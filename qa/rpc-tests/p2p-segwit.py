@@ -194,7 +194,7 @@ def sign_P2PK_witness_input(script, txTo, inIdx, hashtype, value, key):
 
 class SegWitTest(FreicoinTestFramework):
     def setup_chain(self):
-        initialize_chain_clean(self.options.tmpdir, 3)
+        initialize_chain_clean(self.options.tmpdir, 3, bitcoinmode=self.options.bitcoinmode)
 
     def setup_network(self):
         self.nodes = []
