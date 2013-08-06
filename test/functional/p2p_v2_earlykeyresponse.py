@@ -49,7 +49,7 @@ class TestEncryptedP2PState(EncryptedP2PState):
             self.privkey_ours, self.ellswift_ours = ellswift_create()
             self.sent_garbage = random.randbytes(garbage_len)
             self.send_net_magic = False
-            return b"\xfa\xbf\xb5\xda"
+            return b"\xed\x99\x9c\xf6"
         else:
             self.can_data_be_received = True
             return self.ellswift_ours[4:] + self.sent_garbage
