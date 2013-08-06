@@ -126,6 +126,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
+    // Special, one-time adjustment due to the "hash crash" of Apr/May 2013
+    // which rushed the introduction of the new difficulty adjustment filter.
+    // We adjust back to the difficulty prior to the last adjustment.
+    if (pindexLast->GetBlockHash() == uint256S("0x0000000000003bd73ea13954fbbf1cf50b5384f961d142a75a3dfe106f793a20"))
+        return 0x1b01c13a;
+
     const bool use_filter = (pindexLast->nHeight >= (params.diff_adjust_threshold - 1));
     const int64_t interval = use_filter ? params.filtered_adjust_interval : params.original_adjust_interval;
 
