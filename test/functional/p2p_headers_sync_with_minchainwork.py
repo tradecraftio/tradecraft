@@ -84,7 +84,7 @@ class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
             assert len(chaintips) == 1
             assert {
                 'height': 0,
-                'hash': '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
+                'hash': '67756db06265141574ff8e7c3f97ebd57c443791e0ca27ee8b03758d6056edb8',
                 'branchlen': 0,
                 'status': 'active',
             } in chaintips
@@ -96,7 +96,7 @@ class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
 
         assert {
             'height': 0,
-            'hash': '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
+            'hash': '67756db06265141574ff8e7c3f97ebd57c443791e0ca27ee8b03758d6056edb8',
             'branchlen': 0,
             'status': 'active',
         } in self.nodes[2].getchaintips()
