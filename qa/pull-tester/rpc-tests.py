@@ -114,18 +114,18 @@ testScripts = [
     'wallet-hd.py',
     'walletbackup.py',
     # vv Tests less than 5m vv
-    'p2p-fullblocktest.py',
+    'p2p-fullblocktest.py --bitcoin-mode',
     'fundrawtransaction.py',
-    'p2p-compactblocks.py',
+    'p2p-compactblocks.py --bitcoin-mode',
     'segwit.py --bitcoin-mode',
     # vv Tests less than 2m vv
     'wallet.py',
     'wallet-accounts.py',
-    'p2p-segwit.py',
+    'p2p-segwit.py --bitcoin-mode',
     'wallet-dump.py',
     'listtransactions.py',
     # vv Tests less than 60s vv
-    'sendheaders.py',
+    'sendheaders.py --bitcoin-mode',
     'zapwallettxes.py',
     'importmulti.py',
     'mempool_limit.py',

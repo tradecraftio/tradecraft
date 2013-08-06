@@ -254,6 +254,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.vout[1].scriptPubKey = CScript() << OP_TRUE;
     }
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
@@ -492,6 +493,7 @@ void BlockAssembler::initFinalTx(const CCoins& prev_final)
     txFinal.vout[0].nValue = 0;
     txFinal.vout[0].scriptPubKey = CScript() << OP_TRUE;
     txFinal.nLockTime = static_cast<uint32_t>(nMedianTimePast);
+    txFinal.lock_height = nHeight;
 
     // Add all outputs from the prior block-final transaction.  We do nothing
     // here to prevent selected transactions from spending these same outputs

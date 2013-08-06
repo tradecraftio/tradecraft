@@ -103,13 +103,9 @@ struct StratumWork {
     CBlockTemplate m_block_template;
     std::vector<uint256> m_cb_branch;
     bool m_is_witness_enabled;
-    // The height is serialized in the coinbase string.  At the time the work is
-    // customized, we have no need to keep the block chain context (pindexPrev),
-    // so we store just the height value which is all we need.
-    int m_height;
 
-    StratumWork() : m_prev_block_index(0), m_is_witness_enabled(false), m_height(0) { };
-    StratumWork(const CBlockIndex* prev_blocK_index, int height, const CBlockTemplate& block_template);
+    StratumWork() : m_prev_block_index(0), m_is_witness_enabled(false) { };
+    StratumWork(const CBlockIndex* prev_blocK_index, const CBlockTemplate& block_template);
 
     CBlock& GetBlock()
       { return m_block_template.block; }
@@ -117,10 +113,9 @@ struct StratumWork {
       { return m_block_template.block; }
 };
 
-StratumWork::StratumWork(const CBlockIndex* prev_block_index, int height, const CBlockTemplate& block_template)
+StratumWork::StratumWork(const CBlockIndex* prev_block_index, const CBlockTemplate& block_template)
     : m_prev_block_index(prev_block_index)
     , m_block_template(block_template)
-    , m_height(height)
 {
     m_is_witness_enabled = IsWitnessEnabled(prev_block_index, Params().GetConsensus());
     if (!m_is_witness_enabled) {
@@ -281,7 +276,7 @@ std::string GetWorkUnit(StratumClient& client)
         new_work->block.hashMerkleRoot = BlockMerkleRoot(new_work->block);
 
         job_id = new_work->block.GetHash();
-        work_templates[job_id] = StratumWork(tip_new, tip_new->nHeight + 1, *new_work);
+        work_templates[job_id] = StratumWork(tip_new, *new_work);
         tip = tip_new;
 
         transactions_updated_last = mempool.GetTransactionsUpdated();
@@ -341,7 +336,7 @@ std::string GetWorkUnit(StratumClient& client)
     nonce.resize(nonce.size()+4, 0x00); // extranonce2
     cb.vin.front().scriptSig =
            CScript()
-        << current_work.m_height
+        << cb.lock_height
         << nonce;
     if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
         cb.vout.front().scriptPubKey =
@@ -433,7 +428,7 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
     }
     cb.vin.front().scriptSig =
            CScript()
-        << current_work.m_height
+        << cb.lock_height
         << nonce;
     if (cb.vout.empty()) {
         const std::string msg("SubmitBlock: coinbase transaction is missing outputs; unable to customize work to miner");

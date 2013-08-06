@@ -497,7 +497,7 @@ class SendHeadersTest(FreicoinTestFramework):
 
         # Now announce a header that forks the last two blocks
         tip = blocks[0].sha256
-        height -= 1
+        height -= len(blocks)-1
         blocks = []
 
         # Create extra blocks for later
