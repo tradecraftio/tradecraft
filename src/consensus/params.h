@@ -127,13 +127,23 @@ struct Params {
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
+    /** Difficulty adjustment parameters */
     int64_t nPowTargetSpacing;
-    int64_t nPowTargetTimespan;
     std::chrono::seconds PowTargetSpacing() const
     {
         return std::chrono::seconds{nPowTargetSpacing};
     }
-    int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int64_t original_adjust_interval;
+    int64_t filtered_adjust_interval;
+    int64_t diff_adjust_threshold;
+    int64_t OriginalTargetTimespan() const
+    {
+        return original_adjust_interval * nPowTargetSpacing;
+    }
+    int64_t FilteredTargetTimespan() const
+    {
+        return filtered_adjust_interval * nPowTargetSpacing;
+    }
     /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
     /** By default assume that the signatures in ancestors of this block are valid */
