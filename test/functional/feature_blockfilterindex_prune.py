@@ -42,7 +42,7 @@ class FeatureBlockfilterindexPruneTest(FreicoinTestFramework):
         pruneheight = self.nodes[0].pruneblockchain(400)
         # the prune heights used here and below are magic numbers that are determined by the
         # thresholds at which block files wrap, so they depend on disk serialization and default block file size.
-        assert_equal(pruneheight, 216)
+        assert_equal(pruneheight, 213)
 
         self.log.info("check if we can access the tips blockfilter when we have pruned some blocks")
         assert_greater_than(len(self.nodes[0].getblockfilter(self.nodes[0].getbestblockhash())['filter']), 0)
@@ -62,8 +62,8 @@ class FeatureBlockfilterindexPruneTest(FreicoinTestFramework):
         self.generate(self.nodes[0], 502)
 
         self.log.info("prune exactly up to the blockfilterindexes best block while blockfilters are disabled")
-        pruneheight_2 = self.nodes[0].pruneblockchain(1000)
-        assert_equal(pruneheight_2, 807)
+        pruneheight_2 = self.nodes[0].pruneblockchain(900)
+        assert_equal(pruneheight_2, 804)
         self.restart_node(0, extra_args=["-fastprune", "-prune=1", "-blockfilterindex=1"])
         self.log.info("make sure that we can continue with the partially synced index after having pruned up to the index height")
         self.sync_index(height=1500)

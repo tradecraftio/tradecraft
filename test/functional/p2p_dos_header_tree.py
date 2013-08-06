@@ -58,11 +58,12 @@ class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
 
         self.log.info("Feed all non-fork headers, including and up to the first checkpoint")
         peer_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())
-        peer_checkpoint.send_and_ping(msg_headers(self.headers))
+        peer_checkpoint.send_and_ping(msg_headers(self.headers[:1500]))
+        peer_checkpoint.send_and_ping(msg_headers(self.headers[1500:]))
         assert {
-            'height': 3,
-            'hash': '00000000b3e5521c0d5cb5930c3fd737029218f98def9f363df540a31f90cdc9',
-            'branchlen': 3,
+            'height': 2016,
+            'hash': '00000000000017c5d079dfbe901cb7d0fae2a8eafd91be4e98f23481c73921d5',
+            'branchlen': 2016,
             'status': 'headers-only',
         } in self.nodes[0].getchaintips()
 
@@ -78,7 +79,7 @@ class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
         peer_no_checkpoint.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
-            "hash": "00000000c4aead1d82a04b516ce7edd402ca851333eff8fd8c3ae0ada1af1890",
+            "hash": "00000000d479d58ba68bb63ab00eadeaa56770fde588b7f9b667be8eef682c31",
             "branchlen": 2,
             "status": "headers-only",
         } in self.nodes[0].getchaintips()
@@ -88,7 +89,7 @@ class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
         peer_before_checkpoint.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
-            "hash": "00000000c4aead1d82a04b516ce7edd402ca851333eff8fd8c3ae0ada1af1890",
+            "hash": "00000000d479d58ba68bb63ab00eadeaa56770fde588b7f9b667be8eef682c31",
             "branchlen": 2,
             "status": "headers-only",
         } in self.nodes[1].getchaintips()
