@@ -50,7 +50,7 @@ MAX_LOCATOR_SZ = 101
 MAX_BLOCK_BASE_SIZE = 1000000
 
 COIN = 100000000  # 1 frc in kria
-MAX_MONEY = 21000000 * COIN
+MAX_MONEY = 9007199254740991
 
 MAX_SEQUENCE_NUMBER = 0xfffffffe  # Sequence number that is non-final and BIP 68-opt-out
 
@@ -534,7 +534,7 @@ class CTransaction:
     def is_valid(self):
         self.calc_sha256()
         for tout in self.vout:
-            if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
+            if tout.nValue < 0 or tout.nValue > MAX_MONEY:
                 return False
         return True
 
