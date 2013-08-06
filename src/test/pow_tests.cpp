@@ -24,6 +24,14 @@
 
 BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 
+/**
+ * The bitcoin version of CalculateNextWorkRequired is stateless, which the
+ * following tests are written to take advantage of.  However filtered time
+ * intervals necessarily cannot be stateless, so in Freicoin we require that the
+ * first parameter be an actual connected CBlockIndex.  That unfortunately
+ * invalidates these tests.
+ */
+#if 0
 /* Test calculation of next difficulty target with no constraints applying */
 BOOST_AUTO_TEST_CASE(get_next_work)
 {
@@ -71,6 +79,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
     pindexLast.nBits = 0x1c387f6f;
     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00e1fdU);
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {
