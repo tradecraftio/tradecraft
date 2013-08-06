@@ -54,7 +54,7 @@ class DumptxoutsetTest(FreicoinTestFramework):
         # UTXO snapshot hash should be deterministic based on mocked time.
         assert_equal(
             sha256sum_file(str(expected_path)).hex(),
-            'd6b3814e68125669bc3c58b31e8abe359a06ab71bcb5e76ee4d3d746cc36ff7b')
+            '8ea79dad73c07b6d0c13cf4bf16834a617e2cb45653a7a97130486051f0baee7')
 
         assert_equal(
             out['txoutset_hash'], '5569f40935494515e284255039280556dc54af4ea7d2a3e808a95cfa930d0588')
