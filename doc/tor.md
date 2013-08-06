@@ -159,11 +159,11 @@ You can also manually configure your node to be reachable from the Tor network.
 Add these lines to your `/etc/tor/torrc` (or equivalent config file):
 
     HiddenServiceDir /var/lib/tor/freicoin-service/
-    HiddenServicePort 8333 127.0.0.1:8334
+    HiddenServicePort 8639 127.0.0.1:8640
 
 The directory can be different of course, but virtual port numbers should be equal to
-your freicoind's P2P listen port (8333 by default), and target addresses and ports
-should be equal to binding address and port for inbound Tor connections (127.0.0.1:8334 by default).
+your freicoind's P2P listen port (8639 by default), and target addresses and ports
+should be equal to binding address and port for inbound Tor connections (127.0.0.1:8640 by default).
 
     -externalip=X   You can tell freicoin about its publicly reachable addresses using
                     this option, and this can be an onion address. Given the above
@@ -203,7 +203,7 @@ as well, use `discover` instead:
 
     ./freicoind ... -discover
 
-and open port 8333 on your firewall (or use port mapping, i.e., `-upnp` or `-natpmp`).
+and open port 8639 on your firewall (or use port mapping, i.e., `-upnp` or `-natpmp`).
 
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:

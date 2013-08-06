@@ -166,14 +166,14 @@ class ProxyTest(FreicoinTestFramework):
             self.network_test(node, addr, network=NET_IPV6)
 
         if test_onion:
-            addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:8333"
+            addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:8639"
             self.log.debug(f"Test: outgoing onion connection through node for address {addr}")
             node.addnode(addr, "onetry")
             cmd = proxies[2].queue.get()
             assert isinstance(cmd, Socks5Command)
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
             assert_equal(cmd.addr, b"pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion")
-            assert_equal(cmd.port, 8333)
+            assert_equal(cmd.port, 8639)
             if not auth:
                 assert_equal(cmd.username, None)
                 assert_equal(cmd.password, None)
@@ -195,14 +195,14 @@ class ProxyTest(FreicoinTestFramework):
             rv.append(cmd)
             self.network_test(node, addr, network=NET_CJDNS)
 
-        addr = "node.noumenon:8333"
+        addr = "node.noumenon:8639"
         self.log.debug(f"Test: outgoing DNS name connection through node for address {addr}")
         node.addnode(addr, "onetry")
         cmd = proxies[3].queue.get()
         assert isinstance(cmd, Socks5Command)
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
         assert_equal(cmd.addr, b"node.noumenon")
-        assert_equal(cmd.port, 8333)
+        assert_equal(cmd.port, 8639)
         if not auth:
             assert_equal(cmd.username, None)
             assert_equal(cmd.password, None)
