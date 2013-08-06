@@ -775,6 +775,7 @@ class FullBlockTest(FreicoinTestFramework):
         self.move_tip(60)
         b61 = self.next_block(61, spend=out[18])
         b61.vtx[0].vin[0].scriptSig = b60.vtx[0].vin[0].scriptSig  # Equalize the coinbases
+        b61.vtx[0].lock_height = b60.vtx[0].lock_height
         b61.vtx[0].rehash()
         b61 = self.update_block(61, [])
         assert_equal(b60.vtx[0].serialize(), b61.vtx[0].serialize())
