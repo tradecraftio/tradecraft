@@ -96,7 +96,7 @@ class ZMQTest (FreicoinTestFramework):
         # Invalid zmq arguments don't take down the node, see #17185.
         self.restart_node(0, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
 
-        address = 'tcp://127.0.0.1:28332'
+        address = 'tcp://127.0.0.1:28102'
         sockets = []
         subs = []
         services = [b"hashblock", b"hashtx", b"rawblock", b"rawtx"]
@@ -193,7 +193,7 @@ class ZMQTest (FreicoinTestFramework):
             self.log.info("Skipping reorg test because wallet is disabled")
             return
 
-        address = 'tcp://127.0.0.1:28333'
+        address = 'tcp://127.0.0.1:28639'
 
         services = [b"hashblock", b"hashtx"]
         sockets = []
@@ -267,7 +267,7 @@ class ZMQTest (FreicoinTestFramework):
         <32-byte hash>A<8-byte LE uint> : Transactionhash added mempool
         """
         self.log.info("Testing 'sequence' publisher")
-        address = 'tcp://127.0.0.1:28333'
+        address = 'tcp://127.0.0.1:28639'
         socket = self.ctx.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
         seq = ZMQSubscriber(socket, b'sequence')
@@ -427,7 +427,7 @@ class ZMQTest (FreicoinTestFramework):
             return
 
         self.log.info("Testing 'mempool sync' usage of sequence notifier")
-        address = 'tcp://127.0.0.1:28333'
+        address = 'tcp://127.0.0.1:28639'
         socket = self.ctx.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
         seq = ZMQSubscriber(socket, b'sequence')

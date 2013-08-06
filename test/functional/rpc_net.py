@@ -199,7 +199,7 @@ class NetTest(FreicoinTestFramework):
             second_octet = i % 256
             a = "{}.{}.1.1".format(first_octet, second_octet)
             imported_addrs.append(a)
-            self.nodes[0].addpeeraddress(a, 8333)
+            self.nodes[0].addpeeraddress(a, 8639)
 
         # Obtain addresses via rpc call and check they were ones sent in before.
         #
@@ -213,7 +213,7 @@ class NetTest(FreicoinTestFramework):
             assert_greater_than(a["time"], 1527811200)  # 1st June 2018
             assert_equal(a["services"], NODE_NETWORK | NODE_WITNESS)
             assert a["address"] in imported_addrs
-            assert_equal(a["port"], 8333)
+            assert_equal(a["port"], 8639)
 
         node_addresses = self.nodes[0].getnodeaddresses(1)
         assert_equal(len(node_addresses), 1)
