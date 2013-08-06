@@ -99,12 +99,12 @@ class ScanblocksTest(FreicoinTestFramework):
         # coinbase output and verify that their BIP158 ranged hashes match
         genesis_blockhash = node.getblockhash(0)
         genesis_spks = bip158_relevant_scriptpubkeys(node, genesis_blockhash)
-        assert_equal(len(genesis_spks), 1)
-        genesis_coinbase_spk = list(genesis_spks)[0]
-        false_positive_spk = bytes.fromhex("001400000000000000000000000000000000000cadcb")
+        assert_equal(len(genesis_spks), 8)
+        genesis_coinbase_spk = list(sorted(genesis_spks))[0]
+        false_positive_spk = bytes.fromhex("00140000000000000000000000000000000000230495")
 
-        genesis_coinbase_hash = bip158_basic_element_hash(genesis_coinbase_spk, 1, genesis_blockhash)
-        false_positive_hash = bip158_basic_element_hash(false_positive_spk, 1, genesis_blockhash)
+        genesis_coinbase_hash = bip158_basic_element_hash(genesis_coinbase_spk, 8, genesis_blockhash)
+        false_positive_hash = bip158_basic_element_hash(false_positive_spk, 8, genesis_blockhash)
         assert_equal(genesis_coinbase_hash, false_positive_hash)
 
         assert genesis_blockhash in node.scanblocks(
