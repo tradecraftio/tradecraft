@@ -257,6 +257,8 @@ public:
     }
 };
 
+class arith_uint320;
+
 /** 256-bit unsigned big integer. */
 class arith_uint256 : public base_uint<256> {
 public:
@@ -290,9 +292,22 @@ public:
 
     friend uint256 ArithToUint256(const arith_uint256 &);
     friend arith_uint256 UintToArith256(const uint256 &);
+
+    friend class arith_uint320;
 };
 
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);
+
+/** 320-bit unsigned big integer. */
+class arith_uint320 : public base_uint<320> {
+public:
+    arith_uint320() : base_uint<320>() {}
+    arith_uint320(const base_uint<320>& b) : base_uint<320>(b) {}
+    arith_uint320(uint64_t b) : base_uint<320>(b) {}
+
+    arith_uint320(const arith_uint256 &a);
+    bool TruncateTo256(arith_uint256 &);
+};
 
 #endif // FREICOIN_ARITH_UINT256_H
