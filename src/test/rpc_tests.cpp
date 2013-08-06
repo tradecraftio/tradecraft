@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     
     UniValue r;
     BOOST_CHECK_NO_THROW(r = CallRPC(string("setban 127.0.0.0 add")));
-    BOOST_CHECK_THROW(r = CallRPC(string("setban 127.0.0.0:8334")), runtime_error); //portnumber for setban not allowed
+    BOOST_CHECK_THROW(r = CallRPC(string("setban 127.0.0.0:8640")), runtime_error); //portnumber for setban not allowed
     BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
     UniValue ar = r.get_array();
     UniValue o1 = ar[0].get_obj();

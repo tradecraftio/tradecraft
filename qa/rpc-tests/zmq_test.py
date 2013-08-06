@@ -31,7 +31,7 @@ import urllib.parse
 
 class ZMQTest (FreicoinTestFramework):
 
-    port = 28332
+    port = 28638
 
     def setup_nodes(self):
         self.zmqContext = zmq.Context()
