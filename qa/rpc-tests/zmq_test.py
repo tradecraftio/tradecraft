@@ -29,7 +29,7 @@ class ZMQTest (FreicoinTestFramework):
         super().__init__()
         self.num_nodes = 4
 
-    port = 28332
+    port = 28102
 
     def setup_nodes(self):
         self.zmqContext = zmq.Context()
