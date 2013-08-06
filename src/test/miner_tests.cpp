@@ -82,34 +82,34 @@ constexpr static struct {
     unsigned char extranonce;
     unsigned int nonce;
 } BLOCKINFO[]{
-    {1, 0x52d00042}, {0, 0x8e9502af}, {0, 0x0c9086ed}, {1, 0x4dafe8b7},
-    {0, 0x2284fd8e}, {1, 0xbe19c94e}, {0, 0x944fb443}, {0, 0x918164c2},
-    {0, 0x5ca9005e}, {2, 0xdfd36b8c}, {1, 0xbea0958d}, {1, 0x63157720},
-    {0, 0xc7c138b1}, {1, 0x47abc96b}, {0, 0x1a41ae50}, {0, 0x33f81ee2},
-    {0, 0x93d37ee6}, {0, 0xd41309ef}, {1, 0xe030f49b}, {0, 0xe92ac447},
-    {2, 0x0a89381e}, {0, 0x23173160}, {0, 0x2dc1d884}, {0, 0xaba6e9b6},
-    {0, 0xbaa9b8fb}, {0, 0x31d86401}, {0, 0x7ab38bc3}, {0, 0xb6a5921c},
-    {1, 0x46901dbf}, {1, 0x55c74e05}, {0, 0x5236e3b6}, {0, 0xa09faea4},
-    {1, 0x239feb9a}, {0, 0x10021b9a}, {1, 0x1edc56aa}, {3, 0x9d65337b},
-    {0, 0x790bf7c1}, {0, 0x2512d056}, {5, 0xcfd1ad26}, {0, 0xfc101a5a},
-    {0, 0x7094b9df}, {0, 0x76cb9875}, {0, 0xc2405a3d}, {0, 0x7b63fe34},
-    {0, 0x0db81fd0}, {0, 0xceceadd6}, {0, 0x95f2ea4b}, {0, 0x4c77115a},
-    {1, 0xa6b53f07}, {1, 0xb526245d}, {0, 0x2d4b00c8}, {1, 0xc35c0090},
-    {1, 0xaada2eda}, {0, 0x3fd18fab}, {0, 0x7747abf2}, {2, 0xb0b92b17},
-    {0, 0x67227e86}, {0, 0xf9fd9455}, {0, 0x69251c19}, {0, 0x633da320},
-    {0, 0x8acefe47}, {0, 0xeb82586d}, {1, 0x121792ef}, {4, 0x3ef76f0e},
-    {1, 0xb4f30ec8}, {0, 0x4245e33b}, {1, 0xb9bd34c0}, {0, 0x293a1297},
-    {0, 0x3843f35f}, {1, 0x5f6ceef1}, {1, 0xcb3a5a97}, {3, 0xa0c5c696},
-    {0, 0xce5b8825}, {0, 0xe5bad1e6}, {2, 0x2e775dcb}, {1, 0xdd7ba849},
-    {0, 0x70ddc54b}, {1, 0x4d7291de}, {2, 0xdac7f375}, {0, 0xb48a1cbc},
-    {0, 0x28e05f52}, {2, 0x833fba3d}, {1, 0x09260f05}, {2, 0x46c7653e},
-    {2, 0x1b02eee1}, {0, 0x4c6dab99}, {0, 0x758ec784}, {1, 0x6963c9fa},
-    {0, 0x8b92a0b4}, {0, 0x6c82722c}, {0, 0x09c12660}, {0, 0xd02bdc4c},
-    {1, 0xb89cdf2d}, {0, 0x107ce7da}, {0, 0x525613a2}, {0, 0xbc717ed5},
-    {0, 0x477812dc}, {0, 0x8a6d8f17}, {0, 0x9df124b3}, {0, 0x461e1332},
-    {0, 0x0dde35c2}, {0, 0x76683cec}, {0, 0x92a5017b}, {0, 0x681fb885},
-    {2, 0x617826d0}, {0, 0x0029a8e6}, {0, 0x1d3108a1}, {4, 0x33dc89e2},
-    {0, 0x520883b9}, {0, 0xfb702683}
+    {2, 0x1ad89ecd}, {0, 0x767229a5}, {0, 0x33363e69}, {0, 0x5899c287},
+    {0, 0x28e4e292}, {1, 0x29de1388}, {0, 0xd63ec352}, {0, 0x0ed1c5dd},
+    {0, 0x68eb5678}, {6, 0xf5814918}, {0, 0x7e8dcb1c}, {2, 0x0e517ed6},
+    {0, 0xc8d0b1d0}, {0, 0x2a98794b}, {0, 0x1b313abd}, {0, 0x59d860aa},
+    {0, 0x7a37bd60}, {0, 0x00b16dd1}, {0, 0x3ccc05c2}, {0, 0xa18ca381},
+    {2, 0x03bb64ee}, {0, 0x803e4e97}, {0, 0xfa9dc745}, {0, 0x36f15d3a},
+    {0, 0x47ee7c1d}, {2, 0x785e7cd4}, {1, 0x11922a08}, {1, 0x4e75efb4},
+    {0, 0x4fa61751}, {0, 0x48c66bde}, {1, 0x3cbb64b2}, {0, 0x67b7798f},
+    {3, 0x62d584ca}, {0, 0x1d5d7975}, {0, 0xb6ad20da}, {3, 0xc1d870aa},
+    {2, 0x207cd3bf}, {0, 0x0655fcd0}, {0, 0x1e163d53}, {2, 0x9815fced},
+    {0, 0x4e3002af}, {0, 0x2de1eef0}, {1, 0xae1a1bc8}, {2, 0x5d2afdd2},
+    {8, 0x775f2539}, {1, 0xa0b823d4}, {0, 0x287fec20}, {0, 0x5914c6a4},
+    {0, 0xd37a8e98}, {1, 0x10947313}, {2, 0xd7ba2816}, {1, 0x348327c0},
+    {0, 0x11c52cb9}, {0, 0x080e1988}, {0, 0x4a562bcd}, {1, 0x91b7a9c5},
+    {0, 0x1485c139}, {0, 0x47a7f898}, {4, 0x6da88be5}, {0, 0xedd02105},
+    {1, 0xb4ec710f}, {0, 0xc71d1bdc}, {0, 0x630317be}, {2, 0x32385750},
+    {0, 0x2a7e48d2}, {0, 0x01a39d61}, {1, 0xa10b3af8}, {0, 0x5ea85143},
+    {0, 0x218146ce}, {0, 0x4b4e2448}, {0, 0x4c23e630}, {0, 0xb39ee3ec},
+    {0, 0x6ef23559}, {0, 0xf68cebb5}, {0, 0x22ba6842}, {0, 0xa4e0228a},
+    {1, 0x08eb1d0d}, {1, 0x263924eb}, {1, 0x09f64437}, {0, 0xafcebd03},
+    {0, 0x178be1c9}, {1, 0xa66ecc8d}, {1, 0x237405a1}, {2, 0x4909e6b9},
+    {0, 0x069ffa65}, {0, 0x509db10f}, {0, 0xd5cd4b60}, {1, 0x24c7e45b},
+    {1, 0x2cb51358}, {1, 0x55787d31}, {0, 0x451796af}, {1, 0x5a06eb50},
+    {0, 0x4067f679}, {1, 0xe5c4addd}, {0, 0x15b9a5d7}, {0, 0x83f49b2e},
+    {1, 0xb773bd75}, {0, 0x21b6987d}, {0, 0xacd05a6a}, {2, 0xa15946a6},
+    {1, 0x4606bf39}, {3, 0x8dd43bc5}, {1, 0xe529238c}, {2, 0x595b8855},
+    {2, 0x140a7583}, {0, 0xeb84a300}, {2, 0xb983104d}, {0, 0x3b29b547},
+    {1, 0x193a05aa}, {3, 0x50dba7d4}
 };
 
 static std::unique_ptr<CBlockIndex> CreateBlockIndex(int nHeight, CBlockIndex* active_chain_tip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         {
             LOCK(cs_main);
-            pblock->nVersion = 2;
+            pblock->nVersion = VERSIONBITS_TOP_BITS;
             pblock->nTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1;
             CMutableTransaction txCoinbase(*pblock->vtx[0]);
             txCoinbase.nVersion = 2;
