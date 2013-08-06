@@ -268,3 +268,36 @@ arith_uint256 UintToArith256(const uint256 &a)
         b.pn[x] = ReadLE32(a.begin() + x*4);
     return b;
 }
+
+// Explicit instantiations for base_uint<320>
+template base_uint<320>& base_uint<320>::operator<<=(unsigned int);
+template base_uint<320>& base_uint<320>::operator>>=(unsigned int);
+template base_uint<320>& base_uint<320>::operator*=(uint32_t b32);
+template base_uint<320>& base_uint<320>::operator*=(const base_uint<320>& b);
+template base_uint<320>& base_uint<320>::operator/=(const base_uint<320>& b);
+template int base_uint<320>::CompareTo(const base_uint<320>&) const;
+template bool base_uint<320>::EqualTo(uint64_t) const;
+template double base_uint<320>::getdouble() const;
+template unsigned int base_uint<320>::bits() const;
+
+arith_uint320::arith_uint320(const arith_uint256 &a)
+{
+    int i = 0;
+    for (; i < arith_uint256::WIDTH; ++i)
+        pn[i] = a.pn[i];
+    for (; i < WIDTH; ++i)
+        pn[i] = 0;
+}
+
+/** Copies the lower 256 bits into the specified uint256. Returns
+ ** success (true) if the upper bits were clear. */
+bool arith_uint320::TruncateTo256(arith_uint256 &ret)
+{
+    int i = 0;
+    for (; i < arith_uint256::WIDTH; ++i)
+        ret.pn[i] = pn[i];
+    uint32_t bits = 0;
+    for (; i < WIDTH; ++i)
+        bits |= pn[i];
+    return !bits;
+}
