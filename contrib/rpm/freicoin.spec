@@ -332,12 +332,12 @@ if [ `%{_sbindir}/sestatus |grep -c "disabled"` -eq 0 ]; then
 for selinuxvariant in %{selinux_variants}; do
 	%{_sbindir}/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/freicoin.pp &> /dev/null || :
 done
-%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 8332
-%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 8333
-%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 18332
-%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 18333
-%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 18443
-%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 18444
+%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 8638
+%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 8639
+%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 18638
+%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 18639
+%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 28638
+%{_sbindir}/semanage port -a -t freicoin_port_t -p tcp 28639
 %{_sbindir}/fixfiles -R freicoin-server restore &> /dev/null || :
 %{_sbindir}/restorecon -R %{_localstatedir}/lib/freicoin || :
 fi
@@ -353,12 +353,12 @@ fi
 # SELinux
 if [ $1 -eq 0 ]; then
 	if [ `%{_sbindir}/sestatus |grep -c "disabled"` -eq 0 ]; then
-	%{_sbindir}/semanage port -d -p tcp 8332
-	%{_sbindir}/semanage port -d -p tcp 8333
-	%{_sbindir}/semanage port -d -p tcp 18332
-	%{_sbindir}/semanage port -d -p tcp 18333
-	%{_sbindir}/semanage port -d -p tcp 18443
-	%{_sbindir}/semanage port -d -p tcp 18444
+	%{_sbindir}/semanage port -d -p tcp 8638
+	%{_sbindir}/semanage port -d -p tcp 8639
+	%{_sbindir}/semanage port -d -p tcp 18638
+	%{_sbindir}/semanage port -d -p tcp 18639
+	%{_sbindir}/semanage port -d -p tcp 28638
+	%{_sbindir}/semanage port -d -p tcp 28639
 	for selinuxvariant in %{selinux_variants}; do
 		%{_sbindir}/semodule -s ${selinuxvariant} -r freicoin &> /dev/null || :
 	done
