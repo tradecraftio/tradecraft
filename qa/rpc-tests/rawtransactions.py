@@ -37,7 +37,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
 
         #connect to a local machine for debugging
-        #url = "http://freicoinrpc:DP6DvqZtqXarpeNWyN3LZTFchCCyCUuHwNF7E8pX99x1@%s:%d" % ('127.0.0.1', 18332)
+        #url = "http://freicoinrpc:DP6DvqZtqXarpeNWyN3LZTFchCCyCUuHwNF7E8pX99x1@%s:%d" % ('127.0.0.1', 18638)
         #proxy = AuthServiceProxy(url)
         #proxy.url = url # store URL on proxy for info
         #self.nodes.append(proxy)
