@@ -80,6 +80,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
                 tx_final.vin.extend(self.finaltx_vin)
                 tx_final.vout.append(CTxOut(0, CScript([OP_TRUE])))
                 tx_final.nLockTime = block.vtx[0].nLockTime
+                tx_final.lock_height = block.vtx[0].lock_height
                 tx_final.rehash()
                 block.vtx.append(tx_final)
                 block.hashMerkleRoot = block.calc_merkle_root()
@@ -297,6 +298,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         tx_final.vin.append(CTxIn(non_protected_output, CScript([]), 0xffffffff))
         tx_final.vout.append(CTxOut(312500000, CScript([OP_TRUE])))
         tx_final.nLockTime = block.vtx[0].nLockTime
+        tx_final.lock_height = block.vtx[0].lock_height
         tx_final.rehash()
         block.vtx.append(tx_final)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -325,6 +327,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         tx_final.vout.append(CTxOut(156250000, CScript([OP_TRUE])))
         tx_final.vout.append(CTxOut(156250000, CScript([OP_TRUE])))
         tx_final.nLockTime = block.vtx[0].nLockTime
+        tx_final.lock_height = block.vtx[0].lock_height
         tx_final.rehash()
         block.vtx.append(tx_final)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -353,6 +356,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         spend_tx.vin.append(CTxIn(early_coin, CScript([]), 0xffffffff))
         spend_tx.vout.append(CTxOut(utxo_amount, CScript([OP_TRUE])))
         spend_tx.nLockTime = 0
+        spend_tx.lock_height = block.vtx[0].lock_height
         spend_tx.rehash()
         block.vtx.insert(1, spend_tx)
         # Capture output of spend_tx in block-final tx (but don't update the
@@ -380,6 +384,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         tx_final.vin.append(CTxIn(COutPoint(prev_final_tx.sha256, 0), CScript([]), 0xffffffff))
         tx_final.vout.append(CTxOut(156250000, CScript([OP_TRUE])))
         tx_final.nLockTime = block.vtx[0].nLockTime
+        tx_final.lock_height = block.vtx[0].lock_height
         tx_final.rehash()
         block.vtx.append(tx_final)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -418,6 +423,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         spend_tx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(txid)[::-1]), 0), CScript([]), 0xffffffff))
         spend_tx.vout.append(CTxOut(int(utxo['value']*100000000) - 10000, CScript([b'a'*100]))) # Make transaction large enough to avoid tx-size-small standardness check
         spend_tx.nLockTime = 0
+        spend_tx.lock_height = utxo['refheight']
         spend_tx.rehash()
         node.sendrawtransaction(spend_tx.serialize().hex())
         mempool = node.getrawmempool()
@@ -429,6 +435,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         spend_tx.vin.append(CTxIn(COutPoint(prev_final_tx.sha256, 0), CScript([]), 0xffffffff))
         spend_tx.vout.append(CTxOut(int(utxo['value']*100000000), CScript([b'a'*100]))) # Make transaction large enough to avoid tx-size-small standardness check
         spend_tx.nLockTime = 0
+        spend_tx.lock_height = utxo['refheight']
         spend_tx.rehash()
         try:
             node.sendrawtransaction(spend_tx.serialize().hex())
@@ -477,6 +484,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         tx_final.vin.append(txin1)
         tx_final.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx_final.nLockTime = block.vtx[0].nLockTime
+        tx_final.lock_height = block.vtx[0].lock_height
         tx_final.rehash()
         block.vtx.append(tx_final)
         block.hashMerkleRoot = block.calc_merkle_root()

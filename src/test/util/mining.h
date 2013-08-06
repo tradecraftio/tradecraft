@@ -30,12 +30,12 @@ struct NodeContext;
 std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params);
 
 /** Returns the generated coin */
-CTxIn MineBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
+std::pair<CTxIn, uint32_t> MineBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
 
 /** Prepare a block to be mined */
 std::shared_ptr<CBlock> PrepareBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
 
 /** RPC-like helper function, returns the generated coin */
-CTxIn generatetoaddress(const NodeContext&, const std::string& address);
+std::pair<CTxIn, uint32_t> generatetoaddress(const NodeContext&, const std::string& address);
 
 #endif // FREICOIN_TEST_UTIL_MINING_H
