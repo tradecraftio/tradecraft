@@ -128,7 +128,7 @@ public:
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
-        consensus.diff_adjust_threshold = std::numeric_limits<int64_t>::max();
+        consensus.diff_adjust_threshold = 28336;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -261,7 +261,7 @@ public:
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
-        consensus.diff_adjust_threshold = std::numeric_limits<int64_t>::max();
+        consensus.diff_adjust_threshold = 2016;
 
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
