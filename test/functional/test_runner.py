@@ -69,14 +69,14 @@ BASE_SCRIPTS= [
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
-    'feature_block.py',
+    'feature_block.py --bitcoin-mode',
     'rpc_fundrawtransaction.py',
-    'p2p_compactblocks.py',
-    'feature_segwit.py',
+    'p2p_compactblocks.py --bitcoin-mode',
+    'feature_segwit.py --bitcoin-mode',
     # vv Tests less than 2m vv
     'wallet_basic.py',
     'wallet_accounts.py',
-    'p2p_segwit.py',
+    'p2p_segwit.py --bitcoin-mode',
     'wallet_dump.py',
     'rpc_listtransactions.py',
     # vv Tests less than 60s vv
@@ -134,7 +134,7 @@ BASE_SCRIPTS= [
     'wallet_listsinceblock.py',
     'p2p_leak.py',
     'wallet_encryption.py',
-    'feature_dersig.py',
+    'feature_dersig.py --bitcoin-mode',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'feature_minchainwork.py',
@@ -154,7 +154,7 @@ EXTENDED_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
     # vv Tests less than 20m vv
-    'feature_fee_estimation.py',
+    'feature_fee_estimation.py --bitcoin-mode',
     # vv Tests less than 5m vv
     'feature_maxuploadtarget.py',
     'mempool_packages.py',
@@ -168,7 +168,7 @@ EXTENDED_SCRIPTS = [
     'p2p_feefilter.py',
     'rpc_bind.py',
     # vv Tests less than 30s vv
-    'feature_assumevalid.py',
+    'feature_assumevalid.py --bitcoin-mode',
     'example_test.py',
     'wallet_txn_doublespend.py',
     'wallet_txn_clone.py --mineblock',
