@@ -48,7 +48,7 @@ class MiniWallet:
         blocks = self._test_node.generatetoaddress(num_blocks, self._address)
         for b in blocks:
             cb_tx = self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0]
-            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
+            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'refheight': cb_tx['lockheight']})
         return blocks
 
     def get_utxo(self):
@@ -69,10 +69,11 @@ class MiniWallet:
         tx.vout = [CTxOut(int(send_value * COIN), self._scriptPubKey)]
         tx.wit.vtxinwit = [CTxInWitness()]
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        tx.lock_height = utxo_to_spend['refheight']
         tx_hex = tx.serialize().hex()
 
         txid = from_node.sendrawtransaction(tx_hex)
-        self._utxos.append({'txid': txid, 'vout': 0, 'value': send_value})
+        self._utxos.append({'txid': txid, 'vout': 0, 'value': send_value, 'refheight': tx.lock_height})
         tx_info = from_node.getmempoolentry(txid)
         assert_equal(tx_info['vsize'], vsize)
         assert_equal(tx_info['fee'], fee)

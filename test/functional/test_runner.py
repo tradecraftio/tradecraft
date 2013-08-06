@@ -104,17 +104,17 @@ BASE_SCRIPTS = [
     # vv Tests less than 5m vv
     'mining_getblocktemplate_longpoll.py',
     'feature_maxuploadtarget.py',
-    'feature_block.py',
+    'feature_block.py --bitcoin-mode',
     'rpc_fundrawtransaction.py',
     #'rpc_fundrawtransaction.py --descriptors', #times out
-    'p2p_compactblocks.py',
+    'p2p_compactblocks.py --bitcoin-mode',
     'feature_segwit.py --legacy-wallet --bitcoin-mode',
     # vv Tests less than 2m vv
     'wallet_basic.py',
     #'wallet_basic.py --descriptors', #times out
     'wallet_labels.py',
     #'wallet_labels.py --descriptors', #times out
-    'p2p_segwit.py',
+    'p2p_segwit.py --bitcoin-mode',
     'p2p_timeouts.py',
     'p2p_tx_download.py',
     'mempool_updatefromblock.py',
@@ -143,7 +143,7 @@ BASE_SCRIPTS = [
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
     #'wallet_keypool_topup.py --descriptors', #times out
-    'feature_fee_estimation.py',
+    'feature_fee_estimation.py --bitcoin-mode',
     'interface_zmq.py',
     'interface_freicoin_cli.py',
     'mempool_resurrect.py',
@@ -203,8 +203,8 @@ BASE_SCRIPTS = [
     'p2p_invalid_locator.py',
     'p2p_invalid_block.py',
     'p2p_invalid_messages.py',
-    'p2p_invalid_tx.py',
-    'feature_assumevalid.py',
+    'p2p_invalid_tx.py --bitcoin-mode',
+    'feature_assumevalid.py --bitcoin-mode',
     'example_test.py',
     'wallet_txn_doublespend.py',
     #'wallet_txn_doublespend.py --descriptors', #times out
@@ -252,7 +252,7 @@ BASE_SCRIPTS = [
     'p2p_leak.py',
     'wallet_encryption.py',
     #'wallet_encryption.py --descriptors', #times out
-    'feature_dersig.py',
+    'feature_dersig.py --bitcoin-mode',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     #'wallet_resendwallettransactions.py --descriptors', #times out
