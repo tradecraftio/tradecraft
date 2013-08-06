@@ -452,35 +452,24 @@ class BlockchainTest(FreicoinTestFramework):
             textwrap.dedent("""
             Wrong type passed:
             {
-                "Position 1 (nblocks)": "JSON value of type string is not of expected type number",
-                "Position 2 (height)": "JSON value of type array is not of expected type number"
+                "Position 1 (height)": "JSON value of type string is not of expected type number"
             }
             """).strip(),
-            lambda: self.nodes[0].getnetworkhashps("a", []),
+            lambda: self.nodes[0].getnetworkhashps("a"),
         )
         assert_raises_rpc_error(
             -8,
             "Block does not exist at specified height",
-            lambda: self.nodes[0].getnetworkhashps(100, self.nodes[0].getblockcount() + 1),
+            lambda: self.nodes[0].getnetworkhashps(self.nodes[0].getblockcount() + 1),
         )
         assert_raises_rpc_error(
             -8,
             "Block does not exist at specified height",
-            lambda: self.nodes[0].getnetworkhashps(100, -10),
-        )
-        assert_raises_rpc_error(
-            -8,
-            "Invalid nblocks. Must be a positive number or -1.",
-            lambda: self.nodes[0].getnetworkhashps(-100),
-        )
-        assert_raises_rpc_error(
-            -8,
-            "Invalid nblocks. Must be a positive number or -1.",
-            lambda: self.nodes[0].getnetworkhashps(0),
+            lambda: self.nodes[0].getnetworkhashps(-10),
         )
 
         # Genesis block height estimate should return 0
-        hashes_per_second = self.nodes[0].getnetworkhashps(100, 0)
+        hashes_per_second = self.nodes[0].getnetworkhashps(0)
         assert_equal(hashes_per_second, 0)
 
         # This should be 2 hashes every 10 minutes or 1/300
