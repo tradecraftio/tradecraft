@@ -37,7 +37,7 @@ ADDRS = []
 for i in range(10):
     addr = CAddress()
     addr.time = int(time.time()) + i
-    addr.port = 8333 + i
+    addr.port = 8639 + i
     addr.nServices = P2P_SERVICES
     # Add one I2P and one onion V3 address at an arbitrary position.
     if i == 5:
