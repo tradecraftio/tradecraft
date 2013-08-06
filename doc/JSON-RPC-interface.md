@@ -91,7 +91,7 @@ RPC interface will be abused.
     need to expose the RPC port to the host system.  The default way to
     do this in Docker also exposes the port to the public Internet.
     Instead, expose it only on the host system's localhost, for example:
-    `-p 127.0.0.1:8332:8332`
+    `-p 127.0.0.1:8638:8638`
 
 - **Secure authentication:** By default, Freicoin generates unique
   login credentials each time it restarts and puts them into a file

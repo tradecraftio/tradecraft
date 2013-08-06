@@ -43,7 +43,7 @@ for i in range(10):
         addr.ip = I2P_ADDR
     else:
         addr.ip = f"123.123.123.{i % 256}"
-    addr.port = 8333 + i
+    addr.port = 8639 + i
     ADDRS.append(addr)
 
 
