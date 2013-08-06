@@ -80,20 +80,20 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS = [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'feature_fee_estimation.py',
+    'feature_fee_estimation.py --bitcoin-mode',
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
     'mining_getblocktemplate_longpoll.py',
     'feature_maxuploadtarget.py',
-    'feature_block.py',
+    'feature_block.py --bitcoin-mode',
     'rpc_fundrawtransaction.py',
-    'p2p_compactblocks.py',
+    'p2p_compactblocks.py --bitcoin-mode',
     'feature_segwit.py --bitcoin-mode',
     # vv Tests less than 2m vv
     'wallet_basic.py',
     'wallet_labels.py',
-    'p2p_segwit.py',
+    'p2p_segwit.py --bitcoin-mode',
     'p2p_timeouts.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
@@ -152,7 +152,7 @@ BASE_SCRIPTS = [
     'p2p_invalid_block.py',
     'p2p_invalid_messages.py',
     'p2p_invalid_tx.py',
-    'feature_assumevalid.py',
+    'feature_assumevalid.py --bitcoin-mode',
     'example_test.py',
     'wallet_txn_doublespend.py',
     'wallet_txn_clone.py --mineblock',
@@ -180,7 +180,7 @@ BASE_SCRIPTS = [
     'wallet_listsinceblock.py',
     'p2p_leak.py',
     'wallet_encryption.py',
-    'feature_dersig.py',
+    'feature_dersig.py --bitcoin-mode',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'wallet_fallbackfee.py',
