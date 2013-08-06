@@ -134,8 +134,10 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 0;
-        nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        nTargetSpacing = 10 * 60;
+        target_spacing = 10 * 60;
+        original_interval = 2016; //! two weeks
+        filtered_interval = 9; // ! 1.5 hrs
+        diff_adjust_threshold = std::numeric_limits<int32_t>::max();
         nMaxTipAge = 24 * 60 * 60;
 
         /**
@@ -217,8 +219,10 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
-        nTargetSpacing = 10 * 60;
+        target_spacing = 10 * 60;
+        original_interval = 2016; //! two weeks
+        filtered_interval = 9; // ! 1.5 hrs
+        diff_adjust_threshold = std::numeric_limits<int32_t>::max();
         nMaxTipAge = 0x7fffffff;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -274,8 +278,10 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 1;
-        nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
-        nTargetSpacing = 10 * 60;
+        target_spacing = 10 * 60;
+        original_interval = 2016; //! two weeks
+        filtered_interval = 9; // ! 1.5 hrs
+        diff_adjust_threshold = std::numeric_limits<int32_t>::max();
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         nMaxTipAge = 24 * 60 * 60;
         genesis.nTime = 1296688602;

@@ -80,9 +80,12 @@ public:
     bool SkipProofOfWorkCheck() const { return fSkipProofOfWorkCheck; }
     /** Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
-    int64_t TargetTimespan() const { return nTargetTimespan; }
-    int64_t TargetSpacing() const { return nTargetSpacing; }
-    int64_t Interval() const { return nTargetTimespan / nTargetSpacing; }
+    int64_t TargetSpacing() const { return target_spacing; }
+    int64_t OriginalInterval() const { return original_interval; }
+    int64_t FilteredInterval() const { return filtered_interval; }
+    int64_t OriginalTargetTimespan() const { return original_interval * target_spacing; }
+    int64_t FilteredTargetTimespan() const { return filtered_interval * target_spacing; }
+    int64_t DiffAdjustThreshold() const { return diff_adjust_threshold; }
     int64_t MaxTipAge() const { return nMaxTipAge; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
@@ -107,8 +110,10 @@ protected:
     int nEnforceBlockUpgradeMajority;
     int nRejectBlockOutdatedMajority;
     int nToCheckBlockUpgradeMajority;
-    int64_t nTargetTimespan;
-    int64_t nTargetSpacing;
+    int64_t target_spacing;
+    int64_t original_interval;
+    int64_t filtered_interval;
+    int64_t diff_adjust_threshold;
     int nMinerThreads;
     long nMaxTipAge;
     std::vector<CDNSSeedData> vSeeds;
