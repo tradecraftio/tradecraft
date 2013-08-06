@@ -147,13 +147,9 @@ struct StratumWork {
     std::vector<uint256> m_cb_branch;
     //! Whether the block template uses segwit.
     bool m_is_witness_enabled;
-    // The height is serialized in the coinbase string.  At the time the work is
-    // customized, we have no need to keep the block chain context (pindexPrev),
-    // so we store just the height value which is all we need.
-    int m_height;
 
-    StratumWork() : m_prev_block_index(0), m_is_witness_enabled(false), m_height(0) {};
-    StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, int height, const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template);
+    StratumWork() : m_prev_block_index(0), m_is_witness_enabled(false) {};
+    StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template);
 
     //! A more ergonomic way to access the block template.
     CBlock& GetBlock()
@@ -162,11 +158,10 @@ struct StratumWork {
       { return m_block_template.block; }
 };
 
-StratumWork::StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, int height, const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template)
+StratumWork::StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template)
     : m_prev_block_index(prev_block_index)
     , m_coinbase_dest(coinbase_dest)
     , m_block_template(block_template)
-    , m_height(height)
 {
     m_is_witness_enabled = DeploymentActiveAt(*prev_block_index, chainman, Consensus::DEPLOYMENT_SEGWIT);
     if (!m_is_witness_enabled) {
@@ -337,7 +332,7 @@ void CustomizeWork(const ChainstateManager& chainman, const StratumClient& clien
     }
     cb.vin.front().scriptSig =
            CScript()
-        << current_work.m_height
+        << cb.lock_height
         << nonce;
     if (cb.vout.empty()) {
         const std::string msg("SubmitBlock: coinbase transaction is missing outputs; unable to customize work to miner");
@@ -417,7 +412,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
         new_work->block.hashMerkleRoot = BlockMerkleRoot(new_work->block);
 
         job_id = JobId(new_work->block.GetHash());
-        work_templates[job_id] = StratumWork(*g_context->chainman, tip_new, tip_new->nHeight + 1, coinbase_dest, *new_work);
+        work_templates[job_id] = StratumWork(*g_context->chainman, tip_new, coinbase_dest, *new_work);
         tip = tip_new;
 
         LogPrint(BCLog::STRATUM, "New stratum block template (%d total): %s\n", work_templates.size(), HexStr(job_id));

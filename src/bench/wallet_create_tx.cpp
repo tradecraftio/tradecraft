@@ -43,6 +43,7 @@ void generateFakeBlock(const CChainParams& params,
     // Create block
     CBlock block;
     CMutableTransaction coinbase_tx;
+    coinbase_tx.lock_height = tip.tip_height;
     coinbase_tx.vin.resize(1);
     coinbase_tx.vin[0].prevout.SetNull();
     coinbase_tx.vout.resize(2);

@@ -53,7 +53,7 @@ void initialize_tx_pool()
     g_setup = testing_setup.get();
 
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
-        COutPoint prevout{MineBlock(g_setup->m_node, P2WSH_OP_TRUE)};
+        COutPoint prevout{MineBlock(g_setup->m_node, P2WSH_OP_TRUE).first};
         // Remember the txids to avoid expensive disk access later on
         auto& outpoints = i < COINBASE_MATURITY ?
                               g_outpoints_coinbase_init_mature :
