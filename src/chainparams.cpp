@@ -137,7 +137,7 @@ public:
         target_spacing = 10 * 60;
         original_interval = 2016; //! two weeks
         filtered_interval = 9; // ! 1.5 hrs
-        diff_adjust_threshold = std::numeric_limits<int32_t>::max();
+        diff_adjust_threshold = 28336;
         nMaxTipAge = 24 * 60 * 60;
 
         /**
@@ -222,7 +222,7 @@ public:
         target_spacing = 10 * 60;
         original_interval = 2016; //! two weeks
         filtered_interval = 9; // ! 1.5 hrs
-        diff_adjust_threshold = std::numeric_limits<int32_t>::max();
+        diff_adjust_threshold = 2016;
         nMaxTipAge = 0x7fffffff;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -281,7 +281,7 @@ public:
         target_spacing = 10 * 60;
         original_interval = 2016; //! two weeks
         filtered_interval = 9; // ! 1.5 hrs
-        diff_adjust_threshold = std::numeric_limits<int32_t>::max();
+        diff_adjust_threshold = 1;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         nMaxTipAge = 24 * 60 * 60;
         genesis.nTime = 1296688602;
