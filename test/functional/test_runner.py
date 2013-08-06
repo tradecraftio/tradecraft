@@ -68,14 +68,14 @@ BASE_SCRIPTS= [
     'wallet-hd.py',
     'walletbackup.py',
     # vv Tests less than 5m vv
-    'p2p-fullblocktest.py',
+    'p2p-fullblocktest.py --bitcoin-mode',
     'fundrawtransaction.py',
-    'p2p-compactblocks.py',
-    'segwit.py',
+    'p2p-compactblocks.py --bitcoin-mode',
+    'segwit.py --bitcoin-mode',
     # vv Tests less than 2m vv
     'wallet.py',
     'wallet-accounts.py',
-    'p2p-segwit.py',
+    'p2p-segwit.py --bitcoin-mode',
     'wallet-dump.py',
     'listtransactions.py',
     # vv Tests less than 60s vv
@@ -129,7 +129,7 @@ BASE_SCRIPTS= [
     'listsinceblock.py',
     'p2p-leaktests.py',
     'wallet-encryption.py',
-    'bipdersig-p2p.py',
+    'bipdersig-p2p.py --bitcoin-mode',
     'uptime.py',
     'resendwallettransactions.py',
     'minchainwork.py',
@@ -139,9 +139,9 @@ BASE_SCRIPTS= [
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'pruning.py',
+    'pruning.py --bitcoin-mode',
     # vv Tests less than 20m vv
-    'smartfees.py',
+    'smartfees.py --bitcoin-mode',
     # vv Tests less than 5m vv
     'maxuploadtarget.py',
     'mempool_packages.py',
@@ -155,7 +155,7 @@ EXTENDED_SCRIPTS = [
     'p2p-feefilter.py',
     'rpcbind_test.py',
     # vv Tests less than 30s vv
-    'assumevalid.py',
+    'assumevalid.py --bitcoin-mode',
     'example_test.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
