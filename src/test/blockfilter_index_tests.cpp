@@ -83,6 +83,10 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;
 
+    CMutableTransaction cb(*block.vtx[0]);
+    cb.lock_height = (uint32_t)prev->nHeight + 1;
+    block.vtx[0] = MakeTransactionRef(std::move(cb));
+
     // Replace mempool-selected txns with just coinbase plus passed-in txns:
     block.vtx.resize(1);
     for (const CMutableTransaction& tx : txns) {
@@ -98,6 +102,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         }
         final_tx.vout.emplace_back(0, CScript() << OP_TRUE);
         final_tx.nLockTime = prev->GetMedianTimePast();
+        final_tx.lock_height = (uint32_t)prev->nHeight + 1;
         // Store block-final info for next block
         entry.hash = final_tx.GetHash();
         entry.size = 1;

@@ -635,6 +635,7 @@ class SegWitTest(FreicoinTestFramework):
         utxo = find_spendable_utxo(self.nodes[0], 50)
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int('0x' + utxo['txid'], 0), utxo['vout'])))
+        tx.lock_height = utxo['refheight']
         for i in script_list:
             tx.vout.append(CTxOut(10000000, i))
         tx.rehash()
@@ -685,6 +686,7 @@ class SegWitTest(FreicoinTestFramework):
             txtmp = tx_from_hex(txraw)
             for j in range(len(txtmp.vout)):
                 tx.vin.append(CTxIn(COutPoint(int('0x' + i, 0), j)))
+                tx.lock_height = max(tx.lock_height, txtmp.lock_height)
         tx.vout.append(CTxOut(0, CScript()))
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']

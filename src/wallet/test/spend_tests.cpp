@@ -32,11 +32,9 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
     {
         LOCK(wallet->cs_wallet);
-        // FIXME: The following test should fail because the coinbase transaction
-        //        would have a non-zero lock_height.  However, making the coinbase
-        //        lockheight match the block height happens in a later commit.
-        BOOST_CHECK_EQUAL(AvailableCoins(*wallet, /*atheight=*/0).All().size(), 1);
-        BOOST_CHECK_EQUAL(AvailableCoins(*wallet, /*atheight=*/1).All().size(), 1);
+        BOOST_CHECK_EQUAL(AvailableCoins(*wallet, /*atheight=*/0).All().size(), 0);
+        BOOST_CHECK_EQUAL(AvailableCoins(*wallet, /*atheight=*/1).All().size(), 0);
+        BOOST_CHECK_EQUAL(AvailableCoins(*wallet, /*atheight=*/2).All().size(), 1);
     }
 
     // Check that a subtract-from-recipient transaction slightly less than the
@@ -53,10 +51,10 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output
         coin_control.m_change_type = OutputType::LEGACY;
         auto res = CreateTransaction(*wallet, {recipient}, /*refheight=*/0, RANDOM_CHANGE_POSITION, coin_control);
-        // FIXME: Should fail once the coinbase lock_height is required to be
-        //        equal to the block height:
-        BOOST_CHECK(res);
+        BOOST_CHECK(!res);
         res = CreateTransaction(*wallet, {recipient}, /*refheight=*/1, RANDOM_CHANGE_POSITION, coin_control);
+        BOOST_CHECK(!res);
+        res = CreateTransaction(*wallet, {recipient}, /*refheight=*/2, RANDOM_CHANGE_POSITION, coin_control);
         BOOST_CHECK(res);
         const auto& txr = *res;
         BOOST_CHECK_EQUAL(txr.tx->vout.size(), 1);
