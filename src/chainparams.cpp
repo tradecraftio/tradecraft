@@ -57,7 +57,7 @@ public:
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.original_adjust_interval = 2016; //! two weeks
         consensus.filtered_adjust_interval = 9; //! 1.5 hrs
-        consensus.diff_adjust_threshold = std::numeric_limits<int32_t>::max();
+        consensus.diff_adjust_threshold = 28336;
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -161,6 +161,7 @@ public:
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
         consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.diff_adjust_threshold = 2016;
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x09;
@@ -222,6 +223,7 @@ public:
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.diff_adjust_threshold = 150;
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
