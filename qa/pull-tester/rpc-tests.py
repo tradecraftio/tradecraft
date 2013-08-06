@@ -116,7 +116,7 @@ if ENABLE_ZMQ:
 
 testScripts = [
     # longest test should go first, to favor running tests in parallel
-    'p2p-fullblocktest.py',
+    'p2p-fullblocktest.py --bitcoin-mode',
     'walletbackup.py',
     'bip68-112-113-p2p.py',
     'block-final-tx.py',
@@ -146,7 +146,7 @@ testScripts = [
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
-    'sendheaders.py',
+    'sendheaders.py --bitcoin-mode',
     'keypool.py',
     'prioritise_transaction.py',
     'invalidblockrequest.py',
@@ -155,11 +155,11 @@ testScripts = [
     # Disabled as the alertnotify logic has been removed until it is updated
     # to handle overt ASICBoost version-rolling:
 #    'p2p-versionbits-warning.py',
-    'p2p-segwit.py',
-    'segwit.py',
+    'p2p-segwit.py --bitcoin-mode',
+    'segwit.py --bitcoin-mode',
     'importprunedfunds.py',
     'signmessages.py',
-    'p2p-compactblocks.py',
+    'p2p-compactblocks.py --bitcoin-mode',
     'nulldummy.py',
 ]
 if ENABLE_ZMQ:

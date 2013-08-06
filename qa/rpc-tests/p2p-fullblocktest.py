@@ -855,6 +855,7 @@ class FullBlockTest(ComparisonTestFramework):
         tip(60)
         b61 = block(61, spend=out[18])
         b61.vtx[0].vin[0].scriptSig = b60.vtx[0].vin[0].scriptSig  #equalize the coinbases
+        b61.vtx[0].lock_height = b60.vtx[0].lock_height
         b61.vtx[0].rehash()
         b61 = update_block(61, [])
         assert_equal(b60.vtx[0].serialize(), b61.vtx[0].serialize())
