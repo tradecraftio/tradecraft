@@ -263,6 +263,23 @@ template void base_uint<256>::SetHex(const char*);
 template void base_uint<256>::SetHex(const std::string&);
 template unsigned int base_uint<256>::bits() const;
 
+// Explicit instantiations for base_uint<>
+template base_uint<320>::base_uint(const std::string&);
+template base_uint<320>::base_uint(const std::vector<unsigned char>&);
+template base_uint<320>& base_uint<320>::operator<<=(unsigned int);
+template base_uint<320>& base_uint<320>::operator>>=(unsigned int);
+template base_uint<320>& base_uint<320>::operator*=(uint32_t b32);
+template base_uint<320>& base_uint<320>::operator*=(const base_uint<320>& b);
+template base_uint<320>& base_uint<320>::operator/=(const base_uint<320>& b);
+template int base_uint<320>::CompareTo(const base_uint<320>&) const;
+template bool base_uint<320>::EqualTo(uint64_t) const;
+template double base_uint<320>::getdouble() const;
+template std::string base_uint<320>::GetHex() const;
+template std::string base_uint<320>::ToString() const;
+template void base_uint<320>::SetHex(const char*);
+template void base_uint<320>::SetHex(const std::string&);
+template unsigned int base_uint<320>::bits() const;
+
 // This implementation directly uses shifts instead of going
 // through an intermediate MPI representation.
 uint256& uint256::SetCompact(uint32_t nCompact, bool* pfNegative, bool* pfOverflow)
@@ -368,4 +385,17 @@ uint64_t uint256::GetHash(const uint256& salt) const
     HashFinal(a, b, c);
 
     return ((((uint64_t)b) << 32) | c);
+}
+
+/** Copies the lower 256 bits into the specified uint256. Returns
+ ** success (true) if the upper bits were clear. */
+bool uint320::TruncateTo256(uint256& b) const
+{
+    int i = 0;
+    for (; i < uint256::WIDTH; ++i)
+        b.pn[i] = pn[i];
+    uint32_t bits = 0;
+    for (; i < WIDTH; ++i)
+        bits |= pn[i];
+    return !bits;
 }

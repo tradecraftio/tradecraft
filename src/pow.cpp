@@ -25,6 +25,107 @@
 #include "uint256.h"
 #include "util.h"
 
+int64_t GetActualTimespan(const CBlockIndex* pindexLast)
+{
+    // This fixes an issue where a 51% attack can change difficulty at will.
+    // Go back the full period unless it's the first retarget after genesis.
+    // Code courtesy of Art Forz
+    int blocks_to_go_back = Params().OriginalInterval();
+    if ((pindexLast->nHeight + 1) == Params().OriginalInterval())
+        blocks_to_go_back = Params().OriginalInterval() - 1;
+
+    // Go back by what we want to be 14 days worth of blocks
+    const CBlockIndex* pindexFirst = pindexLast;
+    for (int i = 0; pindexFirst && i < blocks_to_go_back; i++)
+        pindexFirst = pindexFirst->pprev;
+    assert(pindexFirst);
+
+    return pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
+}
+
+std::pair<int64_t, int64_t> GetOriginalAdjustmentFactor(const CBlockIndex* pindexLast)
+{
+    // Limit adjustment step
+    int64_t actual_timespan = GetActualTimespan(pindexLast);
+    LogPrintf("  actual_timespan = %d  before bounds\n", actual_timespan);
+    if (actual_timespan < Params().OriginalTargetTimespan()/4)
+        actual_timespan = Params().OriginalTargetTimespan()/4;
+    if (actual_timespan > Params().OriginalTargetTimespan()*4)
+        actual_timespan = Params().OriginalTargetTimespan()*4;
+
+    return std::make_pair(Params().OriginalTargetTimespan(), actual_timespan);
+}
+
+int64_t GetFilteredTime(const CBlockIndex* pindexLast)
+{
+    const std::size_t WINDOW = 144;
+    static int32_t filter_coeff[WINDOW] = {
+         -845859,  -459003,  -573589,  -703227,  -848199, -1008841,
+        -1183669, -1372046, -1573247, -1787578, -2011503, -2243311,
+        -2482346, -2723079, -2964681, -3202200, -3432186, -3650186,
+        -3851924, -4032122, -4185340, -4306430, -4389146, -4427786,
+        -4416716, -4349289, -4220031, -4022692, -3751740, -3401468,
+        -2966915, -2443070, -1825548, -1110759,  -295281,   623307,
+         1646668,  2775970,  4011152,  5351560,  6795424,  8340274,
+         9982332, 11717130, 13539111, 15441640, 17417389, 19457954,
+        21554056, 23695744, 25872220, 28072119, 30283431, 32493814,
+        34690317, 36859911, 38989360, 41065293, 43074548, 45004087,
+        46841170, 48573558, 50189545, 51678076, 53028839, 54232505,
+        55280554, 56165609, 56881415, 57422788, 57785876, 57968085,
+        57968084, 57785876, 57422788, 56881415, 56165609, 55280554,
+        54232505, 53028839, 51678076, 50189545, 48573558, 46841170,
+        45004087, 43074548, 41065293, 38989360, 36859911, 34690317,
+        32493814, 30283431, 28072119, 25872220, 23695744, 21554057,
+        19457953, 17417389, 15441640, 13539111, 11717130,  9982332,
+         8340274,  6795424,  5351560,  4011152,  2775970,  1646668,
+          623307,  -295281, -1110759, -1825548, -2443070, -2966915,
+        -3401468, -3751740, -4022692, -4220031, -4349289, -4416715,
+        -4427787, -4389146, -4306430, -4185340, -4032122, -3851924,
+        -3650186, -3432186, -3202200, -2964681, -2723079, -2482346,
+        -2243311, -2011503, -1787578, -1573247, -1372046, -1183669,
+        -1008841,  -848199,  -703227,  -573589,  -459003,  -845858
+    };
+
+    int32_t time_delta[WINDOW];
+
+    size_t idx = 0;
+    const CBlockIndex *pitr = pindexLast;
+    for (; idx!=WINDOW && pitr && pitr->pprev; ++idx, pitr=pitr->pprev)
+        time_delta[idx] = static_cast<int32_t>(pitr->GetBlockTime() - pitr->pprev->GetBlockTime());
+    for (; idx!=WINDOW; ++idx)
+        time_delta[idx] = static_cast<int32_t>(Params().TargetSpacing());
+
+    int64_t filtered_time = 0;
+    for (idx=0; idx<WINDOW; ++idx)
+        filtered_time += (int64_t)filter_coeff[idx] * (int64_t)time_delta[idx];
+
+    return filtered_time;
+}
+
+std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pindexLast)
+{
+    const std::pair<int16_t, int16_t> gain(41, 400); //! 0.1025
+    const std::pair<int16_t, int16_t> limiter(211, 200); //! 1.055
+
+    int64_t filtered_time = GetFilteredTime(pindexLast);
+
+    int64_t numerator;
+    int64_t denominator;
+    if (filtered_time < 597105209444LL) {
+        numerator   = limiter.first;
+        denominator = limiter.second;
+    } else if (filtered_time > 1943831401459LL) {
+        numerator   = limiter.second;
+        denominator = limiter.first;
+    } else {
+        numerator = ((int64_t)(gain.first + gain.second) * Params().TargetSpacing()) << 31;
+        numerator -= (int64_t)gain.first * filtered_time;
+        denominator = ((int64_t)gain.second * Params().TargetSpacing()) << 31;
+    }
+
+    return std::make_pair(numerator, denominator);
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
@@ -33,8 +134,11 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (pindexLast == NULL)
         return nProofOfWorkLimit;
 
+    const bool use_filter = (pindexLast->nHeight >= (Params().DiffAdjustThreshold() - 1));
+    const int64_t interval = use_filter ? Params().FilteredInterval() : Params().OriginalInterval();
+
     // Only change once per interval
-    if ((pindexLast->nHeight+1) % Params().Interval() != 0)
+    if ((pindexLast->nHeight+1) % interval != 0)
     {
         if (Params().AllowMinDifficultyBlocks())
         {
@@ -47,7 +151,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % interval != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }
@@ -55,41 +159,32 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    // This fixes an issue where a 51% attack can change difficulty at will.
-    // Go back the full period unless it's the first retarget after genesis.
-    // Code courtesy of Art Forz
-    int blocks_to_go_back = Params().Interval()-1;
-    if ((pindexLast->nHeight+1) != Params().Interval())
-        blocks_to_go_back = Params().Interval();
+    std::pair<int64_t, int64_t> adjustment_factor;
 
-    // Go back by what we want to be 14 days worth of blocks
-    const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < blocks_to_go_back; i++)
-        pindexFirst = pindexFirst->pprev;
-    assert(pindexFirst);
+    if (use_filter) {
+        adjustment_factor = GetFilteredAdjustmentFactor(pindexLast);
+    } else {
+        adjustment_factor = GetOriginalAdjustmentFactor(pindexLast);
+    }
 
-    // Limit adjustment step
-    int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
-    LogPrintf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
-    if (nActualTimespan < Params().TargetTimespan()/4)
-        nActualTimespan = Params().TargetTimespan()/4;
-    if (nActualTimespan > Params().TargetTimespan()*4)
-        nActualTimespan = Params().TargetTimespan()*4;
+    assert(adjustment_factor.first >= 0);
+    assert(adjustment_factor.second > 0);
 
     // Retarget
     uint256 bnNew;
     uint256 bnOld;
-    bnNew.SetCompact(pindexLast->nBits);
-    bnOld = bnNew;
-    bnNew *= nActualTimespan;
-    bnNew /= Params().TargetTimespan();
+    bnOld.SetCompact(pindexLast->nBits);
+    uint320 bnTmp(bnOld);
+    bnTmp *= uint320(static_cast<uint64_t>(adjustment_factor.second));
+    bnTmp /= uint320(static_cast<uint64_t>(adjustment_factor.first));
+    assert(bnTmp.TruncateTo256(bnNew));
 
     if (bnNew > Params().ProofOfWorkLimit())
         bnNew = Params().ProofOfWorkLimit();
 
     /// debug print
     LogPrintf("GetNextWorkRequired RETARGET\n");
-    LogPrintf("Params().TargetTimespan() = %d    nActualTimespan = %d\n", Params().TargetTimespan(), nActualTimespan);
+    LogPrintf("adjustment_factor = %g\n", (double)adjustment_factor.first/(double)adjustment_factor.second);
     LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
 

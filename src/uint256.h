@@ -342,6 +342,29 @@ public:
     uint32_t GetCompact(bool fNegative = false) const;
 
     uint64_t GetHash(const uint256& salt) const;
+
+    friend class uint320;
+};
+
+/** 320-bit unsigned big integer. */
+class uint320 : public base_uint<320> {
+public:
+    uint320() : base_uint<320>() {}
+    uint320(const base_uint<320>& b) : base_uint<320>(b) {}
+    uint320(uint64_t b) : base_uint<320>(b) {}
+    explicit uint320(const std::string& str) : base_uint<320>(str) {}
+    explicit uint320(const std::vector<unsigned char>& vch) : base_uint<320>(vch) {}
+
+    uint320(const uint256& b)
+    {
+        int i = 0;
+        for (; i < uint256::WIDTH; ++i)
+            pn[i] = b.pn[i];
+        for (; i < WIDTH; ++i)
+            pn[i] = 0;
+    }
+
+    bool TruncateTo256(uint256& b) const;
 };
 
 #endif // FREICOIN_UINT256_H
