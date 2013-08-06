@@ -74,8 +74,8 @@ FUZZ_TARGET(pow, .init = initialize_pow)
         }
         {
             (void)GetBlockProof(current_block);
-            (void)CalculateNextWorkRequired(&current_block, fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, std::numeric_limits<int64_t>::max()), consensus_params);
-            if (current_block.nHeight != std::numeric_limits<int>::max() && current_block.nHeight - (consensus_params.DifficultyAdjustmentInterval() - 1) >= 0) {
+            (void)CalculateNextWorkRequired(&current_block, consensus_params);
+            if (current_block.nHeight != std::numeric_limits<int>::max() && current_block.nHeight - (consensus_params.original_adjust_interval - 1) >= 0) {
                 (void)GetNextWorkRequired(&current_block, &(*block_header), consensus_params);
             }
         }
@@ -116,12 +116,12 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
         nbits = pow_limit.GetCompact();
     }
     // Create one difficulty adjustment period worth of headers
-    for (int height = 0; height < consensus_params.DifficultyAdjustmentInterval(); ++height) {
+    for (int height = 0; height < consensus_params.original_adjust_interval; ++height) {
         CBlockHeader header;
         header.nVersion = version;
         header.nTime = old_time;
         header.nBits = nbits;
-        if (height == consensus_params.DifficultyAdjustmentInterval() - 1) {
+        if (height == consensus_params.original_adjust_interval - 1) {
             header.nTime = new_time;
         }
         auto current_block{std::make_unique<CBlockIndex>(header)};
