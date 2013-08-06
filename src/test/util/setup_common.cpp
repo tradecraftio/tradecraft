@@ -267,7 +267,7 @@ TestChain100Setup::TestChain100Setup(const std::vector<const char*>& extra_args)
         LOCK(::cs_main);
         assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "2577316511514db1e7f50c414eea6e9ccd929035be271a4a7add6d1059516b3e");
+            "0f4772504297a042fb3c7bf7795bb2c0b4ed5caf51cdf8a6547cbffb73e77fd1");
     }
 }
 
@@ -347,6 +347,9 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     // Create an output
     CTxOut output(output_amount, output_destination);
     mempool_txn.vout.push_back(output);
+
+    // Set reference height
+    mempool_txn.lock_height = input_transaction->lock_height;
 
     // Sign the transaction
     // - Add the signing key to a keystore
