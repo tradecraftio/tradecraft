@@ -81,9 +81,13 @@ struct Params {
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
+    /** Difficulty adjustment parameters */
     int64_t nPowTargetSpacing;
-    int64_t nPowTargetTimespan;
-    int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int64_t original_adjust_interval;
+    int64_t filtered_adjust_interval;
+    int64_t diff_adjust_threshold;
+    int64_t OriginalTargetTimespan() const { return original_adjust_interval * nPowTargetSpacing; }
+    int64_t FilteredTargetTimespan() const { return filtered_adjust_interval * nPowTargetSpacing; }
     uint256 nMinimumChainWork;
 };
 } // namespace Consensus
