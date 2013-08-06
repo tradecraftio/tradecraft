@@ -43,12 +43,13 @@ PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
 PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):(\d+)$")
 PATTERN_AGENT = re.compile(
     r"^/Satoshi:("
-    r"0.14.(0|1|2|3|99)|"
-    r"0.15.(0|1|2|99)|"
-    r"0.16.(0|1|2|3|99)|"
-    r"0.17.(0|0.1|1|2|99)|"
-    r"0.18.(0|1|99)|"
-    r"0.19.99"
+    r"13.2.5|"
+    r"13.2.5.1|"
+    r"14.3.0.1|"
+    r"15.2|"
+    r"16.3|"
+    r"17.2|"
+    r"18.1"
     r")")
 
 def parseline(line):
