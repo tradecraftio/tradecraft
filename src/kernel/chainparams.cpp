@@ -132,10 +132,10 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
+        pchMessageStart[0] = 0x2c;
+        pchMessageStart[1] = 0xfe;
+        pchMessageStart[2] = 0x7e;
+        pchMessageStart[3] = 0x6d;
         nDefaultPort = 8639;
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 620;
@@ -151,15 +151,12 @@ public:
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("seed.bitcoin.sipa.be."); // Pieter Wuille, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("dnsseed.bluematt.me."); // Matt Corallo, only supports x9
-        vSeeds.emplace_back("dnsseed.freicoin.dashjr-list-of-p2p-nodes.us."); // Luke Dashjr
-        vSeeds.emplace_back("seed.freicoin.jonasschnelli.ch."); // Jonas Schnelli, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("seed.frc.petertodd.net."); // Peter Todd, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("seed.freicoin.sprovoost.nl."); // Sjors Provoost
-        vSeeds.emplace_back("dnsseed.emzy.de."); // Stephan Oeste
-        vSeeds.emplace_back("seed.freicoin.wiz.biz."); // Jason Maurice
-        vSeeds.emplace_back("seed.mainnet.achownodes.xyz."); // Ava Chow, only supports x1, x5, x9, x49, x809, x849, xd, x400, x404, x408, x448, xc08, xc48, x40c
+        vSeeds.emplace_back("seed.freico.in"); // Mark Friedenbach
+        vSeeds.emplace_back("fledge.freico.in"); // @galambo
+        vSeeds.emplace_back("dnsseed.sicanet.net"); // Fredrik Bodin
+        vSeeds.emplace_back("ap-northeast-1.aws.seed.tradecraft.io");
+        vSeeds.emplace_back("eu-west-1.aws.seed.tradecraft.io");
+        vSeeds.emplace_back("us-west-2.aws.seed.tradecraft.io");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
@@ -293,10 +290,10 @@ public:
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
         consensus.diff_adjust_threshold = 144;
 
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
+        pchMessageStart[0] = 0x5e;
+        pchMessageStart[1] = 0xd6;
+        pchMessageStart[2] = 0x7c;
+        pchMessageStart[3] = 0xf3;
         nDefaultPort = 18639;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 93;
@@ -329,12 +326,6 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet-seed.freicoin.jonasschnelli.ch.");
-        vSeeds.emplace_back("seed.tfrc.petertodd.net.");
-        vSeeds.emplace_back("seed.testnet.freicoin.sprovoost.nl.");
-        vSeeds.emplace_back("testnet-seed.bluematt.me."); // Just a static list of stable node(s), only supports x9
-        vSeeds.emplace_back("seed.testnet.achownodes.xyz."); // Ava Chow, only supports x1, x5, x9, x49, x809, x849, xd, x400, x404, x408, x448, xc08, xc48, x40c
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -546,10 +537,10 @@ public:
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
         consensus.diff_adjust_threshold = std::numeric_limits<int64_t>::max();
 
-        pchMessageStart[0] = 0xfa;
-        pchMessageStart[1] = 0xbf;
-        pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xda;
+        pchMessageStart[0] = 0xed;
+        pchMessageStart[1] = 0x99;
+        pchMessageStart[2] = 0x9c;
+        pchMessageStart[3] = 0xf6;
         nDefaultPort = 28639;
         nPruneAfterHeight = opts.fastprune ? 100 : 1000;
         m_assumed_blockchain_size = 0;

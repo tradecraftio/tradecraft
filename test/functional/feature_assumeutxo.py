@@ -100,8 +100,8 @@ class AssumeutxoTest(FreicoinTestFramework):
         self.log.info("  - snapshot file with mismatching network magic")
         invalid_magics = [
             # magic, name, real
-            [0xf9beb4d9, "main", True],
-            [0x0b110907, "test", True],
+            [0x2cfe7e6d, "main", True],
+            [0x5ed67cf3, "test", True],
             [0x0a03cf40, "signet", True],
             [0x00000000, "", False],
             [0xffffffff, "", False],
