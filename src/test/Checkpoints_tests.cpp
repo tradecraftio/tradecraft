@@ -35,21 +35,21 @@ BOOST_FIXTURE_TEST_SUITE(Checkpoints_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(sanity)
 {
     const Checkpoints::CCheckpointData& checkpoints = Params(CBaseChainParams::MAIN).Checkpoints();
-    uint256 p11111 = uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d");
-    uint256 p134444 = uint256S("0x00000000000005b12ffd4cd315cd34ffd4a594f430ac814c91184a0d42d2b0fe");
-    BOOST_CHECK(Checkpoints::CheckBlock(checkpoints, 11111, p11111));
-    BOOST_CHECK(Checkpoints::CheckBlock(checkpoints, 134444, p134444));
+    uint256 p10080 = uint256S("0x00000000003ff9c4b806639ec4376cc9acafcdded0e18e9dbcc2fc42e8e72331");
+    uint256 p28336 = uint256S("0x000000000000cc374a984c0deec9aed6fff764918e2cfd4be6670dd4d5292ccb");
+    BOOST_CHECK(Checkpoints::CheckBlock(checkpoints, 10080, p10080));
+    BOOST_CHECK(Checkpoints::CheckBlock(checkpoints, 28336, p28336));
 
     
     // Wrong hashes at checkpoints should fail:
-    BOOST_CHECK(!Checkpoints::CheckBlock(checkpoints, 11111, p134444));
-    BOOST_CHECK(!Checkpoints::CheckBlock(checkpoints, 134444, p11111));
+    BOOST_CHECK(!Checkpoints::CheckBlock(checkpoints, 10080, p28336));
+    BOOST_CHECK(!Checkpoints::CheckBlock(checkpoints, 28336, p10080));
 
     // ... but any hash not at a checkpoint should succeed:
-    BOOST_CHECK(Checkpoints::CheckBlock(checkpoints, 11111+1, p134444));
-    BOOST_CHECK(Checkpoints::CheckBlock(checkpoints, 134444+1, p11111));
+    BOOST_CHECK(Checkpoints::CheckBlock(checkpoints, 10080+1, p28336));
+    BOOST_CHECK(Checkpoints::CheckBlock(checkpoints, 28336+1, p10080));
 
-    BOOST_CHECK(Checkpoints::GetTotalBlocksEstimate(checkpoints) >= 134444);
+    BOOST_CHECK(Checkpoints::GetTotalBlocksEstimate(checkpoints) >= 28336);
 }    
 
 BOOST_AUTO_TEST_SUITE_END()
