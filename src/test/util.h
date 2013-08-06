@@ -31,7 +31,7 @@ extern const std::string ADDRESS_BCRT1_UNSPENDABLE;
 // Lower-level utils //
 
 /** Returns the generated coin */
-CTxIn MineBlock(const CScript& coinbase_scriptPubKey);
+std::pair<CTxIn, uint32_t> MineBlock(const CScript& coinbase_scriptPubKey);
 /** Prepare a block to be mined */
 std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey);
 
@@ -43,7 +43,7 @@ void importaddress(CWallet& wallet, const std::string& address);
 /** Returns a new address from the wallet */
 std::string getnewaddress(CWallet& w);
 /** Returns the generated coin */
-CTxIn generatetoaddress(const std::string& address);
+std::pair<CTxIn, uint32_t> generatetoaddress(const std::string& address);
 
 /**
  * Increment a string. Useful to enumerate all fixed length strings with
