@@ -81,8 +81,8 @@ class UTXOSetHashTest(FreicoinTestFramework):
         assert_equal(finalized[::-1].hex(), node_muhash)
 
         self.log.info("Test deterministic UTXO set hash results")
-        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "dcd5ce20e6bcc4dd2b5a3798a89cf168282c4661e8a1d114201959e0b0134acb")
-        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "74dc4fedf32e42e35d02ce929af92324941fd2d877d4a674da8c94a3824ba4bf")
+        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "5ca1877d420c43cbb573dcfbef518d66a86f7b4d3befe52b75b5354aa268f8b0")
+        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "a6438455ceb7e58ac8caa2041642e2c6d0bb9747dabb6437b224c97e81b2cd4a")
 
     def run_test(self):
         self.test_muhash_implementation()
