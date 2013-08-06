@@ -191,6 +191,7 @@ def create_coinbase(height, pubkey=None, *, script_pubkey=None, extra_output_scr
         coinbaseoutput2.nValue = 0
         coinbaseoutput2.scriptPubKey = extra_output_script
         coinbase.vout.append(coinbaseoutput2)
+    coinbase.lock_height = height
     coinbase.calc_sha256()
     return coinbase
 
