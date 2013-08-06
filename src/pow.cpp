@@ -55,9 +55,16 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
+    // This fixes an issue where a 51% attack can change difficulty at will.
+    // Go back the full period unless it's the first retarget after genesis.
+    // Code courtesy of Art Forz
+    int blocks_to_go_back = Params().Interval()-1;
+    if ((pindexLast->nHeight+1) != Params().Interval())
+        blocks_to_go_back = Params().Interval();
+
     // Go back by what we want to be 14 days worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < Params().Interval()-1; i++)
+    for (int i = 0; pindexFirst && i < blocks_to_go_back; i++)
         pindexFirst = pindexFirst->pprev;
     assert(pindexFirst);
 
