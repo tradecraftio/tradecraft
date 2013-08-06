@@ -23,6 +23,14 @@
 
 BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 
+/**
+ * The bitcoin version of CalculateNextWorkRequired is stateless, which the
+ * following tests are written to take advantage of.  However filtered time
+ * intervals necessarily cannot be stateless, so in Freicoin we require that the
+ * first parameter be an actual connected CBlockIndex.  That unfortunately
+ * invalidates these tests.
+ */
+#if 0
 /* Test calculation of next difficulty target with no constraints applying */
 BOOST_AUTO_TEST_CASE(get_next_work)
 {
@@ -89,6 +97,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
     unsigned int invalid_nbits = expected_nbits+1;
     BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
 {
@@ -175,7 +184,7 @@ void sanity_check_chainparams(const ArgsManager& args, std::string chainName)
     BOOST_CHECK_EQUAL(consensus.hashGenesisBlock, chainParams->GenesisBlock().GetHash());
 
     // target timespan is an even multiple of spacing
-    BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan % consensus.nPowTargetSpacing, 0);
+    BOOST_CHECK_EQUAL(consensus.OriginalTargetTimespan() % consensus.nPowTargetSpacing, 0);
 
     // genesis nBits is positive, doesn't overflow and is lower than powLimit
     arith_uint256 pow_compact;
@@ -188,7 +197,7 @@ void sanity_check_chainparams(const ArgsManager& args, std::string chainName)
     // check max target * 4*nPowTargetTimespan doesn't overflow -- see pow.cpp:CalculateNextWorkRequired()
     if (!consensus.fPowNoRetargeting) {
         arith_uint256 targ_max("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-        targ_max /= consensus.nPowTargetTimespan*4;
+        targ_max /= consensus.OriginalTargetTimespan()*4;
         BOOST_CHECK(UintToArith256(consensus.powLimit) < targ_max);
     }
 }
