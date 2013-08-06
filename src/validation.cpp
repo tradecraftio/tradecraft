@@ -2532,6 +2532,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(time_connect),
              Ticks<MillisecondsDouble>(time_connect) / num_blocks_total);
 
+    if (block.vtx[0]->lock_height != pindex->nHeight) {
+        LogPrintf("ERROR: coinbase lock_height != block height (%d != %d)\n", block.vtx[0]->lock_height, pindex->nHeight);
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-lock-height");
+    }
+
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
     if (block.vtx[0]->GetValueOut() > blockReward) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);

@@ -152,7 +152,7 @@ class GetBlockFromPeerTest(FreicoinTestFramework):
         self.sync_blocks([self.nodes[0], pruned_node])
         pruneheight += 198
         assert_equal(pruned_node.pruneblockchain(700), pruneheight)
-        assert_equal(pruned_node.getblock(pruned_block)["hash"], "10c58f58b37fdaf5f680f67ecdd08de6847cbc750f415e7d643ebadd7c0bd26e")
+        assert_equal(pruned_node.getblock(pruned_block)["hash"], "75cca3cdf141b50c474a1a3f2fb83ba8aa9c1f3e536998351ea4ed5ecd8f73f9")
 
         self.log.info("Fetched block can be pruned again when prune height exceeds the height of the tip at the time when the block was fetched")
         self.generate(self.nodes[0], 208, sync_fun=self.no_op)
