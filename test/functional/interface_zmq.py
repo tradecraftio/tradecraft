@@ -26,7 +26,7 @@ from test_framework.util import (
 )
 from io import BytesIO
 
-ADDRESS = "tcp://127.0.0.1:28332"
+ADDRESS = "tcp://127.0.0.1:28102"
 
 class ZMQSubscriber:
     def __init__(self, socket, topic):
