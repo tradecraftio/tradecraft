@@ -150,7 +150,7 @@ class InitStressTest(FreicoinTestFramework):
                     # Since the genesis block is not checked by -checkblocks, the
                     # perturbation window must be chosen such that a higher block
                     # in blk*.dat is affected.
-                    tweaked_contents[150:350] = b'1' * 200
+                    tweaked_contents[1350:1550] = b'1' * 200
                 with open(target_file, "wb") as tf_write:
                     tf_write.write(bytes(tweaked_contents))
 

@@ -172,7 +172,7 @@ class GetblockstatsTest(FreicoinTestFramework):
                                 self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee', f'aaa{inv_sel_stat}'])
         # Mainchain's genesis block shouldn't be found on regtest
         assert_raises_rpc_error(-5, 'Block not found', self.nodes[0].getblockstats,
-                                hash_or_height='000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
+                                hash_or_height='000000005b1e3d23ecfd2dd4a6e1a35238aa0392c0a8528c40df52376d7efe2c')
 
         # Invalid number of args
         assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, '00', 1, 2)
@@ -180,9 +180,9 @@ class GetblockstatsTest(FreicoinTestFramework):
 
         self.log.info('Test block height 0')
         genesis_stats = self.nodes[0].getblockstats(0)
-        assert_equal(genesis_stats["blockhash"], "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")
-        assert_equal(genesis_stats["utxo_increase"], 1)
-        assert_equal(genesis_stats["utxo_size_inc"], 117)
+        assert_equal(genesis_stats["blockhash"], "67756db06265141574ff8e7c3f97ebd57c443791e0ca27ee8b03758d6056edb8")
+        assert_equal(genesis_stats["utxo_increase"], 8)
+        assert_equal(genesis_stats["utxo_size_inc"], 1493)
         assert_equal(genesis_stats["utxo_increase_actual"], 0)
         assert_equal(genesis_stats["utxo_size_inc_actual"], 0)
 
