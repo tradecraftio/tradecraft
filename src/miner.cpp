@@ -156,6 +156,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
         CCoinsViewCache view(pcoinsTip);
 
+        // lock_height of coinbase must match block height
+        txNew.nVersion = 2;
+        txNew.lock_height = nHeight;
+
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
         map<uint256, vector<COrphan*> > mapDependers;
