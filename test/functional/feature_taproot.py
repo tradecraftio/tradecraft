@@ -1550,12 +1550,13 @@ class TaprootTest(FreicoinTestFramework):
         # Deterministically mine coins to OP_TRUE in block 1
         assert_equal(self.nodes[0].getblockcount(), 0)
         coinbase = CTransaction()
-        coinbase.nVersion = 1
+        coinbase.nVersion = 2
         coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), SEQUENCE_FINAL)]
         coinbase.vout = [CTxOut(0, CScript([OP_1])), CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
+        coinbase.lock_height = self.nodes[0].getblockcount() + 1
         coinbase.rehash()
-        assert_equal(coinbase.hash, "25bfc55241721f03f90f4340cbae3a9b346789d32829c98075622680748f9e39")
+        assert_equal(coinbase.hash, "82ae6784c6503acb5667dc9ee1322b6494e480a4deb10ae22ebbe02b02f245e1")
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
         block.rehash()
@@ -1639,6 +1640,7 @@ class TaprootTest(FreicoinTestFramework):
         txn = []
         lasttxid = coinbase.sha256
         amount = 5000000000
+        refheight = coinbase.lock_height
         for i, spk in enumerate(old_spks + tap_spks):
             val = 42000000 * (i + 7)
             tx = CTransaction()
@@ -1650,9 +1652,11 @@ class TaprootTest(FreicoinTestFramework):
             if i & 1:
                 tx.vout = list(reversed(tx.vout))
             tx.nLockTime = 0
+            tx.lock_height = refheight
             tx.rehash()
             amount -= val
             lasttxid = tx.sha256
+            refheight = tx.lock_height
             txn.append(tx)
             spend_info[spk]['prevout'] = COutPoint(tx.sha256, i & 1)
             spend_info[spk]['utxo'] = SpentOutput(CTxOut(val, spk), tx.lock_height)
@@ -1710,6 +1714,7 @@ class TaprootTest(FreicoinTestFramework):
         for i, spk in enumerate(input_spks):
             tx.vin.append(CTxIn(spend_info[spk]['prevout'], CScript(), sequences[i]))
             inputs.append(spend_info[spk]['utxo'])
+            tx.lock_height = max(tx.lock_height, spend_info[spk]['utxo'].refheight)
         tx.vout.append(CTxOut(1000000000, old_spks[1]))
         tx.vout.append(CTxOut(3410000000, pubs[98]))
         tx.nLockTime = 500000000
@@ -1768,7 +1773,7 @@ class TaprootTest(FreicoinTestFramework):
         aux = tx_test.setdefault("auxiliary", {})
         aux['fullySignedTx'] = tx.serialize().hex()
         keypath_tests.append(tx_test)
-        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "7e1f4a41bf851be8acd4532b70e30bbebfb1e22b03e0ae969076928e41b3ed91")
+        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "125c1896f92381e742efc63524f0fb40fdaac1ff1acdd4a99b7a7f6d579d4b1e")
         # Mine the spending transaction
         self.block_submit(self.nodes[0], [tx], "Spending txn", None, sigops_weight=10000, accept=True, witness=True)
 

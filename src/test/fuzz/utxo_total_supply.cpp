@@ -122,7 +122,7 @@ FUZZ_TARGET(utxo_total_supply)
         current_block->vtx.front() = MakeTransactionRef(tx);
     }
     current_block->hashMerkleRoot = BlockMerkleRoot(*current_block);
-    assert(!MineBlock(node, current_block).IsNull());
+    assert(!MineBlock(node, current_block).first.IsNull());
     circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());
 
     assert(ActiveHeight() == 1);
@@ -153,7 +153,7 @@ FUZZ_TARGET(utxo_total_supply)
             [&] {
                 // Append the current block to the active chain
                 node::RegenerateCommitments(*current_block, chainman);
-                const bool was_valid = !MineBlock(node, current_block).IsNull();
+                const bool was_valid = !MineBlock(node, current_block).first.IsNull();
 
                 const auto prev_utxo_stats = utxo_stats;
                 if (was_valid) {
