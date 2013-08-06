@@ -391,6 +391,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     mtx_child1.vout.resize(1);
     mtx_child1.vout[0].nValue = CAmount(48 * COIN);
     mtx_child1.vout[0].scriptPubKey = child_locking_script;
+    mtx_child1.lock_height = ptx_parent->lock_height;
 
     CMutableTransaction mtx_child2{mtx_child1};
     mtx_child2.vin[0].scriptWitness = witness2;
@@ -536,6 +537,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     mtx_parent2_v1.vout.resize(1);
     mtx_parent2_v1.vout[0].nValue = CAmount(48 * COIN);
     mtx_parent2_v1.vout[0].scriptPubKey = acs_spk;
+    mtx_parent2_v1.lock_height = ptx_grandparent2->lock_height;
 
     CMutableTransaction mtx_parent2_v2{mtx_parent2_v1};
     mtx_parent2_v2.vin[0].scriptWitness = parent2_witness2;
@@ -568,6 +570,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     mtx_mixed_child.vin[1].scriptWitness = acs_witness;
     mtx_mixed_child.vin[2].scriptWitness = acs_witness;
     mtx_mixed_child.vout.push_back(CTxOut((48 + 49 + 50 - 1) * COIN, mixed_child_spk));
+    mtx_mixed_child.lock_height = ptx_parent3->lock_height;
     CTransactionRef ptx_mixed_child = MakeTransactionRef(mtx_mixed_child);
     package_mixed.push_back(ptx_mixed_child);
 
