@@ -48,16 +48,16 @@ class DumptxoutsetTest(FreicoinTestFramework):
         # Blockhash should be deterministic based on mocked time.
         assert_equal(
             out['base_hash'],
-            '7128e7f80c841e6327f9e5e7f8813f42d1068a318240fd150bca1bddabaa0c4c')
+            '4779c9a42d9f420db217a2ab3a77596f55d6da7a2a4b98420fb161ad5c801341')
 
         with open(str(expected_path), 'rb') as f:
             digest = hashlib.sha256(f.read()).hexdigest()
             # UTXO snapshot hash should be deterministic based on mocked time.
             assert_equal(
-                digest, 'e93e4c9f31d0cb75a613086bc7bb13618e0424c9a1ebfb5055a36c892ba75d64')
+                digest, '4ce94065f9241ac5474e481f374366d19e66fd21ebbaf0cc4e75ab8d300862b2')
 
         assert_equal(
-            out['txoutset_hash'], '387c1d3a4abf990a41bd63e7290cbd779758a4eb245162416ec1f0103b394327')
+            out['txoutset_hash'], '3fb15261c77f2f2bb79635a37f161bd505ffe5ec94f50059e904986d01c51ace')
         assert_equal(out['nchaintx'], 101)
 
         # Specifying a path to an existing or invalid file will fail.
