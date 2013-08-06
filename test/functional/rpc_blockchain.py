@@ -454,11 +454,10 @@ class BlockchainTest(FreicoinTestFramework):
             textwrap.dedent("""
             Wrong type passed:
             {
-                "Position 1 (nblocks)": "JSON value of type string is not of expected type number",
-                "Position 2 (height)": "JSON value of type array is not of expected type number"
+                "Position 1 (height)": "JSON value of type string is not of expected type number"
             }
             """).strip(),
-            lambda: self.nodes[0].getnetworkhashps("a", []),
+            lambda: self.nodes[0].getnetworkhashps("a"),
         )
         # This should be 2 hashes every 10 minutes or 1/300
         assert abs(hashes_per_second * 300 - 1) < 0.0001
