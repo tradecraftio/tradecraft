@@ -65,6 +65,7 @@ The Freicoin repo's [root README](https://github.com/freicoin/freicoin/blob/mast
 - [Files](files.md)
 - [Tor Support](tor.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)
+- [Systemd](systemd.md)
 
 License
 ---------------------
