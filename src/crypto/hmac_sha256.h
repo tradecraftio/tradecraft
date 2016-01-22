@@ -27,6 +27,7 @@ public:
         return *this;
     }
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
+    void Midstate(unsigned char hash[OUTPUT_SIZE*2], unsigned char* buffer, uint64_t* length);
 };
 
 #endif // BITCOIN_CRYPTO_HMAC_SHA256_H
