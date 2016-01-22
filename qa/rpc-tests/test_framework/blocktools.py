@@ -41,15 +41,20 @@ WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 def add_witness_commitment(block, nonce=0):
     # First calculate the merkle root of the block's
     # transactions, with witnesses.
-    witness_nonce = nonce
+    witness_path = 0x01
+    witness_branch = b''
+    if nonce:
+        witness_path = 0x02
+        witness_branch = ser_uint256(nonce)
     witness_root = block.calc_witness_merkle_root()
-    witness_commitment = uint256_from_str(fastHash256(ser_uint256(witness_root), ser_uint256(witness_nonce)))
-    # witness_nonce should go to coinbase witness.
+    if nonce:
+        witness_root = uint256_from_str(fastHash256(ser_uint256(witness_root), witness_branch))
+    # witness_branch should go to coinbase witness.
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
-    block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
+    block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [witness_branch]
 
     # witness commitment is the last such output in coinbase
-    output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
+    output_data = WITNESS_COMMITMENT_HEADER + bytes((witness_path,)) + ser_uint256(witness_root)
     block.vtx[0].vout.append(CTxOut(0, CScript([output_data])))
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
