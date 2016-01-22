@@ -89,6 +89,16 @@ def ripemd160(s):
 def hash256(s):
     return sha256(sha256(s))
 
+from .sha256 import SHA256
+_FastHash256Tag = sha256(b'')
+def fastHash256(l,r):
+    return (SHA256()
+         .update(_FastHash256Tag)
+         .update(_FastHash256Tag)
+         .update(l)
+         .update(r)
+        ).midstate()[0]
+
 def ser_compact_size(l):
     r = b""
     if l < 253:
@@ -640,6 +650,19 @@ class CBlock(CBlockHeader):
             hashes = newhashes
         return uint256_from_str(hashes[0])
 
+    # Calculate the Merkle root using fast Merkle trees, given a
+    # vector of transaction hashes.
+    def get_fast_merkle_root(self, hashes):
+        while len(hashes) > 1:
+            newhashes = []
+            for i in range(0, len(hashes), 2):
+                if i < len(hashes)-1:
+                    newhashes.append(fastHash256(hashes[i], hashes[i+1]))
+                else:
+                    newhashes.append(hashes[i])
+            hashes = newhashes
+        return uint256_from_str(hashes[0])
+
     def calc_merkle_root(self):
         hashes = []
         for tx in self.vtx:
@@ -656,7 +679,7 @@ class CBlock(CBlockHeader):
             # Calculate the hashes with witness data
             hashes.append(ser_uint256(tx.calc_sha256(True)))
 
-        return self.get_merkle_root(hashes)
+        return self.get_fast_merkle_root(hashes)
 
     def is_valid(self):
         self.calc_sha256()
