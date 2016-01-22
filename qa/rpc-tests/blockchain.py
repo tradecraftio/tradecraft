@@ -70,7 +70,7 @@ class BlockchainTest(FreicoinTestFramework):
         assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)
         assert_equal(res['txouts'], 400)
-        assert_equal(res['bytes_serialized'], 21997),
+        assert_equal(res['bytes_serialized'], 22197),
         assert_equal(len(res['bestblock']), 64)
         assert_equal(len(res['hash_serialized']), 64)
 
