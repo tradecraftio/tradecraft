@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *ExpectedAssumeutxo(110, *params);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "53e2e75ec15d47cf141e71fd0935da2e657aabd47de0135fa5c0805305d1c531");
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "c953a12de2143bdad9f341b1b341587b6f76893d4d3ca8b76a20348335a33f37");
     BOOST_CHECK_EQUAL(out110.nChainTx, 110U);
 
     const auto out210 = *ExpectedAssumeutxo(200, *params);
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         assert(!block.vtx.empty() && block.vtx[0]->IsCoinBase() && !block.vtx[0]->vout.empty());
 
         CMutableTransaction mtx{*block.vtx[0]};
-        CHash256().Write(commitment).Write(std::vector<unsigned char>(32, 0x00)).Finalize(commitment);
+        commitment = MerkleHash_Sha256Midstate(commitment, uint256());
         memcpy(&mtx.vout[0].scriptPubKey[5], commitment.begin(), 32);
         block.vtx[0] = MakeTransactionRef(mtx);
     };
