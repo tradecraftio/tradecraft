@@ -259,8 +259,7 @@ class SegWitTest(FreicoinTestFramework):
         coinbase_tx = self.nodes[2].gettransaction(txid=coinbase_txid, verbose=True)
         witnesses = coinbase_tx["decoded"]["vin"][0]["txinwitness"]
         assert_equal(len(witnesses), 1)
-        assert_is_hex_string(witnesses[0])
-        assert_equal(witnesses[0], '00' * 32)
+        assert_equal(witnesses[0], '')
 
         self.log.info("Verify witness txs without witness data are invalid after the fork")
         self.fail_accept(self.nodes[2], 'non-mandatory-script-verify-flag (Witness program hash mismatch)', wit_ids[NODE_2][P2WPKH][2], sign=False)
