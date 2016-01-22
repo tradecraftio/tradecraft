@@ -3736,8 +3736,8 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
     std::vector<unsigned char> ret(32, 0x00);
     if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         if (commitpos == -1) {
-            uint256 witnessroot = BlockWitnessMerkleRoot(block, NULL);
-            CHash256().Write(witnessroot.begin(), 32).Write(&ret[0], 32).Finalize(witnessroot.begin());
+            uint256 witnessroot = BlockWitnessMerkleRoot(block);
+            MerkleHash_Sha256Midstate(witnessroot, witnessroot, uint256(ret));
             CTxOut out;
             out.SetReferenceValue(0);
             out.scriptPubKey.resize(37);
@@ -3835,15 +3835,17 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     if (IsWitnessEnabled(pindexPrev, consensusParams)) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
-            bool malleated = false;
-            uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
+            uint256 hashWitness = BlockWitnessMerkleRoot(block);
             // The malleation check is ignored; as the transaction tree itself
             // already does not permit it, it is impossible to trigger in the
-            // witness tree.
+            // witness tree.  If that weren't enough, the fast Merkle trees used
+            // structurally prevent malleation from being possible, unlike the
+            // legacy Merkle trees used for the stripped transaction tree.
             if (block.vtx[0].wit.vtxinwit.size() != 1 || block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.size() != 1 || block.vtx[0].wit.vtxinwit[0].scriptWitness.stack[0].size() != 32) {
                 return state.DoS(100, error("%s : invalid witness nonce size", __func__), REJECT_INVALID, "bad-witness-nonce-size", true);
             }
-            CHash256().Write(hashWitness.begin(), 32).Write(&block.vtx[0].wit.vtxinwit[0].scriptWitness.stack[0][0], 32).Finalize(hashWitness.begin());
+            uint256 hashNonce(block.vtx[0].wit.vtxinwit[0].scriptWitness.stack[0]);
+            MerkleHash_Sha256Midstate(hashWitness, hashWitness, hashNonce);
             if (memcmp(hashWitness.begin(), &block.vtx[0].vout[commitpos].scriptPubKey[5], 32)) {
                 return state.DoS(100, error("%s : witness merkle commitment mismatch", __func__), REJECT_INVALID, "bad-witness-merkle-match", true);
             }
