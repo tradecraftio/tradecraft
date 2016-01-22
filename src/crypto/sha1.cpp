@@ -198,11 +198,22 @@ void CSHA1::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteBE64(sizedesc, bytes << 3);
     Write(pad, 1 + ((119 - (bytes % 64)) % 64));
     Write(sizedesc, 8);
+    Midstate(hash, NULL, NULL);
+}
+
+void CSHA1::Midstate(unsigned char hash[OUTPUT_SIZE], unsigned char* buffer, size_t* length)
+{
     WriteBE32(hash, s[0]);
     WriteBE32(hash + 4, s[1]);
     WriteBE32(hash + 8, s[2]);
     WriteBE32(hash + 12, s[3]);
     WriteBE32(hash + 16, s[4]);
+    if (length) {
+        *length = bytes << 3;
+    }
+    if (buffer) {
+        memcpy(buffer, buf, bytes % 64);
+    }
 }
 
 CSHA1& CSHA1::Reset()

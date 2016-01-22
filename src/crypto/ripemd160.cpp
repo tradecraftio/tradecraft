@@ -291,11 +291,22 @@ void CRIPEMD160::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteLE64(sizedesc, bytes << 3);
     Write(pad, 1 + ((119 - (bytes % 64)) % 64));
     Write(sizedesc, 8);
+    Midstate(hash, NULL, NULL);
+}
+
+void CRIPEMD160::Midstate(unsigned char hash[OUTPUT_SIZE], unsigned char* buffer, size_t* length)
+{
     WriteLE32(hash, s[0]);
     WriteLE32(hash + 4, s[1]);
     WriteLE32(hash + 8, s[2]);
     WriteLE32(hash + 12, s[3]);
     WriteLE32(hash + 16, s[4]);
+    if (length) {
+        *length = bytes << 3;
+    }
+    if (buffer) {
+        memcpy(buffer, buf, bytes % 64);
+    }
 }
 
 CRIPEMD160& CRIPEMD160::Reset()

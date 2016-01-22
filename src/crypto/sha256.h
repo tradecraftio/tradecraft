@@ -36,6 +36,7 @@ public:
     CSHA256();
     CSHA256& Write(const unsigned char* data, size_t len);
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
+    void Midstate(unsigned char hash[OUTPUT_SIZE], unsigned char* buffer, size_t* length);
     CSHA256& Reset();
 };
 

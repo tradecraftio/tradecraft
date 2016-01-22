@@ -203,6 +203,11 @@ void CSHA512::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteBE64(sizedesc + 8, bytes << 3);
     Write(pad, 1 + ((239 - (bytes % 128)) % 128));
     Write(sizedesc, 16);
+    Midstate(hash, NULL, NULL);
+}
+
+void CSHA512::Midstate(unsigned char hash[OUTPUT_SIZE], unsigned char* buffer, size_t* length)
+{
     WriteBE64(hash, s[0]);
     WriteBE64(hash + 8, s[1]);
     WriteBE64(hash + 16, s[2]);
@@ -211,6 +216,12 @@ void CSHA512::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteBE64(hash + 40, s[5]);
     WriteBE64(hash + 48, s[6]);
     WriteBE64(hash + 56, s[7]);
+    if (length) {
+        *length = bytes << 3;
+    }
+    if (buffer) {
+        memcpy(buffer, buf, bytes % 128);
+    }
 }
 
 CSHA512& CSHA512::Reset()
