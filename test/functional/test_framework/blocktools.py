@@ -34,6 +34,7 @@ from .messages import (
     CTxInWitness,
     CTxOut,
     SEQUENCE_FINAL,
+    fastHash256,
     hash256,
     ser_uint256,
     tx_from_hex,
@@ -128,7 +129,7 @@ def add_final_tx(info, block):
     }]
 
 def get_witness_script(witness_root, witness_nonce):
-    witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
+    witness_commitment = uint256_from_str(fastHash256(ser_uint256(witness_root), ser_uint256(witness_nonce)))
     output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
     return CScript([output_data])
 
@@ -141,6 +142,7 @@ def add_witness_commitment(block, nonce=0):
     # transactions, with witnesses.
     witness_nonce = nonce
     witness_root = block.calc_witness_merkle_root()
+    witness_commitment = uint256_from_str(fastHash256(ser_uint256(witness_root), ser_uint256(witness_nonce)))
     # witness_nonce should go to coinbase witness.
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
