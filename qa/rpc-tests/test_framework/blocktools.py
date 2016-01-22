@@ -43,7 +43,7 @@ def add_witness_commitment(block, nonce=0):
     # transactions, with witnesses.
     witness_nonce = nonce
     witness_root = block.calc_witness_merkle_root()
-    witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(witness_nonce)))
+    witness_commitment = uint256_from_str(fastHash256(ser_uint256(witness_root), ser_uint256(witness_nonce)))
     # witness_nonce should go to coinbase witness.
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
