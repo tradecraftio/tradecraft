@@ -384,7 +384,7 @@ bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int f
  * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
  * instead of being performed inline.
  */
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, const Consensus::Params& params, bool fScriptChecks,
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, const Consensus::Params& params, int per_input_adjustment, bool fScriptChecks,
                  unsigned int flags, bool cacheStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
@@ -402,7 +402,7 @@ namespace Consensus {
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int nSpendHeight);
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int per_input_adjustment, int nSpendHeight);
 
 } // namespace Consensus
 

@@ -87,6 +87,7 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.truncate_inputs_activation_height = 158425;
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
         consensus.BIP66Height = 158425; // 0000000000000799b28bbc61b9a93770af898ffc621174e70480656f0382a020
@@ -203,6 +204,7 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.truncate_inputs_activation_height = 1;
         consensus.BIP34Height = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.BIP66Height = 1; // 0000000000002076358270b88c18cce6a0886c870e6167776e40d167bd01b49f
@@ -304,6 +306,7 @@ public:
         consensus.equilibrium_height = 1; // disable
         consensus.equilibrium_monetary_base = 0;
         consensus.initial_excess_subsidy = 0;
+        consensus.truncate_inputs_activation_height = 1;
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
         consensus.BIP34Hash = uint256();
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
