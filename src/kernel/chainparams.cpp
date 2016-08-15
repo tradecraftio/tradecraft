@@ -90,6 +90,7 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.truncate_inputs_activation_height = 158425;
         consensus.BIP34Height = 1;
         consensus.BIP66Height = 158425; // 0000000000000799b28bbc61b9a93770af898ffc621174e70480656f0382a020
         consensus.LockTimeHeight = 258048; // 000000000000002b7c1e4b345d09ed56475bd7e9d84f1bb43ea13195aa7719b6
@@ -220,6 +221,7 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.truncate_inputs_activation_height = 1;
         consensus.BIP34Height = std::numeric_limits<int>::max(); // BIP34 never activated on Freicoin's testnet
         consensus.BIP66Height = 1; // 0000000000002076358270b88c18cce6a0886c870e6167776e40d167bd01b49f
         consensus.LockTimeHeight = 1512; // 00000000000019f427d3b84e5d97485fa957deb7c5d7df6ca7a60f5739b91d3a
@@ -456,6 +458,7 @@ public:
         consensus.equilibrium_height = 0; // disable
         consensus.equilibrium_monetary_base = 0;
         consensus.initial_excess_subsidy = 0;
+        consensus.truncate_inputs_activation_height = 1;
         consensus.BIP34Height = 1; // Always active unless overridden
         consensus.BIP66Height = 1;  // Always active unless overridden
         consensus.LockTimeHeight = 1;    // Always active unless overridden
