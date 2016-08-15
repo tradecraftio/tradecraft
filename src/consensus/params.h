@@ -94,6 +94,8 @@ struct Params {
     int64_t equilibrium_height;
     int64_t equilibrium_monetary_base;
     CAmount initial_excess_subsidy;
+    /** Soft-fork activations */
+    int64_t truncate_inputs_activation_height;
     /**
      * Hashes of blocks that
      * - are known to be consensus valid, and
