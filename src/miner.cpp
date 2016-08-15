@@ -301,7 +301,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             // policy here, but we still have to ensure that the block we
             // create only contains transactions that are valid in new blocks.
             CValidationState state;
-            if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+            if (!CheckInputs(tx, state, view, 0, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
                 continue;
 
             CTxUndo txundo;

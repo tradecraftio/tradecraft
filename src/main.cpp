@@ -1102,7 +1102,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
+        if (!CheckInputs(tx, state, view, 0, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
         {
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString());
         }
@@ -1116,7 +1116,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+        if (!CheckInputs(tx, state, view, 0, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
         {
             return error("AcceptToMemoryPool: : BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
         }
@@ -1446,7 +1446,7 @@ bool CScriptCheck::operator()() {
     return true;
 }
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, int per_input_adjustment, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
 {
     if (!tx.IsCoinBase())
     {
@@ -1484,7 +1484,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                                  REJECT_INVALID, "bad-txns-non-monotonic-lock-height");
 
             // Check for negative or overflow input values
-            nInput = coins->GetPresentValueOfOutput(prevout.n, tx.lock_height);
+            nInput = coins->GetPresentValueOfOutput(prevout.n, tx.lock_height) + per_input_adjustment;
             nValueIn += nInput;
             if (!MoneyRange(nInput) || !MoneyRange(nValueIn))
                 return state.DoS(100, error("CheckInputs() : txin values out of range"),
@@ -1730,11 +1730,16 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nBIP16SwitchTime = 1333238400;
     bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
 
+    // Whether fractional inputs should be summed or ignored. Bundled as part of the
+    // BIP66 soft-fork in Freicoin.
+    bool truncate_inputs = false;
+
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded:
     if (block.nVersion >= 3 && CBlockIndex::IsSuperMajority(3, pindex->pprev, Params().EnforceBlockUpgradeMajority())) {
         flags |= SCRIPT_VERIFY_DERSIG;
+        truncate_inputs = true;
     }
 
     CBlockUndo blockundo;
@@ -1776,11 +1781,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                      REJECT_INVALID, "bad-blk-sigops");
             }
 
-            nFees += GetTimeAdjustedValue(view.GetValueIn(tx)-tx.GetValueOut(),
-                                          pindex->nHeight - (int)tx.lock_height);
+            CAmount fee = (view.GetValueIn(tx)-tx.GetValueOut()) + (truncate_inputs? 0: tx.vin.size());
+            nFees += GetTimeAdjustedValue(fee, pindex->nHeight - (int)tx.lock_height);
 
             std::vector<CScriptCheck> vChecks;
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
+            if (!CheckInputs(tx, state, view, !truncate_inputs, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
                 return false;
             control.Add(vChecks);
         }
