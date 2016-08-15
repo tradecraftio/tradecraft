@@ -70,6 +70,8 @@ struct Params {
     int64_t equilibrium_height;
     int64_t equilibrium_monetary_base;
     CAmount initial_excess_subsidy;
+    /** Soft-fork activations */
+    int64_t truncate_inputs_activation_height;
     /* Block hash that is excepted from BIP16 enforcement */
     uint256 BIP16Exception;
     /** Block height and hash at which BIP34 becomes active */
