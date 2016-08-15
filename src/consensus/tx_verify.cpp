@@ -218,7 +218,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int nSpendHeight)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int per_input_adjustment, int nSpendHeight)
 {
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
@@ -247,7 +247,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             }
 
             // Check for negative or overflow input values
-            CAmount nInput = coin.GetPresentValue(tx.lock_height);
+            CAmount nInput = coin.GetPresentValue(tx.lock_height) + per_input_adjustment;;
             nValueIn += nInput;
             if (!MoneyRange(nInput) || !MoneyRange(nValueIn))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
