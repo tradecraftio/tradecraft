@@ -624,11 +624,11 @@ void CTxMemPool::clear()
     _clear();
 }
 
-static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& mempoolDuplicate, const Consensus::Params& params, const int64_t spendheight)
+static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& mempoolDuplicate, const Consensus::Params& params, int per_input_adjustment, const int64_t spendheight)
 {
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, params, spendheight, txfee);
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, params, per_input_adjustment, spendheight, txfee);
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
@@ -725,7 +725,7 @@ void CTxMemPool::check(CChainState& active_chainstate, const Consensus::Params& 
         if (fDependsWait)
             waitingOnDependants.push_back(&(*it));
         else {
-            CheckInputsAndUpdateCoins(tx, mempoolDuplicate, params, spendheight);
+            CheckInputsAndUpdateCoins(tx, mempoolDuplicate, params, /* per_input_adjustment = */ 0, spendheight);
         }
     }
     unsigned int stepsSinceLastRemove = 0;
@@ -737,7 +737,7 @@ void CTxMemPool::check(CChainState& active_chainstate, const Consensus::Params& 
             stepsSinceLastRemove++;
             assert(stepsSinceLastRemove < waitingOnDependants.size());
         } else {
-            CheckInputsAndUpdateCoins(entry->GetTx(), mempoolDuplicate, params, spendheight);
+            CheckInputsAndUpdateCoins(entry->GetTx(), mempoolDuplicate, params, /* per_input_adjustment = */ 0, spendheight);
             stepsSinceLastRemove = 0;
         }
     }
