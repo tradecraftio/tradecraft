@@ -648,6 +648,7 @@ libfreicoin_consensus_a_SOURCES = \
   consensus/amount.h \
   consensus/amount.cpp \
   consensus/merkle.cpp \
+  consensus/merkleproof.cpp \
   consensus/merkle.h \
   consensus/params.h \
   consensus/tx_check.cpp \
@@ -696,7 +697,6 @@ libfreicoin_common_a_SOURCES = \
   common/settings.cpp \
   common/system.cpp \
   compressor.cpp \
-  consensus/merkleproof.cpp \
   core_read.cpp \
   core_write.cpp \
   deploymentinfo.cpp \
