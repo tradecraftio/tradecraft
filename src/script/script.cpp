@@ -143,7 +143,7 @@ std::string GetOpName(opcodetype opcode)
     case OP_NOP1                   : return "OP_NOP1";
     case OP_CHECKLOCKTIMEVERIFY    : return "OP_CHECKLOCKTIMEVERIFY";
     case OP_CHECKSEQUENCEVERIFY    : return "OP_CHECKSEQUENCEVERIFY";
-    case OP_NOP4                   : return "OP_NOP4";
+    case OP_MERKLEBRANCHVERIFY     : return "OP_MERKLEBRANCHVERIFY";
     case OP_NOP5                   : return "OP_NOP5";
     case OP_NOP6                   : return "OP_NOP6";
     case OP_NOP7                   : return "OP_NOP7";
@@ -348,6 +348,6 @@ bool IsOpSuccess(const opcodetype& opcode)
     return opcode == 80 || opcode == 98 || (opcode >= 126 && opcode <= 129) ||
            (opcode >= 131 && opcode <= 134) || (opcode >= 137 && opcode <= 138) ||
            (opcode >= 141 && opcode <= 142) || (opcode >= 149 && opcode <= 153) ||
-           opcode == 167 || opcode == 176 || (opcode >= 179 && opcode <= 185) ||
+           opcode == 167 || opcode == 176 || (opcode >= 180 && opcode <= 185) ||
            (opcode >= 187 && opcode <= 254);
 }
