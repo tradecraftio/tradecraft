@@ -145,6 +145,7 @@ FREICOIN_CORE_H = \
   compat/sanity.h \
   compressor.h \
   consensus/consensus.h \
+  consensus/merkleproof.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
   core_io.h \
@@ -535,6 +536,7 @@ libfreicoin_consensus_a_SOURCES = \
   consensus/amount.h \
   consensus/amount.cpp \
   consensus/merkle.cpp \
+  consensus/merkleproof.cpp \
   consensus/merkle.h \
   consensus/params.h \
   consensus/tx_check.cpp \
@@ -574,8 +576,6 @@ libfreicoin_common_a_SOURCES = \
   coins.cpp \
   common/bloom.cpp \
   compressor.cpp \
-  consensus/merkleproof.cpp \
-  consensus/merkleproof.h \
   core_read.cpp \
   core_write.cpp \
   deploymentinfo.cpp \

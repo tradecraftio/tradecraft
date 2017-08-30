@@ -64,6 +64,12 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Negative locktime";
         case SCRIPT_ERR_UNSATISFIED_LOCKTIME:
             return "Locktime requirement not satisfied";
+        case SCRIPT_ERR_INVALID_HASH_LENGTH:
+            return "Unexpected length of hash value";
+        case SCRIPT_ERR_INVALID_MERKLE_PROOF:
+            return "Malformed or dirty Merkle proof";
+        case SCRIPT_ERR_MERKLEBRANCHVERIFY:
+            return "Script failed an OP_MERKLEBRANCHVERIFY operation";
         case SCRIPT_ERR_SIG_HASHTYPE:
             return "Signature hash type missing or not understood";
         case SCRIPT_ERR_SIG_DER:
