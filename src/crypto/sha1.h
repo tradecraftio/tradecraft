@@ -34,6 +34,7 @@ public:
     static const size_t OUTPUT_SIZE = 20;
 
     CSHA1();
+    CSHA1(const unsigned char iv[OUTPUT_SIZE]);
     CSHA1& Write(const unsigned char* data, size_t len);
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     void Midstate(unsigned char hash[OUTPUT_SIZE], unsigned char* buffer, size_t* length);

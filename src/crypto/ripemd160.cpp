@@ -258,6 +258,15 @@ CRIPEMD160::CRIPEMD160() : bytes(0)
     ripemd160::Initialize(s);
 }
 
+CRIPEMD160::CRIPEMD160(const unsigned char iv[OUTPUT_SIZE]) : bytes(0)
+{
+    s[0] = ReadLE32(iv);
+    s[1] = ReadLE32(iv + 4);
+    s[2] = ReadLE32(iv + 8);
+    s[3] = ReadLE32(iv + 12);
+    s[4] = ReadLE32(iv + 16);
+}
+
 CRIPEMD160& CRIPEMD160::Write(const unsigned char* data, size_t len)
 {
     const unsigned char* end = data + len;
