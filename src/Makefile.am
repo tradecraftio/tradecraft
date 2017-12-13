@@ -603,6 +603,8 @@ libfreicoin_consensus_a_SOURCES = \
   consensus/amount.cpp \
   consensus/merkle.cpp \
   consensus/merkle.h \
+  consensus/merkleproof.cpp \
+  consensus/merkleproof.h \
   consensus/params.h \
   consensus/tx_check.cpp \
   consensus/validation.h \
