@@ -861,6 +861,7 @@ void Unserialize(Stream& is, prevector<N, T>& v)
 /**
  * vector
  */
+struct MerkleNode; // defined in <consensus/merkleproof.h>
 template <typename Stream, typename T, typename A>
 void Serialize(Stream& os, const std::vector<T, A>& v)
 {
@@ -876,6 +877,10 @@ void Serialize(Stream& os, const std::vector<T, A>& v)
         for (bool elem : v) {
             ::Serialize(os, elem);
         }
+    } else if constexpr (std::is_same_v<T, MerkleNode>) {
+        // A special case for std::vector<MerkleNode>, as MerkleNodes are
+        // compactly encoded into 3 bits, with 8 MerkleNodes every 3 bytes.
+        v.Serialize(os);
     } else {
         Serialize(os, Using<VectorFormatter<DefaultFormatter>>(v));
     }
@@ -896,6 +901,8 @@ void Unserialize(Stream& is, std::vector<T, A>& v)
             is.read(AsWritableBytes(Span{&v[i], blk}));
             i += blk;
         }
+    } else if constexpr (std::is_same_v<T, MerkleNode>) {
+        v.Unserialize(is);
     } else {
         Unserialize(is, Using<VectorFormatter<DefaultFormatter>>(v));
     }

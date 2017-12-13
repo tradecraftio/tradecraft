@@ -149,6 +149,7 @@ BITCOIN_CORE_H = \
   common/system.h \
   compressor.h \
   consensus/consensus.h \
+  consensus/merkleproof.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
   core_io.h \
@@ -684,6 +685,7 @@ libbitcoin_common_a_SOURCES = \
   common/settings.cpp \
   common/system.cpp \
   compressor.cpp \
+  consensus/merkleproof.cpp \
   core_read.cpp \
   core_write.cpp \
   deploymentinfo.cpp \
@@ -935,6 +937,7 @@ libbitcoinkernel_la_SOURCES = \
   coins.cpp \
   compressor.cpp \
   consensus/merkle.cpp \
+  consensus/merkleproof.cpp \
   consensus/tx_check.cpp \
   consensus/tx_verify.cpp \
   core_read.cpp \
