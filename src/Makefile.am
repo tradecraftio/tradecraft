@@ -268,6 +268,8 @@ libfreicoin_consensus_a_SOURCES = \
   arith_uint256.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
+  consensus/merkleproof.cpp \
+  consensus/merkleproof.h \
   consensus/params.h \
   consensus/validation.h \
   hash.cpp \

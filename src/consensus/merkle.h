@@ -26,6 +26,9 @@
 #include "primitives/block.h"
 #include "uint256.h"
 
+void MerkleHash_Hash256(uint256& parent, const uint256& left, const uint256& right);
+void MerkleHash_Sha256Midstate(uint256& parent, const uint256& left, const uint256& right);
+
 uint256 ComputeMerkleRoot(const std::vector<uint256>& leaves, bool* mutated = NULL);
 std::vector<uint256> ComputeMerkleBranch(const std::vector<uint256>& leaves, uint32_t position);
 uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t position);
