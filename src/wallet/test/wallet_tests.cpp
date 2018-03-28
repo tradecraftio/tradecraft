@@ -187,10 +187,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         BOOST_CHECK(!wallet.SelectCoinsMinConf(72 * CENT, refheight, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
 
         // at a higher reference height we don't have 71 anymore
-        BOOST_CHECK( wallet.SelectCoinsMinConf(71 * CENT, refheight+1, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
-        //      --> ! <--
-        // FIXME: The above check should be negated after demurrage
-        //        code is added.
+        BOOST_CHECK(!wallet.SelectCoinsMinConf(71 * CENT, refheight+1, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
 
         // now try making 16 cents.  the best smaller coins can do is 6+7+8 = 21; not as good at the next biggest coin, 20
         BOOST_CHECK( wallet.SelectCoinsMinConf(16 * CENT, refheight, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
@@ -419,7 +416,9 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         LOCK(wallet.cs_wallet);
         wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
         BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip));
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(),
+                          GetTimeAdjustedValue(50 * COIN, 2)
+                        + GetTimeAdjustedValue(50 * COIN, 1));
     }
 
     // Prune the older block file.
@@ -433,7 +432,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         LOCK(wallet.cs_wallet);
         wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
         BOOST_CHECK_EQUAL(newTip, wallet.ScanForWalletTransactions(oldTip));
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), GetTimeAdjustedValue(50 * COIN, 1));
     }
 
     // Verify importmulti RPC returns failure for a key whose creation time is

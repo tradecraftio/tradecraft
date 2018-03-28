@@ -111,36 +111,36 @@ if ENABLE_ZMQ:
 
 testScripts = [
     # longest test should go first, to favor running tests in parallel
-    'wallet-hd.py',
-    'walletbackup.py',
+    'wallet-hd.py --bitcoin-mode',
+    'walletbackup.py --bitcoin-mode',
     # vv Tests less than 5m vv
     'p2p-fullblocktest.py --bitcoin-mode',
-    'fundrawtransaction.py',
+    'fundrawtransaction.py --bitcoin-mode',
     'p2p-compactblocks.py --bitcoin-mode',
     'segwit.py --bitcoin-mode',
     # vv Tests less than 2m vv
-    'wallet.py',
-    'wallet-accounts.py',
+    'wallet.py --bitcoin-mode',
+    'wallet-accounts.py --bitcoin-mode',
     'p2p-segwit.py --bitcoin-mode',
     'wallet-dump.py',
     'listtransactions.py',
     # vv Tests less than 60s vv
     'sendheaders.py --bitcoin-mode',
-    'zapwallettxes.py',
+    'zapwallettxes.py --bitcoin-mode',
     'importmulti.py',
     'mempool_limit.py',
     'merkle_blocks.py',
     'receivedby.py',
-    'abandonconflict.py',
-    'bip68-112-113-p2p.py',
-    'rawtransactions.py',
+    'abandonconflict.py --bitcoin-mode',
+    'bip68-112-113-p2p.py --bitcoin-mode',
+    'rawtransactions.py --bitcoin-mode',
     'reindex.py',
     # vv Tests less than 30s vv
     'mempool_resurrect_test.py',
-    'txn_doublespend.py --mineblock',
-    'txn_clone.py',
+    'txn_doublespend.py --mineblock --bitcoin-mode',
+    'txn_clone.py --bitcoin-mode',
     'getchaintips.py',
-    'rest.py',
+    'rest.py --bitcoin-mode',
     'mempool_spendcoinbase.py',
     'mempool_reorg.py',
     'httpbasics.py',
@@ -154,7 +154,7 @@ testScripts = [
     'block-final-tx.py',
     'keypool.py',
     'p2p-mempool.py',
-    'prioritise_transaction.py',
+    'prioritise_transaction.py --bitcoin-mode',
     'invalidblockrequest.py',
     'invalidtxrequest.py',
     # Disabled as the alertnotify logic has been removed until it is updated
@@ -163,20 +163,20 @@ testScripts = [
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
-    'nulldummy.py',
+    'nulldummy.py --bitcoin-mode',
     'import-rescan.py',
-    'bumpfee.py',
+    'bumpfee.py --bitcoin-mode',
     'rpcnamedargs.py',
-    'listsinceblock.py',
+    'listsinceblock.py --bitcoin-mode',
     'p2p-leaktests.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
 
 testScriptsExt = [
-    'pruning.py',
+    'pruning.py --bitcoin-mode',
     # vv Tests less than 20m vv
-    'smartfees.py',
+    'smartfees.py --bitcoin-mode',
     # vv Tests less than 5m vv
     'maxuploadtarget.py',
     'mempool_packages.py',
@@ -194,8 +194,8 @@ testScriptsExt = [
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_proposals.py',
-    'txn_doublespend.py',
-    'txn_clone.py --mineblock',
+    'txn_doublespend.py --bitcoin-mode',
+    'txn_clone.py --mineblock --bitcoin-mode',
     # Disabled as the alertnotify logic has been removed until it is updated
     # to handle overt ASICBoost version-rolling:
 #    'forknotify.py',
