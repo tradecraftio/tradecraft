@@ -64,7 +64,9 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
         BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(),
+                          GetTimeAdjustedValue(50 * COIN, 2)
+                        + GetTimeAdjustedValue(50 * COIN, 1));
     }
 
     // Prune the older block file.
@@ -79,7 +81,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
         BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), GetTimeAdjustedValue(50 * COIN, 1));
     }
 
     // Verify importmulti RPC returns failure for a key whose creation time is
@@ -340,7 +342,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 1U);
 
     // Check initial balance from one mature coinbase transaction.
-    BOOST_CHECK_EQUAL(50 * COIN, wallet->GetAvailableBalance());
+    BOOST_CHECK_EQUAL(GetTimeAdjustedValue(50 * COIN, 101), wallet->GetAvailableBalance());
 
     // Add a transaction creating a change address, and confirm ListCoins still
     // returns the coin associated with the change address underneath the
