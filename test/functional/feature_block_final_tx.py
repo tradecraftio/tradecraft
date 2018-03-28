@@ -274,7 +274,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         assert_equal(len(tmpl['finaltx']['prevout']), 1)
         assert_equal(tmpl['finaltx']['prevout'][0]['txid'], encode(ser_uint256(non_protected_output.hash)[::-1], 'hex_codec').decode('ascii'))
         assert_equal(tmpl['finaltx']['prevout'][0]['vout'], non_protected_output.n)
-        assert_equal(tmpl['finaltx']['prevout'][0]['amount'], 312500000)
+        assert_equal(tmpl['finaltx']['prevout'][0]['amount'], 312470199)
 
         self.log.info("Extra pass-through value is not included in the coinbasevalue field.")
         assert_equal(tmpl['coinbasevalue'], 5000000000 // 2**(self.height // 150))
@@ -294,7 +294,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         tx_final = CTransaction()
         tx_final.nVersion = 2
         tx_final.vin.append(CTxIn(non_protected_output, CScript([]), 0xffffffff))
-        tx_final.vout.append(CTxOut(312500000, CScript([OP_TRUE])))
+        tx_final.vout.append(CTxOut(312470199, CScript([OP_TRUE])))
         tx_final.nLockTime = block.vtx[0].nLockTime
         tx_final.lock_height = block.vtx[0].lock_height
         tx_final.rehash()
@@ -314,7 +314,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         assert_equal(len(tmpl['finaltx']['prevout']), 1)
         assert_equal(tmpl['finaltx']['prevout'][0]['txid'], encode(ser_uint256(tx_final.sha256)[::-1], 'hex_codec').decode('ascii'))
         assert_equal(tmpl['finaltx']['prevout'][0]['vout'], 0)
-        assert_equal(tmpl['finaltx']['prevout'][0]['amount'], 312500000)
+        assert_equal(tmpl['finaltx']['prevout'][0]['amount'], 312469901)
 
         self.log.info("Test 16: Create a block-final transaction with multiple outputs, which doesn't work because the number of outputs is restricted to be no greater than the number of inputs.")
         block = create_block(self.tip, create_coinbase(self.height), self.last_block_time + 1)
@@ -322,8 +322,8 @@ class BlockFinalTxTest(FreicoinTestFramework):
         tx_final = CTransaction()
         tx_final.nVersion = 2
         tx_final.vin.append(CTxIn(COutPoint(prev_final_tx.sha256, 0), CScript([]), 0xffffffff))
-        tx_final.vout.append(CTxOut(156250000, CScript([OP_TRUE])))
-        tx_final.vout.append(CTxOut(156250000, CScript([OP_TRUE])))
+        tx_final.vout.append(CTxOut(156234951, CScript([OP_TRUE])))
+        tx_final.vout.append(CTxOut(156234950, CScript([OP_TRUE])))
         tx_final.nLockTime = block.vtx[0].nLockTime
         tx_final.lock_height = block.vtx[0].lock_height
         tx_final.rehash()
@@ -336,8 +336,8 @@ class BlockFinalTxTest(FreicoinTestFramework):
 
         self.log.info("Test 17: Try increasing the number of inputs by using an old one doesn't work, because the block-final transaction must source its user inputs from the same block.")
         utxo = node.gettxout(encode(ser_uint256(early_coin.hash)[::-1], 'hex_codec').decode('ascii'), early_coin.n)
-        assert('value' in utxo)
-        utxo_amount = int(100000000 * utxo['value'])
+        assert('amount' in utxo)
+        utxo_amount = int(100000000 * utxo['amount'])
         block.vtx[-1].vin.append(CTxIn(early_coin, CScript([]), 0xffffffff))
         block.vtx[-1].rehash()
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -380,7 +380,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         tx_final = CTransaction()
         tx_final.nVersion = 2
         tx_final.vin.append(CTxIn(COutPoint(prev_final_tx.sha256, 0), CScript([]), 0xffffffff))
-        tx_final.vout.append(CTxOut(156250000, CScript([OP_TRUE])))
+        tx_final.vout.append(CTxOut(156234801, CScript([OP_TRUE])))
         tx_final.nLockTime = block.vtx[0].nLockTime
         tx_final.lock_height = block.vtx[0].lock_height
         tx_final.rehash()
@@ -419,7 +419,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         spend_tx = CTransaction()
         spend_tx.nVersion = 2
         spend_tx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(txid)[::-1]), 0), CScript([]), 0xffffffff))
-        spend_tx.vout.append(CTxOut(int(utxo['value']*100000000) - 10000, CScript([b'a'*100]))) # Make transaction large enough to avoid tx-size-small standardness check
+        spend_tx.vout.append(CTxOut(int(utxo['amount']*100000000) - 10000, CScript([b'a'*100]))) # Make transaction large enough to avoid tx-size-small standardness check
         spend_tx.nLockTime = 0
         spend_tx.lock_height = utxo['refheight']
         spend_tx.rehash()
@@ -431,7 +431,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         spend_tx = CTransaction()
         spend_tx.nVersion = 2
         spend_tx.vin.append(CTxIn(COutPoint(prev_final_tx.sha256, 0), CScript([]), 0xffffffff))
-        spend_tx.vout.append(CTxOut(int(utxo['value']*100000000), CScript([b'a'*100]))) # Make transaction large enough to avoid tx-size-small standardness check
+        spend_tx.vout.append(CTxOut(int(utxo['amount']*100000000), CScript([b'a'*100]))) # Make transaction large enough to avoid tx-size-small standardness check
         spend_tx.nLockTime = 0
         spend_tx.lock_height = utxo['refheight']
         spend_tx.rehash()
