@@ -355,7 +355,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vin[1].scriptSig = CScript() << OP_1;
         tx.vin[1].prevout.hash = txFirst[0]->GetHash();
         tx.vin[1].prevout.n = 0;
-        tx.vout[0].nValue = tx.vout[0].nValue + BLOCKSUBSIDY - HIGHERFEE; // First txn output + fresh coinbase - new txn fee
+        tx.vout[0].nValue = tx.vout[0].nValue + txFirst[0]->GetPresentValueOfOutput(0, tx.lock_height) - HIGHERFEE; //First txn output + fresh coinbase - new txn fee
         hash = tx.GetHash();
         tx_mempool.addUnchecked(entry.Fee(HIGHERFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
         BOOST_CHECK(AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey));
@@ -699,7 +699,14 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     m_node.chainman->ActiveChain().Tip()->nHeight--;
     SetMockTime(0);
 
+    // TestPackageSelection features hand-crafted tests that are not
+    // written in a way that is compatible with 5% demurrage.  So we
+    // temporarily disable time-value adjustments.
+    auto old_disable_time_adjust = disable_time_adjust;
+    disable_time_adjust = true;
     TestPackageSelection(scriptPubKey, txFirst);
+    disable_time_adjust = old_disable_time_adjust;
+
 
     m_node.chainman->ActiveChain().Tip()->nHeight--;
     SetMockTime(0);
