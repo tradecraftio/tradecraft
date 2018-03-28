@@ -51,7 +51,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output
         coin_control.m_change_type = OutputType::LEGACY;
         auto res = CreateTransaction(*wallet, {recipient}, /*refheight=*/std::nullopt, /*change_pos=*/std::nullopt, coin_control);
-        BOOST_CHECK(res);
+        BOOST_CHECK(!res); // Demurrage has destroyed the input
         // Fails now that the coinbase lock_height is required to be equal to
         // the block height:
         res = CreateTransaction(*wallet, {recipient}, /*refheight=*/1, /*change_pos=*/std::nullopt, coin_control);
