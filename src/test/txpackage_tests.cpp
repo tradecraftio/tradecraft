@@ -569,8 +569,12 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     mtx_mixed_child.vin[0].scriptWitness = acs_witness;
     mtx_mixed_child.vin[1].scriptWitness = acs_witness;
     mtx_mixed_child.vin[2].scriptWitness = acs_witness;
-    mtx_mixed_child.vout.push_back(CTxOut((48 + 49 + 50 - 1) * COIN, mixed_child_spk));
     mtx_mixed_child.lock_height = ptx_parent3->lock_height;
+    mtx_mixed_child.vout.push_back(CTxOut((
+          ptx_parent1->GetPresentValueOfOutput(0, mtx_mixed_child.lock_height)
+        + ptx_parent2_v1->GetPresentValueOfOutput(0, mtx_mixed_child.lock_height)
+        + ptx_parent3->GetPresentValueOfOutput(0, mtx_mixed_child.lock_height)
+        - 1 * COIN), mixed_child_spk));
     CTransactionRef ptx_mixed_child = MakeTransactionRef(mtx_mixed_child);
     package_mixed.push_back(ptx_mixed_child);
 
