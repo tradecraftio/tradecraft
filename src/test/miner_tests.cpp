@@ -684,7 +684,13 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Restore standardness rules to prior setting.
     fRequireStandard = old_fRequireStandard;
 
+    // TestPackageSelection features hand-crafted tests that are not
+    // written in a way that is compatible with 5% demurrage.  So we
+    // temporarily disable time-value adjustments.
+    auto old_disable_time_adjust = disable_time_adjust;
+    disable_time_adjust = true;
     TestPackageSelection(chainparams, scriptPubKey, txFirst);
+    disable_time_adjust = old_disable_time_adjust;
 
     fCheckpointsEnabled = true;
 }
