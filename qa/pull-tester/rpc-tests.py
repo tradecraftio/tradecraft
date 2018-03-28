@@ -117,29 +117,29 @@ if ENABLE_ZMQ:
 testScripts = [
     # longest test should go first, to favor running tests in parallel
     'p2p-fullblocktest.py --bitcoin-mode',
-    'walletbackup.py',
-    'bip68-112-113-p2p.py',
+    'walletbackup.py --bitcoin-mode',
+    'bip68-112-113-p2p.py --bitcoin-mode',
     'block-final-tx.py',
-    'wallet.py',
-    'wallet-hd.py',
+    'wallet.py --bitcoin-mode',
+    'wallet-hd.py --bitcoin-mode',
     'wallet-dump.py',
     'listtransactions.py',
     'receivedby.py',
     'mempool_resurrect_test.py',
-    'txn_doublespend.py --mineblock',
-    'txn_clone.py',
+    'txn_doublespend.py --mineblock --bitcoin-mode',
+    'txn_clone.py --bitcoin-mode',
     'getchaintips.py',
-    'rawtransactions.py',
-    'rest.py',
+    'rawtransactions.py --bitcoin-mode',
+    'rest.py --bitcoin-mode',
     'mempool_spendcoinbase.py',
     'mempool_reorg.py',
     'mempool_limit.py',
     'httpbasics.py',
     'multi_rpc.py',
-    'zapwallettxes.py',
+    'zapwallettxes.py --bitcoin-mode',
     'proxy_test.py',
     'merkle_blocks.py',
-    'fundrawtransaction.py',
+    'fundrawtransaction.py --bitcoin-mode',
     'signrawtransactions.py',
     'nodehandling.py',
     'reindex.py',
@@ -148,10 +148,10 @@ testScripts = [
     'disablewallet.py',
     'sendheaders.py --bitcoin-mode',
     'keypool.py',
-    'prioritise_transaction.py',
+    'prioritise_transaction.py --bitcoin-mode',
     'invalidblockrequest.py',
     'invalidtxrequest.py',
-    'abandonconflict.py',
+    'abandonconflict.py --bitcoin-mode',
     # Disabled as the alertnotify logic has been removed until it is updated
     # to handle overt ASICBoost version-rolling:
 #    'p2p-versionbits-warning.py',
@@ -160,7 +160,7 @@ testScripts = [
     'importprunedfunds.py',
     'signmessages.py',
     'p2p-compactblocks.py --bitcoin-mode',
-    'nulldummy.py',
+    'nulldummy.py --bitcoin-mode',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
@@ -174,21 +174,21 @@ testScriptsExt = [
     'bipdersig.py',
     'getblocktemplate_longpoll.py',
     'getblocktemplate_proposals.py',
-    'txn_doublespend.py',
-    'txn_clone.py --mineblock',
+    'txn_doublespend.py --bitcoin-mode',
+    'txn_clone.py --mineblock --bitcoin-mode',
     # Disabled as the alertnotify logic has been removed until it is updated
     # to handle overt ASICBoost version-rolling:
 #    'forknotify.py',
     'invalidateblock.py',
     'rpcbind_test.py',
-    'smartfees.py',
+    'smartfees.py --bitcoin-mode',
     'maxblocksinflight.py',
     'p2p-acceptblock.py',
     'mempool_packages.py',
     'maxuploadtarget.py',
     'replace-by-fee.py --bitcoin-mode',
     'p2p-feefilter.py',
-    'pruning.py', # leave pruning last as it takes a REALLY long time
+    'pruning.py --bitcoin-mode', # leave pruning last as it takes a REALLY long time
 ]
 
 
