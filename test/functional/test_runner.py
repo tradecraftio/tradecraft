@@ -66,16 +66,16 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'wallet_hd.py',
-    'wallet_backup.py',
+    'wallet_hd.py --bitcoin-mode',
+    'wallet_backup.py --bitcoin-mode',
     # vv Tests less than 5m vv
     'feature_block.py --bitcoin-mode',
-    'rpc_fundrawtransaction.py',
+    'rpc_fundrawtransaction.py --bitcoin-mode',
     'p2p_compactblocks.py --bitcoin-mode',
     'feature_segwit.py --bitcoin-mode',
     # vv Tests less than 2m vv
-    'wallet_basic.py',
-    'wallet_accounts.py',
+    'wallet_basic.py --bitcoin-mode',
+    'wallet_accounts.py --bitcoin-mode',
     'p2p_segwit.py --bitcoin-mode',
     'wallet_dump.py',
     'rpc_listtransactions.py',
@@ -86,26 +86,26 @@ BASE_SCRIPTS= [
     'mempool_limit.py',
     'rpc_txoutproof.py',
     'wallet_listreceivedby.py',
-    'wallet_abandonconflict.py',
-    'feature_csv_activation.py',
-    'rpc_rawtransaction.py',
-    'wallet_address_types.py',
+    'wallet_abandonconflict.py --bitcoin-mode',
+    'feature_csv_activation.py --bitcoin-mode',
+    'rpc_rawtransaction.py --bitcoin-mode',
+    'wallet_address_types.py --bitcoin-mode',
     'feature_reindex.py',
     # vv Tests less than 30s vv
-    'wallet_keypool_topup.py',
+    'wallet_keypool_topup.py --bitcoin-mode',
     'interface_zmq.py',
     'interface_freicoin_cli.py',
     'mempool_resurrect.py',
-    'wallet_txn_doublespend.py --mineblock',
-    'wallet_txn_clone.py',
-    'wallet_txn_clone.py --segwit',
+    'wallet_txn_doublespend.py --mineblock --bitcoin-mode',
+    'wallet_txn_clone.py --bitcoin-mode',
+    'wallet_txn_clone.py --segwit --bitcoin-mode',
     'rpc_getchaintips.py',
-    'interface_rest.py',
+    'interface_rest.py --bitcoin-mode',
     'mempool_spend_coinbase.py',
     'mempool_reorg.py',
     'mempool_persist.py',
-    'wallet_multiwallet.py',
-    'wallet_multiwallet.py --usecli',
+    'wallet_multiwallet.py --bitcoin-mode',
+    'wallet_multiwallet.py --usecli --bitcoin-mode',
     'interface_http.py',
     'rpc_users.py',
     'feature_proxy.py',
@@ -129,7 +129,7 @@ BASE_SCRIPTS= [
     'feature_nulldummy.py',
     'wallet_import_rescan.py',
     'mining_basic.py',
-    'wallet_bumpfee.py',
+    'wallet_bumpfee.py --bitcoin-mode',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'p2p_leak.py',
@@ -152,7 +152,7 @@ BASE_SCRIPTS= [
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'feature_pruning.py',
+    'feature_pruning.py --bitcoin-mode',
     # vv Tests less than 20m vv
     'feature_fee_estimation.py --bitcoin-mode',
     # vv Tests less than 5m vv
@@ -170,8 +170,8 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 30s vv
     'feature_assumevalid.py --bitcoin-mode',
     'example_test.py',
-    'wallet_txn_doublespend.py',
-    'wallet_txn_clone.py --mineblock',
+    'wallet_txn_doublespend.py --bitcoin-mode',
+    'wallet_txn_clone.py --mineblock --bitcoin-mode',
     'feature_notifications.py',
     'rpc_invalidateblock.py',
     'feature_rbf.py --bitcoin-mode',
