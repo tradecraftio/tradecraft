@@ -413,13 +413,20 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         CMutableTransaction mtx = CMutableTransaction();
         const size_t num_inputs = det_rand.randrange(24) + 1;
         CAmount total_in{0};
+        std::vector<std::pair<CAmount, uint32_t>> in_amts;
         for (size_t n{0}; n < num_inputs; ++n) {
             if (unspent_prevouts.empty()) break;
             const auto& [prevout, amount, refheight] = unspent_prevouts.front();
             mtx.vin.push_back(CTxIn(prevout, CScript()));
             mtx.lock_height = std::max(mtx.lock_height, refheight);
-            total_in += amount;
+            in_amts.emplace_back(amount, refheight);
             unspent_prevouts.pop_front();
+        }
+        while (!in_amts.empty()) {
+            const CAmount& amount = in_amts.back().first;
+            const uint32_t refheight = in_amts.back().second;
+            total_in += GetTimeAdjustedValue(amount, mtx.lock_height - refheight);
+            in_amts.pop_back();
         }
         const size_t num_outputs = det_rand.randrange(24) + 1;
         // Approximately 1000sat "fee," equal output amounts.
