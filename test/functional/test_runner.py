@@ -90,93 +90,93 @@ TEST_FRAMEWORK_MODULES = [
 EXTENDED_SCRIPTS = [
     # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
-    'feature_pruning.py',
+    'feature_pruning.py --bitcoin-mode',
     'feature_dbcrash.py --bitcoin-mode',
 ]
 
 BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
-    'wallet_hd.py',
-    #'wallet_hd.py --descriptors', #times out
-    'wallet_backup.py',
+    'wallet_hd.py --bitcoin-mode',
+    #'wallet_hd.py --descriptors --bitcoin-mode', #times out
+    'wallet_backup.py --bitcoin-mode',
     #'wallet_backup.py --descriptors', #times out
     # vv Tests less than 5m vv
-    'mining_getblocktemplate_longpoll.py',
-    'feature_maxuploadtarget.py',
+    'mining_getblocktemplate_longpoll.py --bitcoin-mode',
+    'feature_maxuploadtarget.py --bitcoin-mode',
     'feature_block.py --bitcoin-mode',
-    'rpc_fundrawtransaction.py',
+    'rpc_fundrawtransaction.py --bitcoin-mode',
     #'rpc_fundrawtransaction.py --descriptors', #times out
     'p2p_compactblocks.py --bitcoin-mode',
     'feature_segwit.py --legacy-wallet --bitcoin-mode',
     # vv Tests less than 2m vv
-    'wallet_basic.py',
+    'wallet_basic.py --bitcoin-mode',
     #'wallet_basic.py --descriptors', #times out
-    'wallet_labels.py',
+    'wallet_labels.py --bitcoin-mode',
     #'wallet_labels.py --descriptors', #times out
     'p2p_segwit.py --bitcoin-mode',
     'p2p_timeouts.py',
-    'p2p_tx_download.py',
+    'p2p_tx_download.py --bitcoin-mode',
     'mempool_updatefromblock.py',
     'wallet_dump.py --legacy-wallet',
     'wallet_listtransactions.py',
     #'wallet_listtransactions.py --descriptors', #times out
-    'feature_taproot.py',
+    'feature_taproot.py --bitcoin-mode',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_importmulti.py --legacy-wallet',
-    'mempool_limit.py',
+    'mempool_limit.py --bitcoin-mode',
     'rpc_txoutproof.py',
     'wallet_listreceivedby.py',
     #'wallet_listreceivedby.py --descriptors', #times out
-    'wallet_abandonconflict.py',
+    'wallet_abandonconflict.py --bitcoin-mode',
     #'wallet_abandonconflict.py --descriptors', #times out
-    'feature_csv_activation.py',
-    'rpc_rawtransaction.py',
+    'feature_csv_activation.py --bitcoin-mode',
+    'rpc_rawtransaction.py --bitcoin-mode',
     #'rpc_rawtransaction.py --descriptors', #times out
-    'wallet_address_types.py',
+    'wallet_address_types.py --bitcoin-mode',
     #'wallet_address_types.py --descriptors', #times out
     'feature_bip68_sequence.py --bitcoin-mode',
     'p2p_feefilter.py',
     'feature_reindex.py',
     'feature_abortnode.py',
     # vv Tests less than 30s vv
-    'wallet_keypool_topup.py',
+    'wallet_keypool_topup.py --bitcoin-mode',
     #'wallet_keypool_topup.py --descriptors', #times out
     'feature_fee_estimation.py --bitcoin-mode',
     'interface_zmq.py',
-    'interface_freicoin_cli.py',
+    'interface_freicoin_cli.py --bitcoin-mode',
     'mempool_resurrect.py',
-    'wallet_txn_doublespend.py --mineblock',
+    'wallet_txn_doublespend.py --mineblock --bitcoin-mode',
     'tool_wallet.py',
     #'tool_wallet.py --descriptors', #times out
-    'wallet_txn_clone.py',
-    'wallet_txn_clone.py --segwit',
+    'wallet_txn_clone.py --bitcoin-mode',
+    'wallet_txn_clone.py --segwit --bitcoin-mode',
     'rpc_getchaintips.py',
     'rpc_misc.py',
-    'interface_rest.py',
+    'interface_rest.py --bitcoin-mode',
     'mempool_spend_coinbase.py',
     'wallet_avoidreuse.py',
     #'wallet_avoidreuse.py --descriptors', #times out
     'mempool_reorg.py',
     'mempool_persist.py',
-    'wallet_multiwallet.py',
+    'wallet_multiwallet.py --bitcoin-mode',
     #'wallet_multiwallet.py --descriptors', #times out
-    'wallet_multiwallet.py --usecli',
+    'wallet_multiwallet.py --usecli --bitcoin-mode',
     'wallet_createwallet.py',
     'wallet_createwallet.py --usecli',
     #'wallet_createwallet.py --descriptors', #times out
-    'wallet_watchonly.py --legacy-wallet',
-    'wallet_watchonly.py --usecli --legacy-wallet',
-    'wallet_reorgsrestore.py',
+    'wallet_watchonly.py --legacy-wallet --bitcoin-mode',
+    'wallet_watchonly.py --usecli --legacy-wallet --bitcoin-mode',
+    'wallet_reorgsrestore.py --bitcoin-mode',
     'interface_http.py',
     'interface_rpc.py',
-    'rpc_pst.py',
+    'rpc_pst.py --bitcoin-mode',
     #'rpc_pst.py --descriptors', #times out
     'rpc_users.py',
     'rpc_whitelist.py',
     'feature_proxy.py',
-    'rpc_signrawtransaction.py',
+    'rpc_signrawtransaction.py --bitcoin-mode',
     #'rpc_signrawtransaction.py --descriptors', #times out
     'wallet_groups.py',
     'p2p_addrv2_relay.py',
@@ -192,47 +192,47 @@ BASE_SCRIPTS = [
     'p2p_getaddr_caching.py',
     'p2p_getdata.py',
     'rpc_net.py',
-    'wallet_keypool.py',
+    'wallet_keypool.py --bitcoin-mode',
     #'wallet_keypool.py --descriptors', #times out
     #'wallet_descriptor.py --descriptors', #times out
     'p2p_nobloomfilter_messages.py',
     'p2p_filter.py',
     'rpc_setban.py',
-    'p2p_blocksonly.py',
-    'mining_prioritisetransaction.py',
+    'p2p_blocksonly.py --bitcoin-mode',
+    'mining_prioritisetransaction.py --bitcoin-mode',
     'p2p_invalid_locator.py',
     'p2p_invalid_block.py',
     'p2p_invalid_messages.py',
     'p2p_invalid_tx.py --bitcoin-mode',
     'feature_assumevalid.py --bitcoin-mode',
     'example_test.py',
-    'wallet_txn_doublespend.py',
+    'wallet_txn_doublespend.py --bitcoin-mode',
     #'wallet_txn_doublespend.py --descriptors', #times out
     'feature_backwards_compatibility.py',
     #'feature_backwards_compatibility.py --descriptors', #times out
-    'wallet_txn_clone.py --mineblock',
+    'wallet_txn_clone.py --mineblock --bitcoin-mode',
     'feature_notifications.py',
     'rpc_getblockfilter.py',
     'rpc_invalidateblock.py',
     'feature_rbf.py --bitcoin-mode',
-    'mempool_packages.py',
-    'mempool_package_onemore.py',
-    'rpc_createmultisig.py',
+    'mempool_packages.py --bitcoin-mode',
+    'mempool_package_onemore.py --bitcoin-mode',
+    'rpc_createmultisig.py --bitcoin-mode',
     #'rpc_createmultisig.py --descriptors', #times out
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
-    'wallet_importprunedfunds.py',
+    'wallet_importprunedfunds.py --bitcoin-mode',
     #'wallet_importprunedfunds.py --descriptors', #times out
     'p2p_leak_tx.py',
     'p2p_eviction.py',
     'rpc_signmessage.py',
     'rpc_generateblock.py',
     'rpc_generate.py',
-    'wallet_balance.py',
+    'wallet_balance.py --bitcoin-mode',
     #'wallet_balance.py --descriptors', #times out
     'feature_nulldummy.py',
     #'feature_nulldummy.py --descriptors', #times out
-    'mempool_accept.py',
+    'mempool_accept.py --bitcoin-mode',
     'mempool_expiry.py',
     'wallet_import_rescan.py --legacy-wallet',
     'wallet_import_with_label.py --legacy-wallet',
@@ -243,11 +243,11 @@ BASE_SCRIPTS = [
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
     'feature_signet.py',
-    'wallet_bumpfee.py',
+    'wallet_bumpfee.py --bitcoin-mode',
     #'wallet_bumpfee.py --descriptors', #times out
     'wallet_implicitsegwit.py --legacy-wallet',
     'rpc_named_arguments.py',
-    'wallet_listsinceblock.py',
+    'wallet_listsinceblock.py --bitcoin-mode',
     #'wallet_listsinceblock.py --descriptors', #times out
     'p2p_leak.py',
     'wallet_encryption.py',
@@ -281,7 +281,7 @@ BASE_SCRIPTS = [
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'p2p_ping.py',
-    'rpc_scantxoutset.py',
+    'rpc_scantxoutset.py --bitcoin-mode',
     'feature_logging.py',
     'p2p_node_network_limited.py',
     'p2p_permissions.py',
