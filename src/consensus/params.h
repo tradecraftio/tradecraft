@@ -62,6 +62,7 @@ struct Params {
     CAmount initial_excess_subsidy;
     /** Soft-fork activations */
     int64_t truncate_inputs_activation_height;
+    int64_t alu_activation_height;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
