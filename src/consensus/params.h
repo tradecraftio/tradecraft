@@ -65,6 +65,7 @@ struct Params {
     /** Soft-fork activations */
     int64_t verify_dersig_activation_height;
     int64_t truncate_inputs_activation_height;
+    int64_t alu_activation_height;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
