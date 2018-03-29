@@ -1926,6 +1926,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         truncate_inputs = true;
     }
 
+    // Whether ALU arithmetic should be used for demurrage calculations.
+    bool use_alu = false;
+    if (pindex->nHeight >= chainparams.GetConsensus().alu_activation_height) {
+        use_alu = true;
+    }
+
     // Start enforcing BIP68 (sequence locks) using versionbits logic.
     int nLockTimeFlags = 0;
     if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_LOCKTIME, versionbitscache) == THRESHOLD_ACTIVE) {
@@ -2110,10 +2116,10 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         if (!tx.IsCoinBase())
         {
             CAmount txfee = 0;
-            if (!Consensus::CheckTxInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs, pindex->nHeight, txfee)) {
+            if (!Consensus::CheckTxInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs + !use_alu, pindex->nHeight, txfee)) {
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
-            nFees += GetTimeAdjustedValue(txfee, pindex->nHeight - (int)tx.lock_height);
+            nFees += GetTimeAdjustedValue(txfee, pindex->nHeight - (int)tx.lock_height) + !use_alu;
 
             if (!MoneyRange(nFees)) {
                 return state.DoS(100, error("%s: accumulated fee in the block out of range.", __func__),
@@ -2148,7 +2154,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         {
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr))
+            if (!CheckInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs + !use_alu, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
