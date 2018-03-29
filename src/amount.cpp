@@ -19,7 +19,6 @@
 
 #include "amount.h"
 
-#include <array>
 #include "tinyformat.h"
 
 const std::string CURRENCY_UNIT = "FRC";
@@ -53,7 +52,7 @@ CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance)
      * MAX_MONEY (2^53 - 1) to decay to zero. If we are given a
      * distance value greater than or equal to (1<<26), we simply
      * return 0LL. */
-    static std::array<uint32_t, 2*26> k32 = {
+    static const uint32_t k32[2*26] = {
         0xfffff000, 0x00000000, /* 2^0 = 1 */
         0xffffe000, 0x01000000, /* 2^1 = 2 */
         0xffffc000, 0x05ffffc0, /* 2^2 = 4 */
@@ -86,14 +85,15 @@ CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance)
      * which are used both for the exponentiation to calcuate the
      * demurrage rate, and the final multiply at the end. */
     uint64_t sum=0, overflow=0;
-    auto shift32 = [&]() {
-        sum = (overflow << 32) + (sum >> 32);
-        overflow = 0;
-    };
-    auto term = [&](uint64_t val) {
-        overflow += (sum + val) < sum;
-        sum += val;
-    };
+    #define shift32() do { \
+        sum = (overflow << 32) + (sum >> 32); \
+        overflow = 0; \
+    } while (0)
+    #define term(_val) do { \
+        const uint64_t val = (_val); \
+        overflow += (sum + val) < sum; \
+        sum += val; \
+    } while (0)
 
     /* We calculate the first 64 fractional bits of the aggregate
      * demurrage rate over distance blocks by raising the per-block
@@ -107,7 +107,7 @@ CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance)
      * unsigned words, the most significant word first. Its initial
      * value is multiplicative identity, 1.0, for which the fractional
      * bits are zero. */
-    std::array<uint32_t, 2> w = { };
+    uint32_t w[2] = { 0 };
 
     /* The first multiplication has the accumulator set to 1.0, which
      * is the only time it has a value >= 1. Since we don't store the
@@ -171,6 +171,9 @@ CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance)
     shift32();
     term(w[0] * v0);
 
+    #undef term
+    #undef shift32
+
     /* Debugging check: having the overflow bit set at this point
      * would indicate that the demurrage calculation has resulted in
      * an amount that is greater than std::numeric_limits<int64_t>::
@@ -221,7 +224,7 @@ CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance)
      * Our lookup table does not go beyond 26 entries because a
      * distance of 2^26 blocks (the would-be 27th entry) would cause
      * any input value (except zero) to overflow. */
-    static std::array<uint32_t, 4*26> k32 = {
+    static const uint32_t k32[4*26] = {
         0x00000000, 0x00000001, 0x00001000, 0x01000010, /* -2^0 = -1 */
         0x00000000, 0x00000001, 0x00002000, 0x03000040, /* -2^1 = -2 */
         0x00000000, 0x00000001, 0x00004000, 0x0a000140, /* -2^2 = -4 */
@@ -253,14 +256,15 @@ CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance)
      * which are used both for the exponentiation to calcuate the
      * aggregate demurrage rate, and the final multiply at the end. */
     uint64_t sum=0, overflow=0;
-    auto shift32 = [&]() {
-        sum = (overflow << 32) + (sum >> 32);
-        overflow = 0;
-    };
-    auto term = [&](uint64_t val) {
-        overflow += (sum + val) < sum;
-        sum += val;
-    };
+    #define shift32() do { \
+        sum = (overflow << 32) + (sum >> 32); \
+        overflow = 0; \
+    } while (0)
+    #define term(_val) do { \
+        const uint64_t val = (_val); \
+        overflow += (sum + val) < sum; \
+        sum += val; \
+    } while (0)
 
     /* We calculate the aggregate inverse demurrage factor for
      * distance by raising the per-block rate of 1/(1 - 2^-20) to the
@@ -274,7 +278,7 @@ CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance)
      * demurrage rate as a quad of 32-bit unsigned words, the most
      * significant word first. Its initial value is multiplicative
      * identity, 1.0, for which the fractional bits are zero. */
-    std::array<uint32_t, 4> w = { 0, 1, 0, 0 };
+    uint32_t w[4] = { 0, 1, 0, 0 };
 
     /* The first multiplication has the accumulator set to 1.0. So as
      * an optimization we don't need to perform a term-by-term
@@ -382,6 +386,9 @@ CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance)
     term(v0 * w[1]);
     const uint64_t r0 = static_cast<uint32_t>(sum);
     shift32();
+
+    #undef term
+    #undef shift32
 
     /* The final term represents bits 65-128. If this term is
      * non-zero, or if shift32 left any residual value or overflow, we
