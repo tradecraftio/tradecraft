@@ -55,6 +55,7 @@ struct Params {
     int64_t equilibrium_monetary_base;
     int equilibrium_height;
     int64_t initial_block_reward;
+    int64_t alu_activation_height;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
