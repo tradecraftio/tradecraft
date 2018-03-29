@@ -1742,6 +1742,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         truncate_inputs = true;
     }
 
+    // Whether ALU arithmetic should be used for demurrage calculations.
+    bool use_alu = false;
+    if (pindex->nHeight >= Params().AluActivationHeight())
+        use_alu = true;
+
     CBlockUndo blockundo;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
@@ -1781,11 +1786,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                      REJECT_INVALID, "bad-blk-sigops");
             }
 
-            CAmount fee = (view.GetValueIn(tx)-tx.GetValueOut()) + (truncate_inputs? 0: tx.vin.size());
-            nFees += GetTimeAdjustedValue(fee, pindex->nHeight - (int)tx.lock_height);
+            CAmount fee = view.GetValueIn(tx)-tx.GetValueOut();
+            for (int i = 0; i < (!truncate_inputs + !use_alu); ++i)
+                fee += tx.vin.size();
+            nFees += GetTimeAdjustedValue(fee, pindex->nHeight - (int)tx.lock_height) + !use_alu;
 
             std::vector<CScriptCheck> vChecks;
-            if (!CheckInputs(tx, state, view, !truncate_inputs, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
+            if (!CheckInputs(tx, state, view, !truncate_inputs + !use_alu, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
                 return false;
             control.Add(vChecks);
         }

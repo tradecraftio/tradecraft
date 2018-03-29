@@ -86,6 +86,7 @@ public:
     int64_t OriginalTargetTimespan() const { return original_interval * target_spacing; }
     int64_t FilteredTargetTimespan() const { return filtered_interval * target_spacing; }
     int64_t DiffAdjustThreshold() const { return diff_adjust_threshold; }
+    int64_t AluActivationHeight() const { return alu_activation_height; }
     int64_t MaxTipAge() const { return nMaxTipAge; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
@@ -114,6 +115,7 @@ protected:
     int64_t original_interval;
     int64_t filtered_interval;
     int64_t diff_adjust_threshold;
+    int64_t alu_activation_height;
     int nMinerThreads;
     long nMaxTipAge;
     std::vector<CDNSSeedData> vSeeds;
