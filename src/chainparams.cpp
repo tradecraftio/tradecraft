@@ -49,6 +49,7 @@ public:
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.equilibrium_height = 161280; // three years
         consensus.initial_block_reward = 15916928404LL; // 1519.1692,8404fc
+        consensus.alu_activation_height = 229376;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
@@ -157,6 +158,7 @@ class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
+        consensus.alu_activation_height = 2016;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
@@ -219,6 +221,7 @@ class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
+        consensus.alu_activation_height = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
