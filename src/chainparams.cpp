@@ -138,6 +138,7 @@ public:
         original_interval = 2016; //! two weeks
         filtered_interval = 9; // ! 1.5 hrs
         diff_adjust_threshold = 28336;
+        alu_activation_height = 229376;
         nMaxTipAge = 24 * 60 * 60;
 
         /**
@@ -223,6 +224,7 @@ public:
         original_interval = 2016; //! two weeks
         filtered_interval = 9; // ! 1.5 hrs
         diff_adjust_threshold = 2016;
+        alu_activation_height = 2016;
         nMaxTipAge = 0x7fffffff;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -282,6 +284,7 @@ public:
         original_interval = 2016; //! two weeks
         filtered_interval = 9; // ! 1.5 hrs
         diff_adjust_threshold = 1;
+        alu_activation_height = 1;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         nMaxTipAge = 24 * 60 * 60;
         genesis.nTime = 1296688602;
