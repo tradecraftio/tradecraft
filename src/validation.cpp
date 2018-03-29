@@ -2021,6 +2021,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         truncate_inputs = true;
     }
 
+    // Whether ALU arithmetic should be used for demurrage calculations.
+    bool use_alu = false;
+    if (pindex->nHeight >= chainparams.GetConsensus().alu_activation_height) {
+        use_alu = true;
+    }
+
     // Start enforcing BIP68 (sequence locks)
     int nLockTimeFlags = 0;
     if (pindex->nHeight >= chainparams.GetConsensus().LockTimeHeight) {
@@ -2195,7 +2201,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         if (!tx.IsCoinBase())
         {
             CAmount txfee = 0;
-            if (!Consensus::CheckTxInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs, pindex->nHeight, txfee)) {
+            if (!Consensus::CheckTxInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs + !use_alu, pindex->nHeight, txfee)) {
                 if (!IsBlockReason(state.GetReason())) {
                     // CheckTxInputs may return MISSING_INPUTS or
                     // PREMATURE_SPEND but we can't return that, as it's not
@@ -2206,7 +2212,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 }
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
-            nFees += GetTimeAdjustedValue(txfee, pindex->nHeight - (int)tx.lock_height);
+            nFees += GetTimeAdjustedValue(txfee, pindex->nHeight - (int)tx.lock_height) + !use_alu;
 
             if (!MoneyRange(nFees)) {
                 return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: accumulated fee in the block out of range.", __func__),
@@ -2241,7 +2247,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         {
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (fScriptChecks && !CheckInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr)) {
+            if (fScriptChecks && !CheckInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs + !use_alu, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr)) {
                 if (state.GetReason() == ValidationInvalidReason::TX_NOT_STANDARD) {
                     // CheckInputs may return NOT_STANDARD for extra flags we passed,
                     // but we can't return that, as it's not defined for a block, so
