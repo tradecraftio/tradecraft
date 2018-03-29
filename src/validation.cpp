@@ -1889,6 +1889,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         truncate_inputs = true;
     }
 
+    // Whether ALU arithmetic should be used for demurrage calculations.
+    bool use_alu = false;
+    if (pindex->nHeight >= chainparams.GetConsensus().alu_activation_height) {
+        use_alu = true;
+    }
+
     // Start enforcing BIP68 (sequence locks) using versionbits logic.
     int nLockTimeFlags = 0;
     if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_LOCKTIME, versionbitscache) == THRESHOLD_ACTIVE) {
@@ -2077,12 +2083,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
-            CAmount fee = (view.GetValueIn(tx)-tx.GetValueOut()) + (truncate_inputs? 0: tx.vin.size());
-            nFees += GetTimeAdjustedValue(fee, pindex->nHeight - (int)tx.lock_height);
+            CAmount fee = view.GetValueIn(tx)-tx.GetValueOut();
+            for (int i = 0; i < (!truncate_inputs + !use_alu); ++i)
+                fee += tx.vin.size();
+            nFees += GetTimeAdjustedValue(fee, pindex->nHeight - (int)tx.lock_height) + !use_alu;
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, chainparams.GetConsensus(), truncate_inputs, fScriptChecks, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
+            if (!CheckInputs(tx, state, view, chainparams.GetConsensus(), !truncate_inputs + !use_alu, fScriptChecks, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
