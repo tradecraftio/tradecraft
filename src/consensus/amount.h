@@ -37,4 +37,15 @@ static constexpr CAmount COIN = 100000000;
 static constexpr CAmount MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
+/** Adjust to present value by subtracting (or adding) demurrage */
+static const bool DEFAULT_DISABLE_TIME_ADJUST = false;
+extern bool disable_time_adjust;
+CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance);
+CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance);
+CAmount GetTimeAdjustedValue(const CAmount& initial_value, int relative_depth);
+
+/** Convert between demurrage currency and inflationary scrip. */
+CAmount FreicoinToScrip(const CAmount& freicoin, uint32_t height);
+CAmount ScripToFreicoin(const CAmount& scrip, uint32_t height);
+
 #endif // FREICOIN_CONSENSUS_AMOUNT_H

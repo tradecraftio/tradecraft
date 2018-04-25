@@ -250,7 +250,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             const CTxOut& output = wtx.tx->vout[i];
             const COutPoint outpoint(wtxid, i);
 
-            if (output.nValue < nMinimumAmount || output.nValue > nMaximumAmount)
+            CAmount adjusted_value = wtx.tx->GetPresentValueOfOutput(i, atheight);
+            if (adjusted_value < nMinimumAmount || adjusted_value > nMaximumAmount)
                 continue;
 
             if (coinControl && coinControl->HasSelected() && !coinControl->m_allow_other_inputs && !coinControl->IsSelected(outpoint))
@@ -301,7 +302,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 script = output.scriptPubKey;
             }
 
-            COutput coin(atheight, outpoint, {output, wtx.tx->lock_height}, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
+            COutput coin(atheight, adjusted_value, outpoint, {output, wtx.tx->lock_height}, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
 
             // When parsing a scriptPubKey, Solver returns the parsed pubkeys or hashes (depending on the script)
             // We don't need those here, so we are leaving them in return_values_unused
@@ -311,7 +312,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             result.Add(GetOutputType(type, is_from_p2sh), coin);
 
             // Cache total amount as we go
-            result.total_amount += output.nValue;
+            result.total_amount += adjusted_value;
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
                 if (result.total_amount >= nMinimumSumAmount) {
@@ -406,7 +407,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
                 if (ExtractDestination(FindNonChangeParentOutput(wallet, *wtx.tx, output.n).scriptPubKey, address)) {
                     const auto out = wtx.tx->vout.at(output.n);
                     result[address].emplace_back(
-                            wtx.tx->lock_height, COutPoint(wtx.GetHash(), output.n), SpentOutput{out, wtx.tx->lock_height}, depth, CalculateMaximumSignedInputSize(out, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), CachedTxIsFromMe(wallet, wtx, ISMINE_ALL));
+                            wtx.tx->lock_height, it->second.tx->GetPresentValueOfOutput(output.n, next_height), COutPoint(wtx.GetHash(), output.n), SpentOutput{out, wtx.tx->lock_height}, depth, CalculateMaximumSignedInputSize(out, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), CachedTxIsFromMe(wallet, wtx, ISMINE_ALL));
                 }
             }
         }
@@ -606,9 +607,10 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
         }
 
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
-        COutput output(height, outpoint, {spent_output.out, spent_output.refheight}, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
+        CAmount adjusted = spent_output.GetPresentValue(height);
+        COutput output(height, adjusted, outpoint, {spent_output.out, spent_output.refheight}, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
         if (coin_selection_params.m_subtract_fee_outputs) {
-            value_to_select -= output.txout.nValue;
+            value_to_select -= output.adjusted;
         } else {
             value_to_select -= output.GetEffectiveValue();
         }
@@ -1008,7 +1010,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // If there is a change output and we overpay the fees then increase the change to match the fee needed
     if (nChangePosInOut != -1 && fee_needed < nFeeRet) {
         auto& change = txNew.vout.at(nChangePosInOut);
-        change.nValue += nFeeRet - fee_needed;
+        change.AdjustReferenceValue(nFeeRet - fee_needed);
         nFeeRet = fee_needed;
     }
 
@@ -1026,17 +1028,17 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
             if (recipient.fSubtractFeeFromAmount)
             {
-                txout.nValue -= to_reduce / outputs_to_subtract_fee_from; // Subtract fee equally from each selected recipient
+                txout.AdjustReferenceValue(-to_reduce / outputs_to_subtract_fee_from); // Subtract fee equally from each selected recipient
 
                 if (fFirst) // first receiver pays the remainder not divisible by output count
                 {
                     fFirst = false;
-                    txout.nValue -= to_reduce % outputs_to_subtract_fee_from;
+                    txout.AdjustReferenceValue(-(to_reduce % outputs_to_subtract_fee_from));
                 }
 
                 // Error if this output is reduced to be below dust
                 if (IsDust(txout, wallet.chain().relayDustFee())) {
-                    if (txout.nValue < 0) {
+                    if (txout.GetReferenceValue() < 0) {
                         return util::Error{_("The transaction amount is too small to pay the fee")};
                     } else {
                         return util::Error{_("The transaction amount is too small to send after the fee has been deducted")};
@@ -1149,7 +1151,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        CRecipient recipient = {txOut.scriptPubKey, txOut.GetReferenceValue(), setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 
@@ -1196,7 +1198,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     // Copy output sizes from new transaction; they may have had the fee
     // subtracted from them.
     for (unsigned int idx = 0; idx < tx.vout.size(); idx++) {
-        tx.vout[idx].nValue = tx_new->vout[idx].nValue;
+        tx.vout[idx].SetReferenceValue(tx_new->vout[idx].GetReferenceValue());
     }
 
     // Add new txins while keeping original txin scriptSig/order.

@@ -426,6 +426,8 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     std::vector<COutPoint> vCoinControl;
     m_coin_control.ListSelected(vCoinControl);
 
+    const int next_height = model->node().getNumBlocks() + 1;
+
     size_t i = 0;
     for (const auto& out : model->wallet().getCoins(vCoinControl)) {
         if (out.depth_in_main_chain < 0) continue;
@@ -443,7 +445,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         nQuantity++;
 
         // Amount
-        nAmount += out.txout.nValue;
+        nAmount += out.txout.GetTimeAdjustedValue(next_height - out.refheight);;
 
         // Bytes
         CTxDestination address;
@@ -603,6 +605,8 @@ void CoinControlDialog::updateView()
 
     FreicoinUnit nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
+    const int next_height = model->node().getNumBlocks() + 1;
+
     for (const auto& coins : model->wallet().listCoins()) {
         CCoinControlWidgetItem* itemWalletAddress{nullptr};
         QString sWalletAddress = QString::fromStdString(EncodeDestination(coins.first));
@@ -630,7 +634,8 @@ void CoinControlDialog::updateView()
         for (const auto& outpair : coins.second) {
             const COutPoint& output = std::get<0>(outpair);
             const interfaces::WalletTxOut& out = std::get<1>(outpair);
-            nSum += out.txout.nValue;
+            CAmount value_in = out.txout.GetTimeAdjustedValue(next_height - out.refheight);
+            nSum += value_in;
             nChildren++;
 
             CCoinControlWidgetItem *itemOutput;
@@ -667,8 +672,8 @@ void CoinControlDialog::updateView()
             }
 
             // amount
-            itemOutput->setText(COLUMN_AMOUNT, FreicoinUnits::format(nDisplayUnit, out.txout.nValue));
-            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.txout.nValue)); // padding so that sorting works correctly
+            itemOutput->setText(COLUMN_AMOUNT, FreicoinUnits::format(nDisplayUnit, value_in));
+            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)value_in)); // padding so that sorting works correctly
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.time));

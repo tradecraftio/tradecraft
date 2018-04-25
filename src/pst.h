@@ -981,6 +981,7 @@ struct PartiallySignedTransaction
      * Finds the UTXO for a given input index
      *
      * @param[out] utxo The UTXO of the input if found
+     * @param[out] refheight The reference height o the input if found
      * @param[in] input_index Index of the input to retrieve the UTXO of
      * @return Whether the UTXO for the specified input was found
      */

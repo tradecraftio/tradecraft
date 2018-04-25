@@ -91,7 +91,7 @@ static void ApplyHash(HashWriter& ss, const uint256& hash, const std::map<uint32
 
         ss << VARINT(it->first + 1);
         ss << it->second.out.scriptPubKey;
-        ss << VARINT_MODE(it->second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+        ss << VARINT_MODE(it->second.out.GetReferenceValue(), VarIntMode::NONNEGATIVE_SIGNED);
         ss << VARINT(it->second.refheight);
 
         if (it == std::prev(outputs.end())) {
@@ -118,7 +118,10 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         stats.nTransactionOutputs++;
         if (stats.total_value.has_value()) {
-            stats.total_value = CheckedAdd(*stats.total_value, it->second.out.nValue);
+            stats.total_value = CheckedAdd(*stats.total_value, it->second.out.GetReferenceValue());
+        }
+        if (stats.total_amount.has_value()) {
+            stats.total_amount = CheckedAdd(*stats.total_amount, it->second.GetPresentValue(stats.nHeight + 1));
         }
         stats.nBogoSize += GetBogoSize(it->second.out.scriptPubKey);
     }
