@@ -53,6 +53,8 @@ struct Params {
     /** Bitcoin unit test compatibility mode */
     bool bitcoin_mode;
     int nSubsidyHalvingInterval;
+    /** Demurrage settings */
+    bool permit_disable_time_adjust; // is '-notimeadjust' allowed
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;

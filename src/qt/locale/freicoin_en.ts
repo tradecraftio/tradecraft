@@ -450,7 +450,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+155"/>
+        <location line="+158"/>
         <source>yes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -470,8 +470,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+42"/>
-        <location line="+52"/>
+        <location line="+44"/>
+        <location line="+53"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>

@@ -26,12 +26,12 @@ static void addCoin(const CAmount& nValue, uint32_t refheight, const CWallet& wa
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
-    tx.vout[nInput].nValue = nValue;
+    tx.vout[nInput].SetReferenceValue(nValue);
     tx.lock_height = refheight;
     CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
 
     int nAge = 6 * 24;
-    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wtx, nInput, nAge, nValue, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
 }
 

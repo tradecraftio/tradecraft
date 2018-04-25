@@ -1286,7 +1286,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 // failures through additional data in, eg, the coins being
                 // spent being checked as a part of CScriptCheck.
                 const CScript& scriptPubKey = coin.out.scriptPubKey;
-                const CAmount amount = coin.out.nValue;
+                const CAmount amount = coin.out.GetReferenceValue();
                 const int64_t refheight = coin.refheight;
 
                 // Verify signature
@@ -1554,7 +1554,7 @@ bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned i
     txTo.vin[0].scriptSig = CScript();
     txTo.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txTo.vout.resize(1);
-    txTo.vout[0].nValue = 0;
+    txTo.vout[0].SetReferenceValue(0);
     txTo.vout[0].scriptPubKey = (CScript() << OP_TRUE);
     txTo.nLockTime = 0;
     txTo.lock_height = from.nHeight;
@@ -1566,7 +1566,7 @@ bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned i
     PrecomputedTransactionData txdata(to);
     // Must be able to spend the script with an empty scriptSig.
     const CScript& scriptPubKey = from.out.scriptPubKey;
-    const CAmount amount = from.out.nValue;
+    const CAmount amount = from.out.GetReferenceValue();
     const int64_t refheight = from.refheight;
     CScriptCheck check(scriptPubKey, amount, refheight, to, 0, flags, false, &txdata);
     return check();
@@ -1964,7 +1964,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            nFees += GetTimeAdjustedValue(view.GetValueIn(tx)-tx.GetValueOut(),
+                                          pindex->nHeight - (int)tx.lock_height);
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
@@ -3097,7 +3098,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
             CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
             CTxOut out;
-            out.nValue = 0;
+            out.SetReferenceValue(0);
             out.scriptPubKey.resize(38);
             out.scriptPubKey[0] = OP_RETURN;
             out.scriptPubKey[1] = 0x24;

@@ -15,6 +15,8 @@
 
 #include "data/script_tests.json.h"
 
+#include "test/test_freicoin.h"
+
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
@@ -23,7 +25,6 @@
 #include "script/sign.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_freicoin.h"
 #include "rpc/server.h"
 
 #if defined(HAVE_CONSENSUS_LIB)

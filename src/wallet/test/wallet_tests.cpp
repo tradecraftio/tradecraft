@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "wallet/test/wallet_test_fixture.h"
+
 #include "wallet/wallet.h"
 
 #include <set>
@@ -71,7 +73,7 @@ static void add_coin(const CAmount& nValue, uint32_t refheight, int nAge = 6*24,
         wtx->fDebitCached = true;
         wtx->nDebitCached = 1;
     }
-    COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wtx.get(), nInput, nAge, nValue, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
     wtxn.emplace_back(std::move(wtx));
 }
