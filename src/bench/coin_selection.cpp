@@ -27,7 +27,7 @@ static void addCoin(const CAmount& nValue, int32_t refheight, const CWallet& wal
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
-    tx.vout[nInput].nValue = nValue;
+    tx.vout[nInput].SetReferenceValue(nValue);
     tx.lock_height = refheight;
     CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
 

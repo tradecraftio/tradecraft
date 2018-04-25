@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "test/test_freicoin.h"
+
 #include "consensus/validation.h"
 #include "data/sighash.json.h"
 #include "hash.h"
@@ -21,7 +23,6 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "streams.h"
-#include "test/test_freicoin.h"
 #include "test/test_random.h"
 #include "util.h"
 #include "utilstrencodings.h"

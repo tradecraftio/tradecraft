@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "test/test_freicoin.h"
+
 #include "consensus/validation.h"
 #include "key.h"
 #include "validation.h"
@@ -21,7 +23,6 @@
 #include "txmempool.h"
 #include "random.h"
 #include "script/standard.h"
-#include "test/test_freicoin.h"
 #include "utiltime.h"
 
 #include <boost/test/unit_test.hpp>

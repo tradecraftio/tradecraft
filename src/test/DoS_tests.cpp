@@ -15,6 +15,8 @@
 
 // Unit tests for denial-of-service detection/prevention code
 
+#include "test/test_freicoin.h"
+
 #include "chainparams.h"
 #include "keystore.h"
 #include "net.h"
@@ -24,8 +26,6 @@
 #include "serialize.h"
 #include "util.h"
 #include "validation.h"
-
-#include "test/test_freicoin.h"
 
 #include <stdint.h>
 

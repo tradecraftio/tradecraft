@@ -589,7 +589,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
-                    nAmount += txout.nValue;
+                    nAmount += txout.GetReferenceValue();
     }
 
     return  ValueFromAmount(nAmount);
@@ -645,7 +645,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwalletMain, address) && setAddress.count(address))
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
-                    nAmount += txout.nValue;
+                    nAmount += txout.GetReferenceValue();
         }
     }
 
@@ -705,12 +705,10 @@ UniValue getbalance(const JSONRPCRequest& request)
             filter = filter | ISMINE_WATCH_ONLY;
 
     if (request.params[0].get_str() == "*") {
-        // Calculate total balance in a very different way from GetBalance().
-        // The biggest difference is that GetBalance() sums up all unspent
-        // TxOuts paying to the wallet, while this sums up both spent and
-        // unspent TxOuts paying to the wallet, and then subtracts the values of
-        // TxIns spending from the wallet. This also has fewer restrictions on
-        // which unconfirmed transactions are considered trusted.
+        // GetBalance() sums up all available unspent TxOuts AND applies
+        // demurrage. `getbalance` and `getbalance '*' 0` should NOT return the
+        // same number because demurrage is not applied in account views, even
+        // the '*' aggregate-account view.
         CAmount nBalance = 0;
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
         {
@@ -718,11 +716,11 @@ UniValue getbalance(const JSONRPCRequest& request)
             if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
                 continue;
 
-            CAmount allFee;
+            CAmount allFee, all_demurrage;
             string strSentAccount;
             list<COutputEntry> listReceived;
             list<COutputEntry> listSent;
-            wtx.GetAmounts(listReceived, listSent, allFee, strSentAccount, filter);
+            wtx.GetAmounts(listReceived, listSent, allFee, all_demurrage, strSentAccount, filter);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
                 BOOST_FOREACH(const COutputEntry& r, listReceived)
@@ -730,7 +728,7 @@ UniValue getbalance(const JSONRPCRequest& request)
             }
             BOOST_FOREACH(const COutputEntry& s, listSent)
                 nBalance -= s.amount;
-            nBalance -= allFee;
+            nBalance -= (allFee + all_demurrage);
         }
         return  ValueFromAmount(nBalance);
     }
@@ -1184,7 +1182,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
                 continue;
 
             tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
+            item.nAmount += txout.GetReferenceValue();
             item.nConf = min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)
@@ -1351,18 +1349,18 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
 {
-    CAmount nFee;
+    CAmount nFee, demurrage;
     string strSentAccount;
     list<COutputEntry> listReceived;
     list<COutputEntry> listSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
+    wtx.GetAmounts(listReceived, listSent, nFee, demurrage, strSentAccount, filter);
 
     bool fAllAccounts = (strAccount == string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
     // Sent
-    if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
+    if ((!listSent.empty() || (nFee + demurrage) != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
         BOOST_FOREACH(const COutputEntry& s, listSent)
         {
@@ -1377,6 +1375,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 entry.push_back(Pair("label", pwalletMain->mapAddressBook[s.destination].name));
             entry.push_back(Pair("vout", s.vout));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            entry.push_back(Pair("demurrage", ValueFromAmount(-demurrage)));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("refheight", (uint64_t)wtx.tx->lock_height));
@@ -1616,15 +1615,15 @@ UniValue listaccounts(const JSONRPCRequest& request)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        CAmount nFee;
+        CAmount nFee, demurrage;
         string strSentAccount;
         list<COutputEntry> listReceived;
         list<COutputEntry> listSent;
         int nDepth = wtx.GetDepthInMainChain();
         if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
             continue;
-        wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, includeWatchonly);
-        mapAccountBalances[strSentAccount] -= nFee;
+        wtx.GetAmounts(listReceived, listSent, nFee, demurrage, strSentAccount, includeWatchonly);
+        mapAccountBalances[strSentAccount] -= (nFee + demurrage);
         BOOST_FOREACH(const COutputEntry& s, listSent)
             mapAccountBalances[strSentAccount] -= s.amount;
         if (nDepth >= nMinDepth)
@@ -1818,12 +1817,16 @@ UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount value_in = 0, demurrage = 0;
+    pwalletMain->GetInputSplit(wtx, value_in, demurrage);
+    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - value_in : 0);
 
     entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
     entry.push_back(Pair("refheight", (uint64_t)wtx.tx->lock_height));
-    if (wtx.IsFromMe(filter))
+    if (wtx.IsFromMe(filter)) {
         entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+        entry.push_back(Pair("demurrage", ValueFromAmount(demurrage)));
+    }
 
     WalletTxToJSON(wtx, entry);
 
@@ -2466,6 +2469,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     vector<COutput> vecOutputs;
     assert(pwalletMain != NULL);
     LOCK2(cs_main, pwalletMain->cs_wallet);
+    const int next_height = chainActive.Height() + 1;
     pwalletMain->AvailableCoins(vecOutputs, !include_unsafe, NULL, true);
     BOOST_FOREACH(const COutput& out, vecOutputs) {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
@@ -2497,7 +2501,8 @@ UniValue listunspent(const JSONRPCRequest& request)
         }
 
         entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
-        entry.push_back(Pair("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue)));
+        entry.push_back(Pair("value", ValueFromAmount(out.tx->tx->vout[out.i].GetReferenceValue())));
+        entry.push_back(Pair("amount", ValueFromAmount(out.tx->tx->GetPresentValueOfOutput(out.i, next_height))));
         entry.push_back(Pair("refheight", (uint64_t)out.tx->tx->lock_height));
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
@@ -2888,15 +2893,15 @@ UniValue bumpfee(const JSONRPCRequest& request)
     assert(nDelta > 0);
     CMutableTransaction tx(*(wtx.tx));
     CTxOut* poutput = &(tx.vout[nOutput]);
-    if (poutput->nValue < nDelta) {
+    if (poutput->GetReferenceValue() < nDelta) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Change output is too small to bump the fee");
     }
 
     // If the output would become dust, discard it (converting the dust to fee)
-    poutput->nValue -= nDelta;
-    if (poutput->nValue <= poutput->GetDustThreshold(::dustRelayFee)) {
+    poutput->AdjustReferenceValue(-nDelta);
+    if (poutput->GetReferenceValue() <= poutput->GetDustThreshold(::dustRelayFee)) {
         LogPrint("rpc", "Bumping fee and discarding dust output\n");
-        nNewFee += poutput->nValue;
+        nNewFee += poutput->GetReferenceValue();
         tx.vout.erase(tx.vout.begin() + nOutput);
     }
 
@@ -2907,7 +2912,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
         std::map<uint256, CWalletTx>::const_iterator mi = pwalletMain->mapWallet.find(input.prevout.hash);
         assert(mi != pwalletMain->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
         const CScript& scriptPubKey = mi->second.tx->vout[input.prevout.n].scriptPubKey;
-        const CAmount& amount = mi->second.tx->vout[input.prevout.n].nValue;
+        const CAmount& amount = mi->second.tx->vout[input.prevout.n].GetReferenceValue();
         const int64_t refheight = mi->second.tx->lock_height;
         SignatureData sigdata;
         if (!ProduceSignature(TransactionSignatureCreator(pwalletMain, &txNewConst, nIn, amount, refheight, SIGHASH_ALL), scriptPubKey, sigdata)) {

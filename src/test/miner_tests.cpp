@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "test/test_freicoin.h"
+
 #include "chainparams.h"
 #include "coins.h"
 #include "consensus/consensus.h"
@@ -27,8 +29,6 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-
-#include "test/test_freicoin.h"
 
 #include <memory>
 

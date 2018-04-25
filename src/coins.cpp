@@ -302,7 +302,13 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 
     CAmount nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += GetOutputFor(tx.vin[i]).nValue;
+    {
+        // Assumes HaveCoins(tx.vin[i].prevout.hash)
+        const COutPoint& prevout = tx.vin[i].prevout;
+        const CCoins* coins = AccessCoins(prevout.hash);
+        assert(coins && coins->IsAvailable(prevout.n));
+        nResult += coins->GetPresentValueOfOutput(prevout.n, tx.lock_height);
+    }
 
     return nResult;
 }
@@ -333,8 +339,17 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
         assert(coins);
         if (!coins->IsAvailable(txin.prevout.n)) continue;
         if (coins->nHeight <= nHeight) {
-            dResult += (double)(coins->vout[txin.prevout.n].nValue) * (nHeight-coins->nHeight);
-            inChainInputValue += coins->vout[txin.prevout.n].nValue;
+            CAmount value_in = coins->GetPresentValueOfOutput(txin.prevout.n, tx.lock_height);
+            inChainInputValue += value_in;
+            // As an run-time optimization, do not bother with demurrage
+            // adjustments if the output is less than 10.5 days old.  This gains
+            // significant run-time performance benefit at a cost of no more
+            // than 0.1% error in priority calculations, which are not consensus
+            // critical.
+            if ((tx.lock_height + 1008) < nHeight) {
+                value_in = GetTimeAdjustedValue(value_in, nHeight - tx.lock_height);
+            }
+            dResult += (double)value_in * (nHeight-coins->nHeight);
         }
     }
     return tx.ComputePriority(dResult);

@@ -785,9 +785,10 @@ struct CCoinsStats
     uint64_t nTransactionOutputs;
     uint64_t nSerializedSize;
     uint256 hashSerialized;
+    CAmount nTotalValue;
     CAmount nTotalAmount;
 
-    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nTotalValue(0), nTotalAmount(0) {}
 };
 
 //! Calculate statistics about the unspent transaction output set
@@ -802,6 +803,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
     }
     ss << stats.hashBlock;
+    CAmount nTotalValue = 0;
     CAmount nTotalAmount = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
@@ -816,7 +818,8 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
                     stats.nTransactionOutputs++;
                     ss << VARINT(i+1);
                     ss << out;
-                    nTotalAmount += out.nValue;
+                    nTotalValue += out.GetReferenceValue();
+                    nTotalAmount += coins.GetPresentValueOfOutput(i, stats.nHeight + 1);
                 }
             }
             stats.nSerializedSize += 32 + pcursor->GetValueSize();
@@ -827,6 +830,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         pcursor->Next();
     }
     stats.hashSerialized = ss.GetHash();
+    stats.nTotalValue = nTotalValue;
     stats.nTotalAmount = nTotalAmount;
     return true;
 }
@@ -913,6 +917,7 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
         ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
         ret.push_back(Pair("bytes_serialized", (int64_t)stats.nSerializedSize));
         ret.push_back(Pair("hash_serialized", stats.hashSerialized.GetHex()));
+        ret.push_back(Pair("total_value", ValueFromAmount(stats.nTotalValue)));
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -991,13 +996,14 @@ UniValue gettxout(const JSONRPCRequest& request)
         ret.push_back(Pair("confirmations", 0));
     else
         ret.push_back(Pair("confirmations", pindex->nHeight - coins.nHeight + 1));
-    ret.push_back(Pair("value", ValueFromAmount(coins.vout[n].nValue)));
+    ret.push_back(Pair("value", ValueFromAmount(coins.vout[n].GetReferenceValue())));
     UniValue o(UniValue::VOBJ);
     ScriptPubKeyToJSON(coins.vout[n].scriptPubKey, o, true);
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("version", coins.nVersion));
     ret.push_back(Pair("coinbase", coins.fCoinBase));
     ret.push_back(Pair("refheight", coins.refheight));
+    ret.push_back(Pair("amount", ValueFromAmount(coins.GetPresentValueOfOutput(n, pindex->nHeight + 1))));
 
     return ret;
 }

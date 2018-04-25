@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "test/test_freicoin.h"
+
 #include "key.h"
 #include "keystore.h"
 #include "policy/policy.h"
@@ -22,7 +24,6 @@
 #include "script/sign.h"
 #include "script/ismine.h"
 #include "uint256.h"
-#include "test/test_freicoin.h"
 
 
 #include <boost/foreach.hpp>

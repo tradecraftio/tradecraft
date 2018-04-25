@@ -63,7 +63,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
 double
 CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {
-    double deltaPriority = ((double)(currentHeight-entryHeight)*inChainInputValue)/nModSize;
+    double deltaPriority = ((double)(currentHeight-entryHeight)*GetTimeAdjustedValue(inChainInputValue, currentHeight-GetReferenceHeight()))/nModSize;
     double dResult = entryPriority + deltaPriority;
     if (dResult < 0) // This should only happen if it was called with a height below entry height
         dResult = 0;
@@ -122,7 +122,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
     BOOST_FOREACH(txiter cit, setAllDescendants) {
         if (!setExclude.count(cit->GetTx().GetHash())) {
             modifySize += cit->GetTxSize();
-            modifyFee += cit->GetModifiedFee();
+            modifyFee += GetTimeAdjustedValue(cit->GetModifiedFee(), updateIt->GetReferenceHeight() - cit->GetReferenceHeight());
             modifyCount++;
             cachedDescendants[updateIt].insert(cit);
             // Update ancestor state for each descendant
@@ -947,7 +947,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256 hash, const std::string str
             std::string dummy;
             CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
             BOOST_FOREACH(txiter ancestorIt, setAncestors) {
-                mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
+                mapTx.modify(ancestorIt, update_descendant_state(0, GetTimeAdjustedValue(nFeeDelta, ancestorIt->GetReferenceHeight() - it->GetReferenceHeight()), 0));
             }
             // Now update all descendants' modified fees with ancestors
             setEntries setDescendants;

@@ -62,6 +62,7 @@ class BlockchainTest(FreicoinTestFramework):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
+        assert_equal(res['total_value'], Decimal('8725.00000000'))
         assert_equal(res['total_amount'], Decimal('8725.00000000'))
         assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)

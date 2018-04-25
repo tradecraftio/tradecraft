@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "test/test_freicoin.h"
+
 #include "policy/policy.h"
 #include "txmempool.h"
 #include "util.h"
-
-#include "test/test_freicoin.h"
 
 #include <boost/test/unit_test.hpp>
 #include <list>

@@ -110,7 +110,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const CTxOut& txout = tx.vout[i];
         UniValue out(UniValue::VOBJ);
-        out.push_back(Pair("value", ValueFromAmount(txout.nValue)));
+        out.push_back(Pair("value", ValueFromAmount(txout.GetReferenceValue())));
         out.push_back(Pair("n", (int64_t)i));
         UniValue o(UniValue::VOBJ);
         ScriptPubKeyToJSON(txout.scriptPubKey, o, true);
@@ -782,9 +782,9 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
                 if ((unsigned int)nOut >= coins->vout.size())
                     coins->vout.resize(nOut+1);
                 coins->vout[nOut].scriptPubKey = scriptPubKey;
-                coins->vout[nOut].nValue = 0;
+                coins->vout[nOut].SetReferenceValue(0);
                 if (prevOut.exists("amount")) {
-                    coins->vout[nOut].nValue = AmountFromValue(find_value(prevOut, "amount"));
+                    coins->vout[nOut].SetReferenceValue(AmountFromValue(find_value(prevOut, "amount")));
                 }
                 coins->refheight = 0;
                 if (prevOut.exists("refheight")) {
@@ -853,7 +853,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             continue;
         }
         const CScript& prevPubKey = coins->vout[txin.prevout.n].scriptPubKey;
-        const CAmount& amount = coins->vout[txin.prevout.n].nValue;
+        const CAmount& amount = coins->vout[txin.prevout.n].GetReferenceValue();
         const int64_t refheight = coins->refheight;
 
         SignatureData sigdata;

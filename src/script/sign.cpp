@@ -235,7 +235,7 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutab
     CTxIn& txin = txTo.vin[nIn];
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
-    const CAmount amount = txFrom.vout[txin.prevout.n].nValue;
+    const CAmount amount = txFrom.vout[txin.prevout.n].GetReferenceValue();
     const int64_t refheight = txFrom.lock_height;
 
     return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, amount, refheight, nHashType);
