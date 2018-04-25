@@ -32,7 +32,7 @@ static void AddCoin(const CAmount& value, int n_input, int n_input_bytes, int lo
     tx.vout.resize(n_input + 1);
     tx.vout[n_input].nValue = value;
     tx.nLockTime = locktime; // all transactions get different hashes
-    coins.emplace_back(COutPoint(tx.GetHash(), n_input), SpentOutput{tx.vout.at(n_input), /*refheight=*/ 1}, /*depth=*/0, n_input_bytes, /*spendable=*/true, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, fee_rate);
+    coins.emplace_back(/*atheight=*/1, COutPoint(tx.GetHash(), n_input), SpentOutput{tx.vout.at(n_input), /*refheight=*/ 1}, /*depth=*/0, n_input_bytes, /*spendable=*/true, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, fee_rate);
 }
 
 // Randomly distribute coins to instances of OutputGroup
