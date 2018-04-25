@@ -33,6 +33,9 @@ public:
     /** Index in tx->vout. */
     int i;
 
+    /** Reference height of this output. */
+    uint32_t atheight;
+
     /**
      * Depth in block chain.
      * If > 0: the tx is on chain and has this many confirmations.
@@ -59,9 +62,9 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
+    COutput(const CWallet& wallet, uint32_t atheightIn, const CWalletTx& wtx, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
     {
-        tx = &wtx; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
+        tx = &wtx; i = iIn; atheight = atheightIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
         // If known and signable by the given wallet, compute nInputBytes
         // Failure will keep this value -1
         if (fSpendable) {
@@ -73,7 +76,7 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(tx->tx, i, nInputBytes);
+        return CInputCoin(atheight, tx->tx, i, nInputBytes);
     }
 };
 
@@ -96,9 +99,9 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* walle
 /**
  * populate vCoins with vector of available COutputs.
  */
-void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, uint32_t atheight, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
-CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl = nullptr);
+CAmount GetAvailableBalance(const CWallet& wallet, uint32_t atheight = 0, const CCoinControl* coinControl = nullptr);
 
 /**
  * Find non-change parent output.
@@ -139,7 +142,7 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
  * returns                             If successful, a SelectionResult containing the selected coins
  *                                     If failed, a nullopt.
  */
-std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
+std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, uint32_t height, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**

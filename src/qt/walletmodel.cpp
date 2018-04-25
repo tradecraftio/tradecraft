@@ -205,7 +205,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return DuplicateAddress;
     }
 
-    CAmount nBalance = m_wallet->getAvailableBalance(coinControl);
+    CAmount nBalance = m_wallet->getAvailableBalance(/* height= */ 0, coinControl);
 
     if(total > nBalance)
     {

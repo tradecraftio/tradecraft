@@ -42,6 +42,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<st
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(1);
     tx.vout[0].nValue = nValue;
+    tx.lock_height = 1;
     wtxs.push_back(std::make_unique<CWalletTx>(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
 }
 
@@ -69,10 +70,10 @@ static void CoinSelection(benchmark::Bench& bench)
     // Create coins
     std::vector<COutput> coins;
     for (const auto& wtx : wtxs) {
-        coins.emplace_back(wallet, *wtx, 0 /* iIn */, 6 * 24 /* nDepthIn */, true /* spendable */, true /* solvable */, true /* safe */);
+        coins.emplace_back(wallet, 1 /* atheight */, *wtx, 0 /* iIn */, 6 * 24 /* nDepthIn */, true /* spendable */, true /* solvable */, true /* safe */);
     }
 
-    const CoinEligibilityFilter filter_standard(1, 6, 0);
+    const CoinEligibilityFilter filter_standard(1 /* refheight */, 1, 6, 0);
     const CoinSelectionParams coin_selection_params(/* change_output_size= */ 34,
                                                     /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                                     /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
@@ -93,7 +94,8 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    CInputCoin coin(MakeTransactionRef(tx), nInput);
+    tx.lock_height = 1;
+    CInputCoin coin(1, MakeTransactionRef(tx), nInput);
     set.emplace_back();
     set.back().Insert(coin, 0, true, 0, 0, false);
 }

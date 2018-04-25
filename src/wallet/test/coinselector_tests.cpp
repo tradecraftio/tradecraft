@@ -41,9 +41,9 @@ BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 
 typedef std::set<CInputCoin> CoinSet;
 
-static const CoinEligibilityFilter filter_standard(1, 6, 0);
-static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
-static const CoinEligibilityFilter filter_standard_extra(6, 6, 0);
+static const CoinEligibilityFilter filter_standard(/* refheight= */ 1, 1, 6, 0);
+static const CoinEligibilityFilter filter_confirmed(/* refheight= */ 1, 1, 1, 0);
+static const CoinEligibilityFilter filter_standard_extra(/* refheight= */ 1, 6, 6, 0);
 static int nextLockTime = 0;
 
 static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
@@ -52,7 +52,8 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>&
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    set.emplace_back(MakeTransactionRef(tx), nInput);
+    tx.lock_height = 1;
+    set.emplace_back(tx.lock_height, MakeTransactionRef(tx), nInput);
 }
 
 static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
@@ -61,7 +62,8 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    CInputCoin coin(MakeTransactionRef(tx), nInput);
+    tx.lock_height = 1;
+    CInputCoin coin(tx.lock_height, MakeTransactionRef(tx), nInput);
     OutputGroup group;
     group.Insert(coin, 1, false, 0, 0, true);
     result.AddInput(group);
@@ -73,7 +75,7 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fe
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    CInputCoin coin(MakeTransactionRef(tx), nInput);
+    CInputCoin coin(tx.lock_height, MakeTransactionRef(tx), nInput);
     coin.effective_value = nValue - fee;
     coin.m_fee = fee;
     coin.m_long_term_fee = long_term_fee;
@@ -84,6 +86,7 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
 {
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
+    tx.lock_height = 1;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     if (spendable) {
@@ -109,7 +112,7 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
         wtx.m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
         wtx.m_is_cache_empty = false;
     }
-    COutput output(wallet, wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wallet, wtx.tx->lock_height, wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     coins.push_back(output);
 }
 
@@ -355,7 +358,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(COutPoint(coins.at(0).tx->GetHash(), coins.at(0).i));
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
-        const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
+        const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, /* refheight= */ 1, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(result10);
     }
 }
@@ -373,6 +376,17 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
     {
+        coins.clear();
+
+        // a refheight in the future doesn't show up
+        add_coin(coins, *wallet, 1 * CENT);
+        CoinEligibilityFilter past_filter(0 /* refheight */, 1, 6, 0);
+        BOOST_CHECK(!KnapsackSolver(KnapsackGroupOutputs(coins, *wallet, past_filter), 1 * CENT));
+
+        // but it does when we change our target refheight to the future
+        BOOST_CHECK(KnapsackSolver(KnapsackGroupOutputs(coins, *wallet, filter_standard), 1 * CENT));
+
+        // revert wallet for unit tests carried over from bitcoin
         coins.clear();
 
         // with an empty wallet we can't even pay one cent
@@ -730,7 +744,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
                                       /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                       /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
         CCoinControl cc;
-        const auto result = SelectCoins(*wallet, coins, target, cc, cs_params);
+        const auto result = SelectCoins(*wallet, coins, target, /* height= */ 1, cc, cs_params);
         BOOST_CHECK(result);
         BOOST_CHECK_GE(result->GetSelectedValue(), target);
     }
