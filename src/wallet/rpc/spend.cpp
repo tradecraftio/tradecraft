@@ -1419,17 +1419,17 @@ RPCHelpMan sendall()
                     if (!tx || input.prevout.n >= tx->tx->vout.size() || !(pwallet->IsMine(tx->tx->vout[input.prevout.n]) & (coin_control.fAllowWatchOnly ? ISMINE_ALL : ISMINE_SPENDABLE))) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not found. UTXO (%s:%d) is not part of wallet.", input.prevout.hash.ToString(), input.prevout.n));
                     }
-                    total_input_value += tx->tx->vout[input.prevout.n].nValue;
+                    total_input_value += tx->tx->GetPresentValueOfOutput(input.prevout.n, rawTx.lock_height);
                 }
             } else {
                 for (const COutput& output : AvailableCoins(*pwallet, current_height + 1, &coin_control, fee_rate, /*nMinimumAmount=*/0).All()) {
                     CHECK_NONFATAL(output.input_bytes > 0);
-                    if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
+                    if (send_max && fee_rate.GetFee(output.input_bytes) > output.adjusted) {
                         continue;
                     }
                     CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL);
                     rawTx.vin.push_back(input);
-                    total_input_value += output.txout.nValue;
+                    total_input_value += output.adjusted;
                 }
             }
 
@@ -1457,7 +1457,7 @@ RPCHelpMan sendall()
 
             CAmount output_amounts_claimed{0};
             for (const CTxOut& out : rawTx.vout) {
-                output_amounts_claimed += out.nValue;
+                output_amounts_claimed += out.GetReferenceValue();
             }
 
             if (output_amounts_claimed > total_input_value) {
@@ -1477,9 +1477,9 @@ RPCHelpMan sendall()
                 ExtractDestination(out.scriptPubKey, dest);
                 std::string addr{EncodeDestination(dest)};
                 if (addresses_without_amount.count(addr) > 0) {
-                    out.nValue = per_output_without_amount;
+                    out.SetReferenceValue(per_output_without_amount);
                     if (!gave_remaining_to_first) {
-                        out.nValue += remainder % addresses_without_amount.size();
+                        out.AdjustReferenceValue(remainder % addresses_without_amount.size());
                         gave_remaining_to_first = true;
                     }
                     if (IsDust(out, pwallet->chain().relayDustFee())) {

@@ -197,6 +197,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     // If available, use Undo data to calculate the fee. Note that txundo == nullptr
     // for coinbase transactions and for transactions where undo data is unavailable.
     const bool have_undo = txundo != nullptr;
+    CAmount amt_raw_in = 0;
     CAmount amt_total_in = 0;
     CAmount amt_total_out = 0;
 
@@ -224,7 +225,8 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             const Coin& prev_coin = txundo->vprevout[i];
             const CTxOut& prev_txout = prev_coin.out;
 
-            amt_total_in += prev_txout.nValue;
+            amt_raw_in += prev_coin.out.GetReferenceValue();
+            amt_total_in += prev_coin.GetPresentValue(tx.lock_height);
 
             if (verbosity == TxVerbosity::SHOW_DETAILS_AND_PREVOUT) {
                 UniValue o_script_pub_key(UniValue::VOBJ);
@@ -233,7 +235,9 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
                 UniValue p(UniValue::VOBJ);
                 p.pushKV("generated", bool(prev_coin.fCoinBase));
                 p.pushKV("height", uint64_t(prev_coin.nHeight));
-                p.pushKV("value", ValueFromAmount(prev_txout.nValue));
+                p.pushKV("value", ValueFromAmount(prev_txout.GetReferenceValue()));
+                p.pushKV("refheight", ValueFromAmount(prev_coin.refheight));
+                p.pushKV("amount", ValueFromAmount(prev_coin.GetPresentValue(tx.lock_height)));
                 p.pushKV("scriptPubKey", o_script_pub_key);
                 in.pushKV("prevout", p);
             }
@@ -249,7 +253,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
 
         UniValue out(UniValue::VOBJ);
 
-        out.pushKV("value", ValueFromAmount(txout.nValue));
+        out.pushKV("value", ValueFromAmount(txout.GetReferenceValue()));
         out.pushKV("n", (int64_t)i);
 
         UniValue o(UniValue::VOBJ);
@@ -258,12 +262,15 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         vout.push_back(out);
 
         if (have_undo) {
-            amt_total_out += txout.nValue;
+            amt_total_out += txout.GetReferenceValue();
         }
     }
     entry.pushKV("vout", vout);
 
     if (have_undo) {
+        const CAmount demurrage = amt_raw_in - amt_total_in;
+        CHECK_NONFATAL(MoneyRange(demurrage));
+        entry.pushKV("demurrage", ValueFromAmount(demurrage));
         const CAmount fee = amt_total_in - amt_total_out;
         CHECK_NONFATAL(MoneyRange(fee));
         entry.pushKV("fee", ValueFromAmount(fee));

@@ -55,7 +55,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
     CMutableTransaction txSpend = BuildSpendingTransaction(scriptSig, CScriptWitness(), CTransaction(txCredit));
     CScriptWitness& witness = txSpend.vin[0].scriptWitness;
     witness.stack.emplace_back();
-    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].nValue, txCredit.lock_height, SigVersion::WITNESS_V0), witness.stack.back());
+    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].GetReferenceValue(), txCredit.lock_height, SigVersion::WITNESS_V0), witness.stack.back());
     witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
     witness.stack.push_back(ToByteVector(pubkey));
 
@@ -67,7 +67,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
             txCredit.vout[0].scriptPubKey,
             &txSpend.vin[0].scriptWitness,
             flags,
-            MutableTransactionSignatureChecker(&txSpend, 0, txCredit.vout[0].nValue, txCredit.lock_height, MissingDataBehavior::ASSERT_FAIL),
+            MutableTransactionSignatureChecker(&txSpend, 0, txCredit.vout[0].GetReferenceValue(), txCredit.lock_height, MissingDataBehavior::ASSERT_FAIL),
             &err);
         assert(err == SCRIPT_ERR_OK);
         assert(success);
@@ -78,7 +78,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
         int csuccess = freicoinconsensus_verify_script_with_amount(
             txCredit.vout[0].scriptPubKey.data(),
             txCredit.vout[0].scriptPubKey.size(),
-            txCredit.vout[0].nValue,
+            txCredit.vout[0].GetReferenceValue(),
             txCredit.lock_height,
             (const unsigned char*)stream.data(), stream.size(), 0, flags, nullptr);
         assert(csuccess == 1);
