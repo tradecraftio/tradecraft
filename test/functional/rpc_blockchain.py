@@ -546,7 +546,7 @@ class BlockchainTest(FreicoinTestFramework):
             total_vout = Decimal("0.00000000")
             for vin in tx["vin"]:
                 assert "prevout" in vin
-                assert_equal(set(vin["prevout"].keys()), set(("value", "height", "generated", "scriptPubKey")))
+                assert_equal(set(vin["prevout"].keys()), set(("value", "refheight", "amount", "height", "generated", "scriptPubKey")))
                 assert_equal(vin["prevout"]["generated"], True)
                 total_vin += vin["prevout"]["value"]
             for vout in tx["vout"]:

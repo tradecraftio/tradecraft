@@ -16,6 +16,8 @@
 #include <test/data/script_tests.json.h>
 #include <test/data/bip341_wallet_vectors.json.h>
 
+#include <test/util/setup_common.h>
+
 #include <core_io.h>
 #include <key.h>
 #include <rpc/util.h>

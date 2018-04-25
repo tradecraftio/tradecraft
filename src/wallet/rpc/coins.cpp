@@ -79,7 +79,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
 
         for (const CTxOut& txout : wtx.tx->vout) {
             if (output_scripts.count(txout.scriptPubKey) > 0) {
-                amount += txout.nValue;
+                amount += txout.GetReferenceValue();
             }
         }
     }
@@ -542,7 +542,8 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::STR, "address", /*optional=*/true, "the freicoin address"},
                             {RPCResult::Type::STR, "label", /*optional=*/true, "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
-                            {RPCResult::Type::STR_AMOUNT, "value", "the transaction output amount in " + CURRENCY_UNIT},
+                            {RPCResult::Type::STR_AMOUNT, "value", "the transaction output amount in " + CURRENCY_UNIT + " at the reference height of the transaction"},
+                            {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT + " as of the next block"},
                             {RPCResult::Type::NUM, "refheight", "the reference height of the transaction"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::NUM, "ancestorcount", /*optional=*/true, "The number of in-mempool ancestor transactions, including this one (if transaction is in the mempool)"},
@@ -726,7 +727,8 @@ RPCHelpMan listunspent()
         }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
-        entry.pushKV("value", ValueFromAmount(out.txout.nValue));
+        entry.pushKV("value", ValueFromAmount(out.txout.GetReferenceValue()));
+        entry.pushKV("amount", ValueFromAmount(out.adjusted));
         entry.pushKV("refheight", (uint64_t)out.refheight);
         entry.pushKV("confirmations", out.depth);
         if (!out.depth) {

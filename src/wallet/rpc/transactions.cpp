@@ -133,7 +133,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
                 continue;
 
             tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
+            item.nAmount += txout.GetReferenceValue();
             item.nConf = std::min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)
@@ -332,10 +332,11 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     CAmount nFee;
+    CAmount demurrage;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine, include_change);
+    CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, demurrage, filter_ismine, include_change);
 
     bool involvesWatchonly = CachedTxIsFromMe(wallet, wtx, ISMINE_WATCH_ONLY);
 
@@ -357,6 +358,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
+            entry.pushKV("demurrage", ValueFromAmount(-demurrage));
             if (fLong)
                 WalletTxToJSON(wallet, wtx, entry);
             entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
@@ -473,6 +475,8 @@ RPCHelpMan listtransactions()
                             {RPCResult::Type::NUM, "vout", "the vout value"},
                             {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                  "'send' category of transactions."},
+                            {RPCResult::Type::STR_AMOUNT, "demurrage", /*optional=*/true, "The amount of the input demurrage in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                                 "'send' category of transactions."},
                         },
                         TransactionDescriptionString()),
                         {
@@ -587,6 +591,8 @@ RPCHelpMan listsinceblock()
                                 {RPCResult::Type::NUM, "refheight", "The reference height of the transaction"},
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
                                 {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                                     "'send' category of transactions."},
+                                {RPCResult::Type::STR_AMOUNT, "demurrage", /*optional=*/true, "The amount of the input demurrage in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                      "'send' category of transactions."},
                             },
                             TransactionDescriptionString()),
@@ -717,6 +723,8 @@ RPCHelpMan gettransaction()
                         {RPCResult::Type::NUM, "refheight", "The reference height of the transaction"},
                         {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                      "'send' category of transactions."},
+                        {RPCResult::Type::STR_AMOUNT, "demurrage", /*optional=*/true, "The amount of the input demurrage in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                                     "'send' category of transactions."},
                     },
                     TransactionDescriptionString()),
                     {
@@ -737,6 +745,8 @@ RPCHelpMan gettransaction()
                                 {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
                                 {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
+                                    "'send' category of transactions."},
+                                {RPCResult::Type::STR_AMOUNT, "demurrage", /*optional=*/true, "The amount of the input demurrage in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                     "'send' category of transactions."},
                                 {RPCResult::Type::BOOL, "abandoned", /*optional=*/true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
@@ -789,12 +799,16 @@ RPCHelpMan gettransaction()
     CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, filter);
     CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx, filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount value_in = 0, demurrage = 0;
+    pwallet->GetInputSplit(wtx, value_in, demurrage);
+    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx, filter) ? wtx.tx->GetValueOut() - value_in : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
-    if (CachedTxIsFromMe(*pwallet, wtx, filter))
+    if (CachedTxIsFromMe(*pwallet, wtx, filter)) {
         entry.pushKV("fee", ValueFromAmount(nFee));
+        entry.pushKV("demurrage", ValueFromAmount(demurrage));
+    }
 
     WalletTxToJSON(*pwallet, wtx, entry);
 

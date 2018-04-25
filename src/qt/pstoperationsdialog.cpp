@@ -158,7 +158,7 @@ void PSTOperationsDialog::saveTransaction() {
         }
         CTxDestination address;
         ExtractDestination(out.scriptPubKey, address);
-        QString amount = FreicoinUnits::format(m_client_model->getOptionsModel()->getDisplayUnit(), out.nValue);
+        QString amount = FreicoinUnits::format(m_client_model->getOptionsModel()->getDisplayUnit(), out.GetReferenceValue());
         QString address_str = QString::fromStdString(EncodeDestination(address));
         filename_suggestion.append(address_str + "-" + amount);
         first = false;
@@ -189,9 +189,9 @@ std::string PSTOperationsDialog::renderTransaction(const PartiallySignedTransact
     for (const CTxOut& out : pstx.tx->vout) {
         CTxDestination address;
         ExtractDestination(out.scriptPubKey, address);
-        totalAmount += out.nValue;
+        totalAmount += out.GetReferenceValue();
         tx_description.append(tr(" * Sends %1 to %2")
-            .arg(FreicoinUnits::formatWithUnit(FreicoinUnit::FRC, out.nValue))
+            .arg(FreicoinUnits::formatWithUnit(FreicoinUnit::FRC, out.GetReferenceValue()))
             .arg(QString::fromStdString(EncodeDestination(address))));
         tx_description.append("<br>");
     }

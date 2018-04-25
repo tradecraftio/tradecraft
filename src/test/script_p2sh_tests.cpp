@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/util/setup_common.h>
+
 #include <consensus/tx_verify.h>
 #include <key.h>
 #include <policy/policy.h>
@@ -21,7 +23,6 @@
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <vector>

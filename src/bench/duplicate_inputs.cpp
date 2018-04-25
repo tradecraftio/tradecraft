@@ -47,12 +47,12 @@ static void DuplicateInputs(benchmark::Bench& bench)
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = SCRIPT_PUB;
-    coinbaseTx.vout[0].nValue = GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    coinbaseTx.vout[0].SetReferenceValue(GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
 
     naughtyTx.vout.resize(1);
-    naughtyTx.vout[0].nValue = 0;
+    naughtyTx.vout[0].SetReferenceValue(0);
     naughtyTx.vout[0].scriptPubKey = SCRIPT_PUB;
 
     uint64_t n_inputs = (((MAX_BLOCK_SERIALIZED_SIZE / WITNESS_SCALE_FACTOR) - (CTransaction(coinbaseTx).GetTotalSize() + CTransaction(naughtyTx).GetTotalSize())) / 41) - 100;

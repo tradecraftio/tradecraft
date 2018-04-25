@@ -434,6 +434,10 @@ struct WalletTxOut
     int64_t time;
     int depth_in_main_chain = -1;
     bool is_spent = false;
+
+    inline CAmount GetPresentValue(uint32_t atheight) const {
+        return txout.GetTimeAdjustedValue(atheight - refheight);
+    }
 };
 
 //! Return implementation of Wallet interface. This function is defined in

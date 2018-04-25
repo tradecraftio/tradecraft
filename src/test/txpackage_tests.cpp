@@ -41,7 +41,7 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
         mtx.vin[i].scriptSig = random_script;
     }
     for (size_t o{0}; o < num_outputs; ++o) {
-        mtx.vout[o].nValue = 1 * CENT;
+        mtx.vout[o].SetReferenceValue(1 * CENT);
         mtx.vout[o].scriptPubKey = random_script;
     }
     return MakeTransactionRef(mtx);
@@ -416,7 +416,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     mtx_child1.vin[0].scriptSig = CScript();
     mtx_child1.vin[0].scriptWitness = witness1;
     mtx_child1.vout.resize(1);
-    mtx_child1.vout[0].nValue = CAmount(48 * COIN);
+    mtx_child1.vout[0].SetReferenceValue(48 * COIN);
     mtx_child1.vout[0].scriptPubKey = child_locking_script;
     mtx_child1.lock_height = ptx_parent->lock_height;
 
@@ -559,7 +559,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     mtx_parent2_v1.vin[0].scriptSig = CScript();
     mtx_parent2_v1.vin[0].scriptWitness = parent2_witness1;
     mtx_parent2_v1.vout.resize(1);
-    mtx_parent2_v1.vout[0].nValue = CAmount(48 * COIN);
+    mtx_parent2_v1.vout[0].SetReferenceValue(48 * COIN);
     mtx_parent2_v1.vout[0].scriptPubKey = acs_spk;
     mtx_parent2_v1.lock_height = ptx_grandparent2->lock_height;
 
