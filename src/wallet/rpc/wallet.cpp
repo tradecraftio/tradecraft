@@ -740,7 +740,7 @@ RPCHelpMan simulaterawtransaction()
         for (size_t i = 0; i < mtx.vout.size(); ++i) {
             const auto& txout = mtx.vout[i];
             bool is_mine = 0 < (wallet.IsMine(txout) & filter);
-            changes += new_utxos[COutPoint(hash, i)] = is_mine ? txout.nValue : 0;
+            changes += new_utxos[COutPoint(hash, i)] = is_mine ? txout.GetReferenceValue() : 0;
         }
     }
 

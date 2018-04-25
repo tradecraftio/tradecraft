@@ -48,7 +48,7 @@ static void addCoin(CoinsResult& coins,
     CWalletTx& wtx = (*ret.first).second;
     const auto& txout = wtx.tx->vout.at(0);
     coins.Add(*Assert(OutputTypeFromDestination(dest)),
-              {tx.lock_height,
+              {tx.lock_height, nValue,
                    COutPoint(wtx.GetHash(), 0),
                    {txout, wtx.tx->lock_height},
                    depth,

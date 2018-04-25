@@ -87,7 +87,7 @@ FUZZ_TARGET(utxo_total_supply)
     const auto AppendRandomTxo = [&](CMutableTransaction& tx) {
         const auto& txo = txos.at(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, txos.size() - 1));
         tx.vin.emplace_back(txo.first);
-        tx.vout.emplace_back(txo.second.nValue, txo.second.scriptPubKey); // "Forward" coin with no fee
+        tx.vout.emplace_back(txo.second.GetReferenceValue(), txo.second.scriptPubKey); // "Forward" coin with no fee
     };
     const auto UpdateUtxoStats = [&]() {
         LOCK(chainman.GetMutex());

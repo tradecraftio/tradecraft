@@ -164,7 +164,7 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
                 for (const auto& tx : block.vtx) {
                     uint32_t i{0};
                     for (const auto& out : tx->vout) {
-                        coins_new.emplace(out.nValue, COutPoint{tx->GetHash(), i++});
+                        coins_new.emplace(out.GetReferenceValue(), COutPoint{tx->GetHash(), i++});
                     }
                 }
                 chain.emplace_back(coins_new, CBlock{});

@@ -16,6 +16,8 @@
 #ifndef FREICOIN_TEST_UTIL_SETUP_COMMON_H
 #define FREICOIN_TEST_UTIL_SETUP_COMMON_H
 
+#define FREICOIN_TEST 1
+
 #include <common/args.h>
 #include <key.h>
 #include <node/caches.h>

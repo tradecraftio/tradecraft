@@ -234,7 +234,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                 }
                 // We need newly-created values for the duration of this run
                 for (size_t i = 0; i < tx->vout.size(); ++i) {
-                    outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
+                    outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].GetReferenceValue();
                 }
                 return tx;
             }();

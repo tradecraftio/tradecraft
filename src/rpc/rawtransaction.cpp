@@ -743,7 +743,7 @@ static RPCHelpMan combinerawtransaction()
                 sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, coin.refheight));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(mergedTx, i, coin.out.nValue, 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(mergedTx, i, coin.out.GetReferenceValue(), 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
@@ -777,7 +777,7 @@ static RPCHelpMan signrawtransactionwithkey()
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
-                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
+                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent at the reference height of the transaction being spent"},
                                     {"refheight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The lockheight of the transaction output being spent"},
                                 },
                                 },
@@ -868,6 +868,7 @@ const RPCResult decodepst_inputs{
             {
                 {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT},
                 {RPCResult::Type::NUM, "refheight", "The lockheight of the transaction output being spent"},
+                {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT + " as input into the PST (at the reference height of the PST)"},
                 {RPCResult::Type::OBJ, "scriptPubKey", "",
                 {
                     {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
@@ -1091,6 +1092,7 @@ static RPCHelpMan decodepst()
                         }},
                         decodepst_inputs,
                         decodepst_outputs,
+                        {RPCResult::Type::STR_AMOUNT, "demurrage", /*optional=*/true, "The total demurrage of all inputs, if all UTXOs slots in the PST have been filled."},
                         {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The transaction fee paid if all UTXOs slots in the PST have been filled."},
                     }
                 },
@@ -1153,6 +1155,7 @@ static RPCHelpMan decodepst()
     result.pushKV("unknown", unknowns);
 
     // inputs
+    CAmount raw_in = 0;
     CAmount total_in = 0;
     bool have_all_utxos = true;
     UniValue inputs(UniValue::VARR);
@@ -1162,15 +1165,18 @@ static RPCHelpMan decodepst()
         // UTXOs
         bool have_a_utxo = false;
         CTxOut txout;
+        CAmount adjusted = 0;
         if (!input.witness_utxo.IsNull()) {
             txout = input.witness_utxo;
+            adjusted = txout.GetTimeAdjustedValue(pstx.tx->lock_height - input.witness_refheight);
 
             UniValue o(UniValue::VOBJ);
             ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
 
             UniValue out(UniValue::VOBJ);
-            out.pushKV("value", ValueFromAmount(txout.nValue));
+            out.pushKV("value", ValueFromAmount(txout.GetReferenceValue()));
             out.pushKV("refheight", (int64_t)input.witness_refheight);
+            out.pushKV("amount", ValueFromAmount(adjusted));
             out.pushKV("scriptPubKey", o);
 
             in.pushKV("witness_utxo", out);
@@ -1179,6 +1185,7 @@ static RPCHelpMan decodepst()
         }
         if (input.non_witness_utxo) {
             txout = input.non_witness_utxo->vout[pstx.tx->vin[i].prevout.n];
+            adjusted = txout.GetTimeAdjustedValue(pstx.tx->lock_height - input.non_witness_utxo->lock_height);
 
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, /*block_hash=*/uint256(), /*entry=*/non_wit, /*include_hex=*/false);
@@ -1187,8 +1194,9 @@ static RPCHelpMan decodepst()
             have_a_utxo = true;
         }
         if (have_a_utxo) {
-            if (MoneyRange(txout.nValue) && MoneyRange(total_in + txout.nValue)) {
-                total_in += txout.nValue;
+            if (MoneyRange(txout.GetReferenceValue()) && MoneyRange(adjusted) && MoneyRange(total_in + adjusted)) {
+                raw_in += txout.GetReferenceValue();
+                total_in += adjusted;
             } else {
                 // Hack to just not show fee later
                 have_all_utxos = false;
@@ -1475,8 +1483,9 @@ static RPCHelpMan decodepst()
         outputs.push_back(out);
 
         // Fee calculation
-        if (MoneyRange(pstx.tx->vout[i].nValue) && MoneyRange(output_value + pstx.tx->vout[i].nValue)) {
-            output_value += pstx.tx->vout[i].nValue;
+        CAmount txout_value = pstx.tx->vout[i].GetReferenceValue();
+        if (MoneyRange(txout_value) && MoneyRange(output_value + txout_value)) {
+            output_value += txout_value;
         } else {
             // Hack to just not show fee later
             have_all_utxos = false;
@@ -1484,6 +1493,7 @@ static RPCHelpMan decodepst()
     }
     result.pushKV("outputs", outputs);
     if (have_all_utxos) {
+        result.pushKV("demurrage", ValueFromAmount(raw_in - total_in));
         result.pushKV("fee", ValueFromAmount(total_in - output_value));
     }
 
@@ -1891,6 +1901,7 @@ static RPCHelpMan analyzepst()
                     }},
                     {RPCResult::Type::NUM, "estimated_vsize", /*optional=*/true, "Estimated vsize of the final signed transaction"},
                     {RPCResult::Type::STR_AMOUNT, "estimated_feerate", /*optional=*/true, "Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kvB. Shown only if all UTXO slots in the PST have been filled"},
+                    {RPCResult::Type::STR_AMOUNT, "demurrage", /*optional=*/true, "The total input lost to demurrage. Shown only if all UTXO slots in the PST that have been filled"},
                     {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The transaction fee paid. Shown only if all UTXO slots in the PST have been filled"},
                     {RPCResult::Type::STR, "next", "Role of the next person that this pst needs to go to"},
                     {RPCResult::Type::STR, "error", /*optional=*/true, "Error message (if there is one)"},
@@ -1952,6 +1963,9 @@ static RPCHelpMan analyzepst()
     }
     if (psta.estimated_feerate != std::nullopt) {
         result.pushKV("estimated_feerate", ValueFromAmount(psta.estimated_feerate->GetFeePerK()));
+    }
+    if (psta.demurrage != std::nullopt) {
+        result.pushKV("demurrage", ValueFromAmount(*psta.demurrage));
     }
     if (psta.fee != std::nullopt) {
         result.pushKV("fee", ValueFromAmount(*psta.fee));

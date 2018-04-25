@@ -13,6 +13,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
+
+#include <test/util/setup_common.h>
+
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <kernel/disconnected_transactions.h>
@@ -24,7 +27,6 @@
 #include <test/util/chainstate.h>
 #include <test/util/logging.h>
 #include <test/util/random.h>
-#include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <timedata.h>
 #include <uint256.h>
