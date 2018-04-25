@@ -3470,7 +3470,7 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+257"/>
+        <location filename="../transactiontablemodel.cpp" line="+258"/>
         <source>Date</source>
         <translation type="unfinished">Date</translation>
     </message>
@@ -3482,6 +3482,11 @@
     <message>
         <location line="+0"/>
         <source>Label</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lock-Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -3578,7 +3583,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+213"/>
+        <location line="+224"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3610,6 +3615,11 @@
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Reference block height for demurrage calculations.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3687,6 +3697,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+13"/>
+        <source>Lock height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+36"/>
         <source>Abandon transaction</source>
         <translation type="unfinished"></translation>
@@ -3732,7 +3747,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+194"/>
         <source>Export Transaction History</source>
         <translation type="unfinished"></translation>
     </message>
