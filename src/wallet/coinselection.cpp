@@ -345,6 +345,19 @@ void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descend
     // Filter for positive only here before adding the coin
     if (positive_only && output.GetEffectiveValue() <= 0) return;
 
+    // Ideally this shouldn't be an assert as we don't want to cause node
+    // crashes.  However inserting outputs with different calculated refheight
+    // into the same group can potentially result in either failed transactions
+    // or (worse) lost funds.
+    if (m_atheight || !m_outputs.empty()) {
+        assert(m_atheight == output.atheight);
+    }
+    // The reference height is inferred from the first output inserted, unless
+    // it is explicitly set before inserting any outputs into the group.
+    if (m_outputs.empty()) {
+        m_atheight = output.atheight;
+    }
+
     m_outputs.push_back(output);
     COutput& coin = m_outputs.back();
 
@@ -370,6 +383,7 @@ void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descend
 bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
 {
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
+        && m_atheight <= eligibility_filter.max_refheight
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
 }
@@ -487,7 +501,7 @@ bool SelectionResult::operator<(SelectionResult other) const
 
 std::string COutput::ToString() const
 {
-    return strprintf("COutput(%s, %d, %d) [%s]", outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
+    return strprintf("COutput(%d, %s, %d, %d) [%s]", atheight, outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
 }
 
 std::string GetAlgorithmName(const SelectionAlgorithm algo)
