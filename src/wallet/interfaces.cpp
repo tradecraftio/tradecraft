@@ -393,9 +393,9 @@ public:
         return true;
     }
     CAmount getBalance() override { return m_wallet->GetBalance().m_mine_trusted; }
-    CAmount getAvailableBalance(const CCoinControl& coin_control) override
+    CAmount getAvailableBalance(uint32_t atheight, const CCoinControl& coin_control) override
     {
-        return m_wallet->GetAvailableBalance(&coin_control);
+        return m_wallet->GetAvailableBalance(atheight, &coin_control);
     }
     isminetype txinIsMine(const CTxIn& txin) override
     {

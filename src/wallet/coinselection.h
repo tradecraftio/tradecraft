@@ -29,7 +29,7 @@ static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 /** A UTXO under consideration for use in funding a new transaction. */
 class CInputCoin {
 public:
-    CInputCoin(const CTransactionRef& tx, unsigned int i)
+    CInputCoin(uint32_t atheightIn, const CTransactionRef& tx, unsigned int i)
     {
         if (!tx)
             throw std::invalid_argument("tx should not be null");
@@ -39,10 +39,11 @@ public:
         outpoint = COutPoint(tx->GetHash(), i);
         txout = tx->vout[i];
         refheight = tx->lock_height;
+        atheight = atheightIn;
         effective_value = txout.nValue;
     }
 
-    CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(tx, i)
+    CInputCoin(uint32_t atheightIn, const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(atheightIn, tx, i)
     {
         m_input_bytes = input_bytes;
     }
@@ -50,6 +51,7 @@ public:
     COutPoint outpoint;
     CTxOut txout;
     uint32_t refheight;
+    uint32_t atheight;
     CAmount effective_value;
     CAmount m_fee{0};
     CAmount m_long_term_fee{0};
@@ -116,6 +118,8 @@ struct CoinSelectionParams
  * then get more permissive if we cannot fund the transaction. */
 struct CoinEligibilityFilter
 {
+    /** Maximum reference height of output. */
+    const uint32_t max_refheight;
     /** Minimum number of confirmations for outputs that we sent to ourselves.
      * We may use unconfirmed UTXOs sent from ourselves, e.g. change outputs. */
     const int conf_mine;
@@ -128,9 +132,9 @@ struct CoinEligibilityFilter
     /** When avoid_reuse=true and there are full groups (OUTPUT_GROUP_MAX_ENTRIES), whether or not to use any partial groups.*/
     const bool m_include_partial_groups{false};
 
-    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_ancestors) {}
-    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants) {}
-    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants, bool include_partial) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants), m_include_partial_groups(include_partial) {}
+    CoinEligibilityFilter(uint32_t max_refheight, int conf_mine, int conf_theirs, uint64_t max_ancestors) : max_refheight(max_refheight), conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_ancestors) {}
+    CoinEligibilityFilter(uint32_t max_refheight, int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants) : max_refheight(max_refheight), conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants) {}
+    CoinEligibilityFilter(uint32_t max_refheight, int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants, bool include_partial) : max_refheight(max_refheight), conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants), m_include_partial_groups(include_partial) {}
 };
 
 /** A group of UTXOs paid to the same output script. */
@@ -144,6 +148,8 @@ struct OutputGroup
     bool m_from_me{true};
     /** The total value of the UTXOs in sum. */
     CAmount m_value{0};
+    /** The reference height of the sum. */
+    uint32_t m_atheight{0};
     /** The minimum number of confirmations the UTXOs in the group have. Unconfirmed is 0. */
     int m_depth{999};
     /** The aggregated count of unconfirmed ancestors of all UTXOs in this

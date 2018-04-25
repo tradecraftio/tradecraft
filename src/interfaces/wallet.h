@@ -224,7 +224,7 @@ public:
     virtual CAmount getBalance() = 0;
 
     //! Get available balance.
-    virtual CAmount getAvailableBalance(const CCoinControl& coin_control) = 0;
+    virtual CAmount getAvailableBalance(uint32_t atheight, const CCoinControl& coin_control) = 0;
 
     //! Return whether transaction input belongs to wallet.
     virtual isminetype txinIsMine(const CTxIn& txin) = 0;
