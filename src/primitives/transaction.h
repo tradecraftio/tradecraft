@@ -255,6 +255,12 @@ public:
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 
+    CAmount GetPresentValueOfOutput(int n, uint32_t height) const
+    {
+        assert(n < vout.size());
+        return GetTimeAdjustedValue(vout[n].nValue, (int)height - lock_height);
+    }
+
     // Compute priority, given priority of inputs and (optionally) tx size
     double ComputePriority(double dPriorityInputs, unsigned int nTxSize=0) const;
 

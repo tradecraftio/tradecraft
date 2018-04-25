@@ -22,6 +22,11 @@
 
 #include <assert.h>
 
+CAmount CCoins::GetPresentValueOfOutput(int n, uint32_t height) const
+{
+    return GetTimeAdjustedValue(vout[n].nValue, (int)height - (int)refheight);
+}
+
 /**
  * calculate number of bytes for the bitmask, and its number of non-zero bytes
  * each bit in the bitmask represents the availability of one output, but the
@@ -225,7 +230,13 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 
     CAmount nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += GetOutputFor(tx.vin[i]).nValue;
+    {
+        // Assumes HaveCoins(tx.vin[i].prevout.hash)
+        const COutPoint& prevout = tx.vin[i].prevout;
+        const CCoins* coins = AccessCoins(prevout.hash);
+        assert(coins && coins->IsAvailable(prevout.n));
+        nResult += coins->GetPresentValueOfOutput(prevout.n, tx.lock_height);
+    }
 
     return nResult;
 }
