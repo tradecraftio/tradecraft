@@ -2461,6 +2461,9 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if (wtx.tx->vout.size() <= outpoint.n) {
                 return false;
             }
+            if (wtx.tx->lock_height > height) {
+                return false;
+            }
             // Just to calculate the marginal byte size
             CInputCoin coin(height, wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
             nValueFromPresetInputs += coin.txout.nValue;
