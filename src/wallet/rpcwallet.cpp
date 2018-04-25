@@ -671,7 +671,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         min_depth = params[1].get_int();
 
     // Tally
-    CAmount amount = 0;
+    CAmount value = 0;
     for (const std::pair<const uint256, CWalletTx>& wtx_pair : wallet.mapWallet) {
         const CWalletTx& wtx = wtx_pair.second;
         if (wtx.IsCoinBase() || !wallet.chain().checkFinalTx(*wtx.tx) || wtx.GetDepthInMainChain() < min_depth) {
@@ -681,12 +681,12 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         for (const CTxOut& txout : wtx.tx->vout) {
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && wallet.IsMine(address) && address_set.count(address)) {
-                amount += txout.nValue;
+                value += txout.GetReferenceValue();
             }
         }
     }
 
-    return amount;
+    return value;
 }
 
 
@@ -1222,7 +1222,7 @@ static UniValue ListReceived(const CWallet* const pwallet, const UniValue& param
                 continue;
 
             tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
+            item.nAmount += txout.GetReferenceValue();
             item.nConf = std::min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)
@@ -1426,11 +1426,11 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  */
 static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
-    CAmount nFee;
+    CAmount nFee, demurrage;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, filter_ismine);
+    wtx.GetAmounts(listReceived, listSent, nFee, demurrage, filter_ismine);
 
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
@@ -1452,6 +1452,7 @@ static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx,
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
+            entry.pushKV("demurrage", ValueFromAmount(-demurrage));
             if (fLong)
                 WalletTxToJSON(pwallet->chain(), wtx, entry);
             entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
@@ -1862,12 +1863,16 @@ static RPCHelpMan gettransaction()
     CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount value_in = 0, demurrage = 0;
+    pwallet->GetInputSplit(wtx, value_in, demurrage);
+    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - value_in : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
-    if (wtx.IsFromMe(filter))
+    if (wtx.IsFromMe(filter)) {
         entry.pushKV("fee", ValueFromAmount(nFee));
+        entry.pushKV("demurrage", ValueFromAmount(demurrage));
+    }
 
     WalletTxToJSON(pwallet->chain(), wtx, entry);
 
@@ -2976,7 +2981,7 @@ static RPCHelpMan listunspent()
                         {
                             {"minimumAmount", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
-                            {"atheight", RPCArg::Type::NUM, /* default */ "tip", "Reference height for output availability"},
+                            {"atheight", RPCArg::Type::NUM, /* default */ "tip", "Reference height for present-value calculations and output availability"},
                             {"maximumCount", RPCArg::Type::NUM, /* default */ "unlimited", "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
                         },
@@ -3163,7 +3168,8 @@ static RPCHelpMan listunspent()
         }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
-        entry.pushKV("value", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
+        entry.pushKV("value", ValueFromAmount(out.tx->tx->vout[out.i].GetReferenceValue()));
+        entry.pushKV("amount", ValueFromAmount(out.adjusted));
         entry.pushKV("refheight", (uint64_t)out.tx->tx->lock_height);
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);

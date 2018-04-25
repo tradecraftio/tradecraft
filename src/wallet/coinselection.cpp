@@ -326,7 +326,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     }
     m_outputs.push_back(output);
     m_from_me &= from_me;
-    m_value += output.txout.nValue;
+    m_value += output.adjusted;
     m_depth = std::min(m_depth, depth);
     // ancestors here express the number of ancestors the new coin will end up having, which is
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs
@@ -344,7 +344,7 @@ std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output)
     auto it = m_outputs.begin();
     while (it != m_outputs.end() && it->outpoint != output.outpoint) ++it;
     if (it == m_outputs.end()) return it;
-    m_value -= output.txout.nValue;
+    m_value -= output.adjusted;
     effective_value -= output.effective_value;
     fee -= output.m_fee;
     long_term_fee -= output.m_long_term_fee;
@@ -371,7 +371,7 @@ void OutputGroup::SetFees(const CFeeRate effective_feerate, const CFeeRate long_
         coin.m_long_term_fee = coin.m_input_bytes < 0 ? 0 : long_term_feerate.GetFee(coin.m_input_bytes);
         long_term_fee += coin.m_long_term_fee;
 
-        coin.effective_value = coin.txout.nValue - coin.m_fee;
+        coin.effective_value = coin.adjusted - coin.m_fee;
         effective_value += coin.effective_value;
     }
 }

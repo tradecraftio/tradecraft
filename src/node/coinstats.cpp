@@ -44,9 +44,10 @@ static void ApplyStats(CCoinsStats& stats, CHashWriter& ss, const uint256& hash,
     for (const auto& output : outputs) {
         ss << VARINT(output.first + 1);
         ss << output.second.out.scriptPubKey;
-        ss << VARINT_MODE(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+        ss << VARINT_MODE(output.second.out.GetReferenceValue(), VarIntMode::NONNEGATIVE_SIGNED);
         stats.nTransactionOutputs++;
-        stats.nTotalValue += output.second.out.nValue;
+        stats.nTotalValue += output.second.out.GetReferenceValue();
+        stats.nTotalAmount += output.second.GetPresentValue(stats.nHeight + 1);
         stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
     }
     ss << VARINT(0u);
@@ -58,7 +59,8 @@ static void ApplyStats(CCoinsStats& stats, std::nullptr_t, const uint256& hash, 
     stats.nTransactions++;
     for (const auto& output : outputs) {
         stats.nTransactionOutputs++;
-        stats.nTotalValue += output.second.out.nValue;
+        stats.nTotalValue += output.second.out.GetReferenceValue();
+        stats.nTotalAmount += output.second.GetPresentValue(stats.nHeight + 1);
         stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
     }
 }
