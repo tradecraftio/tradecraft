@@ -116,6 +116,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspent", 4, "maximumAmount" },
     { "listunspent", 4, "maximumCount" },
     { "listunspent", 4, "minimumSumAmount" },
+    { "listunspent", 4, "atheight" },
     { "listunspent", 4, "include_immature_coinbase" },
     { "getblock", 1, "verbosity" },
     { "getblock", 1, "verbose" },
