@@ -70,6 +70,7 @@ struct CoinsResult {
  * Populate the CoinsResult struct with vectors of available COutputs, organized by OutputType.
  */
 CoinsResult AvailableCoins(const CWallet& wallet,
+                           uint32_t atheight,
                            const CCoinControl* coinControl = nullptr,
                            std::optional<CFeeRate> feerate = std::nullopt,
                            const CAmount& nMinimumAmount = 1,
@@ -82,9 +83,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
  * Wrapper function for AvailableCoins which skips the `feerate` parameter. Use this function
  * to list all available coins (e.g. listunspent RPC) while not intending to fund a transaction.
  */
-CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, uint32_t atheight, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
-CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl = nullptr);
+CAmount GetAvailableBalance(const CWallet& wallet, uint32_t atheight = 0, const CCoinControl* coinControl = nullptr);
 
 /**
  * Find non-change parent output.
@@ -143,7 +144,7 @@ std::optional<SelectionResult> ChooseSelectionResult(const CWallet& wallet, cons
  * returns                             If successful, a SelectionResult containing the selected coins
  *                                     If failed, a nullopt.
  */
-std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue, const CCoinControl& coin_control,
+std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue, uint32_t height, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 struct CreatedTransactionResult

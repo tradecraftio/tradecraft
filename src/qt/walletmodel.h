@@ -171,7 +171,7 @@ public:
 
     // If coin control has selected outputs, searches the total amount inside the wallet.
     // Otherwise, uses the wallet's cached available balance.
-    CAmount getAvailableBalance(const wallet::CCoinControl* control);
+    CAmount getAvailableBalance(uint32_t atheight, const wallet::CCoinControl* control);
 
 private:
     std::unique_ptr<interfaces::Wallet> m_wallet;

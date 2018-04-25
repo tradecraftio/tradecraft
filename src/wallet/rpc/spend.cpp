@@ -1422,7 +1422,7 @@ RPCHelpMan sendall()
                     total_input_value += tx->tx->vout[input.prevout.n].nValue;
                 }
             } else {
-                for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, /*nMinimumAmount=*/0).All()) {
+                for (const COutput& output : AvailableCoins(*pwallet, current_height + 1, &coin_control, fee_rate, /*nMinimumAmount=*/0).All()) {
                     CHECK_NONFATAL(output.input_bytes > 0);
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
