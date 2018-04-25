@@ -123,12 +123,28 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
     hlayout->addWidget(amountWidget);
 
+    lockHeightWidget = new QLineEdit(this);
+#if QT_VERSION >= 0x040700
+    lockHeightWidget->setPlaceholderText(tr("Lock height"));
+#endif
+    if (platformStyle->getUseExtraSpacing()) {
+        lockHeightWidget->setFixedWidth(97);
+    } else {
+        lockHeightWidget->setFixedWidth(100);
+    }
+    lockHeightWidget->setValidator(new QIntValidator(0, 0x7f000000, this));
+    hlayout->addWidget(lockHeightWidget);
+
     // Delay before filtering transactions in ms
     static const int input_filter_delay = 200;
 
     QTimer* amount_typing_delay = new QTimer(this);
     amount_typing_delay->setSingleShot(true);
     amount_typing_delay->setInterval(input_filter_delay);
+
+    QTimer* lock_height_typing_delay = new QTimer(this);
+    lock_height_typing_delay->setSingleShot(true);
+    lock_height_typing_delay->setInterval(input_filter_delay);
 
     QTimer* prefix_typing_delay = new QTimer(this);
     prefix_typing_delay->setSingleShot(true);
@@ -167,6 +183,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
+    QAction *copyLockHeightAction = new QAction(tr("Copy lock height"), this);
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *copyTxHexAction = new QAction(tr("Copy raw transaction"), this);
     QAction *copyTxPlainText = new QAction(tr("Copy full transaction details"), this);
@@ -178,6 +195,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyAmountAction);
+    contextMenu->addAction(copyLockHeightAction);
     contextMenu->addAction(copyTxIDAction);
     contextMenu->addAction(copyTxHexAction);
     contextMenu->addAction(copyTxPlainText);
@@ -197,6 +215,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(watchOnlyWidget, SIGNAL(activated(int)), this, SLOT(chooseWatchonly(int)));
     connect(amountWidget, SIGNAL(textChanged(QString)), amount_typing_delay, SLOT(start()));
     connect(amount_typing_delay, SIGNAL(timeout()), this, SLOT(changedAmount()));
+    connect(lockHeightWidget, SIGNAL(textChanged(QString)), lock_height_typing_delay, SLOT(start()));
+    connect(lock_height_typing_delay, SIGNAL(timeout()), this, SLOT(changedLockHeight()));
     connect(search_widget, SIGNAL(textChanged(QString)), prefix_typing_delay, SLOT(start()));
     connect(prefix_typing_delay, SIGNAL(timeout()), this, SLOT(changedSearch()));
 
@@ -208,6 +228,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
+    connect(copyLockHeightAction, SIGNAL(triggered()), this, SLOT(copyLockHeight()));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(copyTxHexAction, SIGNAL(triggered()), this, SLOT(copyTxHex()));
     connect(copyTxPlainText, SIGNAL(triggered()), this, SLOT(copyTxPlainText()));
@@ -241,9 +262,10 @@ void TransactionView::setModel(WalletModel *_model)
         transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+        transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_COLUMN_WIDTH);
+        transactionView->setColumnWidth(TransactionTableModel::LockHeight, LOCK_HEIGHT_MINIMUM_COLUMN_WIDTH);
 
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, LOCK_HEIGHT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
 
         if (_model->getOptionsModel())
         {
@@ -357,6 +379,13 @@ void TransactionView::changedAmount()
     }
 }
 
+void TransactionView::changedLockHeight()
+{
+    if(!transactionProxyModel)
+        return;
+    transactionProxyModel->setMinLockHeight(lockHeightWidget->text().toULong());
+}
+
 void TransactionView::exportClicked()
 {
     if (!model || !model->getOptionsModel()) {
@@ -383,6 +412,7 @@ void TransactionView::exportClicked()
     writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);
     writer.addColumn(tr("Address"), 0, TransactionTableModel::AddressRole);
     writer.addColumn(FreicoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0, TransactionTableModel::FormattedAmountRole);
+    writer.addColumn(tr("Lock height"), 0, TransactionTableModel::LockHeightRole);
     writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
 
     if(!writer.write()) {
@@ -463,6 +493,11 @@ void TransactionView::copyLabel()
 void TransactionView::copyAmount()
 {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::FormattedAmountRole);
+}
+
+void TransactionView::copyLockHeight()
+{
+    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::LockHeightRole);
 }
 
 void TransactionView::copyTxID()
