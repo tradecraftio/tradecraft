@@ -123,6 +123,19 @@ TransactionView::TransactionView(QWidget *parent) :
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
     hlayout->addWidget(amountWidget);
 
+    lockHeightWidget = new QLineEdit(this);
+#if QT_VERSION >= 0x040700
+    /* Do not move this to the XML file, Qt before 4.7 will choke on it */
+    lockHeightWidget->setPlaceholderText(tr("Lock height"));
+#endif
+#ifdef Q_WS_MAC
+    lockHeightWidget->setFixedWidth(97);
+#else
+    lockHeightWidget->setFixedWidth(100);
+#endif
+    lockHeightWidget->setValidator(new QIntValidator(0, 0x7f000000, this));
+    hlayout->addWidget(lockHeightWidget);
+
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
@@ -174,6 +187,7 @@ TransactionView::TransactionView(QWidget *parent) :
     connect(watchOnlyWidget, SIGNAL(activated(int)), this, SLOT(chooseWatchonly(int)));
     connect(addressWidget, SIGNAL(textChanged(QString)), this, SLOT(changedPrefix(QString)));
     connect(amountWidget, SIGNAL(textChanged(QString)), this, SLOT(changedAmount(QString)));
+    connect(lockHeightWidget, SIGNAL(textChanged(QString)), this, SLOT(changedLockHeight(QString)));
 
     connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SIGNAL(doubleClicked(QModelIndex)));
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
@@ -327,6 +341,13 @@ void TransactionView::changedAmount(const QString &amount)
     {
         transactionProxyModel->setMinAmount(0);
     }
+}
+
+void TransactionView::changedLockHeight(const QString &lock_height)
+{
+    if(!transactionProxyModel)
+        return;
+    transactionProxyModel->setMinLockHeight(lock_height.toULong());
 }
 
 void TransactionView::exportClicked()

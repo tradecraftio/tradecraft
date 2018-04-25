@@ -45,7 +45,8 @@ static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter, /* date */
         Qt::AlignLeft|Qt::AlignVCenter, /* type */
         Qt::AlignLeft|Qt::AlignVCenter, /* address */
-        Qt::AlignRight|Qt::AlignVCenter /* amount */
+        Qt::AlignRight|Qt::AlignVCenter,/* amount */
+        Qt::AlignRight|Qt::AlignVCenter /* lock_height */
     };
 
 // Comparison operator for sort/binary search of model tx list
@@ -240,7 +241,7 @@ TransactionTableModel::TransactionTableModel(CWallet* wallet, WalletModel *paren
         priv(new TransactionTablePriv(wallet, this)),
         fProcessingQueuedTransactions(false)
 {
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address") << FreicoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address") << FreicoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit()) << tr("Lock-Height");
     priv->refreshWallet();
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -454,6 +455,11 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
     return QString(str);
 }
 
+QString TransactionTableModel::formatTxLockHeight(const TransactionRecord *wtx) const
+{
+    return QString("%1").arg(wtx->lock_height);
+}
+
 QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
 {
     switch(wtx->status.status)
@@ -540,6 +546,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return formatTxToAddress(rec, false);
         case Amount:
             return formatTxAmount(rec, true, FreicoinUnits::separatorAlways);
+        case LockHeight:
+            return formatTxLockHeight(rec);
         }
         break;
     case Qt::EditRole:
@@ -558,6 +566,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return formatTxToAddress(rec, true);
         case Amount:
             return qint64(rec->credit + rec->debit);
+        case LockHeight:
+            return rec->lock_height;
         }
         break;
     case Qt::ToolTipRole:
@@ -595,6 +605,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
     case AmountRole:
         return qint64(rec->credit + rec->debit);
+    case LockHeightRole:
+        return rec->lock_height;
     case TxIDRole:
         return rec->getTxID();
     case TxHashRole:
@@ -637,6 +649,8 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
                 return tr("Destination address of transaction.");
             case Amount:
                 return tr("Amount removed from or added to balance.");
+            case LockHeight:
+                return tr("Reference block height for demurrage calculations.");
             }
         }
     }
