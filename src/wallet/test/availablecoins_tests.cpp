@@ -63,7 +63,7 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, AvailableCoinsTestingSetup)
 
     // Verify our wallet has one usable coinbase UTXO before starting
     // This UTXO is a P2PK, so it should show up in the Other bucket
-    available_coins = AvailableCoins(*wallet);
+    available_coins = AvailableCoins(*wallet, /*atheight=*/0);
     BOOST_CHECK_EQUAL(available_coins.Size(), 1U);
     BOOST_CHECK_EQUAL(available_coins.coins[OutputType::UNKNOWN].size(), 1U);
 
@@ -78,28 +78,28 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, AvailableCoinsTestingSetup)
     dest = wallet->GetNewDestination(OutputType::BECH32M, "");
     BOOST_ASSERT(dest);
     AddTx(CRecipient{{GetScriptForDestination(*dest)}, 1 * COIN, /*fSubtractFeeFromAmount=*/true});
-    available_coins = AvailableCoins(*wallet);
+    available_coins = AvailableCoins(*wallet, /*atheight=*/0);
     BOOST_CHECK_EQUAL(available_coins.coins[OutputType::BECH32M].size(), 2U);
 
     // Bech32
     dest = wallet->GetNewDestination(OutputType::BECH32, "");
     BOOST_ASSERT(dest);
     AddTx(CRecipient{{GetScriptForDestination(*dest)}, 2 * COIN, /*fSubtractFeeFromAmount=*/true});
-    available_coins = AvailableCoins(*wallet);
+    available_coins = AvailableCoins(*wallet, /*atheight=*/0);
     BOOST_CHECK_EQUAL(available_coins.coins[OutputType::BECH32].size(), 2U);
 
     // P2SH-SEGWIT
     dest = wallet->GetNewDestination(OutputType::P2SH_SEGWIT, "");
     BOOST_ASSERT(dest);
     AddTx(CRecipient{{GetScriptForDestination(*dest)}, 3 * COIN, /*fSubtractFeeFromAmount=*/true});
-    available_coins = AvailableCoins(*wallet);
+    available_coins = AvailableCoins(*wallet, /*atheight=*/0);
     BOOST_CHECK_EQUAL(available_coins.coins[OutputType::P2SH_SEGWIT].size(), 2U);
 
     // Legacy (P2PKH)
     dest = wallet->GetNewDestination(OutputType::LEGACY, "");
     BOOST_ASSERT(dest);
     AddTx(CRecipient{{GetScriptForDestination(*dest)}, 4 * COIN, /*fSubtractFeeFromAmount=*/true});
-    available_coins = AvailableCoins(*wallet);
+    available_coins = AvailableCoins(*wallet, /*atheight=*/0);
     BOOST_CHECK_EQUAL(available_coins.coins[OutputType::LEGACY].size(), 2U);
 }
 

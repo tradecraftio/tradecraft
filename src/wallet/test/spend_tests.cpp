@@ -44,7 +44,9 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         coin_control.fOverrideFeeRate = true;
         // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output
         coin_control.m_change_type = OutputType::LEGACY;
-        auto res = CreateTransaction(*wallet, {recipient}, 0, RANDOM_CHANGE_POSITION, coin_control);
+        auto res = CreateTransaction(*wallet, {recipient}, /*refheight=*/0, RANDOM_CHANGE_POSITION, coin_control);
+        BOOST_CHECK(!res);
+        res = CreateTransaction(*wallet, {recipient}, /*refheight=*/1, RANDOM_CHANGE_POSITION, coin_control);
         BOOST_CHECK(res);
         const auto& txr = *res;
         BOOST_CHECK_EQUAL(txr.tx->vout.size(), 1);
@@ -132,7 +134,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
     auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), m_args, coinbaseKey);
 
     LOCK(wallet->cs_wallet);
-    auto available_coins = AvailableCoins(*wallet);
+    auto available_coins = AvailableCoins(*wallet, /*atheight=*/0);
     std::vector<COutput> coins = available_coins.All();
     // Preselect the first 3 UTXO (150 FRC total)
     std::set<COutPoint> preset_inputs = {coins[0].outpoint, coins[1].outpoint, coins[2].outpoint};
