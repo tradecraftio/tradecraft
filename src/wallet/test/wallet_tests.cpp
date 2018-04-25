@@ -16,14 +16,14 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "wallet/wallet.h"
 
 #include <set>
 #include <stdint.h>
 #include <utility>
 #include <vector>
-
-#include "test/test_freicoin.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>

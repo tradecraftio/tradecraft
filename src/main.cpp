@@ -878,13 +878,13 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     CAmount nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
-        if (txout.nValue < 0)
+        if (txout.GetReferenceValue() < 0)
             return state.DoS(100, error("CheckTransaction(): txout.nValue negative"),
                              REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
+        if (txout.GetReferenceValue() > MAX_MONEY)
             return state.DoS(100, error("CheckTransaction(): txout.nValue too high"),
                              REJECT_INVALID, "bad-txns-vout-toolarge");
-        nValueOut += txout.nValue;
+        nValueOut += txout.GetReferenceValue();
         if (!MoneyRange(nValueOut))
             return state.DoS(100, error("CheckTransaction(): txout total out of range"),
                              REJECT_INVALID, "bad-txns-txouttotal-toolarge");
@@ -1477,7 +1477,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         // This is also true for mempool checks.
         CBlockIndex *pindexPrev = mapBlockIndex.find(inputs.GetBestBlock())->second;
         int nSpendHeight = pindexPrev->nHeight + 1;
-        CAmount nValueIn = 0;
+        CAmount nValueIn = 0, nInput;
         CAmount nFees = 0;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
@@ -1499,8 +1499,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                                  REJECT_INVALID, "bad-txns-non-monotonic-lock-height");
 
             // Check for negative or overflow input values
-            nValueIn += coins->vout[prevout.n].nValue;
-            if (!MoneyRange(coins->vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            nInput = coins->GetPresentValueOfOutput(prevout.n, tx.lock_height);
+            nValueIn += nInput;
+            if (!MoneyRange(nInput) || !MoneyRange(nValueIn))
                 return state.DoS(100, error("CheckInputs(): txin values out of range"),
                                  REJECT_INVALID, "bad-txns-inputvalues-outofrange");
 
@@ -1943,7 +1944,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                      REJECT_INVALID, "bad-blk-sigops");
             }
 
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            nFees += GetTimeAdjustedValue(view.GetValueIn(tx)-tx.GetValueOut(),
+                                          pindex->nHeight - (int)tx.lock_height);
 
             std::vector<CScriptCheck> vChecks;
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))

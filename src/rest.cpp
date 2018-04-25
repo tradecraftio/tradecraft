@@ -56,6 +56,12 @@ struct CCoin {
     uint32_t nTxVer; // Don't call this nVersion, that name has a special meaning inside IMPLEMENT_SERIALIZE
     uint32_t nHeight;
     CTxOut out;
+    uint32_t refheight;
+
+    CAmount GetPresentValue(uint32_t height) const
+    {
+        return out.GetTimeAdjustedValue((int)height - refheight);
+    }
 
     ADD_SERIALIZE_METHODS;
 
@@ -65,6 +71,7 @@ struct CCoin {
         READWRITE(nTxVer);
         READWRITE(nHeight);
         READWRITE(out);
+        READWRITE(VARINT(refheight));
     }
 };
 
@@ -474,6 +481,7 @@ static bool rest_getutxos(AcceptedConnection* conn,
                     coin.nTxVer = coins.nVersion;
                     coin.nHeight = coins.nHeight;
                     coin.out = coins.vout.at(vOutPoints[i].n);
+                    coin.refheight = coins.refheight;
                     assert(!coin.out.IsNull());
                     outs.push_back(coin);
                 }
@@ -510,7 +518,8 @@ static bool rest_getutxos(AcceptedConnection* conn,
 
         // pack in some essentials
         // use more or less the same output as mentioned in Bip64
-        objGetUTXOResponse.push_back(Pair("chainHeight", chainActive.Height()));
+        const int height = chainActive.Height();
+        objGetUTXOResponse.push_back(Pair("chainHeight", height));
         objGetUTXOResponse.push_back(Pair("chaintipHash", chainActive.Tip()->GetBlockHash().GetHex()));
         objGetUTXOResponse.push_back(Pair("bitmap", bitmapStringRepresentation));
 
@@ -519,7 +528,9 @@ static bool rest_getutxos(AcceptedConnection* conn,
             Object utxo;
             utxo.push_back(Pair("txvers", (int32_t)coin.nTxVer));
             utxo.push_back(Pair("height", (int32_t)coin.nHeight));
-            utxo.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
+            utxo.push_back(Pair("value", ValueFromAmount(coin.out.GetReferenceValue())));
+            utxo.push_back(Pair("refheight", (int32_t)coin.refheight));
+            utxo.push_back(Pair("amount", ValueFromAmount(coin.GetPresentValue(height + 1))));
 
             // include the script in a json output
             Object o;

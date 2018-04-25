@@ -1,6 +1,8 @@
 #ifndef FREICOIN_TEST_TEST_FREICOIN_H
 #define FREICOIN_TEST_TEST_FREICOIN_H
 
+#define FREICOIN_TEST
+
 #include "txdb.h"
 
 #include <boost/filesystem.hpp>

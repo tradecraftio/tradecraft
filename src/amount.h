@@ -33,6 +33,10 @@ static const CAmount CENT = 1000000;
 /** No amount larger than this (in kria) is valid */
 static const CAmount MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+/** Adjust to present value by subtracting (or adding) demurrage */
+CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance);
+CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance);
+CAmount GetTimeAdjustedValue(const CAmount& initial_value, int relative_depth);
 
 /** Type-safe wrapper class to for fee rates
  * (how much to pay based on transaction size)

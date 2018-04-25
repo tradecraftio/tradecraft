@@ -96,7 +96,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const CTxOut& txout = tx.vout[i];
         Object out;
-        out.push_back(Pair("value", ValueFromAmount(txout.nValue)));
+        out.push_back(Pair("value", ValueFromAmount(txout.GetReferenceValue())));
         out.push_back(Pair("n", (int64_t)i));
         Object o;
         ScriptPubKeyToJSON(txout.scriptPubKey, o, true);
@@ -690,7 +690,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
                 if ((unsigned int)nOut >= coins->vout.size())
                     coins->vout.resize(nOut+1);
                 coins->vout[nOut].scriptPubKey = scriptPubKey;
-                coins->vout[nOut].nValue = 0; // we don't know the actual output value
+                coins->vout[nOut].SetReferenceValue(0); // we don't know the actual output value
             }
 
             // if redeemScript given and not using the local wallet (private keys

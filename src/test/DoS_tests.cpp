@@ -22,6 +22,8 @@
 
 
 
+#include "test/test_freicoin.h"
+
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
@@ -29,8 +31,6 @@
 #include "script/sign.h"
 #include "serialize.h"
 #include "util.h"
-
-#include "test/test_freicoin.h"
 
 #include <stdint.h>
 

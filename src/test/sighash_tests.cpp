@@ -16,6 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "consensus/validation.h"
 #include "data/sighash.json.h"
 #include "main.h"
@@ -23,7 +25,6 @@
 #include "script/interpreter.h"
 #include "script/script.h"
 #include "serialize.h"
-#include "test/test_freicoin.h"
 #include "util.h"
 #include "version.h"
 

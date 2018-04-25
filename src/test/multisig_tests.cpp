@@ -16,6 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
@@ -24,7 +26,6 @@
 #include "script/interpreter.h"
 #include "script/sign.h"
 #include "uint256.h"
-#include "test/test_freicoin.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet_ismine.h"

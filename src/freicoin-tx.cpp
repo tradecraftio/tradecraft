@@ -407,7 +407,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
                 if ((unsigned int)nOut >= coins->vout.size())
                     coins->vout.resize(nOut+1);
                 coins->vout[nOut].scriptPubKey = scriptPubKey;
-                coins->vout[nOut].nValue = 0; // we don't know the actual output value
+                coins->vout[nOut].SetReferenceValue(0); // we don't know the actual output value
             }
 
             // if redeemScript given and private keys given,

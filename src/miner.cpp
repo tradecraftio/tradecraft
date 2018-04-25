@@ -211,13 +211,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                     }
                     mapDependers[txin.prevout.hash].push_back(porphan);
                     porphan->setDependsOn.insert(txin.prevout.hash);
-                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().GetPresentValueOfOutput(txin.prevout.n, tx.lock_height);
                     continue;
                 }
                 const CCoins* coins = view.AccessCoins(txin.prevout.hash);
                 assert(coins);
 
-                CAmount nValueIn = coins->vout[txin.prevout.n].nValue;
+                CAmount nValueIn = coins->GetPresentValueOfOutput(txin.prevout.n, tx.lock_height);
                 nTotalIn += nValueIn;
 
                 int nConf = nHeight - coins->nHeight;
@@ -233,7 +233,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             uint256 hash = tx.GetHash();
             mempool.ApplyDeltas(hash, dPriority, nTotalIn);
 
-            CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
+            CAmount nFee = nTotalIn - tx.GetValueOut();
+            // Ignore demurrage calculations if the refheight age is less than
+            // 1008 blocks (1 week), to speed up block template construction.
+            // This heuristic has an error of less than 0.1%.
+            if (tx.lock_height + 1008 < nHeight)
+                nFee = GetTimeAdjustedValue(nFee, nHeight - tx.lock_height);
+            CFeeRate feeRate(nFee, nTxSize);
 
             if (porphan)
             {
@@ -294,7 +300,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (!view.HaveInputs(tx))
                 continue;
 
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
+            CAmount nTxFees = GetTimeAdjustedValue(view.GetValueIn(tx)-tx.GetValueOut(),
+                                                   nHeight - (int)tx.lock_height);
 
             nTxSigOps += GetP2SHSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
@@ -347,7 +354,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
-        txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+        txNew.vout[0].SetReferenceValue(GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
+        txNew.vout[0].AdjustReferenceValue(nFees);
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
@@ -438,7 +446,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
     LogPrintf("%s\n", pblock->ToString());
-    LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
+    LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].GetReferenceValue()));
 
     // Found a solution
     {

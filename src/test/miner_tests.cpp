@@ -16,14 +16,14 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "consensus/validation.h"
 #include "main.h"
 #include "miner.h"
 #include "pubkey.h"
 #include "uint256.h"
 #include "util.h"
-
-#include "test/test_freicoin.h"
 
 #include <boost/test/unit_test.hpp>
 
