@@ -15,6 +15,8 @@
 
 // Unit tests for denial-of-service detection/prevention code
 
+#include <test/util/setup_common.h>
+
 #include <banman.h>
 #include <chainparams.h>
 #include <net.h>
@@ -28,8 +30,6 @@
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
-
-#include <test/util/setup_common.h>
 
 #include <stdint.h>
 

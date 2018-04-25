@@ -15,6 +15,8 @@
 
 #include <test/data/script_tests.json.h>
 
+#include <test/util/setup_common.h>
+
 #include <core_io.h>
 #include <key.h>
 #include <script/script.h>
@@ -24,7 +26,6 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <test/util/transaction_utils.h>
-#include <test/util/setup_common.h>
 #include <rpc/util.h>
 #include <streams.h>
 

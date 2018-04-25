@@ -33,6 +33,7 @@ struct CCoinsStats
     uint64_t nBogoSize{0};
     uint256 hashSerialized{};
     uint64_t nDiskSize{0};
+    CAmount nTotalValue{0};
     CAmount nTotalAmount{0};
 
     //! The number of coins contained.

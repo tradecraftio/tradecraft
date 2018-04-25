@@ -966,7 +966,8 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM, "bogosize", "A meaningless metric for UTXO set size"},
                         {RPCResult::Type::STR_HEX, "hash_serialized_2", "The serialized hash"},
                         {RPCResult::Type::NUM, "disk_size", "The estimated size of the chainstate on disk"},
-                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount"},
+                        {RPCResult::Type::STR_AMOUNT, "total_value", "The sum total of all outputs without adjustment"},
+                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of all outputs adjusted to the next block height"},
                     }},
                 RPCExamples{
                     HelpExampleCli("gettxoutsetinfo", "")
@@ -988,6 +989,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
         ret.pushKV("bogosize", (int64_t)stats.nBogoSize);
         ret.pushKV("hash_serialized_2", stats.hashSerialized.GetHex());
         ret.pushKV("disk_size", stats.nDiskSize);
+        ret.pushKV("total_value", ValueFromAmount(stats.nTotalValue));
         ret.pushKV("total_amount", ValueFromAmount(stats.nTotalAmount));
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -1009,7 +1011,8 @@ UniValue gettxout(const JSONRPCRequest& request)
                     {
                         {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
                         {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
-                        {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
+                        {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT + " at its reference height"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "The transaction value in " + CURRENCY_UNIT + " as of the next block"},
                         {RPCResult::Type::OBJ, "scriptPubKey", "",
                             {
                                 {RPCResult::Type::STR_HEX, "asm", ""},
@@ -1066,7 +1069,8 @@ UniValue gettxout(const JSONRPCRequest& request)
     } else {
         ret.pushKV("confirmations", (int64_t)(pindex->nHeight - coin.nHeight + 1));
     }
-    ret.pushKV("value", ValueFromAmount(coin.out.nValue));
+    ret.pushKV("value", ValueFromAmount(coin.out.GetReferenceValue()));
+    ret.pushKV("amount", ValueFromAmount(coin.GetPresentValue(pindex->nHeight + 1)));
     UniValue o(UniValue::VOBJ);
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.pushKV("scriptPubKey", o);
@@ -1804,7 +1808,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         CAmount tx_total_out = 0;
         if (loop_outputs) {
             for (const CTxOut& out : tx->vout) {
-                tx_total_out += out.nValue;
+                tx_total_out += out.GetReferenceValue();
                 utxo_size_inc += GetSerializeSize(out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
         }
@@ -1814,7 +1818,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         }
 
         inputs += tx->vin.size(); // Don't count coinbase's fake input
-        total_out += tx_total_out; // Don't count coinbase reward
+        total_out += GetTimeAdjustedValue(tx_total_out, pindex->nHeight - tx->lock_height); // Don't count coinbase reward
 
         int64_t tx_size = 0;
         if (do_calculate_size) {
@@ -1844,13 +1848,13 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             CAmount tx_total_in = 0;
             const auto& txundo = blockUndo.vtxundo.at(i - 1);
             for (const Coin& coin: txundo.vprevout) {
-                const CTxOut& prevoutput = coin.out;
-
-                tx_total_in += prevoutput.nValue;
-                utxo_size_inc -= GetSerializeSize(prevoutput, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                tx_total_in += coin.GetPresentValue(tx->lock_height);
+                utxo_size_inc -= GetSerializeSize(coin.out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
 
             CAmount txfee = tx_total_in - tx_total_out;
+            CHECK_NONFATAL(MoneyRange(txfee));
+            txfee = GetTimeAdjustedValue(txfee, pindex->nHeight - tx->lock_height);
             CHECK_NONFATAL(MoneyRange(txfee));
             if (do_medianfee) {
                 fee_array.push_back(txfee);
@@ -2056,7 +2060,8 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                                         {RPCResult::Type::NUM, "vout", "The vout value"},
                                         {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
                                         {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
-                                        {RPCResult::Type::STR_AMOUNT, "value", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                                        {RPCResult::Type::STR_AMOUNT, "value", "The total amount in " + CURRENCY_UNIT + " of the unspent output at its reference height"},
+                                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output time-adjusted to the next block height"},
                                         {RPCResult::Type::NUM, "refheight", "Reference height of the unspent transaction output"},
                                         {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
                                     }},
@@ -2139,16 +2144,18 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             const Coin& coin = it.second;
             const CTxOut& txo = coin.out;
             input_txos.push_back(txo);
-            total_in += txo.nValue;
+            CAmount tx_amount_in = coin.GetPresentValue(tip->nHeight + 1);
+            total_in += tx_amount_in;
 
             UniValue unspent(UniValue::VOBJ);
             unspent.pushKV("txid", outpoint.hash.GetHex());
             unspent.pushKV("vout", (int32_t)outpoint.n);
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey.begin(), txo.scriptPubKey.end()));
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
-            unspent.pushKV("value", ValueFromAmount(txo.nValue));
+            unspent.pushKV("value", ValueFromAmount(txo.GetReferenceValue()));
             unspent.pushKV("refheight", (int64_t)coin.refheight);
             unspent.pushKV("height", (int32_t)coin.nHeight);
+            unspent.pushKV("amount", ValueFromAmount(tx_amount_in));
 
             unspents.push_back(unspent);
         }
