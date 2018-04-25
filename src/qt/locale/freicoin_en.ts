@@ -3521,7 +3521,7 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+259"/>
+        <location filename="../transactiontablemodel.cpp" line="+260"/>
         <source>Date</source>
         <translation type="unfinished">Date</translation>
     </message>
@@ -3533,6 +3533,11 @@
     <message>
         <location line="+0"/>
         <source>Label</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lock-Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -3629,7 +3634,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+213"/>
+        <location line="+224"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3661,6 +3666,11 @@
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Reference block height for demurrage calculations.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3738,7 +3748,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+12"/>
+        <location line="+287"/>
+        <source>Lock height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-235"/>
         <source>Abandon transaction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3760,6 +3776,11 @@
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy lock height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3788,7 +3809,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+194"/>
+        <location line="+206"/>
         <source>Export Transaction History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3828,7 +3849,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>ID</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3853,7 +3874,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+166"/>
+        <location line="+171"/>
         <source>Range:</source>
         <translation type="unfinished"></translation>
     </message>
