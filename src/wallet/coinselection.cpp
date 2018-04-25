@@ -332,6 +332,19 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     // Filter for positive only here before adding the coin
     if (positive_only && ev <= 0) return;
 
+    // Ideally this shouldn't be an assert as we don't want to cause node
+    // crashes.  However inserting outputs with different calculated refheight
+    // into the same group can potentially result in either failed transactions
+    // or (worse) lost funds.
+    if (m_atheight || !m_outputs.empty()) {
+        assert(m_atheight == output.atheight);
+    }
+    // The reference height is inferred from the first output inserted, unless
+    // it is explicitly set before inserting any outputs into the group.
+    if (m_outputs.empty()) {
+        m_atheight = output.atheight;
+    }
+
     m_outputs.push_back(output);
     CInputCoin& coin = m_outputs.back();
 
@@ -359,6 +372,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
 bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
 {
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
+        && m_atheight <= eligibility_filter.max_refheight
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
 }

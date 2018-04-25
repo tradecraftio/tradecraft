@@ -96,7 +96,7 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
     return CalculateMaximumSignedTxSize(tx, wallet, txouts, coin_control);
 }
 
-void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount)
+void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, uint32_t atheight, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -107,6 +107,13 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
     bool allow_used_addresses = !wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) || (coinControl && !coinControl->m_avoid_address_reuse);
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
+    if (!atheight) {
+        auto chain_height = wallet.chain().getHeight();
+        if (!chain_height) {
+            throw std::runtime_error(std::string(__func__) + ": unable to determine current chain height");
+        }
+        atheight = static_cast<uint32_t>(chain_height.value()) + 1;
+    }
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
 
     std::set<uint256> trusted_parents;
@@ -120,6 +127,12 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
 
         int nDepth = wallet.GetTxDepthInMainChain(wtx);
         if (nDepth < 0)
+            continue;
+
+        // It is possible that we're called with a height value that is less
+        // than the current block height, so let's not include outputs which
+        // can't be used at the specified refheight.
+        if (wtx.tx->lock_height > atheight)
             continue;
 
         // We should not consider coins which aren't at least in our mempool
@@ -201,7 +214,7 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
             bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            vCoins.push_back(COutput(wallet, wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
+            vCoins.push_back(COutput(wallet, atheight, wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -220,13 +233,21 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
     }
 }
 
-CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl)
+CAmount GetAvailableBalance(const CWallet& wallet, uint32_t atheight, const CCoinControl* coinControl)
 {
     LOCK(wallet.cs_wallet);
 
+    if (!atheight) {
+        auto chain_height = wallet.chain().getHeight();
+        if (!chain_height) {
+            throw std::runtime_error(std::string(__func__) + ": unable to determine current chain height");
+        }
+        atheight = static_cast<uint32_t>(chain_height.value()) + 1;
+    }
+
     CAmount balance = 0;
     std::vector<COutput> vCoins;
-    AvailableCoins(wallet, vCoins, coinControl);
+    AvailableCoins(wallet, vCoins, atheight, coinControl);
     for (const COutput& out : vCoins) {
         if (out.fSpendable) {
             balance += out.tx->tx->vout[out.i].nValue;
@@ -260,7 +281,12 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     std::map<CTxDestination, std::vector<COutput>> result;
     std::vector<COutput> availableCoins;
 
-    AvailableCoins(wallet, availableCoins);
+    const auto chain_height = wallet.chain().getHeight();
+    if (!chain_height) {
+        throw std::runtime_error(std::string(__func__) + ": unable to determine current chain height");
+    }
+    const uint32_t next_height = static_cast<uint32_t>(chain_height.value()) + 1;
+    AvailableCoins(wallet, availableCoins, next_height);
 
     for (const COutput& coin : availableCoins) {
         CTxDestination address;
@@ -285,7 +311,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(wallet, *it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        wallet, it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                        wallet, next_height, it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
                 }
             }
         }
@@ -421,7 +447,7 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     return best_result;
 }
 
-std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control, const CoinSelectionParams& coin_selection_params)
+std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, uint32_t height, const CCoinControl& coin_control, const CoinSelectionParams& coin_selection_params)
 {
     std::vector<COutput> vCoins(vAvailableCoins);
     CAmount value_to_select = nTargetValue;
@@ -473,7 +499,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             input_bytes = GetVirtualTransactionSize(coin_control.GetInputWeight(outpoint), 0, 0);
         }
 
-        CInputCoin coin(outpoint, txout, input_bytes);
+        CInputCoin coin(height, outpoint, txout, input_bytes);
         if (coin.m_input_bytes == -1) {
             return std::nullopt; // Not solvable, can't estimate size for fee
         }
@@ -524,25 +550,25 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
 
         // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
         // confirmations on outputs received from other wallets and only spend confirmed change.
-        if (auto r1{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(1, 6, 0), vCoins, coin_selection_params)}) return r1;
-        if (auto r2{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(1, 1, 0), vCoins, coin_selection_params)}) return r2;
+        if (auto r1{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(height, 1, 6, 0), vCoins, coin_selection_params)}) return r1;
+        if (auto r2{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(height, 1, 1, 0), vCoins, coin_selection_params)}) return r2;
 
         // Fall back to using zero confirmation change (but with as few ancestors in the mempool as
         // possible) if we cannot fund the transaction otherwise.
         if (wallet.m_spend_zero_conf_change) {
-            if (auto r3{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(0, 1, 2), vCoins, coin_selection_params)}) return r3;
-            if (auto r4{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)),
+            if (auto r3{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(height, 0, 1, 2), vCoins, coin_selection_params)}) return r3;
+            if (auto r4{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(height, 0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)),
                                    vCoins, coin_selection_params)}) {
                 return r4;
             }
-            if (auto r5{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2),
+            if (auto r5{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(height, 0, 1, max_ancestors/2, max_descendants/2),
                                    vCoins, coin_selection_params)}) {
                 return r5;
             }
             // If partial groups are allowed, relax the requirement of spending OutputGroups (groups
             // of UTXOs sent to the same address, which are obviously controlled by a single wallet)
             // in their entirety.
-            if (auto r6{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
+            if (auto r6{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(height, 0, 1, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
                                    vCoins, coin_selection_params)}) {
                 return r6;
             }
@@ -550,7 +576,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             // received from other wallets.
             if (coin_control.m_include_unsafe_inputs) {
                 if (auto r7{AttemptSelection(wallet, value_to_select,
-                    CoinEligibilityFilter(0 /* conf_mine */, 0 /* conf_theirs */, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
+                    CoinEligibilityFilter(height, 0 /* conf_mine */, 0 /* conf_theirs */, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
                     vCoins, coin_selection_params)}) {
                     return r7;
                 }
@@ -560,7 +586,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             // OutputGroups use heuristics that may overestimate ancestor/descendant counts.
             if (!fRejectLongChains) {
                 if (auto r8{AttemptSelection(wallet, value_to_select,
-                                      CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), true /* include_partial_groups */),
+                                      CoinEligibilityFilter(height, 0, 1, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), true /* include_partial_groups */),
                                       vCoins, coin_selection_params)}) {
                     return r8;
                 }
@@ -777,10 +803,10 @@ static bool CreateTransactionInternal(
 
     // Get available coins
     std::vector<COutput> vAvailableCoins;
-    AvailableCoins(wallet, vAvailableCoins, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
+    AvailableCoins(wallet, vAvailableCoins, txNew.lock_height, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
 
     // Choose coins to use
-    std::optional<SelectionResult> result = SelectCoins(wallet, vAvailableCoins, /* nTargetValue */ selection_target, coin_control, coin_selection_params);
+    std::optional<SelectionResult> result = SelectCoins(wallet, vAvailableCoins, /* nTargetValue */ selection_target, txNew.lock_height, coin_control, coin_selection_params);
     if (!result) {
         error = _("Insufficient funds");
         return false;
