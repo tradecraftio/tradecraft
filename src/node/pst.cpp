@@ -31,6 +31,7 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
 
     bool calc_fee = true;
 
+    CAmount in_raw = 0;
     CAmount in_amt = 0;
 
     result.inputs.resize(pstx.tx->vin.size());
@@ -47,11 +48,13 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
         // Check for a UTXO
         SpentOutput utxo;
         if (pstx.GetInputUTXO(utxo, i)) {
-            if (!MoneyRange(utxo.out.nValue) || !MoneyRange(in_amt + utxo.out.nValue)) {
+            CAmount input = utxo.GetPresentValue(pstx.tx->lock_height);
+            if (!MoneyRange(utxo.out.GetReferenceValue()) || !MoneyRange(input) || !MoneyRange(in_amt + input)) {
                 result.SetInvalid(strprintf("PST is not valid. Input %u has invalid value", i));
                 return result;
             }
-            in_amt += utxo.out.nValue;
+            in_raw += utxo.out.GetReferenceValue();
+            in_amt += input;
             input_analysis.has_utxo = true;
         } else {
             if (input.non_witness_utxo && pstx.tx->vin[i].prevout.n >= input.non_witness_utxo->vout.size()) {
@@ -110,10 +113,10 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
         // Get the output amount
         CAmount out_amt = std::accumulate(pstx.tx->vout.begin(), pstx.tx->vout.end(), CAmount(0),
             [](CAmount a, const CTxOut& b) {
-                if (!MoneyRange(a) || !MoneyRange(b.nValue) || !MoneyRange(a + b.nValue)) {
+                if (!MoneyRange(a) || !MoneyRange(b.GetReferenceValue()) || !MoneyRange(a + b.GetReferenceValue())) {
                     return CAmount(-1);
                 }
-                return a += b.nValue;
+                return a += b.GetReferenceValue();
             }
         );
         if (!MoneyRange(out_amt)) {
@@ -122,6 +125,8 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
         }
 
         // Get the fee
+        CAmount demurrage = in_raw - in_amt;
+        result.demurrage = demurrage;
         CAmount fee = in_amt - out_amt;
         result.fee = fee;
 

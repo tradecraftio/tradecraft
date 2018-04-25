@@ -1398,6 +1398,27 @@ void CWallet::BlockUntilSyncedToCurrentChain() const {
     chain().waitForNotificationsIfTipChanged(last_block_hash);
 }
 
+bool CWallet::GetInputSplit(const CWalletTx& wtx, CAmount& value_in, CAmount& demurrage) const {
+    int missing = 0;
+    value_in = demurrage = 0;
+    for (const CTxIn& txin : wtx.tx->vin) {
+        const CWalletTx* prev = GetWalletTx(txin.prevout.hash);
+        if (prev == NULL) {
+            ++missing;
+            continue;
+        }
+        if (txin.prevout.n < prev->tx->vout.size()) {
+            const CTxOut& txout = prev->tx->vout[txin.prevout.n];
+            CAmount amount = prev->tx->GetPresentValueOfOutput(txin.prevout.n, wtx.tx->lock_height);
+            if (IsMine(txout)) {
+                demurrage += txout.GetReferenceValue() - amount;
+            }
+            value_in += amount;
+        }
+    }
+    return !!missing;
+}
+
 // Note that this function doesn't distinguish between a 0-valued input,
 // and a not-"is mine" (according to the filter) input.
 CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
@@ -1410,7 +1431,7 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
             const CWalletTx& prev = (*mi).second;
             if (txin.prevout.n < prev.tx->vout.size())
                 if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
-                    return prev.tx->vout[txin.prevout.n].nValue;
+                    return prev.tx->vout[txin.prevout.n].GetReferenceValue();
         }
     }
     return 0;

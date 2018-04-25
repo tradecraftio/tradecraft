@@ -686,6 +686,7 @@ static RPCHelpMan getblock()
                         {RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::ELISION, "", "The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result"},
+                            {RPCResult::Type::NUM, "demurrage", "The amount of the input demurrage in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
                             {RPCResult::Type::NUM, "fee", "The transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
                         }},
                     }},
@@ -881,10 +882,12 @@ static RPCHelpMan gettxoutsetinfo()
                         {RPCResult::Type::STR_HEX, "muhash", /*optional=*/true, "The serialized hash (only present if 'muhash' hash_type is chosen)"},
                         {RPCResult::Type::NUM, "transactions", /*optional=*/true, "The number of transactions with unspent outputs (not available when coinstatsindex is used)"},
                         {RPCResult::Type::NUM, "disk_size", /*optional=*/true, "The estimated size of the chainstate on disk (not available when coinstatsindex is used)"},
-                        {RPCResult::Type::STR_AMOUNT, "total_value", "The total value of coins in the UTXO set"},
-                        {RPCResult::Type::STR_AMOUNT, "total_unspendable_value", /*optional=*/true, "The total value of coins permanently excluded from the UTXO set (only available if coinstatsindex is used)"},
+                        {RPCResult::Type::STR_AMOUNT, "total_value", "The total amount of coins in the UTXO set"},
+                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of coins in the UTXO set, time-adjusted to the next block's height"},
+                        {RPCResult::Type::STR_AMOUNT, "total_unspendable_value", /*optional=*/true, "The total amount of coins permanently excluded from the UTXO set (only available if coinstatsindex is used)"},
                         {RPCResult::Type::OBJ, "block_info", /*optional=*/true, "Info on amounts in the block at this block height (only available if coinstatsindex is used)",
                         {
+                            {RPCResult::Type::STR_AMOUNT, "demurrage", "The amount of the input demurrage across all transactions in this block"},
                             {RPCResult::Type::STR_AMOUNT, "prevout_spent", "Total amount of all prevouts spent in this block"},
                             {RPCResult::Type::STR_AMOUNT, "coinbase", "Coinbase subsidy amount of this block"},
                             {RPCResult::Type::STR_AMOUNT, "new_outputs_ex_coinbase", "Total amount of new outputs created by this block"},
@@ -973,6 +976,8 @@ static RPCHelpMan gettxoutsetinfo()
         }
         CHECK_NONFATAL(stats.total_value.has_value());
         ret.pushKV("total_value", ValueFromAmount(stats.total_value.value()));
+        CHECK_NONFATAL(stats.total_amount.has_value());
+        ret.pushKV("total_amount", ValueFromAmount(stats.total_amount.value()));
         if (!stats.index_used) {
             ret.pushKV("transactions", static_cast<int64_t>(stats.nTransactions));
             ret.pushKV("disk_size", stats.nDiskSize);
@@ -989,6 +994,7 @@ static RPCHelpMan gettxoutsetinfo()
             }
 
             UniValue block_info(UniValue::VOBJ);
+            block_info.pushKV("demurrage", ValueFromAmount(stats.block_demurrage));
             block_info.pushKV("prevout_spent", ValueFromAmount(stats.total_prevout_spent_amount - prev_stats.total_prevout_spent_amount));
             block_info.pushKV("coinbase", ValueFromAmount(stats.total_coinbase_amount - prev_stats.total_coinbase_amount));
             block_info.pushKV("new_outputs_ex_coinbase", ValueFromAmount(stats.total_new_outputs_ex_coinbase_amount - prev_stats.total_new_outputs_ex_coinbase_amount));
@@ -1025,7 +1031,8 @@ static RPCHelpMan gettxout()
             RPCResult{"Otherwise", RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
                 {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
-                {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
+                {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT + " at its reference height"},
+                {RPCResult::Type::STR_AMOUNT, "amount", "The transaction value in " + CURRENCY_UNIT + " time-adjusted to the next block's height"},
                 {RPCResult::Type::OBJ, "scriptPubKey", "", {
                     {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
                     {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
@@ -1083,7 +1090,8 @@ static RPCHelpMan gettxout()
     } else {
         ret.pushKV("confirmations", (int64_t)(pindex->nHeight - coin.nHeight + 1));
     }
-    ret.pushKV("value", ValueFromAmount(coin.out.nValue));
+    ret.pushKV("value", ValueFromAmount(coin.out.GetReferenceValue()));
+    ret.pushKV("amount", ValueFromAmount(coin.GetPresentValue(pindex->nHeight + 1)));
     UniValue o(UniValue::VOBJ);
     ScriptToUniv(coin.out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
     ret.pushKV("scriptPubKey", o);
@@ -1850,7 +1858,7 @@ static RPCHelpMan getblockstats()
         CAmount tx_total_out = 0;
         if (loop_outputs) {
             for (const CTxOut& out : tx->vout) {
-                tx_total_out += out.nValue;
+                tx_total_out += out.GetReferenceValue();
                 utxo_size_inc += GetSerializeSize(out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
         }
@@ -1860,7 +1868,7 @@ static RPCHelpMan getblockstats()
         }
 
         inputs += tx->vin.size(); // Don't count coinbase's fake input
-        total_out += tx_total_out; // Don't count coinbase reward
+        total_out += GetTimeAdjustedValue(tx_total_out, pindex.nHeight - tx->lock_height); // Don't count coinbase reward
 
         int64_t tx_size = 0;
         if (do_calculate_size) {
@@ -1890,13 +1898,13 @@ static RPCHelpMan getblockstats()
             CAmount tx_total_in = 0;
             const auto& txundo = blockUndo.vtxundo.at(i - 1);
             for (const Coin& coin: txundo.vprevout) {
-                const CTxOut& prevoutput = coin.out;
-
-                tx_total_in += prevoutput.nValue;
-                utxo_size_inc -= GetSerializeSize(prevoutput, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                tx_total_in += coin.GetPresentValue(tx->lock_height);
+                utxo_size_inc -= GetSerializeSize(coin.out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
 
             CAmount txfee = tx_total_in - tx_total_out;
+            CHECK_NONFATAL(MoneyRange(txfee));
+            txfee = GetTimeAdjustedValue(txfee, pindex.nHeight - tx->lock_height);
             CHECK_NONFATAL(MoneyRange(txfee));
             if (do_medianfee) {
                 fee_array.push_back(txfee);
@@ -2081,7 +2089,8 @@ static RPCHelpMan scantxoutset()
                         {RPCResult::Type::NUM, "vout", "The vout value"},
                         {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
                         {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
-                        {RPCResult::Type::STR_AMOUNT, "value", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                        {RPCResult::Type::STR_AMOUNT, "value", "The total amount in " + CURRENCY_UNIT + " of the unspent output at its reference height"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output time-adjusted to the next block height"},
                         {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
                         {RPCResult::Type::NUM, "refheight", "Reference height of the unspent transaction output"},
                     }},
@@ -2178,16 +2187,18 @@ static RPCHelpMan scantxoutset()
             const Coin& coin = it.second;
             const CTxOut& txo = coin.out;
             input_txos.push_back(txo);
-            total_in += txo.nValue;
+            CAmount tx_amount_in = coin.GetPresentValue(tip->nHeight + 1);
+            total_in += tx_amount_in;
 
             UniValue unspent(UniValue::VOBJ);
             unspent.pushKV("txid", outpoint.hash.GetHex());
             unspent.pushKV("vout", (int32_t)outpoint.n);
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey));
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
-            unspent.pushKV("value", ValueFromAmount(txo.nValue));
+            unspent.pushKV("value", ValueFromAmount(txo.GetReferenceValue()));
             unspent.pushKV("refheight", (int64_t)coin.refheight);
             unspent.pushKV("height", (int32_t)coin.nHeight);
+            unspent.pushKV("amount", ValueFromAmount(tx_amount_in));
 
             unspents.push_back(unspent);
         }

@@ -20,6 +20,7 @@
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>
+#include <util/check.h>
 
 #include <optional>
 
@@ -44,6 +45,9 @@ public:
 
     /** The reference height at which the output is evaluated. */
     uint32_t atheight;
+
+    /** The value of the output adjusted to the reference height atheight */
+    CAmount adjusted;
 
     /** The output itself */
     CTxOut txout;
@@ -83,8 +87,9 @@ public:
     /** The fee required to spend this output at the consolidation feerate. */
     CAmount long_term_fee{0};
 
-    COutput(uint32_t atheight, const COutPoint& outpoint, const SpentOutput& spent_output, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
+    COutput(uint32_t atheight, CAmount adjusted, const COutPoint& outpoint, const SpentOutput& spent_output, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
         : atheight{atheight},
+          adjusted{adjusted},
           outpoint{outpoint},
           txout{spent_output.out},
           refheight{spent_output.refheight},
@@ -96,19 +101,22 @@ public:
           time{time},
           from_me{from_me}
     {
+        if (adjusted < 0) {
+            adjusted = spent_output.out.GetTimeAdjustedValue(static_cast<int>(atheight - refheight));
+        }
         if (feerate) {
             fee = input_bytes < 0 ? 0 : feerate.value().GetFee(input_bytes);
-            effective_value = txout.nValue - fee.value();
+            effective_value = adjusted - fee.value();
         }
     }
 
-    COutput(uint32_t atheight, const COutPoint& outpoint, const SpentOutput& spent_output, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
-        : COutput(atheight, outpoint, spent_output, depth, input_bytes, spendable, solvable, safe, time, from_me)
+    COutput(uint32_t atheight, CAmount adjusted, const COutPoint& outpoint, const SpentOutput& spent_output, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
+        : COutput(atheight, adjusted, outpoint, spent_output, depth, input_bytes, spendable, solvable, safe, time, from_me)
     {
         // if input_bytes is unknown, then fees should be 0, if input_bytes is known, then the fees should be a positive integer or 0 (input_bytes known and fees = 0 only happens in the tests)
         assert((input_bytes < 0 && fees == 0) || (input_bytes > 0 && fees >= 0));
         fee = fees;
-        effective_value = txout.nValue - fee.value();
+        effective_value = adjusted - fee.value();
     }
 
     std::string ToString() const;

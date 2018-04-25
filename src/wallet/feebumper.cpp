@@ -200,7 +200,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         } else {
             new_coin_control.SelectExternal(txin.prevout, {coin.out, coin.refheight});
         }
-        input_value += coin.out.nValue;
+        input_value += coin.GetPresentValue(wtx.tx->lock_height);
         spent_outputs.emplace_back(coin.out, coin.refheight);
     }
 
@@ -219,7 +219,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             // In order to do this, we verify the script with a special SignatureChecker which
             // will observe the signatures verified and record their sizes.
             SignatureWeights weights;
-            TransactionSignatureChecker tx_checker(wtx.tx.get(), i, coin.out.nValue, coin.refheight, txdata, MissingDataBehavior::FAIL);
+            TransactionSignatureChecker tx_checker(wtx.tx.get(), i, coin.out.GetReferenceValue(), coin.refheight, txdata, MissingDataBehavior::FAIL);
             SignatureWeightChecker size_checker(weights, tx_checker);
             VerifyScript(txin.scriptSig, coin.out.scriptPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, size_checker);
             // Add the difference between max and current to input_weight so that it represents the largest the input could be
@@ -239,14 +239,14 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     CAmount output_value = 0;
     for (const auto& output : wtx.tx->vout) {
         if (!OutputIsChange(wallet, output)) {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            CRecipient recipient = {output.scriptPubKey, output.GetReferenceValue(), false};
             recipients.push_back(recipient);
         } else {
             CTxDestination change_dest;
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
         }
-        output_value += output.nValue;
+        output_value += output.GetReferenceValue();
     }
 
     old_fee = input_value - output_value;

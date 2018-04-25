@@ -34,11 +34,11 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     CAmount nValueOut = 0;
     for (const auto& txout : tx.vout)
     {
-        if (txout.nValue < 0)
+        if (txout.GetReferenceValue() < 0)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
+        if (txout.GetReferenceValue() > MAX_MONEY)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-toolarge");
-        nValueOut += txout.nValue;
+        nValueOut += txout.GetReferenceValue();
         if (!MoneyRange(nValueOut))
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-txouttotal-toolarge");
     }

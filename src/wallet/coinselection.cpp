@@ -369,7 +369,7 @@ void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descend
     effective_value += coin.GetEffectiveValue();
 
     m_from_me &= coin.from_me;
-    m_value += coin.txout.nValue;
+    m_value += coin.adjusted;
     m_depth = std::min(m_depth, coin.depth);
     // ancestors here express the number of ancestors the new coin will end up having, which is
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs
@@ -403,7 +403,7 @@ CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, 
     CAmount selected_effective_value = 0;
     for (const COutput& coin : inputs) {
         waste += coin.GetFee() - coin.long_term_fee;
-        selected_effective_value += use_effective_value ? coin.GetEffectiveValue() : coin.txout.nValue;
+        selected_effective_value += use_effective_value ? coin.GetEffectiveValue() : coin.adjusted;
     }
 
     if (change_cost) {
@@ -449,7 +449,7 @@ CAmount SelectionResult::GetWaste() const
 
 CAmount SelectionResult::GetSelectedValue() const
 {
-    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.txout.nValue; });
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.adjusted; });
 }
 
 CAmount SelectionResult::GetSelectedEffectiveValue() const
@@ -501,7 +501,7 @@ bool SelectionResult::operator<(SelectionResult other) const
 
 std::string COutput::ToString() const
 {
-    return strprintf("COutput(%d, %s, %d, %d) [%s]", atheight, outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
+    return strprintf("COutput(%d, %s, %s, %d, %d) [%s]", atheight, FormatMoney(adjusted), outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.GetReferenceValue()));
 }
 
 std::string GetAlgorithmName(const SelectionAlgorithm algo)

@@ -49,6 +49,7 @@ struct CCoinsStats {
     uint64_t nDiskSize{0};
     //! The total value, or nullopt if an overflow occurred calculating it
     std::optional<CAmount> total_value{0};
+    std::optional<CAmount> total_amount{0};
 
     //! The number of coins contained.
     uint64_t coins_count{0};
@@ -60,6 +61,8 @@ struct CCoinsStats {
 
     //! Total cumulative amount of block subsidies up to and including this block
     CAmount total_subsidy{0};
+    //! Residual value of spent coins removed from circulation due to demurrage
+    CAmount block_demurrage{0};
     //! Total cumulative value of unspendable coins up to and including this block
     CAmount total_unspendable_value{0};
     //! Total cumulative amount of prevouts spent up to and including this block

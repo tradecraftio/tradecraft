@@ -13,11 +13,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/util/setup_common.h>
+
 #include <clientversion.h>
 #include <coins.h>
 #include <script/standard.h>
 #include <streams.h>
-#include <test/util/setup_common.h>
 #include <txdb.h>
 #include <uint256.h>
 #include <undo.h>
