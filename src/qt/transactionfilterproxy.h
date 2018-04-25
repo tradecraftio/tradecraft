@@ -51,6 +51,7 @@ public:
      */
     void setTypeFilter(quint32 modes);
     void setMinAmount(const CAmount& minimum);
+    void setMinLockHeight(quint32 minimum);
     void setWatchOnlyFilter(WatchOnlyFilter filter);
 
     /** Set whether to show conflicted transactions. */
@@ -66,6 +67,7 @@ private:
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter{WatchOnlyFilter_All};
     CAmount minAmount{0};
+    quint32 minLockHeight{0};
     bool showInactive{true};
 };
 
