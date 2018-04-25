@@ -312,6 +312,18 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
  ******************************************************************************/
 
 void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) {
+    // Ideally this shouldn't be an assert as we don't want to cause node
+    // crashes.  However inserting outputs with different calculated refheight
+    // into the same group can potentially result in either failed transactions
+    // or (worse) lost funds.
+    if (m_atheight || !m_outputs.empty()) {
+        assert(m_atheight == output.atheight);
+    }
+    // The reference height is inferred from the first output inserted, unless
+    // it is explicitly set before inserting any outputs into the group.
+    if (m_outputs.empty()) {
+        m_atheight = output.atheight;
+    }
     m_outputs.push_back(output);
     m_from_me &= from_me;
     m_value += output.txout.nValue;
@@ -342,6 +354,7 @@ std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output)
 bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
 {
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
+        && m_atheight <= eligibility_filter.max_height
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
 }

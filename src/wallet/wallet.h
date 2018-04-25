@@ -573,6 +573,7 @@ public:
     const CWalletTx *tx;
     int i;
     int nDepth;
+    uint32_t atheight;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
     int nInputBytes;
@@ -593,9 +594,9 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
+    COutput(uint32_t atheightIn, const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
+        tx = txIn; i = iIn; nDepth = nDepthIn; atheight = atheightIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
         // If known and signable by the given wallet, compute nInputBytes
         // Failure will keep this value -1
         if (fSpendable && tx) {
@@ -607,7 +608,7 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(tx->tx, i, nInputBytes);
+        return CInputCoin(atheight, tx->tx, i, nInputBytes);
     }
 };
 
@@ -764,7 +765,7 @@ public:
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
      */
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, uint32_t height, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
                     const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Get a name for this wallet for logging/debugging purposes.
@@ -824,7 +825,7 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableCoins(std::vector<COutput>& vCoins, uint32_t atheight, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.

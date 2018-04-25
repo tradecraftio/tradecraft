@@ -2169,7 +2169,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
 
     CAmount balance = 0;
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl);
+    AvailableCoins(vCoins, /* height= */ 0, /* fOnlySafe= */ true, coinControl, /* nMinimumAmount= */ 1, /* nMaximumAmount= */ MAX_MONEY, /* nMinimumSumAmount= */ MAX_MONEY, /* nMaximumCount= */ 0);
     for (const COutput& out : vCoins) {
         if (out.fSpendable) {
             balance += out.tx->tx->vout[out.i].nValue;
@@ -2178,7 +2178,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount) const
+void CWallet::AvailableCoins(std::vector<COutput>& vCoins, uint32_t atheight, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -2189,6 +2189,13 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
     bool allow_used_addresses = !IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) || (coinControl && !coinControl->m_avoid_address_reuse);
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
+    if (!atheight) {
+        auto chain_height = chain().getHeight();
+        if (!chain_height) {
+            throw std::runtime_error(std::string(__func__) + ": unable to determine current chain height");
+        }
+        atheight = static_cast<uint32_t>(chain_height.get()) + 1;
+    }
 
     std::set<uint256> trusted_parents;
     for (const auto& entry : mapWallet)
@@ -2210,6 +2217,12 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
         if (nDepth == 0 && !wtx.InMempool())
+            continue;
+
+        // It is possible that we're called with a height value that is less
+        // than the current block height, so let's not include outputs which
+        // can't be used at the specified refheight.
+        if (wtx.tx->lock_height > atheight)
             continue;
 
         bool safeTx = IsTrusted(wtx, trusted_parents);
@@ -2286,7 +2299,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
             bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            vCoins.push_back(COutput(&wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
+            vCoins.push_back(COutput(atheight, &wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -2312,7 +2325,12 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
     std::map<CTxDestination, std::vector<COutput>> result;
     std::vector<COutput> availableCoins;
 
-    AvailableCoins(availableCoins);
+    const auto chain_height = chain().getHeight();
+    if (!chain_height) {
+        throw std::runtime_error(std::string(__func__) + ": unable to determine current chain height");
+    }
+    const uint32_t next_height = static_cast<uint32_t>(chain_height.get()) + 1;
+    AvailableCoins(availableCoins, /* height= */ next_height, /* fOnlySafe= */ true, /* coinControl= */ nullptr, /* nMinimumAmount= */ 1, /* nMaximumAmount= */ MAX_MONEY, /* nMinimumSumAmount= */ MAX_MONEY, /* nMaximumCount= */ 0);
 
     for (const COutput& coin : availableCoins) {
         CTxDestination address;
@@ -2337,7 +2355,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                        next_height, &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
                 }
             }
         }
@@ -2404,7 +2422,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     }
 }
 
-bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const
+bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, uint32_t height, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const
 {
     std::vector<COutput> vCoins(vAvailableCoins);
     CAmount value_to_select = nTargetValue;
@@ -2442,7 +2460,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 return false;
             }
             // Just to calculate the marginal byte size
-            CInputCoin coin(wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
+            CInputCoin coin(height, wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
             nValueFromPresetInputs += coin.txout.nValue;
             if (coin.m_input_bytes <= 0) {
                 return false; // Not solvable, can't estimate size for fee
@@ -2486,13 +2504,13 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends, max_ancestors);
 
     bool res = value_to_select <= 0 ||
-        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 6, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 1, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(height, 1, 6, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(height, 1, 1, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(height, 0, 1, 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(height, 0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(height, 0, 1, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(height, 0, 1, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(height, 0, 1, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     util::insert(setCoinsRet, setPresetCoins);
@@ -2791,7 +2809,7 @@ bool CWallet::CreateTransactionInternal(
         }
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
+            AvailableCoins(vAvailableCoins, refheight, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
 
             // Create change script that will be used if we need change
@@ -2921,7 +2939,7 @@ bool CWallet::CreateTransactionInternal(
                     } else {
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, txNew.lock_height, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
                     {
                         // If BnB was used, it was the first pass. No longer the first pass and continue loop with knapsack.
                         if (bnb_used) {

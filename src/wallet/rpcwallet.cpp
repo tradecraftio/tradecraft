@@ -2976,6 +2976,7 @@ static RPCHelpMan listunspent()
                         {
                             {"minimumAmount", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
+                            {"atheight", RPCArg::Type::NUM, /* default */ "tip", "Reference height for output availability"},
                             {"maximumCount", RPCArg::Type::NUM, /* default */ "unlimited", "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
                         },
@@ -3055,6 +3056,7 @@ static RPCHelpMan listunspent()
     CAmount nMinimumAmount = 0;
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
+    uint32_t atheight = 0;
     uint64_t nMaximumCount = 0;
 
     if (!request.params[4].isNull()) {
@@ -3065,6 +3067,7 @@ static RPCHelpMan listunspent()
                 {"minimumAmount", UniValueType()},
                 {"maximumAmount", UniValueType()},
                 {"minimumSumAmount", UniValueType()},
+                {"atheight", UniValueType(UniValue::VNUM)},
                 {"maximumCount", UniValueType(UniValue::VNUM)},
             },
             true, true);
@@ -3077,6 +3080,9 @@ static RPCHelpMan listunspent()
 
         if (options.exists("minimumSumAmount"))
             nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
+
+        if (options.exists("atheight"))
+            atheight = options["height"].get_int();
 
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].get_int64();
@@ -3094,7 +3100,7 @@ static RPCHelpMan listunspent()
         cctl.m_min_depth = nMinDepth;
         cctl.m_max_depth = nMaxDepth;
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+        pwallet->AvailableCoins(vecOutputs, atheight, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
     }
 
     LOCK(pwallet->cs_wallet);

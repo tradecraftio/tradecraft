@@ -43,9 +43,9 @@ static auto testChain = interfaces::MakeChain(testNode);
 static CWallet testWallet(testChain.get(), "", CreateDummyWalletDatabase());
 static CAmount balance = 0;
 
-CoinEligibilityFilter filter_standard(1, 6, 0);
-CoinEligibilityFilter filter_confirmed(1, 1, 0);
-CoinEligibilityFilter filter_standard_extra(6, 6, 0);
+CoinEligibilityFilter filter_standard(1 /* refheight */, 1, 6, 0);
+CoinEligibilityFilter filter_confirmed(1 /* refheight */, 1, 1, 0);
+CoinEligibilityFilter filter_standard_extra(1 /* refheight */, 6, 6, 0);
 CoinSelectionParams coin_selection_params(/* use_bnb= */ false, /* change_output_size= */ 0,
                                           /* change_spend_size= */ 0, /* effective_feerate= */ CFeeRate(0),
                                           /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
@@ -56,7 +56,8 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>&
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    set.emplace_back(MakeTransactionRef(tx), nInput);
+    tx.lock_height = 1;
+    set.emplace_back(tx.lock_height, MakeTransactionRef(tx), nInput);
 }
 
 static void add_coin(const CAmount& nValue, int nInput, CoinSet& set)
@@ -64,7 +65,8 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set)
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    set.emplace(MakeTransactionRef(tx), nInput);
+    tx.lock_height = 1;
+    set.emplace(tx.lock_height, MakeTransactionRef(tx), nInput);
 }
 
 static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
@@ -73,6 +75,7 @@ static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bo
     static int nextLockTime = 0;
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
+    tx.lock_height = 1;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     if (spendable) {
@@ -92,7 +95,7 @@ static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bo
         wtx->m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
         wtx->m_is_cache_empty = false;
     }
-    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wtx->tx->lock_height, wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
 }
 static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
@@ -312,7 +315,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(COutPoint(vCoins.at(0).tx->GetHash(), vCoins.at(0).i));
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
-        BOOST_CHECK(wallet->SelectCoins(vCoins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb, bnb_used));
+        BOOST_CHECK(wallet->SelectCoins(vCoins, 10 * CENT, 1 /* refheight */, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb, bnb_used));
         BOOST_CHECK(bnb_used);
         BOOST_CHECK(coin_selection_params_bnb.use_bnb);
     }
@@ -330,6 +333,17 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
     {
+        empty_wallet();
+
+        // a refheight in the future doesn't show up
+        add_coin(1 * CENT);
+        CoinEligibilityFilter past_filter(0 /* refheight */, 1, 6, 0);
+        BOOST_CHECK(!testWallet.SelectCoinsMinConf( 1 * CENT, past_filter, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+
+        // but it does when we change our target refheight to the future
+        BOOST_CHECK( testWallet.SelectCoinsMinConf( 1 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+
+        // revert wallet for unit tests carried over from bitcoin
         empty_wallet();
 
         // with an empty wallet we can't even pay one cent
