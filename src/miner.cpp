@@ -189,7 +189,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    coinbaseTx.vout[0].SetReferenceValue(nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = coinbaseTx;
@@ -335,7 +335,7 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     nBlockWeight += iter->GetTxWeight();
     ++nBlockTx;
     nBlockSigOpsCost += iter->GetSigOpCost();
-    nFees += iter->GetFee();
+    nFees += GetTimeAdjustedValue(iter->GetFee(), nHeight - iter->GetReferenceHeight());
     inBlock.insert(iter);
 
     bool fPrintPriority = GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
@@ -472,6 +472,12 @@ void BlockAssembler::addPackageTxs()
             packageSize = modit->nSizeWithAncestors;
             packageFees = modit->nModFeesWithAncestors;
             packageSigOpsCost = modit->nSigOpCostWithAncestors;
+        }
+        // Ignore demurrage calculations if the refheight age is less than
+        // 1008 blocks (1 week), to speed up block template construction.
+        // This heuristic has an error of less than 0.1%.
+        if ((iter->GetReferenceHeight() + 1008) < nHeight) {
+            packageFees = GetTimeAdjustedValue(packageFees, nHeight - iter->GetReferenceHeight());
         }
 
         if (packageFees < ::minRelayTxFee.GetFee(packageSize)) {

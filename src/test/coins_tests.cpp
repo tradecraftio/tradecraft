@@ -16,12 +16,13 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "coins.h"
 #include "random.h"
 #include "script/standard.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
-#include "test/test_freicoin.h"
 #include "main.h"
 #include "consensus/validation.h"
 

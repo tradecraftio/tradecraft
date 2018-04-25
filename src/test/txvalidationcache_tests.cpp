@@ -16,6 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "consensus/validation.h"
 #include "key.h"
 #include "main.h"
@@ -24,7 +26,6 @@
 #include "txmempool.h"
 #include "random.h"
 #include "script/standard.h"
-#include "test/test_freicoin.h"
 #include "utiltime.h"
 
 #include <boost/test/unit_test.hpp>

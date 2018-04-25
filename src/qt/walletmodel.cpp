@@ -75,10 +75,11 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
     {
         CAmount nBalance = 0;
         std::vector<COutput> vCoins;
+        const int next_height = chainActive.Height() + 1;
         wallet->AvailableCoins(vCoins, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
-            if(out.fSpendable)
-                nBalance += out.tx->vout[out.i].nValue;
+            if(out.fSpendable && CheckFinalTx(*out.tx))
+                nBalance += out.tx->GetPresentValueOfOutput(out.i, next_height);
 
         return nBalance;
     }

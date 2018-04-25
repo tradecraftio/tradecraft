@@ -1103,11 +1103,11 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     CAmount nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
-        if (txout.nValue < 0)
+        if (txout.GetReferenceValue() < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
+        if (txout.GetReferenceValue() > MAX_MONEY)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        nValueOut += txout.nValue;
+        nValueOut += txout.GetReferenceValue();
         if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
@@ -1947,7 +1947,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
         if (!inputs.HaveInputs(tx))
             return state.Invalid(false, 0, "", "Inputs unavailable");
 
-        CAmount nValueIn = 0;
+        CAmount nValueIn = 0, nInput;
         CAmount nFees = 0;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
@@ -1970,8 +1970,9 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             }
 
             // Check for negative or overflow input values
-            nValueIn += coins->vout[prevout.n].nValue;
-            if (!MoneyRange(coins->vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            nInput = coins->GetPresentValueOfOutput(prevout.n, tx.lock_height);
+            nValueIn += nInput;
+            if (!MoneyRange(nInput) || !MoneyRange(nValueIn))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
 
         }
@@ -2475,7 +2476,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            nFees += GetTimeAdjustedValue(view.GetValueIn(tx)-tx.GetValueOut(),
+                                          pindex->nHeight - (int)tx.lock_height);
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
@@ -3495,7 +3497,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             uint256 witnessroot = BlockWitnessMerkleRoot(block, NULL);
             CHash256().Write(witnessroot.begin(), 32).Write(&ret[0], 32).Finalize(witnessroot.begin());
             CTxOut out;
-            out.nValue = 0;
+            out.SetReferenceValue(0);
             out.scriptPubKey.resize(38);
             out.scriptPubKey[0] = OP_RETURN;
             out.scriptPubKey[1] = 0x24;
