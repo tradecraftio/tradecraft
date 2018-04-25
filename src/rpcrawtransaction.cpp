@@ -289,7 +289,7 @@ Value listunspent(const Array& params, bool fHelp)
                 continue;
         }
 
-        CAmount nValue = out.tx->vout[out.i].nValue;
+        CAmount nValue = GetTimeAdjustedValue(out.tx->vout[out.i].nValue, (int)height - (int)out.tx->lock_height);
         const CScript& pk = out.tx->vout[out.i].scriptPubKey;
         Object entry;
         entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));

@@ -742,6 +742,31 @@ void CWallet::EraseFromWallet(const uint256 &hash)
 }
 
 
+bool CWallet::GetInputSplit(const CWalletTx& wtx, CAmount& value_in, CAmount& demurrage) const
+{
+    int missing = 0;
+    value_in = demurrage = 0;
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        const CWalletTx* prev = GetWalletTx(txin.prevout.hash);
+        if (prev == NULL)
+        {
+            ++missing;
+            continue;
+        }
+        if (txin.prevout.n < prev->vout.size())
+        {
+            const CTxOut& txout = prev->vout[txin.prevout.n];
+            CAmount amount = GetTimeAdjustedValue(txout.nValue, (int)wtx.lock_height - (int)prev->lock_height);
+            if (IsMine(txout)) {
+                demurrage += txout.nValue - amount;
+            }
+            value_in += amount;
+        }
+    }
+    return !!missing;
+}
+
 isminetype CWallet::IsMine(const CTxIn &txin) const
 {
     {
@@ -841,19 +866,20 @@ int CWalletTx::GetRequestCount() const
 }
 
 void CWalletTx::GetAmounts(list<COutputEntry>& listReceived,
-                           list<COutputEntry>& listSent, CAmount& nFee, string& strSentAccount, const isminefilter& filter) const
+                           list<COutputEntry>& listSent, CAmount& nFee, CAmount& demurrage, string& strSentAccount, const isminefilter& filter) const
 {
-    nFee = 0;
+    nFee = demurrage = 0;
     listReceived.clear();
     listSent.clear();
     strSentAccount = strFromAccount;
 
-    // Compute fee:
+    // Compute fee and demurrage:
     CAmount nDebit = GetDebit(filter);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        CAmount nValueOut = GetValueOut();
-        nFee = nDebit - nValueOut;
+        CAmount value_in = 0;
+        pwallet->GetInputSplit(*this, value_in, demurrage);
+        nFee = value_in - GetValueOut();
     }
 
     // Sent/received.
@@ -896,21 +922,22 @@ void CWalletTx::GetAmounts(list<COutputEntry>& listReceived,
 }
 
 void CWalletTx::GetAccountAmounts(const string& strAccount, CAmount& nReceived,
-                                  CAmount& nSent, CAmount& nFee, const isminefilter& filter) const
+                                  CAmount& nSent, CAmount& nFee, CAmount& demurrage, const isminefilter& filter) const
 {
-    nReceived = nSent = nFee = 0;
+    nReceived = nSent = nFee = demurrage = 0;
 
-    CAmount allFee;
+    CAmount allFee, all_demurrage;
     string strSentAccount;
     list<COutputEntry> listReceived;
     list<COutputEntry> listSent;
-    GetAmounts(listReceived, listSent, allFee, strSentAccount, filter);
+    GetAmounts(listReceived, listSent, allFee, all_demurrage, strSentAccount, filter);
 
     if (strAccount == strSentAccount)
     {
         BOOST_FOREACH(const COutputEntry& s, listSent)
             nSent += s.amount;
         nFee = allFee;
+        demurrage = all_demurrage;
     }
     {
         LOCK(pwallet->cs_wallet);
@@ -1078,11 +1105,12 @@ CAmount CWallet::GetBalance() const
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
+        const int height = chainActive.Height() + 1;
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
             if (pcoin->IsTrusted())
-                nTotal += pcoin->GetAvailableCredit();
+                nTotal += GetTimeAdjustedValue(pcoin->GetAvailableCredit(), height - (int)pcoin->lock_height);
         }
     }
 
@@ -1094,11 +1122,12 @@ CAmount CWallet::GetUnconfirmedBalance() const
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
+        const int height = chainActive.Height() + 1;
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
             if (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0))
-                nTotal += pcoin->GetAvailableCredit();
+                nTotal += GetTimeAdjustedValue(pcoin->GetAvailableCredit(), height - (int)pcoin->lock_height);
         }
     }
     return nTotal;
@@ -1279,7 +1308,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int32_t height, in
             continue;
 
         int i = output.i;
-        CAmount n = pcoin->vout[i].nValue;
+        CAmount n = pcoin->GetPresentValueOfOutput(i, height);
 
         pair<CAmount,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
 
@@ -1439,7 +1468,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 }
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
                 {
-                    CAmount nCredit = pcoin.first->vout[pcoin.second].nValue;
+                    CAmount nCredit = pcoin.first->GetPresentValueOfOutput(pcoin.second, wtxNew.lock_height);
                     //The coin age after the next block (depth+1) is used instead of the current,
                     //reflecting an assumption the user would accept a bit more delay for
                     //a chance at a free transaction.

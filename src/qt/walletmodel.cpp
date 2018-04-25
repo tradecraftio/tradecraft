@@ -77,8 +77,8 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
         std::vector<COutput> vCoins;
         wallet->AvailableCoins(vCoins, height, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
-            if(out.fSpendable)
-                nBalance += out.tx->vout[out.i].nValue;
+            if(out.fSpendable && IsFinalTx(*out.tx, height))
+                nBalance += out.tx->GetPresentValueOfOutput(out.i, height);
 
         return nBalance;
     }
