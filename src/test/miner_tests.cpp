@@ -498,23 +498,22 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     delete pblocktemplate;
     mempool.clear();
 
-    // As would a strictly increasing lock_height
+    // However a strictly increasing block height would run afoul of
+    // the rule that lock_heights not exceed the current block height
     ++tx2.lock_height;
     BOOST_CHECK(CheckFinalTx(tx));
-    BOOST_CHECK(CheckFinalTx(tx2));
+    BOOST_CHECK(!CheckFinalTx(tx2));
 
     state = CValidationState();
     BOOST_CHECK(res = AcceptToMemoryPool(mempool, state, tx, false, NULL, true, false));
     BOOST_CHECK_MESSAGE(res, state.GetRejectReason());
 
     state = CValidationState();
-    BOOST_CHECK(res = AcceptToMemoryPool(mempool, state, tx2, false, NULL, true, false));
-    BOOST_CHECK_MESSAGE(res, state.GetRejectReason());
+    BOOST_CHECK(!AcceptToMemoryPool(mempool, state, tx2, false, NULL, true, false));
 
     BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
-    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 2);
     BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1].GetHash() == tx.GetHash());
-    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 3 && pblocktemplate->block.vtx[2].GetHash() == tx2.GetHash());
 
     delete pblocktemplate;
     mempool.clear();
