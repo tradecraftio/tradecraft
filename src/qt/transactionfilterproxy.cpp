@@ -28,6 +28,7 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     typeFilter(ALL_TYPES),
     watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
+    minLockHeight(0),
     limitRows(-1),
     showInactive(true)
 {
@@ -68,6 +69,10 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     if (amount < minAmount)
         return false;
 
+    quint32 lock_height = index.data(TransactionTableModel::LockHeightRole).toUInt();
+    if(lock_height < minLockHeight)
+        return false;
+
     return true;
 }
 
@@ -94,6 +99,12 @@ void TransactionFilterProxy::setTypeFilter(quint32 modes)
 void TransactionFilterProxy::setMinAmount(const CAmount& minimum)
 {
     this->minAmount = minimum;
+    invalidateFilter();
+}
+
+void TransactionFilterProxy::setMinLockHeight(quint32 minimum)
+{
+    this->minLockHeight = minimum;
     invalidateFilter();
 }
 
