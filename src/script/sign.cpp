@@ -300,7 +300,7 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
     Stacks stack(data);
 
     // Get signatures
-    MutableTransactionSignatureChecker tx_checker(&tx, nIn, txout.nValue, refheight);
+    MutableTransactionSignatureChecker tx_checker(&tx, nIn, txout.GetReferenceValue(), refheight);
     SignatureExtractorChecker extractor_checker(data, tx_checker);
     if (VerifyScript(data.scriptSig, txout.scriptPubKey, &data.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, extractor_checker)) {
         data.complete = true;
@@ -397,7 +397,7 @@ bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, 
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.nValue, txFrom.lock_height, nHashType);
+    return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.GetReferenceValue(), txFrom.lock_height, nHashType);
 }
 
 namespace {

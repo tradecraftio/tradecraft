@@ -13,13 +13,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/test_freicoin.h>
+
 #include <validation.h>
 #include <txmempool.h>
 #include <amount.h>
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
-#include <test/test_freicoin.h>
 
 #include <boost/test/unit_test.hpp>
 

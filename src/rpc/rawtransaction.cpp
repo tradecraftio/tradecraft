@@ -812,7 +812,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
                 sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, coin.refheight));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.GetReferenceValue(), 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
@@ -877,9 +877,9 @@ UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, con
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out.SetReferenceValue(MAX_MONEY);
                 if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
+                    newcoin.out.SetReferenceValue(AmountFromValue(find_value(prevOut, "amount")));
                 }
                 newcoin.nHeight = 1;
                 newcoin.refheight = 0;
@@ -939,7 +939,7 @@ UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, con
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.GetReferenceValue();
         const int64_t refheight = coin.refheight;
 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin.out, refheight);
@@ -1357,8 +1357,10 @@ UniValue decodepst(const JSONRPCRequest& request)
 
             UniValue out(UniValue::VOBJ);
 
-            out.pushKV("amount", ValueFromAmount(txout.nValue));
-            total_in += txout.nValue;
+            out.pushKV("value", ValueFromAmount(txout.GetReferenceValue()));
+            CAmount adjusted = txout.GetTimeAdjustedValue(pstx.tx->lock_height - input.witness_refheight);
+            out.pushKV("amount", ValueFromAmount(adjusted));
+            total_in += adjusted;
 
             UniValue o(UniValue::VOBJ);
             ScriptToUniv(txout.scriptPubKey, o, true);
@@ -1368,7 +1370,7 @@ UniValue decodepst(const JSONRPCRequest& request)
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
             in.pushKV("non_witness_utxo", non_wit);
-            total_in += input.non_witness_utxo->vout[pstx.tx->vin[i].prevout.n].nValue;
+            total_in += input.non_witness_utxo->GetPresentValueOfOutput(pstx.tx->vin[i].prevout.n, pstx.tx->lock_height);
         } else {
             have_all_utxos = false;
         }
@@ -1484,7 +1486,7 @@ UniValue decodepst(const JSONRPCRequest& request)
         outputs.push_back(out);
 
         // Fee calculation
-        output_value += pstx.tx->vout[i].nValue;
+        output_value += pstx.tx->vout[i].GetReferenceValue();
     }
     result.pushKV("outputs", outputs);
     if (have_all_utxos) {
@@ -1974,7 +1976,15 @@ UniValue analyzepst(const JSONRPCRequest& request)
         // Check for a UTXO
         CTxOut utxo;
         if (pstx.GetInputUTXO(utxo, i)) {
-            in_amt += utxo.nValue;
+            if (input.non_witness_utxo) {
+                in_amt += utxo.GetTimeAdjustedValue(pstx.tx->lock_height - input.non_witness_utxo->lock_height);
+            } else if (!input.witness_utxo.IsNull()) {
+                in_amt += utxo.GetTimeAdjustedValue(pstx.tx->lock_height - input.witness_refheight);
+            } else {
+                // This should never happen.  How did we get the utxo if we
+                // didn't have either a non-witness or a witness txout?
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "PST input structure is corrupt.");
+            }
             input_univ.pushKV("has_utxo", true);
         } else {
             input_univ.pushKV("has_utxo", false);
@@ -2046,7 +2056,7 @@ UniValue analyzepst(const JSONRPCRequest& request)
         // Get the output amount
         CAmount out_amt = std::accumulate(pstx.tx->vout.begin(), pstx.tx->vout.end(), CAmount(0),
             [](CAmount a, const CTxOut& b) {
-                return a += b.nValue;
+                return a += b.GetReferenceValue();
             }
         );
 

@@ -62,7 +62,7 @@ TransactionError FillPST(const CWallet* pwallet, PartiallySignedTransaction& pst
         SignatureData sigdata;
         pst_out.FillSignatureData(sigdata);
 
-        MutableTransactionSignatureCreator creator(pstx.tx.get_ptr(), 0, out.nValue, pstx.tx->lock_height, 1);
+        MutableTransactionSignatureCreator creator(pstx.tx.get_ptr(), 0, out.GetReferenceValue(), pstx.tx->lock_height, 1);
         ProduceSignature(HidingSigningProvider(pwallet, true, !bip32derivs), creator, out.scriptPubKey, sigdata);
         pst_out.FromSignatureData(sigdata);
     }

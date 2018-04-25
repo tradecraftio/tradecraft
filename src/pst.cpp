@@ -270,7 +270,7 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
     if (use_dummy) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, refheight, sighash);
+        MutableTransactionSignatureCreator creator(&tx, index, utxo.GetReferenceValue(), refheight, sighash);
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
     // Verify that a witness signature was produced in case one was required.
