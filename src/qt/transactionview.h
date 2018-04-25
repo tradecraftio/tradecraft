@@ -82,6 +82,7 @@ private:
     QComboBox *watchOnlyWidget;
     QLineEdit *addressWidget;
     QLineEdit *amountWidget;
+    QLineEdit *lockHeightWidget;
 
     QMenu *contextMenu;
     QSignalMapper *mapperThirdPartyTxUrls;
@@ -123,6 +124,7 @@ public Q_SLOTS:
     void chooseWatchonly(int idx);
     void changedPrefix(const QString &prefix);
     void changedAmount(const QString &amount);
+    void changedLockHeight(const QString &lock_height);
     void exportClicked();
     void focusTransaction(const QModelIndex&);
 
