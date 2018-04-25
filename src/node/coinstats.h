@@ -46,6 +46,7 @@ struct CCoinsStats
     uint256 hashSerialized{};
     uint64_t nDiskSize{0};
     CAmount nTotalValue{0};
+    CAmount nTotalAmount{0};
 
     //! The number of coins contained.
     uint64_t coins_count{0};
@@ -57,6 +58,7 @@ struct CCoinsStats
 
     // Following values are only available from coinstats index
     CAmount total_subsidy{0};
+    CAmount block_demurrage{0};
     CAmount block_unspendable_value{0};
     CAmount block_prevout_spent_amount{0};
     CAmount block_new_outputs_ex_coinbase_amount{0};

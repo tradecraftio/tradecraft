@@ -294,7 +294,7 @@ public:
     }
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
-                    std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter) const;
+                    std::list<COutputEntry>& listSent, CAmount& nFee, CAmount& demurrage, const isminefilter& filter) const;
 
     bool IsFromMe(const isminefilter& filter) const
     {

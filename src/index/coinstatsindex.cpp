@@ -34,7 +34,9 @@ struct DBVal {
     uint64_t transaction_output_count;
     uint64_t bogo_size;
     CAmount total_value;
+    CAmount total_amount;
     CAmount total_subsidy;
+    CAmount block_demurrage;
     CAmount block_unspendable_value;
     CAmount block_prevout_spent_amount;
     CAmount block_new_outputs_ex_coinbase_amount;
@@ -50,7 +52,9 @@ struct DBVal {
         READWRITE(obj.transaction_output_count);
         READWRITE(obj.bogo_size);
         READWRITE(obj.total_value);
+        READWRITE(obj.total_amount);
         READWRITE(obj.total_subsidy);
+        READWRITE(obj.block_demurrage);
         READWRITE(obj.block_unspendable_value);
         READWRITE(obj.block_prevout_spent_amount);
         READWRITE(obj.block_new_outputs_ex_coinbase_amount);
@@ -118,6 +122,8 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     CBlockUndo block_undo;
     const CAmount block_subsidy{GetBlockSubsidy(pindex->nHeight, Params().GetConsensus())};
+    const CAmount demurrage{m_total_amount - TimeAdjustValueForward(m_total_amount, 1)};
+    m_total_amount -= demurrage;
     m_total_subsidy += block_subsidy;
 
     // Ignore genesis block
@@ -158,24 +164,28 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
                 const CTxOut& out{tx->vout[j]};
                 Coin coin{out, tx->lock_height, pindex->nHeight, tx->IsCoinBase()};
                 COutPoint outpoint{tx->GetHash(), static_cast<uint32_t>(j)};
+                CAmount adjusted = coin.GetPresentValue(pindex->nHeight);
 
                 // Skip unspendable coins
                 if (coin.out.scriptPubKey.IsUnspendable()) {
-                    m_block_unspendable_value += coin.out.nValue;
-                    m_unspendables_scripts += coin.out.nValue;
+                    m_block_unspendable_value += adjusted;
+                    m_unspendables_scripts += adjusted;
                     continue;
                 }
 
                 m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
 
                 if (tx->IsCoinBase()) {
-                    m_block_coinbase_amount += coin.out.nValue;
+                    // The coinbase transaction is always at
+                    // the reference height of the block.
+                    m_block_coinbase_amount += coin.out.GetReferenceValue();
                 } else {
-                    m_block_new_outputs_ex_coinbase_amount += coin.out.nValue;
+                    m_block_new_outputs_ex_coinbase_amount += adjusted;
                 }
 
                 ++m_transaction_output_count;
-                m_total_value += coin.out.nValue;
+                m_total_value += coin.out.GetReferenceValue();
+                m_total_amount += adjusted;
                 m_bogo_size += GetBogoSize(coin.out.scriptPubKey);
             }
 
@@ -186,13 +196,15 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
                 for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
                     Coin coin{tx_undo.vprevout[j]};
                     COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
+                    CAmount adjusted = coin.GetPresentValue(pindex->nHeight);
 
                     m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
 
-                    m_block_prevout_spent_amount += coin.out.nValue;
+                    m_block_prevout_spent_amount += adjusted;
 
                     --m_transaction_output_count;
-                    m_total_value -= coin.out.nValue;
+                    m_total_value -= coin.out.GetReferenceValue();
+                    m_total_amount -= adjusted;
                     m_bogo_size -= GetBogoSize(coin.out.scriptPubKey);
                 }
             }
@@ -216,7 +228,9 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     value.second.transaction_output_count = m_transaction_output_count;
     value.second.bogo_size = m_bogo_size;
     value.second.total_value = m_total_value;
+    value.second.total_amount = m_total_amount;
     value.second.total_subsidy = m_total_subsidy;
+    value.second.block_demurrage = demurrage;
     value.second.block_unspendable_value = m_block_unspendable_value;
     value.second.block_prevout_spent_amount = m_block_prevout_spent_amount;
     value.second.block_new_outputs_ex_coinbase_amount = m_block_new_outputs_ex_coinbase_amount;
@@ -327,7 +341,9 @@ bool CoinStatsIndex::LookUpStats(const CBlockIndex* block_index, CCoinsStats& co
     coins_stats.nTransactionOutputs = entry.transaction_output_count;
     coins_stats.nBogoSize = entry.bogo_size;
     coins_stats.nTotalValue = entry.total_value;
+    coins_stats.nTotalAmount = TimeAdjustValueForward(entry.total_amount, 1);
     coins_stats.total_subsidy = entry.total_subsidy;
+    coins_stats.block_demurrage = entry.block_demurrage;
     coins_stats.block_unspendable_value = entry.block_unspendable_value;
     coins_stats.block_prevout_spent_amount = entry.block_prevout_spent_amount;
     coins_stats.block_new_outputs_ex_coinbase_amount = entry.block_new_outputs_ex_coinbase_amount;
@@ -364,7 +380,9 @@ bool CoinStatsIndex::Init()
             m_transaction_output_count = entry.transaction_output_count;
             m_bogo_size = entry.bogo_size;
             m_total_value = entry.total_value;
+            m_total_amount = entry.total_amount;
             m_total_subsidy = entry.total_subsidy;
+            m_block_demurrage = entry.block_demurrage;
             m_block_unspendable_value = entry.block_unspendable_value;
             m_block_prevout_spent_amount = entry.block_prevout_spent_amount;
             m_block_new_outputs_ex_coinbase_amount = entry.block_new_outputs_ex_coinbase_amount;
@@ -417,24 +435,28 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
             const CTxOut& out{tx->vout[j]};
             COutPoint outpoint{tx->GetHash(), static_cast<uint32_t>(j)};
             Coin coin{out, tx->lock_height, pindex->nHeight, tx->IsCoinBase()};
+            CAmount adjusted = coin.GetPresentValue(pindex->nHeight);
 
             // Skip unspendable coins
             if (coin.out.scriptPubKey.IsUnspendable()) {
-                m_block_unspendable_value -= coin.out.nValue;
-                m_unspendables_scripts -= coin.out.nValue;
+                m_block_unspendable_value -= adjusted;
+                m_unspendables_scripts -= adjusted;
                 continue;
             }
 
             m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
 
             if (tx->IsCoinBase()) {
-                m_block_coinbase_amount -= coin.out.nValue;
+                // The coinbase transaction is always at
+                // the reference height of the block.
+                m_block_coinbase_amount -= coin.out.GetReferenceValue();
             } else {
-                m_block_new_outputs_ex_coinbase_amount -= coin.out.nValue;
+                m_block_new_outputs_ex_coinbase_amount -= adjusted;
             }
 
             --m_transaction_output_count;
-            m_total_value -= coin.out.nValue;
+            m_total_value -= coin.out.GetReferenceValue();
+            m_total_amount -= adjusted;
             m_bogo_size -= GetBogoSize(coin.out.scriptPubKey);
         }
 
@@ -445,17 +467,22 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
             for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
                 Coin coin{tx_undo.vprevout[j]};
                 COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
+                CAmount adjusted = coin.GetPresentValue(pindex->nHeight);
 
                 m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
 
-                m_block_prevout_spent_amount -= coin.out.nValue;
+                m_block_prevout_spent_amount -= adjusted;
 
                 m_transaction_output_count++;
-                m_total_value += coin.out.nValue;
+                m_total_value += coin.out.GetReferenceValue();
+                m_total_amount += adjusted;
                 m_bogo_size += GetBogoSize(coin.out.scriptPubKey);
             }
         }
     }
+
+    m_block_demurrage = read_out.second.block_demurrage;
+    m_total_amount += m_block_demurrage;
 
     const CAmount unclaimed_rewards{(m_block_new_outputs_ex_coinbase_amount + m_block_coinbase_amount + m_block_unspendable_value) - (m_block_prevout_spent_amount + m_total_subsidy)};
     m_block_unspendable_value -= unclaimed_rewards;
@@ -467,7 +494,9 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
     Assert(read_out.second.muhash == out);
 
     Assert(m_transaction_output_count == read_out.second.transaction_output_count);
+    Assert(m_block_demurrage == m_total_amount - TimeAdjustValueForward(m_total_amount, 1));
     Assert(m_total_value == read_out.second.total_value);
+    Assert(m_total_amount == read_out.second.total_amount);
     Assert(m_bogo_size == read_out.second.bogo_size);
     Assert(m_total_subsidy == read_out.second.total_subsidy);
     Assert(m_block_unspendable_value == read_out.second.block_unspendable_value);

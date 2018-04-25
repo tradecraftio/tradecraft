@@ -33,7 +33,7 @@ static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
 std::string COutput::ToString() const
 {
-    return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
+    return strprintf("COutput(%s, %d, %d) [%s @ %s: %s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].GetReferenceValue()), atheight, FormatMoney(adjusted));
 }
 
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, bool use_max_sig)
@@ -169,7 +169,8 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, uint32_t atheight, co
                 continue;
             }
 
-            if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount)
+            CAmount adjusted_value = wtx.tx->GetPresentValueOfOutput(i, atheight);
+            if (adjusted_value < nMinimumAmount || adjusted_value > nMaximumAmount)
                 continue;
 
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(entry.first, i)))
@@ -196,11 +197,11 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, uint32_t atheight, co
             bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            vCoins.push_back(COutput(atheight, &wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
+            vCoins.push_back(COutput(atheight, adjusted_value, &wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
-                nTotal += wtx.tx->vout[i].nValue;
+                nTotal += adjusted_value;
 
                 if (nTotal >= nMinimumSumAmount) {
                     return;
@@ -232,7 +233,7 @@ CAmount CWallet::GetAvailableBalance(uint32_t atheight, const CCoinControl* coin
     AvailableCoins(vCoins, atheight, coinControl);
     for (const COutput& out : vCoins) {
         if (out.fSpendable) {
-            balance += out.tx->tx->vout[out.i].nValue;
+            balance += out.adjusted;
         }
     }
     return balance;
@@ -293,7 +294,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        next_height, &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                        next_height, it->second.tx->GetPresentValueOfOutput(output.n, next_height), &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
                 }
             }
         }
@@ -420,7 +421,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                  continue;
             if (out.tx->tx->lock_height > height)
                 continue;
-            nValueRet += out.tx->tx->vout[out.i].nValue;
+            nValueRet += out.adjusted;
             setCoinsRet.insert(out.GetInputCoin());
         }
         return (nValueRet >= nTargetValue);
@@ -447,14 +448,14 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 return false;
             }
             // Just to calculate the marginal byte size
-            CInputCoin coin(height, wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
-            nValueFromPresetInputs += coin.txout.nValue;
+            CInputCoin coin(height, wtx.tx->GetPresentValueOfOutput(outpoint.n, height), wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
+            nValueFromPresetInputs += coin.adjusted;
             if (coin.m_input_bytes <= 0) {
                 return false; // Not solvable, can't estimate size for fee
             }
-            coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
+            coin.effective_value = coin.adjusted - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
             if (coin_selection_params.m_subtract_fee_outputs) {
-                value_to_select -= coin.txout.nValue;
+                value_to_select -= coin.adjusted;
             } else {
                 value_to_select -= coin.effective_value;
             }
@@ -806,13 +807,13 @@ bool CWallet::CreateTransactionInternal(
     // Subtract fee from the change output if not subtracting it from recipient outputs
     CAmount fee_needed = nFeeRet;
     if (!coin_selection_params.m_subtract_fee_outputs) {
-        change_position->nValue -= fee_needed;
+        change_position->AdjustReferenceValue(-fee_needed);
     }
 
     // We want to drop the change to fees if:
     // 1. The change output would be dust
     // 2. The change is within the (almost) exact match window, i.e. it is less than or equal to the cost of the change output (cost_of_change)
-    CAmount change_amount = change_position->nValue;
+    CAmount change_amount = change_position->GetReferenceValue();
     if (IsDust(*change_position, coin_selection_params.m_discard_feerate) || change_amount <= coin_selection_params.m_cost_of_change)
     {
         nChangePosInOut = -1;
@@ -848,17 +849,17 @@ bool CWallet::CreateTransactionInternal(
 
             if (recipient.fSubtractFeeFromAmount)
             {
-                txout.nValue -= to_reduce / outputs_to_subtract_fee_from; // Subtract fee equally from each selected recipient
+                txout.AdjustReferenceValue(-to_reduce / outputs_to_subtract_fee_from); // Subtract fee equally from each selected recipient
 
                 if (fFirst) // first receiver pays the remainder not divisible by output count
                 {
                     fFirst = false;
-                    txout.nValue -= to_reduce % outputs_to_subtract_fee_from;
+                    txout.AdjustReferenceValue(-(to_reduce % outputs_to_subtract_fee_from));
                 }
 
                 // Error if this output is reduced to be below dust
                 if (IsDust(txout, chain().relayDustFee())) {
-                    if (txout.nValue < 0) {
+                    if (txout.GetReferenceValue() < 0) {
                         error = _("The transaction amount is too small to pay the fee");
                     } else {
                         error = _("The transaction amount is too small to send after the fee has been deducted");
@@ -976,7 +977,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        CRecipient recipient = {txOut.scriptPubKey, txOut.GetReferenceValue(), setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 
@@ -1003,7 +1004,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     // Copy output sizes from new transaction; they may have had the fee
     // subtracted from them.
     for (unsigned int idx = 0; idx < tx.vout.size(); idx++) {
-        tx.vout[idx].nValue = tx_new->vout[idx].nValue;
+        tx.vout[idx].SetReferenceValue(tx_new->vout[idx].GetReferenceValue());
     }
 
     // Add new txins while keeping original txin scriptSig/order.

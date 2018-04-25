@@ -180,7 +180,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     std::vector<CRecipient> recipients;
     for (const auto& output : wtx.tx->vout) {
         if (!wallet.IsChange(output)) {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            CRecipient recipient = {output.scriptPubKey, output.GetReferenceValue(), false};
             recipients.push_back(recipient);
         } else {
             CTxDestination change_dest;

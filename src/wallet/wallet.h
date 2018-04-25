@@ -667,6 +667,8 @@ public:
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
 
+    bool GetInputSplit(const CWalletTx& wtx, CAmount& value_in, CAmount& demurrage) const;
+
     /**
      * Marks all outputs in each one of the destinations dirty, so their cache is
      * reset and does not return outdated information.

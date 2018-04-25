@@ -312,7 +312,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
 void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, bool positive_only) {
     // Compute the effective value first
     const CAmount coin_fee = output.m_input_bytes < 0 ? 0 : m_effective_feerate.GetFee(output.m_input_bytes);
-    const CAmount ev = output.txout.nValue - coin_fee;
+    const CAmount ev = output.adjusted - coin_fee;
 
     // Filter for positive only here before adding the coin
     if (positive_only && ev <= 0) return;
@@ -343,7 +343,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     effective_value += coin.effective_value;
 
     m_from_me &= from_me;
-    m_value += output.txout.nValue;
+    m_value += output.adjusted;
     m_depth = std::min(m_depth, depth);
     // ancestors here express the number of ancestors the new coin will end up having, which is
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs

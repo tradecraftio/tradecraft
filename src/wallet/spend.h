@@ -31,6 +31,9 @@ public:
     /** Reference height of this output. */
     uint32_t atheight;
 
+    /** Adjusted value of this output at specified refheight. */
+    CAmount adjusted;
+
     /**
      * Depth in block chain.
      * If > 0: the tx is on chain and has this many confirmations.
@@ -57,9 +60,9 @@ public:
      */
     bool fSafe;
 
-    COutput(uint32_t atheightIn, const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
+    COutput(uint32_t atheightIn, CAmount adjustedIn, const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
     {
-        tx = txIn; i = iIn; atheight = atheightIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
+        tx = txIn; i = iIn; atheight = atheightIn; adjusted = adjustedIn, nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
         // If known and signable by the given wallet, compute nInputBytes
         // Failure will keep this value -1
         if (fSpendable && tx) {
@@ -71,7 +74,7 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(atheight, tx->tx, i, nInputBytes);
+        return CInputCoin(atheight, adjusted, tx->tx, i, nInputBytes);
     }
 };
 

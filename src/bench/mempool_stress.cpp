@@ -57,7 +57,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
         tx.vout.resize(det_rand.randrange(10)+2);
         for (auto& out : tx.vout) {
             out.scriptPubKey = CScript() << CScriptNum(tx_counter) << OP_EQUAL;
-            out.nValue = 10 * COIN;
+            out.SetReferenceValue(10 * COIN);
         }
         ordered_coins.emplace_back(MakeTransactionRef(tx));
         available_coins.emplace_back(ordered_coins.back(), tx_counter++);
@@ -84,7 +84,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
             tx.vout.resize(det_rand.randrange(10)+2);
             for (auto& out : tx.vout) {
                 out.scriptPubKey = CScript() << CScriptNum(tx_counter) << OP_EQUAL;
-                out.nValue = 10 * COIN;
+                out.SetReferenceValue(10 * COIN);
             }
         }
         ordered_coins.emplace_back(MakeTransactionRef(tx));

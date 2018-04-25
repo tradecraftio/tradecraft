@@ -15,6 +15,8 @@
 
 #include <test/data/script_tests.json.h>
 
+#include <test/util/setup_common.h>
+
 #include <core_io.h>
 #include <fs.h>
 #include <key.h>

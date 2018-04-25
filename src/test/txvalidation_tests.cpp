@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/util/setup_common.h>
+
 #include <consensus/validation.h>
 #include <key_io.h>
 #include <policy/packages.h>
@@ -20,7 +22,6 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>

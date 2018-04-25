@@ -54,10 +54,10 @@ bool CWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) co
 
 CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
 {
-    if (!MoneyRange(txout.nValue))
+    if (!MoneyRange(txout.GetReferenceValue()))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     LOCK(cs_wallet);
-    return ((IsMine(txout) & filter) ? txout.nValue : 0);
+    return ((IsMine(txout) & filter) ? txout.GetReferenceValue() : 0);
 }
 
 CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) const
@@ -102,9 +102,9 @@ bool CWallet::IsChange(const CTxOut& txout) const
 CAmount CWallet::GetChange(const CTxOut& txout) const
 {
     AssertLockHeld(cs_wallet);
-    if (!MoneyRange(txout.nValue))
+    if (!MoneyRange(txout.GetReferenceValue()))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
-    return (IsChange(txout) ? txout.nValue : 0);
+    return (IsChange(txout) ? txout.GetReferenceValue() : 0);
 }
 
 CAmount CWallet::GetChange(const CTransaction& tx) const
@@ -227,18 +227,19 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter
 }
 
 void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
-                           std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter) const
+                           std::list<COutputEntry>& listSent, CAmount& nFee, CAmount& demurrage, const isminefilter& filter) const
 {
-    nFee = 0;
+    nFee = demurrage = 0;
     listReceived.clear();
     listSent.clear();
 
-    // Compute fee:
+    // Compute fee and demurrage:
     CAmount nDebit = GetDebit(filter);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        CAmount nValueOut = tx->GetValueOut();
-        nFee = nDebit - nValueOut;
+        CAmount value_in = 0;
+        pwallet->GetInputSplit(*this, value_in, demurrage);
+        nFee = value_in - tx->GetValueOut();
     }
 
     LOCK(pwallet->cs_wallet);
@@ -269,7 +270,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
             address = CNoDestination();
         }
 
-        COutputEntry output = {address, txout.nValue, tx->lock_height, (int)i};
+        COutputEntry output = {address, txout.GetReferenceValue(), tx->lock_height, (int)i};
 
         // If we are debited by the transaction, add the output as a "sent" entry
         if (nDebit > 0)
@@ -326,6 +327,11 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
     Balance ret;
     isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
     {
+        const auto chain_height = chain().getHeight();
+        if (!chain_height) {
+            throw std::runtime_error(std::string(__func__) + ": unable to determine current chain height");
+        }
+        const uint32_t next_height = static_cast<uint32_t>(chain_height.value()) + 1;
         LOCK(cs_wallet);
         std::set<uint256> trusted_parents;
         for (const auto& entry : mapWallet)
@@ -333,8 +339,8 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
             const CWalletTx& wtx = entry.second;
             const bool is_trusted{IsTrusted(wtx, trusted_parents)};
             const int tx_depth{wtx.GetDepthInMainChain()};
-            const CAmount tx_credit_mine{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
-            const CAmount tx_credit_watchonly{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
+            const CAmount tx_credit_mine{GetTimeAdjustedValue(wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter), next_height - wtx.tx->lock_height)};
+            const CAmount tx_credit_watchonly{GetTimeAdjustedValue(wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter), next_height - wtx.tx->lock_height)};
             if (is_trusted && tx_depth >= min_depth) {
                 ret.m_mine_trusted += tx_credit_mine;
                 ret.m_watchonly_trusted += tx_credit_watchonly;
@@ -343,8 +349,8 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
                 ret.m_mine_untrusted_pending += tx_credit_mine;
                 ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
             }
-            ret.m_mine_immature += wtx.GetImmatureCredit();
-            ret.m_watchonly_immature += wtx.GetImmatureWatchOnlyCredit();
+            ret.m_mine_immature += GetTimeAdjustedValue(wtx.GetImmatureCredit(), next_height - wtx.tx->lock_height);
+            ret.m_watchonly_immature += GetTimeAdjustedValue(wtx.GetImmatureWatchOnlyCredit(), next_height - wtx.tx->lock_height);
         }
     }
     return ret;
@@ -379,7 +385,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
                 if(!ExtractDestination(wtx.tx->vout[i].scriptPubKey, addr))
                     continue;
 
-                CAmount n = IsSpent(walletEntry.first, i) ? 0 : wtx.tx->vout[i].nValue;
+                CAmount n = IsSpent(walletEntry.first, i) ? 0 : wtx.tx->vout[i].GetReferenceValue();
                 balances[addr] += n;
             }
         }

@@ -243,8 +243,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_add
             in.pushKV("txinwitness", txinwitness);
         }
         if (calculate_fee) {
-            const CTxOut& prev_txout = txundo->vprevout[i].out;
-            amt_total_in += prev_txout.nValue;
+            amt_total_in += txundo->vprevout[i].GetPresentValue(tx.lock_height);
         }
         in.pushKV("sequence", (int64_t)txin.nSequence);
         vin.push_back(in);
@@ -257,7 +256,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_add
 
         UniValue out(UniValue::VOBJ);
 
-        out.pushKV("value", ValueFromAmount(txout.nValue));
+        out.pushKV("value", ValueFromAmount(txout.GetReferenceValue()));
         out.pushKV("n", (int64_t)i);
 
         UniValue o(UniValue::VOBJ);
@@ -266,7 +265,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_add
         vout.push_back(out);
 
         if (calculate_fee) {
-            amt_total_out += txout.nValue;
+            amt_total_out += txout.GetReferenceValue();
         }
     }
     entry.pushKV("vout", vout);

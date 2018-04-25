@@ -29,7 +29,7 @@ static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 /** A UTXO under consideration for use in funding a new transaction. */
 class CInputCoin {
 public:
-    CInputCoin(uint32_t atheightIn, const CTransactionRef& tx, unsigned int i)
+    CInputCoin(uint32_t atheightIn, CAmount adjustedIn, const CTransactionRef& tx, unsigned int i)
     {
         if (!tx)
             throw std::invalid_argument("tx should not be null");
@@ -40,10 +40,14 @@ public:
         txout = tx->vout[i];
         refheight = tx->lock_height;
         atheight = atheightIn;
-        effective_value = txout.nValue;
+        if (adjustedIn < 0) {
+            adjustedIn = tx->GetPresentValueOfOutput(i, atheight);
+        }
+        adjusted = adjustedIn;
+        effective_value = adjustedIn;
     }
 
-    CInputCoin(uint32_t atheightIn, const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(atheightIn, tx, i)
+    CInputCoin(uint32_t atheightIn, CAmount adjustedIn, const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(atheightIn, adjustedIn, tx, i)
     {
         m_input_bytes = input_bytes;
     }
@@ -52,6 +56,7 @@ public:
     CTxOut txout;
     uint32_t refheight;
     uint32_t atheight;
+    CAmount adjusted;
     CAmount effective_value;
     CAmount m_fee{0};
     CAmount m_long_term_fee{0};
