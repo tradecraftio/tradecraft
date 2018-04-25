@@ -83,6 +83,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     sub.type = TransactionRecord::Generated;
                 }
 
+                sub.lock_height = wtx.tx->lock_height;
+
                 parts.append(sub);
             }
         }
@@ -114,7 +116,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             }
 
             CAmount nChange = wtx.change;
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, address, -(nDebit - nChange), nCredit - nChange));
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, address, -(nDebit - nChange), nCredit - nChange, wtx.tx->lock_height));
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe)
@@ -160,6 +162,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 }
                 sub.debit = -nValue;
 
+                sub.lock_height = wtx.tx->lock_height;
+
                 parts.append(sub);
             }
         }
@@ -168,7 +172,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             //
             // Mixed debit transaction, can't break down payees
             //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0, wtx.tx->lock_height));
             parts.last().involvesWatchAddress = involvesWatchAddress;
         }
     }
