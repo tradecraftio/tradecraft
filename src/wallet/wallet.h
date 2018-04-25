@@ -473,7 +473,7 @@ public:
     CAmount GetChange() const;
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
-                    std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
+                    std::list<COutputEntry>& listSent, CAmount& nFee, CAmount& demurrage, std::string& strSentAccount, const isminefilter& filter) const;
 
     bool IsFromMe(const isminefilter& filter) const
     {
@@ -500,7 +500,7 @@ public:
 
 class CInputCoin {
 public:
-    CInputCoin(const CWalletTx* walletTx, unsigned int i)
+    CInputCoin(const CWalletTx* walletTx, unsigned int i, uint32_t atheightIn, CAmount adjustedIn = -1)
     {
         if (!walletTx)
             throw std::invalid_argument("walletTx should not be null");
@@ -510,11 +510,20 @@ public:
         outpoint = COutPoint(walletTx->GetHash(), i);
         txout = walletTx->tx->vout[i];
         refheight = walletTx->tx->lock_height;
+
+        atheight = atheightIn;
+        if (adjustedIn < 0) {
+            adjustedIn = walletTx->tx->GetPresentValueOfOutput(i, atheight);
+        }
+        adjusted = adjustedIn;
     }
 
     COutPoint outpoint;
     CTxOut txout;
     uint32_t refheight;
+
+    uint32_t atheight;
+    CAmount adjusted;
 
     bool operator<(const CInputCoin& rhs) const {
         return outpoint < rhs.outpoint;
@@ -535,6 +544,7 @@ public:
     const CWalletTx *tx;
     int i;
     int nDepth;
+    CAmount adjusted;
 
     /** Whether we have the private keys to spend this output */
     bool fSpendable;
@@ -549,7 +559,7 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, CAmount adjustedIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn) : adjusted(adjustedIn)
     {
         tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn;
     }
@@ -1022,6 +1032,7 @@ public:
 
     std::set<CTxDestination> GetAccountAddresses(const std::string& strAccount) const;
 
+    bool GetInputSplit(const CWalletTx& wtx, CAmount& value_in, CAmount& demurrage) const;
     isminetype IsMine(const CTxIn& txin) const;
     /**
      * Returns amount of debit if the input matches the

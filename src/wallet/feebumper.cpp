@@ -43,7 +43,7 @@ static int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWalle
     for (auto& input : tx.vin) {
         const auto mi = wallet->mapWallet.find(input.prevout.hash);
         assert(mi != wallet->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
-        vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
+        vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n, txNew.lock_height));
     }
     if (!wallet->DummySignTx(txNew, vCoins)) {
         // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
@@ -213,16 +213,16 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     assert(nDelta > 0);
     mtx =  *wtx.tx;
     CTxOut* poutput = &(mtx.vout[nOutput]);
-    if (poutput->nValue < nDelta) {
+    if (poutput->GetReferenceValue() < nDelta) {
         errors.push_back("Change output is too small to bump the fee");
         return Result::WALLET_ERROR;
     }
 
     // If the output would become dust, discard it (converting the dust to fee)
-    poutput->nValue -= nDelta;
-    if (poutput->nValue <= GetDustThreshold(*poutput, ::dustRelayFee)) {
+    poutput->AdjustReferenceValue(-nDelta);
+    if (poutput->GetReferenceValue() <= GetDustThreshold(*poutput, ::dustRelayFee)) {
         LogPrint(BCLog::RPC, "Bumping fee and discarding dust output\n");
-        new_fee += poutput->nValue;
+        new_fee += poutput->GetReferenceValue();
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }
 

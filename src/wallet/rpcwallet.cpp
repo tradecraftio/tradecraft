@@ -703,7 +703,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
         for (const CTxOut& txout : wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
-                    nAmount += txout.nValue;
+                    nAmount += txout.GetReferenceValue();
     }
 
     return  ValueFromAmount(nAmount);
@@ -766,7 +766,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwallet, address) && setAddress.count(address)) {
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
-                    nAmount += txout.nValue;
+                    nAmount += txout.GetReferenceValue();
             }
         }
     }
@@ -1421,7 +1421,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
                 continue;
 
             tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
+            item.nAmount += txout.GetReferenceValue();
             item.nConf = std::min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)
@@ -1614,18 +1614,18 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  */
 void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
 {
-    CAmount nFee;
+    CAmount nFee, demurrage;
     std::string strSentAccount;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
+    wtx.GetAmounts(listReceived, listSent, nFee, demurrage, strSentAccount, filter);
 
     bool fAllAccounts = (strAccount == std::string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
     // Sent
-    if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
+    if ((!listSent.empty() || (nFee + demurrage) != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
         for (const COutputEntry& s : listSent)
         {
@@ -1642,6 +1642,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
             }
             entry.push_back(Pair("vout", s.vout));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            entry.push_back(Pair("demurrage", ValueFromAmount(-demurrage)));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("refheight", (uint64_t)wtx.tx->lock_height));
@@ -1900,15 +1901,15 @@ UniValue listaccounts(const JSONRPCRequest& request)
 
     for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
-        CAmount nFee;
+        CAmount nFee, demurrage;
         std::string strSentAccount;
         std::list<COutputEntry> listReceived;
         std::list<COutputEntry> listSent;
         int nDepth = wtx.GetDepthInMainChain();
         if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
             continue;
-        wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, includeWatchonly);
-        mapAccountBalances[strSentAccount] -= nFee;
+        wtx.GetAmounts(listReceived, listSent, nFee, demurrage, strSentAccount, includeWatchonly);
+        mapAccountBalances[strSentAccount] -= (nFee + demurrage);
         for (const COutputEntry& s : listSent)
             mapAccountBalances[strSentAccount] -= s.amount;
         if (nDepth >= nMinDepth)
@@ -2149,12 +2150,16 @@ UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount value_in = 0, demurrage = 0;
+    pwallet->GetInputSplit(wtx, value_in, demurrage);
+    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - value_in : 0);
 
     entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
     entry.push_back(Pair("refheight", (uint64_t)wtx.tx->lock_height));
-    if (wtx.IsFromMe(filter))
+    if (wtx.IsFromMe(filter)) {
         entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+        entry.push_back(Pair("demurrage", ValueFromAmount(demurrage)));
+    }
 
     WalletTxToJSON(wtx, entry);
 
@@ -3013,7 +3018,8 @@ UniValue listunspent(const JSONRPCRequest& request)
         }
 
         entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
-        entry.push_back(Pair("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue)));
+        entry.push_back(Pair("value", ValueFromAmount(out.tx->tx->vout[out.i].GetReferenceValue())));
+        entry.push_back(Pair("amount", ValueFromAmount(out.adjusted)));
         entry.push_back(Pair("refheight", (uint64_t)out.tx->tx->lock_height));
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));

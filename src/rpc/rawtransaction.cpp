@@ -683,7 +683,7 @@ UniValue combinerawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_VERIFY_ERROR, "Input not found or already spent");
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.GetReferenceValue();
         const int64_t refheight = coin.refheight;
 
         SignatureData sigdata;
@@ -854,9 +854,9 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out.SetReferenceValue(MAX_MONEY);
                 if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
+                    newcoin.out.SetReferenceValue(AmountFromValue(find_value(prevOut, "amount")));
                 }
                 newcoin.nHeight = 1;
                 newcoin.refheight = 0;
@@ -928,7 +928,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.GetReferenceValue();
         const int64_t refheight = coin.refheight;
 
         SignatureData sigdata;

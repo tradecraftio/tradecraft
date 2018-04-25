@@ -330,6 +330,7 @@ libfreicoin_consensus_a_SOURCES = \
 libfreicoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES)
 libfreicoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libfreicoin_common_a_SOURCES = \
+  amount.cpp \
   base58.cpp \
   bech32.cpp \
   chainparams.cpp \

@@ -379,7 +379,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "          {\n"
             "              \"txid\" : txid,        (string) input txid\n"
             "              \"vout\" : n,           (numeric) index of input\n"
-            "              \"amount\" : n,         (numeric) value of input\n"
+            "              \"amount\" : n,         (numeric) value at current refheight\n"
             "          }, ...\n"
             "      ],\n"
             "  }\n"
@@ -694,7 +694,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             if (coin.IsSpent()) {
                 throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("UTXO record for block-final input '%s:%d' not found", txin.prevout.hash.GetHex(), txin.prevout.n));
             }
-            in.push_back(Pair("amount", (int64_t)coin.out.nValue));
+            in.push_back(Pair("amount", (int64_t)coin.GetPresentValue(pindexPrev->nHeight+1)));
             finaltx_prevout.push_back(in);
         }
         UniValue finaltx(UniValue::VOBJ);

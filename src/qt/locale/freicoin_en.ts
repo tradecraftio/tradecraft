@@ -455,7 +455,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+155"/>
+        <location line="+158"/>
         <source>yes</source>
         <translation type="unfinished"></translation>
     </message>

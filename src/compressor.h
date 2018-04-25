@@ -117,12 +117,12 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         if (!ser_action.ForRead()) {
-            uint64_t nVal = CompressAmount(txout.nValue);
+            uint64_t nVal = CompressAmount(txout.GetReferenceValue());
             READWRITE(VARINT(nVal));
         } else {
             uint64_t nVal = 0;
             READWRITE(VARINT(nVal));
-            txout.nValue = DecompressAmount(nVal);
+            txout.SetReferenceValue(DecompressAmount(nVal));
         }
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);

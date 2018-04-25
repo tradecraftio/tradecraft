@@ -253,7 +253,7 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 
     CAmount nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += AccessCoin(tx.vin[i].prevout).out.nValue;
+        nResult += AccessCoin(tx.vin[i].prevout).GetPresentValue(tx.lock_height);
 
     return nResult;
 }

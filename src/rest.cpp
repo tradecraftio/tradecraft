@@ -55,6 +55,12 @@ static const struct {
 struct CCoin {
     uint32_t nHeight;
     CTxOut out;
+    uint32_t refheight;
+
+    CAmount GetPresentValue(uint32_t height) const
+    {
+        return out.GetTimeAdjustedValue((int)height - refheight);
+    }
 
     ADD_SERIALIZE_METHODS;
 
@@ -68,6 +74,7 @@ struct CCoin {
         READWRITE(nTxVerDummy);
         READWRITE(nHeight);
         READWRITE(out);
+        READWRITE(VARINT(refheight));
     }
 };
 
@@ -551,7 +558,8 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 
         // pack in some essentials
         // use more or less the same output as mentioned in Bip64
-        objGetUTXOResponse.push_back(Pair("chainHeight", chainActive.Height()));
+        const int height = chainActive.Height();
+        objGetUTXOResponse.push_back(Pair("chainHeight", height));
         objGetUTXOResponse.push_back(Pair("chaintipHash", chainActive.Tip()->GetBlockHash().GetHex()));
         objGetUTXOResponse.push_back(Pair("bitmap", bitmapStringRepresentation));
 
@@ -559,7 +567,9 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         for (const CCoin& coin : outs) {
             UniValue utxo(UniValue::VOBJ);
             utxo.push_back(Pair("height", (int32_t)coin.nHeight));
-            utxo.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
+            utxo.push_back(Pair("value", ValueFromAmount(coin.out.GetReferenceValue())));
+            utxo.push_back(Pair("refheight", (int32_t)coin.refheight));
+            utxo.push_back(Pair("amount", ValueFromAmount(coin.GetPresentValue(height + 1))));
 
             // include the script in a json output
             UniValue o(UniValue::VOBJ);

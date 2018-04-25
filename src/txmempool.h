@@ -108,6 +108,7 @@ public:
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
+    int32_t GetReferenceHeight() const { return GetTx().lock_height; }
     const CAmount& GetFee() const { return nFee; }
     size_t GetTxSize() const;
     size_t GetTxWeight() const { return nTxWeight; }
@@ -218,10 +219,18 @@ class CompareTxMemPoolEntryByDescendantScore
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
     {
-        double a_mod_fee, a_size, b_mod_fee, b_size;
+        CAmount a_mod_fee, b_mod_fee;
+        double a_size, b_size;
 
         GetModFeeAndSize(a, a_mod_fee, a_size);
         GetModFeeAndSize(b, b_mod_fee, b_size);
+
+        // Adjust to higher refheight
+        if (a.GetReferenceHeight() < b.GetReferenceHeight()) {
+            a_mod_fee = GetTimeAdjustedValue(a_mod_fee, b.GetReferenceHeight() - a.GetReferenceHeight());
+        } else {
+            b_mod_fee = GetTimeAdjustedValue(b_mod_fee, a.GetReferenceHeight() - b.GetReferenceHeight());
+        }
 
         // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
         double f1 = a_mod_fee * b_size;
@@ -234,7 +243,7 @@ public:
     }
 
     // Return the fee/size we're using for sorting this entry.
-    void GetModFeeAndSize(const CTxMemPoolEntry &a, double &mod_fee, double &size) const
+    void GetModFeeAndSize(const CTxMemPoolEntry &a, CAmount &mod_fee, double &size) const
     {
         // Compare feerate with descendants to feerate of the transaction, and
         // return the fee/size for the max.
@@ -260,8 +269,15 @@ class CompareTxMemPoolEntryByScore
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
     {
-        double f1 = (double)a.GetModifiedFee() * b.GetTxSize();
-        double f2 = (double)b.GetModifiedFee() * a.GetTxSize();
+        CAmount aModFee = a.GetModifiedFee();
+        CAmount bModFee = b.GetModifiedFee();
+        if (a.GetReferenceHeight() < b.GetReferenceHeight()) {
+            aModFee = GetTimeAdjustedValue(aModFee, b.GetReferenceHeight() - a.GetReferenceHeight());
+        } else {
+            bModFee = GetTimeAdjustedValue(bModFee, a.GetReferenceHeight() - b.GetReferenceHeight());
+        }
+        double f1 = (double)aModFee * b.GetTxSize();
+        double f2 = (double)bModFee * a.GetTxSize();
         if (f1 == f2) {
             return b.GetTx().GetHash() < a.GetTx().GetHash();
         }
