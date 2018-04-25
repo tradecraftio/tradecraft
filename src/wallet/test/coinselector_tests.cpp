@@ -43,9 +43,9 @@ static auto testChain = interfaces::MakeChain();
 static CWallet testWallet(*testChain, WalletLocation(), WalletDatabase::CreateDummy());
 static CAmount balance = 0;
 
-CoinEligibilityFilter filter_standard(1, 6, 0);
-CoinEligibilityFilter filter_confirmed(1, 1, 0);
-CoinEligibilityFilter filter_standard_extra(6, 6, 0);
+CoinEligibilityFilter filter_standard(1 /* refheight */, 1, 6, 0);
+CoinEligibilityFilter filter_confirmed(1 /* refheight */, 1, 1, 0);
+CoinEligibilityFilter filter_standard_extra(1 /* refheight */, 6, 6, 0);
 CoinSelectionParams coin_selection_params(false, 0, 0, CFeeRate(0), 0);
 
 static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
@@ -53,6 +53,7 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>&
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
+    tx.lock_height = 1;
     set.emplace_back(MakeTransactionRef(tx), nInput);
 }
 
@@ -61,6 +62,7 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set)
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
+    tx.lock_height = 1;
     set.emplace(MakeTransactionRef(tx), nInput);
 }
 
@@ -70,6 +72,7 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
     static int nextLockTime = 0;
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
+    tx.lock_height = 1;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     if (fIsFromMe) {
@@ -271,7 +274,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     CCoinControl coin_control;
     coin_control.fAllowOtherInputs = true;
     coin_control.Select(COutPoint(vCoins.at(0).tx->GetHash(), vCoins.at(0).i));
-    BOOST_CHECK(testWallet.SelectCoins(vCoins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb, bnb_used));
+    BOOST_CHECK(testWallet.SelectCoins(vCoins, 10 * CENT, 1 /* refheight */, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb, bnb_used));
     BOOST_CHECK(!bnb_used);
     BOOST_CHECK(!coin_selection_params_bnb.use_bnb);
 }
@@ -287,6 +290,17 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
     {
+        empty_wallet();
+
+        // a refheight in the future doesn't show up
+        add_coin(1 * CENT);
+        CoinEligibilityFilter past_filter(0 /* refheight */, 1, 6, 0);
+        BOOST_CHECK(!testWallet.SelectCoinsMinConf( 1 * CENT, past_filter, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+
+        // but it does when we change our target refheight to the future
+        BOOST_CHECK( testWallet.SelectCoinsMinConf( 1 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+
+        // revert wallet for unit tests carried over from bitcoin
         empty_wallet();
 
         // with an empty wallet we can't even pay one cent

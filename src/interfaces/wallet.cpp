@@ -251,6 +251,7 @@ public:
         return m_wallet->ListLockedCoins(outputs);
     }
     std::unique_ptr<PendingWalletTx> createTransaction(const std::vector<CRecipient>& recipients,
+        int64_t refheight,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
@@ -260,7 +261,7 @@ public:
         auto locked_chain = m_wallet->chain().lock();
         LOCK(m_wallet->cs_wallet);
         auto pending = MakeUnique<PendingWalletTxImpl>(*m_wallet);
-        if (!m_wallet->CreateTransaction(*locked_chain, recipients, pending->m_tx, pending->m_key, fee, change_pos,
+        if (!m_wallet->CreateTransaction(*locked_chain, recipients, refheight, pending->m_tx, pending->m_key, fee, change_pos,
                 fail_reason, coin_control, sign)) {
             return {};
         }
