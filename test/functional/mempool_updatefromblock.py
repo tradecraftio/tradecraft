@@ -64,7 +64,9 @@ class MempoolUpdateFromBlockTest(FreicoinTestFramework):
             # Prepare inputs.
             if i == 0:
                 inputs = [{'txid': start_input_txid, 'vout': 1}]
-                inputs_value = self.nodes[0].gettxout(start_input_txid, 1)['value']
+                txout = self.nodes[0].gettxout(start_input_txid, 1)
+                inputs_value = txout['value']
+                refheight = max(1, txout['refheight'])
             else:
                 inputs = []
                 inputs_value = 0
@@ -72,10 +74,13 @@ class MempoolUpdateFromBlockTest(FreicoinTestFramework):
                     # Transaction tx[K] is a child of each of previous transactions tx[0]..tx[K-1] at their output K-1.
                     vout = i - j - 1
                     inputs.append({'txid': tx_id[j], 'vout': vout})
-                    inputs_value += self.nodes[0].gettxout(tx, vout)['value']
+                    txout = self.nodes[0].gettxout(tx, vout)
+                    inputs_value += txout['value']
+                    assert_equal(refheight, txout['refheight'])
 
             self.log.debug('inputs={}'.format(inputs))
             self.log.debug('inputs_value={}'.format(inputs_value))
+            self.log.debug('refheight={}'.format(refheight))
 
             # Prepare outputs.
             tx_count = i + 1
@@ -94,7 +99,7 @@ class MempoolUpdateFromBlockTest(FreicoinTestFramework):
             self.log.debug('outputs={}'.format(outputs))
 
             # Create a new transaction.
-            unsigned_raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
+            unsigned_raw_tx = self.nodes[0].createrawtransaction(inputs, outputs, 0, refheight)
             signed_raw_tx = self.nodes[0].signrawtransactionwithwallet(unsigned_raw_tx)
             tx_id.append(self.nodes[0].sendrawtransaction(signed_raw_tx['hex']))
             tx_size.append(self.nodes[0].getmempoolentry(tx_id[-1])['vsize'])

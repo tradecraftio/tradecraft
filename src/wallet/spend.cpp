@@ -487,6 +487,10 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             if (wtx.tx->vout.size() <= outpoint.n) {
                 return std::nullopt;
             }
+            // Cannot spend an input with refheight higher than our lock_height
+            if (wtx.tx->lock_height > height) {
+                return std::nullopt;
+            }
             input_bytes = GetTxSpendSize(wallet, wtx, outpoint.n, false);
             txout = wtx.tx->vout.at(outpoint.n);
         } else {
