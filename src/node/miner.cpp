@@ -219,7 +219,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    coinbaseTx.vout[0].SetReferenceValue(nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
     if (m_block_final_state == INITIAL_BLOCK_FINAL_TXOUT) {
         CTxOut txout(0, CScript() << OP_TRUE);
         coinbaseTx.vout.insert(coinbaseTx.vout.begin(), txout);
@@ -304,7 +304,7 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     nBlockWeight += iter->GetTxWeight();
     ++nBlockTx;
     nBlockSigOpsCost += iter->GetSigOpCost();
-    nFees += iter->GetFee();
+    nFees += GetTimeAdjustedValue(iter->GetFee(), nHeight - iter->GetReferenceHeight());
     inBlock.insert(iter);
 
     bool fPrintPriority = gArgs.GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
@@ -368,7 +368,7 @@ void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
     CMutableTransaction txFinal;
     txFinal.nVersion = 2;
     txFinal.vout.resize(1);
-    txFinal.vout[0].nValue = 0;
+    txFinal.vout[0].SetReferenceValue(0);
     txFinal.vout[0].scriptPubKey = CScript() << OP_TRUE;
     txFinal.nLockTime = static_cast<uint32_t>(m_median_time_past);
     txFinal.lock_height = nHeight;
@@ -400,6 +400,7 @@ void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
     // Record the fees forwarded by the block-final transaction to the coinbase.
     CAmount nTxFees = m_chainstate.CoinsTip().GetValueIn(*pblocktemplate->block.vtx.back())
                     - pblocktemplate->block.vtx.back()->GetValueOut();
+    nTxFees = GetTimeAdjustedValue(nTxFees, nHeight - txFinal.lock_height);
     pblocktemplate->vTxFees.push_back(nTxFees);
     nFees += nTxFees;
 
@@ -502,6 +503,12 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
             packageSize = modit->nSizeWithAncestors;
             packageFees = modit->nModFeesWithAncestors;
             packageSigOpsCost = modit->nSigOpCostWithAncestors;
+        }
+        // Ignore demurrage calculations if the refheight age is less than
+        // 1008 blocks (1.5 weeks), to speed up block template construction.
+        // This heuristic has an error of less than 0.1%.
+        if ((iter->GetReferenceHeight() + 1008) < nHeight) {
+            packageFees = GetTimeAdjustedValue(packageFees, nHeight - iter->GetReferenceHeight());
         }
 
         if (packageFees < m_options.blockMinFeeRate.GetFee(packageSize)) {

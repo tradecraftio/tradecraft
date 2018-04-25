@@ -13,6 +13,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
+
+#include <test/util/setup_common.h>
+
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <node/utxo_snapshot.h>
@@ -21,7 +24,6 @@
 #include <sync.h>
 #include <test/util/chainstate.h>
 #include <test/util/random.h>
-#include <test/util/setup_common.h>
 #include <timedata.h>
 #include <uint256.h>
 #include <validation.h>

@@ -140,7 +140,7 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
             if (has_data) {
                 for (auto& txout : rawTx.vout) {
                     if (txout.scriptPubKey[0] == OP_RETURN) {
-                        txout.nValue = amount;
+                        txout.SetReferenceValue(amount);
                         break;
                     }
                 }
@@ -277,9 +277,9 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out.SetReferenceValue(MAX_MONEY);
                 if (prevOut.exists("value")) {
-                    newcoin.out.nValue = AmountFromValue(find_value(prevOut, "value"));
+                    newcoin.out.SetReferenceValue(AmountFromValue(find_value(prevOut, "value")));
                 }
                 newcoin.nHeight = 1;
                 newcoin.refheight = refheight;

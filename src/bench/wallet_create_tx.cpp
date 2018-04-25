@@ -48,10 +48,10 @@ void generateFakeBlock(const CChainParams& params,
     coinbase_tx.vin[0].prevout.SetNull();
     coinbase_tx.vout.resize(2);
     coinbase_tx.vout[0].scriptPubKey = coinbase_out_script;
-    coinbase_tx.vout[0].nValue = 49 * COIN;
+    coinbase_tx.vout[0].SetReferenceValue(49 * COIN);
     coinbase_tx.vin[0].scriptSig = CScript() << ++tip.tip_height << OP_0;
     coinbase_tx.vout[1].scriptPubKey = coinbase_out_script; // extra output
-    coinbase_tx.vout[1].nValue = 1 * COIN;
+    coinbase_tx.vout[1].SetReferenceValue(1 * COIN);
     block.vtx = {MakeTransactionRef(std::move(coinbase_tx))};
 
     block.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
@@ -120,7 +120,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
                                     return wallet::AvailableCoins(wallet, next_height, /*coinControl=*/nullptr, /*feerate=*/std::nullopt, filter_coins));
         for (int i=0; i < preset_inputs->num_of_internal_inputs; i++) {
             const auto& coin{res.coins.at(output_type)[i]};
-            target += coin.txout.nValue;
+            target += coin.adjusted;
             coin_control.Select(coin.outpoint);
         }
     }

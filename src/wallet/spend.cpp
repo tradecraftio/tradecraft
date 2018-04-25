@@ -124,7 +124,7 @@ void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher
             if (coins_to_remove.count(coin.outpoint) == 0) return false;
 
             // update cached amounts
-            total_amount -= coin.txout.nValue;
+            total_amount -= coin.adjusted;
             if (coin.HasEffectiveValue()) total_effective_amount = *total_effective_amount - coin.GetEffectiveValue();
             return true;
         });
@@ -142,7 +142,7 @@ void CoinsResult::Shuffle(FastRandomContext& rng_fast)
 void CoinsResult::Add(OutputType type, const COutput& out)
 {
     coins[type].emplace_back(out);
-    total_amount += out.txout.nValue;
+    total_amount += out.adjusted;
     if (out.HasEffectiveValue()) {
         total_effective_amount = total_effective_amount.has_value() ?
                 *total_effective_amount + out.GetEffectiveValue() : out.GetEffectiveValue();
@@ -207,7 +207,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, uint3
         }
 
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
-        COutput output(atheight, outpoint, spent_output, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
+        COutput output(atheight, spent_output.GetPresentValue(atheight), outpoint, spent_output, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
         result.Insert(output, coin_selection_params.m_subtract_fee_outputs);
     }
     return result;
@@ -301,7 +301,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             const CTxOut& output = wtx.tx->vout[i];
             const COutPoint outpoint(wtxid, i);
 
-            if (output.nValue < params.min_amount || output.nValue > params.max_amount)
+            CAmount adjusted_value = wtx.tx->GetPresentValueOfOutput(i, atheight);
+            if (adjusted_value < params.min_amount || adjusted_value > params.max_amount)
                 continue;
 
             // Skip manually selected coins (the caller can fetch them directly)
@@ -350,7 +351,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             }
 
             result.Add(GetOutputType(type, is_from_p2sh),
-                       COutput(atheight, outpoint, SpentOutput{output, wtx.tx->lock_height}, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate));
+                       COutput(atheight, adjusted_value, outpoint, SpentOutput{output, wtx.tx->lock_height}, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate));
 
             // Checks the sum amount of all UTXO's.
             if (params.min_sum_amount != MAX_MONEY) {
@@ -1056,7 +1057,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // If there is a change output and we overpay the fees then increase the change to match the fee needed
     if (nChangePosInOut != -1 && fee_needed < current_fee) {
         auto& change = txNew.vout.at(nChangePosInOut);
-        change.nValue += current_fee - fee_needed;
+        change.AdjustReferenceValue(current_fee - fee_needed);
         current_fee = result.GetSelectedValue() - CalculateOutputValue(txNew);
         if (fee_needed != current_fee) {
             return util::Error{Untranslated(STR_INTERNAL_BUG("Change adjustment: Fee needed != fee paid"))};
@@ -1077,17 +1078,17 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
             if (recipient.fSubtractFeeFromAmount)
             {
-                txout.nValue -= to_reduce / outputs_to_subtract_fee_from; // Subtract fee equally from each selected recipient
+                txout.AdjustReferenceValue(-to_reduce / outputs_to_subtract_fee_from); // Subtract fee equally from each selected recipient
 
                 if (fFirst) // first receiver pays the remainder not divisible by output count
                 {
                     fFirst = false;
-                    txout.nValue -= to_reduce % outputs_to_subtract_fee_from;
+                    txout.AdjustReferenceValue(-(to_reduce % outputs_to_subtract_fee_from));
                 }
 
                 // Error if this output is reduced to be below dust
                 if (IsDust(txout, wallet.chain().relayDustFee())) {
-                    if (txout.nValue < 0) {
+                    if (txout.GetReferenceValue() < 0) {
                         return util::Error{_("The transaction amount is too small to pay the fee")};
                     } else {
                         return util::Error{_("The transaction amount is too small to send after the fee has been deducted")};
@@ -1222,7 +1223,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        CRecipient recipient = {txOut.scriptPubKey, txOut.GetReferenceValue(), setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 
@@ -1269,7 +1270,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     // Copy output sizes from new transaction; they may have had the fee
     // subtracted from them.
     for (unsigned int idx = 0; idx < tx.vout.size(); idx++) {
-        tx.vout[idx].nValue = tx_new->vout[idx].nValue;
+        tx.vout[idx].SetReferenceValue(tx_new->vout[idx].GetReferenceValue());
     }
 
     // Add new txins while keeping original txin scriptSig/order.

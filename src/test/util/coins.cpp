@@ -30,7 +30,7 @@ COutPoint AddTestCoin(CCoinsViewCache& coins_view)
     const uint256 txid{InsecureRand256()};
     COutPoint outpoint{txid, /*nIn=*/0};
     new_coin.nHeight = 1;
-    new_coin.out.nValue = InsecureRandMoneyAmount();
+    new_coin.out.SetReferenceValue(InsecureRandMoneyAmount());
     new_coin.out.scriptPubKey.assign(uint32_t{56}, 1);
     coins_view.AddCoin(outpoint, std::move(new_coin), /*possible_overwrite=*/false);
 
