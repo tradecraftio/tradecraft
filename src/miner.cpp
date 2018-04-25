@@ -223,8 +223,15 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 fPriorityBlock = false;
                 waitPriMap.clear();
             }
+            // Ignore demurrage calculations if the refheight age is less than
+            // 1008 blocks (1 week), to speed up block template construction.
+            // This heuristic has an error of less than 0.1%.
+            CAmount modified_fee = iter->GetModifiedFee();
+            if ((tx.lock_height + 1008) < nHeight) {
+                modified_fee = GetTimeAdjustedValue(modified_fee, nHeight - tx.lock_height);
+            }
             if (!priorityTx &&
-                (iter->GetModifiedFee() < ::minRelayTxFee.GetFee(nTxSize) && nBlockSize >= nBlockMinSize)) {
+                (modified_fee < ::minRelayTxFee.GetFee(nTxSize) && nBlockSize >= nBlockMinSize)) {
                 break;
             }
             if (nBlockSize + nTxSize >= nBlockMaxSize) {
@@ -250,7 +257,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 continue;
             }
 
-            CAmount nTxFees = iter->GetFee();
+            CAmount nTxFees = GetTimeAdjustedValue(iter->GetFee(), nHeight - tx.lock_height);
             // Added
             pblock->vtx.push_back(tx);
             pblocktemplate->vTxFees.push_back(nTxFees);
@@ -266,7 +273,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 CAmount dummy;
                 mempool.ApplyDeltas(tx.GetHash(), dPriority, dummy);
                 LogPrintf("priority %.1f fee %s txid %s\n",
-                          dPriority , CFeeRate(iter->GetModifiedFee(), nTxSize).ToString(), tx.GetHash().ToString());
+                          dPriority , CFeeRate(modified_fee, nTxSize).ToString(), tx.GetHash().ToString());
             }
 
             inBlock.insert(iter);
@@ -295,7 +302,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nBlockSigOps);
 
         // Compute final coinbase transaction.
-        txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+        txNew.vout[0].SetReferenceValue(GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
+        txNew.vout[0].AdjustReferenceValue(nFees);
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
@@ -376,7 +384,7 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
 static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainparams)
 {
     LogPrintf("%s\n", pblock->ToString());
-    LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
+    LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].GetReferenceValue()));
 
     // Found a solution
     {

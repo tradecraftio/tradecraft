@@ -23,6 +23,32 @@
 
 const std::string CURRENCY_UNIT = "FRC";
 
+CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance)
+{
+    /* TimeAdjustValueForward() will not return a value outside of the
+     * range [-MAX_MONEY, MAX_MONEY], no matter its inputs. */
+    CAmount value = std::max(-MAX_MONEY, initial_value);
+    value = std::min(initial_value, MAX_MONEY);
+    return value;
+}
+
+CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance)
+{
+    /* TimeAdjustValueReverse() will not return a value outside of the
+     * range [-MAX_MONEY, MAX_MONEY], no matter its inputs. */
+    CAmount value = std::max(-MAX_MONEY, initial_value);
+    value = std::min(initial_value, MAX_MONEY);
+    return value;
+}
+
+CAmount GetTimeAdjustedValue(const CAmount& initial_value, int relative_depth)
+{
+    if (relative_depth < 0)
+        return TimeAdjustValueReverse(initial_value, std::abs(relative_depth));
+    else
+        return TimeAdjustValueForward(initial_value, relative_depth);
+}
+
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nSize)
 {
     if (nSize > 0)

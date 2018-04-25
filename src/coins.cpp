@@ -252,7 +252,13 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 
     CAmount nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += GetOutputFor(tx.vin[i]).nValue;
+    {
+        // Assumes HaveCoins(tx.vin[i].prevout.hash)
+        const COutPoint& prevout = tx.vin[i].prevout;
+        const CCoins* coins = AccessCoins(prevout.hash);
+        assert(coins && coins->IsAvailable(prevout.n));
+        nResult += coins->GetPresentValueOfOutput(prevout.n, tx.lock_height);
+    }
 
     return nResult;
 }
@@ -283,8 +289,12 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
         assert(coins);
         if (!coins->IsAvailable(txin.prevout.n)) continue;
         if (coins->nHeight <= nHeight) {
-            dResult += coins->vout[txin.prevout.n].nValue * (nHeight-coins->nHeight);
-            inChainInputValue += coins->vout[txin.prevout.n].nValue;
+            CAmount value_in = coins->GetPresentValueOfOutput(txin.prevout.n, tx.lock_height);
+            inChainInputValue += value_in;
+            if ((tx.lock_height + 1008) < nHeight) {
+                value_in = GetTimeAdjustedValue(value_in, nHeight - tx.lock_height);
+            }
+            dResult += value_in * (nHeight-coins->nHeight);
         }
     }
     return tx.ComputePriority(dResult);

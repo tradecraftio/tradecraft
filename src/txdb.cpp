@@ -118,7 +118,9 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
     ss << stats.hashBlock;
+    CAmount nTotalValue = 0;
     CAmount nTotalAmount = 0;
+    const int next_height = mapBlockIndex.find(GetBestBlock())->second->nHeight + 1;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, uint256> key;
@@ -132,7 +134,8 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
                         stats.nTransactionOutputs++;
                         ss << VARINT(i+1);
                         ss << out;
-                        nTotalAmount += out.nValue;
+                        nTotalValue += out.GetReferenceValue();
+                        nTotalAmount += coins.GetPresentValueOfOutput(i, next_height);
                     }
                 }
                 stats.nSerializedSize += 32 + pcursor->GetValueSize();

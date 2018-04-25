@@ -18,6 +18,8 @@
 
 // Unit tests for denial-of-service detection/prevention code
 
+#include "test/test_freicoin.h"
+
 #include "chainparams.h"
 #include "keystore.h"
 #include "main.h"
@@ -26,8 +28,6 @@
 #include "script/sign.h"
 #include "serialize.h"
 #include "util.h"
-
-#include "test/test_freicoin.h"
 
 #include <stdint.h>
 
