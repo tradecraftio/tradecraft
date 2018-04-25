@@ -663,17 +663,9 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     // Basically we don't want to propagate transactions that can't be included in
     // the next block.
     //
-    // However, IsFinalTx() is confusing... Without arguments, it uses
-    // chainActive.Height() to evaluate nLockTime; when a block is accepted, chainActive.Height()
-    // is set to the value of nHeight in the block. However, when IsFinalTx()
-    // is called within CBlock::AcceptBlock(), the height of the block *being*
-    // evaluated is what is used. Thus if we want to know if a transaction can
-    // be part of the *next* block, we need to call IsFinalTx() with one more
-    // than chainActive.Height().
-    //
-    // Timestamps on the other hand don't get any special treatment, because we
-    // can't know what timestamp the next block will have, and there aren't
-    // timestamp applications where it matters.
+    // We don't pass a timestamp here because we can't know what
+    // timestamp the next block will have, and there aren't timestamp
+    // applications where it matters.
     if (!IsFinalTx(tx, chainActive.Height() + 1)) {
         reason = "non-final";
         return false;
@@ -736,14 +728,32 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     return true;
 }
 
+// Behavior of IsFinalTx() is different from bitcoin. For historical
+// reasons the bitcoin codebase checks against chainActive.height()
+// when no arguments are given, which is checking whether the
+// transaction would have been considered final for the existing
+// block. This is an off-by-one error, and the source of various bugs
+// relating to lock_height in this codebase.
+//
+// In bitcoin, all consensus code invocations of IsFinalTx() specify
+// the block height to use, and most non-consensus calls explicitly
+// specify chainActive.Height() + 1. Those which don't and thereby
+// default to chainActive.Height(), including some portions of the
+// wallet code, are in error.
+//
+// Rather than correct these bugs one-by-one, we change the behavior
+// of IsFinalTx() to default nBlockHeight to chainActive.Height() + 1,
+// the value it probably should have had from the beginning.
 bool IsFinalTx(const CTransaction &tx, int32_t nBlockHeight, int64_t nBlockTime)
 {
     AssertLockHeld(cs_main);
     // Time based nLockTime implemented in 0.1.6
+    if (nBlockHeight == 0)
+        nBlockHeight = chainActive.Height() + 1;
+    if (tx.lock_height > nBlockHeight)
+        return false;
     if (tx.nLockTime == 0)
         return true;
-    if (nBlockHeight == 0)
-        nBlockHeight = chainActive.Height();
     if (nBlockTime == 0)
         nBlockTime = GetAdjustedTime();
     if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
