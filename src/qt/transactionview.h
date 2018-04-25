@@ -67,7 +67,8 @@ public:
         WATCHONLY_COLUMN_WIDTH = 23,
         DATE_COLUMN_WIDTH = 120,
         TYPE_COLUMN_WIDTH = 113,
-        AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
+        AMOUNT_COLUMN_WIDTH = 120,
+        LOCK_HEIGHT_MINIMUM_COLUMN_WIDTH = 80,
         MINIMUM_COLUMN_WIDTH = 23
     };
 
@@ -84,6 +85,7 @@ private:
     QComboBox *watchOnlyWidget;
     QLineEdit *search_widget;
     QLineEdit *amountWidget;
+    QLineEdit *lockHeightWidget;
 
     QMenu *contextMenu;
 
@@ -109,6 +111,7 @@ private Q_SLOTS:
     void editLabel();
     void copyLabel();
     void copyAmount();
+    void copyLockHeight();
     void copyTxID();
     void copyTxHex();
     void copyTxPlainText();
@@ -130,6 +133,7 @@ public Q_SLOTS:
     void chooseType(int idx);
     void chooseWatchonly(int idx);
     void changedAmount();
+    void changedLockHeight();
     void changedSearch();
     void exportClicked();
     void focusTransaction(const QModelIndex&);
