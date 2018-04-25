@@ -808,7 +808,7 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
     coin_control.m_allow_other_inputs = !coin_control.HasSelected();
 
     // Calculate available amount to send.
-    CAmount amount = model->getAvailableBalance(&coin_control);
+    CAmount amount = model->getAvailableBalance(/*atheight=*/0, &coin_control);
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry* e = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if (e && !e->isHidden() && e != entry) {

@@ -421,7 +421,7 @@ public:
         return true;
     }
     CAmount getBalance() override { return GetBalance(*m_wallet).m_mine_trusted; }
-    CAmount getAvailableBalance(const CCoinControl& coin_control) override
+    CAmount getAvailableBalance(uint32_t atheight, const CCoinControl& coin_control) override
     {
         LOCK(m_wallet->cs_wallet);
         CAmount total_amount = 0;
@@ -430,14 +430,14 @@ public:
             FastRandomContext rng{};
             CoinSelectionParams params(rng);
             // Note: for now, swallow any error.
-            if (auto res = FetchSelectedInputs(*m_wallet, coin_control, params)) {
+            if (auto res = FetchSelectedInputs(*m_wallet, atheight, coin_control, params)) {
                 total_amount += res->total_amount;
             }
         }
 
         // And fetch the wallet available coins
         if (coin_control.m_allow_other_inputs) {
-            total_amount += AvailableCoins(*m_wallet, &coin_control).GetTotalAmount();
+            total_amount += AvailableCoins(*m_wallet, atheight, &coin_control).GetTotalAmount();
         }
 
         return total_amount;

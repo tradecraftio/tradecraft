@@ -527,6 +527,7 @@ RPCHelpMan listunspent()
                             {"maximumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"unlimited"}, "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
+                            {"atheight", RPCArg::Type::NUM, RPCArg::DefaultHint{"next block height"}, "Reference height for time-value adjustments and output availability"},
                             {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase UTXOs"}
                         },
                         RPCArgOptions{.oneline_description="query_options"}},
@@ -604,6 +605,16 @@ RPCHelpMan listunspent()
         include_unsafe = request.params[3].get_bool();
     }
 
+    int current_height = -1;
+    {
+        const std::optional<int> tip_height = pwallet->chain().getHeight();
+        if (!tip_height) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot determine current chain height.  This should never happen.");
+        }
+        current_height = tip_height.value();
+    }
+    uint32_t atheight = current_height + 1;
+
     CoinFilterParams filter_coins;
     filter_coins.min_amount = 0;
 
@@ -615,6 +626,7 @@ RPCHelpMan listunspent()
                 {"minimumAmount", UniValueType()},
                 {"maximumAmount", UniValueType()},
                 {"minimumSumAmount", UniValueType()},
+                {"atheight", UniValueType(UniValue::VNUM)},
                 {"maximumCount", UniValueType(UniValue::VNUM)},
                 {"include_immature_coinbase", UniValueType(UniValue::VBOOL)}
             },
@@ -628,6 +640,9 @@ RPCHelpMan listunspent()
 
         if (options.exists("minimumSumAmount"))
             filter_coins.min_sum_amount = AmountFromValue(options["minimumSumAmount"]);
+
+        if (options.exists("atheight"))
+            atheight = options["atheight"].getInt<uint32_t>();
 
         if (options.exists("maximumCount"))
             filter_coins.max_count = options["maximumCount"].getInt<int64_t>();
@@ -650,7 +665,7 @@ RPCHelpMan listunspent()
         cctl.m_max_depth = nMaxDepth;
         cctl.m_include_unsafe_inputs = include_unsafe;
         LOCK(pwallet->cs_wallet);
-        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, filter_coins).All();
+        vecOutputs = AvailableCoinsListUnspent(*pwallet, atheight, &cctl, filter_coins).All();
     }
 
     LOCK(pwallet->cs_wallet);
