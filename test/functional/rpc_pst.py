@@ -265,7 +265,7 @@ class PSTTest(FreicoinTestFramework):
         assert_greater_than_or_equal(max_tx_weight_sufficient, weight)
 
         # If inputs are specified, do not automatically add more:
-        utxo1 = self.nodes[0].listunspent()[0]
+        utxo1 = sorted(self.nodes[0].listunspent(), key=lambda x:x['refheight'], reverse=True)[0]
         assert_raises_rpc_error(-4, "The preselected coins total amount does not cover the transaction target. "
                                     "Please allow other inputs to be automatically selected or include more coins manually",
                                 self.nodes[0].walletcreatefundedpst, [{"txid": utxo1['txid'], "vout": utxo1['vout']}], {self.nodes[2].getnewaddress():90})
