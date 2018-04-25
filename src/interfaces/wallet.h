@@ -427,6 +427,7 @@ struct WalletTxStatus
 struct WalletTxOut
 {
     CTxOut txout;
+    uint32_t refheight;
     int64_t time;
     int depth_in_main_chain = -1;
     bool is_spent = false;

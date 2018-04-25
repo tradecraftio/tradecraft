@@ -938,6 +938,13 @@ bool AppInitParameterInteraction(const ArgsManager& args)
          * will get the correct value.
          */
         *const_cast<bool*>(&chainparams.GetConsensus().bitcoin_mode) = true;
+
+        /*
+         * Time-adjustment (demurrage) is controlled by its own global
+         * variable, since accessing the chain parameters would be too
+         * slow for such a frequently called calculation.
+         */
+        disable_time_adjust = true;
     }
 
     // ********************************************************* Step 3: parameter-to-internal-flags

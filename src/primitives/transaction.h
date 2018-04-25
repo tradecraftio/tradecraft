@@ -158,8 +158,23 @@ public:
  */
 class CTxOut
 {
+/**
+ * The vast majority of the accesses to CTxOut::nValue are from unit
+ * tests. Rather than update all of these to use the setters/getters
+ * and jump through hoops to set exact values, we make the nValue
+ * field public when compiling unit tests.
+ */
+#ifdef FREICOIN_TEST
 public:
+#else
+protected:
+    /* The TxOutCompression struct (defined in src/compressor.h) needs to
+     * read/write the nValue field. */
+    friend struct TxOutCompression;
+#endif
     CAmount nValue;
+
+public:
     CScript scriptPubKey;
 
     CTxOut()
@@ -180,6 +195,67 @@ public:
     bool IsNull() const
     {
         return (nValue == -1);
+    }
+
+    /**
+     * The value of an input in freicoin is adjusted based on the
+     * difference between the reference height of the transaction
+     * which spends it and the transaction which created it. In
+     * updating any code from bitcoin which accesses a CTxOut's
+     * nValue, the value might need to be adjusted to either the
+     * spending reference height or the present. In order to make sure
+     * that no instance gets through accidentally unconsidered, we
+     * force the access of this value through getters and setters.
+     *
+     * Generally speaking, access to CTxOut::nValue falls into one of
+     * three categories:
+     *
+     * 1. Historical records or reports of a transaction, which are
+     *    recorded at the reference height of the transaction. The
+     *    historical fact that a transaction debits 10frc from a
+     *    wallet does not change over time.
+     *
+     * 2. Inputs to other transactions, in which case the value of the
+     *    input is decayed by demurrage according to the difference
+     *    between the two transactions reference heights.
+     *
+     * 3. Lists of unspent outputs or wallet balances, which report
+     *    each unspent output as decayed to present value (the height
+     *    of the next block), for coin selection and available balance
+     *    purposes.
+     *
+     * The only odd thing worth noting is the interaction between
+     * account or address views. With Freicoin the decision was made
+     * that these views provide an aggregate view of historical
+     * records. So if you wallet has received 100frc that is an
+     * average of 1 year old, `getbalance` would return ~95frc, but
+     * `listreceivedbyaddress` would show a per-address view of
+     * historical amounts which if summed would yield 100frc.
+     */
+    CTxOut& SetReferenceValue(const CAmount& value_in)
+    {
+        nValue = value_in;
+        return *this;
+    }
+
+    /* There are a few points in transaction creation logic where a
+     * CTxOut::nValue is adjusted by some amount, e.g. to subtract
+     * fee. This method exists to make those scenarios a little bit
+     * more concise. */
+    CTxOut& AdjustReferenceValue(const CAmount& delta)
+    {
+        nValue += delta;
+        return *this;
+    }
+
+    CAmount GetReferenceValue() const
+    {
+        return nValue;
+    }
+
+    CAmount GetTimeAdjustedValue(int relative_depth) const
+    {
+        return ::GetTimeAdjustedValue(nValue, relative_depth);
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -204,6 +280,10 @@ struct SpentOutput
     //! lock height of the CTransaction, which serves double-duty as
     //! the reference height for demurrage calculations
     uint32_t refheight;
+
+    CAmount GetPresentValue(uint32_t height) const {
+        return out.GetTimeAdjustedValue((int)height - refheight);
+    }
 
     SpentOutput() : refheight(0) { }
     SpentOutput(const CTxOut &_out, uint32_t _refheight) : out(_out), refheight(_refheight) { }
@@ -360,6 +440,12 @@ public:
     CAmount GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
+
+    CAmount GetPresentValueOfOutput(int n, uint32_t height) const
+    {
+        assert(n < (int)vout.size());
+        return vout[n].GetTimeAdjustedValue((int)height - lock_height);
+    }
 
     /**
      * Get the total transaction size in bytes, including witness data.

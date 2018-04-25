@@ -1367,6 +1367,27 @@ void CWallet::BlockUntilSyncedToCurrentChain() const {
     chain().waitForNotificationsIfTipChanged(last_block_hash);
 }
 
+bool CWallet::GetInputSplit(const CWalletTx& wtx, CAmount& value_in, CAmount& demurrage) const {
+    int missing = 0;
+    value_in = demurrage = 0;
+    for (const CTxIn& txin : wtx.tx->vin) {
+        const CWalletTx* prev = GetWalletTx(txin.prevout.hash);
+        if (prev == NULL) {
+            ++missing;
+            continue;
+        }
+        if (txin.prevout.n < prev->tx->vout.size()) {
+            const CTxOut& txout = prev->tx->vout[txin.prevout.n];
+            CAmount amount = prev->tx->GetPresentValueOfOutput(txin.prevout.n, wtx.tx->lock_height);
+            if (IsMine(txout)) {
+                demurrage += txout.GetReferenceValue() - amount;
+            }
+            value_in += amount;
+        }
+    }
+    return !!missing;
+}
+
 // Note that this function doesn't distinguish between a 0-valued input,
 // and a not-"is mine" (according to the filter) input.
 CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
@@ -1379,7 +1400,7 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
             const CWalletTx& prev = (*mi).second;
             if (txin.prevout.n < prev.tx->vout.size())
                 if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
-                    return prev.tx->vout[txin.prevout.n].nValue;
+                    return prev.tx->vout[txin.prevout.n].GetReferenceValue();
         }
     }
     return 0;
@@ -1515,10 +1536,10 @@ bool CWallet::AddWalletFlags(uint64_t flags)
 
 // Helper for producing a max-sized low-S low-R signature (eg 71 bytes)
 // or a max-sized low-S signature (e.g. 72 bytes) if use_max_sig is true
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool use_max_sig)
+bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const SpentOutput& spent_output, bool use_max_sig)
 {
     // Fill in dummy signatures for fee calculation.
-    const CScript& scriptPubKey = txout.scriptPubKey;
+    const CScript& scriptPubKey = spent_output.out.scriptPubKey;
     SignatureData sigdata;
 
     if (!ProduceSignature(provider, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
@@ -1572,11 +1593,11 @@ bool FillInputToWeight(CTxIn& txin, int64_t target_weight)
 }
 
 // Helper for producing a bunch of max-sized low-S low-R signatures (eg 71 bytes)
-bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts, const CCoinControl* coin_control) const
+bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<SpentOutput> &spent_outputs, const CCoinControl* coin_control) const
 {
     // Fill in dummy signatures for fee calculation.
     int nIn = 0;
-    for (const auto& txout : txouts)
+    for (const auto& spent_output : spent_outputs)
     {
         CTxIn& txin = txNew.vin[nIn];
         // If weight was provided, fill the input to that weight
@@ -1590,9 +1611,9 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
         // Use max sig if watch only inputs were used or if this particular input is an external input
         // to ensure a sufficient fee is attained for the requested feerate.
         const bool use_max_sig = coin_control && (coin_control->fAllowWatchOnly || coin_control->IsExternalSelected(txin.prevout));
-        const std::unique_ptr<SigningProvider> provider = GetSolvingProvider(txout.scriptPubKey);
-        if (!provider || !DummySignInput(*provider, txin, txout, use_max_sig)) {
-            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, use_max_sig)) {
+        const std::unique_ptr<SigningProvider> provider = GetSolvingProvider(spent_output.out.scriptPubKey);
+        if (!provider || !DummySignInput(*provider, txin, spent_output, use_max_sig)) {
+            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, spent_output, use_max_sig)) {
                 return false;
             }
         }

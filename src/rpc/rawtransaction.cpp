@@ -776,7 +776,7 @@ static RPCHelpMan combinerawtransaction()
                 sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, coin.refheight));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.GetReferenceValue(), 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
@@ -810,7 +810,7 @@ static RPCHelpMan signrawtransactionwithkey()
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
-                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
+                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent at the reference height of the transaction being spent"},
                                     {"refheight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The lockheight of the transaction output being spent"},
                                 },
                                 },
@@ -1143,8 +1143,9 @@ static RPCHelpMan decodepst()
                                 }},
                                 {RPCResult::Type::OBJ, "witness_utxo", /*optional=*/true, "Transaction output for witness UTXOs",
                                 {
-                                    {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT},
-                                    {RPCResult::Type::NUM, "refheight", "The lockheight of the transaction output being spent"},
+                                    {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT + " at the reference height of the source transaction"},
+                                    {RPCResult::Type::NUM, "refheight", "The reference height of the transaction output being spent"},
+                                    {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT + " as input into the PST (at the reference height of the PST)"},
                                     {RPCResult::Type::OBJ, "scriptPubKey", "",
                                     {
                                         {RPCResult::Type::STR, "asm", "The asm"},
@@ -1335,15 +1336,18 @@ static RPCHelpMan decodepst()
         // UTXOs
         bool have_a_utxo = false;
         CTxOut txout;
+        CAmount adjusted = 0;
         if (!input.witness_utxo.IsNull()) {
             txout = input.witness_utxo;
+            adjusted = txout.GetTimeAdjustedValue(pstx.tx->lock_height - input.witness_refheight);
 
             UniValue o(UniValue::VOBJ);
             ScriptPubKeyToUniv(txout.scriptPubKey, o, /* include_hex */ true);
 
             UniValue out(UniValue::VOBJ);
-            out.pushKV("value", ValueFromAmount(txout.nValue));
+            out.pushKV("value", ValueFromAmount(txout.GetReferenceValue()));
             out.pushKV("refheight", (int64_t)input.witness_refheight);
+            out.pushKV("amount", ValueFromAmount(adjusted));
             out.pushKV("scriptPubKey", o);
 
             in.pushKV("witness_utxo", out);
@@ -1352,6 +1356,7 @@ static RPCHelpMan decodepst()
         }
         if (input.non_witness_utxo) {
             txout = input.non_witness_utxo->vout[pstx.tx->vin[i].prevout.n];
+            adjusted = txout.GetTimeAdjustedValue(pstx.tx->lock_height - input.non_witness_utxo->lock_height);
 
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
@@ -1360,8 +1365,8 @@ static RPCHelpMan decodepst()
             have_a_utxo = true;
         }
         if (have_a_utxo) {
-            if (MoneyRange(txout.nValue) && MoneyRange(total_in + txout.nValue)) {
-                total_in += txout.nValue;
+            if (MoneyRange(txout.GetReferenceValue()) && MoneyRange(adjusted) && MoneyRange(total_in + adjusted)) {
+                total_in += adjusted;
             } else {
                 // Hack to just not show fee later
                 have_all_utxos = false;
@@ -1545,8 +1550,9 @@ static RPCHelpMan decodepst()
         outputs.push_back(out);
 
         // Fee calculation
-        if (MoneyRange(pstx.tx->vout[i].nValue) && MoneyRange(output_value + pstx.tx->vout[i].nValue)) {
-            output_value += pstx.tx->vout[i].nValue;
+        CAmount txout_value = pstx.tx->vout[i].GetReferenceValue();
+        if (MoneyRange(txout_value) && MoneyRange(output_value + txout_value)) {
+            output_value += txout_value;
         } else {
             // Hack to just not show fee later
             have_all_utxos = false;

@@ -53,9 +53,9 @@ FUZZ_TARGET_INIT(script_flags, initialize_script_flags)
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
             CTxOut prevout;
             ds >> prevout;
-            if (!MoneyRange(prevout.nValue)) {
+            if (!MoneyRange(prevout.GetReferenceValue())) {
                 // prevouts should be consensus-valid
-                prevout.nValue = 1;
+                prevout.SetReferenceValue(1);
             }
             spent_outputs.emplace_back(prevout, tx.lock_height);
         }
@@ -64,7 +64,7 @@ FUZZ_TARGET_INIT(script_flags, initialize_script_flags)
 
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
             const SpentOutput& prevout = txdata.m_spent_outputs.at(i);
-            const TransactionSignatureChecker checker{&tx, i, prevout.out.nValue, prevout.refheight, txdata, MissingDataBehavior::ASSERT_FAIL};
+            const TransactionSignatureChecker checker{&tx, i, prevout.out.GetReferenceValue(), prevout.refheight, txdata, MissingDataBehavior::ASSERT_FAIL};
 
             ScriptError serror;
             const bool ret = VerifyScript(tx.vin.at(i).scriptSig, prevout.out.scriptPubKey, &tx.vin.at(i).scriptWitness, verify_flags, checker, &serror);

@@ -223,7 +223,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             const Coin& prev_coin = txundo->vprevout[i];
             const CTxOut& prev_txout = prev_coin.out;
 
-            amt_total_in += prev_txout.nValue;
+            amt_total_in += prev_coin.GetPresentValue(tx.lock_height);
 
             if (verbosity == TxVerbosity::SHOW_DETAILS_AND_PREVOUT) {
                 UniValue o_script_pub_key(UniValue::VOBJ);
@@ -232,7 +232,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                 UniValue p(UniValue::VOBJ);
                 p.pushKV("generated", bool(prev_coin.fCoinBase));
                 p.pushKV("height", uint64_t(prev_coin.nHeight));
-                p.pushKV("value", ValueFromAmount(prev_txout.nValue));
+                p.pushKV("value", ValueFromAmount(prev_txout.GetReferenceValue()));
+                p.pushKV("refheight", ValueFromAmount(prev_coin.refheight));
+                p.pushKV("amount", ValueFromAmount(prev_coin.GetPresentValue(tx.lock_height)));
                 p.pushKV("scriptPubKey", o_script_pub_key);
                 in.pushKV("prevout", p);
             }
@@ -248,7 +250,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 
         UniValue out(UniValue::VOBJ);
 
-        out.pushKV("value", ValueFromAmount(txout.nValue));
+        out.pushKV("value", ValueFromAmount(txout.GetReferenceValue()));
         out.pushKV("n", (int64_t)i);
 
         UniValue o(UniValue::VOBJ);
@@ -257,7 +259,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         vout.push_back(out);
 
         if (have_undo) {
-            amt_total_out += txout.nValue;
+            amt_total_out += txout.GetReferenceValue();
         }
     }
     entry.pushKV("vout", vout);

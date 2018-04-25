@@ -601,7 +601,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
     wallet.chain().findCoins(coins);
     for (const auto& coin : coins) {
         if (!coin.second.out.IsNull()) {
-            coinControl.SelectExternal(coin.first, coin.second.out);
+            coinControl.SelectExternal(coin.first, {coin.second.out, coin.second.refheight});
         }
     }
 

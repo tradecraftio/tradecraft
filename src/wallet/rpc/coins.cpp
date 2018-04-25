@@ -64,7 +64,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
     }
 
     // Tally
-    CAmount amount = 0;
+    CAmount value = 0;
     for (const std::pair<const uint256, CWalletTx>& wtx_pair : wallet.mapWallet) {
         const CWalletTx& wtx = wtx_pair.second;
         int depth{wallet.GetTxDepthInMainChain(wtx)};
@@ -79,12 +79,12 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         for (const CTxOut& txout : wtx.tx->vout) {
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && wallet.IsMine(address) && address_set.count(address)) {
-                amount += txout.nValue;
+                value += txout.GetReferenceValue();
             }
         }
     }
 
-    return amount;
+    return value;
 }
 
 
@@ -545,7 +545,8 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::STR, "address", /*optional=*/true, "the freicoin address"},
                             {RPCResult::Type::STR, "label", /*optional=*/true, "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
-                            {RPCResult::Type::STR_AMOUNT, "value", "the transaction output amount in " + CURRENCY_UNIT},
+                            {RPCResult::Type::STR_AMOUNT, "value", "the transaction output amount in " + CURRENCY_UNIT + " at the reference height of the transaction"},
+                            {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT + " as of the next block"},
                             {RPCResult::Type::NUM, "refheight", "the reference height of the transaction"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::NUM, "ancestorcount", /*optional=*/true, "The number of in-mempool ancestor transactions, including this one (if transaction is in the mempool)"},
@@ -720,7 +721,8 @@ RPCHelpMan listunspent()
         }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
-        entry.pushKV("value", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
+        entry.pushKV("value", ValueFromAmount(out.tx->tx->vout[out.i].GetReferenceValue()));
+        entry.pushKV("amount", ValueFromAmount(out.adjusted));
         entry.pushKV("refheight", (uint64_t)out.tx->tx->lock_height);
         entry.pushKV("confirmations", out.nDepth);
         if (!out.nDepth) {
