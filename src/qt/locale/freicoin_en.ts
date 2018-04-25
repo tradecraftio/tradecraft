@@ -3386,6 +3386,11 @@
         <source>Label</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location line="+0"/>
+        <source>Lock-Height</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <location line="+58"/>
         <source>Open for %n more block(s)</source>
@@ -3514,6 +3519,11 @@
         <source>Amount removed from or added to balance.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location line="+2"/>
+        <source>Reference block height for demurrage calculations.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TransactionView</name>
@@ -3586,6 +3596,11 @@
     <message>
         <location line="+6"/>
         <source>Min amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Lock height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
