@@ -358,10 +358,44 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     delete pblocktemplate;
     mempool.clear();
 
-    // As would a strictly increasing lock_height
+    // However a strictly increasing block height would run afoul of
+    // the rule that lock_heights not exceed the current block height
     ++tx2.lock_height;
     BOOST_CHECK(CheckFinalTx(tx));
-    BOOST_CHECK(CheckFinalTx(tx2));
+    BOOST_CHECK(!CheckFinalTx(tx2));
+    mempool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    mempool.addUnchecked(tx2.GetHash(), CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 2);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1].GetHash() == tx.GetHash());
+
+    {
+        // The block with one transaction would be valid, if mined
+        CValidationState state;
+        BOOST_CHECK_MESSAGE(TestBlockValidity(state, pblocktemplate->block, chainActive.Tip(), false, false), state.GetRejectReason());
+    }
+    {
+        // But force inclusion of the second transaction, and it fails
+        pblocktemplate->block.vtx.resize(3);
+        pblocktemplate->block.vtx[2] = tx2;
+        CValidationState state;
+        BOOST_CHECK(!TestBlockValidity(state, pblocktemplate->block, chainActive.Tip(), false, false));
+        BOOST_CHECK(state.GetRejectCode() == REJECT_INVALID);
+        BOOST_CHECK_MESSAGE(state.GetRejectReason() == "bad-txns-nonfinal", state.GetRejectReason());
+    }
+
+    delete pblocktemplate;
+    mempool.clear();
+
+    // Force-increment the current block height and the second
+    // transaction becomes valid again
+    chainActive.Tip()->nHeight++;
+    // FIXME: we should *actually* create a new block so the following test
+    //        works; CheckFinalTx() isn't fooled by monkey-patching nHeight.
+    //BOOST_CHECK(CheckFinalTx(tx));
+    //BOOST_CHECK(CheckFinalTx(tx2));
+    BOOST_CHECK(IsFinalTx(tx, chainActive.Tip()->nHeight + 1, GetTime()));
+    BOOST_CHECK(IsFinalTx(tx2, chainActive.Tip()->nHeight + 1, GetTime()));
     mempool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
     mempool.addUnchecked(tx2.GetHash(), CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
     BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));

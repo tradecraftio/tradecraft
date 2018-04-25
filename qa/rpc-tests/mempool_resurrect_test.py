@@ -81,9 +81,28 @@ class MempoolCoinbaseTest(FreicoinTestFramework):
         for node in self.nodes:
             node.invalidateblock(blocks[0])
 
+        # Use an address from the keypool so that next block generated
+        # will have a different coinbase transaction and therefore not
+        # be literally identical to the invalidated block, which would
+        # cause problems.
+        self.nodes[0].getnewaddress()
+
         # mempool should be empty, all txns confirmed
         assert_equal(set(self.nodes[0].getrawmempool()), set(spends1_id+spends2_id))
         for txid in spends1_id+spends2_id:
+            tx = self.nodes[0].gettransaction(txid)
+            assert(tx["confirmations"] == 0)
+
+        # Generate another block, spends1 should get mined. spends2
+        # has a non-final lock_height and so it remains in the
+        # mempool.
+        self.nodes[0].generate(1)
+        # mempool should contain just spends2, spends1 is confirmed
+        assert_equal(set(self.nodes[0].getrawmempool()), set(spends2_id))
+        for txid in spends1_id:
+            tx = self.nodes[0].gettransaction(txid)
+            assert(tx["confirmations"] > 0)
+        for txid in spends2_id:
             tx = self.nodes[0].gettransaction(txid)
             assert(tx["confirmations"] == 0)
 
