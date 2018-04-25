@@ -16,14 +16,14 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "wallet/test/wallet_test_fixture.h"
+
 #include "wallet/wallet.h"
 
 #include <set>
 #include <stdint.h>
 #include <utility>
 #include <vector>
-
-#include "wallet/test/wallet_test_fixture.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>

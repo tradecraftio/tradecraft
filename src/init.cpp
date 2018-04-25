@@ -424,7 +424,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-testsafemode", strprintf("Force safe mode (default: %u)", DEFAULT_TESTSAFEMODE));
         strUsage += HelpMessageOpt("-dropmessagestest=<n>", "Randomly drop 1 of every <n> network messages");
         strUsage += HelpMessageOpt("-fuzzmessagestest=<n>", "Randomly fuzz 1 of every <n> network messages");
-        strUsage += HelpMessageOpt("-bitcoinmode", "Enable bitcoin unit test compatibility mode, where certain Freicoin-specific consensus rules are ignored (-regtest only)");
+        strUsage += HelpMessageOpt("-bitcoinmode", "Enable bitcoin unit test compatibility mode, where certain Freicoin-specific consensus rules are ignored (-regtest only; default: off)");
         strUsage += HelpMessageOpt("-stopafterblockimport", strprintf("Stop running after importing blocks from disk (default: %u)", DEFAULT_STOPAFTERBLOCKIMPORT));
         strUsage += HelpMessageOpt("-limitancestorcount=<n>", strprintf("Do not accept transactions if number of in-mempool ancestors is <n> or more (default: %u)", DEFAULT_ANCESTOR_LIMIT));
         strUsage += HelpMessageOpt("-limitancestorsize=<n>", strprintf("Do not accept transactions whose size with all in-mempool ancestors exceeds <n> kilobytes (default: %u)", DEFAULT_ANCESTOR_SIZE_LIMIT));
@@ -912,6 +912,13 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
          * will get the correct value.
          */
         *const_cast<bool*>(&chainparams.GetConsensus().bitcoin_mode) = true;
+
+        /*
+         * Time-adjustment (demurrage) is controlled by its own global
+         * variable, since accessing the chain parameters would be too
+         * slow for such a frequently called calculation.
+         */
+        disable_time_adjust = true;
     }
 
     // ********************************************************* Step 3: parameter-to-internal-flags

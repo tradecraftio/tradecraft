@@ -407,7 +407,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "          {\n"
             "              \"txid\" : txid,        (string) input txid\n"
             "              \"vout\" : n,           (numeric) index of input\n"
-            "              \"amount\" : n,         (numeric) value of input\n"
+            "              \"amount\" : n,         (numeric) value at current refheight\n"
             "          }, ...\n"
             "      ],\n"
             "  }\n"
@@ -692,7 +692,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     CAmount finaltx_fee = pblocktemplate->has_block_final_tx
                            ? pblocktemplate->vTxFees.back()
                            : 0;
-    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue - finaltx_fee));
+    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].GetReferenceValue() - finaltx_fee));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
     result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
@@ -719,7 +719,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             if (!pcoinsTip->GetCoins(txin.prevout.hash, coins) || txin.prevout.n>=coins.vout.size() || coins.vout[txin.prevout.n].IsNull()) {
                 throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("UTXO record for block-final input '%s:%d' not found", txin.prevout.hash.GetHex(), txin.prevout.n));
             }
-            in.push_back(Pair("amount", (int64_t)coins.vout[txin.prevout.n].nValue));
+            in.push_back(Pair("amount", (int64_t)coins.GetPresentValueOfOutput(txin.prevout.n, pindexPrev->nHeight+1)));
             finaltx_prevout.push_back(in);
         }
         UniValue finaltx(UniValue::VOBJ);

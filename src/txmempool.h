@@ -129,6 +129,7 @@ public:
 
     const CTransaction& GetTx() const { return *this->tx; }
     std::shared_ptr<const CTransaction> GetSharedTx() const { return this->tx; }
+    int32_t GetReferenceHeight() const { return GetTx().lock_height; }
     /**
      * Fast calculation of lower bound of current priority as update
      * from entry priority. Only inputs that were originally in-chain will age.
@@ -243,11 +244,18 @@ public:
         bool fUseADescendants = UseDescendantScore(a);
         bool fUseBDescendants = UseDescendantScore(b);
 
-        double aModFee = fUseADescendants ? a.GetModFeesWithDescendants() : a.GetModifiedFee();
+        CAmount aModFee = fUseADescendants ? a.GetModFeesWithDescendants() : a.GetModifiedFee();
         double aSize = fUseADescendants ? a.GetSizeWithDescendants() : a.GetTxSize();
 
-        double bModFee = fUseBDescendants ? b.GetModFeesWithDescendants() : b.GetModifiedFee();
+        CAmount bModFee = fUseBDescendants ? b.GetModFeesWithDescendants() : b.GetModifiedFee();
         double bSize = fUseBDescendants ? b.GetSizeWithDescendants() : b.GetTxSize();
+
+        // Adjust to higher refheight
+        if (a.GetReferenceHeight() < b.GetReferenceHeight()) {
+            aModFee = GetTimeAdjustedValue(aModFee, b.GetReferenceHeight() - a.GetReferenceHeight());
+        } else {
+            bModFee = GetTimeAdjustedValue(bModFee, a.GetReferenceHeight() - b.GetReferenceHeight());
+        }
 
         // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
         double f1 = aModFee * bSize;
@@ -277,8 +285,15 @@ class CompareTxMemPoolEntryByScore
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
     {
-        double f1 = (double)a.GetModifiedFee() * b.GetTxSize();
-        double f2 = (double)b.GetModifiedFee() * a.GetTxSize();
+        CAmount aModFee = a.GetModifiedFee();
+        CAmount bModFee = b.GetModifiedFee();
+        if (a.GetReferenceHeight() < b.GetReferenceHeight()) {
+            aModFee = GetTimeAdjustedValue(aModFee, b.GetReferenceHeight() - a.GetReferenceHeight());
+        } else {
+            bModFee = GetTimeAdjustedValue(bModFee, a.GetReferenceHeight() - b.GetReferenceHeight());
+        }
+        double f1 = (double)aModFee * b.GetTxSize();
+        double f2 = (double)bModFee * a.GetTxSize();
         if (f1 == f2) {
             return b.GetTx().GetHash() < a.GetTx().GetHash();
         }

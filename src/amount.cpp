@@ -23,6 +23,48 @@
 
 const std::string CURRENCY_UNIT = "FRC";
 
+/** Only set to true when running the regtest chain with the
+ ** '-notimeadjust' option set, making TimeAdjustValueForward() and
+ ** TimeAdjustValueBackward() return their inputs unmodified. This
+ ** enables running bitcoin regression tests unmodified. */
+bool disable_time_adjust = DEFAULT_DISABLE_TIME_ADJUST;
+
+CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance)
+{
+    /* If we're in bitcoin unit test compatibility mode, return our
+     * input unmodified, with no demurrage adjustment. */
+    if (disable_time_adjust)
+        return initial_value;
+
+    /* TimeAdjustValueForward() will not return a value outside of the
+     * range [-MAX_MONEY, MAX_MONEY], no matter its inputs. */
+    CAmount value = std::max(-MAX_MONEY, initial_value);
+    value = std::min(initial_value, MAX_MONEY);
+    return value;
+}
+
+CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance)
+{
+    /* If we're in bitcoin unit test compatibility mode, return our
+     * input unmodified, with no demurrage adjustment. */
+    if (disable_time_adjust)
+        return initial_value;
+
+    /* TimeAdjustValueReverse() will not return a value outside of the
+     * range [-MAX_MONEY, MAX_MONEY], no matter its inputs. */
+    CAmount value = std::max(-MAX_MONEY, initial_value);
+    value = std::min(initial_value, MAX_MONEY);
+    return value;
+}
+
+CAmount GetTimeAdjustedValue(const CAmount& initial_value, int relative_depth)
+{
+    if (relative_depth < 0)
+        return TimeAdjustValueReverse(initial_value, std::abs(relative_depth));
+    else
+        return TimeAdjustValueForward(initial_value, relative_depth);
+}
+
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_)
 {
     assert(nBytes_ <= uint64_t(std::numeric_limits<int64_t>::max()));

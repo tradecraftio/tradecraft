@@ -16,11 +16,11 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "policy/policy.h"
 #include "txmempool.h"
 #include "util.h"
-
-#include "test/test_freicoin.h"
 
 #include <boost/test/unit_test.hpp>
 #include <list>

@@ -16,6 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "key.h"
 #include "keystore.h"
 #include "policy/policy.h"
@@ -25,7 +27,6 @@
 #include "script/sign.h"
 #include "script/ismine.h"
 #include "uint256.h"
-#include "test/test_freicoin.h"
 
 
 #include <boost/foreach.hpp>

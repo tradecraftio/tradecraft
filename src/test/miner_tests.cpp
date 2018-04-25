@@ -16,6 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
+#include "test/test_freicoin.h"
+
 #include "chainparams.h"
 #include "coins.h"
 #include "consensus/consensus.h"
@@ -29,8 +31,6 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-
-#include "test/test_freicoin.h"
 
 #include <boost/test/unit_test.hpp>
 

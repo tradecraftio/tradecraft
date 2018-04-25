@@ -56,6 +56,8 @@ struct Params {
     /** Bitcoin unit test compatibility mode */
     bool bitcoin_mode;
     int nSubsidyHalvingInterval;
+    /** Demurrage settings */
+    bool permit_disable_time_adjust; // is '-notimeadjust' allowed
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;

@@ -147,6 +147,13 @@ public:
         Cleanup();
     }
 
+    // calculate value of an output at the specified block height
+    CAmount GetPresentValueOfOutput(int n, uint32_t height) const
+    {
+        assert(n < (int)vout.size());
+        return vout[n].GetTimeAdjustedValue((int)height - refheight);
+    }
+
     void swap(CCoins &to) {
         std::swap(to.fCoinBase, fCoinBase);
         to.vout.swap(vout);

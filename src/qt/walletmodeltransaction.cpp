@@ -78,7 +78,7 @@ void WalletModelTransaction::reassignAmounts(int nChangePosRet)
                 if (out.amount() <= 0) continue;
                 if (i == nChangePosRet)
                     i++;
-                subtotal += walletTransaction->vout[i].nValue;
+                subtotal += walletTransaction->vout[i].GetReferenceValue();
                 i++;
             }
             rcp.amount = subtotal;
@@ -87,7 +87,7 @@ void WalletModelTransaction::reassignAmounts(int nChangePosRet)
         {
             if (i == nChangePosRet)
                 i++;
-            rcp.amount = walletTransaction->vout[i].nValue;
+            rcp.amount = walletTransaction->vout[i].GetReferenceValue();
             i++;
         }
     }

@@ -499,6 +499,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     coinControl->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
+    const int next_height = chainActive.Height() + 1;
+
     BOOST_FOREACH(const COutput& out, vOutputs) {
         // unselect already spent, very unlikely scenario, this could happen
         // when selected are spent elsewhere, like rpc or another computer
@@ -514,10 +516,11 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nQuantity++;
 
         // Amount
-        nAmount += out.tx->vout[out.i].nValue;
+        CAmount value_in = out.tx->GetPresentValueOfOutput(out.i, next_height);
+        nAmount += value_in;
 
         // Priority
-        dPriorityInputs += (double)out.tx->vout[out.i].nValue * (out.nDepth+1);
+        dPriorityInputs += (double)value_in * (out.nDepth+1);
 
         // Bytes
         CTxDestination address;
@@ -711,6 +714,8 @@ void CoinControlDialog::updateView()
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
     double mempoolEstimatePriority = mempool.estimateSmartPriority(nTxConfirmTarget);
 
+    const int next_height = chainActive.Height() + 1;
+
     std::map<QString, std::vector<COutput> > mapCoins;
     model->listCoins(mapCoins);
 
@@ -743,7 +748,8 @@ void CoinControlDialog::updateView()
         int nInputSum = 0;
         BOOST_FOREACH(const COutput& out, coins.second) {
             int nInputSize = 0;
-            nSum += out.tx->vout[out.i].nValue;
+            CAmount value_in = out.tx->GetPresentValueOfOutput(out.i, next_height);
+            nSum += value_in;
             nChildren++;
 
             CCoinControlWidgetItem *itemOutput;
@@ -785,8 +791,8 @@ void CoinControlDialog::updateView()
             }
 
             // amount
-            itemOutput->setText(COLUMN_AMOUNT, FreicoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
-            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.tx->vout[out.i].nValue)); // padding so that sorting works correctly
+            itemOutput->setText(COLUMN_AMOUNT, FreicoinUnits::format(nDisplayUnit, value_in));
+            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)value_in)); // padding so that sorting works correctly
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
@@ -797,10 +803,10 @@ void CoinControlDialog::updateView()
             itemOutput->setData(COLUMN_CONFIRMATIONS, Qt::UserRole, QVariant((qlonglong)out.nDepth));
 
             // priority
-            double dPriority = ((double)out.tx->vout[out.i].nValue  / (nInputSize + 78)) * (out.nDepth+1); // 78 = 2 * 34 + 10
+            double dPriority = ((double)value_in  / (nInputSize + 78)) * (out.nDepth+1); // 78 = 2 * 34 + 10
             itemOutput->setText(COLUMN_PRIORITY, CoinControlDialog::getPriorityLabel(dPriority, mempoolEstimatePriority));
             itemOutput->setData(COLUMN_PRIORITY, Qt::UserRole, QVariant((qlonglong)dPriority));
-            dPrioritySum += (double)out.tx->vout[out.i].nValue  * (out.nDepth+1);
+            dPrioritySum += (double)value_in  * (out.nDepth+1);
             nInputSum    += nInputSize;
 
             // transaction hash
