@@ -3659,7 +3659,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+238"/>
+        <location filename="../transactiontablemodel.cpp" line="+239"/>
         <source>Date</source>
         <translation type="unfinished">Date</translation>
     </message>
@@ -3671,6 +3671,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
     <message>
         <location line="+0"/>
         <source>Label</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lock-Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -3757,7 +3762,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+208"/>
+        <location line="+219"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3789,6 +3794,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Reference block height for demurrage calculations.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3866,7 +3876,13 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+15"/>
+        <location line="+292"/>
+        <source>Lock height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-240"/>
         <source>Abandon transaction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3888,6 +3904,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy lock height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3916,7 +3937,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+199"/>
+        <location line="+211"/>
         <source>Export Transaction History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3956,7 +3977,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>ID</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3981,7 +4002,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+171"/>
+        <location line="+176"/>
         <source>Range:</source>
         <translation type="unfinished"></translation>
     </message>
