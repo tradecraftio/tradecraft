@@ -76,9 +76,39 @@ class MempoolCoinbaseTest(FreicoinTestFramework):
         for node in self.nodes:
             node.invalidateblock(blocks[0])
 
-        # mempool should be empty, all txns confirmed
-        assert_equal(set(self.nodes[0].getrawmempool()), set(spends1_id+spends2_id))
-        for txid in spends1_id+spends2_id:
+        # Use an address from the keypool so that next block generated
+        # will have a different coinbase transaction and therefore not
+        # be literally identical to the invalidated block, which would
+        # cause problems.
+        self.nodes[0].getnewaddress()
+
+        # mempool should contain only spends1, since spends2 has a
+        # lock height higher than the next block
+        assert_equal(set(self.nodes[0].getrawmempool()), set(spends1_id))
+        for txid in spends1_id:
+            tx = self.nodes[0].gettransaction(txid)
+            assert(tx["confirmations"] == 0)
+
+        # Trying to add spends2 transactions to the mempool raises an
+        # error because they are non-final.
+        for tx in spends2_raw:
+            assert_raises(JSONRPCException, self.nodes[0].sendrawtransaction, [tx])
+
+        # Generate another block, spends1 should get mined.
+        self.nodes[0].generate(1)
+        # mempool should be empty
+        assert_equal(set(self.nodes[0].getrawmempool()), set())
+        for txid in spends1_id:
+            tx = self.nodes[0].gettransaction(txid)
+            assert(tx["confirmations"] > 0)
+
+        # Now we can add the spends2 transactions
+        spends2_id_2 = [ self.nodes[0].sendrawtransaction(tx) for tx in spends2_raw ]
+        assert_equal(spends2_id, spends2_id_2)
+
+        # mempool should contain only spends2, since spends1 have confirmed
+        assert_equal(set(self.nodes[0].getrawmempool()), set(spends2_id))
+        for txid in spends2_id:
             tx = self.nodes[0].gettransaction(txid)
             assert(tx["confirmations"] == 0)
 
