@@ -38,6 +38,7 @@ static void addCoin(CoinsResult& coins,
     tx.vout.resize(1);
     tx.vout[0].nValue = nValue;
     tx.vout[0].scriptPubKey = GetScriptForDestination(dest);
+    tx.lock_height = 1;
 
     const uint256& txid = tx.GetHash();
     LOCK(wallet.cs_wallet);
@@ -46,7 +47,8 @@ static void addCoin(CoinsResult& coins,
     CWalletTx& wtx = (*ret.first).second;
     const auto& txout = wtx.tx->vout.at(0);
     coins.Add(*Assert(OutputTypeFromDestination(dest)),
-              {COutPoint(wtx.GetHash(), 0),
+              {tx.lock_height,
+                   COutPoint(wtx.GetHash(), 0),
                    {txout, wtx.tx->lock_height},
                    depth,
                    CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr),

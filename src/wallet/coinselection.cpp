@@ -345,6 +345,19 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
  ******************************************************************************/
 
 void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestors, size_t descendants) {
+    // Ideally this shouldn't be an assert as we don't want to cause node
+    // crashes.  However inserting outputs with different calculated refheight
+    // into the same group can potentially result in either failed transactions
+    // or (worse) lost funds.
+    if (m_atheight || !m_outputs.empty()) {
+        assert(m_atheight == output->atheight);
+    }
+    // The reference height is inferred from the first output inserted, unless
+    // it is explicitly set before inserting any outputs into the group.
+    if (m_outputs.empty()) {
+        m_atheight = output->atheight;
+    }
+
     m_outputs.push_back(output);
     auto& coin = *m_outputs.back();
 
@@ -472,6 +485,8 @@ void SelectionResult::Clear()
 
 void SelectionResult::AddInput(const OutputGroup& group)
 {
+    // If reference heights don't match, money could be lost.
+    assert(m_selected_inputs.empty() || m_atheight == group.m_atheight);
     // As it can fail, combine inputs first
     InsertInputs(group.m_outputs);
     m_use_effective = !group.m_subtract_fee_outputs;
@@ -492,6 +507,8 @@ void SelectionResult::AddInputs(const std::set<std::shared_ptr<COutput>>& inputs
 
 void SelectionResult::Merge(const SelectionResult& other)
 {
+    // If reference heights don't match, money could be lost.
+    assert(m_selected_inputs.empty() || other.m_selected_inputs.empty() || m_atheight == other.m_atheight);
     // As it can fail, combine inputs first
     InsertInputs(other.m_selected_inputs);
 
@@ -526,7 +543,7 @@ bool SelectionResult::operator<(SelectionResult other) const
 
 std::string COutput::ToString() const
 {
-    return strprintf("COutput(%s, %d, %d) [%s]", outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
+    return strprintf("COutput(%d, %s, %d, %d) [%s]", atheight, outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
 }
 
 std::string GetAlgorithmName(const SelectionAlgorithm algo)
