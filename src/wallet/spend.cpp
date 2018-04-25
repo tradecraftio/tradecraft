@@ -266,7 +266,7 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
 
 // Fetch and validate the coin control selected inputs.
 // Coins could be internal (from the wallet) or external.
-util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
+util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, uint32_t atheight, const CCoinControl& coin_control,
                                             const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     PreSelectedInputs result;
@@ -307,7 +307,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
         }
 
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
-        COutput output(outpoint, spent_output, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
+        COutput output(atheight, outpoint, spent_output, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
         output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
         result.Insert(output, coin_selection_params.m_subtract_fee_outputs);
     }
@@ -315,6 +315,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
 }
 
 CoinsResult AvailableCoins(const CWallet& wallet,
+                           uint32_t atheight,
                            const CCoinControl* coinControl,
                            std::optional<CFeeRate> feerate,
                            const CoinFilterParams& params)
@@ -342,6 +343,12 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         int nDepth = wallet.GetTxDepthInMainChain(wtx);
         if (nDepth < 0)
+            continue;
+
+        // It is possible that we're called with a height value that is less
+        // than the current block height, so let's not include outputs which
+        // can't be used at the specified refheight.
+        if (wtx.tx->lock_height > atheight)
             continue;
 
         // We should not consider coins which aren't at least in our mempool
@@ -447,7 +454,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             }
 
             result.Add(GetOutputType(type, is_from_p2sh),
-                       COutput(outpoint, SpentOutput{output, wtx.tx->lock_height}, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate));
+                       COutput(atheight, outpoint, SpentOutput{output, wtx.tx->lock_height}, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate));
 
             outpoints.push_back(outpoint);
 
@@ -478,10 +485,10 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     return result;
 }
 
-CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl, CoinFilterParams params)
+CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, uint32_t atheight, const CCoinControl* coinControl, CoinFilterParams params)
 {
     params.only_spendable = false;
-    return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, params);
+    return AvailableCoins(wallet, atheight, coinControl, /*feerate=*/ std::nullopt, params);
 }
 
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint)
@@ -510,13 +517,18 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
 
     std::map<CTxDestination, std::vector<COutput>> result;
 
+    const auto chain_height = wallet.chain().getHeight();
+    if (!chain_height) {
+        throw std::runtime_error(std::string(__func__) + ": unable to determine current chain height");
+    }
+    const uint32_t next_height = static_cast<uint32_t>(chain_height.value()) + 1;
     CCoinControl coin_control;
     // Include watch-only for LegacyScriptPubKeyMan wallets without private keys
     coin_control.fAllowWatchOnly = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     CoinFilterParams coins_params;
     coins_params.only_spendable = false;
     coins_params.skip_locked = false;
-    for (const COutput& coin : AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coins_params).All()) {
+    for (const COutput& coin : AvailableCoins(wallet, next_height, &coin_control, /*feerate=*/std::nullopt, coins_params).All()) {
         CTxDestination address;
         if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable))) {
             if (!ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
@@ -1130,7 +1142,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Fetch manually selected coins
     PreSelectedInputs preset_inputs;
     if (coin_control.HasSelected()) {
-        auto res_fetch_inputs = FetchSelectedInputs(wallet, coin_control, coin_selection_params);
+        auto res_fetch_inputs = FetchSelectedInputs(wallet, txNew.lock_height, coin_control, coin_selection_params);
         if (!res_fetch_inputs) return util::Error{util::ErrorString(res_fetch_inputs)};
         preset_inputs = *res_fetch_inputs;
     }
@@ -1139,7 +1151,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // allowed (coins automatically selected by the wallet)
     CoinsResult available_coins;
     if (coin_control.m_allow_other_inputs) {
-        available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate);
+        available_coins = AvailableCoins(wallet, txNew.lock_height, &coin_control, coin_selection_params.m_effective_feerate);
     }
 
     // Choose coins to use

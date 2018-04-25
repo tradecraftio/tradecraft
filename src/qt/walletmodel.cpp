@@ -205,9 +205,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return DuplicateAddress;
     }
 
+    const int next_height = node().getNumBlocks() + 1;
+
     // If no coin was manually selected, use the cached balance
     // Future: can merge this call with 'createTransaction'.
-    CAmount nBalance = getAvailableBalance(&coinControl);
+    CAmount nBalance = getAvailableBalance(next_height, &coinControl);
 
     if(total > nBalance)
     {
@@ -623,7 +625,7 @@ uint256 WalletModel::getLastBlockProcessed() const
     return m_client_model ? m_client_model->getBestBlockHash() : uint256{};
 }
 
-CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
+CAmount WalletModel::getAvailableBalance(uint32_t atheight, const CCoinControl* control)
 {
     // No selected coins, return the cached balance
     if (!control || !control->HasSelected()) {
@@ -637,5 +639,5 @@ CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
         return available_balance;
     }
     // Fetch balance from the wallet, taking into account the selected coins
-    return wallet().getAvailableBalance(*control);
+    return wallet().getAvailableBalance(atheight, *control);
 }
