@@ -199,9 +199,9 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out.SetReferenceValue(MAX_MONEY);
                 if (prevOut.exists("value")) {
-                    newcoin.out.nValue = AmountFromValue(find_value(prevOut, "value"));
+                    newcoin.out.SetReferenceValue(AmountFromValue(find_value(prevOut, "value")));
                 }
                 newcoin.nHeight = 1;
                 newcoin.refheight = 0;
@@ -305,7 +305,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keysto
             continue;
         }
         const CScript& prevPubKey = coin->second.out.scriptPubKey;
-        const CAmount& value = coin->second.out.nValue;
+        const CAmount& value = coin->second.out.GetReferenceValue();
         const int64_t refheight = coin->second.refheight;
 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out, refheight);

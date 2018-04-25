@@ -1002,6 +1002,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
         ret.pushKV("bogosize", (int64_t)stats.nBogoSize);
         ret.pushKV("hash_serialized_2", stats.hashSerialized.GetHex());
         ret.pushKV("disk_size", stats.nDiskSize);
+        ret.pushKV("total_value", ValueFromAmount(stats.nTotalValue));
         ret.pushKV("total_amount", ValueFromAmount(stats.nTotalAmount));
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -1022,7 +1023,9 @@ UniValue gettxout(const JSONRPCRequest& request)
             "{\n"
             "  \"bestblock\":  \"hash\",    (string) The hash of the block at the tip of the chain\n"
             "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
-            "  \"value\" : x.xxx,           (numeric) The transaction value in " + CURRENCY_UNIT + "\n"
+            "  \"value\" : x.xxx,           (numeric) The transaction value in " + CURRENCY_UNIT + " at its reference height\n"
+            "  \"refheight\" : n            (numeric) The reference height\n"
+            "  \"amount\" : x.xxx,          (numeric) The transaction value in " + CURRENCY_UNIT + " as of the the next block\n"
             "  \"scriptPubKey\" : {         (json object)\n"
             "     \"asm\" : \"code\",       (string) \n"
             "     \"hex\" : \"hex\",        (string) \n"
@@ -1034,7 +1037,6 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     ]\n"
             "  },\n"
             "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
-            "  \"refheight\" : n           (numeric) The reference height\n"
             "}\n"
                 },
                 RPCExamples{
@@ -1080,12 +1082,13 @@ UniValue gettxout(const JSONRPCRequest& request)
     } else {
         ret.pushKV("confirmations", (int64_t)(pindex->nHeight - coin.nHeight + 1));
     }
-    ret.pushKV("value", ValueFromAmount(coin.out.nValue));
+    ret.pushKV("value", ValueFromAmount(coin.out.GetReferenceValue()));
+    ret.pushKV("refheight", (int64_t)coin.refheight);
+    ret.pushKV("amount", ValueFromAmount(coin.GetPresentValue(pindex->nHeight + 1)));
     UniValue o(UniValue::VOBJ);
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.pushKV("scriptPubKey", o);
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
-    ret.pushKV("refheight", (int64_t)coin.refheight);
 
     return ret;
 }
@@ -1826,7 +1829,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         CAmount tx_total_out = 0;
         if (loop_outputs) {
             for (const CTxOut& out : tx->vout) {
-                tx_total_out += out.nValue;
+                tx_total_out += out.GetReferenceValue();
                 utxo_size_inc += GetSerializeSize(out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
         }
@@ -1836,7 +1839,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         }
 
         inputs += tx->vin.size(); // Don't count coinbase's fake input
-        total_out += tx_total_out; // Don't count coinbase reward
+        total_out += GetTimeAdjustedValue(tx_total_out, pindex->nHeight - tx->lock_height); // Don't count coinbase reward
 
         int64_t tx_size = 0;
         if (do_calculate_size) {
@@ -1866,13 +1869,13 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             CAmount tx_total_in = 0;
             const auto& txundo = blockUndo.vtxundo.at(i - 1);
             for (const Coin& coin: txundo.vprevout) {
-                const CTxOut& prevoutput = coin.out;
-
-                tx_total_in += prevoutput.nValue;
-                utxo_size_inc -= GetSerializeSize(prevoutput, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                tx_total_in += coin.GetPresentValue(tx->lock_height);
+                utxo_size_inc -= GetSerializeSize(coin.out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
 
             CAmount txfee = tx_total_in - tx_total_out;
+            assert(MoneyRange(txfee));
+            txfee = GetTimeAdjustedValue(txfee, pindex->nHeight - tx->lock_height);
             assert(MoneyRange(txfee));
             if (do_medianfee) {
                 fee_array.push_back(txfee);
@@ -2077,9 +2080,11 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             "    \"value\": x.xxx,              (numeric) The total amount in " + CURRENCY_UNIT + " of the unspent output at its reference height\n"
             "    \"refheight\": n,              (numeric) Height of the unspent transaction output\n"
             "    \"height\": n,                 (numeric) Height of the unspent transaction output\n"
+            "    \"refheight\": n,              (numeric) Reference height of the unspent transaction output\n"
+            "    \"amount\": x.xxx,             (numeric) The total amount in " + CURRENCY_UNIT + " of the unspent output time-adjusted to the next block height\n"
             "   }\n"
             "   ,...],\n"
-            "  \"total_amount\": x.xxx,          (numeric) The total amount of all found unspent outputs in " + CURRENCY_UNIT + "\n"
+            "  \"total_amount\": x.xxx,          (numeric) The total amount of all found unspent outputs in " + CURRENCY_UNIT + " as of the next block\n"
             "]\n"
                 },
                 RPCExamples{""},
@@ -2158,16 +2163,19 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             const Coin& coin = it.second;
             const CTxOut& txo = coin.out;
             input_txos.push_back(txo);
-            total_in += txo.nValue;
+            CAmount tx_amount_in = coin.GetPresentValue(tip->nHeight + 1);
+            total_in += tx_amount_in;
 
             UniValue unspent(UniValue::VOBJ);
             unspent.pushKV("txid", outpoint.hash.GetHex());
             unspent.pushKV("vout", (int32_t)outpoint.n);
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey.begin(), txo.scriptPubKey.end()));
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
-            unspent.pushKV("value", ValueFromAmount(txo.nValue));
+            unspent.pushKV("value", ValueFromAmount(txo.GetReferenceValue()));
             unspent.pushKV("refheight", (int64_t)coin.refheight);
             unspent.pushKV("height", (int32_t)coin.nHeight);
+            unspent.pushKV("refheight", (int64_t)coin.refheight);
+            unspent.pushKV("amount", ValueFromAmount(tx_amount_in));
 
             unspents.push_back(unspent);
         }

@@ -13,13 +13,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/setup_common.h>
+
 #include <blockencodings.h>
 #include <consensus/merkle.h>
 #include <chainparams.h>
 #include <pow.h>
 #include <streams.h>
-
-#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 

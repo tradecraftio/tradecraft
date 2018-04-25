@@ -13,7 +13,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/setup_common.h>
+
 #include <consensus/tx_check.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <test/data/sighash.json.h>
 #include <hash.h>
@@ -21,7 +24,6 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/setup_common.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <version.h>

@@ -39,9 +39,10 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
     for (const auto& output : outputs) {
         ss << VARINT(output.first + 1);
         ss << output.second.out.scriptPubKey;
-        ss << VARINT(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+        ss << VARINT(output.second.out.GetReferenceValue(), VarIntMode::NONNEGATIVE_SIGNED);
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
+        stats.nTotalValue += output.second.out.GetReferenceValue();
+        stats.nTotalAmount += output.second.GetPresentValue(stats.nHeight + 1);
         stats.nBogoSize += 32 /* txid */ + 4 /* vout index */ + 4 /* height + coinbase */ + 8 /* amount */ +
                            2 /* scriptPubKey len */ + output.second.out.scriptPubKey.size() /* scriptPubKey */;
     }

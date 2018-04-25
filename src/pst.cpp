@@ -75,7 +75,7 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSTOutput&
     return true;
 }
 
-bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
+bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, uint32_t& refheight, int input_index) const
 {
     PSTInput input = inputs[input_index];
     uint32_t prevout_index = tx->vin[input_index].prevout.n;
@@ -84,8 +84,10 @@ bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) con
             return false;
         }
         utxo = input.non_witness_utxo->vout[prevout_index];
+        refheight = input.non_witness_utxo->lock_height;
     } else if (!input.witness_utxo.IsNull()) {
         utxo = input.witness_utxo;
+        refheight = input.witness_refheight;
     } else {
         return false;
     }
@@ -239,7 +241,7 @@ void UpdatePSTOutput(const SigningProvider& provider, PartiallySignedTransaction
     // Construct a would-be spend of this output, to update sigdata with.
     // Note that ProduceSignature is used to fill in metadata (not actual signatures),
     // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
-    MutableTransactionSignatureCreator creator(pst.tx.get_ptr(), /* index */ 0, out.nValue, pst.tx->lock_height, SIGHASH_ALL);
+    MutableTransactionSignatureCreator creator(pst.tx.get_ptr(), /* index */ 0, out.GetReferenceValue(), pst.tx->lock_height, SIGHASH_ALL);
     ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
 
     // Put redeem_script, witness_script, key paths, into PSTOutput.
@@ -297,7 +299,7 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
     if (use_dummy) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, refheight, sighash);
+        MutableTransactionSignatureCreator creator(&tx, index, utxo.GetReferenceValue(), refheight, sighash);
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
     // Verify that a witness signature was produced in case one was required.

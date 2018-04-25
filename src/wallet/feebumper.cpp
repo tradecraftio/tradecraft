@@ -256,16 +256,16 @@ Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, co
     assert(nDelta > 0);
     mtx = CMutableTransaction{*wtx.tx};
     CTxOut* poutput = &(mtx.vout[nOutput]);
-    if (poutput->nValue < nDelta) {
+    if (poutput->GetReferenceValue() < nDelta) {
         errors.push_back("Change output is too small to bump the fee");
         return Result::WALLET_ERROR;
     }
 
     // If the output would become dust, discard it (converting the dust to fee)
-    poutput->nValue -= nDelta;
-    if (poutput->nValue <= GetDustThreshold(*poutput, GetDiscardRate(*wallet))) {
+    poutput->AdjustReferenceValue(-nDelta);
+    if (poutput->GetReferenceValue() <= GetDustThreshold(*poutput, GetDiscardRate(*wallet))) {
         wallet->WalletLogPrintf("Bumping fee and discarding dust output\n");
-        new_fee += poutput->nValue;
+        new_fee += poutput->GetReferenceValue();
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }
 
@@ -298,7 +298,7 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
     std::vector<CRecipient> recipients;
     for (const auto& output : wtx.tx->vout) {
         if (!wallet->IsChange(output)) {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            CRecipient recipient = {output.scriptPubKey, output.GetReferenceValue(), false};
             recipients.push_back(recipient);
         } else {
             CTxDestination change_dest;

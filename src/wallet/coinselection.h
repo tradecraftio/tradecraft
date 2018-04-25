@@ -27,7 +27,7 @@ static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 
 class CInputCoin {
 public:
-    CInputCoin(const CTransactionRef& tx, unsigned int i)
+    CInputCoin(uint32_t atheightIn, CAmount adjustedIn, const CTransactionRef& tx, unsigned int i)
     {
         if (!tx)
             throw std::invalid_argument("tx should not be null");
@@ -37,10 +37,15 @@ public:
         outpoint = COutPoint(tx->GetHash(), i);
         txout = tx->vout[i];
         refheight = tx->lock_height;
-        effective_value = txout.nValue;
+        atheight = atheightIn;
+        if (adjustedIn < 0) {
+            adjustedIn = tx->GetPresentValueOfOutput(i, atheight);
+        }
+        adjusted = adjustedIn;
+        effective_value = adjustedIn;
     }
 
-    CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(tx, i)
+    CInputCoin(uint32_t atheightIn, CAmount adjustedIn, const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(atheightIn, adjustedIn, tx, i)
     {
         m_input_bytes = input_bytes;
     }
@@ -48,6 +53,8 @@ public:
     COutPoint outpoint;
     CTxOut txout;
     uint32_t refheight;
+    uint32_t atheight;
+    CAmount adjusted;
     CAmount effective_value;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */

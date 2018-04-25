@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/setup_common.h>
+
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/consensus.h>
@@ -28,8 +30,6 @@
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
-
-#include <test/setup_common.h>
 
 #include <memory>
 

@@ -685,7 +685,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
                 sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, coin.refheight));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.GetReferenceValue(), 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
@@ -717,7 +717,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
-                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
+                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent at the reference height of the transaction being spent"},
                                     {"refheight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The lockheight of the transaction output being spent"},
                                 },
                                 },
@@ -978,8 +978,9 @@ UniValue decodepst(const JSONRPCRequest& request)
             "        ...\n"
             "      },\n"
             "      \"witness_utxo\" : {            (json object, optional) Transaction output for witness UTXOs\n"
-            "        \"value\" : x.xxx,            (numeric) The value in " + CURRENCY_UNIT + " of the input at the source transaction's reference height\n"
+            "        \"value\" : x.xxx,            (numeric) The value in " + CURRENCY_UNIT + " at the reference height of the input\n"
             "        \"refheight\" : n,            (numeric) The reference height of the input (the lockheight of the transaction being spent)\n"
+            "        \"amount\" : x.xxx,           (numeric) The value in " + CURRENCY_UNIT + " as input into the PST (at the PST's refheight)\n"
             "        \"scriptPubKey\" : {          (json object)\n"
             "          \"asm\" : \"asm\",            (string) The asm\n"
             "          \"hex\" : \"hex\",            (string) The hex\n"
@@ -1093,10 +1094,12 @@ UniValue decodepst(const JSONRPCRequest& request)
 
             UniValue out(UniValue::VOBJ);
 
-            out.pushKV("value", ValueFromAmount(txout.nValue));
+            out.pushKV("value", ValueFromAmount(txout.GetReferenceValue()));
             out.pushKV("refheight", (int64_t)input.witness_refheight);
-            if (MoneyRange(txout.nValue) && MoneyRange(total_in + txout.nValue)) {
-                total_in += txout.nValue;
+            CAmount adjusted = txout.GetTimeAdjustedValue(pstx.tx->lock_height - input.witness_refheight);
+            out.pushKV("amount", (int64_t)adjusted);
+            if (MoneyRange(txout.GetReferenceValue()) && MoneyRange(adjusted) && MoneyRange(total_in + adjusted)) {
+                total_in += adjusted;
             } else {
                 // Hack to just not show fee later
                 have_all_utxos = false;
@@ -1110,9 +1113,9 @@ UniValue decodepst(const JSONRPCRequest& request)
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
             in.pushKV("non_witness_utxo", non_wit);
-            CAmount utxo_val = input.non_witness_utxo->vout[pstx.tx->vin[i].prevout.n].nValue;
-            if (MoneyRange(utxo_val) && MoneyRange(total_in + utxo_val)) {
-                total_in += utxo_val;
+            CAmount adjusted = input.non_witness_utxo->GetPresentValueOfOutput(pstx.tx->vin[i].prevout.n, pstx.tx->lock_height);
+            if (MoneyRange(input.non_witness_utxo->vout[pstx.tx->vin[i].prevout.n].GetReferenceValue()) && MoneyRange(adjusted) && MoneyRange(total_in + adjusted)) {
+                total_in += adjusted;
             } else {
                 // Hack to just not show fee later
                 have_all_utxos = false;
@@ -1232,8 +1235,9 @@ UniValue decodepst(const JSONRPCRequest& request)
         outputs.push_back(out);
 
         // Fee calculation
-        if (MoneyRange(pstx.tx->vout[i].nValue) && MoneyRange(output_value + pstx.tx->vout[i].nValue)) {
-            output_value += pstx.tx->vout[i].nValue;
+        CAmount txout_value = pstx.tx->vout[i].GetReferenceValue();
+        if (MoneyRange(txout_value) && MoneyRange(output_value + txout_value)) {
+            output_value += txout_value;
         } else {
             // Hack to just not show fee later
             have_all_utxos = false;

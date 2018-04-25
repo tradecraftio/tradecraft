@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/setup_common.h>
+
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
@@ -22,7 +24,6 @@
 #include <script/standard.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 

@@ -631,7 +631,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
         for (const CTxOut& txout : wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
                 if (wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
-                    nAmount += txout.nValue;
+                    nAmount += txout.GetReferenceValue();
     }
 
     return  ValueFromAmount(nAmount);
@@ -697,7 +697,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwallet, address) && setAddress.count(address)) {
                 if (wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
-                    nAmount += txout.nValue;
+                    nAmount += txout.GetReferenceValue();
             }
         }
     }
@@ -1188,7 +1188,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
                 continue;
 
             tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
+            item.nAmount += txout.GetReferenceValue();
             item.nConf = std::min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)
@@ -1393,11 +1393,11 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  */
 static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
-    CAmount nFee;
+    CAmount nFee, demurrage;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, filter_ismine);
+    wtx.GetAmounts(listReceived, listSent, nFee, demurrage, filter_ismine);
 
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
@@ -1418,6 +1418,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
+            entry.pushKV("demurrage", ValueFromAmount(-demurrage));
             if (fLong)
                 WalletTxToJSON(pwallet->chain(), locked_chain, wtx, entry);
             entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
@@ -1830,12 +1831,16 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nCredit = wtx.GetCredit(*locked_chain, filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount value_in = 0, demurrage = 0;
+    pwallet->GetInputSplit(wtx, value_in, demurrage);
+    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - value_in : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
-    if (wtx.IsFromMe(filter))
+    if (wtx.IsFromMe(filter)) {
         entry.pushKV("fee", ValueFromAmount(nFee));
+        entry.pushKV("demurrage", ValueFromAmount(demurrage));
+    }
 
     WalletTxToJSON(pwallet->chain(), *locked_chain, wtx, entry);
 
@@ -3078,7 +3083,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
         }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
-        entry.pushKV("value", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
+        entry.pushKV("value", ValueFromAmount(out.tx->tx->vout[out.i].GetReferenceValue()));
+        entry.pushKV("amount", ValueFromAmount(out.adjusted));
         entry.pushKV("refheight", (uint64_t)out.tx->tx->lock_height);
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);

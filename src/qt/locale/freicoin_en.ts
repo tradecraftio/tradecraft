@@ -496,8 +496,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
-        <location line="+54"/>
+        <location line="+47"/>
+        <location line="+55"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>

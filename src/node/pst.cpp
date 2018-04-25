@@ -42,12 +42,14 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
 
         // Check for a UTXO
         CTxOut utxo;
-        if (pstx.GetInputUTXO(utxo, i)) {
-            if (!MoneyRange(utxo.nValue) || !MoneyRange(in_amt + utxo.nValue)) {
+        uint32_t refheight = 0;
+        if (pstx.GetInputUTXO(utxo, refheight, i)) {
+            CAmount nInput = utxo.GetTimeAdjustedValue(pstx.tx->lock_height - refheight);
+            if (!MoneyRange(utxo.GetReferenceValue()) || !MoneyRange(nInput) || !MoneyRange(in_amt + nInput)) {
                 result.SetInvalid(strprintf("PST is not valid. Input %u has invalid value", i));
                 return result;
             }
-            in_amt += utxo.nValue;
+            in_amt += nInput;
             input_analysis.has_utxo = true;
         } else {
             if (input.non_witness_utxo && pstx.tx->vin[i].prevout.n >= input.non_witness_utxo->vout.size()) {
@@ -105,10 +107,10 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
         // Get the output amount
         CAmount out_amt = std::accumulate(pstx.tx->vout.begin(), pstx.tx->vout.end(), CAmount(0),
             [](CAmount a, const CTxOut& b) {
-                if (!MoneyRange(a) || !MoneyRange(b.nValue) || !MoneyRange(a + b.nValue)) {
+                if (!MoneyRange(a) || !MoneyRange(b.GetReferenceValue()) || !MoneyRange(a + b.GetReferenceValue())) {
                     return CAmount(-1);
                 }
-                return a += b.nValue;
+                return a += b.GetReferenceValue();
             }
         );
         if (!MoneyRange(out_amt)) {
@@ -130,7 +132,7 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
             PSTInput& input = pstx.inputs[i];
             Coin newcoin;
 
-            if (!SignPSTInput(DUMMY_SIGNING_PROVIDER, pstx, i, 1, nullptr, true) || !pstx.GetInputUTXO(newcoin.out, i)) {
+            if (!SignPSTInput(DUMMY_SIGNING_PROVIDER, pstx, i, 1, nullptr, true) || !pstx.GetInputUTXO(newcoin.out, newcoin.refheight, i)) {
                 success = false;
                 break;
             } else {

@@ -13,6 +13,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <wallet/test/wallet_test_fixture.h>
+#include <test/setup_common.h>
+
 #include <wallet/wallet.h>
 
 #include <memory>
@@ -23,10 +26,8 @@
 #include <interfaces/chain.h>
 #include <policy/policy.h>
 #include <rpc/server.h>
-#include <test/setup_common.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
-#include <wallet/test/wallet_test_fixture.h>
 
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
