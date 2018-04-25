@@ -486,7 +486,7 @@ public:
     }
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
-                    std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
+                    std::list<COutputEntry>& listSent, CAmount& nFee, CAmount& demurrage, std::string& strSentAccount, const isminefilter& filter) const;
 
     bool IsFromMe(const isminefilter& filter) const
     {
@@ -516,6 +516,8 @@ public:
     const CWalletTx *tx;
     int i;
     int nDepth;
+    uint32_t atheight;
+    CAmount adjusted;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
     int nInputBytes;
@@ -536,7 +538,7 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
+ COutput(uint32_t atheightIn, CAmount adjustedIn, const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false) : atheight(atheightIn), adjusted(adjustedIn)
     {
         tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
         // If known and signable by the given wallet, compute nInputBytes
@@ -550,7 +552,7 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(tx->tx, i, nInputBytes);
+        return CInputCoin(atheight, adjusted, tx->tx, i, nInputBytes);
     }
 };
 
@@ -1057,6 +1059,7 @@ public:
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
     void DeleteLabel(const std::string& label);
 
+    bool GetInputSplit(const CWalletTx& wtx, CAmount& value_in, CAmount& demurrage) const;
     isminetype IsMine(const CTxIn& txin) const;
     /**
      * Returns amount of debit if the input matches the

@@ -27,12 +27,12 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<Ou
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
-    tx.vout[nInput].nValue = nValue;
+    tx.vout[nInput].SetReferenceValue(nValue);
     tx.lock_height = 1;
     CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
 
     int nAge = 6 * 24;
-    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(1, nValue, wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     groups.emplace_back(output.GetInputCoin(), 6, false, 0, 0);
 }
 
@@ -77,9 +77,9 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>
 {
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
-    tx.vout[nInput].nValue = nValue;
+    tx.vout[nInput].SetReferenceValue(nValue);
     std::unique_ptr<CWalletTx> wtx(new CWalletTx(&testWallet, MakeTransactionRef(std::move(tx))));
-    set.emplace_back(COutput(wtx.get(), nInput, 0, true, true, true).GetInputCoin(), 0, true, 0, 0);
+    set.emplace_back(COutput(1, nValue, wtx.get(), nInput, 0, true, true, true).GetInputCoin(), 0, true, 0, 0);
     wtxn.emplace_back(std::move(wtx));
 }
 // Copied from src/wallet/test/coinselector_tests.cpp

@@ -858,9 +858,10 @@ struct CCoinsStats
     uint64_t nBogoSize;
     uint256 hashSerialized;
     uint64_t nDiskSize;
+    CAmount nTotalValue;
     CAmount nTotalAmount;
 
-    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nBogoSize(0), nDiskSize(0), nTotalAmount(0) {}
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nBogoSize(0), nDiskSize(0), nTotalValue(0), nTotalAmount(0) {}
 };
 
 static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
@@ -872,9 +873,10 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
     for (const auto& output : outputs) {
         ss << VARINT(output.first + 1);
         ss << output.second.out.scriptPubKey;
-        ss << VARINT(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+        ss << VARINT(output.second.out.GetReferenceValue(), VarIntMode::NONNEGATIVE_SIGNED);
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
+        stats.nTotalValue += output.second.out.GetReferenceValue();
+        stats.nTotalAmount += output.second.GetPresentValue(stats.nHeight + 1);
         stats.nBogoSize += 32 /* txid */ + 4 /* vout index */ + 4 /* height + coinbase */ + 8 /* amount */ +
                            2 /* scriptPubKey len */ + output.second.out.scriptPubKey.size() /* scriptPubKey */;
     }
@@ -1004,6 +1006,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
         ret.pushKV("bogosize", (int64_t)stats.nBogoSize);
         ret.pushKV("hash_serialized_2", stats.hashSerialized.GetHex());
         ret.pushKV("disk_size", stats.nDiskSize);
+        ret.pushKV("total_value", ValueFromAmount(stats.nTotalValue));
         ret.pushKV("total_amount", ValueFromAmount(stats.nTotalAmount));
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -1082,12 +1085,13 @@ UniValue gettxout(const JSONRPCRequest& request)
     } else {
         ret.pushKV("confirmations", (int64_t)(pindex->nHeight - coin.nHeight + 1));
     }
-    ret.pushKV("value", ValueFromAmount(coin.out.nValue));
+    ret.pushKV("value", ValueFromAmount(coin.out.GetReferenceValue()));
     UniValue o(UniValue::VOBJ);
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.pushKV("scriptPubKey", o);
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
     ret.pushKV("refheight", (int64_t)coin.refheight);
+    ret.pushKV("amount", ValueFromAmount(coin.GetPresentValue(pindex->nHeight + 1)));
 
     return ret;
 }
@@ -1826,7 +1830,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         CAmount tx_total_out = 0;
         if (loop_outputs) {
             for (const CTxOut& out : tx->vout) {
-                tx_total_out += out.nValue;
+                tx_total_out += out.GetReferenceValue();
                 utxo_size_inc += GetSerializeSize(out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
         }
@@ -1836,7 +1840,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         }
 
         inputs += tx->vin.size(); // Don't count coinbase's fake input
-        total_out += tx_total_out; // Don't count coinbase reward
+        total_out += GetTimeAdjustedValue(tx_total_out, pindex->nHeight - tx->lock_height); // Don't count coinbase reward
 
         int64_t tx_size = 0;
         if (do_calculate_size) {
@@ -1875,13 +1879,13 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                     throw JSONRPCError(RPC_INTERNAL_ERROR, std::string("Unexpected internal error (tx index seems corrupt)"));
                 }
 
-                CTxOut prevoutput = tx_in->vout[in.prevout.n];
-
-                tx_total_in += prevoutput.nValue;
-                utxo_size_inc -= GetSerializeSize(prevoutput, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                tx_total_in += tx_in->GetPresentValueOfOutput(in.prevout.n, tx->lock_height);
+                utxo_size_inc -= GetSerializeSize(tx_in->vout[in.prevout.n], SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
 
             CAmount txfee = tx_total_in - tx_total_out;
+            assert(MoneyRange(txfee));
+            txfee = GetTimeAdjustedValue(txfee, pindex->nHeight - tx->lock_height);
             assert(MoneyRange(txfee));
             if (do_medianfee) {
                 fee_array.push_back(txfee);
@@ -2111,6 +2115,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
         }
         std::set<CScript> needles;
         CAmount total_in = 0;
+        int next_height = chainActive.Height() + 1;
 
         // loop through the scan objects
         for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
@@ -2169,14 +2174,17 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             const Coin& coin = it.second;
             const CTxOut& txo = coin.out;
             input_txos.push_back(txo);
-            total_in += txo.nValue;
+            CAmount tx_amount_in = coin.GetPresentValue(next_height);
+            total_in += tx_amount_in;
 
             UniValue unspent(UniValue::VOBJ);
             unspent.pushKV("txid", outpoint.hash.GetHex());
             unspent.pushKV("vout", (int32_t)outpoint.n);
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey.begin(), txo.scriptPubKey.end()));
-            unspent.pushKV("amount", ValueFromAmount(txo.nValue));
+            unspent.pushKV("value", ValueFromAmount(txo.GetReferenceValue()));
             unspent.pushKV("height", (int32_t)coin.nHeight);
+            unspent.pushKV("refheight", (int64_t)coin.refheight);
+            unspent.pushKV("amount", ValueFromAmount(tx_amount_in));
 
             unspents.push_back(unspent);
         }

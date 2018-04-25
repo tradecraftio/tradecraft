@@ -785,7 +785,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
                 sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, coin.refheight));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.GetReferenceValue(), 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
@@ -850,9 +850,9 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out.SetReferenceValue(MAX_MONEY);
                 if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
+                    newcoin.out.SetReferenceValue(AmountFromValue(find_value(prevOut, "amount")));
                 }
                 newcoin.nHeight = 1;
                 newcoin.refheight = 0;
@@ -900,7 +900,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.GetReferenceValue();
         const int64_t refheight = coin.refheight;
 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin.out, refheight);
@@ -1450,8 +1450,10 @@ UniValue decodepst(const JSONRPCRequest& request)
 
             UniValue out(UniValue::VOBJ);
 
-            out.pushKV("amount", ValueFromAmount(txout.nValue));
-            total_in += txout.nValue;
+            out.pushKV("value", ValueFromAmount(txout.GetReferenceValue()));
+            CAmount adjusted = txout.GetTimeAdjustedValue(pstx.tx->lock_height - input.witness_refheight);
+            out.pushKV("amount", ValueFromAmount(adjusted));
+            total_in += adjusted;
 
             UniValue o(UniValue::VOBJ);
             ScriptToUniv(txout.scriptPubKey, o, true);
@@ -1461,7 +1463,7 @@ UniValue decodepst(const JSONRPCRequest& request)
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
             in.pushKV("non_witness_utxo", non_wit);
-            total_in += input.non_witness_utxo->vout[pstx.tx->vin[i].prevout.n].nValue;
+            total_in += input.non_witness_utxo->GetPresentValueOfOutput(pstx.tx->vin[i].prevout.n, pstx.tx->lock_height);
         } else {
             have_all_utxos = false;
         }
@@ -1584,7 +1586,7 @@ UniValue decodepst(const JSONRPCRequest& request)
         outputs.push_back(out);
 
         // Fee calculation
-        output_value += pstx.tx->vout[i].nValue;
+        output_value += pstx.tx->vout[i].GetReferenceValue();
     }
     result.pushKV("outputs", outputs);
     if (have_all_utxos) {

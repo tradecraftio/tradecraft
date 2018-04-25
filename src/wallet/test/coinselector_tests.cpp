@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <wallet/test/wallet_test_fixture.h>
 #include <wallet/wallet.h>
 #include <wallet/coinselection.h>
 #include <wallet/coincontrol.h>
@@ -20,7 +21,6 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <test/test_freicoin.h>
-#include <wallet/test/wallet_test_fixture.h>
 
 #include <boost/test/unit_test.hpp>
 #include <random>
@@ -53,7 +53,7 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>&
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.lock_height = 1;
-    set.emplace_back(MakeTransactionRef(tx), nInput);
+    set.emplace_back(1, nValue, MakeTransactionRef(tx), nInput);
 }
 
 static void add_coin(const CAmount& nValue, int nInput, CoinSet& set)
@@ -62,7 +62,7 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set)
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.lock_height = 1;
-    set.emplace(MakeTransactionRef(tx), nInput);
+    set.emplace(1, nValue, MakeTransactionRef(tx), nInput);
 }
 
 static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0)
@@ -85,7 +85,7 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
         wtx->fDebitCached = true;
         wtx->nDebitCached = 1;
     }
-    COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(1, nValue, wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
     testWallet.AddToWallet(*wtx.get());
     wtxn.emplace_back(std::move(wtx));

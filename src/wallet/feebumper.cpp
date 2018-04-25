@@ -192,16 +192,16 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     assert(nDelta > 0);
     mtx = CMutableTransaction{*wtx.tx};
     CTxOut* poutput = &(mtx.vout[nOutput]);
-    if (poutput->nValue < nDelta) {
+    if (poutput->GetReferenceValue() < nDelta) {
         errors.push_back("Change output is too small to bump the fee");
         return Result::WALLET_ERROR;
     }
 
     // If the output would become dust, discard it (converting the dust to fee)
-    poutput->nValue -= nDelta;
-    if (poutput->nValue <= GetDustThreshold(*poutput, GetDiscardRate(*wallet, ::feeEstimator))) {
+    poutput->AdjustReferenceValue(-nDelta);
+    if (poutput->GetReferenceValue() <= GetDustThreshold(*poutput, GetDiscardRate(*wallet, ::feeEstimator))) {
         wallet->WalletLogPrintf("Bumping fee and discarding dust output\n");
-        new_fee += poutput->nValue;
+        new_fee += poutput->GetReferenceValue();
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }
 
