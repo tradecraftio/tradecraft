@@ -2292,6 +2292,8 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
             // Clearly invalid input, fail
             if (pcoin->tx->vout.size() <= outpoint.n)
                 return false;
+            if (pcoin->tx->lock_height > height)
+                return false;
             nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
             setPresetCoins.insert(make_pair(pcoin, outpoint.n));
         } else
