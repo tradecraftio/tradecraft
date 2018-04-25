@@ -28,6 +28,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<Ou
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
+    tx.lock_height = 1;
     CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
 
     int nAge = 6 * 24;
@@ -54,7 +55,7 @@ static void CoinSelection(benchmark::State& state)
     }
     addCoin(3 * COIN, wallet, groups);
 
-    const CoinEligibilityFilter filter_standard(1, 6, 0);
+    const CoinEligibilityFilter filter_standard(1 /* refheight */, 1, 6, 0);
     const CoinSelectionParams coin_selection_params(true, 34, 148, CFeeRate(0), 0);
     while (state.KeepRunning()) {
         std::set<CInputCoin> setCoinsRet;

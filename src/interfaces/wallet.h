@@ -144,6 +144,7 @@ public:
 
     //! Create transaction.
     virtual std::unique_ptr<PendingWalletTx> createTransaction(const std::vector<CRecipient>& recipients,
+        int64_t refeight,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,

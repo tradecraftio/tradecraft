@@ -309,6 +309,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     m_outputs.push_back(output);
     m_from_me &= from_me;
     m_value += output.effective_value;
+    m_refheight = std::max(m_refheight, output.refheight);
     m_depth = std::min(m_depth, depth);
     // ancestors here express the number of ancestors the new coin will end up having, which is
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs
@@ -332,6 +333,7 @@ std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output)
 bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
 {
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
+        && m_refheight <= eligibility_filter.refheight
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
 }
