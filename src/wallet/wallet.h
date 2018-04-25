@@ -595,13 +595,13 @@ public:
     /** Pass this transaction to node for mempool insertion and relay to peers if flag set to true */
     bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, bool relay) const;
 
-    bool DummySignTx(CMutableTransaction &txNew, const std::set<CTxOut> &txouts, const CCoinControl* coin_control = nullptr) const
+    bool DummySignTx(CMutableTransaction &txNew, const std::set<SpentOutput> &spent_outputs, const CCoinControl* coin_control = nullptr) const
     {
-        std::vector<CTxOut> v_txouts(txouts.size());
-        std::copy(txouts.begin(), txouts.end(), v_txouts.begin());
-        return DummySignTx(txNew, v_txouts, coin_control);
+        std::vector<SpentOutput> v_spent_outputs(spent_outputs.size());
+        std::copy(spent_outputs.begin(), spent_outputs.end(), v_spent_outputs.begin());
+        return DummySignTx(txNew, v_spent_outputs, coin_control);
     }
-    bool DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts, const CCoinControl* coin_control = nullptr) const;
+    bool DummySignTx(CMutableTransaction &txNew, const std::vector<SpentOutput> &spent_outputs, const CCoinControl* coin_control = nullptr) const;
 
     bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -651,6 +651,8 @@ public:
     std::optional<int64_t> GetOldestKeyPoolTime() const;
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    bool GetInputSplit(const CWalletTx& wtx, CAmount& value_in, CAmount& demurrage) const;
 
     /**
      * Marks all outputs in each one of the destinations dirty, so their cache is
@@ -947,7 +949,7 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 //! Remove wallet name from persistent configuration so it will not be loaded on startup.
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool use_max_sig);
+bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const SpentOutput &spent_output, bool use_max_sig);
 
 bool FillInputToWeight(CTxIn& txin, int64_t target_weight);
 } // namespace wallet

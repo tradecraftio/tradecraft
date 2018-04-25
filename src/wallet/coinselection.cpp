@@ -327,7 +327,7 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
 void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, bool positive_only) {
     // Compute the effective value first
     const CAmount coin_fee = output.m_input_bytes < 0 ? 0 : m_effective_feerate.GetFee(output.m_input_bytes);
-    const CAmount ev = output.txout.nValue - coin_fee;
+    const CAmount ev = output.adjusted - coin_fee;
 
     // Filter for positive only here before adding the coin
     if (positive_only && ev <= 0) return;
@@ -358,7 +358,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     effective_value += coin.effective_value;
 
     m_from_me &= from_me;
-    m_value += output.txout.nValue;
+    m_value += output.adjusted;
     m_depth = std::min(m_depth, depth);
     // ancestors here express the number of ancestors the new coin will end up having, which is
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs
@@ -392,7 +392,7 @@ CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cos
     CAmount selected_effective_value = 0;
     for (const CInputCoin& coin : inputs) {
         waste += coin.m_fee - coin.m_long_term_fee;
-        selected_effective_value += use_effective_value ? coin.effective_value : coin.txout.nValue;
+        selected_effective_value += use_effective_value ? coin.effective_value : coin.adjusted;
     }
 
     if (change_cost) {
@@ -421,7 +421,7 @@ CAmount SelectionResult::GetWaste() const
 
 CAmount SelectionResult::GetSelectedValue() const
 {
-    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.txout.nValue; });
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.adjusted; });
 }
 
 void SelectionResult::Clear()

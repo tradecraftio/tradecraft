@@ -13,12 +13,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/util/setup_common.h>
+
 #include <policy/policy.h>
 #include <txmempool.h>
 #include <util/system.h>
 #include <util/time.h>
-
-#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 #include <vector>

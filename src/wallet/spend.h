@@ -36,6 +36,9 @@ public:
     /** Reference height of this output. */
     uint32_t atheight;
 
+    /** Adjusted value of this output at specified refheight. */
+    CAmount adjusted;
+
     /**
      * Depth in block chain.
      * If > 0: the tx is on chain and has this many confirmations.
@@ -62,9 +65,9 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWallet& wallet, uint32_t atheightIn, const CWalletTx& wtx, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
+    COutput(const CWallet& wallet, uint32_t atheightIn, CAmount adjustedIn, const CWalletTx& wtx, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
     {
-        tx = &wtx; i = iIn; atheight = atheightIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
+        tx = &wtx; i = iIn; atheight = atheightIn; adjusted = adjustedIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
         // If known and signable by the given wallet, compute nInputBytes
         // Failure will keep this value -1
         if (fSpendable) {
@@ -76,13 +79,13 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(atheight, tx->tx, i, nInputBytes);
+        return CInputCoin(atheight, adjusted, tx->tx, i, nInputBytes);
     }
 };
 
 //Get the marginal bytes of spending the specified output
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* pwallet, bool use_max_sig = false);
+int CalculateMaximumSignedInputSize(const SpentOutput& spent_output, const CWallet* pwallet, bool use_max_sig = false);
+int CalculateMaximumSignedInputSize(const SpentOutput& spent_output, const SigningProvider* pwallet, bool use_max_sig = false);
 
 struct TxSize {
     int64_t vsize{-1};

@@ -13,11 +13,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/util/setup_common.h>
+
 #include <consensus/amount.h>
 #include <node/context.h>
 #include <primitives/transaction.h>
 #include <random.h>
-#include <test/util/setup_common.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
@@ -53,7 +54,7 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>&
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     tx.lock_height = 1;
-    set.emplace_back(tx.lock_height, MakeTransactionRef(tx), nInput);
+    set.emplace_back(tx.lock_height, nValue, MakeTransactionRef(tx), nInput);
 }
 
 static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
@@ -63,7 +64,7 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     tx.lock_height = 1;
-    CInputCoin coin(tx.lock_height, MakeTransactionRef(tx), nInput);
+    CInputCoin coin(tx.lock_height, nValue, MakeTransactionRef(tx), nInput);
     OutputGroup group;
     group.Insert(coin, 1, false, 0, 0, true);
     result.AddInput(group);
@@ -75,7 +76,7 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fe
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    CInputCoin coin(tx.lock_height, MakeTransactionRef(tx), nInput);
+    CInputCoin coin(tx.lock_height, nValue, MakeTransactionRef(tx), nInput);
     coin.effective_value = nValue - fee;
     coin.m_fee = fee;
     coin.m_long_term_fee = long_term_fee;
@@ -112,7 +113,7 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
         wtx.m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
         wtx.m_is_cache_empty = false;
     }
-    COutput output(wallet, wtx.tx->lock_height, wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wallet, wtx.tx->lock_height, nValue, wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     coins.push_back(output);
 }
 
@@ -123,10 +124,10 @@ static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
     std::vector<CAmount> a_amts;
     std::vector<CAmount> b_amts;
     for (const auto& coin : a.GetInputSet()) {
-        a_amts.push_back(coin.txout.nValue);
+        a_amts.push_back(coin.adjusted);
     }
     for (const auto& coin : b.GetInputSet()) {
-        b_amts.push_back(coin.txout.nValue);
+        b_amts.push_back(coin.adjusted);
     }
     std::sort(a_amts.begin(), a_amts.end());
     std::sort(b_amts.begin(), b_amts.end());

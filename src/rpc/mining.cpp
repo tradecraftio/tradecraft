@@ -621,7 +621,7 @@ static RPCHelpMan getblocktemplate()
                         {RPCResult::Type::OBJ, "", "", {
                             {RPCResult::Type::STR_HEX, "txid", "input txid encoded in little-endian hexadecimal"},
                             {RPCResult::Type::NUM, "vout", "index to the output vector of the previous transaction"},
-                            {RPCResult::Type::NUM, "amount", "value of input"},
+                            {RPCResult::Type::NUM, "amount", "value of input at current refheight"},
                         }},
                     }},
                 }},
@@ -963,7 +963,7 @@ static RPCHelpMan getblocktemplate()
             if (coin.IsSpent()) {
                 throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("UTXO record for block-final input '%s:%d' not found", txin.prevout.hash.GetHex(), txin.prevout.n));
             }
-            in.pushKV("amount", (int64_t)coin.out.nValue);
+            in.pushKV("amount", (int64_t)coin.GetPresentValue(pindexPrev->nHeight + 1));
             finaltx_prevout.push_back(in);
         }
         UniValue finaltx(UniValue::VOBJ);

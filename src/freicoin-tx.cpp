@@ -612,9 +612,9 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out.SetReferenceValue(MAX_MONEY);
                 if (prevOut.exists("value")) {
-                    newcoin.out.nValue = AmountFromValue(prevOut["value"]);
+                    newcoin.out.SetReferenceValue(AmountFromValue(prevOut["value"]));
                 }
                 newcoin.refheight = 0;
                 if (prevOut.exists("refheight")) {
@@ -648,7 +648,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             continue;
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
+        const CAmount& amount = coin.out.GetReferenceValue();
         const int64_t refheight = coin.refheight;
 
         SignatureData sigdata = DataFromTransaction(mergedTx, i, coin.out, refheight);

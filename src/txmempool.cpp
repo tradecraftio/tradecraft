@@ -161,7 +161,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendan
     for (const CTxMemPoolEntry& descendant : descendants) {
         if (!setExclude.count(descendant.GetTx().GetHash())) {
             modifySize += descendant.GetTxSize();
-            modifyFee += descendant.GetModifiedFee();
+            modifyFee += GetTimeAdjustedValue(descendant.GetModifiedFee(), updateIt->GetReferenceHeight() - descendant.GetReferenceHeight());
             modifyCount++;
             cachedDescendants[updateIt].insert(mapTx.iterator_to(descendant));
             // Update ancestor state for each descendant
@@ -954,7 +954,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             std::string dummy;
             CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
             for (txiter ancestorIt : setAncestors) {
-                mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
+                mapTx.modify(ancestorIt, update_descendant_state(0, GetTimeAdjustedValue(nFeeDelta, ancestorIt->GetReferenceHeight() - it->GetReferenceHeight()), 0));
             }
             // Now update all descendants' modified fees with ancestors
             setEntries setDescendants;

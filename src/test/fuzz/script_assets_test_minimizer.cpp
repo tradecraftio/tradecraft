@@ -172,7 +172,7 @@ void Test(const std::string& str)
         tx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["success"]["witness"]);
         PrecomputedTransactionData txdata;
         txdata.Init(tx, std::vector<SpentOutput>(prevouts));
-        MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].out.nValue, prevouts[idx].refheight, txdata, MissingDataBehavior::ASSERT_FAIL);
+        MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].out.GetReferenceValue(), prevouts[idx].refheight, txdata, MissingDataBehavior::ASSERT_FAIL);
         for (const auto flags : ALL_FLAGS) {
             // "final": true tests are valid for all flags. Others are only valid with flags that are
             // a subset of test_flags.
@@ -187,7 +187,7 @@ void Test(const std::string& str)
         tx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["failure"]["witness"]);
         PrecomputedTransactionData txdata;
         txdata.Init(tx, std::vector<SpentOutput>(prevouts));
-        MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].out.nValue, prevouts[idx].refheight, txdata, MissingDataBehavior::ASSERT_FAIL);
+        MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].out.GetReferenceValue(), prevouts[idx].refheight, txdata, MissingDataBehavior::ASSERT_FAIL);
         for (const auto flags : ALL_FLAGS) {
             // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.
             if ((flags & test_flags) == test_flags) {

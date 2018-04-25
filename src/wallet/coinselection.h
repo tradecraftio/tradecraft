@@ -20,6 +20,7 @@
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>
+#include <util/check.h>
 
 #include <optional>
 
@@ -32,7 +33,7 @@ static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 /** A UTXO under consideration for use in funding a new transaction. */
 class CInputCoin {
 public:
-    CInputCoin(uint32_t atheight_in, const CTransactionRef& tx, unsigned int i)
+    CInputCoin(uint32_t atheight_in, CAmount adjusted_in, const CTransactionRef& tx, unsigned int i)
     {
         if (!tx)
             throw std::invalid_argument("tx should not be null");
@@ -40,34 +41,42 @@ public:
             throw std::out_of_range("The output index is out of range");
 
         outpoint = COutPoint(tx->GetHash(), i);
-        txout = tx->vout[i];
-        refheight = tx->lock_height;
+        spent_output = SpentOutput(tx->vout[i], tx->lock_height);
         atheight = atheight_in;
-        effective_value = txout.nValue;
+        if (adjusted_in < 0) {
+            adjusted_in = tx->GetPresentValueOfOutput(i, atheight_in);
+        }
+        adjusted = adjusted_in;
+        effective_value = adjusted_in;
     }
 
-    CInputCoin(uint32_t atheight_in, const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(atheight_in, tx, i)
+    CInputCoin(uint32_t atheight_in, CAmount adjusted_in, const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(atheight_in, adjusted_in, tx, i)
     {
         m_input_bytes = input_bytes;
     }
 
-    CInputCoin(uint32_t atheight_in, const COutPoint& outpoint_in, const CTxOut& txout_in)
+    CInputCoin(uint32_t atheight_in, CAmount adjusted_in, const COutPoint& outpoint_in, const SpentOutput& spent_output_in)
     {
         outpoint = outpoint_in;
-        txout = txout_in;
+        spent_output = spent_output_in;
         atheight = atheight_in;
-        effective_value = txout.nValue;
+        if (adjusted_in < 0) {
+            CHECK_NONFATAL(atheight_in >= spent_output_in.refheight);
+            adjusted_in = spent_output_in.GetPresentValue(atheight_in);
+        }
+        adjusted = adjusted_in;
+        effective_value = adjusted_in;
     }
 
-    CInputCoin(uint32_t atheight_in, const COutPoint& outpoint_in, const CTxOut& txout_in, int input_bytes) : CInputCoin(atheight_in, outpoint_in, txout_in)
+    CInputCoin(uint32_t atheight_in, CAmount adjusted_in, const COutPoint& outpoint_in, const SpentOutput& spent_output_in, int input_bytes) : CInputCoin(atheight_in, adjusted_in, outpoint_in, spent_output_in)
     {
         m_input_bytes = input_bytes;
     }
 
     COutPoint outpoint;
-    CTxOut txout;
-    uint32_t refheight;
+    SpentOutput spent_output;
     uint32_t atheight;
+    CAmount adjusted;
     CAmount effective_value;
     CAmount m_fee{0};
     CAmount m_long_term_fee{0};

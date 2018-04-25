@@ -51,7 +51,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         BOOST_CHECK(!CreateTransaction(*wallet, {recipient}, 0, tx, fee, change_pos, error, coin_control, fee_calc));
         BOOST_CHECK(CreateTransaction(*wallet, {recipient}, 2, tx, fee, change_pos, error, coin_control, fee_calc));
         BOOST_CHECK_EQUAL(tx->vout.size(), 1);
-        BOOST_CHECK_EQUAL(tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - fee);
+        BOOST_CHECK_EQUAL(tx->vout[0].GetReferenceValue(), recipient.nAmount + leftover_input_amount - fee);
         BOOST_CHECK_GT(fee, 0);
         return fee;
     };
