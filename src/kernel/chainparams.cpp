@@ -86,7 +86,11 @@ public:
         consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 0; // never
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
+        consensus.equilibrium_height = 161280; // three years
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.script_flag_exceptions.emplace( // BIP16 exception
             uint256S("0x00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22"), SCRIPT_VERIFY_NONE);
         consensus.script_flag_exceptions.emplace( // Taproot exception
@@ -212,7 +216,11 @@ public:
         consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 0; // never
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
+        consensus.equilibrium_height = 161280; // three years
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.script_flag_exceptions.emplace( // BIP16 exception
             uint256S("0x00000000dd30457c001f4095d208cc1296b0eed002427aa599874af7a432b105"), SCRIPT_VERIFY_NONE);
         consensus.BIP34Height = 21111;
@@ -357,7 +365,11 @@ public:
         consensus.bitcoin_mode = false;
         consensus.signet_blocks = true;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 0; // never
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
+        consensus.equilibrium_height = 161280; // three years
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256{};
         consensus.BIP66Height = 1;
@@ -440,6 +452,10 @@ public:
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 150;
+        consensus.perpetual_subsidy = 5000000000; // 50.000,000,00fc
+        consensus.equilibrium_height = 0; // disable
+        consensus.equilibrium_monetary_base = 0;
+        consensus.initial_excess_subsidy = 0;
         consensus.BIP34Height = 1; // Always active unless overridden
         consensus.BIP34Hash = uint256();
         consensus.BIP66Height = 1;  // Always active unless overridden
