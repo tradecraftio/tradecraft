@@ -31,11 +31,12 @@ static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
     int maxHalvings = 64;
     CAmount nInitialSubsidy = 50 * COIN;
 
-    CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
+    CAmount nPreviousSubsidy = nInitialSubsidy;
+    for (int nHalvings = 1; nHalvings < maxHalvings; nHalvings++) {
         int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
+        CAmount nSubsidy = GetBlockSubsidy(nHeight-1, consensusParams);
+        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy);
+        nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
         BOOST_CHECK(nSubsidy <= nInitialSubsidy);
         BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
         nPreviousSubsidy = nSubsidy;
@@ -45,14 +46,14 @@ static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 
 static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
 {
-    Consensus::Params consensusParams;
+    Consensus::Params consensusParams(Params(CBaseChainParams::REGTEST).GetConsensus());
     consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
     TestBlockSubsidyHalvings(consensusParams);
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
-    TestBlockSubsidyHalvings(Params(CBaseChainParams::MAIN).GetConsensus()); // As in main
+    TestBlockSubsidyHalvings(Params(CBaseChainParams::REGTEST).GetConsensus());
     TestBlockSubsidyHalvings(150); // As in regtest
     TestBlockSubsidyHalvings(1000); // Just another interval
 }
@@ -61,13 +62,35 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
     const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
     CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
+    for (int nHeight = 0; nHeight < consensusParams.equilibrium_height; ++nHeight) {
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= 50 * COIN);
-        nSum += nSubsidy * 1000;
-        BOOST_CHECK(MoneyRange(nSum));
+        BOOST_CHECK(nSubsidy <= 75056846172LL);
+        BOOST_CHECK(nSubsidy >=  9536743164LL);
+        nSum += GetTimeAdjustedValue(nSubsidy, consensusParams.equilibrium_height-nHeight);
+        BOOST_CHECK(nSum <= 9999990463180220LL);
     }
-    BOOST_CHECK_EQUAL(nSum, 2099999997690000ULL);
+    BOOST_CHECK(nSum == 9999990463180220LL);
+}
+
+BOOST_AUTO_TEST_CASE(subsidy_limit_test_bitcoin_mode)
+{
+    const Consensus::Params& consensusParams = Params(CBaseChainParams::REGTEST).GetConsensus();
+    bool old_disable_time_adjust = disable_time_adjust;
+    disable_time_adjust = true;
+    try {
+        CAmount nSum = 0;
+        for (int nHeight = 1; nHeight < 10000; ++nHeight) {
+            CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
+            BOOST_CHECK(nSubsidy == ((int64_t)5000000000LL >> std::min(nHeight/150, 63)));
+            nSum += GetTimeAdjustedValue(nSubsidy, 10000-nHeight);
+            BOOST_CHECK(nSum <= 1494999998350LL);
+        }
+        BOOST_CHECK(nSum == 1494999998350LL);
+    } catch (...) {
+        disable_time_adjust = old_disable_time_adjust;
+        throw;
+    }
+    disable_time_adjust = old_disable_time_adjust;
 }
 
 bool ReturnFalse() { return false; }
