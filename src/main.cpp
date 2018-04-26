@@ -1257,15 +1257,19 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex)
 
 CAmount GetBlockValue(int nHeight, const CAmount& nFees)
 {
-    CAmount nSubsidy = 50 * COIN;
-    int halvings = nHeight / Params().SubsidyHalvingInterval();
+    CAmount nSubsidy = 0;
 
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return nFees;
+    // Initial distribution until equilibrium is reached
+    if (nHeight < EQUILIBRIUM_HEIGHT) {
+        nSubsidy += EQUILIBRIUM_BASE * 4;
+        nSubsidy += 5 * (EQUILIBRIUM_HEIGHT-nHeight) * INITIAL_REWARD;
+        nSubsidy /= 5 * EQUILIBRIUM_HEIGHT;
+        ++nSubsidy; // Integer truncation can cause an error of up to 1 kria
+                    // for the above calculation + residual fees.
+    }
 
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+    // Perpetual demurrage-compensating subsidy
+    nSubsidy += EQUILIBRIUM_BASE / DEMURRAGE_RATE;
 
     return nSubsidy + nFees;
 }
