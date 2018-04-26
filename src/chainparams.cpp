@@ -87,7 +87,11 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.bitcoin_mode = false;
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 0; // never
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
+        consensus.equilibrium_height = 161280; // three years
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.BIP16Height = 173805; // 00000000000000ce80a7e057163a4db1d5ad7b20fb6f598c9597b9665c8fb0d4 - April 1, 2012
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
@@ -203,7 +207,11 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.bitcoin_mode = false;
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 0; // never
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
+        consensus.equilibrium_height = 161280; // three years
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.BIP16Height = 514; // 00000000040b4e986385315e14bee30ad876d8b47f748025b26683116d21aa65
         consensus.BIP34Height = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
@@ -300,6 +308,10 @@ public:
         strNetworkID = "regtest";
         consensus.bitcoin_mode = false;
         consensus.nSubsidyHalvingInterval = 150;
+        consensus.perpetual_subsidy = 5000000000; // 50.000,000,00fc
+        consensus.equilibrium_height = 1; // disable
+        consensus.equilibrium_monetary_base = 0;
+        consensus.initial_excess_subsidy = 0;
         consensus.BIP16Height = 0; // always enforce P2SH BIP16 on regtest
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
         consensus.BIP34Hash = uint256();
