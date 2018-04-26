@@ -51,7 +51,10 @@ struct BIP9Deployment {
  */
 struct Params {
     uint256 hashGenesisBlock;
-    int nSubsidyHalvingInterval;
+    int per_block_demurrage_factor;
+    int64_t equilibrium_monetary_base;
+    int equilibrium_height;
+    int64_t initial_block_reward;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
