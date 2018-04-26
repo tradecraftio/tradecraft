@@ -45,7 +45,10 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.equilibrium_height = 161280; // three years
+        consensus.initial_block_reward = 15916928404LL; // 1519.1692,8404fc
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
@@ -213,7 +216,6 @@ class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
-        consensus.nSubsidyHalvingInterval = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
