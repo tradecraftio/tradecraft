@@ -21,3 +21,16 @@ process can take anywhere from a few hours to a day or more.
 See the bitcoin wiki at:
   https://en.bitcoin.it/wiki/Main_Page
 for more help and information.
+
+License
+-------
+
+Copyright (c) 2009-2016 Bitcoin Core Developers
+Copyright (c) 2011-2019 Freicoin Developers
+
+Distributed under the conjunctive terms of BOTH the GNU Affero General
+Public License v3.0 and the MIT software license, see the accompanying
+file COPYING for details.  This product includes software developed by
+the OpenSSL Project for use in the OpenSSL Toolkit
+(https://www.openssl.org/).  This product includes cryptographic
+software written by Eric Young (eay@cryptsoft.com).

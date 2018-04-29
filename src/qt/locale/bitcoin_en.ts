@@ -3899,11 +3899,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location line="+5"/>
         <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
         <translation type="unfinished"></translation>
@@ -4324,6 +4319,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="-19"/>
+        <source>Freicoin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation type="unfinished"></translation>
@@ -4341,6 +4341,11 @@
     <message>
         <location line="+6"/>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Distributed under the conjunctive terms of BOTH the GNU Affero General Purpose License v3.0 (&lt;https://www.gnu.org/licenses/agpl-3.0.en.html&gt;) and the MIT software license (&lt;https://www.opensource.org/licenses/mit-license.php&gt;).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -11,6 +11,7 @@
 static const char UNUSED *bitcoin_strings[] = {
 QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin Core"),
 QT_TRANSLATE_NOOP("bitcoin-core", "The %s developers"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Freicoin"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "(1 = keep tx meta data e.g. account owner and payment request information, 2 "
 "= drop tx meta data)"),
@@ -55,8 +56,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Discover own IP addresses (default: 1 when listening and no -externalip or -"
 "proxy)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Distributed under the MIT software license, see the accompanying file "
-"COPYING or <http://www.opensource.org/licenses/mit-license.php>."),
+"Distributed under the conjunctive terms of BOTH the GNU Affero General "
+"Purpose License v3.0 (<https://www.gnu.org/licenses/agpl-3.0.en.html>) and "
+"the MIT software license (<https://www.opensource.org/licenses/mit-license."
+"php>)."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Do not keep transactions in the mempool longer than <n> hours (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
