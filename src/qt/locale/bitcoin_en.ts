@@ -3629,7 +3629,7 @@
     </message>
     <message>
         <location line="+6"/>
-        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <source>Distributed under the conjunctive terms of BOTH the GNU Affero General Purpose License v3.0 (&lt;https://www.gnu.org/licenses/agpl-3.0.en.html&gt;) and the MIT software license (&lt;https://www.opensource.org/licenses/mit-license.php&gt;).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4055,6 +4055,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <location line="+3"/>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copyright (C) 2011-%i The Freicoin Developers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
