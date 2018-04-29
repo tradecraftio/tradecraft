@@ -26,7 +26,7 @@
  * Copyright year (2009-this)
  * Todo: update this when changing our copyright comments in the source
  */
-#define COPYRIGHT_YEAR 2016
+#define COPYRIGHT_YEAR 2019
 
 #endif //HAVE_CONFIG_H
 
@@ -38,7 +38,8 @@
 #define DO_STRINGIZE(X) #X
 
 //! Copyright string used in Windows .rc files
-#define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcoin Core Developers"
+#define COPYRIGHT_STR "2009-2016 The Bitcoin Core Developers, " \
+                      "2011-" STRINGIZE(COPYRIGHT_YEAR) " The Freicoin Developers"
 
 /**
  * bitcoind-res.rc includes this file, but it cannot cope with real c++ code.

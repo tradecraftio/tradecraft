@@ -3118,7 +3118,12 @@
     </message>
     <message>
         <location line="+2"/>
-        <source>The Bitcoin Core developers</source>
+        <source>The Bitcoin Core Developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The Freicoin Developers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3864,11 +3869,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location line="+13"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
@@ -4204,6 +4204,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Distributed under the conjunctive terms of BOTH the GNU Affero General Purpose License v3.0 (&lt;https://www.gnu.org/licenses/agpl-3.0.en.html&gt;) and the MIT software license (&lt;https://www.opensource.org/licenses/mit-license.php&gt;).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+11"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation type="unfinished"></translation>
@@ -4311,6 +4316,11 @@
     <message>
         <location line="+3"/>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copyright (C) 2011-%i The Freicoin Developers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
