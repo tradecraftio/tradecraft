@@ -505,7 +505,7 @@ std::string LicenseInfo()
            "\n" +
            "\n" +
            _("This is experimental software.") + "\n" +
-           _("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.") + "\n" +
+           _("Distributed under the conjunctive terms of BOTH the GNU Affero General Purpose License v3.0 (<https://www.gnu.org/licenses/agpl-3.0.en.html>) and the MIT software license (<https://www.opensource.org/licenses/mit-license.php>).") + "\n" +
            "\n" +
            _("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.") +
            "\n";

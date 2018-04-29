@@ -3779,7 +3779,7 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+311"/>
+        <location filename="../bitcoinstrings.cpp" line="+314"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
@@ -3859,7 +3859,7 @@
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
-        <location line="-222"/>
+        <location line="-225"/>
         <source>Bitcoin Core</source>
         <translation type="unfinished">Bitcoin Core</translation>
     </message>
@@ -3869,7 +3869,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3909,12 +3909,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+13"/>
         <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4359,12 +4354,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-343"/>
+        <location line="-345"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="-19"/>
+        <source>Freicoin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4384,7 +4384,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+3"/>
+        <source>Distributed under the conjunctive terms of BOTH the GNU Affero General Purpose License v3.0 (&lt;https://www.gnu.org/licenses/agpl-3.0.en.html&gt;) and the MIT software license (&lt;https://www.opensource.org/licenses/mit-license.php&gt;).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4669,7 +4674,7 @@
         <translation>Loading addresses...</translation>
     </message>
     <message>
-        <location line="-284"/>
+        <location line="-286"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4684,7 +4689,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+47"/>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
