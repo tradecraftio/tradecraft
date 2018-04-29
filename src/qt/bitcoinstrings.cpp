@@ -11,6 +11,7 @@
 static const char UNUSED *bitcoin_strings[] = {
 QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin Core"),
 QT_TRANSLATE_NOOP("bitcoin-core", "The %s developers"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Freicoin"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
@@ -35,8 +36,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "keypool. Please use -upgradewallet=169900 or -upgradewallet with no version "
 "specified."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Distributed under the MIT software license, see the accompanying file %s or "
-"%s"),
+"Distributed under the GNU Affero General Purpose License v3.0, see the "
+"accompanying file %s or %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error loading %s: You can't enable HD on an already existing non-HD wallet"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""

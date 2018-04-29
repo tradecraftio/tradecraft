@@ -4061,12 +4061,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+37"/>
-        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+28"/>
+        <location filename="../bitcoinstrings.cpp" line="+66"/>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4096,13 +4091,18 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-196"/>
+        <location line="-197"/>
         <source>Bitcoin Core</source>
         <translation type="unfinished">Bitcoin Core</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The %s developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Freicoin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4126,7 +4126,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+7"/>
+        <source>Distributed under the GNU Affero General Purpose License v3.0, see the accompanying file %s or %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation type="unfinished"></translation>
     </message>
