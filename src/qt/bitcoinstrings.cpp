@@ -25,8 +25,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot upgrade a non HD split wallet without upgrading to support pre split "
 "keypool. Please use version 169900 or no version specified."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Distributed under the MIT software license, see the accompanying file %s or "
-"%s"),
+"Distributed under the GNU Affero General Purpose License v3.0, see the "
+"accompanying file %s or %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
