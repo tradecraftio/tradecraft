@@ -89,4 +89,4 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 License
 ---------------------
-Distributed under the [MIT software license](/COPYING).
+Distributed under the [GNU Affero General Purpose License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html).
