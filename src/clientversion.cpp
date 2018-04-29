@@ -108,6 +108,6 @@ std::string LicenseInfo()
            "\n" +
            "\n" +
            _("This is experimental software.").translated + "\n" +
-           strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s").translated, "COPYING", "<https://opensource.org/licenses/MIT>") +
+           strprintf(_("Distributed under the GNU Affero General Purpose License v3.0, see the accompanying file %s or %s").translated, "COPYING", "<https://www.gnu.org/licenses/agpl-3.0.en.html>") +
            "\n";
 }
