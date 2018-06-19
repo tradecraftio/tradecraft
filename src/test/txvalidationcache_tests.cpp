@@ -207,6 +207,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     spend_tx.vout[2].scriptPubKey = CScript() << OP_CHECKLOCKTIMEVERIFY << OP_DROP << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     spend_tx.vout[3].nValue = 11*CENT;
     spend_tx.vout[3].scriptPubKey = CScript() << OP_CHECKSEQUENCEVERIFY << OP_DROP << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    spend_tx.lock_height = m_coinbase_txns[0]->lock_height;
 
     // Sign, with a non-DER signature
     {
@@ -263,6 +264,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         invalid_under_p2sh_tx.vout.resize(1);
         invalid_under_p2sh_tx.vout[0].nValue = 11*CENT;
         invalid_under_p2sh_tx.vout[0].scriptPubKey = p2pk_scriptPubKey;
+        invalid_under_p2sh_tx.lock_height = spend_tx.lock_height;
         std::vector<unsigned char> vchSig2(p2pk_scriptPubKey.begin(), p2pk_scriptPubKey.end());
         invalid_under_p2sh_tx.vin[0].scriptSig << vchSig2;
 
@@ -281,6 +283,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         invalid_with_cltv_tx.vout.resize(1);
         invalid_with_cltv_tx.vout[0].nValue = 11*CENT;
         invalid_with_cltv_tx.vout[0].scriptPubKey = p2pk_scriptPubKey;
+        invalid_with_cltv_tx.lock_height = spend_tx.lock_height;
 
         // Sign
         std::vector<unsigned char> vchSig;
@@ -309,6 +312,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         invalid_with_csv_tx.vout.resize(1);
         invalid_with_csv_tx.vout[0].nValue = 11*CENT;
         invalid_with_csv_tx.vout[0].scriptPubKey = p2pk_scriptPubKey;
+        invalid_with_csv_tx.lock_height = spend_tx.lock_height;
 
         // Sign
         std::vector<unsigned char> vchSig;
@@ -339,6 +343,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         valid_with_witness_tx.vout.resize(1);
         valid_with_witness_tx.vout[0].nValue = 11*CENT;
         valid_with_witness_tx.vout[0].scriptPubKey = p2pk_scriptPubKey;
+        valid_with_witness_tx.lock_height = spend_tx.lock_height;
 
         // Sign
         SignatureData sigdata;
@@ -366,6 +371,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         tx.vout.resize(1);
         tx.vout[0].nValue = 22*CENT;
         tx.vout[0].scriptPubKey = p2pk_scriptPubKey;
+        tx.lock_height = spend_tx.lock_height;
 
         // Sign
         for (int i = 0; i < 2; ++i) {
