@@ -37,14 +37,16 @@ public:
     bool fCoinBase;       // if the outpoint was the last unspent: whether it belonged to a coinbase
     unsigned int nHeight; // if the outpoint was the last unspent: its height
     int nVersion;         // if the outpoint was the last unspent: its version
+    int refheight;        // if the outpoint was the last unspent: its refheight
 
-    CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
-    CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+    CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0), refheight(0) {}
+    CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0, int refheightIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn), refheight(refheightIn) { }
 
     unsigned int GetSerializeSize(int nType, int nVersion) const {
         return ::GetSerializeSize(VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion) +
                (nHeight > 0 ? ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion) : 0) +
-               ::GetSerializeSize(CTxOutCompressor(REF(txout)), nType, nVersion);
+               ::GetSerializeSize(CTxOutCompressor(REF(txout)), nType, nVersion) +
+               (nHeight > 0 ? ::GetSerializeSize(VARINT(refheight), nType, nVersion) : 0);
     }
 
     template<typename Stream>
@@ -53,6 +55,8 @@ public:
         if (nHeight > 0)
             ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
         ::Serialize(s, CTxOutCompressor(REF(txout)), nType, nVersion);
+        if (nHeight > 0)
+            ::Serialize(s, VARINT(refheight), nType, nVersion);
     }
 
     template<typename Stream>
@@ -64,6 +68,8 @@ public:
         if (nHeight > 0)
             ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
         ::Unserialize(s, REF(CTxOutCompressor(REF(txout))), nType, nVersion);
+        if (nHeight > 0)
+            ::Unserialize(s, VARINT(refheight), nType, nVersion);
     }
 };
 

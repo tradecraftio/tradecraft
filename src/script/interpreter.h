@@ -39,6 +39,13 @@ enum
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
     SIGHASH_ANYONECANPAY = 0x80,
+    // Only set within unit tests ported over from bitcoin and
+    // retained, this flag (which exceeds a byte and therefore cannot
+    // be set within a serialized signature) indicates that the
+    // lock_height field of CTransaction is not to be serialized
+    // during signature checks, thereby preventing the invalidation of
+    // bitcoin signatures contained within the unit test transaction.
+    SIGHASH_NO_LOCK_HEIGHT = 0x100,
 };
 
 /** Script verification flags */
@@ -95,6 +102,17 @@ enum
     //
     // See BIP65 for details.
     SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
+
+    // If set, do not serialize CTransaction::lock_height in SignatureHash
+    //
+    // This exists entirely as a shim to keep valuable bitcoin unit
+    // tests working within this codebase. Unit tests containing a
+    // bitcoin transaction have to be rewritten to add the lock_height
+    // field in order to deserialize, but passing this flag to script
+    // verification ensures that the lock heights are not serialized
+    // during signature verification, and therefore do not invalidate
+    // the original bitcoin signatures.
+    SCRIPT_VERIFY_LOCK_HEIGHT_NOT_UNDER_SIGNATURE = (1U << 30),
 };
 
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
@@ -120,12 +138,13 @@ class TransactionSignatureChecker : public BaseSignatureChecker
 private:
     const CTransaction* txTo;
     unsigned int nIn;
+    bool no_lock_height;
 
 protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
+    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, bool no_lock_heightIn = false) : txTo(txToIn), nIn(nInIn), no_lock_height(no_lock_heightIn) {}
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
     bool CheckLockTime(const CScriptNum& nLockTime) const;
 };

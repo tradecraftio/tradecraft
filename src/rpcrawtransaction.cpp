@@ -74,6 +74,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("version", tx.nVersion));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
+    entry.push_back(Pair("lockheight", (int64_t)tx.lock_height));
     Array vin;
     BOOST_FOREACH(const CTxIn& txin, tx.vin) {
         Object in;
@@ -325,7 +326,7 @@ Value verifytxoutproof(const Array& params, bool fHelp)
 
 Value createrawtransaction(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
             "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] {\"address\":amount,...}\n"
             "\nCreate a transaction spending the given inputs and sending to the given addresses.\n"
@@ -346,7 +347,9 @@ Value createrawtransaction(const Array& params, bool fHelp)
             "    {\n"
             "      \"address\": x.xxx   (numeric, required) The key is the freicoin address, the value is the frc amount\n"
             "      ,...\n"
-            "    }\n"
+            "    },\n"
+            "3. refheight             (numeric, optional, default=tip+1) The reference height of the outputs.\n"
+            "                         If not specified, the height of the next block to be mined is used.\n"
 
             "\nResult:\n"
             "\"transaction\"            (string) hex string of the transaction\n"
@@ -362,7 +365,16 @@ Value createrawtransaction(const Array& params, bool fHelp)
     Array inputs = params[0].get_array();
     Object sendTo = params[1].get_obj();
 
+    int refheight = 0;
+    if (params.size() > 2 && params[2].type() != null_type) {
+        refheight = params[2].get_int();
+    }
+    if (refheight <= 0) {
+        refheight = chainActive.Height() + 1;
+    }
+
     CMutableTransaction rawTx;
+    rawTx.lock_height = refheight;
 
     BOOST_FOREACH(const Value& input, inputs) {
         const Object& o = input.get_obj();
@@ -415,6 +427,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
             "  \"txid\" : \"id\",        (string) The transaction id\n"
             "  \"version\" : n,          (numeric) The version\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
+            "  \"lockheight\" : n,       (numeric) The lock height\n"
             "  \"vin\" : [               (array of json objects)\n"
             "     {\n"
             "       \"txid\": \"id\",    (string) The transaction id\n"
