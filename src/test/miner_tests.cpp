@@ -18,6 +18,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
+#include <consensus/validation.h>
 #include <node/miner.h>
 #include <policy/policy.h>
 #include <script/standard.h>
@@ -125,6 +126,7 @@ void MinerTestingSetup::TestPackageSelection(const CChainParams& chainparams, co
     tx.vin[0].prevout.n = 0;
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL - 1000;
+    tx.lock_height = txFirst.back()->lock_height;
     // This tx has a low fee: 1000 kria
     uint256 hashParentTx = tx.GetHash(); // save this txid for later use
     m_node.mempool->addUnchecked(entry.Fee(1000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
@@ -415,6 +417,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     tx.vout[0].nValue = BLOCKSUBSIDY-HIGHFEE;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     tx.nLockTime = 0;
+    tx.lock_height = txFirst[0]->lock_height;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Fee(HIGHFEE).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
@@ -428,6 +431,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     // relative time locked
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1-m_node.chainman->ActiveChain()[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
+    tx.lock_height = txFirst[1]->lock_height;
     prevheights[0] = baseheight + 2;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Time(GetTime()).FromTx(tx));
@@ -449,6 +453,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
 
     // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
+    tx.lock_height = txFirst[2]->lock_height;
     tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
     prevheights[0] = baseheight + 3;
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
@@ -461,6 +466,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     // absolute time locked
     tx.vin[0].prevout.hash = txFirst[3]->GetHash();
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast();
+    tx.lock_height = txFirst[3]->lock_height;
     prevheights.resize(1);
     prevheights[0] = baseheight + 4;
     hash = tx.GetHash();
@@ -634,6 +640,143 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     m_node.chainman->ActiveChain().Tip()->nHeight--;
     SetMockTime(0);
     m_node.mempool->clear();
+
+    // To get around standardness rules we use an OP_TRUE script
+    // behind a P2SH construction, and turn off standardness so
+    // P2SH redeem scripts aren't checked.
+    CScript p2shTrue = CScript() << OP_TRUE;
+    const auto old_require_standard = m_node.mempool->m_require_standard;
+    *const_cast<bool*>(&m_node.mempool->m_require_standard) = false;
+
+    // Test non-monotonic lock_height by creating two dependent
+    // transactions where the second transaction has a lower
+    // lock_height than the first. This shouldn't pass validation and
+    // shouldn't make it into a block template.
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vin[0].nSequence = 0;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 2500000000LL;
+    tx.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(p2shTrue));
+    tx.lock_height = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
+    uint256 hash = tx.GetHash();
+
+    CMutableTransaction tx2;
+    tx2.vin.resize(1);
+    tx2.vin[0].prevout.hash = hash;
+    tx2.vin[0].prevout.n = 0;
+    tx2.vin[0].scriptSig = CScript() << std::vector<unsigned char>(p2shTrue.begin(), p2shTrue.end());
+    tx2.vin[0].nSequence = 0;
+    tx2.vout.resize(1);
+    tx2.vout[0].nValue = 1250000000LL;
+    tx2.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(p2shTrue));
+    tx2.lock_height = m_node.chainman->ActiveChain().Tip()->nHeight;
+    hash = tx2.GetHash();
+
+    // Both transactions are final, which doesn't consider context
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx)));
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx2)));
+
+    // But only the first transaction makes it into the mempool
+    {
+        CTransaction _tx(tx);
+        const auto res = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), MakeTransactionRef(std::move(_tx)), GetTime(), /*bypass_limits=*/false, /*test_accept=*/false);
+        BOOST_CHECK_MESSAGE(res.m_result_type == MempoolAcceptResult::ResultType::VALID, res.m_state.GetRejectReason());
+    }
+
+    {
+        CTransaction _tx2(tx2);
+        const auto res = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), MakeTransactionRef(std::move(_tx2)), GetTime(), /*bypass_limits=*/false, /*test_accept=*/false);
+        BOOST_CHECK_MESSAGE(res.m_result_type == MempoolAcceptResult::ResultType::INVALID, res.m_state.GetRejectReason());
+    }
+
+    BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 2);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1]->GetHash() == tx.GetHash());
+
+    // Now we try connecting the block to engage consensus code checks
+    // on monotonic lock_heights.
+
+    // The block with one transaction would be valid, if mined
+    {
+        bool res = false;
+        BlockValidationState block_state;
+        BOOST_CHECK(res = TestBlockValidity(block_state, chainparams, m_node.chainman->ActiveChainstate(), pblocktemplate->block, m_node.chainman->ActiveChain().Tip(), GetAdjustedTime, false, false));
+        BOOST_CHECK_MESSAGE(res, block_state.GetRejectReason());
+    }
+
+    // But force inclusion of the second transaction, and it fails
+    pblocktemplate->block.vtx.resize(3);
+    {
+        CTransaction _tx2(tx2);
+        pblocktemplate->block.vtx[2] = MakeTransactionRef(std::move(_tx2));
+        BlockValidationState block_state;
+        BOOST_CHECK(!TestBlockValidity(block_state, chainparams, m_node.chainman->ActiveChainstate(), pblocktemplate->block, m_node.chainman->ActiveChain().Tip(), GetAdjustedTime, false, false));
+        BOOST_CHECK_MESSAGE(block_state.GetRejectReason() == "bad-txns-non-monotonic-lock-height", block_state.GetRejectReason());
+    }
+
+    m_node.mempool->clear();
+
+    // Change the lock_height to be the same and it works
+    ++tx2.lock_height;
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx)));
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx2)));
+
+    {
+        CTransaction _tx(tx);
+        const auto res = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), MakeTransactionRef(std::move(_tx)), GetTime(), /*bypass_limits=*/false, /*test_accept=*/false);
+        BOOST_CHECK_MESSAGE(res.m_result_type == MempoolAcceptResult::ResultType::VALID, res.m_state.GetRejectReason());
+    }
+
+    {
+        CTransaction _tx2(tx2);
+        const auto res = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), MakeTransactionRef(std::move(_tx2)), GetTime(), /*bypass_limits=*/false, /*test_accept=*/false);
+        BOOST_CHECK_MESSAGE(res.m_result_type == MempoolAcceptResult::ResultType::VALID, res.m_state.GetRejectReason());
+    }
+
+    BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1]->GetHash() == tx.GetHash());
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 3 && pblocktemplate->block.vtx[2]->GetHash() == tx2.GetHash());
+
+    {
+        bool res = false;
+        BlockValidationState block_state;
+        BOOST_CHECK(res = TestBlockValidity(block_state, chainparams, m_node.chainman->ActiveChainstate(), pblocktemplate->block, m_node.chainman->ActiveChain().Tip(), GetAdjustedTime, false, false));
+        BOOST_CHECK_MESSAGE(res, block_state.GetRejectReason());
+    }
+
+    m_node.mempool->clear();
+
+    // As would a strictly increasing lock_height
+    ++tx2.lock_height;
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx)));
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx2)));
+
+    {
+        CTransaction _tx(tx);
+        const auto res = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), MakeTransactionRef(std::move(_tx)), GetTime(), /*bypass_limits=*/false, /*test_accept=*/false);
+        BOOST_CHECK_MESSAGE(res.m_result_type == MempoolAcceptResult::ResultType::VALID, res.m_state.GetRejectReason());
+    }
+
+    {
+        CTransaction _tx2(tx2);
+        const auto res = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), MakeTransactionRef(std::move(_tx2)), GetTime(), /*bypass_limits=*/false, /*test_accept=*/false);
+        BOOST_CHECK_MESSAGE(res.m_result_type == MempoolAcceptResult::ResultType::VALID, res.m_state.GetRejectReason());
+    }
+
+    BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1]->GetHash() == tx.GetHash());
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 3 && pblocktemplate->block.vtx[2]->GetHash() == tx2.GetHash());
+
+    m_node.mempool->clear();
+
+    // Restore standardness rules to prior setting.
+    *const_cast<bool*>(&m_node.mempool->m_require_standard) = old_require_standard;
 
     TestPackageSelection(chainparams, scriptPubKey, txFirst);
 

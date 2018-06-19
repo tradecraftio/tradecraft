@@ -1344,6 +1344,7 @@ class TaprootTest(FreicoinTestFramework):
                 balance += int(unspent["amount"] * 100000000)
                 txid = int(unspent["txid"], 16)
                 fund_tx.vin.append(CTxIn(COutPoint(txid, int(unspent["vout"])), CScript()))
+                fund_tx.lock_height = max(fund_tx.lock_height, unspent["refheight"])
             # Add outputs
             cur_progress = done / len(spenders)
             next_progress = (done + count_this_tx) / len(spenders)
@@ -1422,6 +1423,7 @@ class TaprootTest(FreicoinTestFramework):
             in_value = amount - fee
             tx.vin = [CTxIn(outpoint=utxo.outpoint, nSequence=random.randint(min_sequence, 0xffffffff)) for utxo in input_utxos]
             tx.wit.vtxinwit = [CTxInWitness() for _ in range(len(input_utxos))]
+            tx.lock_height = max(utxo.output.refheight for utxo in input_utxos)
             sigops_weight = sum(utxo.spender.sigops_weight for utxo in input_utxos)
             self.log.debug("Test: %s" % (", ".join(utxo.spender.comment for utxo in input_utxos)))
 
