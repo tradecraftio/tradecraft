@@ -320,6 +320,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vout[0].nValue = 4900000000LL;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     tx.nLockTime = 0;
+    tx.lock_height = txFirst[0]->lock_height;
     hash = tx.GetHash();
     mempool.addUnchecked(hash, entry.Fee(100000000L).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
     BOOST_CHECK(CheckFinalTx(tx, flags)); // Locktime passes
@@ -328,6 +329,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // relative time locked
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.lock_height = txFirst[1]->lock_height;
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((chainActive.Tip()->GetMedianTimePast()+1-chainActive[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
     prevheights[0] = baseheight + 2;
     hash = tx.GetHash();
@@ -343,6 +345,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
+    tx.lock_height = txFirst[2]->lock_height;
     tx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL - 1;
     prevheights[0] = baseheight + 3;
     tx.nLockTime = chainActive.Tip()->nHeight + 1;
@@ -354,6 +357,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // absolute time locked
     tx.vin[0].prevout.hash = txFirst[3]->GetHash();
+    tx.lock_height = txFirst[3]->lock_height;
     tx.nLockTime = chainActive.Tip()->GetMedianTimePast();
     prevheights.resize(1);
     prevheights[0] = baseheight + 4;
@@ -398,6 +402,125 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     chainActive.Tip()->nHeight--;
     SetMockTime(0);
     mempool.clear();
+
+    // To get around standardness rules we use an OP_TRUE script
+    // behind a P2SH construction, and turn off fRequireStandard so
+    // P2SH redeem scripts aren't checked.
+    CScript p2shTrue = CScript() << OP_TRUE;
+    bool old_fRequireStandard = fRequireStandard;
+    fRequireStandard = false;
+
+    // Test non-monotonic lock_height by creating two dependent
+    // transactions where the second transaction has a lower
+    // lock_height than the first. This shouldn't pass validation and
+    // shouldn't make it into a block template.
+    tx = CTransaction();
+    tx.vin.resize(1);
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vin[0].nSequence = 0;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 2500000000LL;
+    tx.vout[0].scriptPubKey = GetScriptForDestination(CScriptID(p2shTrue));
+    tx.lock_height = chainActive.Tip()->nHeight + 1;
+    hash = tx.GetHash();
+
+    tx2 = CTransaction();
+    tx2.vin.resize(1);
+    tx2.vin[0].prevout.hash = hash;
+    tx2.vin[0].prevout.n = 0;
+    tx2.vin[0].scriptSig = CScript() << std::vector<unsigned char>(p2shTrue.begin(), p2shTrue.end());
+    tx2.vin[0].nSequence = 0;
+    tx2.vout.resize(1);
+    tx2.vout[0].nValue = 1250000000LL;
+    tx2.vout[0].scriptPubKey = GetScriptForDestination(CScriptID(p2shTrue));
+    tx2.lock_height = chainActive.Tip()->nHeight;
+    hash = tx2.GetHash();
+
+    // Both transactions are final, which doesn't consider context
+    BOOST_CHECK(CheckFinalTx(tx));
+    BOOST_CHECK(CheckFinalTx(tx2));
+
+    // But only the first transaction makes it into the mempool
+    bool res = false;
+    CValidationState state;
+    BOOST_CHECK(res = AcceptToMemoryPool(mempool, state, tx, false, NULL, true, false));
+    BOOST_CHECK_MESSAGE(res, state.GetRejectReason());
+
+    state = CValidationState();
+    BOOST_CHECK(!AcceptToMemoryPool(mempool, state, tx2, false, NULL, true, false));
+
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 2);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1].GetHash() == tx.GetHash());
+
+    // Now we try connecting the block to engage consensus code checks
+    // on monotonic lock_heights.
+
+    // The block with one transaction would be valid, if mined
+    state = CValidationState();
+    BOOST_CHECK(res = TestBlockValidity(state, chainparams, pblocktemplate->block, chainActive.Tip(), false, false));
+    BOOST_CHECK_MESSAGE(res, state.GetRejectReason());
+
+    // But force inclusion of the second transaction, and it fails
+    state = CValidationState();
+    pblocktemplate->block.vtx.resize(3);
+    pblocktemplate->block.vtx[2] = tx2;
+    BOOST_CHECK(!TestBlockValidity(state, chainparams, pblocktemplate->block, chainActive.Tip(), false, false));
+    BOOST_CHECK(state.GetRejectCode() == REJECT_INVALID);
+    BOOST_CHECK_MESSAGE(state.GetRejectReason() == "bad-txns-non-monotonic-lock-height", state.GetRejectReason());
+
+    delete pblocktemplate;
+    mempool.clear();
+
+    // Change the lock_height to be the same and it works
+    ++tx2.lock_height;
+    BOOST_CHECK(CheckFinalTx(tx));
+    BOOST_CHECK(CheckFinalTx(tx2));
+
+    state = CValidationState();
+    BOOST_CHECK(res = AcceptToMemoryPool(mempool, state, tx, false, NULL, true, false));
+    BOOST_CHECK_MESSAGE(res, state.GetRejectReason());
+
+    state = CValidationState();
+    BOOST_CHECK(res = AcceptToMemoryPool(mempool, state, tx2, false, NULL, true, false));
+    BOOST_CHECK_MESSAGE(res, state.GetRejectReason());
+
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1].GetHash() == tx.GetHash());
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 3 && pblocktemplate->block.vtx[2].GetHash() == tx2.GetHash());
+
+    state = CValidationState();
+    BOOST_CHECK_MESSAGE(TestBlockValidity(state, chainparams, pblocktemplate->block, chainActive.Tip(), false, false), state.GetRejectReason());
+
+    delete pblocktemplate;
+    mempool.clear();
+
+    // As would a strictly increasing lock_height
+    ++tx2.lock_height;
+    BOOST_CHECK(CheckFinalTx(tx));
+    BOOST_CHECK(CheckFinalTx(tx2));
+
+    state = CValidationState();
+    BOOST_CHECK(res = AcceptToMemoryPool(mempool, state, tx, false, NULL, true, false));
+    BOOST_CHECK_MESSAGE(res, state.GetRejectReason());
+
+    state = CValidationState();
+    BOOST_CHECK(res = AcceptToMemoryPool(mempool, state, tx2, false, NULL, true, false));
+    BOOST_CHECK_MESSAGE(res, state.GetRejectReason());
+
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1].GetHash() == tx.GetHash());
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 3 && pblocktemplate->block.vtx[2].GetHash() == tx2.GetHash());
+
+    delete pblocktemplate;
+    mempool.clear();
+
+    // Restore standardness rules to prior setting.
+    fRequireStandard = old_fRequireStandard;
 
     BOOST_FOREACH(CTransaction *tx, txFirst)
         delete tx;

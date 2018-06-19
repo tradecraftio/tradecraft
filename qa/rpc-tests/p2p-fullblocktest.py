@@ -83,6 +83,7 @@ class FullBlockTest(ComparisonTestFramework):
         block = create_block(base_block_hash, coinbase, self.block_time)
         if (spend != None):
             tx = CTransaction()
+            tx.lock_height = spend.tx.lock_height
             tx.vin.append(CTxIn(COutPoint(spend.tx.sha256, spend.n), b"", 0xffffffff))  # no signature yet
             # This copies the java comparison tool testing behavior: the first
             # txout has a garbage scriptPubKey, "to make sure we're not
@@ -349,6 +350,7 @@ class FullBlockTest(ComparisonTestFramework):
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 1)))
+        tx.lock_height = b23.vtx[1].lock_height
         b23 = update_block(23, [tx])
         # Make sure the math above worked out to produce a max-sized block
         assert_equal(len(b23.serialize()), MAX_BLOCK_SIZE)

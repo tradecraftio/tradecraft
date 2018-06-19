@@ -74,6 +74,7 @@ def create_coinbase(height, pubkey = None):
 # nth output of prevtx.
 def create_transaction(prevtx, n, sig, value):
     tx = CTransaction()
+    tx.lock_height = prevtx.lock_height
     assert(n < len(prevtx.vout))
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), sig, 0xffffffff))
     tx.vout.append(CTxOut(value, b""))

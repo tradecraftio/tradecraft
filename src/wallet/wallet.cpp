@@ -1870,6 +1870,8 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, int32_t height, set<pair<
         {
             if (!out.fSpendable)
                  continue;
+            if (out.tx->lock_height > height)
+                continue;
             nValueRet += out.tx->vout[out.i].nValue;
             setCoinsRet.insert(make_pair(out.tx, out.i));
         }
