@@ -419,10 +419,12 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
             assert(txFrom->GetHash() == txin.prevout.hash);
             assert(txFrom->vout.size() > txin.prevout.n);
             assert(txFrom->vout[txin.prevout.n] == coin.out);
+            assert(txFrom->lock_height == coin.refheight);
         } else {
             const Coin& coinFromUTXOSet = coins_tip.AccessCoin(txin.prevout);
             assert(!coinFromUTXOSet.IsSpent());
             assert(coinFromUTXOSet.out == coin.out);
+            assert(coinFromUTXOSet.refheight == coin.refheight);
         }
     }
 
@@ -1665,7 +1667,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
+    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, refheight, cacheStore, *txdata), &error);
 }
 
 static CuckooCache::cache<uint256, SignatureCacheHasher> g_scriptExecutionCache;
@@ -1734,14 +1736,14 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     }
 
     if (!txdata.m_spent_outputs_ready) {
-        std::vector<CTxOut> spent_outputs;
+        std::vector<SpentOutput> spent_outputs;
         spent_outputs.reserve(tx.vin.size());
 
         for (const auto& txin : tx.vin) {
             const COutPoint& prevout = txin.prevout;
             const Coin& coin = inputs.AccessCoin(prevout);
             assert(!coin.IsSpent());
-            spent_outputs.emplace_back(coin.out);
+            spent_outputs.emplace_back(coin.out, coin.refheight);
         }
         txdata.Init(tx, std::move(spent_outputs));
     }
@@ -1756,7 +1758,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         // spent being checked as a part of CScriptCheck.
 
         // Verify signature
-        CScriptCheck check(txdata.m_spent_outputs[i], tx, i, flags, cacheSigStore, &txdata);
+        const auto& coin = txdata.m_spent_outputs[i];
+        CScriptCheck check(coin.out, coin.refheight, tx, i, flags, cacheSigStore, &txdata);
         if (pvChecks) {
             pvChecks->push_back(CScriptCheck());
             check.swap(pvChecks->back());
@@ -1770,7 +1773,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                 // splitting the network between upgraded and
                 // non-upgraded nodes by banning CONSENSUS-failing
                 // data providers.
-                CScriptCheck check2(txdata.m_spent_outputs[i], tx, i,
+                CScriptCheck check2(coin.out, coin.refheight, tx, i,
                         flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
                 if (check2())
                     return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
@@ -1824,6 +1827,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
         if (!alternate.IsSpent()) {
             undo.nHeight = alternate.nHeight;
             undo.fCoinBase = alternate.fCoinBase;
+            undo.refheight = alternate.refheight;
         } else {
             return DISCONNECT_FAILED; // adding output for transaction without known metadata
         }
@@ -1851,6 +1855,7 @@ bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned i
     txTo.vout[0].nValue = 0;
     txTo.vout[0].scriptPubKey = (CScript() << OP_TRUE);
     txTo.nLockTime = 0;
+    txTo.lock_height = from.refheight;
     CTransaction to(txTo);
     // Ideally we shouldn't need this structure, since it requires some hash
     // operations to setup and is never used.  However CScriptCheck calls
@@ -1858,14 +1863,14 @@ bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned i
     // reference to this struct, so until we refactor, it needs to exist.
     PrecomputedTransactionData txdata(to);
     // Must be able to spend the script with an empty scriptSig.
-    CScriptCheck check(from.out, to, 0, flags, false, &txdata);
+    CScriptCheck check(from.out, from.refheight, to, 0, flags, false, &txdata);
     return check();
 }
 
 bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags)
 {
     // Build the coin object from which we will attempt to spend the output:
-    Coin from(txFrom.vout[0], 0, false);
+    Coin from(txFrom.vout[0], txFrom.lock_height, 0, false);
     // Then call the common implementation.
     return IsTriviallySpendable(from, COutPoint(txFrom.GetHash(), n), flags);
 }
@@ -1901,7 +1906,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
                 COutPoint out(hash, o);
                 Coin coin;
                 bool is_spent = view.SpendCoin(out, &coin);
-                if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
+                if (!is_spent || tx.vout[o] != coin.out || tx.lock_height != coin.refheight || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
                     fClean = false; // transaction output mismatch
                 }
             }

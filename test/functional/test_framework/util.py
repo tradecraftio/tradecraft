@@ -518,7 +518,7 @@ def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
     outputs = {}
     for _ in range(num_outputs):
         outputs[node.getnewaddress()] = send_value
-    rawtx = node.createrawtransaction(inputs, outputs, 0, True)
+    rawtx = node.createrawtransaction(inputs, outputs, 0, -1, True)
     signedtx = node.signrawtransactionwithwallet(rawtx)
     txid = node.sendrawtransaction(signedtx['hex'])
     fulltx = node.getrawtransaction(txid, 1)

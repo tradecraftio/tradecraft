@@ -97,6 +97,7 @@ class P2PEvict(FreicoinTestFramework):
             rawtx = node.createrawtransaction(
                 inputs=[{'txid': prevtx['txid'], 'vout': 0}],
                 outputs=[{node.get_deterministic_priv_key().address: 50 - 0.00125}],
+                lockheight=prevtx['lockheight'],
             )
             sigtx = node.signrawtransactionwithkey(
                 hexstring=rawtx,
@@ -104,6 +105,7 @@ class P2PEvict(FreicoinTestFramework):
                 prevtxs=[{
                     'txid': prevtx['txid'],
                     'vout': 0,
+                    'refheight': prevtx['lockheight'],
                     'scriptPubKey': prevtx['vout'][0]['scriptPubKey']['hex'],
                 }],
             )['hex']

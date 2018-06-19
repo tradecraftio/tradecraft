@@ -184,7 +184,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // While we're here, calculate the input amount
     std::map<COutPoint, Coin> coins;
     CAmount input_value = 0;
-    std::vector<CTxOut> spent_outputs;
+    std::vector<SpentOutput> spent_outputs;
     for (const CTxIn& txin : wtx.tx->vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
@@ -198,10 +198,10 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         if (wallet.IsMine(txin.prevout)) {
             new_coin_control.Select(txin.prevout);
         } else {
-            new_coin_control.SelectExternal(txin.prevout, coin.out);
+            new_coin_control.SelectExternal(txin.prevout, {coin.out, coin.refheight});
         }
         input_value += coin.out.nValue;
-        spent_outputs.push_back(coin.out);
+        spent_outputs.emplace_back(coin.out, coin.refheight);
     }
 
     // Figure out if we need to compute the input weight, and do so if necessary
@@ -219,7 +219,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             // In order to do this, we verify the script with a special SignatureChecker which
             // will observe the signatures verified and record their sizes.
             SignatureWeights weights;
-            TransactionSignatureChecker tx_checker(wtx.tx.get(), i, coin.out.nValue, txdata, MissingDataBehavior::FAIL);
+            TransactionSignatureChecker tx_checker(wtx.tx.get(), i, coin.out.nValue, coin.refheight, txdata, MissingDataBehavior::FAIL);
             SignatureWeightChecker size_checker(weights, tx_checker);
             VerifyScript(txin.scriptSig, coin.out.scriptPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, size_checker);
             // Add the difference between max and current to input_weight so that it represents the largest the input could be
@@ -286,7 +286,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     new_coin_control.m_min_depth = 1;
 
     constexpr int RANDOM_CHANGE_POSITION = -1;
-    auto res = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, new_coin_control, false);
+    auto res = CreateTransaction(wallet, recipients, wtx.tx->lock_height, RANDOM_CHANGE_POSITION, new_coin_control, false);
     if (!res) {
         errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
         return Result::WALLET_ERROR;

@@ -71,9 +71,9 @@ class SignRawTransactionWithKeyTest(FreicoinTestFramework):
         inputs = [
             # Valid pay-to-pubkey scripts
             {'txid': '9b907ef1e3c26fc71fe4a4b3580bc75264112f95050014157059c736f0202e71', 'vout': 0,
-             'scriptPubKey': '76a91460baa0f494b38ce3c940dea67f3804dc52d1fb9488ac'},
+             'scriptPubKey': '76a91460baa0f494b38ce3c940dea67f3804dc52d1fb9488ac', 'refheight': 1},
             {'txid': '83a4f6a6b73660e13ee6cb3c6063fa3759c50c9b7521d0536022961898f4fb02', 'vout': 0,
-             'scriptPubKey': '76a914669b857c03a5ed269d5d85a1ffac9ed5d663072788ac'},
+             'scriptPubKey': '76a914669b857c03a5ed269d5d85a1ffac9ed5d663072788ac', 'refheight': 1},
         ]
 
         outputs = {'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB': 0.1}
@@ -136,7 +136,7 @@ class SignRawTransactionWithKeyTest(FreicoinTestFramework):
         self.generate(self.nodes[0], 1)
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {getnewdestination()[2]: Decimal("9.999")})
-        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'refheight': self.nodes[0].gettxout(txid, vout)['refheight'], 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)

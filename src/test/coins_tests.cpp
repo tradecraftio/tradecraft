@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             // Update the expected result to know about the new output coins
             assert(tx.vout.size() == 1);
             const COutPoint outpoint(tx.GetHash(), 0);
-            result[outpoint] = Coin{tx.vout[0], height, CTransaction{tx}.IsCoinBase()};
+            result[outpoint] = Coin{tx.vout[0], tx.lock_height, height, CTransaction{tx}.IsCoinBase()};
 
             // Call UpdateCoins on the top cache
             CTxUndo undo;
@@ -509,37 +509,45 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 BOOST_AUTO_TEST_CASE(ccoins_serialization)
 {
     // Good example
-    CDataStream ss1(ParseHex("97f23c835800816115944e077fe7c803cfa57f29b36bf87c1d35"), SER_DISK, CLIENT_VERSION);
+    CDataStream ss1(ParseHex("97f23c835800816115944e077fe7c803cfa57f29b36bf87c1d3500"), SER_DISK, CLIENT_VERSION);
     Coin cc1;
     ss1 >> cc1;
+    BOOST_CHECK(ss1.empty());
     BOOST_CHECK_EQUAL(cc1.fCoinBase, false);
     BOOST_CHECK_EQUAL(cc1.nHeight, 203998U);
     BOOST_CHECK_EQUAL(cc1.out.nValue, CAmount{60000000000});
+    BOOST_CHECK_EQUAL(cc1.refheight, 0);
     BOOST_CHECK_EQUAL(HexStr(cc1.out.scriptPubKey), HexStr(GetScriptForDestination(PKHash(uint160(ParseHex("816115944e077fe7c803cfa57f29b36bf87c1d35"))))));
 
     // Good example
-    CDataStream ss2(ParseHex("8ddf77bbd123008c988f1a4a4de2161e0f50aac7f17e7f9555caa4"), SER_DISK, CLIENT_VERSION);
+    CDataStream ss2(ParseHex("8ddf77bbd123008c988f1a4a4de2161e0f50aac7f17e7f9555caa48000"), SER_DISK, CLIENT_VERSION);
     Coin cc2;
     ss2 >> cc2;
+    BOOST_CHECK(ss2.empty());
     BOOST_CHECK_EQUAL(cc2.fCoinBase, true);
     BOOST_CHECK_EQUAL(cc2.nHeight, 120891U);
     BOOST_CHECK_EQUAL(cc2.out.nValue, 110397);
+    BOOST_CHECK_EQUAL(cc2.refheight, 128);
     BOOST_CHECK_EQUAL(HexStr(cc2.out.scriptPubKey), HexStr(GetScriptForDestination(PKHash(uint160(ParseHex("8c988f1a4a4de2161e0f50aac7f17e7f9555caa4"))))));
 
     // Smallest possible example
-    CDataStream ss3(ParseHex("000006"), SER_DISK, CLIENT_VERSION);
+    CDataStream ss3(ParseHex("00000600"), SER_DISK, CLIENT_VERSION);
     Coin cc3;
+
     ss3 >> cc3;
+    BOOST_CHECK(ss3.empty());
     BOOST_CHECK_EQUAL(cc3.fCoinBase, false);
     BOOST_CHECK_EQUAL(cc3.nHeight, 0U);
     BOOST_CHECK_EQUAL(cc3.out.nValue, 0);
+    BOOST_CHECK_EQUAL(cc3.refheight, 0);
     BOOST_CHECK_EQUAL(cc3.out.scriptPubKey.size(), 0U);
 
     // scriptPubKey that ends beyond the end of the stream
-    CDataStream ss4(ParseHex("000007"), SER_DISK, CLIENT_VERSION);
+    CDataStream ss4(ParseHex("00000700"), SER_DISK, CLIENT_VERSION);
     try {
         Coin cc4;
         ss4 >> cc4;
+        BOOST_CHECK(ss4.empty());
         BOOST_CHECK_MESSAGE(false, "We should have thrown");
     } catch (const std::ios_base::failure&) {
     }
@@ -549,10 +557,11 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     uint64_t x = 3000000000ULL;
     tmp << VARINT(x);
     BOOST_CHECK_EQUAL(HexStr(tmp), "8a95c0bb00");
-    CDataStream ss5(ParseHex("00008a95c0bb00"), SER_DISK, CLIENT_VERSION);
+    CDataStream ss5(ParseHex("00008a95c0bb0000"), SER_DISK, CLIENT_VERSION);
     try {
         Coin cc5;
         ss5 >> cc5;
+        BOOST_CHECK(ss5.empty());
         BOOST_CHECK_MESSAGE(false, "We should have thrown");
     } catch (const std::ios_base::failure&) {
     }
@@ -749,7 +758,7 @@ static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount mo
     try {
         CTxOut output;
         output.nValue = modify_value;
-        test.cache.AddCoin(OUTPOINT, Coin(std::move(output), 1, coinbase), coinbase);
+        test.cache.AddCoin(OUTPOINT, Coin(std::move(output), 1, 1, coinbase), coinbase);
         test.cache.SelfTest();
         GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
     } catch (std::logic_error&) {
