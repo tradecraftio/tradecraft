@@ -1020,6 +1020,7 @@ UniValue gettxout(const JSONRPCRequest& request)
                                     {{RPCResult::Type::STR, "address", "freicoin address"}}},
                             }},
                         {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
+                        {RPCResult::Type::BOOL, "refheight", "Reference height"},
                     }},
                 RPCExamples{
             "\nGet unspent transactions\n"
@@ -1070,6 +1071,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.pushKV("scriptPubKey", o);
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
+    ret.pushKV("refheight", (int64_t)coin.refheight);
 
     return ret;
 }
@@ -2055,6 +2057,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                                         {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
                                         {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
                                         {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                                        {RPCResult::Type::NUM, "refheight", "Reference height of the unspent transaction output"},
                                         {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
                                     }},
                             }},
@@ -2144,6 +2147,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey.begin(), txo.scriptPubKey.end()));
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
             unspent.pushKV("amount", ValueFromAmount(txo.nValue));
+            unspent.pushKV("refheight", (int64_t)coin.refheight);
             unspent.pushKV("height", (int32_t)coin.nHeight);
 
             unspents.push_back(unspent);

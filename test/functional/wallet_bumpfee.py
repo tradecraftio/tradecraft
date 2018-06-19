@@ -259,13 +259,13 @@ def test_dust_to_fee(self, rbf_node, dest_address):
     # variable size of 70-72 bytes (or possibly even less), with most being 71 or 72 bytes. The signature
     # in the witness is divided by 4 for the vsize, so this variance can take the weight across a 4-byte
     # boundary. Thus expected transaction size (p2wpkh, 1 input, 2 outputs) is 140-141 vbytes, usually 141.
-    if not 140 <= fulltx["vsize"] <= 141:
+    if not 144 <= fulltx["vsize"] <= 145:
         raise AssertionError("Invalid tx vsize of {} (140-141 expected), full tx: {}".format(fulltx["vsize"], fulltx))
     # Bump with fee_rate of 0.00350250 FRC per 1000 vbytes to create dust.
-    # Expected fee is 141 vbytes * fee_rate 0.00350250 FRC / 1000 vbytes = 0.00049385 FRC.
-    # or occasionally 140 vbytes * fee_rate 0.00350250 FRC / 1000 vbytes = 0.00049035 FRC.
+    # Expected fee is 145 vbytes * fee_rate 0.00340550 FRC / 1000 vbytes = 0.00049380 FRC.
+    # or occasionally 144 vbytes * fee_rate 0.00340550 FRC / 1000 vbytes = 0.00049039 FRC.
     # Dust should be dropped to the fee, so actual bump fee is 0.00050000 FRC.
-    bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": 0.00350250})
+    bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": 0.00340550})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
@@ -357,7 +357,7 @@ def test_watchonly_pst(self, peer_node, rbf_node, dest_address):
     self.sync_all()
 
     # Create single-input PST for transaction to be bumped
-    pst = watcher.walletcreatefundedpst([], {dest_address:0.0005}, 0, {"feeRate": 0.00001}, True)['pst']
+    pst = watcher.walletcreatefundedpst([], {dest_address:0.0005}, 0, -1, {"feeRate": 0.00001}, True)['pst']
     pst_signed = signer.walletprocesspst(pst=pst, sign=True, sighashtype="ALL", bip32derivs=True)
     pst_final = watcher.finalizepst(pst_signed["pst"])
     original_txid = watcher.sendrawtransaction(pst_final["hex"])
