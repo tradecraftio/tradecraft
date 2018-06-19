@@ -41,6 +41,7 @@ public:
 
         outpoint = COutPoint(tx->GetHash(), i);
         txout = tx->vout[i];
+        refheight = tx->lock_height;
         effective_value = txout.nValue;
     }
 
@@ -63,6 +64,7 @@ public:
 
     COutPoint outpoint;
     CTxOut txout;
+    uint32_t refheight;
     CAmount effective_value;
     CAmount m_fee{0};
     CAmount m_long_term_fee{0};

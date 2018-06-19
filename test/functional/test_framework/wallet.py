@@ -110,13 +110,13 @@ class MiniWallet:
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
-            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount'], 'height': utxo['height']})
+            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount'], 'refheight': utxo['refheight'], 'height': utxo['height']})
 
     def scan_tx(self, tx):
         """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
         for out in tx['vout']:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value'], 'height': 0})
+                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value'], 'refheight': tx['lockheight'], 'height': 0})
 
     def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
@@ -141,7 +141,7 @@ class MiniWallet:
             cb_tx = block_info['tx'][0]
             cb_vout = [x for x in cb_tx['vout'] if x['scriptPubKey']['hex'] == self._scriptPubKey.hex()]
             for vout in cb_vout:
-                self._utxos.append({'txid': cb_tx['txid'], 'vout': vout['n'], 'value': vout['value'], 'height': block_info['height']})
+                self._utxos.append({'txid': cb_tx['txid'], 'vout': vout['n'], 'value': vout['value'], 'refheight': cb_tx['lockheight'], 'height': block_info['height']})
         return blocks
 
     def get_descriptor(self):
@@ -197,9 +197,9 @@ class MiniWallet:
         from_node = from_node or self._test_node
         utxo_to_spend = utxo_to_spend or self.get_utxo()
         if self._priv_key is None:
-            vsize = Decimal(104)  # anyone-can-spend
+            vsize = Decimal(108)  # anyone-can-spend
         else:
-            vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
+            vsize = Decimal(172)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 64 bytes other)
         send_value = int(COIN * (utxo_to_spend['value'] - fee_rate * (vsize / 1000)))
         assert send_value > 0
 
@@ -207,6 +207,7 @@ class MiniWallet:
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
         tx.vout = [CTxOut(send_value, self._scriptPubKey)]
         tx.nLockTime = locktime
+        tx.lock_height = utxo_to_spend['refheight']
         if not self._address:
             # raw script
             if self._priv_key is not None:

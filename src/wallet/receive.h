@@ -50,6 +50,7 @@ struct COutputEntry
 {
     CTxDestination destination;
     CAmount amount;
+    uint32_t refheight;
     int vout;
 };
 void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,

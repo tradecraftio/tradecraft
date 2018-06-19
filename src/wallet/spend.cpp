@@ -641,6 +641,7 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uin
 static bool CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
+        int64_t refheight,
         CTransactionRef& tx,
         CAmount& nFeeRet,
         int& nChangePosInOut,
@@ -653,6 +654,13 @@ static bool CreateTransactionInternal(
 
     CMutableTransaction txNew; // The resulting transaction that we make
     txNew.nLockTime = GetLocktimeForNewTransaction(wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+    if (refheight < 0) {
+        // A negative value means "set based on current chain tip."  However
+        // to simplify rebasing, automatic value setting is added in a later
+        // commit.
+        refheight = 0;
+    }
+    txNew.lock_height = static_cast<uint32_t>(refheight);
 
     CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
@@ -741,7 +749,7 @@ static bool CreateTransactionInternal(
 
     // vouts to the payees
     if (!coin_selection_params.m_subtract_fee_outputs) {
-        coin_selection_params.tx_noinputs_size = 11; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 output count, 1 witness overhead (dummy, flag, stack size)
+        coin_selection_params.tx_noinputs_size = 15; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 4 lock_height, 1 input count, 1 output count, 1 witness overhead (dummy, flag, stack size)
     }
     for (const auto& recipient : vecSend)
     {
@@ -935,6 +943,7 @@ static bool CreateTransactionInternal(
 bool CreateTransaction(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
+        int64_t refheight,
         CTransactionRef& tx,
         CAmount& nFeeRet,
         int& nChangePosInOut,
@@ -957,7 +966,7 @@ bool CreateTransaction(
 
     int nChangePosIn = nChangePosInOut;
     Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
-    bool res = CreateTransactionInternal(wallet, vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
+    bool res = CreateTransactionInternal(wallet, vecSend, refheight, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
     // try with avoidpartialspends unless it's enabled already
     if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && wallet.m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         CCoinControl tmp_cc = coin_control;
@@ -966,7 +975,7 @@ bool CreateTransaction(
         CTransactionRef tx2;
         int nChangePosInOut2 = nChangePosIn;
         bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
-        if (CreateTransactionInternal(wallet, vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign)) {
+        if (CreateTransactionInternal(wallet, vecSend, refheight, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign)) {
             // if fee of this alternative one is within the range of the max fee, we use this one
             const bool use_aps = nFeeRet2 <= nFeeRet + wallet.m_max_aps_fee;
             wallet.WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");
@@ -1003,7 +1012,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
 
     CTransactionRef tx_new;
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(wallet, vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
+    if (!CreateTransaction(wallet, vecSend, tx.lock_height ? tx.lock_height : -1, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
         return false;
     }
 

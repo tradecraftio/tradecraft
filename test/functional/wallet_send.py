@@ -52,7 +52,7 @@ class WalletSendTest(FreicoinTestFramework):
                   arg_conf_target=None, arg_estimate_mode=None, arg_fee_rate=None,
                   conf_target=None, estimate_mode=None, fee_rate=None, add_to_wallet=None, pst=None,
                   inputs=None, add_inputs=None, include_unsafe=None, change_address=None, change_position=None, change_type=None,
-                  include_watching=None, locktime=None, lock_unspents=None, subtract_fee_from_outputs=None,
+                  include_watching=None, locktime=None, lockheight=None, lock_unspents=None, subtract_fee_from_outputs=None,
                   expect_error=None, solving_data=None):
         assert (amount is None) != (destroy is None)
 
@@ -104,6 +104,8 @@ class WalletSendTest(FreicoinTestFramework):
             options["include_watching"] = include_watching
         if locktime is not None:
             options["locktime"] = locktime
+        if lockheight is not None:
+            options["lockheight"] = lockheight
         if lock_unspents is not None:
             options["lock_unspents"] = lock_unspents
         if subtract_fee_from_outputs is not None:
@@ -143,7 +145,7 @@ class WalletSendTest(FreicoinTestFramework):
 
             return
 
-        if locktime:
+        if locktime or lockheight:
             return res
 
         if from_wallet.getwalletinfo()["private_keys_enabled"] and not include_watching:

@@ -246,6 +246,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
     for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i)
     {
         const CTxOut& txout = wtx.tx->vout[i];
+        const uint32_t& refheight = wtx.tx->lock_height;
         isminetype fIsMine = wallet.IsMine(txout);
         // Only need to handle txouts if AT LEAST one of these is true:
         //   1) they debit from us (sent)
@@ -269,7 +270,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
             address = CNoDestination();
         }
 
-        COutputEntry output = {address, txout.nValue, (int)i};
+        COutputEntry output = {address, txout.nValue, refheight, (int)i};
 
         // If we are debited by the transaction, add the output as a "sent" entry
         if (nDebit > 0)

@@ -149,8 +149,8 @@ class CoinStatsIndexTest(FreicoinTestFramework):
             assert_equal(res5['block_info'], {
                 'unspendable': 0,
                 'prevout_spent': 50,
-                'new_outputs_ex_coinbase': Decimal('49.99995560'),
-                'coinbase': Decimal('50.00004440'),
+                'new_outputs_ex_coinbase': Decimal('49.99995480'),
+                'coinbase': Decimal('50.00004520'),
                 'unspendables': {
                     'genesis_block': 0,
                     'bip30': 0,
@@ -191,8 +191,8 @@ class CoinStatsIndexTest(FreicoinTestFramework):
             assert_equal(res6['block_info'], {
                 'unspendable': Decimal('20.99000000'),
                 'prevout_spent': 111,
-                'new_outputs_ex_coinbase': Decimal('89.99993620'),
-                'coinbase': Decimal('50.01006380'),
+                'new_outputs_ex_coinbase': Decimal('89.99993540'),
+                'coinbase': Decimal('50.01006460'),
                 'unspendables': {
                     'genesis_block': 0,
                     'bip30': 0,

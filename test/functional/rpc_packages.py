@@ -67,6 +67,7 @@ class RPCPackagesTest(FreicoinTestFramework):
             self.coins.append({
                 "txid": coinbase["txid"],
                 "amount": coinbase["vout"][0]["value"],
+                "refheight": coinbase["lockheight"],
                 "scriptPubKey": coinbase["vout"][0]["scriptPubKey"],
             })
 
@@ -182,6 +183,7 @@ class RPCPackagesTest(FreicoinTestFramework):
 
         parent_locking_script_a = parent_tx.vout[0].scriptPubKey.hex()
         child_value = value - Decimal("0.0001")
+        child_refheight = parent_tx.lock_height
 
         # Child A
         (_, tx_child_a_hex, _, _) = make_chain(node, self.address, self.privkeys, parent_txid, child_value, 0, parent_locking_script_a)
@@ -223,7 +225,8 @@ class RPCPackagesTest(FreicoinTestFramework):
             for _ in range(num_parents):
                 parent_coin = self.coins.pop()
                 value = parent_coin["amount"]
-                (tx, txhex, value, parent_locking_script) = make_chain(node, self.address, self.privkeys, parent_coin["txid"], value)
+                refheight = parent_coin["refheight"]
+                (tx, txhex, value, parent_locking_script) = make_chain(node, self.address, self.privkeys, parent_coin["txid"], value, refheight)
                 package_hex.append(txhex)
                 parents_tx.append(tx)
                 values.append(value)

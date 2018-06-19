@@ -44,6 +44,14 @@ enum
     SIGHASH_DEFAULT = 0, //!< Taproot only; implied when sighash byte is missing, and equivalent to SIGHASH_ALL
     SIGHASH_OUTPUT_MASK = 3,
     SIGHASH_INPUT_MASK = 0x80,
+
+    // Only set within unit tests ported over from bitcoin and
+    // retained, this flag (which exceeds a byte and therefore cannot
+    // be set within a serialized signature) indicates that the
+    // lock_height field of CTransaction is not to be serialized
+    // during signature checks, thereby preventing the invalidation of
+    // bitcoin signatures contained within the unit test transaction.
+    SIGHASH_NO_LOCK_HEIGHT = 0x100,
 };
 
 /** Script verification flags.
@@ -152,6 +160,17 @@ enum : uint32_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
+    // If set, do not serialize CTransaction::lock_height in SignatureHash
+    //
+    // This exists entirely as a shim to keep valuable bitcoin unit
+    // tests working within this codebase. Unit tests containing a
+    // bitcoin transaction have to be rewritten to add the lock_height
+    // field in order to deserialize, but passing this flag to script
+    // verification ensures that the lock heights are not serialized
+    // during signature verification, and therefore do not invalidate
+    // the original bitcoin signatures.
+    SCRIPT_VERIFY_LOCK_HEIGHT_NOT_UNDER_SIGNATURE = (1U << 30),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -176,7 +195,7 @@ struct PrecomputedTransactionData
     //! Whether the 3 fields above are initialized.
     bool m_bip143_segwit_ready = false;
 
-    std::vector<CTxOut> m_spent_outputs;
+    std::vector<SpentOutput> m_spent_outputs;
     //! Whether m_spent_outputs is initialized.
     bool m_spent_outputs_ready = false;
 
@@ -190,7 +209,7 @@ struct PrecomputedTransactionData
      *                             regardless of what is in the inputs (used at signing
      *                             time, when the inputs aren't filled in yet). */
     template <class T>
-    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs, bool force = false);
+    void Init(const T& tx, std::vector<SpentOutput>&& spent_outputs, bool force = false);
 
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
@@ -249,7 +268,7 @@ extern const CHashWriter HASHER_TAPLEAF;    //!< Hasher with tag "TapLeaf" pre-f
 extern const CHashWriter HASHER_TAPBRANCH;  //!< Hasher with tag "TapBranch" pre-fed to it.
 
 template <class T>
-uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
+uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, int64_t refheight, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
 
 class BaseSignatureChecker
 {
@@ -277,6 +296,11 @@ public:
     virtual ~BaseSignatureChecker() {}
 };
 
+enum class TxSigCheckOpt {
+    NONE = 0,
+    NO_LOCK_HEIGHT = (1 << 0),
+};
+
 /** Enum to specify what *TransactionSignatureChecker's behavior should be
  *  when dealing with missing transaction data.
  */
@@ -297,15 +321,17 @@ private:
     const MissingDataBehavior m_mdb;
     unsigned int nIn;
     const CAmount amount;
+    const int64_t refheight;
     const PrecomputedTransactionData* txdata;
+    bool no_lock_height;
 
 protected:
     virtual bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
     virtual bool VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const;
 
 public:
-    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, MissingDataBehavior mdb) : txTo(txToIn), m_mdb(mdb), nIn(nInIn), amount(amountIn), txdata(nullptr) {}
-    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn, MissingDataBehavior mdb) : txTo(txToIn), m_mdb(mdb), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
+    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, MissingDataBehavior mdb, TxSigCheckOpt opts = TxSigCheckOpt::NONE) : txTo(txToIn), m_mdb(mdb), nIn(nInIn), amount(amountIn), refheight(refheightIn), txdata(nullptr), no_lock_height(opts == TxSigCheckOpt::NO_LOCK_HEIGHT) {}
+    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, const PrecomputedTransactionData& txdataIn, MissingDataBehavior mdb, TxSigCheckOpt opts = TxSigCheckOpt::NONE) : txTo(txToIn), m_mdb(mdb), nIn(nInIn), amount(amountIn), refheight(refheightIn), txdata(&txdataIn), no_lock_height(opts == TxSigCheckOpt::NO_LOCK_HEIGHT) {}
     bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;

@@ -75,7 +75,7 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSTOutput&
     return true;
 }
 
-bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
+bool PartiallySignedTransaction::GetInputUTXO(SpentOutput& utxo, int input_index) const
 {
     const PSTInput& input = inputs[input_index];
     uint32_t prevout_index = tx->vin[input_index].prevout.n;
@@ -86,9 +86,9 @@ bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) con
         if (input.non_witness_utxo->GetHash() != tx->vin[input_index].prevout.hash) {
             return false;
         }
-        utxo = input.non_witness_utxo->vout[prevout_index];
+        utxo = {input.non_witness_utxo->vout[prevout_index], input.non_witness_utxo->lock_height};
     } else if (!input.witness_utxo.IsNull()) {
-        utxo = input.witness_utxo;
+        utxo = {input.witness_utxo, input.witness_refheight};
     } else {
         return false;
     }
@@ -161,6 +161,7 @@ void PSTInput::Merge(const PSTInput& input)
     if (witness_utxo.IsNull() && !input.witness_utxo.IsNull()) {
         // TODO: For segwit v1, we will want to clear out the non-witness utxo when setting a witness one. For v0 and non-segwit, this is not safe
         witness_utxo = input.witness_utxo;
+        witness_refheight = input.witness_refheight;
     }
 
     partial_sigs.insert(input.partial_sigs.begin(), input.partial_sigs.end());
@@ -245,7 +246,7 @@ void UpdatePSTOutput(const SigningProvider& provider, PartiallySignedTransaction
     // Construct a would-be spend of this output, to update sigdata with.
     // Note that ProduceSignature is used to fill in metadata (not actual signatures),
     // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
-    MutableTransactionSignatureCreator creator(&tx, /*input_idx=*/0, out.nValue, SIGHASH_ALL);
+    MutableTransactionSignatureCreator creator(&tx, /*input_idx=*/0, out.nValue, pst.tx->lock_height, SIGHASH_ALL);
     ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
 
     // Put redeem_script, witness_script, key paths, into PSTOutput.
@@ -256,7 +257,7 @@ PrecomputedTransactionData PrecomputePSTData(const PartiallySignedTransaction& p
 {
     const CMutableTransaction& tx = *pst.tx;
     bool have_all_spent_outputs = true;
-    std::vector<CTxOut> utxos(tx.vin.size());
+    std::vector<SpentOutput> utxos(tx.vin.size());
     for (size_t idx = 0; idx < tx.vin.size(); ++idx) {
         if (!pst.GetInputUTXO(utxos[idx], idx)) have_all_spent_outputs = false;
     }
@@ -285,6 +286,7 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
     // Get UTXO
     bool require_witness_sig = false;
     CTxOut utxo;
+    uint32_t refheight;
 
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
@@ -296,8 +298,10 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
             return false;
         }
         utxo = input.non_witness_utxo->vout[prevout.n];
+        refheight = input.non_witness_utxo->lock_height;
     } else if (!input.witness_utxo.IsNull()) {
         utxo = input.witness_utxo;
+        refheight = input.witness_refheight;
         // When we're taking our information from a witness UTXO, we can't verify it is actually data from
         // the output being spent. This is safe in case a witness signature is produced (which includes this
         // information directly in the hash), but not for non-witness signatures. Remember that we require
@@ -312,7 +316,7 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
     if (txdata == nullptr) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, txdata, sighash);
+        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, refheight, txdata, sighash);
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
     // Verify that a witness signature was produced in case one was required.
@@ -327,6 +331,7 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
     // TODO: For segwit v1, we should remove the non_witness_utxo
     if (sigdata.witness) {
         input.witness_utxo = utxo;
+        input.witness_refheight = refheight;
         // input.non_witness_utxo = nullptr;
     }
 

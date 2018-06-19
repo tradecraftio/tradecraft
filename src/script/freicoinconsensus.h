@@ -76,7 +76,7 @@ EXPORT_SYMBOL int freicoinconsensus_verify_script(const unsigned char *scriptPub
                                                  const unsigned char *txTo        , unsigned int txToLen,
                                                  unsigned int nIn, unsigned int flags, freicoinconsensus_error* err);
 
-EXPORT_SYMBOL int freicoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
+EXPORT_SYMBOL int freicoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount, int64_t refheight,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, freicoinconsensus_error* err);
 
