@@ -68,10 +68,10 @@ FUZZ_TARGET(pst)
     }
 
     for (size_t i = 0; i < pst.tx->vin.size(); ++i) {
-        CTxOut tx_out;
+        SpentOutput tx_out;
         if (pst.GetInputUTXO(tx_out, i)) {
-            (void)tx_out.IsNull();
-            (void)tx_out.ToString();
+            (void)tx_out.out.IsNull();
+            (void)tx_out.out.ToString();
         }
     }
 

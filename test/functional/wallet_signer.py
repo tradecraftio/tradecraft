@@ -181,7 +181,7 @@ class WalletSignerTest(FreicoinTestFramework):
         assert_equal(result[1], {'success': True})
         assert_equal(mock_wallet.getwalletinfo()["txcount"], 1)
         dest = self.nodes[0].getnewaddress(address_type='bech32')
-        mock_pst = mock_wallet.walletcreatefundedpst([], {dest:0.5}, 0, {'replaceable': True}, True)['pst']
+        mock_pst = mock_wallet.walletcreatefundedpst([], {dest:0.5}, 0, 0, {'replaceable': True}, True)['pst']
         mock_pst_signed = mock_wallet.walletprocesspst(pst=mock_pst, sign=True, sighashtype="ALL", bip32derivs=True)
         mock_pst_final = mock_wallet.finalizepst(mock_pst_signed["pst"])
         mock_tx = mock_pst_final["hex"]

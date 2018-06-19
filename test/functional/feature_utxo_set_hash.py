@@ -71,6 +71,7 @@ class UTXOSetHashTest(FreicoinTestFramework):
                     data = COutPoint(int(tx.rehash(), 16), n).serialize()
                     data += struct.pack("<i", height * 2 + coinbase)
                     data += tx_out.serialize()
+                    data += struct.pack("<I", tx.lock_height)
 
                     muhash.insert(data)
 
@@ -80,8 +81,8 @@ class UTXOSetHashTest(FreicoinTestFramework):
         assert_equal(finalized[::-1].hex(), node_muhash)
 
         self.log.info("Test deterministic UTXO set hash results")
-        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "6da8700cfc144756c163ea9070dcc47384d16a8b230c5be552840188c3ce5389")
-        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "6c65da68e7509cc6f15c04e35d6b900924e4979b7df53ebc9af0be437acdf0d8")
+        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "9de76e979ab5d4eed4b79657116b3b586c466399a2fd234ea69b4478889f4c4f")
+        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "f5008c216a6cabce8c7cecf5255235a9f384060e6bb7edf1fe07c79ebeeac552")
 
     def run_test(self):
         self.test_muhash_implementation()

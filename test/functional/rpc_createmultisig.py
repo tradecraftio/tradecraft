@@ -213,7 +213,8 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         vout = vout[0]
         scriptPubKey = tx["vout"][vout]["scriptPubKey"]["hex"]
         value = tx["vout"][vout]["value"]
-        prevtxs = [{"txid": txid, "vout": vout, "scriptPubKey": scriptPubKey, "redeemScript": mredeem, "amount": value}]
+        refheight = tx["lockheight"]
+        prevtxs = [{"txid": txid, "vout": vout, "scriptPubKey": scriptPubKey, "redeemScript": mredeem, "amount": value, "refheight": refheight}]
 
         self.generate(node0, 1)
 

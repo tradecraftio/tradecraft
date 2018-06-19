@@ -55,6 +55,7 @@ uint64_t GetBogoSize(const CScript& script_pub_key)
            4 /* vout index */ +
            4 /* height + coinbase */ +
            8 /* amount */ +
+           4 /* refheight */ +
            2 /* scriptPubKey len */ +
            script_pub_key.size() /* scriptPubKey */;
 }
@@ -65,6 +66,7 @@ DataStream TxOutSer(const COutPoint& outpoint, const Coin& coin)
     ss << outpoint;
     ss << static_cast<uint32_t>(coin.nHeight * 2 + coin.fCoinBase);
     ss << coin.out;
+    ss << coin.refheight;
     return ss;
 }
 
@@ -91,6 +93,7 @@ static void ApplyHash(HashWriter& ss, const uint256& hash, const std::map<uint32
         ss << VARINT(it->first + 1);
         ss << it->second.out.scriptPubKey;
         ss << VARINT_MODE(it->second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+        ss << VARINT(it->second.refheight);
 
         if (it == std::prev(outputs.end())) {
             ss << VARINT(0u);

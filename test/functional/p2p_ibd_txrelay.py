@@ -75,7 +75,7 @@ class P2PIBDTxRelayTest(FreicoinTestFramework):
         rawhex = "0100000001b14bdcbc3e01bdaad36cc08e81e69c82e1060bc14e518db2b49aa43ad90ba260000000004a01ff473" + \
             "04402203f16c6f40162ab686621ef3000b04e75418a0c0cb2d8aebeac894ae360ac1e780220ddc15ecdfc3507ac48e168" + \
             "1a33eb60996631bf6bf5bc0a0682c4db743ce7ca2b01ffffffff0140420f00000000001976a914660d4ef3a743e3e696a" + \
-            "d990364e555c271ad504b88ac00000000"
+            "d990364e555c271ad504b88ac0000000001000000"
         assert self.nodes[1].decoderawtransaction(rawhex) # returns a dict, should not throw
         tx = from_hex(CTransaction(), rawhex)
         peer_txer = self.nodes[0].add_p2p_connection(P2PInterface())

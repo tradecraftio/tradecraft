@@ -100,9 +100,10 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
     {
         const std::optional<CMutableTransaction> mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
         const std::optional<CTxOut> tx_out = ConsumeDeserializable<CTxOut>(fuzzed_data_provider);
+        const uint32_t refheight = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
         const unsigned int n_in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-        if (mutable_transaction && tx_out && mutable_transaction->vin.size() > n_in) {
-            SignatureData signature_data_1 = DataFromTransaction(*mutable_transaction, n_in, *tx_out);
+        if (mutable_transaction && tx_out && mutable_transaction->vin.size() > n_in && refheight <= mutable_transaction->lock_height) {
+            SignatureData signature_data_1 = DataFromTransaction(*mutable_transaction, n_in, *tx_out, refheight);
             CTxIn input;
             UpdateInput(input, signature_data_1);
             const CScript script = ConsumeScript(fuzzed_data_provider);
@@ -122,10 +123,10 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
                 SignatureData empty;
                 (void)SignSignature(provider, tx_from, tx_to, n_in, fuzzed_data_provider.ConsumeIntegral<int>(), empty);
             }
-            if (n_in < script_tx_to.vin.size()) {
+            if (n_in < script_tx_to.vin.size() && refheight < mutable_transaction->lock_height) {
                 SignatureData empty;
-                (void)SignSignature(provider, ConsumeScript(fuzzed_data_provider), script_tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>(), empty);
-                MutableTransactionSignatureCreator signature_creator{tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>()};
+                (void)SignSignature(provider, ConsumeScript(fuzzed_data_provider), script_tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint32_t>(), fuzzed_data_provider.ConsumeIntegral<int>(), empty);
+                MutableTransactionSignatureCreator signature_creator{tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint32_t>(), fuzzed_data_provider.ConsumeIntegral<int>()};
                 std::vector<unsigned char> vch_sig;
                 CKeyID address;
                 if (fuzzed_data_provider.ConsumeBool()) {

@@ -112,11 +112,12 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     it->second.coin = std::move(coin);
     it->second.flags |= CCoinsCacheEntry::DIRTY | (fresh ? CCoinsCacheEntry::FRESH : 0);
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
-    TRACE5(utxocache, add,
+    TRACE6(utxocache, add,
            outpoint.hash.data(),
            (uint32_t)outpoint.n,
            (uint32_t)it->second.coin.nHeight,
            (int64_t)it->second.coin.out.nValue,
+           (uint32_t)it->second.coin.refheight,
            (bool)it->second.coin.IsCoinBase());
 }
 
@@ -135,7 +136,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
         bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Coinbase transactions can always be overwritten, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
-        cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
+        cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], tx.lock_height, nHeight, fCoinbase), overwrite);
     }
 }
 
@@ -143,11 +144,12 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
     CCoinsMap::iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return false;
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
-    TRACE5(utxocache, spent,
+    TRACE6(utxocache, spent,
            outpoint.hash.data(),
            (uint32_t)outpoint.n,
            (uint32_t)it->second.coin.nHeight,
            (int64_t)it->second.coin.out.nValue,
+           (uint32_t)it->second.coin.refheight,
            (bool)it->second.coin.IsCoinBase());
     if (moveout) {
         *moveout = std::move(it->second.coin);
@@ -309,11 +311,12 @@ void CCoinsViewCache::Uncache(const COutPoint& hash)
     CCoinsMap::iterator it = cacheCoins.find(hash);
     if (it != cacheCoins.end() && it->second.flags == 0) {
         cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
-        TRACE5(utxocache, uncache,
+        TRACE6(utxocache, uncache,
                hash.hash.data(),
                (uint32_t)hash.n,
                (uint32_t)it->second.coin.nHeight,
                (int64_t)it->second.coin.out.nValue,
+               (uint32_t)it->second.coin.refheight,
                (bool)it->second.coin.IsCoinBase());
         cacheCoins.erase(it);
     }
