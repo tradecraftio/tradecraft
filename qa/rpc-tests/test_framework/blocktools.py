@@ -97,6 +97,7 @@ def create_coinbase(height, pubkey = None):
 # If the scriptPubKey is not specified, make it anyone-can-spend.
 def create_transaction(prevtx, n, sig, value, scriptPubKey=CScript()):
     tx = CTransaction()
+    tx.lock_height = prevtx.lock_height
     assert(n < len(prevtx.vout))
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), sig, 0xffffffff))
     tx.vout.append(CTxOut(value, scriptPubKey))
