@@ -112,8 +112,8 @@ class MiniWallet:
             self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
-    def _create_utxo(self, *, txid, vout, value, height):
-        return {"txid": txid, "vout": vout, "value": value, "height": height}
+    def _create_utxo(self, *, txid, vout, value, refheight, height):
+        return {"txid": txid, "vout": vout, "value": value, "refheight": refheight, "height": height}
 
     def _bulk_tx(self, tx, target_weight):
         """Pad a transaction with extra outputs until it reaches a target weight (or higher).
@@ -136,7 +136,7 @@ class MiniWallet:
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
-            self._utxos.append(self._create_utxo(txid=utxo["txid"], vout=utxo["vout"], value=utxo["amount"], height=utxo["height"]))
+            self._utxos.append(self._create_utxo(txid=utxo["txid"], vout=utxo["vout"], value=utxo["amount"], refheight=utxo["refheight"], height=utxo["height"]))
 
     def scan_tx(self, tx):
         """Scan the tx and adjust the internal list of owned utxos"""
@@ -151,7 +151,7 @@ class MiniWallet:
                 pass
         for out in tx['vout']:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                self._utxos.append(self._create_utxo(txid=tx["txid"], vout=out["n"], value=out["value"], height=0))
+                self._utxos.append(self._create_utxo(txid=tx["txid"], vout=out["n"], value=out["value"], refheight=tx["lockheight"], height=0))
 
     def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
@@ -279,10 +279,12 @@ class MiniWallet:
             txin.nSequence = seq
         tx.wit.vtxinwit = [deepcopy(tx.wit.vtxinwit[0]) for _ in range(len(utxos_to_spend))]
         tx.vout = [deepcopy(tx.vout[0]) for _ in range(num_outputs)]
+        tx.lock_height = 0
 
         # adapt input prevouts
         for i, utxo in enumerate(utxos_to_spend):
             tx.vin[i] = CTxIn(COutPoint(int(utxo['txid'], 16), utxo['vout']))
+            tx.lock_height = max(tx.lock_height, utxo['refheight'])
 
         # adapt output amounts (use fixed fee per output)
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
@@ -299,6 +301,7 @@ class MiniWallet:
                 txid=txid,
                 vout=i,
                 value=Decimal(tx.vout[i].nValue) / COIN,
+                refheight=tx.lock_height,
                 height=0,
             ) for i in range(len(tx.vout))],
             "txid": txid,
@@ -312,9 +315,9 @@ class MiniWallet:
         assert fee_rate >= 0
         assert fee >= 0
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
-            vsize = Decimal(104)  # anyone-can-spend
+            vsize = Decimal(108)  # anyone-can-spend
         elif self._mode == MiniWalletMode.RAW_P2PK:
-            vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
+            vsize = Decimal(172)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 64 bytes other)
         else:
             assert False
         send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
@@ -324,6 +327,7 @@ class MiniWallet:
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
         tx.vout = [CTxOut(int(COIN * send_value), bytearray(self._scriptPubKey))]
         tx.nLockTime = locktime
+        tx.lock_height = utxo_to_spend['refheight']
         if self._mode == MiniWalletMode.RAW_P2PK:
             self.sign_tx(tx)
         elif self._mode == MiniWalletMode.RAW_OP_TRUE:
@@ -340,7 +344,7 @@ class MiniWallet:
             self._bulk_tx(tx, target_weight)
 
         tx_hex = tx.serialize().hex()
-        new_utxo = self._create_utxo(txid=tx.rehash(), vout=0, value=send_value, height=0)
+        new_utxo = self._create_utxo(txid=tx.rehash(), vout=0, value=send_value, refheight=tx.lock_height, height=0)
 
         return {"txid": new_utxo["txid"], "wtxid": tx.getwtxid(), "hex": tx_hex, "tx": tx, "new_utxo": new_utxo}
 
@@ -401,7 +405,7 @@ def address_to_scriptpubkey(address):
         assert False
 
 
-def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
+def make_chain(node, address, privkeys, parent_txid, parent_value, parent_refheight, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
     """Build a transaction that spends parent_txid.vout[n] and produces one output with
     amount = parent_value with a fee deducted.
     Return tuple (CTransaction object, raw hex, nValue, scriptPubKey of the output created).
@@ -409,12 +413,13 @@ def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_l
     inputs = [{"txid": parent_txid, "vout": n}]
     my_value = parent_value - fee
     outputs = {address : my_value}
-    rawtx = node.createrawtransaction(inputs, outputs)
+    rawtx = node.createrawtransaction(inputs, outputs, 0, parent_refheight)
     prevtxs = [{
         "txid": parent_txid,
         "vout": n,
         "scriptPubKey": parent_locking_script,
         "amount": parent_value,
+        "refheight": parent_refheight,
     }] if parent_locking_script else None
     signedtx = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=privkeys, prevtxs=prevtxs)
     assert signedtx["complete"]
@@ -427,10 +432,12 @@ def create_child_with_parents(node, address, privkeys, parents_tx, values, locki
     total_value = sum(values)
     inputs = [{"txid": tx.rehash(), "vout": 0} for tx in parents_tx]
     outputs = {address : total_value - fee}
-    rawtx_child = node.createrawtransaction(inputs, outputs)
     prevtxs = []
+    refheight = 0
     for i in range(num_parents):
-        prevtxs.append({"txid": parents_tx[i].rehash(), "vout": 0, "scriptPubKey": locking_scripts[i], "amount": values[i]})
+        refheight = max(refheight, parents_tx[i].lock_height)
+        prevtxs.append({"txid": parents_tx[i].rehash(), "vout": 0, "scriptPubKey": locking_scripts[i], "amount": values[i], "refheight": parents_tx[i].lock_height})
+    rawtx_child = node.createrawtransaction(inputs, outputs, 0, refheight)
     signedtx_child = node.signrawtransactionwithkey(hexstring=rawtx_child, privkeys=privkeys, prevtxs=prevtxs)
     assert signedtx_child["complete"]
     return signedtx_child["hex"]
@@ -444,10 +451,12 @@ def create_raw_chain(node, first_coin, address, privkeys, chain_length=25):
     chain_hex = []
     chain_txns = []
     value = first_coin["amount"]
+    refheight = first_coin["refheight"]
 
     for _ in range(chain_length):
-        (tx, txhex, value, parent_locking_script) = make_chain(node, address, privkeys, txid, value, 0, parent_locking_script)
+        (tx, txhex, value, parent_locking_script) = make_chain(node, address, privkeys, txid, value, refheight, 0, parent_locking_script)
         txid = tx.rehash()
+        refheight = tx.lock_height
         chain_hex.append(txhex)
         chain_txns.append(tx)
 
