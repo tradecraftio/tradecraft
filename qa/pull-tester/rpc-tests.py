@@ -117,7 +117,7 @@ testScripts = [
     'p2p-fullblocktest.py',
     'fundrawtransaction.py',
     'p2p-compactblocks.py',
-    'segwit.py',
+    'segwit.py --bitcoin-mode',
     # vv Tests less than 2m vv
     'wallet.py',
     'wallet-accounts.py',
@@ -181,7 +181,7 @@ testScriptsExt = [
     'maxuploadtarget.py',
     'mempool_packages.py',
     # vv Tests less than 2m vv
-    'bip68-sequence.py',
+    'bip68-sequence.py --bitcoin-mode',
     'getblocktemplate_longpoll.py',
     'p2p-timeouts.py',
     # vv Tests less than 60s vv
@@ -202,7 +202,7 @@ testScriptsExt = [
     'invalidateblock.py',
     'maxblocksinflight.py',
     'p2p-acceptblock.py',
-    'replace-by-fee.py',
+    'replace-by-fee.py --bitcoin-mode',
 ]
 
 
