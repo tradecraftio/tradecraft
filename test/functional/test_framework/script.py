@@ -619,6 +619,7 @@ SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
 SIGHASH_ANYONECANPAY = 0x80
+SIGHASH_NO_LOCK_HEIGHT = 0x100
 
 def FindAndDelete(script, sig):
     """Consensus critical, see FindAndDelete() in Satoshi codebase"""
@@ -680,7 +681,9 @@ def LegacySignatureMsg(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize_without_witness()
-    s += hashtype.to_bytes(4, "little")
+    if (hashtype & SIGHASH_NO_LOCK_HEIGHT) or (txTo.version==1 and len(txTo.vin)==1 and txTo.vin[0].prevout.hash==0 and txTo.vin[0].prevout.n in (-1,0xffffffff)):
+        s = s[:-4]
+    s += (hashtype & ~SIGHASH_NO_LOCK_HEIGHT).to_bytes(4, "little")
 
     return (s, None)
 
@@ -708,11 +711,11 @@ def sign_input_legacy(tx, input_index, input_scriptpubkey, privkey, sighash_type
     tx.vin[input_index].scriptSig = bytes(CScript([der_sig + bytes([sighash_type])])) + tx.vin[input_index].scriptSig
     tx.rehash()
 
-def sign_input_segwitv0(tx, input_index, input_scriptpubkey, input_amount, privkey, sighash_type=SIGHASH_ALL):
+def sign_input_segwitv0(tx, input_index, input_scriptpubkey, input_amount, input_refheight, privkey, sighash_type=SIGHASH_ALL):
     """Add segwitv0 ECDSA signature for a given transaction input. Note that the signature
        is inserted at the bottom of the witness stack, i.e. additional witness data
        needed (e.g. pubkey for P2WPKH) can already be set before."""
-    sighash = SegwitV0SignatureHash(input_scriptpubkey, tx, input_index, sighash_type, input_amount)
+    sighash = SegwitV0SignatureHash(input_scriptpubkey, tx, input_index, sighash_type, input_amount, input_refheight)
     der_sig = privkey.sign_ecdsa(sighash)
     tx.wit.vtxinwit[input_index].scriptWitness.stack.insert(0, der_sig + bytes([sighash_type]))
     tx.rehash()
@@ -721,7 +724,7 @@ def sign_input_segwitv0(tx, input_index, input_scriptpubkey, input_amount, privk
 # Performance optimization probably not necessary for python tests, however.
 # Note that this corresponds to sigversion == 1 in EvalScript, which is used
 # for version 0 witnesses.
-def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount):
+def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount, refheight):
 
     hashPrevouts = 0
     hashSequence = 0
@@ -755,10 +758,12 @@ def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount):
     ss += txTo.vin[inIdx].prevout.serialize()
     ss += ser_string(script)
     ss += amount.to_bytes(8, "little", signed=True)
+    ss += refheight.to_bytes(8, "little", signed=True)
     ss += txTo.vin[inIdx].nSequence.to_bytes(4, "little")
     ss += ser_uint256(hashOutputs)
     ss += txTo.nLockTime.to_bytes(4, "little")
-    ss += hashtype.to_bytes(4, "little")
+    ss += txTo.lock_height.to_bytes(4, "little")
+    ss += (hashtype & ~SIGHASH_NO_LOCK_HEIGHT).to_bytes(4, "little")
     return ss
 
 def SegwitV0SignatureHash(*args, **kwargs):
@@ -806,14 +811,16 @@ class TestFrameworkScript(unittest.TestCase):
                 self.assertEqual(multisig_script.GetSigOpCount(fAccurate=False), 20)
                 self.assertEqual(multisig_script.GetSigOpCount(fAccurate=True), n)
 
+SpentOutput = namedtuple('SpentOutput', 'out,refheight')
+
 def BIP341_sha_prevouts(txTo):
     return sha256(b"".join(i.prevout.serialize() for i in txTo.vin))
 
 def BIP341_sha_amounts(spent_utxos):
-    return sha256(b"".join(u.nValue.to_bytes(8, "little", signed=True) for u in spent_utxos))
+    return sha256(b"".join(u.out.nValue.to_bytes(8, "little", signed=True) + u.refheight.to_bytes(4, "little") for u in spent_utxos))
 
 def BIP341_sha_scriptpubkeys(spent_utxos):
-    return sha256(b"".join(ser_string(u.scriptPubKey) for u in spent_utxos))
+    return sha256(b"".join(ser_string(u.out.scriptPubKey) for u in spent_utxos))
 
 def BIP341_sha_sequences(txTo):
     return sha256(b"".join(i.nSequence.to_bytes(4, "little") for i in txTo.vin))
@@ -826,10 +833,11 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpa
     assert (input_index < len(txTo.vin))
     out_type = SIGHASH_ALL if hash_type == 0 else hash_type & 3
     in_type = hash_type & SIGHASH_ANYONECANPAY
-    spk = spent_utxos[input_index].scriptPubKey
+    spk = spent_utxos[input_index].out.scriptPubKey
     ss = bytes([0, hash_type]) # epoch, hash_type
     ss += txTo.version.to_bytes(4, "little")
     ss += txTo.nLockTime.to_bytes(4, "little")
+    ss += txTo.lock_height.to_bytes(4, "little")
     if in_type != SIGHASH_ANYONECANPAY:
         ss += BIP341_sha_prevouts(txTo)
         ss += BIP341_sha_amounts(spent_utxos)
@@ -845,8 +853,9 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpa
     ss += bytes([spend_type])
     if in_type == SIGHASH_ANYONECANPAY:
         ss += txTo.vin[input_index].prevout.serialize()
-        ss += spent_utxos[input_index].nValue.to_bytes(8, "little", signed=True)
+        ss += spent_utxos[input_index].out.nValue.to_bytes(8, "little", signed=True)
         ss += ser_string(spk)
+        ss += spent_utxos[input_index].refheight.to_bytes(4, "little")
         ss += txTo.vin[input_index].nSequence.to_bytes(4, "little")
     else:
         ss += input_index.to_bytes(4, "little")
@@ -861,7 +870,7 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpa
         ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(leaf_script))
         ss += bytes([0])
         ss += codeseparator_pos.to_bytes(4, "little", signed=True)
-    assert len(ss) == 175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
+    assert len(ss) == 179 - (in_type == SIGHASH_ANYONECANPAY) * 45 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
     return ss
 
 def TaprootSignatureHash(*args, **kwargs):

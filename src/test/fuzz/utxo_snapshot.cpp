@@ -116,7 +116,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
                 outfile << coinbase->GetHash();
                 WriteCompactSize(outfile, 1); // number of coins for the hash
                 WriteCompactSize(outfile, 0); // index of coin
-                outfile << Coin(coinbase->vout[0], height, /*fCoinBaseIn=*/1);
+                outfile << Coin(coinbase->vout[0], coinbase->lock_height, height, /*fCoinBaseIn=*/1);
                 height++;
             }
         }
@@ -128,7 +128,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
             outfile << coinbase->GetHash();
             WriteCompactSize(outfile, 1);   // number of coins for the hash
             WriteCompactSize(outfile, 999); // index of coin
-            outfile << Coin{coinbase->vout[0], /*nHeightIn=*/999, /*fCoinBaseIn=*/0};
+            outfile << Coin{coinbase->vout[0], coinbase->lock_height, /*nHeightIn=*/999, /*fCoinBaseIn=*/0};
         }
     }
 

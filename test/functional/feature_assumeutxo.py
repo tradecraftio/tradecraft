@@ -126,7 +126,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         self.log.info("  - snapshot file with wrong number of coins")
         idx = 43
-        if valid_snapshot_contents[31] & 0x80:
+        if valid_snapshot_contents[idx-1] & 0x80:
             flag = valid_snapshot_contents[idx]
             idx += 1
             if flag & 0x01:
@@ -144,14 +144,14 @@ class AssumeutxoTest(FreicoinTestFramework):
         self.log.info("  - snapshot file with alternated but parsable UTXO data results in different hash")
         cases = [
             # (content, offset, wrong_hash, custom_message)
-            [b"\xff" * 32, 0, "37f390f87b61ec9b0c7d21181f35cb9b5947954e24176349dd12c2ee133e70ee", None],  # wrong outpoint hash
-            [(2).to_bytes(1, "little"), 32, None, "Bad snapshot data after deserializing 1 coins."],  # wrong txid coins count
+            [b"\xff" * 32, 0, "23ff50e650375d9beadd9c50f5581ccfb2c383c4936665c9a1cc5a9c30e21b59", None],  # wrong outpoint hash
+            [(2).to_bytes(1, "little"), 32, None, "Bad snapshot format or truncated snapshot after deserializing 2 coins."],  # wrong txid coins count
             [b"\xfd\xff\xff", 32, None, "Mismatch in coins count in snapshot metadata and actual snapshot data"],  # txid coins count exceeds coins left
-            [b"\x01", 33, "244c57cfee62c1a22aa531898a389a449463373309ece4f855d0544967e4d79d", None],  # wrong outpoint index
-            [b"\x81", 34, "1fbce2afb8598e14fbaf114dd619a72dce7720f62d9391883d4455462d0f6293", None],  # wrong coin code VARINT
-            [b"\x80", 34, "531622c8d49f817e68b72ae90658e0801dd3102605abb6732870fb012a640b04", None],  # another wrong coin code
+            [b"\x01", 33, "aa5d604bc77c41371bc8eaecff59408b09e58d8f99e5f68f238e33068b27dffe", None],  # wrong outpoint index
+            [b"\x81", 34, "6e8282e027738105a2ef64e4640d802c3e4301c855d136cc8af54b21bd831011", None],  # wrong coin code VARINT
+            [b"\x82", 34, "64efef06ca8bb2dbe59bac5fe4f4e5fc03f02253a6c10c12838f4eab9d20eb9b", None],  # another wrong coin code
             [b"\x84\x58", 34, None, "Bad snapshot data after deserializing 0 coins"],  # wrong coin case with height 364 and coinbase 0
-            [b"\xCA\xD2\x8F\x5A", 39, None, "Bad snapshot data after deserializing 0 coins - bad tx out value"],  # Amount exceeds MAX_MONEY
+            [b"\xCA\xD2\x8F\x5A\x17", 36, None, "Bad snapshot data after deserializing 0 coins - bad tx out value"],  # Amount exceeds MAX_MONEY
         ]
 
         for content, offset, wrong_hash, custom_message in cases:
@@ -161,12 +161,12 @@ class AssumeutxoTest(FreicoinTestFramework):
                 f.write(content)
                 f.write(valid_snapshot_contents[(idx + 8 + offset + len(content)):])
 
-            msg = custom_message if custom_message is not None else f"Bad snapshot content hash: expected d8006e8892c18986f210740b08a8f8609a6c53bd1eb01373586444eb5ea7c79a, got {wrong_hash}."
+            msg = custom_message if custom_message is not None else f"Bad snapshot content hash: expected 821727f95e356ddc74b0c1f61533a190d239a50ddb4867164cd7e1bee62425be, got {wrong_hash}."
             expected_error(msg)
 
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
-            msg = "Unable to load UTXO snapshot: The base block header (6d3daa7651234fc27576c3a081fffc1db33bdc9060df4954f0dd6de945da66b3) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
+            msg = "Unable to load UTXO snapshot: The base block header (4d5bae1e221b64be21949cb77e7f3154618962f021d287723230fbe823479c59) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, valid_snapshot_path)
 
     def test_invalid_chainstate_scenarios(self):
@@ -225,7 +225,7 @@ class AssumeutxoTest(FreicoinTestFramework):
             block_hash = node.getblockhash(height)
             node.invalidateblock(block_hash)
             assert_equal(node.getblockcount(), height - 1)
-            msg = "Unable to load UTXO snapshot: The base block header (6d3daa7651234fc27576c3a081fffc1db33bdc9060df4954f0dd6de945da66b3) is part of an invalid chain."
+            msg = "Unable to load UTXO snapshot: The base block header (4d5bae1e221b64be21949cb77e7f3154618962f021d287723230fbe823479c59) is part of an invalid chain."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
             node.reconsiderblock(block_hash)
 
@@ -419,7 +419,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         assert_equal(
             dump_output['txoutset_hash'],
-            "d8006e8892c18986f210740b08a8f8609a6c53bd1eb01373586444eb5ea7c79a")
+            "821727f95e356ddc74b0c1f61533a190d239a50ddb4867164cd7e1bee62425be")
         assert_equal(dump_output["nchaintx"], blocks[SNAPSHOT_BASE_HEIGHT].chain_tx)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
@@ -540,7 +540,7 @@ class AssumeutxoTest(FreicoinTestFramework):
         spend_coin_blockhash = n1.getblockhash(START_HEIGHT + 1)
         assert_raises_rpc_error(-1, "Block not found on disk", n1.getblock, spend_coin_blockhash)
         prev_tx = n0.getblock(spend_coin_blockhash, 3)['tx'][0]
-        prevout = {"txid": prev_tx['txid'], "vout": 0, "scriptPubKey": prev_tx['vout'][0]['scriptPubKey']['hex']}
+        prevout = {"txid": prev_tx['txid'], "vout": 0, "scriptPubKey": prev_tx['vout'][0]['scriptPubKey']['hex'], "refheight": prev_tx['lockheight']}
         privkey = n0.get_deterministic_priv_key().key
         raw_tx = n1.createrawtransaction([prevout], {getnewdestination()[2]: 24.99})
         signed_tx = n1.signrawtransactionwithkey(raw_tx, [privkey], [prevout])['hex']
