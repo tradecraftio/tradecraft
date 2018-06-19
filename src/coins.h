@@ -99,11 +99,16 @@ public:
     //! as new tx version will probably only be introduced at certain heights
     int nVersion;
 
+    //! lock height of the CTransaction, which serves double-duty as
+    //! the reference height for demurrage calculations
+    int refheight;
+
     void FromTx(const CTransaction &tx, int nHeightIn) {
         fCoinBase = tx.IsCoinBase();
         vout = tx.vout;
         nHeight = nHeightIn;
         nVersion = tx.nVersion;
+        refheight = tx.lock_height;
         ClearUnspendable();
     }
 
@@ -117,10 +122,11 @@ public:
         std::vector<CTxOut>().swap(vout);
         nHeight = 0;
         nVersion = 0;
+        refheight = 0;
     }
 
     //! empty constructor
-    CCoins() : fCoinBase(false), vout(0), nHeight(0), nVersion(0) { }
+    CCoins() : fCoinBase(false), vout(0), nHeight(0), nVersion(0), refheight(0) { }
 
     //!remove spent outputs at the end of vout
     void Cleanup() {
@@ -143,6 +149,7 @@ public:
         to.vout.swap(vout);
         std::swap(to.nHeight, nHeight);
         std::swap(to.nVersion, nVersion);
+        std::swap(to.refheight, refheight);
     }
 
     //! equality test
@@ -153,6 +160,7 @@ public:
          return a.fCoinBase == b.fCoinBase &&
                 a.nHeight == b.nHeight &&
                 a.nVersion == b.nVersion &&
+                a.refheight == b.refheight &&
                 a.vout == b.vout;
     }
     friend bool operator!=(const CCoins &a, const CCoins &b) {
@@ -190,6 +198,8 @@ public:
             if (!vout[i].IsNull())
                 ::Serialize(s, CTxOutCompressor(REF(vout[i])));
         }
+        // refheight
+        ::Serialize(s, VARINT(refheight));
         // coinbase height
         ::Serialize(s, VARINT(nHeight));
     }
@@ -223,6 +233,8 @@ public:
             if (vAvail[i])
                 ::Unserialize(s, REF(CTxOutCompressor(vout[i])));
         }
+        // refheight
+        ::Unserialize(s, VARINT(refheight));
         // coinbase height
         ::Unserialize(s, VARINT(nHeight));
         Cleanup();

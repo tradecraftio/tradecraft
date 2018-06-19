@@ -61,7 +61,7 @@ def create_witnessprogram(version, node, utxo, pubkey, encode_p2sh, amount):
     outputs[DUMMY_P2SH] = amount
     tx_to_witness = node.createrawtransaction(inputs,outputs)
     #replace dummy output with our own
-    tx_to_witness = tx_to_witness[0:110] + addlength(pkscript) + tx_to_witness[-8:]
+    tx_to_witness = tx_to_witness[0:110] + addlength(pkscript) + tx_to_witness[-16:]
     return tx_to_witness
 
 def send_to_witness(version, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):

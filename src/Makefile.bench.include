@@ -18,7 +18,7 @@ BENCH_SRCDIR = bench
 BENCH_BINARY = bench/bench_freicoin$(EXEEXT)
 
 RAW_TEST_FILES = \
-  bench/data/block413567.raw
+  bench/data/block136207.raw
 GENERATED_TEST_FILES = $(RAW_TEST_FILES:.raw=.raw.h)
 
 bench_bench_freicoin_SOURCES = \
@@ -69,7 +69,7 @@ CLEAN_FREICOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_FREICOIN_BENCH)
 
-bench/checkblock.cpp: bench/data/block413567.raw.h
+bench/checkblock.cpp: bench/data/block136207.raw.h
 
 freicoin_bench: $(BENCH_BINARY)
 

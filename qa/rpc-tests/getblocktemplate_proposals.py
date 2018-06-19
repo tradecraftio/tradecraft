@@ -99,7 +99,7 @@ class GetBlockTemplateProposalTest(FreicoinTestFramework):
             rawcoinbase += b'\x01-'
             hexcoinbase = b2x(rawcoinbase)
             hexoutval = b2x(pack('<Q', tmpl['coinbasevalue']))
-            tmpl['coinbasetxn'] = {'data': '01000000' + '01' + '0000000000000000000000000000000000000000000000000000000000000000ffffffff' + ('%02x' % (len(rawcoinbase),)) + hexcoinbase + 'fffffffe' + '01' + hexoutval + '00' + '00000000'}
+            tmpl['coinbasetxn'] = {'data': '02000000' + '01' + '0000000000000000000000000000000000000000000000000000000000000000ffffffff' + ('%02x' % (len(rawcoinbase),)) + hexcoinbase + 'fffffffe' + '01' + hexoutval + '00' + '00000000' + pack('<I', tmpl['height']).hex()}
         txlist = list(bytearray(a2b_hex(a['data'])) for a in (tmpl['coinbasetxn'],) + tuple(tmpl['transactions']))
 
         # Test 0: Capability advertised
@@ -133,9 +133,9 @@ class GetBlockTemplateProposalTest(FreicoinTestFramework):
         txlist.pop()
 
         # Test 6: Future tx lock time
-        txlist[0][-4:] = b'\xff\xff\xff\xff'
+        txlist[0][-8:-4] = b'\xff\xff\xff\xff'
         assert_template(node, tmpl, txlist, 'bad-txns-nonfinal')
-        txlist[0][-4:] = b'\0\0\0\0'
+        txlist[0][-8:-4] = b'\0\0\0\0'
 
         # Test 7: Bad tx count
         txlist.append(b'')

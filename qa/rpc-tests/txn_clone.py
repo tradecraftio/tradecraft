@@ -21,6 +21,8 @@
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
+from struct import pack
+
 class TxnMallTest(FreicoinTestFramework):
 
     def __init__(self):
@@ -70,7 +72,13 @@ class TxnMallTest(FreicoinTestFramework):
         clone_outputs = {rawtx1["vout"][0]["scriptPubKey"]["addresses"][0]:rawtx1["vout"][0]["value"],
                          rawtx1["vout"][1]["scriptPubKey"]["addresses"][0]:rawtx1["vout"][1]["value"]}
         clone_locktime = rawtx1["locktime"]
-        clone_raw = self.nodes[0].createrawtransaction(clone_inputs, clone_outputs, clone_locktime)
+        clone_lockheight = rawtx1["lockheight"]
+        clone_raw = self.nodes[0].createrawtransaction(clone_inputs, clone_outputs, clone_locktime, clone_lockheight)
+
+        # createrawtransaction will auto-fill the lock_height field if
+        # the value provided is zero, so we manually copy the original
+        # value.
+        clone_raw = clone_raw[:-8] + pack('<I', rawtx1['lockheight']).hex()
 
         # createrawtransaction randomizes the order of its outputs, so swap them if necessary.
         # output 0 is at version+#inputs+input+sigstub+sequence+#outputs
