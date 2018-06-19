@@ -282,6 +282,101 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(0);
     mempool.clear();
 
+    // Test non-monotonic lock_height by creating two dependent
+    // transactions where the second transaction has a lower
+    // lock_height than the first. This shouldn't pass validation and
+    // shouldn't make it into a block template.
+    tx = CTransaction();
+    tx.vin.resize(1);
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vin[0].nSequence = 0;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 2450000000LL;
+    tx.vout[0].scriptPubKey = CScript();
+    tx.lock_height = chainActive.Tip()->nHeight + 1;
+    hash = tx.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+
+    tx2 = CTransaction();
+    tx2.vin.resize(1);
+    tx2.vin[0].prevout.hash = hash;
+    tx2.vin[0].prevout.n = 0;
+    tx2.vin[0].scriptSig = CScript() << OP_1;
+    tx2.vin[0].nSequence = 0;
+    tx2.vout.resize(1);
+    tx2.vout[0].nValue = 1225000000LL;
+    tx2.vout[0].scriptPubKey = CScript();
+    tx2.lock_height = chainActive.Tip()->nHeight;
+    hash = tx2.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
+
+    // Only the first transaction makes it into the template
+    BOOST_CHECK(CheckFinalTx(tx));
+    BOOST_CHECK(CheckFinalTx(tx2));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 2);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1].GetHash() == tx.GetHash());
+
+    // Now we try connecting the block to engage consensus code checks
+    // on monotonic lock_heights.
+    {
+        // The block with one transaction would be valid, if mined
+        CValidationState state;
+        BOOST_CHECK_MESSAGE(TestBlockValidity(state, pblocktemplate->block, chainActive.Tip(), false, false), state.GetRejectReason());
+    }
+    {
+        // But force inclusion of the second transaction, and it fails
+        pblocktemplate->block.vtx.resize(3);
+        pblocktemplate->block.vtx[2] = tx2;
+        CValidationState state;
+        BOOST_CHECK(!TestBlockValidity(state, pblocktemplate->block, chainActive.Tip(), false, false));
+        BOOST_CHECK(state.GetRejectCode() == REJECT_INVALID);
+        BOOST_CHECK_MESSAGE(state.GetRejectReason() == "bad-txns-non-monotonic-lock-height", state.GetRejectReason());
+    }
+
+    delete pblocktemplate;
+    mempool.clear();
+
+    // Change the lock_height to be the same and it works
+    ++tx2.lock_height;
+    BOOST_CHECK(CheckFinalTx(tx));
+    BOOST_CHECK(CheckFinalTx(tx2));
+    mempool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    mempool.addUnchecked(tx2.GetHash(), CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1].GetHash() == tx.GetHash());
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 3 && pblocktemplate->block.vtx[2].GetHash() == tx2.GetHash());
+
+    {
+        CValidationState state;
+        BOOST_CHECK_MESSAGE(TestBlockValidity(state, pblocktemplate->block, chainActive.Tip(), false, false), state.GetRejectReason());
+    }
+
+    delete pblocktemplate;
+    mempool.clear();
+
+    // As would a strictly increasing lock_height
+    ++tx2.lock_height;
+    BOOST_CHECK(CheckFinalTx(tx));
+    BOOST_CHECK(CheckFinalTx(tx2));
+    mempool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    mempool.addUnchecked(tx2.GetHash(), CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1].GetHash() == tx.GetHash());
+    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 3 && pblocktemplate->block.vtx[2].GetHash() == tx2.GetHash());
+
+    {
+        CValidationState state;
+        BOOST_CHECK_MESSAGE(TestBlockValidity(state, pblocktemplate->block, chainActive.Tip(), false, false), state.GetRejectReason());
+    }
+
+    delete pblocktemplate;
+    mempool.clear();
+
     BOOST_FOREACH(CTransaction *tx, txFirst)
         delete tx;
 
