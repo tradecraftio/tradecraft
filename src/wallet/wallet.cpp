@@ -2311,7 +2311,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
 
     CAmount balance = 0;
     std::vector<COutput> vCoins;
-    AvailableCoins(*locked_chain, vCoins, true, coinControl);
+    AvailableCoins(*locked_chain, chainActive.Height() + 1, vCoins, true, coinControl);
     for (const COutput& out : vCoins) {
         if (out.fSpendable) {
             balance += out.tx->tx->vout[out.i].nValue;
@@ -2320,7 +2320,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth) const
+void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, uint32_t height, std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth) const
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(cs_wallet);
@@ -2346,6 +2346,12 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
         if (nDepth == 0 && !pcoin->InMempool())
+            continue;
+
+        // It is possible that we're called with a height value that is less
+        // than the current block height, so let's not include outputs which
+        // can't be used at the specified refheight.
+        if (pcoin->tx->lock_height > height)
             continue;
 
         bool safeTx = pcoin->IsTrusted(locked_chain);
@@ -2437,7 +2443,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins(interfaces::Ch
     std::map<CTxDestination, std::vector<COutput>> result;
     std::vector<COutput> availableCoins;
 
-    AvailableCoins(locked_chain, availableCoins);
+    AvailableCoins(locked_chain, chainActive.Height() + 1, availableCoins);
 
     for (const COutput& coin : availableCoins) {
         CTxDestination address;
@@ -2552,6 +2558,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         {
             if (!out.fSpendable)
                  continue;
+            if (out.tx->tx->lock_height > height)
+                continue;
             nValueRet += out.tx->tx->vout[out.i].nValue;
             setCoinsRet.insert(out.GetInputCoin());
         }
@@ -2832,7 +2840,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
         }
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(*locked_chain, vAvailableCoins, true, &coin_control);
+            AvailableCoins(*locked_chain, refheight, vAvailableCoins, true, &coin_control);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
 
             // Create change script that will be used if we need change

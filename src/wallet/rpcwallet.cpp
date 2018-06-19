@@ -2938,7 +2938,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
     {
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+        pwallet->AvailableCoins(*locked_chain, chainActive.Height() + 1, vecOutputs, !include_unsafe, nullptr, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
     }
 
     LOCK(pwallet->cs_wallet);

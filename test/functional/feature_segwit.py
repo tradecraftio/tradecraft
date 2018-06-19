@@ -33,6 +33,8 @@ from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash16
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, connect_nodes, hex_str_to_bytes, sync_blocks, try_rpc
 
+import struct
+
 NODE_0 = 0
 NODE_2 = 2
 WIT_V0 = 0
@@ -568,10 +570,10 @@ class SegWitTest(FreicoinTestFramework):
         for use_p2wsh in [False, True]:
             if use_p2wsh:
                 scriptPubKey = "00203a59f3f56b713fdcf5d1a57357f02c44342cbf306ffe0c4741046837bf90561a"
-                transaction = "01000000000100e1f505000000002200203a59f3f56b713fdcf5d1a57357f02c44342cbf306ffe0c4741046837bf90561a0000000000000000"
+                transaction = "01000000000100e1f505000000002200203a59f3f56b713fdcf5d1a57357f02c44342cbf306ffe0c4741046837bf90561a00000000" + struct.pack("<I", self.nodes[0].getblockcount()).hex()
             else:
                 scriptPubKey = "a9142f8c469c2f0084c48e11f998ffbe7efa7549f26d87"
-                transaction = "01000000000100e1f5050000000017a9142f8c469c2f0084c48e11f998ffbe7efa7549f26d870000000000000000"
+                transaction = "01000000000100e1f5050000000017a9142f8c469c2f0084c48e11f998ffbe7efa7549f26d8700000000" + struct.pack("<I", self.nodes[0].getblockcount()).hex()
 
             self.nodes[1].importaddress(scriptPubKey, "", False)
             rawtxfund = self.nodes[1].fundrawtransaction(transaction)['hex']

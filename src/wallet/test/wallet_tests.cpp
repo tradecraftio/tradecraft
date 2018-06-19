@@ -434,7 +434,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     {
         LOCK2(cs_main, wallet->cs_wallet);
         std::vector<COutput> available;
-        wallet->AvailableCoins(*m_locked_chain, available);
+        wallet->AvailableCoins(*m_locked_chain, chainActive.Height() + 1, available);
         BOOST_CHECK_EQUAL(available.size(), 2U);
     }
     for (const auto& group : list) {
@@ -446,7 +446,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     {
         LOCK2(cs_main, wallet->cs_wallet);
         std::vector<COutput> available;
-        wallet->AvailableCoins(*m_locked_chain, available);
+        wallet->AvailableCoins(*m_locked_chain, chainActive.Height() + 1, available);
         BOOST_CHECK_EQUAL(available.size(), 0U);
     }
     // Confirm ListCoins still returns same result as before, despite coins

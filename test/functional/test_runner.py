@@ -89,7 +89,7 @@ BASE_SCRIPTS = [
     'feature_block.py',
     'rpc_fundrawtransaction.py',
     'p2p_compactblocks.py',
-    'feature_segwit.py',
+    'feature_segwit.py --bitcoin-mode',
     # vv Tests less than 2m vv
     'wallet_basic.py',
     'wallet_labels.py',
@@ -108,7 +108,7 @@ BASE_SCRIPTS = [
     'feature_csv_activation.py',
     'rpc_rawtransaction.py',
     'wallet_address_types.py',
-    'feature_bip68_sequence.py',
+    'feature_bip68_sequence.py --bitcoin-mode',
     'p2p_feefilter.py',
     'feature_reindex.py',
     # vv Tests less than 30s vv
@@ -158,7 +158,7 @@ BASE_SCRIPTS = [
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
     'rpc_invalidateblock.py',
-    'feature_rbf.py',
+    'feature_rbf.py --bitcoin-mode',
     'mempool_packages.py',
     'rpc_createmultisig.py',
     'feature_versionbits_warning.py',
@@ -211,7 +211,7 @@ EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
-    'feature_dbcrash.py',
+    'feature_dbcrash.py --bitcoin-mode',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
