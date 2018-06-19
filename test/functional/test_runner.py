@@ -98,7 +98,7 @@ EXTENDED_SCRIPTS = [
     # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
-    'feature_dbcrash.py',
+    'feature_dbcrash.py --bitcoin-mode',
     'feature_index_prune.py',
     'wallet_pruning.py --legacy-wallet',
 ]
@@ -276,7 +276,7 @@ BASE_SCRIPTS = [
     'rpc_getblockfrompeer.py',
     'rpc_invalidateblock.py',
     'feature_utxo_set_hash.py',
-    'feature_rbf.py',
+    'feature_rbf.py --bitcoin-mode',
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'mempool_package_limits.py',
