@@ -320,10 +320,10 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
                     CMutableTransaction spend;
                     spend.vin.resize(1);
                     spend.vout.resize(1);
-                    std::vector<CTxOut> utxos(1);
+                    std::vector<SpentOutput> utxos(1);
                     PrecomputedTransactionData txdata;
                     txdata.Init(spend, std::move(utxos), /* force */ true);
-                    MutableTransactionSignatureCreator creator(&spend, 0, CAmount{0}, &txdata, SIGHASH_DEFAULT);
+                    MutableTransactionSignatureCreator creator(&spend, 0, CAmount{0}, 0, &txdata, SIGHASH_DEFAULT);
                     SignatureData sigdata;
                     BOOST_CHECK_MESSAGE(ProduceSignature(Merge(keys_priv, script_provider), creator, spks[n], sigdata), prv);
                 }

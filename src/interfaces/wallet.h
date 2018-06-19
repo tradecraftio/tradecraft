@@ -150,6 +150,7 @@ public:
 
     //! Create transaction.
     virtual CTransactionRef createTransaction(const std::vector<wallet::CRecipient>& recipients,
+        int64_t refheight,
         const wallet::CCoinControl& coin_control,
         bool sign,
         int& change_pos,

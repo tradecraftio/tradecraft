@@ -31,7 +31,7 @@
 #include <util/strencodings.h>
 #include <util/translation.h>
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& lockheight, int current_height)
 {
     if (outputs_in.isNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument must be non-null");
@@ -54,6 +54,22 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         if (nLockTime < 0 || nLockTime > LOCKTIME_MAX)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
+    }
+
+    rawTx.lock_height = 0;
+    if (!lockheight.isNull()) {
+        int64_t lock_height = lockheight.get_int64();
+        if (lock_height < -1 || lock_height > std::numeric_limits<uint32_t>::max()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, lockheight out of range");
+        }
+        if (lock_height <= 0) {
+            rawTx.lock_height = 0;
+        } else {
+            rawTx.lock_height = static_cast<uint32_t>(lock_height);
+        }
+    }
+    if (rawTx.lock_height == 0) {
+        rawTx.lock_height = current_height + 1;
     }
 
     for (unsigned int idx = 0; idx < inputs.size(); idx++) {
@@ -205,6 +221,10 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
                 }
                 newcoin.nHeight = 1;
+                newcoin.refheight = 0;
+                if (prevOut.exists("refheight")) {
+                    newcoin.refheight = find_value(prevOut, "refheight").get_int();
+                }
                 coins[out] = std::move(newcoin);
             }
 

@@ -38,7 +38,7 @@ private:
     bool store;
 
 public:
-    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, PrecomputedTransactionData& txdataIn) : TransactionSignatureChecker(txToIn, nInIn, amountIn, txdataIn, MissingDataBehavior::ASSERT_FAIL), store(storeIn) {}
+    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, bool storeIn, PrecomputedTransactionData& txdataIn, TxSigCheckOpt opts = TxSigCheckOpt::NONE) : TransactionSignatureChecker(txToIn, nInIn, amountIn, refheightIn, txdataIn, MissingDataBehavior::ASSERT_FAIL, opts), store(storeIn) {}
 
     bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const override;
     bool VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;

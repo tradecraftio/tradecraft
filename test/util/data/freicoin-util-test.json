@@ -197,6 +197,18 @@
     "description": "Malformed outpubkey argument (too many separators). Expected to fail."
   },
   { "exec": "./freicoin-tx",
+    "args": ["-", "lockheight=252000"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-lockheight252000-out.hex",
+    "description": "Adds an lock_height to a transaction"
+  },
+  { "exec": "./freicoin-tx",
+    "args": ["-json", "-", "lockheight=252000"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-lockheight252000-out.json",
+    "description": "Adds an lock_height to a transaction (output in json)"
+  },
+  { "exec": "./freicoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -230,12 +242,12 @@
     "description": "Creates a new transaction with a single empty output script (output in json)"
   },
   { "exec": "./freicoin-tx",
-    "args": ["02000000000100000000000000000000000000"],
+    "args": ["0200000000010000000000000000000000000000000000"],
     "output_cmp": "txcreate2.hex",
     "description": "Parses a transaction with no inputs and a single output script"
   },
   { "exec": "./freicoin-tx",
-    "args": ["-json", "02000000000100000000000000000000000000"],
+    "args": ["-json", "0200000000010000000000000000000000000000000000"],
     "output_cmp": "txcreate2.json",
     "description": "Parses a transaction with no inputs and a single output script (output in json)"
   },
@@ -571,7 +583,7 @@
   },
   { "exec": "./freicoin-tx",
     "args":
-    ["01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
+    ["01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac0000000001000000",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
     "output_cmp": "txcreatedata_seq1.hex",
     "description": "Adds a new input with sequence number to a transaction"
@@ -579,7 +591,7 @@
   { "exec": "./freicoin-tx",
     "args":
     ["-json",
-     "01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
+     "01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac0000000001000000",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
     "output_cmp": "txcreatedata_seq1.json",
     "description": "Adds a new input with sequence number to a transaction (output in json)"

@@ -134,9 +134,9 @@ def subtest(func):
     return func_wrapper
 
 
-def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
+def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, refheight, key):
     """Add signature for a P2PK witness script."""
-    tx_hash = SegwitV0SignatureHash(script, tx_to, in_idx, hashtype, value)
+    tx_hash = SegwitV0SignatureHash(script, tx_to, in_idx, hashtype, value, refheight)
     signature = key.sign_ecdsa(tx_hash) + chr(hashtype).encode('latin-1')
     tx_to.wit.vtxinwit[in_idx].scriptWitness.stack = [signature, script]
     tx_to.rehash()
@@ -1218,6 +1218,8 @@ class SegWitTest(FreicoinTestFramework):
                 if flags & 1:
                     r += self.wit.serialize()
                 r += struct.pack("<I", self.nLockTime)
+                if self.nVersion!=1 or len(self.vin)!=1 or self.vin[0].prevout.hash!=0 or self.vin[0].prevout.n not in (-1,0xffffffff):
+                    r += struct.pack("<I", self.lock_height)
                 return r
 
         tx2 = BrokenCTransaction()
@@ -1520,7 +1522,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, script_wsh))
         script = keyhash_to_p2pkh_script(pubkeyhash)
-        sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
+        sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue, tx.lock_height)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
         tx2.wit.vtxinwit.append(CTxInWitness())
         tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, pubkey]
@@ -1543,7 +1545,7 @@ class SegWitTest(FreicoinTestFramework):
         tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), b""))
         tx3.vout.append(CTxOut(tx2.vout[0].nValue - 1000, script_p2sh))
         tx3.wit.vtxinwit.append(CTxInWitness())
-        sign_p2pk_witness_input(witness_script, tx3, 0, SIGHASH_ALL, tx2.vout[0].nValue, key)
+        sign_p2pk_witness_input(witness_script, tx3, 0, SIGHASH_ALL, tx2.vout[0].nValue, tx2.lock_height, key)
 
         # Should fail policy test.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, True, False, 'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
@@ -1560,7 +1562,7 @@ class SegWitTest(FreicoinTestFramework):
         tx4.vin.append(CTxIn(COutPoint(tx3.sha256, 0), script_sig))
         tx4.vout.append(CTxOut(tx3.vout[0].nValue - 1000, script_pubkey))
         tx4.wit.vtxinwit.append(CTxInWitness())
-        sign_p2pk_witness_input(witness_script, tx4, 0, SIGHASH_ALL, tx3.vout[0].nValue, key)
+        sign_p2pk_witness_input(witness_script, tx4, 0, SIGHASH_ALL, tx3.vout[0].nValue, tx3.lock_height, key)
 
         # Should fail policy test.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx4, True, False, 'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
@@ -1619,14 +1621,14 @@ class SegWitTest(FreicoinTestFramework):
                 tx.vout.append(CTxOut(prev_utxo.nValue - 1000, script_pubkey))
                 tx.wit.vtxinwit.append(CTxInWitness())
                 # Too-large input value
-                sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue + 1, key)
+                sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue + 1, tx.lock_height, key)
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
                                    reason='non-mandatory-script-verify-flag (Script evaluated without error '
                                           'but finished with a false/empty top stack element')
 
                 # Too-small input value
-                sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue - 1, key)
+                sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue - 1, tx.lock_height, key)
                 block.vtx.pop(-2)  # remove last tx
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
@@ -1634,7 +1636,7 @@ class SegWitTest(FreicoinTestFramework):
                                           'but finished with a false/empty top stack element')
 
                 # Now try correct value
-                sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue, key)
+                sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue, tx.lock_height, key)
                 block.vtx.pop(-2)
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -1655,7 +1657,7 @@ class SegWitTest(FreicoinTestFramework):
         for _ in range(NUM_SIGHASH_TESTS):
             tx.vout.append(CTxOut(split_value, script_pubkey))
         tx.wit.vtxinwit.append(CTxInWitness())
-        sign_p2pk_witness_input(witness_script, tx, 0, SIGHASH_ALL, prev_utxo.nValue, key)
+        sign_p2pk_witness_input(witness_script, tx, 0, SIGHASH_ALL, prev_utxo.nValue, tx.lock_height, key)
         for i in range(NUM_SIGHASH_TESTS):
             temp_utxos.append(UTXO(tx.sha256, i, split_value))
 
@@ -1690,7 +1692,7 @@ class SegWitTest(FreicoinTestFramework):
                 if random.randint(0, 1):
                     anyonecanpay = SIGHASH_ANYONECANPAY
                 hashtype = random.randint(1, 3) | anyonecanpay
-                sign_p2pk_witness_input(witness_script, tx, i, hashtype, temp_utxos[i].nValue, key)
+                sign_p2pk_witness_input(witness_script, tx, i, hashtype, temp_utxos[i].nValue, 0, key)
                 if (hashtype == SIGHASH_SINGLE and i >= num_outputs):
                     used_sighash_single_out_of_bounds = True
             tx.rehash()
@@ -1720,13 +1722,13 @@ class SegWitTest(FreicoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(temp_utxos[0].sha256, temp_utxos[0].n), b""))
         tx.vout.append(CTxOut(temp_utxos[0].nValue, script_pkh))
         tx.wit.vtxinwit.append(CTxInWitness())
-        sign_p2pk_witness_input(witness_script, tx, 0, SIGHASH_ALL, temp_utxos[0].nValue, key)
+        sign_p2pk_witness_input(witness_script, tx, 0, SIGHASH_ALL, temp_utxos[0].nValue, 0, key)
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
 
         script = keyhash_to_p2pkh_script(pubkeyhash)
-        sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
+        sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue, tx.lock_height)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
 
         # Check that we can't have a scriptSig
@@ -1761,7 +1763,7 @@ class SegWitTest(FreicoinTestFramework):
             # the signatures as we go.
             tx.vin.append(CTxIn(COutPoint(i.sha256, i.n), b""))
             tx.wit.vtxinwit.append(CTxInWitness())
-            sign_p2pk_witness_input(witness_script, tx, index, SIGHASH_ALL | SIGHASH_ANYONECANPAY, i.nValue, key)
+            sign_p2pk_witness_input(witness_script, tx, index, SIGHASH_ALL | SIGHASH_ANYONECANPAY, i.nValue, 0, key)
             index += 1
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])

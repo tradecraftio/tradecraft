@@ -108,7 +108,7 @@ class CreateWalletWatchonlyTest(FreicoinTestFramework):
 
         result = wo_wallet.walletcreatefundedpst(inputs=inputs, outputs=outputs, options=options)
         assert_equal("pst" in result, True)
-        assert_raises_rpc_error(-4, "Insufficient funds", wo_wallet.walletcreatefundedpst, inputs, outputs, 0, no_wo_options)
+        assert_raises_rpc_error(-4, "Insufficient funds", wo_wallet.walletcreatefundedpst, inputs, outputs, 0, wo_wallet.getblockcount() + 1, no_wo_options)
 
         self.log.info('Testing fundrawtransaction watch-only defaults')
         rawtx = wo_wallet.createrawtransaction(inputs=inputs, outputs=outputs)

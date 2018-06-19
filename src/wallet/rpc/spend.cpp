@@ -62,7 +62,7 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
     }
 }
 
-UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose)
+UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, int64_t refheight, mapValue_t map_value, bool verbose)
 {
     EnsureWalletIsUnlocked(wallet);
 
@@ -81,7 +81,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     bilingual_str error;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    const bool fCreated = CreateTransaction(wallet, recipients, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true);
+    const bool fCreated = CreateTransaction(wallet, recipients, refheight, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true);
     if (!fCreated) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
@@ -223,7 +223,7 @@ RPCHelpMan sendtoaddress()
     ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
     const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
 
-    return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
+    return SendMoney(*pwallet, coin_control, recipients, -1 /* refheight */, mapValue, verbose);
 },
     };
 }
@@ -311,7 +311,7 @@ RPCHelpMan sendmany()
     ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
     const bool verbose{request.params[8].isNull() ? false : request.params[8].get_bool()};
 
-    return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose);
+    return SendMoney(*pwallet, coin_control, recipients, -1 /* refheight */, std::move(mapValue), verbose);
 },
     };
 }
@@ -418,6 +418,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
                 {"lock_unspents", UniValueType(UniValue::VBOOL)},
                 {"locktime", UniValueType(UniValue::VNUM)},
+                {"lockheight", UniValueType(UniValue::VNUM)},
                 {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
                 {"feeRate", UniValueType()}, // will be checked by AmountFromValue() below
                 {"pst", UniValueType(UniValue::VBOOL)},
@@ -760,6 +761,7 @@ RPCHelpMan signrawtransactionwithwallet()
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
                                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
+                                    {"refheight", RPCArg::Type::NUM, RPCArg::Optional::NO, "The lockheight of the transaction output being spent"},
                                 },
                             },
                         },
@@ -1056,6 +1058,7 @@ RPCHelpMan send()
                         },
                     },
                     {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"lockheight", RPCArg::Type::NUM, RPCArg::Default{0}, "The reference height of the outputs in the transaction being generated, and the minimum height for inclusion in chain. If not specified, the height of the next block to be mined is used."},
                     {"lock_unspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                     {"pst", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PST, implies add_to_wallet=false."},
                     {"subtract_fee_from_outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Outputs to subtract the fee from, specified as integer indices.\n"
@@ -1145,9 +1148,18 @@ RPCHelpMan send()
 
             const bool pst_opt_in = options.exists("pst") && options["pst"].get_bool();
 
+            int current_height = -1;
+            {
+                const std::optional<int> tip_height = pwallet->chain().getHeight();
+                if (!tip_height) {
+                    throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot determine current chain height.  This should never happen.");
+                }
+                current_height = tip_height.value();
+            }
+
             CAmount fee;
             int change_position;
-            CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"]);
+            CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], options["lockheight"], current_height);
             CCoinControl coin_control;
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
@@ -1320,6 +1332,7 @@ RPCHelpMan walletcreatefundedpst()
                         },
                     },
                     {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"lockheight", RPCArg::Type::NUM, RPCArg::Default{0}, "The reference height of the outputs in the transaction being generated, and the minimum height for inclusion in chain. If not specified, the height of the next block to be mined is used."},
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         Cat<std::vector<RPCArg>>(
                         {
@@ -1373,16 +1386,26 @@ RPCHelpMan walletcreatefundedpst()
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
+        UniValue::VNUM, // lockheight
         UniValue::VOBJ,
         UniValue::VBOOL
         }, true
     );
 
-    UniValue options = request.params[3];
+    UniValue options = request.params[4];
+
+    int current_height = -1;
+    {
+        const std::optional<int> tip_height = pwallet->chain().getHeight();
+        if (!tip_height) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot determine current chain height.  This should never happen.");
+        }
+        current_height = tip_height.value();
+    }
 
     CAmount fee;
     int change_position;
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3], current_height);
     CCoinControl coin_control;
     // Automatically select coins, unless at least one is manually selected. Can
     // be overridden by options.add_inputs.
@@ -1394,7 +1417,7 @@ RPCHelpMan walletcreatefundedpst()
     PartiallySignedTransaction pstx(rawTx);
 
     // Fill transaction with out data but don't sign
-    bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
+    bool bip32derivs = request.params[5].isNull() ? true : request.params[5].get_bool();
     bool complete = true;
     const TransactionError err{wallet.FillPST(pstx, complete, 1, false, bip32derivs)};
     if (err != TransactionError::OK) {
