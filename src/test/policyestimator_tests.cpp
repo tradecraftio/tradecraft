@@ -61,6 +61,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         garbage.push_back('X');
     CMutableTransaction tx;
     std::list<CTransaction> dummyConflicted;
+    tx.nVersion = 2;
     tx.vin.resize(1);
     tx.vin[0].scriptSig = garbage;
     tx.vout.resize(1);

@@ -376,7 +376,7 @@ class FullBlockTest(ComparisonTestFramework):
         tip(15)
         b23 = block(23, spend=out[6])
         tx = CTransaction()
-        script_length = MAX_BLOCK_SIZE - len(b23.serialize()) - 69
+        script_length = MAX_BLOCK_SIZE - len(b23.serialize()) - 73
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 0)))
@@ -389,7 +389,7 @@ class FullBlockTest(ComparisonTestFramework):
         # Make the next block one byte bigger and check that it fails
         tip(15)
         b24 = block(24, spend=out[6])
-        script_length = MAX_BLOCK_SIZE - len(b24.serialize()) - 69
+        script_length = MAX_BLOCK_SIZE - len(b24.serialize()) - 73
         script_output = CScript([b'\x00' * (script_length+1)])
         tx.vout = [CTxOut(0, script_output)]
         b24 = update_block(24, [tx])
@@ -918,7 +918,7 @@ class FullBlockTest(ComparisonTestFramework):
         tx = CTransaction()
 
         # use canonical serialization to calculate size
-        script_length = MAX_BLOCK_SIZE - len(b64a.normal_serialize()) - 69
+        script_length = MAX_BLOCK_SIZE - len(b64a.normal_serialize()) - 73
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
@@ -1267,7 +1267,7 @@ class FullBlockTest(ComparisonTestFramework):
             for i in range(89, LARGE_REORG_SIZE + 89):
                 b = block(i, spend)
                 tx = CTransaction()
-                script_length = MAX_BLOCK_SIZE - len(b.serialize()) - 69
+                script_length = MAX_BLOCK_SIZE - len(b.serialize()) - 73
                 script_output = CScript([b'\x00' * script_length])
                 tx.vout.append(CTxOut(0, script_output))
                 tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))

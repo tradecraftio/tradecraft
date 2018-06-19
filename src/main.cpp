@@ -1909,6 +1909,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
                 undo.nHeight = coins->nHeight;
                 undo.fCoinBase = coins->fCoinBase;
                 undo.nVersion = coins->nVersion;
+                undo.refheight = coins->refheight;
             }
         }
     }
@@ -1925,7 +1926,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = (nIn < ptxTo->wit.vtxinwit.size()) ? &ptxTo->wit.vtxinwit[nIn].scriptWitness : NULL;
-    if (!VerifyScript(scriptSig, scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, amount, cacheStore, *txdata), &error)) {
+    if (!VerifyScript(scriptSig, scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, amount, refheight, cacheStore, *txdata), &error)) {
         return false;
     }
     return true;
@@ -2140,6 +2141,7 @@ static bool ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const CO
         coins->fCoinBase = undo.fCoinBase;
         coins->nHeight = undo.nHeight;
         coins->nVersion = undo.nVersion;
+        coins->refheight = undo.refheight;
     } else {
         if (coins->IsPruned())
             fClean = fClean && error("%s: undo data adding output to missing transaction", __func__);
@@ -2268,6 +2270,7 @@ bool IsTriviallySpendable(const CCoins& from, const COutPoint& prevout, unsigned
     txTo.vout[0].nValue = 0;
     txTo.vout[0].scriptPubKey = (CScript() << OP_TRUE);
     txTo.nLockTime = 0;
+    txTo.lock_height = from.nHeight;
     CTransaction to(txTo);
     // Ideally we shouldn't need this structure, since it requires some hash
     // operations to setup and is never used.  However CScriptCheck calls
@@ -2282,7 +2285,7 @@ bool IsTriviallySpendable(const CCoins& from, const COutPoint& prevout, unsigned
 bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags)
 {
     // Build the coin object from which we will attempt to spend the output:
-    CCoins from(txFrom, 0);
+    CCoins from(txFrom, txFrom.lock_height);
     // Then call the common implementation.
     return IsTriviallySpendable(from, COutPoint(txFrom.GetHash(), n), flags);
 }

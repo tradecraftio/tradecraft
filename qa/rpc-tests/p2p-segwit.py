@@ -880,6 +880,8 @@ class SegWitTest(FreicoinTestFramework):
                 if flags & 1:
                     r += self.wit.serialize()
                 r += struct.pack("<I", self.nLockTime)
+                if self.nVersion!=1 or len(self.vin)!=1 or self.vin[0].prevout.hash!=0 or self.vin[0].prevout.n not in (-1,0xffffffff):
+                    r += struct.pack("<I", self.lock_height)
                 return r
 
         tx2 = BrokenCTransaction()

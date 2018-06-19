@@ -151,6 +151,7 @@ class CompactBlocksTest(FreicoinTestFramework):
             finaltx = CTransaction()
             finaltx.nVersion = 2
             finaltx.nLockTime = block.vtx[0].nLockTime
+            finaltx.lock_height = block.vtx[0].lock_height
             finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
             for prevout in finaltx_prevout:
                 finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
