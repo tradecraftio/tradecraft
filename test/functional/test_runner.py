@@ -124,7 +124,7 @@ BASE_SCRIPTS= [
     'nulldummy.py',
     'import-rescan.py',
     'mining.py',
-    'bumpfee.py',
+    'bumpfee.py --bitcoin-mode',
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
@@ -145,9 +145,9 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 5m vv
     'maxuploadtarget.py',
     'mempool_packages.py',
-    'dbcrash.py',
+    'dbcrash.py --bitcoin-mode',
     # vv Tests less than 2m vv
-    'bip68-sequence.py',
+    'bip68-sequence.py --bitcoin-mode',
     'getblocktemplate_longpoll.py',
     'p2p-timeouts.py',
     # vv Tests less than 60s vv
@@ -161,7 +161,7 @@ EXTENDED_SCRIPTS = [
     'txn_clone.py --mineblock',
     'forknotify.py',
     'invalidateblock.py',
-    'replace-by-fee.py',
+    'replace-by-fee.py --bitcoin-mode',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
