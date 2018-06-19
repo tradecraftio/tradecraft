@@ -45,6 +45,9 @@ public:
             ::Serialize(s, (unsigned char)0);
         }
         ::Serialize(s, CTxOutCompressor(REF(txout->out)));
+        if (txout->nHeight > 0) {
+            ::Serialize(s, VARINT(txout->refheight));
+        }
     }
 
     explicit TxInUndoSerializer(const Coin* coin) : txout(coin) {}
@@ -69,6 +72,9 @@ public:
             ::Unserialize(s, VARINT(nVersionDummy));
         }
         ::Unserialize(s, CTxOutCompressor(REF(txout->out)));
+        if (txout->nHeight > 0) {
+            ::Unserialize(s, VARINT(txout->refheight));
+        }
     }
 
     explicit TxInUndoDeserializer(Coin* coin) : txout(coin) {}

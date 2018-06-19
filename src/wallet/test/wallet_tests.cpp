@@ -382,7 +382,7 @@ public:
         CCoinControl dummy;
         {
             auto locked_chain = m_chain->lock();
-            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, fee, changePos, error, dummy));
+            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, -1 /* refheight */, tx, fee, changePos, error, dummy));
         }
         CValidationState state;
         BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));

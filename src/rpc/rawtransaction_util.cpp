@@ -29,7 +29,7 @@
 #include <univalue.h>
 #include <util/strencodings.h>
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& lockheight, int current_height)
 {
     if (inputs_in.isNull() || outputs_in.isNull())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1 and 2 must be non-null");
@@ -45,6 +45,14 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         if (nLockTime < 0 || nLockTime > LOCKTIME_MAX)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
+    }
+
+    rawTx.lock_height = 0;
+    if (!lockheight.isNull()) {
+        rawTx.lock_height = lockheight.get_int();
+    }
+    if (rawTx.lock_height <= 0) {
+        rawTx.lock_height = current_height + 1;
     }
 
     for (unsigned int idx = 0; idx < inputs.size(); idx++) {
@@ -196,6 +204,10 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
                 }
                 newcoin.nHeight = 1;
+                newcoin.refheight = 0;
+                if (prevOut.exists("refheight")) {
+                    newcoin.refheight = find_value(prevOut, "refheight").get_int();
+                }
                 coins[out] = std::move(newcoin);
             }
 
@@ -294,11 +306,12 @@ UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keysto
         }
         const CScript& prevPubKey = coin->second.out.scriptPubKey;
         const CAmount& amount = coin->second.out.nValue;
+        const int64_t refheight = coin->second.refheight;
 
-        SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
+        SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out, refheight);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, refheight, nHashType), prevPubKey, sigdata);
         }
 
         UpdateInput(txin, sigdata);
@@ -309,7 +322,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keysto
         }
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, refheight), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");

@@ -27,21 +27,21 @@
 
 static void DeserializeBlockTest(benchmark::State& state)
 {
-    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream stream(benchmark::data::block136207, SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
 
     while (state.KeepRunning()) {
         CBlock block;
         stream >> block;
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
+        bool rewound = stream.Rewind(benchmark::data::block136207.size());
         assert(rewound);
     }
 }
 
 static void DeserializeAndCheckBlockTest(benchmark::State& state)
 {
-    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream stream(benchmark::data::block136207, SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
 
@@ -50,7 +50,7 @@ static void DeserializeAndCheckBlockTest(benchmark::State& state)
     while (state.KeepRunning()) {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
         stream >> block;
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
+        bool rewound = stream.Rewind(benchmark::data::block136207.size());
         assert(rewound);
 
         CValidationState validationState;

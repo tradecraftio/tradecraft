@@ -36,6 +36,7 @@ public:
 
         outpoint = COutPoint(tx->GetHash(), i);
         txout = tx->vout[i];
+        refheight = tx->lock_height;
         effective_value = txout.nValue;
     }
 
@@ -46,6 +47,7 @@ public:
 
     COutPoint outpoint;
     CTxOut txout;
+    uint32_t refheight;
     CAmount effective_value;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */

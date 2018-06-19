@@ -56,6 +56,7 @@ struct PSTInput
 {
     CTransactionRef non_witness_utxo;
     CTxOut witness_utxo;
+    uint32_t witness_refheight;
     CScript redeem_script;
     CScript witness_script;
     CScript final_script_sig;
@@ -82,7 +83,7 @@ struct PSTInput
             SerializeToVector(os, non_witness_utxo);
         } else if (!witness_utxo.IsNull()) {
             SerializeToVector(s, PST_IN_WITNESS_UTXO);
-            SerializeToVector(s, witness_utxo);
+            SerializeToVector(s, witness_utxo, witness_refheight);
         }
 
         if (final_script_sig.empty() && final_script_witness.IsNull()) {
@@ -174,7 +175,7 @@ struct PSTInput
                     } else if (key.size() != 1) {
                         throw std::ios_base::failure("Witness utxo key is more than one byte type");
                     }
-                    UnserializeFromVector(s, witness_utxo);
+                    UnserializeFromVector(s, witness_utxo, witness_refheight);
                     break;
                 case PST_IN_PARTIAL_SIG:
                 {

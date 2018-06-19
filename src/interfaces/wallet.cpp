@@ -214,6 +214,7 @@ public:
         return m_wallet->ListLockedCoins(outputs);
     }
     CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
+        int64_t refheight,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
@@ -223,7 +224,7 @@ public:
         auto locked_chain = m_wallet->chain().lock();
         LOCK(m_wallet->cs_wallet);
         CTransactionRef tx;
-        if (!m_wallet->CreateTransaction(*locked_chain, recipients, tx, fee, change_pos,
+        if (!m_wallet->CreateTransaction(*locked_chain, recipients, refheight, tx, fee, change_pos,
                 fail_reason, coin_control, sign)) {
             return {};
         }

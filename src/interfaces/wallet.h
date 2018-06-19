@@ -145,6 +145,7 @@ public:
 
     //! Create transaction.
     virtual CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
+        int64_t refheight,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
