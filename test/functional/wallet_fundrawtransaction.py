@@ -613,7 +613,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         inputs = wallet.listunspent()
 
         # Deduce exact fee to produce a changeless transaction
-        tx_size = 110  # Total tx size: 110 vbytes, p2wpkh -> p2wpkh. Input 68 vbytes + rest of tx is 42 vbytes.
+        tx_size = 114  # Total tx size: 114 vbytes, p2wpkh -> p2wpkh. Input 72 vbytes + rest of tx is 42 vbytes.
         value = inputs[0]["amount"] - get_fee(tx_size, self.min_relay_tx_fee)
 
         outputs = {self.nodes[0].getnewaddress():value}
@@ -709,7 +709,7 @@ class RawTransactionsTest(FreicoinTestFramework):
     def test_op_return(self):
         self.log.info("Test fundrawtxn with OP_RETURN and no vin")
 
-        rawtx   = "0100000000010000000000000000066a047465737400000000"
+        rawtx   = "0100000000010000000000000000066a04746573740000000000000000"
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
 
         assert_equal(len(dec_tx['vin']), 0)
@@ -811,10 +811,10 @@ class RawTransactionsTest(FreicoinTestFramework):
             assert_equal(self.nodes[3].fundrawtransaction(rawtx, {param: zero_value})["fee"], 0)
 
         # With no arguments passed, expect fee of 141 kria.
-        assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000141, vspan=0.00000001)
+        assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000145, vspan=0.00000001)
         # Expect fee to be 10,000x higher when an explicit fee rate 10,000x greater is specified.
         result = node.fundrawtransaction(rawtx, fee_rate=10000)
-        assert_approx(result["fee"], vexp=0.0141, vspan=0.0001)
+        assert_approx(result["fee"], vexp=0.0145, vspan=0.0001)
 
         self.log.info("Test fundrawtxn with invalid estimate_mode settings")
         for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
@@ -1285,16 +1285,16 @@ class RawTransactionsTest(FreicoinTestFramework):
         rawtx = wallet.createrawtransaction([{'txid': txid, 'vout': vout}], [{self.nodes[0].getnewaddress(address_type="bech32"): 8}])
         fundedtx = wallet.fundrawtransaction(rawtx, fee_rate=10, change_type="bech32")
         # with 71-byte signatures we should expect following tx size
-        # tx overhead (10) + 2 inputs (41 each) + 2 p2wpkh (31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 byte sig witnesses (107 each)) / witness scaling factor (4)
-        tx_size = ceil(10 + 41*2 + 31*2 + (2 + 107*2)/4)
+        # tx overhead (14) + 2 inputs (41 each) + 2 p2wpkh (31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 byte sig witnesses (107 each)) / witness scaling factor (4)
+        tx_size = ceil(14 + 41*2 + 31*2 + (2 + 107*2)/4)
         assert_equal(fundedtx['fee'] * COIN, tx_size * 10)
 
         # Using the other output should have 72 byte sigs
         rawtx = wallet.createrawtransaction([{'txid': txid, 'vout': ext_vout}], [{self.nodes[0].getnewaddress(): 13}])
         ext_desc = self.nodes[0].getaddressinfo(ext_addr)["desc"]
         fundedtx = wallet.fundrawtransaction(rawtx, fee_rate=10, change_type="bech32", solving_data={"descriptors": [ext_desc]})
-        # tx overhead (10) + 3 inputs (41 each) + 2 p2wpkh(31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 bytes sig witnesses (107 each) + p2wpkh 72 byte sig witness (108)) / witness scaling factor (4)
-        tx_size = ceil(10 + 41*3 + 31*2 + (2 + 107*2 + 108)/4)
+        # tx overhead (14) + 3 inputs (41 each) + 2 p2wpkh(31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 bytes sig witnesses (107 each) + p2wpkh 72 byte sig witness (108)) / witness scaling factor (4)
+        tx_size = ceil(14 + 41*3 + 31*2 + (2 + 107*2 + 108)/4)
         assert_equal(fundedtx['fee'] * COIN, tx_size * 10)
 
         self.nodes[2].unloadwallet("test_weight_calculation")
@@ -1429,7 +1429,7 @@ class RawTransactionsTest(FreicoinTestFramework):
 
         self.log.info("Crafting TX using an unconfirmed input")
         target_address = self.nodes[2].getnewaddress()
-        raw_tx1 = wallet.createrawtransaction([], {target_address: 0.1}, 0, True)
+        raw_tx1 = wallet.createrawtransaction([], {target_address: 0.1}, 0, -1, True)
         funded_tx1 = wallet.fundrawtransaction(raw_tx1, {'fee_rate': 1, 'maxconf': 0})['hex']
 
         # Make sure we only had the one input

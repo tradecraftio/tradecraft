@@ -65,6 +65,7 @@ static void SetupFreicoinTxArgs(ArgsManager &argsman)
     argsman.AddArg("delout=N", "Delete output N from TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("in=TXID:VOUT(:SEQUENCE_NUMBER)", "Add input to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("locktime=N", "Set TX lock time to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    argsman.AddArg("lockheight=N", "Set TX lock height to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("nversion=N", "Set TX version to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("outaddr=VALUE:ADDRESS", "Add address-based output to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("outdata=[VALUE:]DATA", "Add data-based output to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
@@ -229,6 +230,16 @@ static void MutateTxLocktime(CMutableTransaction& tx, const std::string& cmdVal)
         throw std::runtime_error("Invalid TX locktime requested: '" + cmdVal + "'");
 
     tx.nLockTime = (unsigned int) newLocktime;
+}
+
+static void MutateTxLockHeight(CMutableTransaction& tx, const std::string& cmdVal)
+{
+    int64_t new_lock_height;
+    if (!ParseInt64(cmdVal, &new_lock_height) || new_lock_height < 0LL || new_lock_height > 0xffffffffLL) {
+        throw std::runtime_error("Invalid TX lockheight requested: '" + cmdVal + "'");
+    }
+
+    tx.lock_height = static_cast<uint32_t>(new_lock_height);
 }
 
 static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInIdx)
@@ -658,6 +669,10 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 if (prevOut.exists("amount")) {
                     newcoin.out.nValue = AmountFromValue(prevOut["amount"]);
                 }
+                newcoin.refheight = 0;
+                if (prevOut.exists("refheight")) {
+                    newcoin.refheight = prevOut["refheight"].getInt<int>();
+                }
                 newcoin.nHeight = 1;
                 view.AddCoin(out, std::move(newcoin), true);
             }
@@ -687,11 +702,12 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
         const CAmount& amount = coin.out.nValue;
+        const int64_t refheight = coin.refheight;
 
-        SignatureData sigdata = DataFromTransaction(mergedTx, i, coin.out);
+        SignatureData sigdata = DataFromTransaction(mergedTx, i, coin.out, refheight);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
-            ProduceSignature(keystore, MutableTransactionSignatureCreator(mergedTx, i, amount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(keystore, MutableTransactionSignatureCreator(mergedTx, i, amount, refheight, nHashType), prevPubKey, sigdata);
 
         if (amount == MAX_MONEY && !sigdata.scriptWitness.IsNull()) {
             throw std::runtime_error(strprintf("Missing amount for CTxOut with scriptPubKey=%s", HexStr(prevPubKey)));
@@ -723,6 +739,8 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxVersion(tx, commandVal);
     else if (command == "locktime")
         MutateTxLocktime(tx, commandVal);
+    else if (command == "lockheight")
+        MutateTxLockHeight(tx, commandVal);
     else if (command == "replaceable") {
         MutateTxRBFOptIn(tx, commandVal);
     }

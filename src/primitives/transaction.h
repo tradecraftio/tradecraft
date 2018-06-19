@@ -205,6 +205,20 @@ public:
     std::string ToString() const;
 };
 
+struct SpentOutput
+{
+    //! unspent transaction output
+    CTxOut out;
+
+    //! lock height of the CTransaction, which serves double-duty as
+    //! the reference height for demurrage calculations
+    uint32_t refheight;
+
+    SpentOutput() : refheight(0) { }
+    SpentOutput(const CTxOut &_out, uint32_t _refheight) : out(_out), refheight(_refheight) { }
+    SpentOutput(CTxOut &&_out, uint32_t _refheight) : out(_out), refheight(_refheight) { }
+};
+
 struct CMutableTransaction;
 
 /**
@@ -213,6 +227,7 @@ struct CMutableTransaction;
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
  * - uint32_t nLockTime
+ * - uint32_t lock_height
  *
  * Extended transaction serialization format:
  * - int32_t nVersion
@@ -223,6 +238,7 @@ struct CMutableTransaction;
  * - if (flags & 1):
  *   - CScriptWitness scriptWitness; (deserialized into CTxIn)
  * - uint32_t nLockTime
+ * - uint32_t lock_height
  */
 template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
@@ -261,6 +277,11 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
+    if (tx.nVersion != 1 || tx.vin.size() != 1 || !tx.vin[0].prevout.IsNull()) {
+        s >> tx.lock_height;
+    } else {
+        tx.lock_height = 0;
+    }
 }
 
 template<typename Stream, typename TxType>
@@ -290,6 +311,9 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         }
     }
     s << tx.nLockTime;
+    if (tx.nVersion != 1 || tx.vin.size() != 1 || !tx.vin[0].prevout.IsNull()) {
+        s << tx.lock_height;
+    }
 }
 
 template<typename TxType>
@@ -317,6 +341,7 @@ public:
     const std::vector<CTxOut> vout;
     const int32_t nVersion;
     const uint32_t nLockTime;
+    const uint32_t lock_height;
 
 private:
     /** Memory only. */
@@ -395,6 +420,7 @@ struct CMutableTransaction
     std::vector<CTxOut> vout;
     int32_t nVersion;
     uint32_t nLockTime;
+    uint32_t lock_height;
 
     explicit CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);

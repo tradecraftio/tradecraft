@@ -146,8 +146,8 @@ class OrphanHandlingTest(FreicoinTestFramework):
         tx_parent_doesnt_arrive = self.wallet.create_self_transfer()
         # Fake orphan spends nonexistent outputs of the two parents
         tx_fake_orphan = self.wallet.create_self_transfer_multi(utxos_to_spend=[
-            {"txid": tx_parent_doesnt_arrive["txid"], "vout": 10, "value": tx_parent_doesnt_arrive["new_utxo"]["value"]},
-            {"txid": tx_parent_arrives["txid"], "vout": 10, "value": tx_parent_arrives["new_utxo"]["value"]}
+            {"txid": tx_parent_doesnt_arrive["txid"], "vout": 10, "value": tx_parent_doesnt_arrive["new_utxo"]["value"], "refheight": 1},
+            {"txid": tx_parent_arrives["txid"], "vout": 10, "value": tx_parent_arrives["new_utxo"]["value"], "refheight": 1}
         ])
 
         peer_spy = node.add_p2p_connection(PeerTxRelayer())

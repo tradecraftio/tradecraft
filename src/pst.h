@@ -203,6 +203,7 @@ struct PSTInput
 {
     CTransactionRef non_witness_utxo;
     CTxOut witness_utxo;
+    uint32_t witness_refheight;
     CScript redeem_script;
     CScript witness_script;
     CScript final_script_sig;
@@ -242,7 +243,7 @@ struct PSTInput
         }
         if (!witness_utxo.IsNull()) {
             SerializeToVector(s, CompactSizeWriter(PST_IN_WITNESS_UTXO));
-            SerializeToVector(s, witness_utxo);
+            SerializeToVector(s, witness_utxo, witness_refheight);
         }
 
         if (final_script_sig.empty() && final_script_witness.IsNull()) {
@@ -415,7 +416,7 @@ struct PSTInput
                     } else if (key.size() != 1) {
                         throw std::ios_base::failure("Witness utxo key is more than one byte type");
                     }
-                    UnserializeFromVector(s, witness_utxo);
+                    UnserializeFromVector(s, witness_utxo, witness_refheight);
                     break;
                 case PST_IN_PARTIAL_SIG:
                 {
@@ -983,7 +984,7 @@ struct PartiallySignedTransaction
      * @param[in] input_index Index of the input to retrieve the UTXO of
      * @return Whether the UTXO for the specified input was found
      */
-    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
+    bool GetInputUTXO(SpentOutput& utxo, int input_index) const;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {

@@ -123,6 +123,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
 {
     WalletTxOut result;
     result.txout = wtx.tx->vout[n];
+    result.refheight = wtx.tx->lock_height;
     result.time = wtx.GetTxTime();
     result.depth_in_main_chain = depth;
     result.is_spent = wallet.IsSpent(COutPoint(wtx.GetHash(), n));
@@ -134,6 +135,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
 {
     WalletTxOut result;
     result.txout = output.txout;
+    result.refheight = output.refheight;
     result.time = output.time;
     result.depth_in_main_chain = output.depth;
     result.is_spent = wallet.IsSpent(output.outpoint);
@@ -285,13 +287,14 @@ public:
         return m_wallet->ListLockedCoins(outputs);
     }
     util::Result<CTransactionRef> createTransaction(const std::vector<CRecipient>& recipients,
+        int64_t refheight,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
         CAmount& fee) override
     {
         LOCK(m_wallet->cs_wallet);
-        auto res = CreateTransaction(*m_wallet, recipients, change_pos,
+        auto res = CreateTransaction(*m_wallet, recipients, refheight, change_pos,
                                      coin_control, sign);
         if (!res) return util::Error{util::ErrorString(res)};
         const auto& txr = *res;

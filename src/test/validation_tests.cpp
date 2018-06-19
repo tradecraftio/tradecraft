@@ -153,11 +153,11 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *params->AssumeutxoForHeight(110);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "ff639020089a1befe6c55c6ef696adf9c4911aa00547e230efd7d00c48f44f25");
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "b502d5bbd053804871b605b819fffba6d7852ea40c01efe15ab9a15ca6af6ed1");
     BOOST_CHECK_EQUAL(out110.nChainTx, 121U);
 
-    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256S("0x4294742361c4131179bc1f78d483bfbb12c691b1f43da7484bbc99d901e6a071"));
-    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "ff639020089a1befe6c55c6ef696adf9c4911aa00547e230efd7d00c48f44f25");
+    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256S("0x2d97822a6c664514c63d5078b58931e6ae09588c12bc325e90559fad421a24e4"));
+    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "b502d5bbd053804871b605b819fffba6d7852ea40c01efe15ab9a15ca6af6ed1");
     BOOST_CHECK_EQUAL(out110_2.nChainTx, 121U);
 }
 
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
             CMutableTransaction mtx;
             mtx.vin.resize(1);
             mtx.vout.resize(1);
-            mtx.vout[0].scriptPubKey.resize(4);
+            mtx.vout[0].scriptPubKey.resize(0);
             block.vtx.push_back(MakeTransactionRef(mtx));
             block.hashMerkleRoot = block.vtx.back()->GetHash();
             assert(block.vtx.back()->IsCoinBase());
@@ -287,11 +287,11 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         // The `random_tx` function used to mine the txs below simply created
         // empty transactions with a random version field.
         CMutableTransaction tx1;
-        BOOST_CHECK(DecodeHexTx(tx1, "ff204bd0000000000000", /*try_no_witness=*/true, /*try_witness=*/false));
+        BOOST_CHECK(DecodeHexTx(tx1, "2342643600000000000000000000", /*try_no_witness=*/true, /*try_witness=*/false));
         CMutableTransaction tx2;
-        BOOST_CHECK(DecodeHexTx(tx2, "8ae53c92000000000000", /*try_no_witness=*/true, /*try_witness=*/false));
+        BOOST_CHECK(DecodeHexTx(tx2, "0ae9a47200000000000000000000", /*try_no_witness=*/true, /*try_witness=*/false));
         CMutableTransaction tx3;
-        BOOST_CHECK(DecodeHexTx(tx3, "cdaf22d00002c6a7f848f8ae4d30054e61dcf3303d6fe01d282163341f06feecc10032b3160fcab87bdfe3ecfb769206ef2d991b92f8a268e423a6ef4d485f06", /*try_no_witness=*/true, /*try_witness=*/false));
+        BOOST_CHECK(DecodeHexTx(tx3, "ac965eca000172a1ea27d71cec1d2999d2b8cb7b590110d2a929ca3d6f79320ae5add5c2b65085bc81f9e83877f5ae54a41d0f9dce57d70f97832b19591d9fa8", /*try_no_witness=*/true, /*try_witness=*/false));
         {
             // Verify that double_sha256(txid1||txid2) == txid3
             HashWriter hasher;
