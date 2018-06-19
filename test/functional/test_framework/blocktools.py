@@ -115,6 +115,7 @@ def get_final_tx_info(node):
 def add_final_tx(info, block):
     finaltx = CTransaction()
     finaltx.nLockTime = block.vtx[0].nLockTime
+    finaltx.lock_height = block.vtx[0].lock_height
     finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
     for prevout in info:
         finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(bytes.fromhex(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))

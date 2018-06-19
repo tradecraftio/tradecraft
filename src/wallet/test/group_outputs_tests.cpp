@@ -47,7 +47,7 @@ static void addCoin(CoinsResult& coins,
     const auto& txout = wtx.tx->vout.at(0);
     coins.Add(*Assert(OutputTypeFromDestination(dest)),
               {COutPoint(wtx.GetHash(), 0),
-                   txout,
+                   {txout, wtx.tx->lock_height},
                    depth,
                    CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr),
                    /*spendable=*/ true,

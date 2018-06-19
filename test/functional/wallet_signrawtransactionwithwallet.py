@@ -59,7 +59,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
         self.log.info("Test correct error reporting when trying to sign a locked output")
         self.nodes[0].encryptwallet("password")
 
-        rawTx = '020000000156b958f78e3f24e0b2f4e4db1255426b0902027cb37e3ddadb52e37c3557dddb0000000000ffffffff01c0a6b929010000001600149a2ee8c77140a053f36018ac8124a6ececc1668a00000000'
+        rawTx = '020000000156b958f78e3f24e0b2f4e4db1255426b0902027cb37e3ddadb52e37c3557dddb0000000000ffffffff01c0a6b929010000001600149a2ee8c77140a053f36018ac8124a6ececc1668a0000000001000000'
 
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signrawtransactionwithwallet, rawTx)
 
@@ -86,16 +86,16 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
 
         scripts = [
             # Valid pay-to-pubkey script
-            {'txid': '9b907ef1e3c26fc71fe4a4b3580bc75264112f95050014157059c736f0202e71', 'vout': 0,
+            {'txid': '9b907ef1e3c26fc71fe4a4b3580bc75264112f95050014157059c736f0202e71', 'vout': 0, 'refheight': 1,
              'scriptPubKey': '76a91460baa0f494b38ce3c940dea67f3804dc52d1fb9488ac'},
             # Invalid script
-            {'txid': '5b8673686910442c644b1f4993d8f7753c7c8fcb5c87ee40d56eaeef25204547', 'vout': 7,
+            {'txid': '5b8673686910442c644b1f4993d8f7753c7c8fcb5c87ee40d56eaeef25204547', 'vout': 7, 'refheight': 1,
              'scriptPubKey': 'badbadbadbad'}
         ]
 
         outputs = {'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB': 0.1}
 
-        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
+        rawTx = self.nodes[0].createrawtransaction(inputs, outputs, 0, 1)
 
         # Make sure decoderawtransaction is at least marginally sane
         decodedRawTx = self.nodes[0].decoderawtransaction(rawTx)
@@ -131,7 +131,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
         assert not rawTxSigned['errors'][0]['witness']
 
         # Now test signing failure for transaction with input witnesses
-        p2wpkh_raw_tx = "01000000000102fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f00000000494830450221008b9d1dc26ba6a9cb62127b02742fa9d754cd3bebf337f7a55d114c8e5cdd30be022040529b194ba3f9281a99f2b1c0a19c0489bc22ede944ccf4ecbab4cc618ef3ed01eeffffffef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a0100000000ffffffff02202cb206000000001976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac9093510d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac000247304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee0121025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee635711000000"
+        p2wpkh_raw_tx = "01000000000102fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f00000000494830450221008b9d1dc26ba6a9cb62127b02742fa9d754cd3bebf337f7a55d114c8e5cdd30be022040529b194ba3f9281a99f2b1c0a19c0489bc22ede944ccf4ecbab4cc618ef3ed01eeffffffef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a0100000000ffffffff02202cb206000000001976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac9093510d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac000247304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee0121025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee63571100000001000000"
 
         rawTxSigned = self.nodes[0].signrawtransactionwithwallet(p2wpkh_raw_tx)
 
@@ -173,6 +173,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
             "0200000001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
             "FFFFFFFF00000000044F024F9CFDFFFFFF01F0B9F5050000000023210277777777"
             "77777777777777777777777777777777777777777777777777777777AC66030000"
+            "01000000"
         )
         prev_txs = [
             {
@@ -181,6 +182,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
                 "scriptPubKey": "A914AE44AB6E9AA0B71F1CD2B453B69340E9BFBAEF6087",
                 "redeemScript": "4F9C",
                 "amount": 1,
+                "refheight": 1,
             }
         ]
         txn = self.nodes[0].signrawtransactionwithwallet(hex_str, prev_txs)
@@ -264,7 +266,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
             outputs = {self.nodes[0].getnewaddress(): 1}
             rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
 
-            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, amount=1)
+            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, amount=1, refheight=1)
             succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
             assert succ["complete"]
 
@@ -278,12 +280,22 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
                         "txid": txid,
                         "scriptPubKey": pubkey,
                         "vout": 3,
+                        "refheight": 1,
                     }
                 ])
 
             assert_raises_rpc_error(-3, "Missing vout", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                 {
                     "txid": txid,
+                    "scriptPubKey": pubkey,
+                    "amount": 1,
+                    "refheight": 1,
+                }
+            ])
+            assert_raises_rpc_error(-3, "Missing refheight", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+                {
+                    "txid": txid,
+                    "vout": 3,
                     "scriptPubKey": pubkey,
                     "amount": 1,
                 }
@@ -293,13 +305,15 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
                     "scriptPubKey": pubkey,
                     "vout": 3,
                     "amount": 1,
+                    "refheight": 1,
                 }
             ])
             assert_raises_rpc_error(-3, "Missing scriptPubKey", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                 {
                     "txid": txid,
                     "vout": 3,
-                    "amount": 1
+                    "amount": 1,
+                    "refheight": 1,
                 }
             ])
 
