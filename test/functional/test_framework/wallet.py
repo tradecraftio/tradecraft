@@ -59,7 +59,7 @@ class MiniWallet:
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one kria higher than needed."""
         self._utxos = sorted(self._utxos, key=lambda k: k['value'])
         utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
-        vsize = Decimal(96)
+        vsize = Decimal(100)
         send_value = kria_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
         fee = utxo_to_spend['value'] - send_value
         assert send_value > 0

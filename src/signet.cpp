@@ -81,12 +81,14 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
     CMutableTransaction tx_to_spend;
     tx_to_spend.nVersion = 0;
     tx_to_spend.nLockTime = 0;
+    tx_to_spend.lock_height = 0;
     tx_to_spend.vin.emplace_back(COutPoint(), CScript(OP_0), 0);
     tx_to_spend.vout.emplace_back(0, challenge);
 
     CMutableTransaction tx_spending;
     tx_spending.nVersion = 0;
     tx_spending.nLockTime = 0;
+    tx_spending.lock_height = 0;
     tx_spending.vin.emplace_back(COutPoint(), CScript(), 0);
     tx_spending.vout.emplace_back(0, CScript(OP_RETURN));
 
@@ -150,7 +152,7 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
     const CScript& scriptSig = signet_txs->m_to_sign.vin[0].scriptSig;
     const CScriptWitness& witness = signet_txs->m_to_sign.vin[0].scriptWitness;
 
-    TransactionSignatureChecker sigcheck(&signet_txs->m_to_sign, /*nIn=*/ 0, /*amount=*/ signet_txs->m_to_spend.vout[0].nValue);
+    TransactionSignatureChecker sigcheck(&signet_txs->m_to_sign, /*nIn=*/ 0, /*amount=*/ signet_txs->m_to_spend.vout[0].nValue, signet_txs->m_to_spend.lock_height);
 
     if (!VerifyScript(scriptSig, signet_txs->m_to_spend.vout[0].scriptPubKey, &witness, BLOCK_SCRIPT_VERIFY_FLAGS, sigcheck)) {
         LogPrint(BCLog::VALIDATION, "CheckSignetBlockSolution: Errors in block (block solution invalid)\n");

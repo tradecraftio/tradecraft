@@ -42,6 +42,14 @@ enum
     SIGHASH_DEFAULT = 0, //!< Taproot only; implied when sighash byte is missing, and equivalent to SIGHASH_ALL
     SIGHASH_OUTPUT_MASK = 3,
     SIGHASH_INPUT_MASK = 0x80,
+
+    // Only set within unit tests ported over from bitcoin and
+    // retained, this flag (which exceeds a byte and therefore cannot
+    // be set within a serialized signature) indicates that the
+    // lock_height field of CTransaction is not to be serialized
+    // during signature checks, thereby preventing the invalidation of
+    // bitcoin signatures contained within the unit test transaction.
+    SIGHASH_NO_LOCK_HEIGHT = 0x100,
 };
 
 /** Script verification flags.
@@ -150,9 +158,33 @@ enum
 
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
+
+    // If set, do not serialize CTransaction::lock_height in SignatureHash
+    //
+    // This exists entirely as a shim to keep valuable bitcoin unit
+    // tests working within this codebase. Unit tests containing a
+    // bitcoin transaction have to be rewritten to add the lock_height
+    // field in order to deserialize, but passing this flag to script
+    // verification ensures that the lock heights are not serialized
+    // during signature verification, and therefore do not invalidate
+    // the original bitcoin signatures.
+    SCRIPT_VERIFY_LOCK_HEIGHT_NOT_UNDER_SIGNATURE = (1U << 30),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
+
+struct SpentOutput
+{
+    //! unspent transaction output
+    CTxOut out;
+
+    //! lock height of the CTransaction, which serves double-duty as
+    //! the reference height for demurrage calculations
+    uint32_t refheight;
+
+    SpentOutput(const CTxOut &_out, uint32_t _refheight) : out(_out), refheight(_refheight) { }
+    SpentOutput(CTxOut &&_out, uint32_t _refheight) : out(_out), refheight(_refheight) { }
+};
 
 struct PrecomputedTransactionData
 {
@@ -171,14 +203,14 @@ struct PrecomputedTransactionData
     //! Whether the 3 fields above are initialized.
     bool m_bip143_segwit_ready = false;
 
-    std::vector<CTxOut> m_spent_outputs;
+    std::vector<SpentOutput> m_spent_outputs;
     //! Whether m_spent_outputs is initialized.
     bool m_spent_outputs_ready = false;
 
     PrecomputedTransactionData() = default;
 
     template <class T>
-    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs);
+    void Init(const T& tx, std::vector<SpentOutput>&& spent_outputs);
 
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
@@ -230,7 +262,7 @@ static constexpr size_t TAPROOT_CONTROL_MAX_NODE_COUNT = 128;
 static constexpr size_t TAPROOT_CONTROL_MAX_SIZE = TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * TAPROOT_CONTROL_MAX_NODE_COUNT;
 
 template <class T>
-uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
+uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, int64_t refheight, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
 
 class BaseSignatureChecker
 {
@@ -258,6 +290,11 @@ public:
     virtual ~BaseSignatureChecker() {}
 };
 
+enum TxSigCheckOpt {
+    NONE = 0,
+    NO_LOCK_HEIGHT = (1 << 0),
+};
+
 template <class T>
 class GenericTransactionSignatureChecker : public BaseSignatureChecker
 {
@@ -265,15 +302,17 @@ private:
     const T* txTo;
     unsigned int nIn;
     const CAmount amount;
+    const int64_t refheight;
     const PrecomputedTransactionData* txdata;
+    bool no_lock_height;
 
 protected:
     virtual bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
     virtual bool VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const;
 
 public:
-    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(nullptr) {}
-    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
+    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, TxSigCheckOpt opts = TxSigCheckOpt::NONE) : txTo(txToIn), nIn(nInIn), amount(amountIn), refheight(refheightIn), txdata(nullptr), no_lock_height(opts == TxSigCheckOpt::NO_LOCK_HEIGHT) {}
+    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, const PrecomputedTransactionData& txdataIn, TxSigCheckOpt opts = TxSigCheckOpt::NONE) : txTo(txToIn), nIn(nInIn), amount(amountIn), refheight(refheightIn), txdata(&txdataIn), no_lock_height(opts == TxSigCheckOpt::NO_LOCK_HEIGHT) {}
     bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, const ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;

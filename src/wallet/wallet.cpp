@@ -1682,7 +1682,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
             address = CNoDestination();
         }
 
-        COutputEntry output = {address, txout.nValue, (int)i};
+        COutputEntry output = {address, txout.nValue, (uint32_t)tx->lock_height, (int)i};
 
         // If we are debited by the transaction, add the output as a "sent" entry
         if (nDebit > 0)
@@ -2515,7 +2515,7 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
             return false;
         }
         const CWalletTx& wtx = mi->second;
-        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase());
+        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.tx->lock_height, wtx.m_confirm.block_height, wtx.IsCoinBase());
     }
     std::map<int, std::string> input_errors;
     return SignTransaction(tx, coins, SIGHASH_ALL, input_errors);
@@ -2621,7 +2621,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     CTransactionRef tx_new;
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
+    if (!CreateTransaction(vecSend, tx.lock_height ? tx.lock_height : -1, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
         return false;
     }
 
@@ -2740,6 +2740,7 @@ OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_typ
 
 bool CWallet::CreateTransactionInternal(
         const std::vector<CRecipient>& vecSend,
+        int64_t refheight,
         CTransactionRef& tx,
         CAmount& nFeeRet,
         int& nChangePosInOut,
@@ -2779,6 +2780,12 @@ bool CWallet::CreateTransactionInternal(
         std::set<CInputCoin> setCoins;
         LOCK(cs_wallet);
         txNew.nLockTime = GetLocktimeForNewTransaction(chain(), GetLastBlockHash(), GetLastBlockHeight());
+        if (refheight < 0) {
+            // A negative value means "set based on current chain tip."  However
+            // to simplify rebasing, automatic value setting is added in a later
+            // commit.
+            refheight = 0;
+        }
         {
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
@@ -2851,6 +2858,7 @@ bool CWallet::CreateTransactionInternal(
                 nChangePosInOut = nChangePosRequest;
                 txNew.vin.clear();
                 txNew.vout.clear();
+                txNew.lock_height = static_cast<uint32_t>(refheight);
                 bool fFirst = true;
 
                 CAmount nValueToSelect = nValue;
@@ -3102,6 +3110,7 @@ bool CWallet::CreateTransactionInternal(
 
 bool CWallet::CreateTransaction(
         const std::vector<CRecipient>& vecSend,
+        int64_t refheight,
         CTransactionRef& tx,
         CAmount& nFeeRet,
         int& nChangePosInOut,
@@ -3112,7 +3121,7 @@ bool CWallet::CreateTransaction(
 {
     int nChangePosIn = nChangePosInOut;
     CTransactionRef tx2 = tx;
-    bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
+    bool res = CreateTransactionInternal(vecSend, refheight, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
     // try with avoidpartialspends unless it's enabled already
     if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         CCoinControl tmp_cc = coin_control;
@@ -3120,7 +3129,7 @@ bool CWallet::CreateTransaction(
         CAmount nFeeRet2;
         int nChangePosInOut2 = nChangePosIn;
         bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
-        if (CreateTransactionInternal(vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign)) {
+        if (CreateTransactionInternal(vecSend, refheight, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign)) {
             // if fee of this alternative one is within the range of the max fee, we use this one
             const bool use_aps = nFeeRet2 <= nFeeRet + m_max_aps_fee;
             WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");

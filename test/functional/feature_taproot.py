@@ -85,6 +85,7 @@ from test_framework.script import (
     SIGHASH_SINGLE,
     SIGHASH_ANYONECANPAY,
     SegwitV0SignatureHash,
+    SpentOutput,
     TaprootSignatureHash,
     is_op_success,
     taproot_construct,
@@ -223,7 +224,7 @@ def default_sighash(ctx):
         # BIP143 signature hash
         scriptcode = get(ctx, "scriptcode")
         utxos = get(ctx, "utxos")
-        return SegwitV0SignatureHash(scriptcode, tx, idx, hashtype, utxos[idx].nValue)
+        return SegwitV0SignatureHash(scriptcode, tx, idx, hashtype, utxos[idx].out.nValue, utxos[idx].refheight)
     else:
         # Pre-segwit signature hash
         scriptcode = get(ctx, "scriptcode")
@@ -1324,7 +1325,7 @@ class TaprootTest(FreicoinTestFramework):
             # Construct UTXOData entries
             fund_tx.rehash()
             for i in range(count_this_tx):
-                utxodata = UTXOData(outpoint=COutPoint(fund_tx.sha256, i), output=fund_tx.vout[i], spender=spenders[done])
+                utxodata = UTXOData(outpoint=COutPoint(fund_tx.sha256, i), output=SpentOutput(fund_tx.vout[i], fund_tx.lock_height), spender=spenders[done])
                 if utxodata.spender.need_vin_vout_mismatch:
                     mismatching_utxos.append(utxodata)
                 else:
@@ -1379,7 +1380,7 @@ class TaprootTest(FreicoinTestFramework):
             assert first_mismatch_input is None or first_mismatch_input > 0
 
             # Decide fee, and add CTxIns to tx.
-            amount = sum(utxo.output.nValue for utxo in input_utxos)
+            amount = sum(utxo.output.out.nValue for utxo in input_utxos)
             fee = min(random.randrange(MIN_FEE * 2, MIN_FEE * 4), amount - DUST_LIMIT)  # 10000-20000 sat fee
             in_value = amount - fee
             tx.vin = [CTxIn(outpoint=utxo.outpoint, nSequence=random.randint(min_sequence, 0xffffffff)) for utxo in input_utxos]
