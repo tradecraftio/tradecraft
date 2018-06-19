@@ -79,6 +79,7 @@ static CMutableTransaction TestSimpleSpend(const CTransaction& from, uint32_t in
     CMutableTransaction mtx;
     mtx.vout.push_back({from.vout[index].nValue - DEFAULT_TRANSACTION_MAXFEE, pubkey});
     mtx.vin.push_back({CTxIn{from.GetHash(), index}});
+    mtx.lock_height = from.lock_height;
     FillableSigningProvider keystore;
     keystore.AddKey(key);
     std::map<COutPoint, Coin> coins;

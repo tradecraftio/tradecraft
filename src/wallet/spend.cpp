@@ -588,6 +588,10 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
             }
         }
 
+        // Skip outputs which are beyond the requested refheight
+        if (spent_output.refheight > height)
+            continue;
+
         if (input_bytes == -1) {
             input_bytes = CalculateMaximumSignedInputSize(spent_output.out, outpoint, &coin_control.m_external_provider, &coin_control);
         }
