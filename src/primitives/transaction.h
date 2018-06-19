@@ -237,6 +237,11 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
+    if (tx.nVersion != 1 || tx.vin.size() != 1 || !tx.vin[0].prevout.IsNull()) {
+        s >> tx.lock_height;
+    } else {
+        tx.lock_height = 0;
+    }
 }
 
 template<typename Stream, typename TxType>
@@ -266,6 +271,9 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         }
     }
     s << tx.nLockTime;
+    if (tx.nVersion != 1 || tx.vin.size() != 1 || !tx.vin[0].prevout.IsNull()) {
+        s << tx.lock_height;
+    }
 }
 
 
@@ -293,6 +301,19 @@ public:
     const std::vector<CTxOut> vout;
     const int32_t nVersion;
     const uint32_t nLockTime;
+    // Note: It would be semantically better to use a uint32_t here.
+    //       However there are many places where the lock_neight is
+    //       compared against the chain height, which is a regular
+    //       signed int. Converting between the two in a way that
+    //       avoids implementation defined semantics is actually
+    //       quicte tricky and verbose. At some point we should change
+    //       that logic to be unsigned as well, and then we can change
+    //       this to a uint32_t. That would technically be a
+    //       hard-fork, but one that triggers 40,000 years in the
+    //       future, which is perfectly fine. All chain progress would
+    //       stop at that point anyway for similar reasons related to
+    //       height overflow.
+    const int32_t lock_height;
 
 private:
     /** Memory only. */
@@ -374,6 +395,7 @@ struct CMutableTransaction
     std::vector<CTxOut> vout;
     int32_t nVersion;
     uint32_t nLockTime;
+    int32_t lock_height;
 
     CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);

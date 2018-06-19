@@ -1038,6 +1038,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     ]\n"
             "  },\n"
             "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
+            "  \"refheight\" : n           (numeric) The reference height\n"
             "}\n"
 
             "\nExamples:\n"
@@ -1086,6 +1087,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.pushKV("scriptPubKey", o);
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
+    ret.pushKV("refheight", (int64_t)coin.refheight);
 
     return ret;
 }

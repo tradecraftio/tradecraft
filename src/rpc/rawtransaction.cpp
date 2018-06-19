@@ -109,6 +109,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             "  \"weight\" : n,           (numeric) The transaction's weight (between vsize*4-3 and vsize*4)\n"
             "  \"version\" : n,          (numeric) The version\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
+            "  \"lockheight\" : ttt,     (numeric) The lock height\n"
             "  \"vin\" : [               (array of json objects)\n"
             "     {\n"
             "       \"txid\": \"id\",    (string) The transaction id\n"
@@ -348,7 +349,7 @@ static UniValue verifytxoutproof(const JSONRPCRequest& request)
     return res;
 }
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& lockheight)
 {
     if (inputs_in.isNull() || outputs_in.isNull())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1 and 2 must be non-null");
@@ -364,6 +365,14 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
+    }
+
+    rawTx.lock_height = 0;
+    if (!lockheight.isNull()) {
+        rawTx.lock_height = lockheight.get_int();
+    }
+    if (rawTx.lock_height <= 0) {
+        rawTx.lock_height = chainActive.Height() + 1;
     }
 
     for (unsigned int idx = 0; idx < inputs.size(); idx++) {
@@ -455,10 +464,10 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
 
 static UniValue createrawtransaction(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3) {
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4) {
         throw std::runtime_error(
             // clang-format off
-            "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime )\n"
+            "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( lockheight )\n"
             "\nCreate a transaction spending the given inputs and creating new outputs.\n"
             "Outputs can be addresses or data.\n"
             "Returns hex-encoded raw transaction.\n"
@@ -488,6 +497,8 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
             "                             accepted as second parameter.\n"
             "   ]\n"
             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
+            "4. lockheight                (numeric, optional, default=tip+1) The reference heiheight of the outputs.\n"
+            "                             If not specified, the height of the next block to be mined is used.\n"
             "\nResult:\n"
             "\"transaction\"              (string) hex string of the transaction\n"
 
@@ -504,10 +515,11 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
+        UniValue::VNUM,
         }, true
     );
 
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
 
     return EncodeHexTx(rawTx);
 }
@@ -533,6 +545,7 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
             "  \"weight\" : n,           (numeric) The transaction's weight (between vsize*4 - 3 and vsize*4)\n"
             "  \"version\" : n,          (numeric) The version\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
+            "  \"lockheight\" : n,       (numeric) The lock height\n"
             "  \"vin\" : [               (array of json objects)\n"
             "     {\n"
             "       \"txid\": \"id\",    (string) The transaction id\n"
@@ -722,6 +735,17 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions");
     }
 
+    // Merging transactions with different lock_height values is unlikely to
+    // accomplish what the user is expecting, since this field also acts as the
+    // reference height for the transaction.  We require all transactions to
+    // have maching lock_height values.
+    auto lock_height = txVariants[0].lock_height;
+    for (const auto& tx : txVariants) {
+        if (tx.lock_height != lock_height) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Provided transactions have incompatible lock_height fields");
+        }
+    }
+
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
     CMutableTransaction mergedTx(txVariants[0]);
@@ -758,10 +782,10 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
             if (txv.vin.size() > i) {
-                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out));
+                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, coin.refheight));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1), coin.out.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
@@ -831,6 +855,10 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
                     newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
                 }
                 newcoin.nHeight = 1;
+                newcoin.refheight = 0;
+                if (prevOut.exists("refheight")) {
+                    newcoin.refheight = find_value(prevOut, "refheight").get_int();
+                }
                 view.AddCoin(out, std::move(newcoin), true);
             }
 
@@ -873,11 +901,12 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
         const CAmount& amount = coin.out.nValue;
+        const int64_t refheight = coin.refheight;
 
-        SignatureData sigdata = DataFromTransaction(mtx, i, coin.out);
+        SignatureData sigdata = DataFromTransaction(mtx, i, coin.out, refheight);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, refheight, nHashType), prevPubKey, sigdata);
         }
 
         UpdateInput(txin, sigdata);
@@ -888,7 +917,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         }
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, refheight), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");
@@ -935,6 +964,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
             "         \"scriptPubKey\": \"hex\",     (string, required) script key\n"
             "         \"redeemScript\": \"hex\",     (string, required for P2SH or P2WSH) redeem script\n"
             "         \"amount\": value            (numeric, required) The amount spent\n"
+            "         \"refheight\": value         (numeric, required) The lockheight of the transaction output being spent\n"
             "       }\n"
             "       ,...\n"
             "    ]\n"
@@ -1016,6 +1046,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             "         \"scriptPubKey\": \"hex\",   (string, required) script key\n"
             "         \"redeemScript\": \"hex\",   (string, required for P2SH or P2WSH) redeem script\n"
             "         \"amount\": value            (numeric, required) The amount spent\n"
+            "         \"refheight\": value         (numeric, required) The lockheight of the transaction output being spent\n"
             "       }\n"
             "       ,...\n"
             "    ]\n"
@@ -1683,9 +1714,9 @@ UniValue finalizepst(const JSONRPCRequest& request)
 
 UniValue createpst(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
-                            "createpst [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime )\n"
+                            "createpst [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( lockheight )\n"
                             "\nCreates a transaction in the Partially Signed Transaction format.\n"
                             "Implements the Creator role.\n"
                             "\nArguments:\n"
@@ -1712,6 +1743,8 @@ UniValue createpst(const JSONRPCRequest& request)
                             "   ]\n"
                             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
                             "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
+                            "4. lockheight                (numeric, optional, default=tip+1) The reference heiheight of the outputs.\n"
+                            "                             If not specified, the height of the next block to be mined is used.\n"
                             "\nResult:\n"
                             "  \"pst\"        (string)  The resulting raw transaction (hex-encoded string)\n"
                             "\nExamples:\n"
@@ -1723,10 +1756,11 @@ UniValue createpst(const JSONRPCRequest& request)
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
+        UniValue::VNUM,
         }, true
     );
 
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
 
     // Make a blank pst
     PartiallySignedTransaction pstx;
@@ -1813,7 +1847,7 @@ static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
     { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
-    { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime"} },
+    { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","lockheight"} },
     { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
     { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },
     { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","allowhighfees"} },
@@ -1824,7 +1858,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "decodepst",                   &decodepst,                {"pst"} },
     { "rawtransactions",    "combinepst",                  &combinepst,               {"txs"} },
     { "rawtransactions",    "finalizepst",                 &finalizepst,              {"pst", "extract"} },
-    { "rawtransactions",    "createpst",                   &createpst,                {"inputs","outputs","locktime"} },
+    { "rawtransactions",    "createpst",                   &createpst,                {"inputs","outputs","locktime","lockheight"} },
     { "rawtransactions",    "converttopst",                &converttopst,             {"hexstring","permitsigdata","iswitness"} },
 
     { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },

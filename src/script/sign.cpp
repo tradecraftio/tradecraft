@@ -24,7 +24,7 @@
 
 typedef std::vector<unsigned char> valtype;
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, int nHashTypeIn) : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), refheight(refheightIn), checker(txTo, nIn, amountIn, refheightIn) {}
 
 bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& address, const CScript& scriptCode, SigVersion sigversion) const
 {
@@ -36,7 +36,7 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     if (sigversion == SigVersion::WITNESS_V0 && !key.IsCompressed())
         return false;
 
-    uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion);
+    uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, refheight, sigversion);
     if (!key.Sign(hash, vchSig))
         return false;
     vchSig.push_back((unsigned char)nHashType);
@@ -264,6 +264,7 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
     // Get UTXO
     bool require_witness_sig = false;
     CTxOut utxo;
+    uint32_t refheight;
 
     // Verify input sanity, which checks that at most one of witness or non-witness utxos is provided.
     if (!input.IsSane()) {
@@ -277,8 +278,10 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
             return false;
         }
         utxo = input.non_witness_utxo->vout[prevout.n];
+        refheight = input.non_witness_utxo->lock_height;
     } else if (!input.witness_utxo.IsNull()) {
         utxo = input.witness_utxo;
+        refheight = input.witness_refheight;
         // When we're taking our information from a witness UTXO, we can't verify it is actually data from
         // the output being spent. This is safe in case a witness signature is produced (which includes this
         // information directly in the hash), but not for non-witness signatures. Remember that we require
@@ -288,7 +291,7 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
         return false;
     }
 
-    MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
+    MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, refheight, sighash);
     sigdata.witness = false;
     bool sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     // Verify that a witness signature was produced in case one was required.
@@ -298,6 +301,7 @@ bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& p
     // If we have a witness signature, use the smaller witness UTXO.
     if (sigdata.witness) {
         input.witness_utxo = utxo;
+        input.witness_refheight = refheight;
         input.non_witness_utxo = nullptr;
     }
 
@@ -341,7 +345,7 @@ struct Stacks
 }
 
 // Extracts signatures and scripts from incomplete scriptSigs. Please do not extend this, use PST instead
-SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout)
+SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout, int64_t refheight)
 {
     SignatureData data;
     assert(tx.vin.size() > nIn);
@@ -350,7 +354,7 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
     Stacks stack(data);
 
     // Get signatures
-    MutableTransactionSignatureChecker tx_checker(&tx, nIn, txout.nValue);
+    MutableTransactionSignatureChecker tx_checker(&tx, nIn, txout.nValue, refheight);
     SignatureExtractorChecker extractor_checker(data, tx_checker);
     if (VerifyScript(data.scriptSig, txout.scriptPubKey, &data.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, extractor_checker)) {
         data.complete = true;
@@ -429,11 +433,11 @@ void SignatureData::MergeSignatureData(SignatureData sigdata)
     signatures.insert(std::make_move_iterator(sigdata.signatures.begin()), std::make_move_iterator(sigdata.signatures.end()));
 }
 
-bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType)
+bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int64_t refheight, int nHashType)
 {
     assert(nIn < txTo.vin.size());
 
-    MutableTransactionSignatureCreator creator(&txTo, nIn, amount, nHashType);
+    MutableTransactionSignatureCreator creator(&txTo, nIn, amount, refheight, nHashType);
 
     SignatureData sigdata;
     bool ret = ProduceSignature(provider, creator, fromPubKey, sigdata);
@@ -448,7 +452,7 @@ bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, 
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.nValue, nHashType);
+    return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.nValue, txFrom.lock_height, nHashType);
 }
 
 namespace {
@@ -612,6 +616,7 @@ void PSTInput::Merge(const PSTInput& input)
     if (!non_witness_utxo && input.non_witness_utxo) non_witness_utxo = input.non_witness_utxo;
     if (witness_utxo.IsNull() && !input.witness_utxo.IsNull()) {
         witness_utxo = input.witness_utxo;
+        witness_refheight = input.witness_refheight;
         non_witness_utxo = nullptr; // Clear out any non-witness utxo when we set a witness one.
     }
 

@@ -1809,6 +1809,7 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
             entry.pushKV("fee", ValueFromAmount(-nFee));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
+            entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
             entry.pushKV("abandoned", wtx.isAbandoned());
             ret.push_back(entry);
         }
@@ -1851,6 +1852,7 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
                 entry.pushKV("vout", r.vout);
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
+                entry.push_back(Pair("refheight", (uint64_t)wtx.tx->lock_height));
                 ret.push_back(entry);
             }
         }
@@ -2375,6 +2377,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
+    entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
     if (wtx.IsFromMe(filter))
         entry.pushKV("fee", ValueFromAmount(nFee));
 
@@ -3410,6 +3413,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
+        entry.pushKV("refheight", (uint64_t)out.tx->tx->lock_height);
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
@@ -4516,7 +4520,7 @@ bool FillPST(const CWallet* pwallet, PartiallySignedTransaction& pstx, int sigha
         SignatureData sigdata;
         pst_out.FillSignatureData(sigdata);
 
-        MutableTransactionSignatureCreator creator(pstx.tx.get_ptr(), 0, out.nValue, 1);
+        MutableTransactionSignatureCreator creator(pstx.tx.get_ptr(), 0, out.nValue, 1, SIGHASH_ALL);
         ProduceSignature(*pwallet, creator, out.scriptPubKey, sigdata);
         pst_out.FromSignatureData(sigdata);
 
@@ -4604,9 +4608,9 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw std::runtime_error(
-                            "walletcreatefundedpst [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( options bip32derivs )\n"
+                            "walletcreatefundedpst [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( lockheight ) ( options bip32derivs )\n"
                             "\nCreates and funds a transaction in the Partially Signed Transaction format. Inputs will be added if supplied inputs are not enough\n"
                             "Implements the Creator and Updater roles.\n"
                             "\nArguments:\n"
@@ -4632,7 +4636,9 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
                             "                             accepted as second parameter.\n"
                             "   ]\n"
                             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
-                            "4. options                 (object, optional)\n"
+                            "4. lockheight                (numeric, optional, default=tip+1) The reference heiheight of the outputs.\n"
+                            "                             If not specified, the height of the next block to be mined is used.\n"
+                            "5. options                 (object, optional)\n"
                             "   {\n"
                             "     \"changeAddress\"          (string, optional, default pool address) The freicoin address to receive the change\n"
                             "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
@@ -4652,7 +4658,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
                             "         \"ECONOMICAL\"\n"
                             "         \"CONSERVATIVE\"\n"
                             "   }\n"
-                            "5. bip32derivs                    (boolean, optional, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
+                            "6. bip32derivs                    (boolean, optional, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"pst\": \"value\",        (string)  The resulting raw transaction (hex-encoded string)\n"
@@ -4668,6 +4674,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
+        UniValue::VNUM,
         UniValue::VOBJ,
         UniValue::VBOOL
         }, true
@@ -4675,14 +4682,14 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
 
     CAmount fee;
     int change_position;
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
-    FundTransaction(pwallet, rawTx, fee, change_position, request.params[3]);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
+    FundTransaction(pwallet, rawTx, fee, change_position, request.params[4]);
 
     // Make a blank pst
     PartiallySignedTransaction pstx(rawTx);
 
     // Fill transaction with out data but don't sign
-    bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
+    bool bip32derivs = request.params[5].isNull() ? false : request.params[5].get_bool();
     FillPST(pwallet, pstx, 1, false, bip32derivs);
 
     // Serialize the PST
