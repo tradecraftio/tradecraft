@@ -2219,7 +2219,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, uint32_t atheight, bo
         if (nDepth == 0 && !wtx.InMempool())
             continue;
 
-        // It is possible that we're called with a height value that is less
+        // It is possible that we're called with an height value that is less
         // than the current block height, so let's not include outputs which
         // can't be used at the specified refheight.
         if (wtx.tx->lock_height > atheight)
@@ -2437,6 +2437,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         {
             if (!out.fSpendable)
                  continue;
+            if (out.tx->tx->lock_height > height)
+                continue;
             nValueRet += out.tx->tx->vout[out.i].nValue;
             setCoinsRet.insert(out.GetInputCoin());
         }

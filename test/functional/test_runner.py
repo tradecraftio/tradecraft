@@ -91,7 +91,7 @@ EXTENDED_SCRIPTS = [
     # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
-    'feature_dbcrash.py',
+    'feature_dbcrash.py --bitcoin-mode',
 ]
 
 BASE_SCRIPTS = [
@@ -108,7 +108,7 @@ BASE_SCRIPTS = [
     'rpc_fundrawtransaction.py',
     #'rpc_fundrawtransaction.py --descriptors', #times out
     'p2p_compactblocks.py',
-    'feature_segwit.py --legacy-wallet',
+    'feature_segwit.py --legacy-wallet --bitcoin-mode',
     # vv Tests less than 2m vv
     'wallet_basic.py',
     #'wallet_basic.py --descriptors', #times out
@@ -136,7 +136,7 @@ BASE_SCRIPTS = [
     #'rpc_rawtransaction.py --descriptors', #times out
     'wallet_address_types.py',
     #'wallet_address_types.py --descriptors', #times out
-    'feature_bip68_sequence.py',
+    'feature_bip68_sequence.py --bitcoin-mode',
     'p2p_feefilter.py',
     'feature_reindex.py',
     'feature_abortnode.py',
@@ -214,7 +214,7 @@ BASE_SCRIPTS = [
     'feature_notifications.py',
     'rpc_getblockfilter.py',
     'rpc_invalidateblock.py',
-    'feature_rbf.py',
+    'feature_rbf.py --bitcoin-mode',
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'rpc_createmultisig.py',
