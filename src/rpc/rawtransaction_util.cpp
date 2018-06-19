@@ -167,7 +167,7 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
     }
 }
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& lockheight, int current_height, std::optional<bool> rbf)
 {
     CMutableTransaction rawTx;
 
@@ -176,6 +176,22 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         if (nLockTime < 0 || nLockTime > LOCKTIME_MAX)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
+    }
+
+    rawTx.lock_height = 0;
+    if (!lockheight.isNull()) {
+        int64_t lock_height = lockheight.getInt<int64_t>();
+        if (lock_height < -1 || lock_height > std::numeric_limits<uint32_t>::max()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, lockheight out of range");
+        }
+        if (lock_height <= 0) {
+            rawTx.lock_height = 0;
+        } else {
+            rawTx.lock_height = static_cast<uint32_t>(lock_height);
+        }
+    }
+    if (rawTx.lock_height == 0) {
+        rawTx.lock_height = current_height + 1;
     }
 
     AddInputs(rawTx, inputs_in, rbf);
@@ -207,12 +223,13 @@ static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::
 
 void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keystore, std::map<COutPoint, Coin>& coins)
 {
+    using std::to_string;
     if (!prevTxsUnival.isNull()) {
         const UniValue& prevTxs = prevTxsUnival.get_array();
         for (unsigned int idx = 0; idx < prevTxs.size(); ++idx) {
             const UniValue& p = prevTxs[idx];
             if (!p.isObject()) {
-                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"txid'\",\"vout\",\"scriptPubKey\"}");
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"txid'\",\"vout\",\"refheight\",\"scriptPubKey\"}");
             }
 
             const UniValue& prevOut = p.get_obj();
@@ -221,6 +238,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 {
                     {"txid", UniValueType(UniValue::VSTR)},
                     {"vout", UniValueType(UniValue::VNUM)},
+                    {"refheight", UniValueType(UniValue::VNUM)},
                     {"scriptPubKey", UniValueType(UniValue::VSTR)},
                 });
 
@@ -231,17 +249,31 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "vout cannot be negative");
             }
 
+            int64_t _refheight = prevOut.find_value("refheight").getInt<int64_t>();
+            if (_refheight < 0) {
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "refheight cannot be negative");
+            }
+            if (_refheight > std::numeric_limits<uint32_t>::max()) {
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "refheight cannot exceed 2^32");
+            }
+            uint32_t refheight = static_cast<uint32_t>(_refheight);
+
             COutPoint out(txid, nOut);
             std::vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
             {
                 auto coin = coins.find(out);
-                if (coin != coins.end() && !coin->second.IsSpent() && coin->second.out.scriptPubKey != scriptPubKey) {
-                    std::string err("Previous output scriptPubKey mismatch:\n");
-                    err = err + ScriptToAsmStr(coin->second.out.scriptPubKey) + "\nvs:\n"+
-                        ScriptToAsmStr(scriptPubKey);
-                    throw JSONRPCError(RPC_DESERIALIZATION_ERROR, err);
+                if (coin != coins.end() && !coin->second.IsSpent()) {
+                    if (coin->second.out.scriptPubKey != scriptPubKey) {
+                        std::string err("Previous output scriptPubKey mismatch:\n");
+                        err = err + ScriptToAsmStr(coin->second.out.scriptPubKey) + "\nvs:\n"+
+                            ScriptToAsmStr(scriptPubKey);
+                        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, err);
+                    }
+                    if (coin->second.refheight != refheight) {
+                        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Previous output refheight mismatch: " + to_string(coin->second.refheight) + " != " + to_string(refheight));
+                    }
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
@@ -250,6 +282,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     newcoin.out.nValue = AmountFromValue(prevOut.find_value("amount"));
                 }
                 newcoin.nHeight = 1;
+                newcoin.refheight = refheight;
                 coins[out] = std::move(newcoin);
             }
 

@@ -51,6 +51,9 @@ public:
     /** The output itself */
     CTxOut txout;
 
+    /** The transaction's lock_height */
+    uint32_t refheight;
+
     /**
      * Depth in block chain.
      * If > 0: the tx is on chain and has this many confirmations.
@@ -86,9 +89,10 @@ public:
     /** The fee necessary to bump this UTXO's ancestor transactions to the target feerate */
     CAmount ancestor_bump_fees{0};
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
+    COutput(const COutPoint& outpoint, const SpentOutput& spent_output, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
         : outpoint{outpoint},
-          txout{txout},
+          txout{spent_output.out},
+          refheight{spent_output.refheight},
           depth{depth},
           input_bytes{input_bytes},
           spendable{spendable},
@@ -104,8 +108,8 @@ public:
         }
     }
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
-        : COutput(outpoint, txout, depth, input_bytes, spendable, solvable, safe, time, from_me)
+    COutput(const COutPoint& outpoint, const SpentOutput& spent_output, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
+        : COutput(outpoint, spent_output, depth, input_bytes, spendable, solvable, safe, time, from_me)
     {
         // if input_bytes is unknown, then fees should be 0, if input_bytes is known, then the fees should be a positive integer or 0 (input_bytes known and fees = 0 only happens in the tests)
         assert((input_bytes < 0 && fees == 0) || (input_bytes > 0 && fees >= 0));

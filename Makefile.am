@@ -281,6 +281,8 @@ EXTRA_DIST += \
     test/util/data/tt-delout1-out.json \
     test/util/data/tt-locktime317000-out.hex \
     test/util/data/tt-locktime317000-out.json \
+    test/util/data/tt-lockheight252000-out.hex \
+    test/util/data/tt-lockheight252000-out.json \
     test/util/data/tx394b54bb.hex \
     test/util/data/txcreate1.hex \
     test/util/data/txcreate1.json \
