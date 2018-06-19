@@ -166,7 +166,7 @@ testScriptsExt = [
     'bip9-softforks.py',
 #    'bip65-cltv.py', #not deployed on Freicoin
 #    'bip65-cltv-p2p.py', #not deployed on Freicoin
-    'bip68-sequence.py',
+    'bip68-sequence.py --bitcoin-mode',
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_longpoll.py',
@@ -181,7 +181,7 @@ testScriptsExt = [
     'p2p-acceptblock.py',
     'mempool_packages.py',
     'maxuploadtarget.py',
-    'replace-by-fee.py',
+    'replace-by-fee.py --bitcoin-mode',
     'p2p-feefilter.py',
     'pruning.py', # leave pruning last as it takes a REALLY long time
 ]
