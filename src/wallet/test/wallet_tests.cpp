@@ -717,7 +717,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 
     // Lock both coins. Confirm number of available coins drops to 0.
     std::vector<COutput> available;
-    wallet->AvailableCoins(available);
+    wallet->AvailableCoins(chainActive.Height() + 1, available);
     BOOST_CHECK_EQUAL(available.size(), 2);
     for (const auto& group : list) {
         for (const auto& coin : group.second) {
@@ -725,7 +725,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
             wallet->LockCoin(COutPoint(coin.tx->GetHash(), coin.i));
         }
     }
-    wallet->AvailableCoins(available);
+    wallet->AvailableCoins(chainActive.Height() + 1, available);
     BOOST_CHECK_EQUAL(available.size(), 0);
 
     // Confirm ListCoins still returns same result as before, despite coins

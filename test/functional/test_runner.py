@@ -158,9 +158,9 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 5m vv
     'feature_maxuploadtarget.py',
     'mempool_packages.py',
-    'feature_dbcrash.py',
+    'feature_dbcrash.py --bitcoin-mode',
     # vv Tests less than 2m vv
-    'feature_bip68_sequence.py',
+    'feature_bip68_sequence.py --bitcoin-mode',
     'mining_getblocktemplate_longpoll.py',
     'p2p_timeouts.py',
     # vv Tests less than 60s vv
@@ -174,7 +174,7 @@ EXTENDED_SCRIPTS = [
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
     'rpc_invalidateblock.py',
-    'feature_rbf.py',
+    'feature_rbf.py --bitcoin-mode',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
