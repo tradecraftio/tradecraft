@@ -408,6 +408,7 @@ class CTransaction(object):
             self.vin = []
             self.vout = []
             self.nLockTime = 0
+            self.lock_height = 0
             self.sha256 = None
             self.hash = None
         else:
@@ -415,6 +416,7 @@ class CTransaction(object):
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
+            self.lock_height = tx.lock_height
             self.sha256 = None
             self.hash = None
 
@@ -423,6 +425,8 @@ class CTransaction(object):
         self.vin = deser_vector(f, CTxIn)
         self.vout = deser_vector(f, CTxOut)
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
+        if self.nVersion!=1 or len(self.vin)!=1 or self.vin[0].prevout.hash!=0 or self.vin[0].prevout.n not in (-1,0xffffffff):
+            self.lock_height = struct.unpack("<I", f.read(4))[0]
         self.sha256 = None
         self.hash = None
 
@@ -432,6 +436,8 @@ class CTransaction(object):
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += struct.pack("<I", self.nLockTime)
+        if self.nVersion!=1 or len(self.vin)!=1 or self.vin[0].prevout.hash!=0 or self.vin[0].prevout.n not in (-1,0xffffffff):
+            r += struct.pack("<I", self.lock_height)
         return r
 
     def rehash(self):
@@ -451,8 +457,8 @@ class CTransaction(object):
         return True
 
     def __repr__(self):
-        return "CTransaction(nVersion=%i vin=%s vout=%s nLockTime=%i)" \
-            % (self.nVersion, repr(self.vin), repr(self.vout), self.nLockTime)
+        return "CTransaction(nVersion=%i vin=%s vout=%s nLockTime=%i lock_height=%i)" \
+            % (self.nVersion, repr(self.vin), repr(self.vout), self.nLockTime, self.lock_height)
 
 
 class CBlockHeader(object):

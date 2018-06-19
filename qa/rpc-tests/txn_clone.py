@@ -93,6 +93,11 @@ class TxnMallTest(FreicoinTestFramework):
         ltbe = '%08x' % rawtx1["locktime"]
         clone_raw = clone_raw[:poslt] + ltbe[6:8] + ltbe[4:6] + ltbe[2:4] + ltbe[0:2] + clone_raw[poslt + 8:]
 
+        # maipulation 4. lockheight is after locktime
+        poslh = poslt + 2 * 4
+        lhbe = '%08x' % rawtx1["lockheight"]
+        clone_raw = clone_raw[:poslh] + lhbe[6:8] + lhbe[4:6] + lhbe[2:4] + lhbe[0:2] + clone_raw[poslh + 8:]
+
         # Use a different signature hash type to sign.  This creates an equivalent but malleated clone.
         # Don't send the clone anywhere yet
         tx1_clone = self.nodes[0].signrawtransaction(clone_raw, None, None, "ALL|ANYONECANPAY")

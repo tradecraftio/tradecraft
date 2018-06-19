@@ -345,7 +345,7 @@ class FullBlockTest(ComparisonTestFramework):
         b23 = block(23, spend=out6)
         old_hash = b23.sha256
         tx = CTransaction()
-        script_length = MAX_BLOCK_SIZE - len(b23.serialize()) - 69
+        script_length = MAX_BLOCK_SIZE - len(b23.serialize()) - 73
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 1)))
@@ -357,7 +357,7 @@ class FullBlockTest(ComparisonTestFramework):
         # Make the next block one byte bigger and check that it fails
         tip(15)
         b24 = block(24, spend=out6)
-        script_length = MAX_BLOCK_SIZE - len(b24.serialize()) - 69
+        script_length = MAX_BLOCK_SIZE - len(b24.serialize()) - 73
         script_output = CScript([b'\x00' * (script_length+1)])
         tx.vout = [CTxOut(0, script_output)]
         b24 = update_block(24, [tx])

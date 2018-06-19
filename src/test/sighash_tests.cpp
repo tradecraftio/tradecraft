@@ -114,6 +114,7 @@ void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
     tx.vin.clear();
     tx.vout.clear();
     tx.nLockTime = (insecure_rand() % 2) ? insecure_rand() : 0;
+    tx.lock_height = (insecure_rand() % 2) ? insecure_rand() : 0;
     int ins = (insecure_rand() % 4) + 1;
     int outs = fSingle ? ins : (insecure_rand() % 4) + 1;
     for (int in = 0; in < ins; in++) {
@@ -148,7 +149,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     nRandomTests = 500;
     #endif
     for (int i=0; i<nRandomTests; i++) {
-        int nHashType = insecure_rand();
+        int nHashType = (insecure_rand() & ~SIGHASH_NO_LOCK_HEIGHT);
         CMutableTransaction txTo;
         RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
         CScript scriptCode;

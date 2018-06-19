@@ -79,6 +79,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     entry.push_back(Pair("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION)));
     entry.push_back(Pair("version", tx.nVersion));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
+    entry.push_back(Pair("lockheight", (int64_t)tx.lock_height));
     UniValue vin(UniValue::VARR);
     BOOST_FOREACH(const CTxIn& txin, tx.vin) {
         UniValue in(UniValue::VOBJ);
@@ -357,6 +358,8 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
             "      ...\n"
             "    }\n"
             "3. locktime                (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
+            "4. refheight            (numeric, optional, default=tip+1) The reference height of the outputs.\n"
+            "                         If not specified, the height of the next block to be mined is used.\n"
             "\nResult:\n"
             "\"transaction\"            (string) hex string of the transaction\n"
 
@@ -382,6 +385,14 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
         if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
+    }
+
+    int refheight = 0;
+    if (params.size() > 3 && params[3].isNull()) {
+        rawTx.lock_height = params[3].get_int();
+    }
+    if (refheight <= 0) {
+        rawTx.lock_height = chainActive.Height() + 1;
     }
 
     for (unsigned int idx = 0; idx < inputs.size(); idx++) {
@@ -448,6 +459,7 @@ UniValue decoderawtransaction(const UniValue& params, bool fHelp)
             "  \"size\" : n,             (numeric) The transaction size\n"
             "  \"version\" : n,          (numeric) The version\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
+            "  \"lockheight\" : n,       (numeric) The lock height\n"
             "  \"vin\" : [               (array of json objects)\n"
             "     {\n"
             "       \"txid\": \"id\",    (string) The transaction id\n"
