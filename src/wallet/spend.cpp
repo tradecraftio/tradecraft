@@ -459,6 +459,8 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     {
         for (const COutput& out : vCoins) {
             if (!out.fSpendable) continue;
+            if (out.tx->tx->lock_height > height)
+                continue;
             /* Set depth, from_me, ancestors, and descendants to 0 or false as these don't matter for preset inputs as no actual selection is being done.
              * positive_only is set to false because we want to include all preset inputs, even if they are dust.
              */

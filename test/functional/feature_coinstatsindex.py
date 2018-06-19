@@ -178,6 +178,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(int(tx1_txid, 16), n), b''))
         tx2.vout.append(CTxOut(int(Decimal('20.99') * COIN), CScript([OP_RETURN] + [OP_FALSE]*30)))
+        tx2.lock_height = tx1_final["refheight"]
         tx2_hex = self.nodes[0].signrawtransactionwithwallet(tx2.serialize().hex())['hex']
         self.nodes[0].sendrawtransaction(tx2_hex)
 
