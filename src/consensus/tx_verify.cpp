@@ -237,6 +237,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
+        // Check that lock_height is monotonically increasing.
+        if (!(params.bitcoin_mode) && (tx.lock_height < coin.refheight)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-non-monotonic-lock-height", false,
+                             strprintf("%s: tx.lock_height %d < coin.refheight %d", __func__, tx.lock_height, coin.refheight));
+        }
+
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
         if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
