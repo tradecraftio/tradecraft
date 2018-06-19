@@ -116,8 +116,8 @@ class MiniWallet:
         # for those mature UTXOs, so that all txs spend confirmed coins
         self.rescan_utxos()
 
-    def _create_utxo(self, *, txid, vout, value, height, coinbase, confirmations):
-        return {"txid": txid, "vout": vout, "value": value, "height": height, "coinbase": coinbase, "confirmations": confirmations}
+    def _create_utxo(self, *, txid, vout, value, refheight, height, coinbase, confirmations):
+        return {"txid": txid, "vout": vout, "value": value, "refheight": refheight, "height": height, "coinbase": coinbase, "confirmations": confirmations}
 
     def _bulk_tx(self, tx, target_weight):
         """Pad a transaction with extra outputs until it reaches a target weight (or higher).
@@ -144,6 +144,7 @@ class MiniWallet:
                 self._create_utxo(txid=utxo["txid"],
                                   vout=utxo["vout"],
                                   value=utxo["amount"],
+                                  refheight=utxo["refheight"],
                                   height=utxo["height"],
                                   coinbase=utxo["coinbase"],
                                   confirmations=res["height"] - utxo["height"] + 1))
@@ -167,7 +168,7 @@ class MiniWallet:
                 pass
         for out in tx['vout']:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                self._utxos.append(self._create_utxo(txid=tx["txid"], vout=out["n"], value=out["value"], height=0, coinbase=False, confirmations=0))
+                self._utxos.append(self._create_utxo(txid=tx["txid"], vout=out["n"], value=out["value"], refheight=tx["lockheight"], height=0, coinbase=False, confirmations=0))
 
     def scan_txs(self, txs):
         for tx in txs:
@@ -299,6 +300,7 @@ class MiniWallet:
         amount_per_output=0,
         version=2,
         locktime=0,
+        lockheight=0,
         sequence=0,
         fee_per_output=1000,
         target_weight=0,
@@ -312,6 +314,10 @@ class MiniWallet:
         utxos_to_spend = utxos_to_spend or [self.get_utxo(confirmed_only=confirmed_only)]
         sequence = [sequence] * len(utxos_to_spend) if type(sequence) is int else sequence
         assert_equal(len(utxos_to_spend), len(sequence))
+
+        # calculate max input refheight
+        if lockheight <= 0:
+            lockheight = max([utxo['refheight'] for utxo in utxos_to_spend])
 
         # calculate output amount
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
@@ -327,6 +333,7 @@ class MiniWallet:
         tx.vout = [CTxOut(amount_per_output, bytearray(self._scriptPubKey)) for _ in range(num_outputs)]
         tx.nVersion = version
         tx.nLockTime = locktime
+        tx.lock_height = lockheight
 
         self.sign_tx(tx)
 
@@ -339,6 +346,7 @@ class MiniWallet:
                 txid=txid,
                 vout=i,
                 value=Decimal(tx.vout[i].nValue) / COIN,
+                refheight=tx.lock_height,
                 height=0,
                 coinbase=False,
                 confirmations=0,
@@ -366,12 +374,14 @@ class MiniWallet:
         assert fee >= 0
         # calculate fee
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
-            vsize = Decimal(104)  # anyone-can-spend
+            vsize = Decimal(108)  # anyone-can-spend
         elif self._mode == MiniWalletMode.RAW_P2PK:
-            vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
+            vsize = Decimal(172)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 64 bytes other)
         else:
             assert False
         send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
+        if kwargs.get('lockheight', 0) <= 0:
+            kwargs['lockheight'] = utxo_to_spend['refheight']
 
         # create tx
         tx = self.create_self_transfer_multi(
