@@ -1004,13 +1004,15 @@ private:
     const bool fAnyoneCanPay;  //! whether the hashtype has the SIGHASH_ANYONECANPAY flag set
     const bool fHashSingle;    //! whether the hashtype is SIGHASH_SINGLE
     const bool fHashNone;      //! whether the hashtype is SIGHASH_NONE
+    const bool no_lock_height; //! whether the hashtype has the SIGHASH_NO_LOCK_HEIGHT flag set
 
 public:
     CTransactionSignatureSerializer(const CTransaction &txToIn, const CScript &scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
         txTo(txToIn), scriptCode(scriptCodeIn), nIn(nInIn),
         fAnyoneCanPay(!!(nHashTypeIn & SIGHASH_ANYONECANPAY)),
         fHashSingle((nHashTypeIn & 0x1f) == SIGHASH_SINGLE),
-        fHashNone((nHashTypeIn & 0x1f) == SIGHASH_NONE) {}
+        fHashNone((nHashTypeIn & 0x1f) == SIGHASH_NONE),
+        no_lock_height(!!(nHashTypeIn & SIGHASH_NO_LOCK_HEIGHT)) {}
 
     /** Serialize the passed scriptCode, skipping OP_CODESEPARATORs */
     template<typename S>
@@ -1084,6 +1086,10 @@ public:
              SerializeOutput(s, nOutput, nType, nVersion);
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime, nType, nVersion);
+        // Serialize lock_height
+        if (!no_lock_height && (txTo.vin.size() != 1 || !txTo.vin[0].prevout.IsNull() || txTo.nVersion != 1)) {
+            ::Serialize(s, txTo.lock_height, nType, nVersion);
+        }
     }
 };
 
@@ -1109,7 +1115,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
-    ss << txTmp << nHashType;
+    ss << txTmp << (nHashType & ~SIGHASH_NO_LOCK_HEIGHT);
     return ss.GetHash();
 }
 
@@ -1130,6 +1136,14 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
         return false;
     int nHashType = vchSig.back();
     vchSig.pop_back();
+
+    // If we are in bitcoin compatibility mode, then we need to signal
+    // that the lock_height field of the transaction not be serialized
+    // during the signature check. This prevents invalidation of
+    // bitcoin signatures in unit tests carried over from that
+    // codebase.
+    if (no_lock_height)
+        nHashType |= SIGHASH_NO_LOCK_HEIGHT;
 
     uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType);
 
