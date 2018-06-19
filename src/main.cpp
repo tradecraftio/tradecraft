@@ -1464,6 +1464,11 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
             }
 
+            // Check that lock_height is monotonically increasing.
+            if (tx.lock_height < coins->refheight)
+                return state.DoS(100, error("CheckInputs() : input refheight less than tx lock_height"),
+                                 REJECT_INVALID, "bad-txns-non-monotonic-lock-height");
+
             // Check for negative or overflow input values
             nValueIn += coins->vout[prevout.n].nValue;
             if (!MoneyRange(coins->vout[prevout.n].nValue) || !MoneyRange(nValueIn))
