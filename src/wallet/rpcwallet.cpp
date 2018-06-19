@@ -1439,6 +1439,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             entry.pushKV("fee", ValueFromAmount(-nFee));
             if (fLong)
                 WalletTxToJSON(pwallet->chain(), locked_chain, wtx, entry);
+            entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
             entry.pushKV("abandoned", wtx.isAbandoned());
             ret.push_back(entry);
         }
@@ -1481,6 +1482,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             entry.pushKV("vout", r.vout);
             if (fLong)
                 WalletTxToJSON(pwallet->chain(), locked_chain, wtx, entry);
+            entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
             ret.push_back(entry);
         }
     }
@@ -1846,6 +1848,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
+    entry.pushKV("refheight", (uint64_t)wtx.tx->lock_height);
     if (wtx.IsFromMe(filter))
         entry.pushKV("fee", ValueFromAmount(nFee));
 
@@ -2993,6 +2996,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
+        entry.pushKV("refheight", (uint64_t)out.tx->tx->lock_height);
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
@@ -4102,7 +4106,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw std::runtime_error(
             RPCHelpMan{"walletcreatefundedpst",
                 "\nCreates and funds a transaction in the Partially Signed Transaction format. Inputs will be added if supplied inputs are not enough\n"
@@ -4137,6 +4141,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
                         },
                     },
                     {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"lockheight", RPCArg::Type::NUM, /* default */ "0", "The reference height of the outputs in the transaction being generated, and the minimum height for inclusion in chain. If not specified, the height of the next block to be mined is used."},
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         {
                             {"changeAddress", RPCArg::Type::STR_HEX, /* default */ "pool address", "The freicoin address to receive the change"},
@@ -4179,6 +4184,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
+        UniValue::VNUM,
         UniValue::VOBJ,
         UniValue::VBOOL
         }, true
@@ -4186,14 +4192,14 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
 
     CAmount fee;
     int change_position;
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
-    FundTransaction(pwallet, rawTx, fee, change_position, request.params[3]);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
+    FundTransaction(pwallet, rawTx, fee, change_position, request.params[4]);
 
     // Make a blank pst
     PartiallySignedTransaction pstx(rawTx);
 
     // Fill transaction with out data but don't sign
-    bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
+    bool bip32derivs = request.params[5].isNull() ? false : request.params[5].get_bool();
     bool complete = true;
     const TransactionError err = FillPST(pwallet, pstx, complete, 1, false, bip32derivs);
     if (err != TransactionError::OK) {

@@ -1116,13 +1116,15 @@ private:
     const bool fAnyoneCanPay;  //!< whether the hashtype has the SIGHASH_ANYONECANPAY flag set
     const bool fHashSingle;    //!< whether the hashtype is SIGHASH_SINGLE
     const bool fHashNone;      //!< whether the hashtype is SIGHASH_NONE
+    const bool no_lock_height; //!< whether the hashtype has the SIGHASH_NO_LOCK_HEIGHT flag set
 
 public:
     CTransactionSignatureSerializer(const T& txToIn, const CScript& scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
         txTo(txToIn), scriptCode(scriptCodeIn), nIn(nInIn),
         fAnyoneCanPay(!!(nHashTypeIn & SIGHASH_ANYONECANPAY)),
         fHashSingle((nHashTypeIn & 0x1f) == SIGHASH_SINGLE),
-        fHashNone((nHashTypeIn & 0x1f) == SIGHASH_NONE) {}
+        fHashNone((nHashTypeIn & 0x1f) == SIGHASH_NONE),
+        no_lock_height(!!(nHashTypeIn & SIGHASH_NO_LOCK_HEIGHT)) {}
 
     /** Serialize the passed scriptCode, skipping OP_CODESEPARATORs */
     template<typename S>
@@ -1196,6 +1198,10 @@ public:
              SerializeOutput(s, nOutput);
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime);
+        // Serialize lock_height
+        if (!no_lock_height && (txTo.nVersion != 1 || txTo.vin.size() != 1 || !txTo.vin[0].prevout.IsNull())) {
+            ::Serialize(s, txTo.lock_height);
+        }
     }
 };
 
@@ -1248,7 +1254,7 @@ template PrecomputedTransactionData::PrecomputedTransactionData(const CTransacti
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 
 template <class T>
-uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
+uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, int64_t refheight, SigVersion sigversion, const PrecomputedTransactionData* cache)
 {
     assert(nIn < txTo.vin.size());
 
@@ -1287,13 +1293,20 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         ss << txTo.vin[nIn].prevout;
         ss << scriptCode;
         ss << amount;
+        if (!(nHashType & SIGHASH_NO_LOCK_HEIGHT)) {
+            ss << refheight;
+        }
         ss << txTo.vin[nIn].nSequence;
         // Outputs (none/one/all, depending on flags)
         ss << hashOutputs;
         // Locktime
         ss << txTo.nLockTime;
+        // Lockheight
+        if (!(nHashType & SIGHASH_NO_LOCK_HEIGHT)) {
+            ss << txTo.lock_height;
+        }
         // Sighash type
-        ss << nHashType;
+        ss << (nHashType & ~SIGHASH_NO_LOCK_HEIGHT);
 
         return ss.GetHash();
     }
@@ -1313,7 +1326,7 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
 
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
-    ss << txTmp << nHashType;
+    ss << txTmp << (nHashType & ~SIGHASH_NO_LOCK_HEIGHT);
     return ss.GetHash();
 }
 
@@ -1337,7 +1350,16 @@ bool GenericTransactionSignatureChecker<T>::CheckSig(const std::vector<unsigned 
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+    // If we are in bitcoin compatibility mode, then we must pass on a
+    // flag to indicate that the lock_height field of the transaction
+    // must not be serialized during the signature check. This feature
+    // is present for the sole purpose of supporting validation of
+    // signatures encoded within unit tests carried over from the
+    // bitcoin code base.
+    if (no_lock_height)
+        nHashType |= SIGHASH_NO_LOCK_HEIGHT;
+
+    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, refheight, sigversion, this->txdata);
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;
