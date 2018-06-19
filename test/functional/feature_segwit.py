@@ -65,6 +65,8 @@ from test_framework.wallet_util import (
     get_generate_key,
 )
 
+import struct
+
 NODE_0 = 0
 NODE_2 = 2
 P2WPKH = 0
