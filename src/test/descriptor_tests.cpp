@@ -338,10 +338,10 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                     spend.vin.resize(1);
                     spend.vin[0].nSequence = spender_nsequence;
                     spend.vout.resize(1);
-                    std::vector<CTxOut> utxos(1);
+                    std::vector<SpentOutput> utxos(1);
                     PrecomputedTransactionData txdata;
                     txdata.Init(spend, std::move(utxos), /*force=*/true);
-                    MutableTransactionSignatureCreator creator{spend, 0, CAmount{0}, &txdata, SIGHASH_DEFAULT};
+                    MutableTransactionSignatureCreator creator{spend, 0, CAmount{0}, 0, &txdata, SIGHASH_DEFAULT};
                     SignatureData sigdata;
                     // We assume there is no collision between the hashes (eg h1=SHA256(SHA256(x)) and h2=SHA256(x))
                     sigdata.sha256_preimages = preimages;

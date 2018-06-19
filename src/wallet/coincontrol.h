@@ -39,7 +39,7 @@ class PreselectedInput
 {
 private:
     //! The previous output being spent by this input
-    std::optional<CTxOut> m_txout;
+    std::optional<SpentOutput> m_spent_output;
     //! The input weight for spending this input
     std::optional<int64_t> m_weight;
     //! The sequence number for this input
@@ -56,11 +56,11 @@ public:
      * Set the previous output for this input.
      * Only necessary if the input is expected to be an external input.
      */
-    void SetTxOut(const CTxOut& txout);
+    void SetSpentOutput(const CTxOut& txout, uint32_t refheight);
     /** Retrieve the previous output for this input. */
-    CTxOut GetTxOut() const;
+    SpentOutput GetSpentOutput() const;
     /** Return whether the previous output is set for this input. */
-    bool HasTxOut() const;
+    bool HasSpentOutput() const;
 
     /** Set the weight for this input. */
     void SetInputWeight(int64_t weight);
@@ -144,7 +144,7 @@ public:
     /**
      * Returns the external output for the given outpoint if it exists.
      */
-    std::optional<CTxOut> GetExternalOutput(const COutPoint& outpoint) const;
+    std::optional<SpentOutput> GetExternalOutput(const COutPoint& outpoint) const;
     /**
      * Lock-in the given output for spending.
      * The output will be included in the transaction even if it's not the most optimal choice.

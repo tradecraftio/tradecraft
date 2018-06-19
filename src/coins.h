@@ -46,6 +46,10 @@ public:
     //! unspent transaction output
     CTxOut out;
 
+    //! lock height of the CTransaction, which serves double-duty as
+    //! the reference height for demurrage calculations
+    uint32_t refheight;
+
     //! whether containing transaction was a coinbase
     unsigned int fCoinBase : 1;
 
@@ -53,17 +57,18 @@ public:
     uint32_t nHeight : 31;
 
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    Coin(CTxOut&& outIn, uint32_t refheightIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), refheight(refheightIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
+    Coin(const CTxOut& outIn, uint32_t refheightIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), refheight(refheightIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
 
     void Clear() {
         out.SetNull();
+        refheight = 0;
         fCoinBase = false;
         nHeight = 0;
     }
 
     //! empty constructor
-    Coin() : fCoinBase(false), nHeight(0) { }
+    Coin() : refheight(0), fCoinBase(false), nHeight(0) { }
 
     bool IsCoinBase() const {
         return fCoinBase;
@@ -75,6 +80,7 @@ public:
         uint32_t code = nHeight * uint32_t{2} + fCoinBase;
         ::Serialize(s, VARINT(code));
         ::Serialize(s, Using<TxOutCompression>(out));
+        ::Serialize(s, VARINT(refheight));
     }
 
     template<typename Stream>
@@ -84,6 +90,7 @@ public:
         nHeight = code >> 1;
         fCoinBase = code & 1;
         ::Unserialize(s, Using<TxOutCompression>(out));
+        ::Unserialize(s, VARINT(refheight));
     }
 
     /** Either this coin never existed (see e.g. coinEmpty in coins.cpp), or it

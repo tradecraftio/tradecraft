@@ -45,13 +45,13 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
         input_analysis.next = PSTRole::EXTRACTOR;
 
         // Check for a UTXO
-        CTxOut utxo;
+        SpentOutput utxo;
         if (pstx.GetInputUTXO(utxo, i)) {
-            if (!MoneyRange(utxo.nValue) || !MoneyRange(in_amt + utxo.nValue)) {
+            if (!MoneyRange(utxo.out.nValue) || !MoneyRange(in_amt + utxo.out.nValue)) {
                 result.SetInvalid(strprintf("PST is not valid. Input %u has invalid value", i));
                 return result;
             }
-            in_amt += utxo.nValue;
+            in_amt += utxo.out.nValue;
             input_analysis.has_utxo = true;
         } else {
             if (input.non_witness_utxo && pstx.tx->vin[i].prevout.n >= input.non_witness_utxo->vout.size()) {
@@ -64,7 +64,7 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
             calc_fee = false;
         }
 
-        if (!utxo.IsNull() && utxo.scriptPubKey.IsUnspendable()) {
+        if (!utxo.out.IsNull() && utxo.out.scriptPubKey.IsUnspendable()) {
             result.SetInvalid(strprintf("PST is not valid. Input %u spends unspendable output", i));
             return result;
         }
@@ -93,7 +93,7 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
             } else {
                 input_analysis.next = PSTRole::FINALIZER;
             }
-        } else if (!utxo.IsNull()){
+        } else if (!utxo.out.IsNull()){
             input_analysis.is_final = true;
         }
     }
@@ -135,12 +135,15 @@ PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx)
             PSTInput& input = pstx.inputs[i];
             Coin newcoin;
 
-            if (!SignPSTInput(DUMMY_SIGNING_PROVIDER, pstx, i, nullptr, 1) || !pstx.GetInputUTXO(newcoin.out, i)) {
+            SpentOutput utxo;
+            if (!SignPSTInput(DUMMY_SIGNING_PROVIDER, pstx, i, nullptr, 1) || !pstx.GetInputUTXO(utxo, i)) {
                 success = false;
                 break;
             } else {
                 mtx.vin[i].scriptSig = input.final_script_sig;
                 mtx.vin[i].scriptWitness = input.final_script_witness;
+                newcoin.out = utxo.out;
+                newcoin.refheight = utxo.refheight;
                 newcoin.nHeight = 1;
                 view.AddCoin(pstx.tx->vin[i].prevout, std::move(newcoin), true);
             }

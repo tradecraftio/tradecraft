@@ -110,7 +110,7 @@ class P2PIBDStallingTest(FreicoinTestFramework):
 
         # Need to wait until 1023 blocks are received - the magic total bytes number is a workaround in lack of an rpc
         # returning the number of downloaded (but not connected) blocks.
-        bytes_recv = 229125 if not self.options.v2transport else 226056
+        bytes_recv = 236913 if not self.options.v2transport else 233844
         self.wait_until(lambda: self.total_bytes_recv_for_blocks() == bytes_recv)
 
         self.all_sync_send_with_ping(peers)
