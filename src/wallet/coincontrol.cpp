@@ -35,13 +35,13 @@ bool CCoinControl::IsSelected(const COutPoint& output) const
 
 bool CCoinControl::IsExternalSelected(const COutPoint& output) const
 {
-    return m_external_txouts.count(output) > 0;
+    return m_external_spent_outputs.count(output) > 0;
 }
 
-std::optional<CTxOut> CCoinControl::GetExternalOutput(const COutPoint& outpoint) const
+std::optional<SpentOutput> CCoinControl::GetExternalOutput(const COutPoint& outpoint) const
 {
-    const auto ext_it = m_external_txouts.find(outpoint);
-    if (ext_it == m_external_txouts.end()) {
+    const auto ext_it = m_external_spent_outputs.find(outpoint);
+    if (ext_it == m_external_spent_outputs.end()) {
         return std::nullopt;
     }
 
@@ -53,10 +53,10 @@ void CCoinControl::Select(const COutPoint& output)
     m_selected_inputs.insert(output);
 }
 
-void CCoinControl::SelectExternal(const COutPoint& outpoint, const CTxOut& txout)
+void CCoinControl::SelectExternal(const COutPoint& outpoint, const SpentOutput& spent_output)
 {
     m_selected_inputs.insert(outpoint);
-    m_external_txouts.emplace(outpoint, txout);
+    m_external_spent_outputs.emplace(outpoint, spent_output);
 }
 
 void CCoinControl::UnSelect(const COutPoint& output)

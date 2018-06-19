@@ -128,20 +128,26 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vin[0].prevout.n = 0;
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL - 1000;
+    tx.lock_height = txFirst[0]->lock_height;
     // This tx has a low fee: 1000 kria
     uint256 hashParentTx = tx.GetHash(); // save this txid for later use
+    uint32_t refheightParentTx = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
 
     // This tx has a medium fee: 10000 kria
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
+    tx.lock_height = txFirst[1]->lock_height;
     uint256 hashMediumFeeTx = tx.GetHash();
+    uint32_t refheightMediumFeeTx = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
 
     // This tx has a high fee, but depends on the first transaction
     tx.vin[0].prevout.hash = hashParentTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 50k kria fee
+    tx.lock_height = refheightParentTx;
     uint256 hashHighFeeTx = tx.GetHash();
+    uint32_t refheightHighFeeTx = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
 
     std::unique_ptr<CBlockTemplate> pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
@@ -153,7 +159,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 0 fee
+    tx.lock_height = refheightHighFeeTx;
     uint256 hashFreeTx = tx.GetHash();
+    uint32_t refheightFreeTx = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(0).FromTx(tx));
     size_t freeTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
@@ -163,7 +171,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 
     tx.vin[0].prevout.hash = hashFreeTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
+    tx.lock_height = refheightFreeTx;
     uint256 hashLowFeeTx = tx.GetHash();
+    uint32_t refheightLowFeeTx = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(feeToUse).FromTx(tx));
     pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
     // Verify that the free tx and the low fee tx didn't get selected
@@ -191,7 +201,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout.resize(2);
     tx.vout[0].nValue = 5000000000LL - 100000000;
     tx.vout[1].nValue = 100000000; // 1FRC output
+    tx.lock_height = txFirst[2]->lock_height;
     uint256 hashFreeTx2 = tx.GetHash();
+    uint32_t refheightFreeTx2 = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
 
     // This tx can't be mined by itself
@@ -199,7 +211,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout.resize(1);
     feeToUse = blockMinFeeRate.GetFee(freeTxSize);
     tx.vout[0].nValue = 5000000000LL - 100000000 - feeToUse;
+    tx.lock_height = refheightFreeTx2;
     uint256 hashLowFeeTx2 = tx.GetHash();
+    uint32_t refheightLowFeeTx2 = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
     pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
 
@@ -248,6 +262,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vin[0].prevout.n = 0;
         tx.vout.resize(1);
         tx.vout[0].nValue = BLOCKSUBSIDY;
+        tx.lock_height = txFirst[0]->lock_height;
         for (unsigned int i = 0; i < 1001; ++i) {
             tx.vout[0].nValue -= LOWFEE;
             hash = tx.GetHash();
@@ -266,6 +281,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
 
         tx.vin[0].prevout.hash = txFirst[0]->GetHash();
         tx.vout[0].nValue = BLOCKSUBSIDY;
+        tx.lock_height = txFirst[0]->lock_height;
         for (unsigned int i = 0; i < 1001; ++i) {
             tx.vout[0].nValue -= LOWFEE;
             hash = tx.GetHash();
@@ -291,6 +307,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vin[0].scriptSig << OP_1;
         tx.vin[0].prevout.hash = txFirst[0]->GetHash();
         tx.vout[0].nValue = BLOCKSUBSIDY;
+        tx.lock_height = txFirst[0]->lock_height;
         for (unsigned int i = 0; i < 128; ++i) {
             tx.vout[0].nValue -= LOWFEE;
             hash = tx.GetHash();
@@ -319,6 +336,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vin[0].scriptSig = CScript() << OP_1;
         tx.vin[0].prevout.hash = txFirst[1]->GetHash();
         tx.vout[0].nValue = BLOCKSUBSIDY - HIGHFEE;
+        tx.lock_height = txFirst[1]->lock_height;
         hash = tx.GetHash();
         tx_mempool.addUnchecked(entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
         tx.vin[0].prevout.hash = hash;
@@ -357,6 +375,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vin[0].scriptSig = CScript() << OP_1;
         tx.vout[0].nValue = BLOCKSUBSIDY - HIGHFEE;
         tx.vout[0].scriptPubKey = CScript() << OP_1;
+        tx.lock_height = txFirst[0]->lock_height;
         hash = tx.GetHash();
         tx_mempool.addUnchecked(entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
         tx.vout[0].scriptPubKey = CScript() << OP_2;
@@ -403,6 +422,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vout[0].nValue = BLOCKSUBSIDY - LOWFEE;
         CScript script = CScript() << OP_0;
         tx.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(script));
+        tx.lock_height = txFirst[0]->lock_height;
         hash = tx.GetHash();
         tx_mempool.addUnchecked(entry.Fee(LOWFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
         tx.vin[0].prevout.hash = hash;
@@ -445,6 +465,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vout[0].nValue = BLOCKSUBSIDY-HIGHFEE;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     tx.nLockTime = 0;
+    tx.lock_height = txFirst[0]->lock_height;
     hash = tx.GetHash();
     tx_mempool.addUnchecked(entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
@@ -458,6 +479,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     // relative time locked
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1-m_node.chainman->ActiveChain()[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
+    tx.lock_height = txFirst[1]->lock_height;
     prevheights[0] = baseheight + 2;
     hash = tx.GetHash();
     tx_mempool.addUnchecked(entry.Time(Now<NodeSeconds>()).FromTx(tx));
@@ -482,6 +504,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
     prevheights[0] = baseheight + 3;
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
+    tx.lock_height = txFirst[2]->lock_height;
     hash = tx.GetHash();
     tx_mempool.addUnchecked(entry.Time(Now<NodeSeconds>()).FromTx(tx));
     BOOST_CHECK(!CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime fails
@@ -493,6 +516,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast();
     prevheights.resize(1);
     prevheights[0] = baseheight + 4;
+    tx.lock_height = txFirst[3]->lock_height;
     hash = tx.GetHash();
     tx_mempool.addUnchecked(entry.Time(Now<NodeSeconds>()).FromTx(tx));
     BOOST_CHECK(!CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime fails
@@ -548,6 +572,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL; // 0 fee
+    tx.lock_height = txFirst[0]->lock_height;
     uint256 hashFreePrioritisedTx = tx.GetHash();
     tx_mempool.addUnchecked(entry.Fee(0).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreePrioritisedTx, 5 * COIN);
@@ -555,6 +580,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vin[0].prevout.n = 0;
     tx.vout[0].nValue = 5000000000LL - 1000;
+    tx.lock_height = txFirst[1]->lock_height;
     // This tx has a low fee: 1000 kria
     uint256 hashParentTx = tx.GetHash(); // save this txid for later use
     tx_mempool.addUnchecked(entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
@@ -562,6 +588,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     // This tx has a medium fee: 10000 kria
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
+    tx.lock_height = txFirst[2]->lock_height;
     uint256 hashMediumFeeTx = tx.GetHash();
     tx_mempool.addUnchecked(entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashMediumFeeTx, -5 * COIN);
@@ -569,6 +596,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     // This tx also has a low fee, but is prioritised
     tx.vin[0].prevout.hash = hashParentTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 1000; // 1000 kria fee
+    tx.lock_height = txFirst[1]->lock_height;
     uint256 hashPrioritsedChild = tx.GetHash();
     tx_mempool.addUnchecked(entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashPrioritsedChild, 2 * COIN);
@@ -581,6 +609,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     // When FreeChild is included, FreeChild's prioritisation should also not be included.
     tx.vin[0].prevout.hash = txFirst[3]->GetHash();
     tx.vout[0].nValue = 5000000000LL; // 0 fee
+    tx.lock_height = txFirst[3]->lock_height;
     uint256 hashFreeParent = tx.GetHash();
     tx_mempool.addUnchecked(entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreeParent, 10 * COIN);

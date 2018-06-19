@@ -154,6 +154,7 @@ public:
 
     //! Create transaction.
     virtual util::Result<CTransactionRef> createTransaction(const std::vector<wallet::CRecipient>& recipients,
+        int64_t refheight,
         const wallet::CCoinControl& coin_control,
         bool sign,
         int& change_pos,
@@ -435,6 +436,7 @@ struct WalletTxStatus
 struct WalletTxOut
 {
     CTxOut txout;
+    uint32_t refheight;
     int64_t time;
     int depth_in_main_chain = -1;
     bool is_spent = false;

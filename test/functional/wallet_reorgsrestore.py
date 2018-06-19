@@ -61,7 +61,8 @@ class ReorgsRestoreTest(FreicoinTestFramework):
 
         # Disconnect node0 from node2 to broadcast a conflict on their respective chains
         self.disconnect_nodes(0, 2)
-        nA = next(tx_out["vout"] for tx_out in self.nodes[0].gettransaction(txid_conflict_from)["details"] if tx_out["amount"] == Decimal("10"))
+        tx_conflict_from = self.nodes[0].gettransaction(txid_conflict_from)
+        nA = next(tx_out["vout"] for tx_out in tx_conflict_from["details"] if tx_out["amount"] == Decimal("10"))
         inputs = []
         inputs.append({"txid": txid_conflict_from, "vout": nA})
         outputs_1 = {}
@@ -70,8 +71,8 @@ class ReorgsRestoreTest(FreicoinTestFramework):
         # Create a conflicted tx broadcast on node0 chain and conflicting tx broadcast on node1 chain. Both spend from txid_conflict_from
         outputs_1[self.nodes[0].getnewaddress()] = Decimal("9.99998")
         outputs_2[self.nodes[0].getnewaddress()] = Decimal("9.99998")
-        conflicted = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs_1))
-        conflicting = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs_2))
+        conflicted = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs_1, 0, tx_conflict_from["refheight"]))
+        conflicting = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs_2, 0, tx_conflict_from["refheight"]))
 
         conflicted_txid = self.nodes[0].sendrawtransaction(conflicted["hex"])
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)

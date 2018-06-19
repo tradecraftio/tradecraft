@@ -88,7 +88,7 @@ public:
     /**
      * Returns the external output for the given outpoint if it exists.
      */
-    std::optional<CTxOut> GetExternalOutput(const COutPoint& outpoint) const;
+    std::optional<SpentOutput> GetExternalOutput(const COutPoint& outpoint) const;
     /**
      * Lock-in the given output for spending.
      * The output will be included in the transaction even if it's not the most optimal choice.
@@ -98,7 +98,7 @@ public:
      * Lock-in the given output as an external input for spending because it is not in the wallet.
      * The output will be included in the transaction even if it's not the most optimal choice.
      */
-    void SelectExternal(const COutPoint& outpoint, const CTxOut& txout);
+    void SelectExternal(const COutPoint& outpoint, const SpentOutput& spent_output);
     /**
      * Unselects the given output.
      */
@@ -129,7 +129,7 @@ private:
     std::set<COutPoint> m_selected_inputs;
     //! Map of external inputs to include in the transaction
     //! These are not in the wallet, so we need to track them separately
-    std::map<COutPoint, CTxOut> m_external_txouts;
+    std::map<COutPoint, SpentOutput> m_external_spent_outputs;
     //! Map of COutPoints to the maximum weight for that input
     std::map<COutPoint, int64_t> m_input_weights;
 };

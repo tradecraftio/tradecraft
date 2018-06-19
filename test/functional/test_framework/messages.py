@@ -564,8 +564,8 @@ class CTxWitness:
 
 
 class CTransaction:
-    __slots__ = ("hash", "nLockTime", "nVersion", "sha256", "vin", "vout",
-                 "wit")
+    __slots__ = ("hash", "lock_height", "nLockTime", "nVersion", "sha256",
+                 "vin", "vout", "wit")
 
     def __init__(self, tx=None):
         if tx is None:
@@ -574,6 +574,7 @@ class CTransaction:
             self.vout = []
             self.wit = CTxWitness()
             self.nLockTime = 0
+            self.lock_height = 0
             self.sha256 = None
             self.hash = None
         else:
@@ -581,6 +582,7 @@ class CTransaction:
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
+            self.lock_height = tx.lock_height
             self.sha256 = tx.sha256
             self.hash = tx.hash
             self.wit = copy.deepcopy(tx.wit)
@@ -604,6 +606,8 @@ class CTransaction:
         else:
             self.wit = CTxWitness()
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
+        if self.nVersion!=1 or len(self.vin)!=1 or self.vin[0].prevout.hash!=0 or self.vin[0].prevout.n not in (-1,0xffffffff):
+            self.lock_height = struct.unpack("<I", f.read(4))[0]
         self.sha256 = None
         self.hash = None
 
@@ -613,6 +617,8 @@ class CTransaction:
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += struct.pack("<I", self.nLockTime)
+        if self.nVersion!=1 or len(self.vin)!=1 or self.vin[0].prevout.hash!=0 or self.vin[0].prevout.n not in (-1,0xffffffff):
+            r += struct.pack("<I", self.lock_height)
         return r
 
     # Only serialize with witness when explicitly called for
@@ -636,6 +642,8 @@ class CTransaction:
                     self.wit.vtxinwit.append(CTxInWitness())
             r += self.wit.serialize()
         r += struct.pack("<I", self.nLockTime)
+        if self.nVersion!=1 or len(self.vin)!=1 or self.vin[0].prevout.hash!=0 or self.vin[0].prevout.n not in (-1,0xffffffff):
+            r += struct.pack("<I", self.lock_height)
         return r
 
     # Regular serialization is with witness -- must explicitly
@@ -681,8 +689,8 @@ class CTransaction:
         return math.ceil(self.get_weight() / WITNESS_SCALE_FACTOR)
 
     def __repr__(self):
-        return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
-            % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
+        return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i lock_height=%i)" \
+            % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime, self.lock_height)
 
 
 class CBlockHeader:

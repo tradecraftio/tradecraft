@@ -55,6 +55,7 @@ uint64_t GetBogoSize(const CScript& script_pub_key)
            4 /* vout index */ +
            4 /* height + coinbase */ +
            8 /* amount */ +
+           4 /* refheight */ +
            2 /* scriptPubKey len */ +
            script_pub_key.size() /* scriptPubKey */;
 }
@@ -65,6 +66,7 @@ static void TxOutSer(T& ss, const COutPoint& outpoint, const Coin& coin)
     ss << outpoint;
     ss << static_cast<uint32_t>((coin.nHeight << 1) + coin.fCoinBase);
     ss << coin.out;
+    ss << coin.refheight;
 }
 
 static void ApplyCoinHash(HashWriter& ss, const COutPoint& outpoint, const Coin& coin)

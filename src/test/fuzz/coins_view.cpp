@@ -212,7 +212,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 const CTransaction transaction{random_mutable_transaction};
                 bool is_spent = false;
                 for (const CTxOut& tx_out : transaction.vout) {
-                    if (Coin{tx_out, 0, transaction.IsCoinBase()}.IsSpent()) {
+                    if (Coin{tx_out, 0, 0, transaction.IsCoinBase()}.IsSpent()) {
                         is_spent = true;
                     }
                 }

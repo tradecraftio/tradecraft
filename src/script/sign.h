@@ -53,12 +53,13 @@ class MutableTransactionSignatureCreator : public BaseSignatureCreator
     unsigned int nIn;
     int nHashType;
     CAmount amount;
+    int64_t refheight;
     const MutableTransactionSignatureChecker checker;
     const PrecomputedTransactionData* m_txdata;
 
 public:
-    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, int hash_type);
-    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, int hash_type);
+    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, int64_t refheight, int hash_type);
+    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, int64_t refheight, const PrecomputedTransactionData* txdata, int hash_type);
     const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const override;
@@ -116,6 +117,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
  * @param txTo       The spending transaction.
  * @param nIn        The index of the input in `txTo` referring the output being spent.
  * @param amount     The value of the output being spent.
+ * @param refheight  The reference height as which values are calculated.
  * @param nHashType  Signature hash type.
  * @param sig_data   Additional data provided to solve a script. Filled with the resulting satisfying
  *                   script and whether the satisfaction is complete.
@@ -123,12 +125,12 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
  * @return           True if the produced script is entirely satisfying `fromPubKey`.
  **/
 bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo,
-                   unsigned int nIn, const CAmount& amount, int nHashType, SignatureData& sig_data);
+                   unsigned int nIn, const CAmount& amount, int64_t refheight, int nHashType, SignatureData& sig_data);
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo,
                    unsigned int nIn, int nHashType, SignatureData& sig_data);
 
 /** Extract signature data from a transaction input, and insert it. */
-SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
+SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout, int64_t refheight);
 void UpdateInput(CTxIn& input, const SignatureData& data);
 
 /** Check whether a scriptPubKey is known to be segwit. */

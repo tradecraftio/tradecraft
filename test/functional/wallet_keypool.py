@@ -199,15 +199,15 @@ class KeyPoolTest(FreicoinTestFramework):
         res = w2.walletcreatefundedpst(inputs=[], outputs=[{destination: 0.00010000}], subtractFeeFromOutputs=[0], feeRate=0.00010)
         assert_equal("pst" in res, True)
         # should work without subtractFeeFromOutputs if the exact fee is subtracted from the amount
-        res = w2.walletcreatefundedpst(inputs=[], outputs=[{destination: 0.00008900}], feeRate=0.00010)
+        res = w2.walletcreatefundedpst(inputs=[], outputs=[{destination: 0.00008850}], feeRate=0.00010)
         assert_equal("pst" in res, True)
 
         # dust change should be removed
-        res = w2.walletcreatefundedpst(inputs=[], outputs=[{destination: 0.00008800}], feeRate=0.00010)
+        res = w2.walletcreatefundedpst(inputs=[], outputs=[{destination: 0.00008750}], feeRate=0.00010)
         assert_equal("pst" in res, True)
 
         # create a transaction without change at the maximum fee rate, such that the output is still spendable:
-        res = w2.walletcreatefundedpst(inputs=[], outputs=[{destination: 0.00010000}], subtractFeeFromOutputs=[0], feeRate=0.0008823)
+        res = w2.walletcreatefundedpst(inputs=[], outputs=[{destination: 0.00010000}], subtractFeeFromOutputs=[0], feeRate=0.0008514)
         assert_equal("pst" in res, True)
         assert_equal(res["fee"], Decimal("0.00009706"))
 
