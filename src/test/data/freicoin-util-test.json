@@ -58,6 +58,16 @@
     "output_cmp": "tt-locktime317000-out.json"
   },
   { "exec": "./freicoin-tx",
+    "args": ["-", "lockheight=252000"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-lockheight252000-out.hex"
+  },
+  { "exec": "./freicoin-tx",
+    "args": ["-json", "-", "lockheight=252000"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-lockheight252000-out.json"
+  },
+  { "exec": "./freicoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -188,14 +198,14 @@
   },
   { "exec": "./freicoin-tx",
     "args":
-    ["01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
+    ["01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac0000000001000000",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
     "output_cmp": "txcreatedata_seq1.hex"
   },
   { "exec": "./freicoin-tx",
     "args":
     ["-json",
-     "01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
+     "01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac0000000001000000",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
     "output_cmp": "txcreatedata_seq1.json"
   }

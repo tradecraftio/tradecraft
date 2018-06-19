@@ -92,6 +92,7 @@ static int AppInitRawTx(int argc, char* argv[])
         strUsage += HelpMessageOpt("delout=N", _("Delete output N from TX"));
         strUsage += HelpMessageOpt("in=TXID:VOUT(:SEQUENCE_NUMBER)", _("Add input to TX"));
         strUsage += HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
+        strUsage += HelpMessageOpt("lockheight=N", _("Set TX lock height to N"));
         strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
         strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
         strUsage += HelpMessageOpt("outdestroy=VALUE", _("Add unspendable output with specified value to TX"));
@@ -200,6 +201,15 @@ static void MutateTxLocktime(CMutableTransaction& tx, const string& cmdVal)
         throw runtime_error("Invalid TX locktime requested");
 
     tx.nLockTime = (unsigned int) newLocktime;
+}
+
+static void MutateTxLockHeight(CMutableTransaction& tx, const string& cmdVal)
+{
+    int64_t new_lock_height = atoi64(cmdVal);
+    if (new_lock_height < 0LL || new_lock_height > 0xffffffffLL)
+        throw runtime_error("Invalid TX lockheight requested");
+
+    tx.lock_height = static_cast<int32_t>(new_lock_height);
 }
 
 static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
@@ -483,18 +493,19 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
         }
         const CScript& prevPubKey = coins->vout[txin.prevout.n].scriptPubKey;
         const CAmount& amount = coins->vout[txin.prevout.n].nValue;
+        const int64_t refheight = coins->refheight;
 
         SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
-            ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, amount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, amount, refheight, nHashType), prevPubKey, sigdata);
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CTransaction& txv, txVariants)
-            sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount), sigdata, DataFromTransaction(txv, i));
+            sigdata = CombineSignatures(prevPubKey, MutableTransactionSignatureChecker(&mergedTx, i, amount, refheight), sigdata, DataFromTransaction(txv, i));
         UpdateTransaction(mergedTx, i, sigdata);
 
-        if (!VerifyScript(txin.scriptSig, prevPubKey, mergedTx.wit.vtxinwit.size() > i ? &mergedTx.wit.vtxinwit[i].scriptWitness : NULL, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i, amount)))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, mergedTx.wit.vtxinwit.size() > i ? &mergedTx.wit.vtxinwit[i].scriptWitness : NULL, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i, amount, refheight)))
             fComplete = false;
     }
 
@@ -528,6 +539,8 @@ static void MutateTx(CMutableTransaction& tx, const string& command,
         MutateTxVersion(tx, commandVal);
     else if (command == "locktime")
         MutateTxLocktime(tx, commandVal);
+    else if (command == "lockheight")
+        MutateTxLockHeight(tx, commandVal);
 
     else if (command == "delin")
         MutateTxDelInput(tx, commandVal);

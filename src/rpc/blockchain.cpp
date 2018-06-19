@@ -750,7 +750,8 @@ UniValue gettxout(const UniValue& params, bool fHelp)
             "     ]\n"
             "  },\n"
             "  \"version\" : n,            (numeric) The version\n"
-            "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
+            "  \"coinbase\" : true|false,  (boolean) Coinbase or not\n"
+            "  \"refheight\" : n           (numeric) The reference height\n"
             "}\n"
 
             "\nExamples:\n"
@@ -800,6 +801,7 @@ UniValue gettxout(const UniValue& params, bool fHelp)
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("version", coins.nVersion));
     ret.push_back(Pair("coinbase", coins.fCoinBase));
+    ret.push_back(Pair("refheight", coins.refheight));
 
     return ret;
 }

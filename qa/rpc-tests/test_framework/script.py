@@ -846,6 +846,7 @@ SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
 SIGHASH_ANYONECANPAY = 0x80
+SIGHASH_NO_LOCK_HEIGHT = 0x100
 
 def FindAndDelete(script, sig):
     """Consensus critical, see FindAndDelete() in Satoshi codebase"""
@@ -909,7 +910,9 @@ def SignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize()
-    s += struct.pack(b"<I", hashtype)
+    if (hashtype & SIGHASH_NO_LOCK_HEIGHT) or (txTo.nVersion==1 and len(txTo.vin)==1 and txTo.vin[0].prevout.hash==0 and txTo.vin[0].prevout.n in (-1,0xffffffff)):
+        s = s[:-4]
+    s += struct.pack(b"<I", (hashtype & ~SIGHASH_NO_LOCK_HEIGHT))
 
     hash = hash256(s)
 
@@ -919,7 +922,7 @@ def SignatureHash(script, txTo, inIdx, hashtype):
 # Performance optimization probably not necessary for python tests, however.
 # Note that this corresponds to sigversion == 1 in EvalScript, which is used
 # for version 0 witnesses.
-def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
+def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount, refheight=0):
 
     hashPrevouts = 0
     hashSequence = 0
@@ -953,9 +956,11 @@ def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
     ss += txTo.vin[inIdx].prevout.serialize()
     ss += ser_string(script)
     ss += struct.pack("<q", amount)
+    ss += struct.pack("<q", refheight)
     ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
     ss += ser_uint256(hashOutputs)
     ss += struct.pack("<i", txTo.nLockTime)
-    ss += struct.pack("<I", hashtype)
+    ss += struct.pack("<i", txTo.lock_height)
+    ss += struct.pack("<I", (hashtype & ~SIGHASH_NO_LOCK_HEIGHT))
 
     return hash256(ss)
