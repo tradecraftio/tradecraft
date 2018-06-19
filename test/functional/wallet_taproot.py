@@ -363,7 +363,7 @@ class WalletTaprootTest(FreicoinTestFramework):
             test_balance = int(pst_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
             # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
-            pst = pst_online.walletcreatefundedpst([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": address_type})['pst']
+            pst = pst_online.walletcreatefundedpst([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], 0, None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": address_type})['pst']
             res = pst_offline.walletprocesspst(pst=pst, finalize=False)
             for wallet in [pst_offline, key_only_wallet]:
                 res = wallet.walletprocesspst(pst=pst, finalize=False)
@@ -373,6 +373,7 @@ class WalletTaprootTest(FreicoinTestFramework):
                     for pstin in decoded["inputs"]:
                         assert "non_witness_utxo" not in pstin
                         assert "witness_utxo" in pstin
+                        assert "refheight" in pstin["witness_utxo"]
                         assert "taproot_internal_key" in pstin
                         assert "taproot_bip32_derivs" in pstin
                         assert "taproot_key_path_sig" in pstin or "taproot_script_path_sigs" in pstin

@@ -90,6 +90,7 @@ from test_framework.script import (
     SIGHASH_SINGLE,
     SIGHASH_ANYONECANPAY,
     SegwitV0SignatureMsg,
+    SpentOutput,
     TaggedHash,
     TaprootSignatureMsg,
     is_op_success,
@@ -244,7 +245,7 @@ def default_sigmsg(ctx):
         # BIP143 signature hash
         scriptcode = get(ctx, "scriptcode")
         utxos = get(ctx, "utxos")
-        return SegwitV0SignatureMsg(scriptcode, tx, idx, hashtype, utxos[idx].nValue)
+        return SegwitV0SignatureMsg(scriptcode, tx, idx, hashtype, utxos[idx].out.nValue, utxos[idx].refheight)
     else:
         # Pre-segwit signature hash
         scriptcode = get(ctx, "scriptcode")
@@ -1361,7 +1362,7 @@ class TaprootTest(FreicoinTestFramework):
             # Construct UTXOData entries
             fund_tx.rehash()
             for i in range(count_this_tx):
-                utxodata = UTXOData(outpoint=COutPoint(fund_tx.sha256, i), output=fund_tx.vout[i], spender=spenders[done])
+                utxodata = UTXOData(outpoint=COutPoint(fund_tx.sha256, i), output=SpentOutput(fund_tx.vout[i], fund_tx.lock_height), spender=spenders[done])
                 if utxodata.spender.need_vin_vout_mismatch:
                     mismatching_utxos.append(utxodata)
                 else:
@@ -1416,7 +1417,7 @@ class TaprootTest(FreicoinTestFramework):
             assert first_mismatch_input is None or first_mismatch_input > 0
 
             # Decide fee, and add CTxIns to tx.
-            amount = sum(utxo.output.nValue for utxo in input_utxos)
+            amount = sum(utxo.output.out.nValue for utxo in input_utxos)
             fee = min(random.randrange(MIN_FEE * 2, MIN_FEE * 4), amount - DUST_LIMIT)  # 10000-20000 sat fee
             in_value = amount - fee
             tx.vin = [CTxIn(outpoint=utxo.outpoint, nSequence=random.randint(min_sequence, 0xffffffff)) for utxo in input_utxos]
@@ -1601,7 +1602,7 @@ class TaprootTest(FreicoinTestFramework):
             lasttxid = tx.sha256
             txn.append(tx)
             spend_info[spk]['prevout'] = COutPoint(tx.sha256, i & 1)
-            spend_info[spk]['utxo'] = CTxOut(val, spk)
+            spend_info[spk]['utxo'] = SpentOutput(CTxOut(val, spk), tx.lock_height)
         # Mine those transactions
         self.init_blockinfo(self.nodes[0])
         self.block_submit(self.nodes[0], txn, "Crediting txn", None, sigops_weight=10, accept=True)
@@ -1672,7 +1673,7 @@ class TaprootTest(FreicoinTestFramework):
         global_given['rawUnsignedTx'] = tx.serialize().hex()
         utxos_spent = global_given.setdefault("utxosSpent", [])
         for i in range(len(input_spks)):
-            utxos_spent.append({"scriptPubKey": inputs[i].scriptPubKey.hex(), "amountSats": inputs[i].nValue})
+            utxos_spent.append({"scriptPubKey": inputs[i].out.scriptPubKey.hex(), "amountSats": inputs[i].out.nValue, "refheight": inputs[i].refheight})
         global_intermediary = tx_test.setdefault("intermediary", {})
         for key in sorted(precomputed.keys()):
             global_intermediary[key] = precomputed[key].hex()
@@ -1714,7 +1715,7 @@ class TaprootTest(FreicoinTestFramework):
         aux = tx_test.setdefault("auxiliary", {})
         aux['fullySignedTx'] = tx.serialize().hex()
         keypath_tests.append(tx_test)
-        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "47827b96c27a65d36a96fceb2bdcfaa3cf363b5cd773212a425dfa719d085ca9")
+        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "7e1f4a41bf851be8acd4532b70e30bbebfb1e22b03e0ae969076928e41b3ed91")
         # Mine the spending transaction
         self.block_submit(self.nodes[0], [tx], "Spending txn", None, sigops_weight=10000, accept=True, witness=True)
 
