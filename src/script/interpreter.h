@@ -36,6 +36,13 @@ enum
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
     SIGHASH_ANYONECANPAY = 0x80,
+    // Only set within unit tests ported over from bitcoin and
+    // retained, this flag (which exceeds a byte and therefore cannot
+    // be set within a serialized signature) indicates that the
+    // lock_height field of CTransaction is not to be serialized
+    // during signature checks, thereby preventing the invalidation of
+    // bitcoin signatures contained within the unit test transaction.
+    SIGHASH_NO_LOCK_HEIGHT = 0x100,
 };
 
 /** Script verification flags.
@@ -126,6 +133,17 @@ enum
     // Making OP_CODESEPARATOR and FindAndDelete fail any non-segwit scripts
     //
     SCRIPT_VERIFY_CONST_SCRIPTCODE = (1U << 16),
+
+    // If set, do not serialize CTransaction::lock_height in SignatureHash
+    //
+    // This exists entirely as a shim to keep valuable bitcoin unit
+    // tests working within this codebase. Unit tests containing a
+    // bitcoin transaction have to be rewritten to add the lock_height
+    // field in order to deserialize, but passing this flag to script
+    // verification ensures that the lock heights are not serialized
+    // during signature verification, and therefore do not invalidate
+    // the original bitcoin signatures.
+    SCRIPT_VERIFY_LOCK_HEIGHT_NOT_UNDER_SIGNATURE = (1U << 30),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
@@ -144,7 +162,7 @@ enum SigVersion
     SIGVERSION_WITNESS_V0 = 1,
 };
 
-uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
+uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, int64_t refheight, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
 
 class BaseSignatureChecker
 {
@@ -167,20 +185,27 @@ public:
     virtual ~BaseSignatureChecker() {}
 };
 
+enum TxSigCheckOpt {
+    NONE = 0,
+    NO_LOCK_HEIGHT = (1 << 0),
+};
+
 class TransactionSignatureChecker : public BaseSignatureChecker
 {
 private:
     const CTransaction* txTo;
     unsigned int nIn;
     const CAmount amount;
+    const int64_t refheight;
     const PrecomputedTransactionData* txdata;
+    bool no_lock_height;
 
 protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(nullptr) {}
-    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
+    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, TxSigCheckOpt opts = TxSigCheckOpt::NONE) : txTo(txToIn), nIn(nInIn), amount(amountIn), refheight(refheightIn), txdata(nullptr), no_lock_height(opts == TxSigCheckOpt::NO_LOCK_HEIGHT) {}
+    TransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, const PrecomputedTransactionData& txdataIn, TxSigCheckOpt opts = TxSigCheckOpt::NONE) : txTo(txToIn), nIn(nInIn), amount(amountIn), refheight(refheightIn), txdata(&txdataIn), no_lock_height(opts == TxSigCheckOpt::NO_LOCK_HEIGHT) {}
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
@@ -192,7 +217,7 @@ private:
     const CTransaction txTo;
 
 public:
-    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn) : TransactionSignatureChecker(&txTo, nInIn, amountIn), txTo(*txToIn) {}
+    MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int64_t refheightIn, TxSigCheckOpt opts = TxSigCheckOpt::NONE) : TransactionSignatureChecker(&txTo, nInIn, amountIn, refheightIn, opts), txTo(*txToIn) {}
 };
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);

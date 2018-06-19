@@ -1644,6 +1644,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
+            entry.push_back(Pair("refheight", (uint64_t)wtx.tx->lock_height));
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
             ret.push_back(entry);
         }
@@ -1686,6 +1687,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
                 entry.push_back(Pair("vout", r.vout));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
+                entry.push_back(Pair("refheight", (uint64_t)wtx.tx->lock_height));
                 ret.push_back(entry);
             }
         }
@@ -2150,6 +2152,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
 
     entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
+    entry.push_back(Pair("refheight", (uint64_t)wtx.tx->lock_height));
     if (wtx.IsFromMe(filter))
         entry.push_back(Pair("fee", ValueFromAmount(nFee)));
 
@@ -3011,6 +3014,7 @@ UniValue listunspent(const JSONRPCRequest& request)
 
         entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
         entry.push_back(Pair("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue)));
+        entry.push_back(Pair("refheight", (uint64_t)out.tx->tx->lock_height));
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));

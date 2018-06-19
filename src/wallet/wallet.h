@@ -509,10 +509,12 @@ public:
 
         outpoint = COutPoint(walletTx->GetHash(), i);
         txout = walletTx->tx->vout[i];
+        refheight = walletTx->tx->lock_height;
     }
 
     COutPoint outpoint;
     CTxOut txout;
+    uint32_t refheight;
 
     bool operator<(const CInputCoin& rhs) const {
         return outpoint < rhs.outpoint;
