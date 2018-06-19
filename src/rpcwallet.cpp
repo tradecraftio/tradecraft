@@ -1201,6 +1201,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
+            entry.push_back(Pair("refheight", (uint64_t)wtx.lock_height));
             ret.push_back(entry);
         }
     }
@@ -1237,6 +1238,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 entry.push_back(Pair("vout", r.vout));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
+                entry.push_back(Pair("refheight", (uint64_t)wtx.lock_height));
                 ret.push_back(entry);
             }
         }
@@ -1590,6 +1592,7 @@ Value gettransaction(const Array& params, bool fHelp)
     CAmount nFee = (wtx.IsFromMe(filter) ? wtx.GetValueOut() - nDebit : 0);
 
     entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
+    entry.push_back(Pair("refheight", (uint64_t)wtx.lock_height));
     if (wtx.IsFromMe(filter))
         entry.push_back(Pair("fee", ValueFromAmount(nFee)));
 

@@ -200,6 +200,19 @@ public:
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
     const uint32_t nLockTime;
+    // Note: It would be semantically better to use a uint32_t here.
+    //       However there are many places where the lock_neight is
+    //       compared against the chain height, which is a regular
+    //       signed int. Converting between the two in a way that
+    //       avoids implementation defined semantics is actually
+    //       quicte tricky and verbose. At some point we should change
+    //       that logic to be unsigned as well, and then we can change
+    //       this to a uint32_t. That would technically be a
+    //       hard-fork, but one that triggers 40,000 years in the
+    //       future, which is perfectly fine. All chain progress would
+    //       stop at that point anyway for similar reasons related to
+    //       height overflow.
+    const int32_t lock_height;
 
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
@@ -218,6 +231,13 @@ public:
         READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
         READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
         READWRITE(*const_cast<uint32_t*>(&nLockTime));
+        if (vin.size() != 1 || !vin[0].prevout.IsNull() || this->nVersion != 1) {
+            READWRITE(*const_cast<int32_t*>(&lock_height));
+        } else {
+            if (ser_action.ForRead()) {
+                *const_cast<int32_t*>(&lock_height) = 0;
+            }
+        }
         if (ser_action.ForRead())
             UpdateHash();
     }
@@ -266,6 +286,7 @@ struct CMutableTransaction
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     uint32_t nLockTime;
+    int32_t lock_height;
 
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
@@ -279,6 +300,13 @@ struct CMutableTransaction
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
+        if (vin.size() != 1 || !vin[0].prevout.IsNull() || this->nVersion != 1) {
+            READWRITE(lock_height);
+        } else {
+            if (ser_action.ForRead()) {
+                lock_height = 0;
+            }
+        }
     }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the
