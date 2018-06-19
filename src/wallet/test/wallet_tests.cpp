@@ -521,7 +521,7 @@ public:
         CCoinControl dummy;
         FeeCalculation fee_calc_out;
         {
-            BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, fee, changePos, error, dummy, fee_calc_out));
+            BOOST_CHECK(wallet->CreateTransaction({recipient}, -1 /* refheight */, tx, fee, changePos, error, dummy, fee_calc_out));
         }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;

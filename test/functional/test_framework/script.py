@@ -613,6 +613,7 @@ SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
 SIGHASH_ANYONECANPAY = 0x80
+SIGHASH_NO_LOCK_HEIGHT = 0x100
 
 def FindAndDelete(script, sig):
     """Consensus critical, see FindAndDelete() in Satoshi codebase"""
@@ -675,7 +676,9 @@ def LegacySignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize_without_witness()
-    s += struct.pack(b"<I", hashtype)
+    if (hashtype & SIGHASH_NO_LOCK_HEIGHT) or (txTo.nVersion==1 and len(txTo.vin)==1 and txTo.vin[0].prevout.hash==0 and txTo.vin[0].prevout.n in (-1,0xffffffff)):
+        s = s[:-4]
+    s += struct.pack(b"<I", (hashtype & ~SIGHASH_NO_LOCK_HEIGHT))
 
     hash = hash256(s)
 
@@ -685,7 +688,7 @@ def LegacySignatureHash(script, txTo, inIdx, hashtype):
 # Performance optimization probably not necessary for python tests, however.
 # Note that this corresponds to sigversion == 1 in EvalScript, which is used
 # for version 0 witnesses.
-def SegwitV0SignatureHash(script, txTo, inIdx, hashtype, amount):
+def SegwitV0SignatureHash(script, txTo, inIdx, hashtype, amount, refheight):
 
     hashPrevouts = 0
     hashSequence = 0
@@ -719,10 +722,12 @@ def SegwitV0SignatureHash(script, txTo, inIdx, hashtype, amount):
     ss += txTo.vin[inIdx].prevout.serialize()
     ss += ser_string(script)
     ss += struct.pack("<q", amount)
+    ss += struct.pack("<q", refheight)
     ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
     ss += ser_uint256(hashOutputs)
     ss += struct.pack("<i", txTo.nLockTime)
-    ss += struct.pack("<I", hashtype)
+    ss += struct.pack("<i", txTo.lock_height)
+    ss += struct.pack("<I", (hashtype & ~SIGHASH_NO_LOCK_HEIGHT))
 
     return hash256(ss)
 
@@ -754,19 +759,22 @@ class TestFrameworkScript(unittest.TestCase):
         for value in values:
             self.assertEqual(CScriptNum.decode(CScriptNum.encode(CScriptNum(value))), value)
 
+SpentOutput = namedtuple('SpentOutput', 'out,refheight')
+
 def TaprootSignatureHash(txTo, spent_utxos, hash_type, input_index = 0, scriptpath = False, script = CScript(), codeseparator_pos = -1, annex = None, leaf_ver = LEAF_VERSION_TAPSCRIPT):
     assert (len(txTo.vin) == len(spent_utxos))
     assert (input_index < len(txTo.vin))
     out_type = SIGHASH_ALL if hash_type == 0 else hash_type & 3
     in_type = hash_type & SIGHASH_ANYONECANPAY
-    spk = spent_utxos[input_index].scriptPubKey
+    spk = spent_utxos[input_index].out.scriptPubKey
     ss = bytes([0, hash_type]) # epoch, hash_type
     ss += struct.pack("<i", txTo.nVersion)
     ss += struct.pack("<I", txTo.nLockTime)
+    ss += struct.pack("<I", txTo.lock_height)
     if in_type != SIGHASH_ANYONECANPAY:
         ss += sha256(b"".join(i.prevout.serialize() for i in txTo.vin))
-        ss += sha256(b"".join(struct.pack("<q", u.nValue) for u in spent_utxos))
-        ss += sha256(b"".join(ser_string(u.scriptPubKey) for u in spent_utxos))
+        ss += sha256(b"".join((struct.pack("<q", u.out.nValue) + struct.pack("<I", u.refheight)) for u in spent_utxos))
+        ss += sha256(b"".join(ser_string(u.out.scriptPubKey) for u in spent_utxos))
         ss += sha256(b"".join(struct.pack("<I", i.nSequence) for i in txTo.vin))
     if out_type == SIGHASH_ALL:
         ss += sha256(b"".join(o.serialize() for o in txTo.vout))
@@ -778,8 +786,9 @@ def TaprootSignatureHash(txTo, spent_utxos, hash_type, input_index = 0, scriptpa
     ss += bytes([spend_type])
     if in_type == SIGHASH_ANYONECANPAY:
         ss += txTo.vin[input_index].prevout.serialize()
-        ss += struct.pack("<q", spent_utxos[input_index].nValue)
+        ss += struct.pack("<q", spent_utxos[input_index].out.nValue)
         ss += ser_string(spk)
+        ss += struct.pack("<I", spent_utxos[input_index].refheight)
         ss += struct.pack("<I", txTo.vin[input_index].nSequence)
     else:
         ss += struct.pack("<I", input_index)
@@ -794,7 +803,7 @@ def TaprootSignatureHash(txTo, spent_utxos, hash_type, input_index = 0, scriptpa
         ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(script))
         ss += bytes([0])
         ss += struct.pack("<i", codeseparator_pos)
-    assert len(ss) ==  175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
+    assert len(ss) ==  179 - (in_type == SIGHASH_ANYONECANPAY) * 45 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
     return TaggedHash("TapSighash", ss)
 
 def taproot_tree_helper(scripts):

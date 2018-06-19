@@ -62,6 +62,7 @@ class RPCPackagesTest(FreicoinTestFramework):
             self.coins.append({
                 "txid": coinbase["txid"],
                 "amount": coinbase["vout"][0]["value"],
+                "refheight": coinbase["lockheight"],
                 "scriptPubKey": coinbase["vout"][0]["scriptPubKey"],
             })
 
@@ -89,7 +90,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         self.test_conflicting()
         self.test_rbf()
 
-    def chain_transaction(self, parent_txid, parent_value, n=0, parent_locking_script=None):
+    def chain_transaction(self, parent_txid, parent_value, parent_refheight, n=0, parent_locking_script=None):
         """Build a transaction that spends parent_txid.vout[n] and produces one output with
         amount = parent_value with a fee deducted.
         Return tuple (CTransaction object, raw hex, nValue, scriptPubKey of the output created).
@@ -104,6 +105,7 @@ class RPCPackagesTest(FreicoinTestFramework):
             "vout": n,
             "scriptPubKey": parent_locking_script,
             "amount": parent_value,
+            "refheight": parent_refheight,
         }] if parent_locking_script else None
         signedtx = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys, prevtxs=prevtxs)
         assert signedtx["complete"]
@@ -166,9 +168,10 @@ class RPCPackagesTest(FreicoinTestFramework):
         chain_hex = []
         chain_txns = []
         value = first_coin["amount"]
+        refheight = first_coin["refheight"]
 
         for _ in range(25):
-            (tx, txhex, value, parent_locking_script) = self.chain_transaction(txid, value, 0, parent_locking_script)
+            (tx, txhex, value, parent_locking_script) = self.chain_transaction(txid, value, refheight, 0, parent_locking_script)
             txid = tx.rehash()
             chain_hex.append(txhex)
             chain_txns.append(tx)
@@ -210,9 +213,10 @@ class RPCPackagesTest(FreicoinTestFramework):
 
         parent_locking_script_a = parent_tx.vout[0].scriptPubKey.hex()
         child_value = value - Decimal("0.0001")
+        child_refheight = parent_tx.lock_height
 
         # Child A
-        (_, tx_child_a_hex, _, _) = self.chain_transaction(parent_txid, child_value, 0, parent_locking_script_a)
+        (_, tx_child_a_hex, _, _) = self.chain_transaction(parent_txid, child_value, child_refheight, 0, parent_locking_script_a)
         assert not node.testmempoolaccept([tx_child_a_hex])[0]["allowed"]
 
         # Child B
@@ -246,7 +250,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         rawtx_child = self.nodes[0].createrawtransaction(inputs, outputs)
         prevtxs = []
         for i in range(num_parents):
-            prevtxs.append({"txid": parents_tx[i].rehash(), "vout": 0, "scriptPubKey": locking_scripts[i], "amount": values[i]})
+            prevtxs.append({"txid": parents_tx[i].rehash(), "vout": 0, "scriptPubKey": locking_scripts[i], "amount": values[i], "refheight": parents_tx[i].lock_height})
         signedtx_child = self.nodes[0].signrawtransactionwithkey(hexstring=rawtx_child, privkeys=self.privkeys, prevtxs=prevtxs)
         assert signedtx_child["complete"]
         return signedtx_child["hex"]
@@ -264,7 +268,8 @@ class RPCPackagesTest(FreicoinTestFramework):
             for _ in range(num_parents):
                 parent_coin = self.coins.pop()
                 value = parent_coin["amount"]
-                (tx, txhex, value, parent_locking_script) = self.chain_transaction(parent_coin["txid"], value)
+                refheight = parent_coin["refheight"]
+                (tx, txhex, value, parent_locking_script) = self.chain_transaction(parent_coin["txid"], value, refheight)
                 package_hex.append(txhex)
                 parents_tx.append(tx)
                 values.append(value)

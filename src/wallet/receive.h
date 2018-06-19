@@ -25,6 +25,7 @@ struct COutputEntry
 {
     CTxDestination destination;
     CAmount amount;
+    uint32_t refheight;
     int vout;
 };
 

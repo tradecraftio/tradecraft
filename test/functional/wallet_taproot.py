@@ -317,7 +317,7 @@ class WalletTaprootTest(FreicoinTestFramework):
             self.nodes[0].generatetoaddress(1, self.boring.getnewaddress())
             test_balance = int(self.pst_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
-            pst = self.pst_online.walletcreatefundedpst([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0]})['pst']
+            pst = self.pst_online.walletcreatefundedpst([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], 0, None, {"subtractFeeFromOutputs":[0]})['pst']
             res = self.pst_offline.walletprocesspst(pst)
             assert(res['complete'])
             rawtx = self.nodes[0].finalizepst(res['pst'])['hex']
@@ -426,7 +426,7 @@ class WalletTaprootTest(FreicoinTestFramework):
         self.nodes[0].generatetoaddress(1, self.boring.getnewaddress())
         assert(self.rpc_online.gettransaction(txid)["confirmations"] > 0)
 
-        pst = self.pst_online.walletcreatefundedpst([], [{self.boring.getnewaddress(): self.pst_online.getbalance()}], None, {"subtractFeeFromOutputs": [0]})['pst']
+        pst = self.pst_online.walletcreatefundedpst([], [{self.boring.getnewaddress(): self.pst_online.getbalance()}], 0, None, {"subtractFeeFromOutputs": [0]})['pst']
         res = self.pst_offline.walletprocesspst(pst)
         assert(res['complete'])
         rawtx = self.nodes[0].finalizepst(res['pst'])['hex']

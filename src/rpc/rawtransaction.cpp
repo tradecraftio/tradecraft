@@ -115,6 +115,7 @@ static RPCHelpMan getrawtransaction()
                              {RPCResult::Type::NUM, "weight", "The transaction's weight (between vsize*4-3 and vsize*4)"},
                              {RPCResult::Type::NUM, "version", "The version"},
                              {RPCResult::Type::NUM_TIME, "locktime", "The lock time"},
+                             {RPCResult::Type::NUM, "lockheight", "The reference height, and the minimum height for inclusion in chain."},
                              {RPCResult::Type::ARR, "vin", "",
                              {
                                  {RPCResult::Type::OBJ, "", "",
@@ -421,6 +422,7 @@ static RPCHelpMan createrawtransaction()
                         },
                         },
                     {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"lockheight", RPCArg::Type::NUM, RPCArg::Default{0}, "The reference height of the outputs in the transaction being generated, and the minimum height for inclusion in chain. If not specified, the height of the next block to be mined is used."},
                 },
                 RPCResult{
                     RPCResult::Type::STR_HEX, "transaction", "hex string of the transaction"
@@ -437,10 +439,18 @@ static RPCHelpMan createrawtransaction()
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
+        UniValue::VNUM,
         }, true
     );
 
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    int height = -1;
+    {
+        LOCK(cs_main);
+        height = chainman.ActiveChain().Height();
+    }
+
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3], height);
 
     return EncodeHexTx(CTransaction(rawTx));
 },
@@ -471,6 +481,7 @@ static RPCHelpMan decoderawtransaction()
                         {RPCResult::Type::NUM, "weight", "The transaction's weight (between vsize*4 - 3 and vsize*4)"},
                         {RPCResult::Type::NUM, "version", "The version"},
                         {RPCResult::Type::NUM_TIME, "locktime", "The lock time"},
+                        {RPCResult::Type::NUM, "lockheight", "The reference height, and the minimum height for inclusion in chain."},
                         {RPCResult::Type::ARR, "vin", "",
                         {
                             {RPCResult::Type::OBJ, "", "",
@@ -676,6 +687,17 @@ static RPCHelpMan combinerawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions");
     }
 
+    // Merging transactions with different lock_height values is unlikely to
+    // accomplish what the user is expecting, since this field also acts as the
+    // reference height for the transaction.  We require all transactions to
+    // have maching lock_height values.
+    auto lock_height = txVariants[0].lock_height;
+    for (const auto& tx : txVariants) {
+        if (tx.lock_height != lock_height) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Provided transactions have incompatible lock_height fields");
+        }
+    }
+
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
     CMutableTransaction mergedTx(txVariants[0]);
@@ -714,10 +736,10 @@ static RPCHelpMan combinerawtransaction()
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
             if (txv.vin.size() > i) {
-                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out));
+                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, coin.refheight));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1), coin.out.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1, SIGHASH_ALL), coin.out.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
@@ -752,6 +774,7 @@ static RPCHelpMan signrawtransactionwithkey()
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
                                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
+                                    {"refheight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The lockheight of the transaction output being spent"},
                                 },
                                 },
                         },
@@ -1056,6 +1079,7 @@ static RPCHelpMan decodepst()
                                 {RPCResult::Type::OBJ, "witness_utxo", /* optional */ true, "Transaction output for witness UTXOs",
                                 {
                                     {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT},
+                                    {RPCResult::Type::NUM, "refheight", "The lockheight of the transaction output being spent"},
                                     {RPCResult::Type::OBJ, "scriptPubKey", "",
                                     {
                                         {RPCResult::Type::STR, "asm", "The asm"},
@@ -1184,6 +1208,7 @@ static RPCHelpMan decodepst()
 
             UniValue out(UniValue::VOBJ);
             out.pushKV("amount", ValueFromAmount(txout.nValue));
+            out.pushKV("refheight", (int64_t)input.witness_refheight);
             out.pushKV("scriptPubKey", o);
 
             in.pushKV("witness_utxo", out);
@@ -1481,6 +1506,7 @@ static RPCHelpMan createpst()
                         },
                         },
                     {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"lockheight", RPCArg::Type::NUM, RPCArg::Default{0}, "The reference height of the outputs in the transaction being generated, and the minimum height for inclusion in chain. If not specified, the height of the next block to be mined is used."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "", "The resulting raw transaction (hex-encoded string)"
@@ -1495,10 +1521,18 @@ static RPCHelpMan createpst()
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
+        UniValue::VNUM,
         }, true
     );
 
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    int height = -1;
+    {
+        LOCK(cs_main);
+        height = chainman.ActiveChain().Height();
+    }
+
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3], height);
 
     // Make a blank pst
     PartiallySignedTransaction pstx;
