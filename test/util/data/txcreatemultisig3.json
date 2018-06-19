@@ -1,11 +1,12 @@
 {
-    "txid": "ccc552220b46a3b5140048b03395987ce4f0fa1ddf8c635bba1fa44e0f8c1d7f",
-    "hash": "ccc552220b46a3b5140048b03395987ce4f0fa1ddf8c635bba1fa44e0f8c1d7f",
+    "txid": "34784bcf09a05b2d47871e68414d58efa8d18b0b3e2efee3fad23f86706bc921",
+    "hash": "34784bcf09a05b2d47871e68414d58efa8d18b0b3e2efee3fad23f86706bc921",
     "version": 1,
-    "size": 53,
-    "vsize": 53,
-    "weight": 212,
+    "size": 57,
+    "vsize": 57,
+    "weight": 228,
     "locktime": 0,
+    "lockheight": 0,
     "vin": [
     ],
     "vout": [
@@ -21,5 +22,5 @@
             }
         }
     ],
-    "hex": "01000000000100e1f50500000000220020e15a86a23178f433d514dbbce042e87d72662b8b5edcacfd2e37ab7a2d135f0500000000"
+    "hex": "01000000000100e1f50500000000220020e15a86a23178f433d514dbbce042e87d72662b8b5edcacfd2e37ab7a2d135f050000000000000000"
 }
