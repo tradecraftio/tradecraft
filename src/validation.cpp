@@ -1203,7 +1203,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    return VerifyScript(scriptSig, scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, amount, cacheStore, *txdata), &error);
+    return VerifyScript(scriptSig, scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, amount, refheight, cacheStore, *txdata), &error);
 }
 
 int GetSpendHeight(const CCoinsViewCache& inputs)
@@ -1287,9 +1287,10 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 // spent being checked as a part of CScriptCheck.
                 const CScript& scriptPubKey = coin.out.scriptPubKey;
                 const CAmount amount = coin.out.nValue;
+                const int64_t refheight = coin.refheight;
 
                 // Verify signature
-                CScriptCheck check(scriptPubKey, amount, tx, i, flags, cacheSigStore, &txdata);
+                CScriptCheck check(scriptPubKey, amount, refheight, tx, i, flags, cacheSigStore, &txdata);
                 if (pvChecks) {
                     pvChecks->push_back(CScriptCheck());
                     check.swap(pvChecks->back());
@@ -1301,7 +1302,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                         // arguments; if so, don't trigger DoS protection to
                         // avoid splitting the network between upgraded and
                         // non-upgraded nodes.
-                        CScriptCheck check2(scriptPubKey, amount, tx, i,
+                        CScriptCheck check2(scriptPubKey, amount, refheight, tx, i,
                                 flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
                         if (check2())
                             return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
@@ -1431,6 +1432,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
         if (!alternate.IsSpent()) {
             undo.nHeight = alternate.nHeight;
             undo.fCoinBase = alternate.fCoinBase;
+            undo.refheight = alternate.refheight;
         } else {
             return DISCONNECT_FAILED; // adding output for transaction without known metadata
         }
@@ -1555,6 +1557,7 @@ bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned i
     txTo.vout[0].nValue = 0;
     txTo.vout[0].scriptPubKey = (CScript() << OP_TRUE);
     txTo.nLockTime = 0;
+    txTo.lock_height = from.nHeight;
     CTransaction to(txTo);
     // Ideally we shouldn't need this structure, since it requires some hash
     // operations to setup and is never used.  However CScriptCheck calls
@@ -1564,14 +1567,15 @@ bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned i
     // Must be able to spend the script with an empty scriptSig.
     const CScript& scriptPubKey = from.out.scriptPubKey;
     const CAmount amount = from.out.nValue;
-    CScriptCheck check(scriptPubKey, amount, to, 0, flags, false, &txdata);
+    const int64_t refheight = from.refheight;
+    CScriptCheck check(scriptPubKey, amount, refheight, to, 0, flags, false, &txdata);
     return check();
 }
 
 bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags)
 {
     // Build the coin object from which we will attempt to spend the output:
-    Coin from(txFrom.vout[0], 0, false);
+    Coin from(txFrom.vout[0], txFrom.lock_height, 0, false);
     // Then call the common implementation.
     return IsTriviallySpendable(from, COutPoint(txFrom.GetHash(), n), flags);
 }
