@@ -73,8 +73,8 @@ def small_txpuzzle_randfee(
     tx_hex = tx.serialize().hex()
 
     batch_reqs.append(from_node.sendrawtransaction.get_request(hexstring=tx_hex, maxfeerate=0))
-    unconflist.append({"txid": txid, "vout": 0, "value": total_in - amount - fee})
-    unconflist.append({"txid": txid, "vout": 1, "value": amount})
+    unconflist.append({"txid": txid, "vout": 0, "value": total_in - amount - fee, "refheight": tx.lock_height})
+    unconflist.append({"txid": txid, "vout": 1, "value": amount, "refheight": tx.lock_height})
 
     return (tx.get_vsize(), fee)
 

@@ -35,15 +35,15 @@ from test_framework.script import (
 # input (blank, empty scriptSig), and with an output omitting the scriptPubKey,
 # we get to a minimum size of 60 bytes:
 #
-# Tx Skeleton: 4 [Version] + 1 [InCount] + 1 [OutCount] + 4 [LockTime] = 10 bytes
+# Tx Skeleton: 4 [Version] + 1 [InCount] + 1 [OutCount] + 4 [LockTime] + 4 [LockHeight] = 14 bytes
 # Blank Input: 32 [PrevTxHash] + 4 [Index] + 1 [scriptSigLen] + 4 [SeqNo] = 41 bytes
 # Output:      8 [Amount] + 1 [scriptPubKeyLen] = 9 bytes
 #
 # Hence, the scriptPubKey of the single output has to have a size of at
-# least 5 bytes.
+# least 1 byte.
 MIN_STANDARD_TX_NONWITNESS_SIZE = 65
-MIN_PADDING = MIN_STANDARD_TX_NONWITNESS_SIZE - 10 - 41 - 9
-assert MIN_PADDING == 5
+MIN_PADDING = MIN_STANDARD_TX_NONWITNESS_SIZE - 14 - 41 - 9
+assert MIN_PADDING == 1
 
 # This script cannot be spent, allowing dust output values under
 # standardness checks
