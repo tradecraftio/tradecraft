@@ -66,25 +66,36 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(const CChainParams& params)
 constexpr static struct {
     unsigned char extranonce;
     unsigned int nonce;
-} BLOCKINFO[]{{8, 582909131},  {0, 971462344},  {2, 1169481553}, {6, 66147495},  {7, 427785981},  {8, 80538907},
-              {8, 207348013},  {2, 1951240923}, {4, 215054351},  {1, 491520534}, {8, 1282281282}, {4, 639565734},
-              {3, 248274685},  {8, 1160085976}, {6, 396349768},  {5, 393780549}, {5, 1096899528}, {4, 965381630},
-              {0, 728758712},  {5, 318638310},  {3, 164591898},  {2, 274234550}, {2, 254411237},  {7, 561761812},
-              {2, 268342573},  {0, 402816691},  {1, 221006382},  {6, 538872455}, {7, 393315655},  {4, 814555937},
-              {7, 504879194},  {6, 467769648},  {3, 925972193},  {2, 200581872}, {3, 168915404},  {8, 430446262},
-              {5, 773507406},  {3, 1195366164}, {0, 433361157},  {3, 297051771}, {0, 558856551},  {2, 501614039},
-              {3, 528488272},  {2, 473587734},  {8, 230125274},  {2, 494084400}, {4, 357314010},  {8, 60361686},
-              {7, 640624687},  {3, 480441695},  {8, 1424447925}, {4, 752745419}, {1, 288532283},  {6, 669170574},
-              {5, 1900907591}, {3, 555326037},  {3, 1121014051}, {0, 545835650}, {8, 189196651},  {5, 252371575},
-              {0, 199163095},  {6, 558895874},  {6, 1656839784}, {6, 815175452}, {6, 718677851},  {5, 544000334},
-              {0, 340113484},  {6, 850744437},  {4, 496721063},  {8, 524715182}, {6, 574361898},  {6, 1642305743},
-              {6, 355110149},  {5, 1647379658}, {8, 1103005356}, {7, 556460625}, {3, 1139533992}, {5, 304736030},
-              {2, 361539446},  {2, 143720360},  {6, 201939025},  {7, 423141476}, {4, 574633709},  {3, 1412254823},
-              {4, 873254135},  {0, 341817335},  {6, 53501687},   {3, 179755410}, {5, 172209688},  {8, 516810279},
-              {4, 1228391489}, {8, 325372589},  {6, 550367589},  {0, 876291812}, {7, 412454120},  {7, 717202854},
-              {2, 222677843},  {6, 251778867},  {7, 842004420},  {7, 194762829}, {4, 96668841},   {1, 925485796},
-              {0, 792342903},  {6, 678455063},  {6, 773251385},  {5, 186617471}, {6, 883189502},  {7, 396077336},
-              {8, 254702874},  {0, 455592851}};
+} BLOCKINFO[]{
+    {1, 0x52d00042}, {0, 0x8e9502af}, {0, 0x0c9086ed}, {1, 0x4dafe8b7},
+    {0, 0x2284fd8e}, {1, 0xbe19c94e}, {0, 0x944fb443}, {0, 0x918164c2},
+    {0, 0x5ca9005e}, {2, 0xdfd36b8c}, {1, 0xbea0958d}, {1, 0x63157720},
+    {0, 0xc7c138b1}, {1, 0x47abc96b}, {0, 0x1a41ae50}, {0, 0x33f81ee2},
+    {0, 0x93d37ee6}, {0, 0xd41309ef}, {1, 0xe030f49b}, {0, 0xe92ac447},
+    {2, 0x0a89381e}, {0, 0x23173160}, {0, 0x2dc1d884}, {0, 0xaba6e9b6},
+    {0, 0xbaa9b8fb}, {0, 0x31d86401}, {0, 0x7ab38bc3}, {0, 0xb6a5921c},
+    {1, 0x46901dbf}, {1, 0x55c74e05}, {0, 0x5236e3b6}, {0, 0xa09faea4},
+    {1, 0x239feb9a}, {0, 0x10021b9a}, {1, 0x1edc56aa}, {3, 0x9d65337b},
+    {0, 0x790bf7c1}, {0, 0x2512d056}, {5, 0xcfd1ad26}, {0, 0xfc101a5a},
+    {0, 0x7094b9df}, {0, 0x76cb9875}, {0, 0xc2405a3d}, {0, 0x7b63fe34},
+    {0, 0x0db81fd0}, {0, 0xceceadd6}, {0, 0x95f2ea4b}, {0, 0x4c77115a},
+    {1, 0xa6b53f07}, {1, 0xb526245d}, {0, 0x2d4b00c8}, {1, 0xc35c0090},
+    {1, 0xaada2eda}, {0, 0x3fd18fab}, {0, 0x7747abf2}, {2, 0xb0b92b17},
+    {0, 0x67227e86}, {0, 0xf9fd9455}, {0, 0x69251c19}, {0, 0x633da320},
+    {0, 0x8acefe47}, {0, 0xeb82586d}, {1, 0x121792ef}, {4, 0x3ef76f0e},
+    {1, 0xb4f30ec8}, {0, 0x4245e33b}, {1, 0xb9bd34c0}, {0, 0x293a1297},
+    {0, 0x3843f35f}, {1, 0x5f6ceef1}, {1, 0xcb3a5a97}, {3, 0xa0c5c696},
+    {0, 0xce5b8825}, {0, 0xe5bad1e6}, {2, 0x2e775dcb}, {1, 0xdd7ba849},
+    {0, 0x70ddc54b}, {1, 0x4d7291de}, {2, 0xdac7f375}, {0, 0xb48a1cbc},
+    {0, 0x28e05f52}, {2, 0x833fba3d}, {1, 0x09260f05}, {2, 0x46c7653e},
+    {2, 0x1b02eee1}, {0, 0x4c6dab99}, {0, 0x758ec784}, {1, 0x6963c9fa},
+    {0, 0x8b92a0b4}, {0, 0x6c82722c}, {0, 0x09c12660}, {0, 0xd02bdc4c},
+    {1, 0xb89cdf2d}, {0, 0x107ce7da}, {0, 0x525613a2}, {0, 0xbc717ed5},
+    {0, 0x477812dc}, {0, 0x8a6d8f17}, {0, 0x9df124b3}, {0, 0x461e1332},
+    {0, 0x0dde35c2}, {0, 0x76683cec}, {0, 0x92a5017b}, {0, 0x681fb885},
+    {2, 0x617826d0}, {0, 0x0029a8e6}, {0, 0x1d3108a1}, {4, 0x33dc89e2},
+    {0, 0x520883b9}, {0, 0xfb702683}
+};
 
 static CBlockIndex CreateBlockIndex(int nHeight, CBlockIndex* active_chain_tip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -231,13 +242,17 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         {
             LOCK(cs_main);
-            pblock->nVersion = VERSIONBITS_TOP_BITS;
+            pblock->nVersion = 2;
             pblock->nTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1;
             CMutableTransaction txCoinbase(*pblock->vtx[0]);
-            txCoinbase.nVersion = 1;
-            txCoinbase.vin[0].scriptSig = CScript{} << (m_node.chainman->ActiveChain().Height() + 1) << bi.extranonce;
+            txCoinbase.nVersion = 2;
+            txCoinbase.vin[0].scriptSig = CScript();
+            txCoinbase.vin[0].scriptSig << static_cast<int64_t>(m_node.chainman->ActiveChain().Height() + 1);
+            txCoinbase.vin[0].scriptSig << CScriptNum(bi.extranonce);
             txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
+            txCoinbase.vout[0].nValue = 50 * COIN;
             txCoinbase.vout[0].scriptPubKey = CScript();
+            txCoinbase.lock_height = m_node.chainman->ActiveChain().Height() + 1;
             pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
             if (txFirst.size() == 0)
                 baseheight = m_node.chainman->ActiveChain().Height();
@@ -257,10 +272,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Just to make sure we can still make simple blocks
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
 
-    const CAmount BLOCKSUBSIDY = 50*COIN;
+    const CAmount BLOCKSUBSIDY = 49*COIN;
     const CAmount LOWFEE = CENT;
     const CAmount HIGHFEE = COIN;
     const CAmount HIGHERFEE = 4*COIN;
+
+    tx.lock_height = txFirst.back()->lock_height;
 
     // block sigops > limit: 1000 CHECKMULTISIG + 1
     tx.vin.resize(1);
