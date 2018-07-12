@@ -2827,6 +2827,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
         std::set<CInputCoin> setCoins;
         auto locked_chain = chain().lock();
         LOCK(cs_wallet);
+        const int32_t height = chainActive.Height() + 1;
         {
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(*locked_chain, vAvailableCoins, true, &coin_control);
@@ -2888,6 +2889,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 nChangePosInOut = nChangePosRequest;
                 txNew.vin.clear();
                 txNew.vout.clear();
+                txNew.lock_height = height;
                 bool fFirst = true;
 
                 CAmount nValueToSelect = nValue;
