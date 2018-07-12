@@ -1399,12 +1399,14 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 
     {
         LOCK2(cs_main, cs_wallet);
+        const int32_t height = chainActive.Height() + 1;
         {
             nFeeRet = 0;
             while (true)
             {
                 txNew.vin.clear();
                 txNew.vout.clear();
+                txNew.lock_height = height;
                 wtxNew.fFromMe = true;
 
                 CAmount nTotalValue = nValue + nFeeRet;
