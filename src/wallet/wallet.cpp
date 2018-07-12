@@ -1763,12 +1763,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
 
     {
         LOCK2(cs_main, cs_wallet);
+        const int32_t height = chainActive.Height() + 1;
         {
             nFeeRet = 0;
             while (true)
             {
                 txNew.vin.clear();
                 txNew.vout.clear();
+                txNew.lock_height = height;
                 wtxNew.fFromMe = true;
                 nChangePosRet = -1;
                 bool fFirst = true;
