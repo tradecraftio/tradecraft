@@ -17,7 +17,7 @@
 
 from test_framework.address import check_script, script_to_p2sh
 from test_framework.test_framework import FreicoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, hex_str_to_bytes
+from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, get_refheight_for_tx, hex_str_to_bytes
 from test_framework.messages import sha256
 from test_framework.script import CScript, OP_0, OP_CHECKSIG
 
@@ -203,10 +203,11 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         # Fund that address
         txid = self.nodes[0].sendtoaddress(addr, 10)
         vout = find_vout_for_address(self.nodes[0], txid, addr)
+        refheight = get_refheight_for_tx(self.nodes[0], txid)
         self.nodes[0].generate(1)
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
-        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10, 'refheight': refheight}])
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)
@@ -222,10 +223,11 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         # Fund that address
         txid = self.nodes[0].sendtoaddress(addr, 10)
         vout = find_vout_for_address(self.nodes[0], txid, addr)
+        refheight = get_refheight_for_tx(self.nodes[0], txid)
         self.nodes[0].generate(1)
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
-        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10, 'refheight': refheight}])
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)

@@ -51,6 +51,8 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
 QT_TRANSLATE_NOOP("freicoin", ""
+"Reference height not specified and couldn't determine current chain height."),
+QT_TRANSLATE_NOOP("freicoin", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
 "rebuild the block database if you are sure that your computer's date and "

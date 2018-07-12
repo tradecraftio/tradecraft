@@ -612,3 +612,12 @@ def find_vout_for_address(node, txid, addr):
         if any([addr == a for a in tx["vout"][i]["scriptPubKey"]["addresses"]]):
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
+
+def get_refheight_for_tx(node, txid):
+    """
+    Return the lockheight / reference height of the given transaction.
+    """
+    tx = node.getrawtransaction(txid, True)
+    if 'lockheight' in tx:
+        return tx['lockheight']
+    raise RuntimeError("Transaction not found: txid=%s" % txid)
