@@ -2737,6 +2737,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     {
         std::set<CInputCoin> setCoins;
         LOCK2(cs_main, cs_wallet);
+        const int32_t height = chainActive.Height() + 1;
         {
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, &coin_control);
@@ -2785,6 +2786,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 nChangePosInOut = nChangePosRequest;
                 txNew.vin.clear();
                 txNew.vout.clear();
+                txNew.lock_height = height;
                 wtxNew.fFromMe = true;
                 bool fFirst = true;
 
