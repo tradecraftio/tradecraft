@@ -51,6 +51,8 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
 QT_TRANSLATE_NOOP("freicoin", ""
+"Reference height not specified and couldn't determine current chain height."),
+QT_TRANSLATE_NOOP("freicoin", ""
 "Rescans are not possible in pruned mode. You will need to use -reindex which "
 "will download the whole blockchain again."),
 QT_TRANSLATE_NOOP("freicoin", ""

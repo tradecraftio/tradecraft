@@ -2999,10 +2999,12 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
         auto locked_chain = chain().lock();
         LOCK(cs_wallet);
         if (refheight < 0) {
-            // A negative value means "set based on current chain tip."  However
-            // to simplify rebasing, automatic value setting is added in a later
-            // commit.
-            refheight = 0;
+            // A negative value means "set based on current chain tip."
+            auto locked_height = locked_chain->getHeight();
+            if (!locked_height) {
+                strFailReason = _("Reference height not specified and couldn't determine current chain height.").translated;
+            }
+            refheight = locked_height.get() + 1;
         }
         {
             std::vector<COutput> vAvailableCoins;
