@@ -2023,6 +2023,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
     {
         LOCK2(cs_main, cs_wallet);
+        const int32_t height = chainActive.Height() + 1;
         {
             nFeeRet = 0;
             // Start with no fee and loop until there is enough fee
@@ -2030,6 +2031,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
             {
                 txNew.vin.clear();
                 txNew.vout.clear();
+                txNew.lock_height = height;
                 wtxNew.fFromMe = true;
                 nChangePosRet = -1;
                 bool fFirst = true;
