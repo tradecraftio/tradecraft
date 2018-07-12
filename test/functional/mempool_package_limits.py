@@ -57,6 +57,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
             self.coins.append({
                 "txid": coinbase["txid"],
                 "amount": coinbase["vout"][0]["value"],
+                "refheight": coinbase["lockheight"],
                 "scriptPubKey": coinbase["vout"][0]["scriptPubKey"],
             })
 
@@ -78,13 +79,15 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         first_coin = self.coins.pop()
         spk = None
         txid = first_coin["txid"]
+        refheight = first_coin["refheight"]
         chain_hex = []
         chain_txns = []
         value = first_coin["amount"]
 
         for i in range(mempool_count + package_count):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, refheight, 0, spk)
             txid = tx.rehash()
+            refheight = tx.lock_height
             if i < mempool_count:
                 node.sendrawtransaction(txhex)
                 assert_equal(node.getmempoolentry(txid)["ancestorcount"], i + 1)
@@ -138,9 +141,10 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         # Top parent in mempool, M1
         first_coin = self.coins.pop()
         parent_value = (first_coin["amount"] - Decimal("0.0002")) / 2 # Deduct reasonable fee and make 2 outputs
+        parent_refheight = first_coin["refheight"]
         inputs = [{"txid": first_coin["txid"], "vout": 0}]
         outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : parent_value}]
-        rawtx = node.createrawtransaction(inputs, outputs)
+        rawtx = node.createrawtransaction(inputs, outputs, 0, parent_refheight)
 
         parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
         assert parent_signed["complete"]
@@ -153,10 +157,12 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         # Chain A
         spk = parent_tx.vout[0].scriptPubKey.hex()
         value = parent_value
+        refheight = parent_tx.lock_height
         txid = parent_txid
         for i in range(12):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, refheight, 0, spk)
             txid = tx.rehash()
+            refheight = tx.lock_height
             if i < 11: # M2a... M12a
                 node.sendrawtransaction(txhex)
             else: # Pa
@@ -172,9 +178,11 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         node.sendrawtransaction(tx_child_b_hex)
         spk = tx_child_b.vout[0].scriptPubKey.hex()
         txid = tx_child_b.rehash()
+        refheight = tx_child_b.lock_height
         for i in range(12):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, refheight, 0, spk)
             txid = tx.rehash()
+            refheight = tx.lock_height
             if i < 11: # M3b... M13b
                 node.sendrawtransaction(txhex)
             else: # Pb
@@ -213,9 +221,10 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         # M1
         first_coin_a = self.coins.pop()
         parent_value = (first_coin_a["amount"] - DEFAULT_FEE) / 2 # Deduct reasonable fee and make 2 outputs
+        parent_refheight = first_coin_a["refheight"]
         inputs = [{"txid": first_coin_a["txid"], "vout": 0}]
         outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : parent_value}]
-        rawtx = node.createrawtransaction(inputs, outputs)
+        rawtx = node.createrawtransaction(inputs, outputs, 0, parent_refheight)
 
         parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
         assert parent_signed["complete"]
@@ -226,10 +235,12 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         # Chain M2...M24
         spk = parent_tx.vout[0].scriptPubKey.hex()
         value = parent_value
+        refheight = parent_tx.lock_height
         txid = parent_txid
         for i in range(23): # M2...M24
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, refheight, 0, spk)
             txid = tx.rehash()
+            refheight = tx.lock_height
             node.sendrawtransaction(txhex)
 
         # P1
@@ -244,7 +255,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         tx_child_p1_spk = tx_child_p1.vout[0].scriptPubKey.hex()
 
         # P2
-        (_, tx_child_p2_hex, _, _) = make_chain(node, self.address, self.privkeys, txid_child_p1, value_p1, 0, tx_child_p1_spk)
+        (_, tx_child_p2_hex, _, _) = make_chain(node, self.address, self.privkeys, txid_child_p1, value_p1, tx_child_p1.lock_height, 0, tx_child_p1_spk)
         package_hex.append(tx_child_p2_hex)
 
         assert_equal(24, node.getmempoolinfo()["size"])
@@ -289,9 +300,11 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
             top_coin = self.coins.pop()
             txid = top_coin["txid"]
             value = top_coin["amount"]
+            refheight = top_coin["refheight"]
             for i in range(13):
-                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, refheight, 0, spk)
                 txid = tx.rehash()
+                refheight = tx.lock_height
                 if i < 12:
                     node.sendrawtransaction(txhex)
                 else: # Save the 13th transaction for the package
@@ -343,9 +356,11 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
             top_coin = self.coins.pop()
             txid = top_coin["txid"]
             value = top_coin["amount"]
+            refheight = top_coin["refheight"]
             for i in range(12):
-                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, refheight, 0, spk)
                 txid = tx.rehash()
+                refheight = tx.lock_height
                 value -= Decimal("0.0001")
                 node.sendrawtransaction(txhex)
                 if i == 11:
@@ -361,7 +376,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         pc_spk = pc_tx.vout[0].scriptPubKey.hex()
 
         # Child Pd
-        (_, pd_hex, _, _) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, 0, pc_spk)
+        (_, pd_hex, _, _) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, pc_tx.lock_height, 0, pc_spk)
 
         assert_equal(24, node.getmempoolinfo()["size"])
         testres_too_long = node.testmempoolaccept(rawtxs=[pc_hex, pd_hex])
@@ -396,8 +411,9 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
             for _ in range(4): # Make mempool transactions M(4i+1)...M(4i+4)
                 parent_coin = self.coins.pop()
                 value = parent_coin["amount"]
+                refheight = parent_coin["refheight"]
                 txid = parent_coin["txid"]
-                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value)
+                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, refheight)
                 gp_tx.append(tx)
                 gp_values.append(value)
                 gp_scripts.append(spk)
@@ -447,7 +463,8 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
             top_coin = self.coins.pop()
             txid = top_coin["txid"]
             value = top_coin["amount"]
-            (tx, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk, high_fee)
+            refheight = top_coin["refheight"]
+            (tx, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, refheight, 0, spk, high_fee)
             bulked_tx = bulk_transaction(tx, node, target_weight, self.privkeys)
             node.sendrawtransaction(bulked_tx.serialize().hex())
             parents_tx.append(bulked_tx)
@@ -462,12 +479,13 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         pc_hex = pc_tx.serialize().hex()
 
         # Package transaction D
-        (small_pd, _, val, spk) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, 0, pc_spk, high_fee)
+        (small_pd, _, val, spk) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, pc_tx.lock_height, 0, pc_spk, high_fee)
         prevtxs = [{
             "txid": pc_tx.rehash(),
             "vout": 0,
             "scriptPubKey": spk,
             "amount": val,
+            "refheight": pc_tx.lock_height,
         }]
         pd_tx = bulk_transaction(small_pd, node, target_weight, self.privkeys, prevtxs)
         pd_hex = pd_tx.serialize().hex()
@@ -499,9 +517,10 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         # Top parent in mempool, Ma
         first_coin = self.coins.pop()
         parent_value = (first_coin["amount"] - high_fee) / 2 # Deduct fee and make 2 outputs
+        parent_refheight = first_coin["refheight"]
         inputs = [{"txid": first_coin["txid"], "vout": 0}]
         outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE:  parent_value}]
-        rawtx = node.createrawtransaction(inputs, outputs)
+        rawtx = node.createrawtransaction(inputs, outputs, 0, parent_refheight)
         parent_tx = bulk_transaction(tx_from_hex(rawtx), node, target_weight, self.privkeys)
         node.sendrawtransaction(parent_tx.serialize().hex())
 
@@ -517,14 +536,15 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
                 "vout": j,
                 "scriptPubKey": spk,
                 "amount": value,
+                "refheight": parent_tx.lock_height,
             }]
             if j == 0: # normal key
-                (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, j, spk, high_fee)
+                (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, parent_tx.lock_height, j, spk, high_fee)
                 mempool_tx = bulk_transaction(tx_small, node, target_weight, self.privkeys, prevtxs)
             else: # OP_TRUE
                 inputs = [{"txid": txid, "vout": 1}]
                 outputs = {self.address: value - high_fee}
-                small_tx = tx_from_hex(node.createrawtransaction(inputs, outputs))
+                small_tx = tx_from_hex(node.createrawtransaction(inputs, outputs, 0, parent_tx.lock_height))
                 mempool_tx = bulk_transaction(small_tx, node, target_weight, None, prevtxs)
             node.sendrawtransaction(mempool_tx.serialize().hex())
 
@@ -532,12 +552,13 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
             spk = mempool_tx.vout[0].scriptPubKey.hex()
             value = Decimal(mempool_tx.vout[0].nValue) / COIN
             txid = mempool_tx.rehash()
-            (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk, high_fee)
+            (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, mempool_tx.lock_height, 0, spk, high_fee)
             prevtxs = [{
                 "txid": txid,
                 "vout": 0,
                 "scriptPubKey": spk,
                 "amount": value,
+                "refheight": tx_small.lock_height,
             }]
             package_tx = bulk_transaction(tx_small, node, target_weight, self.privkeys, prevtxs)
             package_hex.append(package_tx.serialize().hex())

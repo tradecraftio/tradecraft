@@ -270,7 +270,7 @@ def address_to_scriptpubkey(address):
         assert False
 
 
-def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
+def make_chain(node, address, privkeys, parent_txid, parent_value, parent_refheight, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
     """Build a transaction that spends parent_txid.vout[n] and produces one output with
     amount = parent_value with a fee deducted.
     Return tuple (CTransaction object, raw hex, nValue, scriptPubKey of the output created).
@@ -278,12 +278,13 @@ def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_l
     inputs = [{"txid": parent_txid, "vout": n}]
     my_value = parent_value - fee
     outputs = {address : my_value}
-    rawtx = node.createrawtransaction(inputs, outputs)
+    rawtx = node.createrawtransaction(inputs, outputs, 0, parent_refheight)
     prevtxs = [{
         "txid": parent_txid,
         "vout": n,
         "scriptPubKey": parent_locking_script,
         "amount": parent_value,
+        "refheight": parent_refheight,
     }] if parent_locking_script else None
     signedtx = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=privkeys, prevtxs=prevtxs)
     assert signedtx["complete"]
@@ -296,10 +297,12 @@ def create_child_with_parents(node, address, privkeys, parents_tx, values, locki
     total_value = sum(values)
     inputs = [{"txid": tx.rehash(), "vout": 0} for tx in parents_tx]
     outputs = {address : total_value - fee}
-    rawtx_child = node.createrawtransaction(inputs, outputs)
     prevtxs = []
+    refheight = 0
     for i in range(num_parents):
-        prevtxs.append({"txid": parents_tx[i].rehash(), "vout": 0, "scriptPubKey": locking_scripts[i], "amount": values[i]})
+        refheight = max(refheight, parents_tx[i].lock_height)
+        prevtxs.append({"txid": parents_tx[i].rehash(), "vout": 0, "scriptPubKey": locking_scripts[i], "amount": values[i], "refheight": parents_tx[i].lock_height})
+    rawtx_child = node.createrawtransaction(inputs, outputs, 0, refheight)
     signedtx_child = node.signrawtransactionwithkey(hexstring=rawtx_child, privkeys=privkeys, prevtxs=prevtxs)
     assert signedtx_child["complete"]
     return signedtx_child["hex"]
@@ -313,10 +316,12 @@ def create_raw_chain(node, first_coin, address, privkeys, chain_length=25):
     chain_hex = []
     chain_txns = []
     value = first_coin["amount"]
+    refheight = first_coin["refheight"]
 
     for _ in range(chain_length):
-        (tx, txhex, value, parent_locking_script) = make_chain(node, address, privkeys, txid, value, 0, parent_locking_script)
+        (tx, txhex, value, parent_locking_script) = make_chain(node, address, privkeys, txid, value, refheight, 0, parent_locking_script)
         txid = tx.rehash()
+        refheight = tx.lock_height
         chain_hex.append(txhex)
         chain_txns.append(tx)
 

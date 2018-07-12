@@ -655,10 +655,13 @@ static bool CreateTransactionInternal(
     CMutableTransaction txNew; // The resulting transaction that we make
     txNew.nLockTime = GetLocktimeForNewTransaction(wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
     if (refheight < 0) {
-        // A negative value means "set based on current chain tip."  However
-        // to simplify rebasing, automatic value setting is added in a later
-        // commit.
-        refheight = 0;
+        // A negative value means "set based on current chain tip."
+        auto chain_height = wallet.chain().getHeight();
+        if (!chain_height) {
+            error = _("Reference height not specified and couldn't determine current chain height.");
+            return false;
+        }
+        refheight = chain_height.value() + 1;
     }
     txNew.lock_height = static_cast<uint32_t>(refheight);
 
