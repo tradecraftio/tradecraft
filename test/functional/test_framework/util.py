@@ -614,6 +614,15 @@ def find_vout_for_address(node, txid, addr):
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
 
+def get_refheight_for_tx(node, txid):
+    """
+    Return the lockheight / reference height of the given transaction.
+    """
+    tx = node.getrawtransaction(txid, True)
+    if 'lockheight' in tx:
+        return tx['lockheight']
+    raise RuntimeError("Transaction not found: txid=%s" % txid)
+
 def modinv(a, n):
     """Compute the modular inverse of a modulo n using the extended Euclidean
     Algorithm. See https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers.
