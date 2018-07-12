@@ -40,6 +40,7 @@ class P2PBlocksOnly(FreicoinTestFramework):
             outputs=[{
                 self.nodes[0].get_deterministic_priv_key().address: 50 - 0.00125
             }],
+            lockheight=prevtx['lockheight']
         )
         sigtx = self.nodes[0].signrawtransactionwithkey(
             hexstring=rawtx,
@@ -47,6 +48,7 @@ class P2PBlocksOnly(FreicoinTestFramework):
             prevtxs=[{
                 'txid': prevtx['txid'],
                 'vout': 1,
+                'refheight': prevtx['lockheight'],
                 'scriptPubKey': prevtx['vout'][1]['scriptPubKey']['hex'],
             }],
         )['hex']
