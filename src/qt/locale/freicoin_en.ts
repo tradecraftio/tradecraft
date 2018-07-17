@@ -3935,11 +3935,6 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location line="+3"/>
         <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
         <translation type="unfinished"></translation>
@@ -4097,11 +4092,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Freicoin Alert&quot; admin@foo
     <message>
         <location line="+10"/>
         <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Node relay options:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4412,11 +4402,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Freicoin Alert&quot; admin@foo
     <message>
         <location line="+4"/>
         <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

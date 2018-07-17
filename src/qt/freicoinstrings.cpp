@@ -89,9 +89,6 @@ QT_TRANSLATE_NOOP("freicoin-core", ""
 "Maintain a full transaction index, used by the getrawtransaction rpc call "
 "(default: %u)"),
 QT_TRANSLATE_NOOP("freicoin-core", ""
-"Maximum size of data in data carrier transactions we relay and mine "
-"(default: %u)"),
-QT_TRANSLATE_NOOP("freicoin-core", ""
 "Maximum total fees to use in a single wallet transaction, setting too low "
 "may abort large transactions (default: %s)"),
 QT_TRANSLATE_NOOP("freicoin-core", ""
@@ -240,7 +237,6 @@ QT_TRANSLATE_NOOP("freicoin-core", "Maintain at most <n> connections to peers (d
 QT_TRANSLATE_NOOP("freicoin-core", "Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"),
 QT_TRANSLATE_NOOP("freicoin-core", "Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"),
 QT_TRANSLATE_NOOP("freicoin-core", "Need to specify a port with -whitebind: '%s'"),
-QT_TRANSLATE_NOOP("freicoin-core", "Node relay options:"),
 QT_TRANSLATE_NOOP("freicoin-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("freicoin-core", "Only accept block chain matching built-in checkpoints (default: %u)"),
 QT_TRANSLATE_NOOP("freicoin-core", "Only connect to nodes in network <net> (ipv4, ipv6 or onion)"),
@@ -254,7 +250,6 @@ QT_TRANSLATE_NOOP("freicoin-core", "Randomly drop 1 of every <n> network message
 QT_TRANSLATE_NOOP("freicoin-core", "Randomly fuzz 1 of every <n> network messages"),
 QT_TRANSLATE_NOOP("freicoin-core", "Rebuild block chain index from current blk000??.dat files"),
 QT_TRANSLATE_NOOP("freicoin-core", "Receive and display P2P network alerts (default: %u)"),
-QT_TRANSLATE_NOOP("freicoin-core", "Relay and mine data carrier transactions (default: %u)"),
 QT_TRANSLATE_NOOP("freicoin-core", "Relay non-P2SH multisig (default: %u)"),
 QT_TRANSLATE_NOOP("freicoin-core", "Rescan the block chain for missing wallet transactions"),
 QT_TRANSLATE_NOOP("freicoin-core", "Rescanning..."),
