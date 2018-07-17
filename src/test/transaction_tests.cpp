@@ -363,9 +363,9 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_1;
     BOOST_CHECK(!IsStandardTx(t, reason));
 
-    // 56-byte TX_NULL_DATA (standard)
+    // 56-byte TX_NULL_DATA (once standard, not anymore)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38000102030405060708090a0b0c0d0e0f10111213");
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(!IsStandardTx(t, reason));
 
     // 57-byte TX_NULL_DATA (non-standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38000102030405060708090a0b0c0d0e0f1011121314");
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // TX_NULL_DATA w/o PUSHDATA
     t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(!IsStandardTx(t, reason));
 
     // Only one TX_NULL_DATA permitted in all cases
     t.vout.resize(2);
