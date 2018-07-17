@@ -81,19 +81,19 @@ class DataCarrierTest(FreicoinTestFramework):
         self.test_null_data_transaction(node=self.nodes[2], data=small_data, success=True)
 
         self.log.info("Testing a null data transaction with no data.")
-        self.test_null_data_transaction(node=self.nodes[0], data=None, success=True)
+        self.test_null_data_transaction(node=self.nodes[0], data=None, success=False)
         self.test_null_data_transaction(node=self.nodes[1], data=None, success=False)
         self.test_null_data_transaction(node=self.nodes[2], data=None, success=True)
         self.test_null_data_transaction(node=self.nodes[3], data=None, success=True)
 
         self.log.info("Testing a null data transaction with zero bytes of data.")
-        self.test_null_data_transaction(node=self.nodes[0], data=zero_bytes, success=True)
+        self.test_null_data_transaction(node=self.nodes[0], data=zero_bytes, success=False)
         self.test_null_data_transaction(node=self.nodes[1], data=zero_bytes, success=False)
         self.test_null_data_transaction(node=self.nodes[2], data=zero_bytes, success=True)
         self.test_null_data_transaction(node=self.nodes[3], data=zero_bytes, success=True)
 
         self.log.info("Testing a null data transaction with one byte of data.")
-        self.test_null_data_transaction(node=self.nodes[0], data=one_byte, success=True)
+        self.test_null_data_transaction(node=self.nodes[0], data=one_byte, success=False)
         self.test_null_data_transaction(node=self.nodes[1], data=one_byte, success=False)
         self.test_null_data_transaction(node=self.nodes[2], data=one_byte, success=True)
         self.test_null_data_transaction(node=self.nodes[3], data=one_byte, success=False)
