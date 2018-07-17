@@ -49,6 +49,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
             '-txindex',
             '-reindex',  # Need reindex for txindex
             '-acceptnonstdtxn=0',  # Try to mimic main-net
+            '-datacarrier=1',  # We still test OP_RETURN
         ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
