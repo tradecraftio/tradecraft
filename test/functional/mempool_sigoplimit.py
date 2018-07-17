@@ -54,7 +54,7 @@ class BytesPerSigOpTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # allow large datacarrier output to pad transactions
-        self.extra_args = [['-datacarriersize=100000']]
+        self.extra_args = [['-datacarrier=1', '-datacarriersize=100000']]
 
     def create_p2wsh_spending_tx(self, witness_script, output_script):
         """Create a 1-input-1-output P2WSH spending transaction with only the
