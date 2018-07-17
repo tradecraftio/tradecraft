@@ -79,9 +79,9 @@ class RawTransactionsTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [
-            ["-txindex"],
-            ["-txindex"],
-            [],
+            ["-datacarrier=1", "-txindex"],
+            ["-datacarrier=1", "-txindex"],
+            ["-datacarrier=1"],
         ]
         # whitelist all peers to speed up tx relay / mempool sync
         for args in self.extra_args:

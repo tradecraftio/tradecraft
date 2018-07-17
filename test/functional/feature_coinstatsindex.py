@@ -55,7 +55,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         self.num_nodes = 2
         self.supports_cli = False
         self.extra_args = [
-            [],
+            ["-datacarrier=1"],
             ["-coinstatsindex"]
         ]
 
