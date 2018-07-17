@@ -437,6 +437,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         # but child is too high fee
         # Lower mempool limit to make it easier to fill_mempool
         self.restart_node(0, extra_args=[
+            "-datacarrier=1",
             "-datacarriersize=100000",
             "-maxmempool=5",
             "-persistmempool=0",

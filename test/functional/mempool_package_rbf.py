@@ -43,6 +43,7 @@ class PackageRBFTest(FreicoinTestFramework):
         self.setup_clean_chain = True
         # Required for fill_mempool()
         self.extra_args = [[
+            '-datacarrier=1',           # data outputs are disabled by default
             "-datacarriersize=100000",
             "-maxmempool=5",
         ]] * self.num_nodes

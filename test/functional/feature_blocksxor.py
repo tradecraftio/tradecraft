@@ -34,6 +34,7 @@ class BlocksXORTest(FreicoinTestFramework):
         self.extra_args = [[
             '-blocksxor=1',
             '-fastprune=1',             # use smaller block files
+            '-datacarrier=1',           # data outputs are disabled by default
             '-datacarriersize=100000',  # needed to pad transaction with MiniWallet
         ]]
 

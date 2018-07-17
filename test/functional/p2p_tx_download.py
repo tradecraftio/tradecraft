@@ -70,7 +70,7 @@ MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RE
 class TxDownloadTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args= [['-datacarriersize=100000', '-maxmempool=5', '-persistmempool=0']] * self.num_nodes
+        self.extra_args= [['-datacarrier=1', '-datacarriersize=100000', '-maxmempool=5', '-persistmempool=0']] * self.num_nodes
 
     def test_tx_requests(self):
         self.log.info("Test that we request transactions from all our peers, eventually")
