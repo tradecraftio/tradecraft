@@ -52,6 +52,7 @@ class PackageRelayTest(FreicoinTestFramework):
         # hugely speeds up the test, as it involves multiple hops of tx relay.
         self.noban_tx_relay = True
         self.extra_args = [[
+            "-datacarrier=1",
             "-datacarriersize=100000",
             "-maxmempool=5",
         ]] * self.num_nodes

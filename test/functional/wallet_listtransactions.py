@@ -39,7 +39,7 @@ class ListTransactionsTest(FreicoinTestFramework):
         self.num_nodes = 3
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
-        self.extra_args = [["-walletrbf=0"]] * self.num_nodes
+        self.extra_args = [["-datacarrier=1", "-walletrbf=0"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
