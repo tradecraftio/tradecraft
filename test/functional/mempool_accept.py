@@ -47,6 +47,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             '-txindex',
+            '-datacarrier=1',  # We still test OP_RETURN
         ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
