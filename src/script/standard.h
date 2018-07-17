@@ -27,7 +27,7 @@
 
 #include <stdint.h>
 
-static const bool DEFAULT_ACCEPT_DATACARRIER = true;
+static const bool DEFAULT_ACCEPT_DATACARRIER = false;
 
 class CKeyID;
 class CScript;
