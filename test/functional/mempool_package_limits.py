@@ -67,7 +67,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         self.test_anc_count_limits_bushy()
 
         # The node will accept (nonstandard) extra large OP_RETURN outputs
-        self.restart_node(0, extra_args=["-datacarriersize=100000"])
+        self.restart_node(0, extra_args=["-datacarrier=1", "-datacarriersize=100000"])
         self.test_anc_size_limits()
         self.test_desc_size_limits()
 
