@@ -57,6 +57,7 @@ class MaxUploadTest(FreicoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             "-maxuploadtarget=800M",
+            "-datacarrier=1",
             "-datacarriersize=100000",
         ]]
         self.supports_cli = False
