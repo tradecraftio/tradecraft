@@ -55,7 +55,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         self.extra_args = [
             # Explicitly set the output type in order to have consistent tx vsize / fees
             # for both legacy and descriptor wallets (disables the change address type detection algorithm)
-            ["-addresstype=bech32", "-changetype=bech32"],
+            ["-addresstype=bech32", "-changetype=bech32", "-datacarrier=1"],
             ["-coinstatsindex"]
         ]
 
