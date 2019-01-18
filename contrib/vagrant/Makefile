@@ -282,7 +282,7 @@ lxc-base: .stamp-lxc-base.manifest
 	    echo 'lxc.cgroup.devices.allow = c 10:200 rwm' >> etc/lxc.config.in; \
 	    ln -s '$(GUEST_CACHE_DIR)' inputs; \
 	    env LXC_BRIDGE=lxcbr0 LXC_GUEST_IP=10.0.3.2 GITIAN_HOST_IP=10.0.3.1 \
-	        bin/make-base-vm --lxc --suite bionic --arch amd64"
+	        bin/make-base-vm --lxc --suite trusty --arch amd64"
 	
 ifdef VAGRANT_CYCLE
 	-$(call VAGRANT_HALT)
