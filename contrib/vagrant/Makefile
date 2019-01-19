@@ -376,14 +376,8 @@ PLATFORM           := linux
 TARGET             := $(PLATFORM)
 $(TARGET)_NAME     := $(TARGET)-$(VERSION)
 $(TARGET)_VERSION  := $(VERSION)
-$(TARGET)_OUTPUTS  := $(PROJECT)-$($(TARGET)_VERSION)-aarch64-linux-gnu.tar.gz \
-                      $(PROJECT)-$($(TARGET)_VERSION)-aarch64-linux-gnu-debug.tar.gz \
-                      $(PROJECT)-$($(TARGET)_VERSION)-arm-linux-gnueabihf.tar.gz \
-                      $(PROJECT)-$($(TARGET)_VERSION)-arm-linux-gnueabihf-debug.tar.gz \
-                      $(PROJECT)-$($(TARGET)_VERSION)-i686-pc-linux-gnu.tar.gz \
-                      $(PROJECT)-$($(TARGET)_VERSION)-i686-pc-linux-gnu-debug.tar.gz \
-                      $(PROJECT)-$($(TARGET)_VERSION)-x86_64-linux-gnu.tar.gz \
-                      $(PROJECT)-$($(TARGET)_VERSION)-x86_64-linux-gnu-debug.tar.gz
+$(TARGET)_OUTPUTS  := $(PROJECT)-$($(TARGET)_VERSION)-linux32.tar.gz \
+                      $(PROJECT)-$($(TARGET)_VERSION)-linux64.tar.gz
 $(TARGET)_SCRIPT   := contrib/gitian-descriptors/gitian-$(TARGET).yml
 $(TARGET)_PKGS     :=
 $(TARGET)_DEPS     := .stamp-download-depends.h
@@ -411,10 +405,11 @@ PLATFORM           := win
 TARGET             := $(PLATFORM)
 $(TARGET)_NAME     := $(TARGET)-$(VERSION)
 $(TARGET)_VERSION  := $(VERSION)
-$(TARGET)_OUTPUTS  := $(PROJECT)-$($(TARGET)_VERSION)-win64-debug.zip \
-                      $(PROJECT)-$($(TARGET)_VERSION)-win32-debug.zip \
-                      $(PROJECT)-$($(TARGET)_VERSION)-win64.zip \
-                      $(PROJECT)-$($(TARGET)_VERSION)-win32.zip
+$(TARGET)_OUTPUTS  := $(PROJECT)-$($(TARGET)_VERSION)-win64.zip \
+                      $(PROJECT)-$($(TARGET)_VERSION)-win64-setup-unsigned.exe \
+                      $(PROJECT)-$($(TARGET)_VERSION)-win32.zip \
+                      $(PROJECT)-$($(TARGET)_VERSION)-win32-setup-unsigned.exe \
+                      $(PROJECT)-$($(TARGET)_VERSION)-win-unsigned.tar.gz
 $(TARGET)_SCRIPT   := contrib/gitian-descriptors/gitian-$(TARGET).yml
 $(TARGET)_PKGS     :=
 $(TARGET)_DEPS     := .stamp-download-depends.h
