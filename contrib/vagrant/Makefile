@@ -114,8 +114,8 @@ $(PKG)_URL      := http://78.108.103.11/MIRROR/ftp/png/src/history/libpng16/$(PK
 PKGS            += $(PKG)
 
 PKG             := MacOSX10.7.sdk.tar.gz
-$(PKG)_CHECKSUM := d6d816d6505a92b5434af78d8e8863fb7c6efedb18b2928821b50eb4fc152b30a7eb851eaa6dd237c14c7c0168bbf9e88aa11a1f8e0e0c2adf4cc89bd1cf278e
-$(PKG)_URL      := https://people.torproject.org/~mikeperry/mirrors/sources/$(PKG)
+$(PKG)_CHECKSUM := b45d47d5791c15136f61475deccc819d9c5e7cf2024ed9871cc3911eb85de4c50a2544263b0a4e1ea52e095cbacb20702c886a281605dd0431bc4752caf8afaa
+$(PKG)_URL      := https://github.com/maaku/dependencies/raw/7d5b05fcab446b1d7a6a9e8e45cabfb26e31c45d/$(PKG)
 PKGS            += $(PKG)
 
 PKG             := miniupnpc-1.9.20140701.tar.gz
