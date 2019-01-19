@@ -53,9 +53,9 @@ GUEST_CACHE_DIR := /vagrant/$(CACHE_DIR)
 
 SOURCEFORGE_MIRROR := downloads.sourceforge.net
 
-PKG             := MacOSX10.11.sdk.tar.gz
-$(PKG)_CHECKSUM := 1c8744a2a47156a7c10b299b7f39ec775c4d13a808e8524ee11825b77e597597571146cba4f6330257b8f2d93f84cf04146013d513b6ab647d061de89c560529
-$(PKG)_URL      := https://github.com/MZaf/MacOSX10.11.sdk/raw/master/$(PKG)
+PKG             := MacOSX10.7.sdk.tar.gz
+$(PKG)_CHECKSUM := b45d47d5791c15136f61475deccc819d9c5e7cf2024ed9871cc3911eb85de4c50a2544263b0a4e1ea52e095cbacb20702c886a281605dd0431bc4752caf8afaa
+$(PKG)_URL      := https://github.com/maaku/dependencies/raw/7d5b05fcab446b1d7a6a9e8e45cabfb26e31c45d/$(PKG)
 PKGS            += $(PKG)
 
 # ===----------------------------------------------------------------------===
@@ -394,7 +394,7 @@ $(TARGET)_OUTPUTS  := $(PROJECT)-$($(TARGET)_VERSION)-osx64.tar.gz \
                       $(PROJECT)-$($(TARGET)_VERSION)-osx-unsigned.dmg \
                       $(PROJECT)-$($(TARGET)_VERSION)-osx-unsigned.tar.gz
 $(TARGET)_SCRIPT   := contrib/gitian-descriptors/gitian-$(TARGET).yml
-$(TARGET)_PKGS     := MacOSX10.11.sdk.tar.gz
+$(TARGET)_PKGS     := MacOSX10.7.sdk.tar.gz
 $(TARGET)_DEPS     := .stamp-download-depends.h
 $(TARGET)_FILES    := $(SOURCE_FILES)
 $(TARGET)_FILES    := $(sort $($(TARGET)_FILES))
