@@ -91,7 +91,7 @@ clean: mostlyclean
 .PHONY: distclean
 distclean: clean
 	-rm -rf cache
-	-rm -rf output-gitian-host-bionic64
+	-rm -rf output-gitian-host-xenial64
 	-rm -rf packer_cache
 
 .PHONY: maintainer-clean
@@ -229,12 +229,12 @@ gitian-host: .stamp-gitian-host.manifest
 	
 	# Remove any temporary files from interupted builds that would
 	# interfere if present.
-	if [ -e output-gitian-host-bionic64 ]; then \
-	    rm -rf output-gitian-host-bionic64; \
+	if [ -e output-gitian-host-xenial64 ]; then \
+	    rm -rf output-gitian-host-xenial64; \
 	fi
 	
 	packer build gitian-host.json
-	vagrant box add --name gitian-host-bionic64 --force box/virtualbox/gitian-host-bionic64-0.box
+	vagrant box add --name gitian-host-xenial64 --force box/virtualbox/gitian-host-xenial64-0.box
 	-rm -rf box
 	
 	$(call VAGRANT_UP)
