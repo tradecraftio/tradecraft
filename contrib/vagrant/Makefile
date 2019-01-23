@@ -110,7 +110,7 @@ PKGS            += $(PKG)
 
 PKG             := libpng-1.6.8.tar.gz
 $(PKG)_CHECKSUM := 1b0de10acf39b300e22fd02fd6a0766a358a02358d081989e9d4f0619918c7ab5be830a232bd58c67a1eb1b592ed0d956588c5dcf489885320c499bb0bd35a74
-$(PKG)_URL      := ftp://ftp.simplesystems.org/pub/png/src/history/libpng16/$(PKG)
+$(PKG)_URL      := http://78.108.103.11/MIRROR/ftp/png/src/history/libpng16/$(PKG)
 PKGS            += $(PKG)
 
 PKG             := MacOSX10.7.sdk.tar.gz
