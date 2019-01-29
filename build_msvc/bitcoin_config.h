@@ -8,6 +8,12 @@
 /* Define if building universal (internal helper macro) */
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
 
+/* Version base string */
+#define CLIENT_BASE_VERSION 22
+
+/* Release string */
+#define CLIENT_RELEASE_STRING 22
+
 /* Version Build */
 #define CLIENT_VERSION_BUILD 0
 
@@ -19,6 +25,12 @@
 
 /* Minor version */
 #define CLIENT_VERSION_MINOR 0
+
+/* Patch version */
+#define CLIENT_VERSION_PATCH 0
+
+/* Build revision */
+#define CLIENT_VERSION_REVISION 0
 
 /* Copyright holder(s) before %s replacement */
 #define COPYRIGHT_HOLDERS "The %s developers"
@@ -254,7 +266,7 @@
 #define PACKAGE_NAME "Bitcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Bitcoin Core 22.0.0"
+#define PACKAGE_STRING "Bitcoin Core 22"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "bitcoin"
@@ -263,7 +275,7 @@
 #define PACKAGE_URL "https://bitcoincore.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "22.0.0"
+#define PACKAGE_VERSION "22"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
