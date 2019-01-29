@@ -1048,9 +1048,9 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
 
 UniValue signrawtransaction(const JSONRPCRequest& request)
 {
-    // This method should be removed entirely in V0.19, along with the entries in the
+    // This method should be removed entirely in V19, along with the entries in the
     // CRPCCommand table and rpc/client.cpp.
-    throw JSONRPCError(RPC_METHOD_DEPRECATED, "signrawtransaction was removed in v0.18.\n"
+    throw JSONRPCError(RPC_METHOD_DEPRECATED, "signrawtransaction was removed in v18.\n"
         "Clients should transition to using signrawtransactionwithkey and signrawtransactionwithwallet");
 }
 
