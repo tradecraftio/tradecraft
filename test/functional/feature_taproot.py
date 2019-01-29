@@ -485,7 +485,7 @@ def spend(tx, idx, utxos, **kwargs):
 Spender = namedtuple("Spender", "script,comment,is_standard,sat_function,err_msg,sigops_weight,no_fail,need_vin_vout_mismatch")
 # The full node versions that treat the tx standard.
 # ALL means any version
-# V23 means the major version 23.0 and any later version
+# V23 means the major version v23 and any later version
 # NONE means no version
 Standard = Enum('Standard', 'ALL V23 NONE')
 
