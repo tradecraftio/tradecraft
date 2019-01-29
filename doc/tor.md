@@ -5,7 +5,7 @@ It is possible to run Bitcoin Core as a Tor onion service, and connect to such s
 The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150.
 ## Compatibility
 
-- Starting with version 22.0, Bitcoin Core only supports Tor version 3 hidden
+- Starting with version v22, Bitcoin Core only supports Tor version 3 hidden
   services (Tor v3). Tor v2 addresses are ignored by Bitcoin Core and neither
   relayed nor stored.
 

@@ -53,7 +53,7 @@ With the /notxdetails/ option JSON response will only contain the transaction ha
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 Returns empty if the block doesn't exist or it isn't in the active chain.
 
-*Deprecated (but not removed) since 24.0:*
+*Deprecated (but not removed) since v24:*
 `GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 #### Blockfilter Headers
@@ -63,7 +63,7 @@ Given a block hash: returns <COUNT> amount of blockfilter headers in upward
 direction for the filter type <FILTERTYPE>.
 Returns empty if the block doesn't exist or it isn't in the active chain.
 
-*Deprecated (but not removed) since 24.0:*
+*Deprecated (but not removed) since v24:*
 `GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 #### Blockfilters
@@ -141,7 +141,7 @@ Only supports JSON as output format.
 Refer to the `getrawmempool` RPC help for details. Defaults to setting
 `verbose=true` and `mempool_sequence=false`.
 
-*Query parameters for `verbose` and `mempool_sequence` available in 25.0 and up.*
+*Query parameters for `verbose` and `mempool_sequence` available in v25 and up.*
 
 
 Risks

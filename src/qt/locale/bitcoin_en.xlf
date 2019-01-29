@@ -251,21 +251,21 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">214</context></context-group>
       </trans-unit>
       <trans-unit id="_msg56">
-        <source xml:space="preserve">The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <source xml:space="preserve">The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to v25, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
         <context-group purpose="location"><context context-type="linenumber">179</context></context-group>
       </trans-unit>
       <trans-unit id="_msg57">
+        <source xml:space="preserve">The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to v25, please try again with only the characters up to — but not including — the first null character.</source>
+        <context-group purpose="location"><context context-type="linenumber">217</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg58">
         <source xml:space="preserve">Wallet passphrase was successfully changed.</source>
         <context-group purpose="location"><context context-type="linenumber">206</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg58">
+      <trans-unit id="_msg59">
         <source xml:space="preserve">Passphrase change failed</source>
         <context-group purpose="location"><context context-type="linenumber">213</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">216</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg59">
-        <source xml:space="preserve">The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
-        <context-group purpose="location"><context context-type="linenumber">217</context></context-group>
       </trans-unit>
       <trans-unit id="_msg60">
         <source xml:space="preserve">Warning: The Caps Lock key is on!</source>
@@ -2248,7 +2248,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <group restype="x-trolltech-linguist-context" resname="QObject">
       <trans-unit id="_msg493">
         <source xml:space="preserve">Amount</source>
-        <context-group purpose="location"><context context-type="linenumber">208</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">212</context></context-group>
       </trans-unit>
     </group>
   </body></file>
