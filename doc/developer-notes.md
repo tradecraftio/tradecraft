@@ -1010,7 +1010,7 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 ```
 
 - Build and run tests with `-DDEBUG_LOCKORDER` to verify that no potential
-  deadlocks are introduced. As of 0.12, this is defined by default when
+  deadlocks are introduced. As of 12.1, this is defined by default when
   configuring with `--enable-debug`.
 
 - When using `LOCK`/`TRY_LOCK` be aware that the lock exists in the context of
