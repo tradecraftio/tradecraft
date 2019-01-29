@@ -172,7 +172,7 @@ void AskPassphraseDialog::accept()
                     QMessageBox::critical(this, tr("Wallet unlock failed"),
                                           tr("The passphrase entered for the wallet decryption is incorrect. "
                                              "It contains a null character (ie - a zero byte). "
-                                             "If the passphrase was set with a version of this software prior to 25.0, "
+                                             "If the passphrase was set with a version of this software prior to v25, "
                                              "please try again with only the characters up to — but not including — "
                                              "the first null character. If this is successful, please set a new "
                                              "passphrase to avoid this issue in the future."));
@@ -203,7 +203,7 @@ void AskPassphraseDialog::accept()
                     QMessageBox::critical(this, tr("Passphrase change failed"),
                                           tr("The old passphrase entered for the wallet decryption is incorrect. "
                                              "It contains a null character (ie - a zero byte). "
-                                             "If the passphrase was set with a version of this software prior to 25.0, "
+                                             "If the passphrase was set with a version of this software prior to v25, "
                                              "please try again with only the characters up to — but not including — "
                                              "the first null character."));
                 }
