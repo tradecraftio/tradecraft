@@ -85,7 +85,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Output debugging information (default: %u, supplying <category> is optional)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Prune configured below the minimum of %d MB.  Please use a higher number."),
+"Prune configured below the minimum of %d MiB.  Please use a higher number."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Query for peer addresses via DNS lookup, if low on addresses (default: 1 "
 "unless -connect)"),
@@ -261,6 +261,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "RPC server options:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "RPC support for HTTP persistent connections (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rebuild block chain index from current blk000??.dat files on startup"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Receive and display P2P network alerts (default: %u)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Reindex required as the chainstate or block database is obfuscated"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Relay and mine data carrier transactions (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Relay non-P2SH multisig (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rescan the block chain for missing wallet transactions"),
