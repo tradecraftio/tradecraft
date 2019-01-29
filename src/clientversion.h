@@ -25,9 +25,9 @@
  */
 
 //! These need to be macros, as clientversion.cpp's and bitcoin*-res.rc's voodoo requires it
-#define CLIENT_VERSION_MAJOR 0
-#define CLIENT_VERSION_MINOR 14
-#define CLIENT_VERSION_REVISION 2
+#define CLIENT_VERSION_MAJOR 14
+#define CLIENT_VERSION_MINOR 3
+#define CLIENT_VERSION_REVISION 0
 #define CLIENT_VERSION_PATCH 0
 #define CLIENT_VERSION_BUILD 0
 
