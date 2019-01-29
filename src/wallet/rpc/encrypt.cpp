@@ -85,7 +85,7 @@ RPCHelpMan walletpassphrase()
             } else {
                 throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered is incorrect. "
                                                                     "It contains a null character (ie - a zero byte). "
-                                                                    "If the passphrase was set with a version of this software prior to 25.0, "
+                                                                    "If the passphrase was set with a version of this software prior to v25, "
                                                                     "please try again with only the characters up to — but not including — "
                                                                     "the first null character. If this is successful, please set a new "
                                                                     "passphrase to avoid this issue in the future.");
@@ -170,7 +170,7 @@ RPCHelpMan walletpassphrasechange()
         } else {
             throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The old wallet passphrase entered is incorrect. "
                                                                 "It contains a null character (ie - a zero byte). "
-                                                                "If the old passphrase was set with a version of this software prior to 25.0, "
+                                                                "If the old passphrase was set with a version of this software prior to v25, "
                                                                 "please try again with only the characters up to — but not including — "
                                                                 "the first null character.");
         }

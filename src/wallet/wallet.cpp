@@ -4248,7 +4248,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
             } else {
                 return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase entered was incorrect. "
                                                 "The passphrase contains a null character (ie - a zero byte). "
-                                                "If this passphrase was set with a version of this software prior to 25.0, "
+                                                "If this passphrase was set with a version of this software prior to v25, "
                                                 "please try again with only the characters up to — but not including — "
                                                 "the first null character.")};
             }
