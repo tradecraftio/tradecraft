@@ -7,7 +7,7 @@ configure Tor.
 
 ## Compatibility
 
-- Starting with version 22.0, Bitcoin Core only supports Tor version 3 hidden
+- Starting with version v22, Bitcoin Core only supports Tor version 3 hidden
   services (Tor v3). Tor v2 addresses are ignored by Bitcoin Core and neither
   relayed nor stored.
 
@@ -26,7 +26,7 @@ information in the debug log about your Tor configuration.
 CLI `-addrinfo` returns the number of addresses known to your node per network
 type, including Tor v2 and v3. This is useful to see how many onion addresses
 are known to your node for `-onlynet=onion` and how many Tor v3 addresses it
-knows when upgrading to Bitcoin Core v22.0 and up that supports Tor v3 only.
+knows when upgrading to Bitcoin Core v22 and up that supports Tor v3 only.
 
 ## 1. Run Bitcoin Core behind a Tor proxy
 
