@@ -141,7 +141,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
         if (IsHex(keys[i].get_str()) && (keys[i].get_str().length() == 66 || keys[i].get_str().length() == 130)) {
             pubkeys.push_back(HexToPubKey(keys[i].get_str()));
         } else {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid public key: %s\nNote that from v0.16, createmultisig no longer accepts addresses."
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid public key: %s\nNote that from v16.3, createmultisig no longer accepts addresses."
             " Users must use addmultisigaddress to create multisig addresses with addresses known to the wallet.", keys[i].get_str()));
         }
     }
@@ -471,7 +471,7 @@ static UniValue getinfo_deprecated(const JSONRPCRequest& request)
 {
     throw JSONRPCError(RPC_METHOD_NOT_FOUND,
         "getinfo\n"
-        "\nThis call was removed in version 0.16.0. Use the appropriate fields from:\n"
+        "\nThis call was removed in version v16. Use the appropriate fields from:\n"
         "- getblockchaininfo: blocks, difficulty, chain\n"
         "- getnetworkinfo: version, protocolversion, timeoffset, connections, proxy, relayfee, warnings\n"
         "- getwalletinfo: balance, keypoololdest, keypoolsize, paytxfee, unlocked_until, walletversion\n"

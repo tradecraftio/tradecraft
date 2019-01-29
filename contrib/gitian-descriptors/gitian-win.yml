@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-win-0.17"
+name: "bitcoin-win-17"
 enable_cache: true
 suites:
 - "bionic"
