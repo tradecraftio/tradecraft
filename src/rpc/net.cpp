@@ -231,13 +231,13 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("subver", stats.cleanSubVer);
         obj.pushKV("inbound", stats.fInbound);
         if (IsDeprecatedRPCEnabled("getpeerinfo_addnode")) {
-            // addnode is deprecated in v0.21 for removal in v0.22
+            // addnode is deprecated in v21 for removal in v22
             obj.pushKV("addnode", stats.m_manual_connection);
         }
         obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
             if (IsDeprecatedRPCEnabled("banscore")) {
-                // banscore is deprecated in v0.21 for removal in v0.22
+                // banscore is deprecated in v21 for removal in v22
                 obj.pushKV("banscore", statestats.m_misbehavior_score);
             }
             obj.pushKV("synced_headers", statestats.nSyncHeight);
@@ -251,7 +251,7 @@ static RPCHelpMan getpeerinfo()
             obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
         }
         if (IsDeprecatedRPCEnabled("whitelisted")) {
-            // whitelisted is deprecated in v0.21 for removal in v0.22
+            // whitelisted is deprecated in v21 for removal in v22
             obj.pushKV("whitelisted", stats.m_legacyWhitelisted);
         }
         UniValue permissions(UniValue::VARR);
