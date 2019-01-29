@@ -93,7 +93,7 @@ Make automatic outbound connections only to CJDNS addresses. Inbound and manual
 connections are not affected by this option. It can be specified multiple times
 to allow multiple networks, e.g. onlynet=cjdns, onlynet=i2p, onlynet=onion.
 
-CJDNS support was added to Bitcoin Core in version 23.0 and there may be fewer
+CJDNS support was added to Bitcoin Core in version v23 and there may be fewer
 CJDNS peers than Tor or IP ones. You can use `bitcoin-cli -addrinfo` to see the
 number of CJDNS addresses known to your node.
 
