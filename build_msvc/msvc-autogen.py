@@ -65,7 +65,7 @@ def parse_config_into_btc_config():
             if line.startswith("define"):
                 config_info.append(find_between(line, "(_", ")"))
 
-    config_info = [c for c in config_info if not c.startswith("COPYRIGHT_HOLDERS")]
+    config_info = [c for c in config_info if not any(c.startswith(p) for p in ("COPYRIGHT_HOLDERS", "CLIENT_BASE_VERSION", "CLIENT_RELEASE_STRING"))]
 
     config_dict = dict(item.split(", ") for item in config_info)
     config_dict["PACKAGE_VERSION"] = f"\"{config_dict['CLIENT_VERSION_MAJOR']}.{config_dict['CLIENT_VERSION_MINOR']}.{config_dict['CLIENT_VERSION_BUILD']}\""
