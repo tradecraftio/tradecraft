@@ -44,7 +44,7 @@ class BumpFeeWithTotalFeeArgumentDeprecationTest(BitcoinTestFramework):
         self.log.info("Testing bumpfee with totalFee argument raises RPC error with deprecation message")
         assert_raises_rpc_error(
             -8,
-            "totalFee argument has been deprecated and will be removed in 0.20. " +
+            "totalFee argument has been deprecated and will be removed in v20. " +
             "Please use -deprecatedrpc=totalFee to continue using this argument until removal.",
             rbf_node.bumpfee, rbfid, {"totalFee": 2000})
 

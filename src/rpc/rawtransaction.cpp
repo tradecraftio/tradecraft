@@ -818,7 +818,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
 
     CFeeRate max_raw_tx_fee_rate = DEFAULT_MAX_RAW_TX_FEE_RATE;
-    // TODO: temporary migration code for old clients. Remove in v0.20
+    // TODO: temporary migration code for old clients. Remove in v20
     if (request.params[1].isBool()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Second argument must be numeric (maxfeerate) and no longer supports a boolean. To allow a transaction with high fees, set maxfeerate to 0.");
     } else if (!request.params[1].isNull()) {
@@ -892,7 +892,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     const uint256& tx_hash = tx->GetHash();
 
     CFeeRate max_raw_tx_fee_rate = DEFAULT_MAX_RAW_TX_FEE_RATE;
-    // TODO: temporary migration code for old clients. Remove in v0.20
+    // TODO: temporary migration code for old clients. Remove in v20
     if (request.params[1].isBool()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Second argument must be numeric (maxfeerate) and no longer supports a boolean. To allow a transaction with high fees, set maxfeerate to 0.");
     } else if (!request.params[1].isNull()) {

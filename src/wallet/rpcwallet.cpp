@@ -3507,7 +3507,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             coin_control.m_confirm_target = ParseConfirmTarget(options["confTarget"], pwallet->chain().estimateMaxBlocks());
         } else if (options.exists("totalFee")) {
             if (!pwallet->chain().rpcEnableDeprecated("totalFee")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "totalFee argument has been deprecated and will be removed in 0.20. Please use -deprecatedrpc=totalFee to continue using this argument until removal.");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "totalFee argument has been deprecated and will be removed in v20. Please use -deprecatedrpc=totalFee to continue using this argument until removal.");
             }
             totalFee = options["totalFee"].get_int64();
             if (totalFee <= 0) {
