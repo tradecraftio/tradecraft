@@ -358,12 +358,13 @@ rightparen=)
 CLIENT_VERSION_MAJOR := $(shell $(GREP) _CLIENT_VERSION_MAJOR ../../configure.ac | head -n 1 | $(AWK) -F'[ $(rightparen)]' '{print $$2}')
 CLIENT_VERSION_MINOR := $(shell $(GREP) _CLIENT_VERSION_MINOR ../../configure.ac | head -n 1 | $(AWK) -F'[ $(rightparen)]' '{print $$2}')
 CLIENT_VERSION_REVISION := $(shell $(GREP) _CLIENT_VERSION_REVISION ../../configure.ac | head -n 1 | $(AWK) -F'[ $(rightparen)]' '{print $$2}')
+CLIENT_VERSION_BUILD := $(shell $(GREP) _CLIENT_VERSION_BUILD ../../configure.ac | head -n 1 | $(AWK) -F'[ $(rightparen)]' '{print $$2}')
 ifeq ($(CLIENT_VERSION_REVISION), 99)
 SERIES := $(CLIENT_VERSION_MAJOR).$(shell expr 1 + $(CLIENT_VERSION_MINOR))
-VERSION := $(SERIES)
+VERSION := $(SERIES)-$(CLIENT_VERSION_BUILD)
 else
 SERIES := $(CLIENT_VERSION_MAJOR).$(CLIENT_VERSION_MINOR)
-VERSION := $(SERIES).$(CLIENT_VERSION_REVISION)
+VERSION := $(SERIES).$(CLIENT_VERSION_REVISION)-$(CLIENT_VERSION_BUILD)
 endif
 
 OUTPUT_DIR         := output
