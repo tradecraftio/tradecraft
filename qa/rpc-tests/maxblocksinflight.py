@@ -26,7 +26,7 @@ import logging
 In this test we connect to one node over p2p, send it numerous inv's, and
 compare the resulting number of getdata requests to a max allowed value.  We
 test for exceeding 128 blocks in flight, which was the limit an 0.9 client will
-reach. [0.10 clients shouldn't request more than 16 from a single peer.]
+reach. [10.4 clients shouldn't request more than 16 from a single peer.]
 '''
 MAX_REQUESTS = 128
 

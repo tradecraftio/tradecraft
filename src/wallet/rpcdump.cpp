@@ -271,7 +271,7 @@ UniValue importprunedfunds(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    // 0.13.x: Silently accept up to 3 params, but ignore the third:
+    // v13.2: Silently accept up to 3 params, but ignore the third:
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
             "importprunedfunds\n"
