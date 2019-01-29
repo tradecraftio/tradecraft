@@ -62,7 +62,7 @@ Make automatic outbound connections only to I2P addresses. Inbound and manual
 connections are not affected by this option. It can be specified multiple times
 to allow multiple networks, e.g. onlynet=onion, onlynet=i2p.
 
-I2P support was added to Bitcoin Core in version 22.0 and there may be fewer I2P
+I2P support was added to Bitcoin Core in version v22 and there may be fewer I2P
 peers than Tor or IP ones. Therefore, using I2P alone without other networks may
 make a node more susceptible to [Sybil
 attacks](https://en.bitcoin.it/wiki/Weaknesses#Sybil_attack). You can use
