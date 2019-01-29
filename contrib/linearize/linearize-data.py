@@ -223,7 +223,7 @@ class BlockDataCopier:
 
             self.hash_str = calc_hash_str(blk_hdr)
             if not self.hash_str in blkmap:
-                # Because blocks can be written to files out-of-order as of 0.10, the script
+                # Because blocks can be written to files out-of-order as of 10.4, the script
                 # may encounter blocks it doesn't know about. Treat as debug output.
                 if settings['debug_output'] == 'true':
                     print("Skipping unknown block " + self.hash_str)

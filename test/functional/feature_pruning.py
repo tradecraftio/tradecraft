@@ -272,7 +272,7 @@ class PruneTest(BitcoinTestFramework):
         goalbestheight = self.mainchainheight
         goalbesthash = self.mainchainhash2
 
-        # As of 0.10 the current block download logic is not able to reorg to the original chain created in
+        # As of 10.4 the current block download logic is not able to reorg to the original chain created in
         # create_chain_with_stale_blocks because it doesn't know of any peer that's on that chain from which to
         # redownload its missing blocks.
         # Invalidate the reorg_test chain in node 0 as well, it can successfully switch to the original chain

@@ -77,5 +77,5 @@ This set of rules is similar but distinct from BIP125.
 * RBF enabled by default in the wallet GUI as of **v0.18.1** ([PR
   #11605](https://github.com/bitcoin/bitcoin/pull/11605)).
 
-* Full replace-by-fee enabled as a configurable mempool policy as of **v24.0** ([PR
+* Full replace-by-fee enabled as a configurable mempool policy as of **v24** ([PR
   #25353](https://github.com/bitcoin/bitcoin/pull/25353)).

@@ -70,7 +70,7 @@ Release Process
 
 To tag the version (or release candidate) in git, use the `make-tag.py` script from [bitcoin-maintainer-tools](https://github.com/bitcoin-core/bitcoin-maintainer-tools). From the root of the repository run:
 
-    ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 23.0)
+    ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 23)
 
 This will perform a few last-minute consistency checks in the build system files, and if they pass, create a signed tag.
 
