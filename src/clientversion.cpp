@@ -34,7 +34,7 @@ const std::string CLIENT_NAME("Satoshi");
     #define BUILD_DESC BUILD_GIT_TAG
     #define BUILD_SUFFIX ""
 #else
-    #define BUILD_DESC "v" PACKAGE_VERSION
+    #define BUILD_DESC "v" STRINGIZE(CLIENT_RELEASE_STRING)
     #if CLIENT_VERSION_IS_RELEASE
         #define BUILD_SUFFIX ""
     #elif defined(BUILD_GIT_COMMIT)
@@ -48,7 +48,13 @@ const std::string CLIENT_NAME("Satoshi");
 
 static std::string FormatVersion(int nVersion)
 {
-    return strprintf("%d.%d.%d", nVersion / 10000, (nVersion / 100) % 100, nVersion % 100);
+    if (nVersion % 10000 == 0) {
+        return strprintf("%d", nVersion / 10000);
+    } if (nVersion % 100 == 0) {
+        return strprintf("%d.%d", nVersion / 10000, (nVersion / 100) % 100);
+    } else {
+        return strprintf("%d.%d.%d", nVersion / 10000, (nVersion / 100) % 100, nVersion % 100);
+    }
 }
 
 std::string FormatFullVersion()
