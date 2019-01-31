@@ -62,7 +62,7 @@ class DataCarrierTest(FreicoinTestFramework):
         small_data = random_bytes(MAX_OP_RETURN_RELAY - 4)
 
         self.log.info("Testing null data transaction with default -datacarrier and -datacarriersize values.")
-        self.test_null_data_transaction(node=self.nodes[0], data=default_size_data, success=True)
+        self.test_null_data_transaction(node=self.nodes[0], data=default_size_data, success=False)
 
         self.log.info("Testing a null data transaction larger than allowed by the default -datacarriersize value.")
         self.test_null_data_transaction(node=self.nodes[0], data=too_long_data, success=False)
