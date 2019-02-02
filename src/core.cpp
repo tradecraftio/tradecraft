@@ -168,6 +168,9 @@ int64_t GetTimeAdjustedValue(int64_t initial_value, int relative_depth)
     shift32();
     term(w[0] * v1);
 
+    #undef term
+    #undef shift32
+
     /* Debugging check: having the overflow bit set at this point
      * would indicate that the demurrage calculation has resulted in
      * an amount that is greater than std::numeric_limits<int64_t>::
