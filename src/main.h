@@ -383,7 +383,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state);
  * Check if transaction is final and can be included in a block with the
  * specified height and time. Consensus critical.
  */
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
+bool IsFinalTx(const CTransaction &tx, int32_t nBlockHeight, int64_t nBlockTime);
 
 /**
  * Check if transaction will be final in the next block to be created.
