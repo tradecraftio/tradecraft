@@ -25,7 +25,7 @@
 #include <coins.h>
 #include <utilmoneystr.h>
 
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
+bool IsFinalTx(const CTransaction &tx, int32_t nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)
         return true;
