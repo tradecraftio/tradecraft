@@ -736,7 +736,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     return true;
 }
 
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
+bool IsFinalTx(const CTransaction &tx, int32_t nBlockHeight, int64_t nBlockTime)
 {
     AssertLockHeld(cs_main);
     // Time based nLockTime implemented in 0.1.6

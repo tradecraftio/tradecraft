@@ -321,7 +321,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state);
  */
 bool IsStandardTx(const CTransaction& tx, std::string& reason);
 
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
+bool IsFinalTx(const CTransaction &tx, int32_t nBlockHeight = 0, int64_t nBlockTime = 0);
 
 /** Undo information for a CBlock */
 class CBlockUndo
