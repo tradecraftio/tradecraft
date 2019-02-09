@@ -55,6 +55,13 @@ def sync_blocks(rpc_connections):
         counts = [ x.getblockcount() for x in rpc_connections ]
         if counts == [ counts[0] ]*len(counts):
             break
+        tip_node = max(enumerate(counts), key=lambda x:x[1])[0]
+        for node,connect in enumerate(rpc_connections):
+            if counts[node] == counts[tip_node]:
+                continue
+            for height in range(counts[node], counts[tip_node]+1):
+                block = rpc_connections[tip_node].getblock(rpc_connections[tip_node].getblockhash(height), False)
+                rpc_connections[node].submitblock(block)
         time.sleep(1)
 
 def sync_mempools(rpc_connections):
@@ -70,6 +77,18 @@ def sync_mempools(rpc_connections):
                 num_match = num_match+1
         if num_match == len(rpc_connections):
             break
+        rawmempools = [node.getrawmempool() for node in rpc_connections]
+        for i,node in enumerate(rpc_connections):
+            node_mempool = set(rawmempools[i])
+            for j,other in enumerate(rpc_connections):
+                if (i == j):
+                    continue
+                txns = set(rawmempools[j]) - node_mempool
+                for txid in txns:
+                    tx = other.getrawtransaction(txid)
+                    node.sendrawtransaction(tx)
+                num_missing += len(txns)
+                node_mempool.union(txns)
         time.sleep(1)
 
 freicoind_processes = {}
