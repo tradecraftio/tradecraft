@@ -1968,7 +1968,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     // edge case when manipulating the UTXO and it would be simpler not to have
     // another edge case to deal with.
 
-    // testnet3 has no blocks before the BIP34 height with indicated heights
+    // testnet has no blocks before the BIP34 height with indicated heights
     // post BIP34 before approximately height 486,000,000 and presumably will
     // be reset before it reaches block 1,983,702 and starts doing unnecessary
     // BIP30 checking again.
