@@ -309,7 +309,6 @@ QT_TRANSLATE_NOOP("freicoin-core", "Wallet %s resides outside data directory %s"
 QT_TRANSLATE_NOOP("freicoin-core", "Wallet needed to be rewritten: restart Freicoin to complete"),
 QT_TRANSLATE_NOOP("freicoin-core", "Wallet options:"),
 QT_TRANSLATE_NOOP("freicoin-core", "Warning"),
-QT_TRANSLATE_NOOP("freicoin-core", "Warning: This version is obsolete; upgrade required!"),
 QT_TRANSLATE_NOOP("freicoin-core", "Warning: Unsupported argument -benchmark ignored, use -debug=bench."),
 QT_TRANSLATE_NOOP("freicoin-core", "Warning: Unsupported argument -debugnet ignored, use -debug=net."),
 QT_TRANSLATE_NOOP("freicoin-core", "You need to rebuild the database using -reindex to change -txindex"),
