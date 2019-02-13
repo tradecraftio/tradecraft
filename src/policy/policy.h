@@ -39,7 +39,7 @@ static constexpr unsigned int MAX_STANDARD_TX_WEIGHT{400000};
 /** The minimum non-witness size for transactions we're willing to relay/mine (1 segwit input + 1 P2WPKH output = 82 bytes) */
 static constexpr unsigned int MIN_STANDARD_TX_NONWITNESS_SIZE{82};
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
-static constexpr unsigned int MAX_P2SH_SIGOPS{15};
+static constexpr unsigned int MAX_P2SH_SIGOPS{20};
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
 static constexpr unsigned int MAX_STANDARD_TX_SIGOPS_COST{MAX_BLOCK_SIGOPS_COST/5};
 /** Default for -incrementalrelayfee, which sets the minimum feerate increase for mempool limiting or replacement **/
