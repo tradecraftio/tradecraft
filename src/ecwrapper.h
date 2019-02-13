@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_ECWRAPPER_H
-#define BITCOIN_ECWRAPPER_H
+#ifndef FREICOIN_ECWRAPPER_H
+#define FREICOIN_ECWRAPPER_H
 
 #include <cstddef>
 #include <vector>
@@ -51,4 +51,4 @@ public:
     static bool SanityCheck();
 };
 
-#endif // BITCOIN_ECWRAPPER_H
+#endif // FREICOIN_ECWRAPPER_H

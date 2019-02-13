@@ -21,11 +21,11 @@
 # Test InvalidateBlock code
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from test_framework import FreicoinTestFramework
+from freicoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
-class InvalidateTest(BitcoinTestFramework):
+class InvalidateTest(FreicoinTestFramework):
     
         
     def setup_chain(self):

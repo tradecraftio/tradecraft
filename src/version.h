@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_VERSION_H
-#define BITCOIN_VERSION_H
+#ifndef FREICOIN_VERSION_H
+#define FREICOIN_VERSION_H
 
 /**
  * network protocol versioning
@@ -48,4 +48,4 @@ static const int BIP0031_VERSION = 60000;
 //! "mempool" command, enhanced "getdata" behavior starts with this version
 static const int MEMPOOL_GD_VERSION = 60002;
 
-#endif // BITCOIN_VERSION_H
+#endif // FREICOIN_VERSION_H

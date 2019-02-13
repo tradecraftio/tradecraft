@@ -5,7 +5,7 @@ UNSIGNED=$1
 SIGNATURE=$2
 ARCH=x86_64
 ROOTDIR=dist
-BUNDLE=${ROOTDIR}/Bitcoin-Qt.app
+BUNDLE=${ROOTDIR}/Freicoin-Qt.app
 TEMPDIR=signed.temp
 OUTDIR=signed-app
 

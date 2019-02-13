@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_POW_H
-#define BITCOIN_POW_H
+#ifndef FREICOIN_POW_H
+#define FREICOIN_POW_H
 
 #include <stdint.h>
 
@@ -32,4 +32,4 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 uint256 GetBlockProof(const CBlockIndex& block);
 
-#endif // BITCOIN_POW_H
+#endif // FREICOIN_POW_H

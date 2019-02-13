@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_KEY_H
-#define BITCOIN_KEY_H
+#ifndef FREICOIN_KEY_H
+#define FREICOIN_KEY_H
 
 #include "allocators.h"
 #include "serialize.h"
@@ -191,4 +191,4 @@ struct CExtKey {
 /** Check that required EC support is available at runtime */
 bool ECC_InitSanityCheck(void);
 
-#endif // BITCOIN_KEY_H
+#endif // FREICOIN_KEY_H

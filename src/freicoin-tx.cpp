@@ -61,10 +61,10 @@ static bool AppInitRawTx(int argc, char* argv[])
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help"))
     {
         // First part of help message is specific to this utility
-        std::string strUsage = _("Bitcoin Core bitcoin-tx utility version") + " " + FormatFullVersion() + "\n\n" +
+        std::string strUsage = _("Freicoin freicoin-tx utility version") + " " + FormatFullVersion() + "\n\n" +
             _("Usage:") + "\n" +
-              "  bitcoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded bitcoin transaction") + "\n" +
-              "  bitcoin-tx [options] -create [commands]   " + _("Create hex-encoded bitcoin transaction") + "\n" +
+              "  freicoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded freicoin transaction") + "\n" +
+              "  freicoin-tx [options] -create [commands]   " + _("Create hex-encoded freicoin transaction") + "\n" +
               "\n";
 
         fprintf(stdout, "%s", strUsage.c_str());
@@ -239,7 +239,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const string& strInput)
 
     // extract and validate ADDRESS
     string strAddr = strInput.substr(pos + 1, string::npos);
-    CBitcoinAddress addr(strAddr);
+    CFreicoinAddress addr(strAddr);
     if (!addr.IsValid())
         throw runtime_error("invalid TX output address");
 
@@ -371,7 +371,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
     for (unsigned int kidx = 0; kidx < keysObj.count(); kidx++) {
         if (!keysObj[kidx].isStr())
             throw runtime_error("privatekey not a string");
-        CBitcoinSecret vchSecret;
+        CFreicoinSecret vchSecret;
         bool fGood = vchSecret.SetString(keysObj[kidx].getValStr());
         if (!fGood)
             throw runtime_error("privatekey not valid");
@@ -570,7 +570,7 @@ static int CommandLineRawTx(int argc, char* argv[])
             if (argc < 2)
                 throw runtime_error("too few parameters");
 
-            // param: hex-encoded bitcoin transaction
+            // param: hex-encoded freicoin transaction
             string strHexTx(argv[1]);
             if (strHexTx == "-")                 // "-" implies standard input
                 strHexTx = readStdin();

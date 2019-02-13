@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_BITCOINAMOUNTFIELD_H
-#define BITCOIN_QT_BITCOINAMOUNTFIELD_H
+#ifndef FREICOIN_QT_FREICOINAMOUNTFIELD_H
+#define FREICOIN_QT_FREICOINAMOUNTFIELD_H
 
 #include "amount.h"
 
@@ -29,23 +29,23 @@ QT_BEGIN_NAMESPACE
 class QValueComboBox;
 QT_END_NAMESPACE
 
-/** Widget for entering bitcoin amounts.
+/** Widget for entering freicoin amounts.
   */
-class BitcoinAmountField: public QWidget
+class FreicoinAmountField: public QWidget
 {
     Q_OBJECT
 
     // ugly hack: for some unknown reason CAmount (instead of qint64) does not work here as expected
-    // discussion: https://github.com/bitcoin/bitcoin/pull/5117
+    // discussion: https://github.com/freicoin/freicoin/pull/5117
     Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
 
 public:
-    explicit BitcoinAmountField(QWidget *parent = 0);
+    explicit FreicoinAmountField(QWidget *parent = 0);
 
     CAmount value(bool *value=0) const;
     void setValue(const CAmount& value);
 
-    /** Set single step in satoshis **/
+    /** Set single step in kria **/
     void setSingleStep(const CAmount& step);
 
     /** Make read-only **/
@@ -86,4 +86,4 @@ private slots:
 
 };
 
-#endif // BITCOIN_QT_BITCOINAMOUNTFIELD_H
+#endif // FREICOIN_QT_FREICOINAMOUNTFIELD_H

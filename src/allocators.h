@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_ALLOCATORS_H
-#define BITCOIN_ALLOCATORS_H
+#ifndef FREICOIN_ALLOCATORS_H
+#define FREICOIN_ALLOCATORS_H
 
 #include <map>
 #include <string>
@@ -279,4 +279,4 @@ typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> >
 // Byte-vector that clears its contents before deletion.
 typedef std::vector<char, zero_after_free_allocator<char> > CSerializeData;
 
-#endif // BITCOIN_ALLOCATORS_H
+#endif // FREICOIN_ALLOCATORS_H

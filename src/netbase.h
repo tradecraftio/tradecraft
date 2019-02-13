@@ -16,11 +16,11 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_NETBASE_H
-#define BITCOIN_NETBASE_H
+#ifndef FREICOIN_NETBASE_H
+#define FREICOIN_NETBASE_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/freicoin-config.h"
 #endif
 
 #include "compat.h"
@@ -207,4 +207,4 @@ bool CloseSocket(SOCKET& hSocket);
 /** Disable or enable blocking-mode for a socket */
 bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking);
 
-#endif // BITCOIN_NETBASE_H
+#endif // FREICOIN_NETBASE_H

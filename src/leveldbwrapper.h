@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_LEVELDBWRAPPER_H
-#define BITCOIN_LEVELDBWRAPPER_H
+#ifndef FREICOIN_LEVELDBWRAPPER_H
+#define FREICOIN_LEVELDBWRAPPER_H
 
 #include "clientversion.h"
 #include "serialize.h"
@@ -184,4 +184,4 @@ public:
     }
 };
 
-#endif // BITCOIN_LEVELDBWRAPPER_H
+#endif // FREICOIN_LEVELDBWRAPPER_H

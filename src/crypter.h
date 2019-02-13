@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_CRYPTER_H
-#define BITCOIN_CRYPTER_H
+#ifndef FREICOIN_CRYPTER_H
+#define FREICOIN_CRYPTER_H
 
 #include "allocators.h"
 #include "keystore.h"
@@ -210,4 +210,4 @@ public:
     boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
 };
 
-#endif // BITCOIN_CRYPTER_H
+#endif // FREICOIN_CRYPTER_H

@@ -29,7 +29,7 @@
 #include "util.h"
 
 #if defined(HAVE_CONSENSUS_LIB)
-#include "script/bitcoinconsensus.h"
+#include "script/freicoinconsensus.h"
 #endif
 
 #include <fstream>
@@ -119,7 +119,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, bo
 #if defined(HAVE_CONSENSUS_LIB)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
-    BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script(begin_ptr(scriptPubKey), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect,message);
+    BOOST_CHECK_MESSAGE(freicoinconsensus_verify_script(begin_ptr(scriptPubKey), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect,message);
 #endif
 }
 

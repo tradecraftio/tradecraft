@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_WALLETMODEL_H
-#define BITCOIN_QT_WALLETMODEL_H
+#ifndef FREICOIN_QT_WALLETMODEL_H
+#define FREICOIN_QT_WALLETMODEL_H
 
 #include "paymentrequestplus.h"
 #include "walletmodeltransaction.h"
@@ -106,7 +106,7 @@ public:
     }
 };
 
-/** Interface to Bitcoin wallet from Qt view code. */
+/** Interface to Freicoin wallet from Qt view code. */
 class WalletModel : public QObject
 {
     Q_OBJECT
@@ -276,4 +276,4 @@ public slots:
     void pollBalanceChanged();
 };
 
-#endif // BITCOIN_QT_WALLETMODEL_H
+#endif // FREICOIN_QT_WALLETMODEL_H

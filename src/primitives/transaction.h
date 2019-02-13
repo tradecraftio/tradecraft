@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
-#define BITCOIN_PRIMITIVES_TRANSACTION_H
+#ifndef FREICOIN_PRIMITIVES_TRANSACTION_H
+#define FREICOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
 #include "script/script.h"
@@ -151,12 +151,12 @@ public:
     bool IsDust(CFeeRate minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,
-        // which has units satoshis-per-kilobyte.
+        // which has units kria-per-kilobyte.
         // If you'd pay more than 1/3 in fees
         // to spend something, then we consider it dust.
         // A typical txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend:
-        // so dust is a txout less than 546 satoshis 
+        // so dust is a txout less than 546 kria 
         // with default minRelayTxFee.
         size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
         return (nValue < 3*minRelayTxFee.GetFee(nSize));
@@ -287,4 +287,4 @@ struct CMutableTransaction
     uint256 GetHash() const;
 };
 
-#endif // BITCOIN_PRIMITIVES_TRANSACTION_H
+#endif // FREICOIN_PRIMITIVES_TRANSACTION_H

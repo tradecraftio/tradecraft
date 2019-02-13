@@ -18,7 +18,7 @@
 
 #include "recentrequeststablemodel.h"
 
-#include "bitcoinunits.h"
+#include "freicoinunits.h"
 #include "clientversion.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -98,9 +98,9 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
                 return tr("(no amount)");
             else if (role == Qt::EditRole)
-                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::separatorNever);
+                return FreicoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, FreicoinUnits::separatorNever);
             else
-                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
+                return FreicoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
     }
     else if (role == Qt::TextAlignmentRole)
@@ -141,7 +141,7 @@ QString RecentRequestsTableModel::getAmountTitle()
     QString amountTitle = tr("Amount");
     if (this->walletModel->getOptionsModel() != NULL)
     {
-        amountTitle += " ("+BitcoinUnits::name(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")";
+        amountTitle += " ("+FreicoinUnits::name(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")";
     }
     return amountTitle;
 }

@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_WINSHUTDOWNMONITOR_H
-#define BITCOIN_QT_WINSHUTDOWNMONITOR_H
+#ifndef FREICOIN_QT_WINSHUTDOWNMONITOR_H
+#define FREICOIN_QT_WINSHUTDOWNMONITOR_H
 
 #ifdef WIN32
 #include <QByteArray>
@@ -40,4 +40,4 @@ public:
 #endif
 #endif
 
-#endif // BITCOIN_QT_WINSHUTDOWNMONITOR_H
+#endif // FREICOIN_QT_WINSHUTDOWNMONITOR_H

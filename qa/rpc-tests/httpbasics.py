@@ -21,7 +21,7 @@
 # Test REST interface
 #
 
-from test_framework import BitcoinTestFramework
+from test_framework import FreicoinTestFramework
 from util import *
 import base64
 
@@ -34,7 +34,7 @@ try:
 except ImportError:
     import urlparse
 
-class HTTPBasicsTest (BitcoinTestFramework):        
+class HTTPBasicsTest (FreicoinTestFramework):        
     def setup_nodes(self):
         return start_nodes(4, self.options.tmpdir, extra_args=[['-rpckeepalive=1'], ['-rpckeepalive=0'], [], []])
 
@@ -110,7 +110,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         out1 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True)
-        assert_equal(conn.sock!=None, True) #connection must be closed because bitcoind should use keep-alive by default
+        assert_equal(conn.sock!=None, True) #connection must be closed because freicoind should use keep-alive by default
         
 if __name__ == '__main__':
     HTTPBasicsTest ().main ()

@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_TEST_BIGNUM_H
-#define BITCOIN_TEST_BIGNUM_H
+#ifndef FREICOIN_TEST_BIGNUM_H
+#define FREICOIN_TEST_BIGNUM_H
 
 #include <algorithm>
 #include <limits>
@@ -191,4 +191,4 @@ inline bool operator>=(const CBigNum& a, const CBigNum& b) { return (BN_cmp(&a, 
 inline bool operator<(const CBigNum& a, const CBigNum& b)  { return (BN_cmp(&a, &b) < 0); }
 inline bool operator>(const CBigNum& a, const CBigNum& b)  { return (BN_cmp(&a, &b) > 0); }
 
-#endif // BITCOIN_TEST_BIGNUM_H
+#endif // FREICOIN_TEST_BIGNUM_H

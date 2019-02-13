@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_LIMITEDMAP_H
-#define BITCOIN_LIMITEDMAP_H
+#ifndef FREICOIN_LIMITEDMAP_H
+#define FREICOIN_LIMITEDMAP_H
 
 #include <assert.h>
 #include <map>
@@ -105,4 +105,4 @@ public:
     }
 };
 
-#endif // BITCOIN_LIMITEDMAP_H
+#endif // FREICOIN_LIMITEDMAP_H

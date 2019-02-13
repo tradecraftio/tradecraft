@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_RANDOM_H
-#define BITCOIN_RANDOM_H
+#ifndef FREICOIN_RANDOM_H
+#define FREICOIN_RANDOM_H
 
 #include "uint256.h"
 
@@ -60,4 +60,4 @@ static inline uint32_t insecure_rand(void)
     return (insecure_rand_Rw << 16) + insecure_rand_Rz;
 }
 
-#endif // BITCOIN_RANDOM_H
+#endif // FREICOIN_RANDOM_H
