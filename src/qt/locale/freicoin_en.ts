@@ -4096,11 +4096,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Freicoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+2"/>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Warning: This version is obsolete, upgrade required!</translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>Zapping all transactions from wallet...</source>
         <translation type="unfinished"></translation>
     </message>
