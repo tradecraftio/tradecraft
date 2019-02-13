@@ -4201,11 +4201,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Freicoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Warning: This version is obsolete, upgrade required!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
         <translation type="unfinished"></translation>
     </message>
