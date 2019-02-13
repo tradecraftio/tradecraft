@@ -273,7 +273,6 @@ QT_TRANSLATE_NOOP("freicoin-core", "Wallet needed to be rewritten: restart Freic
 QT_TRANSLATE_NOOP("freicoin-core", "Wallet options:"),
 QT_TRANSLATE_NOOP("freicoin-core", "Warning"),
 QT_TRANSLATE_NOOP("freicoin-core", "Warning: Deprecated argument -debugnet ignored, use -debug=net"),
-QT_TRANSLATE_NOOP("freicoin-core", "Warning: This version is obsolete, upgrade required!"),
 QT_TRANSLATE_NOOP("freicoin-core", "You need to rebuild the database using -reindex to change -txindex"),
 QT_TRANSLATE_NOOP("freicoin-core", "Zapping all transactions from wallet..."),
 QT_TRANSLATE_NOOP("freicoin-core", "on startup"),
