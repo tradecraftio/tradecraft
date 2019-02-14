@@ -120,6 +120,10 @@ QString FreicoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separato
     QString quotient_str = QString::number(quotient);
     QString remainder_str = QString::number(remainder).rightJustified(num_decimals, '0');
 
+    // Remove thin space for versions of Qt which for some reason
+    // don't properly support it. Test removing this with each release
+    // until thin spaces work again.
+#if 0
     // Use SI-style thin space separators as these are locale independent and can't be
     // confused with the decimal marker.
     QChar thin_sp(THIN_SP_CP);
@@ -132,6 +136,7 @@ QString FreicoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separato
     if (separators == separatorAlways || (separators == separatorStandard && r_size > 4))
         for (int i = 3, adj = 0; i < r_size ; i += 3, adj++)
             remainder_str.insert(i + adj, thin_sp);
+#endif
 
     if (n < 0)
         quotient_str.insert(0, '-');
