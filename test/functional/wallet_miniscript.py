@@ -50,7 +50,7 @@ MINISCRIPTS = [
     # A script similar (same spending policy) to BOLT3's offered HTLC (with anchor outputs)
     f"or_d(pk({TPUBS[0]}/*),and_v(and_v(v:pk({TPUBS[1]}/*),or_c(pk({TPUBS[2]}/*),v:hash160(7f999c905d5e35cefd0a37673f746eb13fba3640))),older(1)))",
     # A Revault Unvault policy with the older() replaced by an after()
-    f"andor(multi(2,{TPUBS[0]}/*,{TPUBS[1]}/*),and_v(v:multi(4,{PUBKEYS[0]},{PUBKEYS[1]},{PUBKEYS[2]},{PUBKEYS[3]}),after(424242)),thresh(4,pkh({TPUBS[2]}/*),a:pkh({TPUBS[3]}/*),a:pkh({TPUBS[4]}/*),a:pkh({TPUBS[5]}/*)))",
+    f"andor(multi(2,{TPUBS[0]}/*,{TPUBS[1]}/*),and_v(v:multi(4,{PUBKEYS[0]},{PUBKEYS[1]},{PUBKEYS[2]},{PUBKEYS[3]}),t:after(424242)),thresh(4,pkh({TPUBS[2]}/*),a:pkh({TPUBS[3]}/*),a:pkh({TPUBS[4]}/*),a:pkh({TPUBS[5]}/*)))",
     # Liquid-like federated pegin with emergency recovery keys
     f"or_i(and_b(pk({PUBKEYS[0]}),a:and_b(pk({PUBKEYS[1]}),a:and_b(pk({PUBKEYS[2]}),a:and_b(pk({PUBKEYS[3]}),s:pk({PUBKEYS[4]}))))),and_v(v:thresh(2,pkh({TPUBS[0]}/*),a:pkh({PUBKEYS[5]}),a:pkh({PUBKEYS[6]})),older(4209713)))",
 ]
@@ -93,7 +93,7 @@ MINISCRIPTS_PRIV = [
     },
     # Signature with an absolute timelock
     {
-        "ms": f"and_v(v:after(20),pk({TPRVS[0]}/*))",
+        "ms": f"and_v(after(20),pk({TPRVS[0]}/*))",
         "sequence": None,
         "locktime": 20,
         "sigs_count": 1,
@@ -101,7 +101,7 @@ MINISCRIPTS_PRIV = [
     },
     # Signature with both
     {
-        "ms": f"and_v(v:older(4),and_v(v:after(30),pk({TPRVS[0]}/*)))",
+        "ms": f"and_v(v:older(4),and_v(after(30),pk({TPRVS[0]}/*)))",
         "sequence": 4,
         "locktime": 30,
         "sigs_count": 1,
