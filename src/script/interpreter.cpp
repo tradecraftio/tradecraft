@@ -606,8 +606,10 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     if (!checker.CheckLockTime(nLockTime))
                         return set_error(serror, SCRIPT_ERR_UNSATISFIED_LOCKTIME);
 
-                    break;
+                    // Drop the argument from the stack.
+                    popstack(stack);
                 }
+                break;
 
                 case OP_CHECKSEQUENCEVERIFY:
                 {
