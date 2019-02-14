@@ -1907,7 +1907,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoinunits.cpp" line="+208"/>
+        <location filename="../bitcoinunits.cpp" line="+212"/>
         <source>Amount</source>
         <translation type="unfinished">Amount</translation>
     </message>
