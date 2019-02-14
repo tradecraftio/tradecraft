@@ -2160,7 +2160,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoinunits.cpp" line="+220"/>
+        <location filename="../bitcoinunits.cpp" line="+224"/>
         <source>Amount</source>
         <translation type="unfinished">Amount</translation>
     </message>
