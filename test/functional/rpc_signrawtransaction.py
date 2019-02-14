@@ -299,7 +299,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         self.nodes[0].generate(750)
 
         # Create a P2WSH script with CLTV
-        script = CScript([1000, OP_CHECKLOCKTIMEVERIFY, OP_DROP])
+        script = CScript([1000, OP_CHECKLOCKTIMEVERIFY])
         address = script_to_p2wsh(script)
 
         # Fund that address and make the spend
