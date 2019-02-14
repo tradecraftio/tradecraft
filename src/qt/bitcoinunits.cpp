@@ -124,6 +124,10 @@ QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, Separato
     if (num_decimals > 0) {
         qint64 remainder = n_abs % coin;
         QString remainder_str = QString::number(remainder).rightJustified(num_decimals, '0');
+        int r_size = remainder_str.size();
+        if (separators == SeparatorStyle::ALWAYS || (separators == SeparatorStyle::STANDARD && r_size > 4))
+            for (int i = 3, adj = 0; i < r_size ; i += 3, adj++)
+                remainder_str.insert(i + adj, thin_sp);
         return quotient_str + QString(".") + remainder_str;
     } else {
         return quotient_str;
