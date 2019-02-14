@@ -103,7 +103,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
         case Fragment::AFTER: return
             "i"_mst.If(k >= LOCKTIME_THRESHOLD) |
             "j"_mst.If(k < LOCKTIME_THRESHOLD) |
-            "Bzfmxk"_mst;
+            "Vzfmk"_mst;
         case Fragment::SHA256: return "Bonudmk"_mst;
         case Fragment::RIPEMD160: return "Bonudmk"_mst;
         case Fragment::HASH256: return "Bonudmk"_mst;
