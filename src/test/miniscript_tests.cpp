@@ -404,16 +404,16 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     Test("l:older(0)", "?", TESTMODE_INVALID); // older(0): k must be at least 1
     Test("l:older(2147483647)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // older(2147483647): valid
     Test("l:older(2147483648)", "?", TESTMODE_INVALID); // older(2147483648): k must be below 2^31
-    Test("u:after(1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // after(1): valid
-    Test("u:after(0)", "?", TESTMODE_INVALID); // after(0): k must be at least 1
-    Test("u:after(2147483647)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // after(2147483647): valid
-    Test("u:after(2147483648)", "?", TESTMODE_INVALID); // after(2147483648): k must be below 2^31
+    Test("t:after(1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // after(1): valid
+    Test("t:after(0)", "?", TESTMODE_INVALID); // after(0): k must be at least 1
+    Test("t:after(2147483647)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // after(2147483647): valid
+    Test("t:after(2147483648)", "?", TESTMODE_INVALID); // after(2147483648): k must be below 2^31
     Test("andor(0,1,1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // andor(Bdu,B,B): valid
     Test("andor(a:0,1,1)", "?", TESTMODE_INVALID); // andor(Wdu,B,B): X must be B
     Test("andor(0,a:1,a:1)", "?", TESTMODE_INVALID); // andor(Bdu,W,W): Y and Z must be B/V/K
     Test("andor(1,1,1)", "?", TESTMODE_INVALID); // andor(Bu,B,B): X must be d
-    Test("andor(n:or_i(0,after(1)),1,1)", "?", TESTMODE_VALID); // andor(Bdu,B,B): valid
-    Test("andor(or_i(0,after(1)),1,1)", "?", TESTMODE_INVALID); // andor(Bd,B,B): X must be u
+    Test("andor(n:or_i(0,d:after(1)),1,1)", "?", TESTMODE_VALID); // andor(Bdu,B,B): valid
+    Test("andor(or_i(0,d:after(1)),1,1)", "?", TESTMODE_INVALID); // andor(Bd,B,B): X must be u
     Test("c:andor(0,pk_k(03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7),pk_k(036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // andor(Bdu,K,K): valid
     Test("t:andor(0,v:1,v:1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // andor(Bdu,V,V): valid
     Test("and_v(v:1,1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // and_v(V,B): valid
@@ -437,28 +437,30 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     Test("t:or_c(0,v:1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // or_c(Bdu,V): valid
     Test("t:or_c(a:0,v:1)", "?", TESTMODE_INVALID); // or_c(Wdu,V): X must be B
     Test("t:or_c(1,v:1)", "?", TESTMODE_INVALID); // or_c(Bu,V): X must be d
-    Test("t:or_c(n:or_i(0,after(1)),v:1)", "?", TESTMODE_VALID); // or_c(Bdu,V): valid
-    Test("t:or_c(or_i(0,after(1)),v:1)", "?", TESTMODE_INVALID); // or_c(Bd,V): X must be u
+    Test("t:or_c(n:or_i(0,d:after(1)),v:1)", "?", TESTMODE_VALID); // or_c(Bdu,V): valid
+    Test("t:or_c(or_i(0,d:after(1)),v:1)", "?", TESTMODE_INVALID); // or_c(Bd,V): X must be u
     Test("t:or_c(0,1)", "?", TESTMODE_INVALID); // or_c(Bdu,B): Y must be V
     Test("or_d(0,1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // or_d(Bdu,B): valid
     Test("or_d(a:0,1)", "?", TESTMODE_INVALID); // or_d(Wdu,B): X must be B
     Test("or_d(1,1)", "?", TESTMODE_INVALID); // or_d(Bu,B): X must be d
-    Test("or_d(n:or_i(0,after(1)),1)", "?", TESTMODE_VALID); // or_d(Bdu,B): valid
-    Test("or_d(or_i(0,after(1)),1)", "?", TESTMODE_INVALID); // or_d(Bd,B): X must be u
+    Test("or_d(n:or_i(0,d:after(1)),1)", "?", TESTMODE_VALID); // or_d(Bdu,B): valid
+    Test("or_d(or_i(0,d:after(1)),1)", "?", TESTMODE_INVALID); // or_d(Bd,B): X must be u
     Test("or_d(0,v:1)", "?", TESTMODE_INVALID); // or_d(Bdu,V): Y must be B
     Test("or_i(1,1)", "?", TESTMODE_VALID); // or_i(B,B): valid
     Test("t:or_i(v:1,v:1)", "?", TESTMODE_VALID); // or_i(V,V): valid
     Test("c:or_i(pk_k(03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7),pk_k(036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // or_i(K,K): valid
     Test("or_i(a:1,a:1)", "?", TESTMODE_INVALID); // or_i(W,W): X and Y must be B/V/K
-    Test("or_b(l:after(100),al:after(1000000000))", "?", TESTMODE_VALID); // or_b(timelock, heighlock) valid
-    Test("and_b(after(100),a:after(1000000000))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX); // and_b(timelock, heighlock) invalid
+    Test("or_b(ld:after(100),ald:after(1000000000))", "?", TESTMODE_VALID); // or_b(timelock, heighlock) valid
+    Test("and_b(d:after(100),ad:after(1000000000))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX); // and_b(timelock, heighlock) invalid
     Test("pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // alias to c:pk_k
     Test("pkh(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)", "76a914fcd35ddacad9f2d5be5e464639441c6065e6955d88ac", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // alias to c:pk_h
 
 
     // Randomly generated test set that covers the majority of type and node type combinations
-    Test("lltvln:after(1231488000)", "6300676300676300670400046749b1926869516868", TESTMODE_VALID | TESTMODE_NONMAL, 12, 4);
-    Test("uuj:and_v(v:multi(2,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a,025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),after(1231488000))", "6363829263522103d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a21025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc52af0400046749b168670068670068", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG, 14, 6);
+#if 0
+    // RANDOM TESTS?!? Hell no, I ain't supporting this shit.
+    Test("lltvlnt:after(1231488000)", "6300676300676300670400046749b151926869516868", TESTMODE_VALID | TESTMODE_NONMAL, 12, 4);
+    Test("uuj:and_v(v:multi(2,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a,025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),d:after(1231488000))", "6363829263522103d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a21025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc52af76630400046749b16868670068670068", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG, 14, 6);
     Test("or_b(un:multi(2,03daed4f2be3a8bf278e70132fb0beb7522f570e144bf615c07e996d443dee8729,024ce119c96e2fa357200b559b2f7dd5a5f02d5290aff74b03f3e471b273211c97),al:older(16))", "63522103daed4f2be3a8bf278e70132fb0beb7522f570e144bf615c07e996d443dee872921024ce119c96e2fa357200b559b2f7dd5a5f02d5290aff74b03f3e471b273211c9752ae926700686b63006760b2686c9b", TESTMODE_VALID, 14, 6);
     Test("j:and_v(vdv:after(1567547623),older(2016))", "829263766304e7e06e5db169686902e007b268", TESTMODE_VALID | TESTMODE_NONMAL, 11, 2);
     Test("t:and_v(vu:hash256(131772552c01444cd81360818376a040b7c3b2b7b0a53550ee3edde216cec61b),v:sha256(ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5))", "6382012088aa20131772552c01444cd81360818376a040b7c3b2b7b0a53550ee3edde216cec61b876700686982012088a820ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc58851", TESTMODE_VALID | TESTMODE_NONMAL, 12, 4);
@@ -488,6 +490,7 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     Test("c:or_i(andor(c:pk_h(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),pk_h(022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e))", "6376a914fcd35ddacad9f2d5be5e464639441c6065e6955d88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9149652d86bedf43ad264362e6e6eba6eb7645081278868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG, 17, 6);
     Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),altv:after(1000000000),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670400ca9a3bb16951686c936b6300670164b16951686c935187", TESTMODE_VALID, 18, 4);
     Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),ac:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),altv:after(1000000000),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac6c936b6300670400ca9a3bb16951686c936b6300670164b16951686c935287", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX, 22, 5);
+#endif
 
     // Misc unit tests
     // A Script with a non minimal push is invalid
@@ -499,7 +502,7 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     const CScript nonminverify_script(nonminverify.begin(), nonminverify.end());
     BOOST_CHECK(miniscript::FromScript(nonminverify_script, CONVERTER) == nullptr);
     // A threshold as large as the number of subs is valid.
-    Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b16951686c935287", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
+    Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),alt:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b151686c935287", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
     // A threshold of 1 is valid.
     Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
     // A threshold with a k larger than the number of subs is invalid
@@ -541,23 +544,23 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     // 2. It contains timelock mixes
     // We'll report the timelock mix error, as it's "deeper" (closer to be a leaf node) than the "no 's' property"
     // error is.
-    const auto ms_ins = miniscript::FromString("or_i(and_b(after(1),a:after(1000000000)),pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204))", CONVERTER);
+    const auto ms_ins = miniscript::FromString("or_i(d:and_v(after(1),after(1000000000)),pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204))", CONVERTER);
     BOOST_CHECK(ms_ins && ms_ins->IsValid() && !ms_ins->IsSane());
     const auto insane_sub = ms_ins->FindInsaneSub();
-    BOOST_CHECK(insane_sub && *insane_sub->ToString(CONVERTER) == "and_b(after(1),a:after(1000000000))");
+    BOOST_CHECK(insane_sub && *insane_sub->ToString(CONVERTER) == "and_v(after(1),after(1000000000))");
 
     // Timelock tests
-    Test("after(100)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock
-    Test("after(1000000000)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only timelock
-    Test("or_b(l:after(100),al:after(1000000000))", "?", TESTMODE_VALID); // or_b(timelock, heighlock) valid
-    Test("and_b(after(100),a:after(1000000000))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX); // and_b(timelock, heighlock) invalid
+    Test("t:after(100)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock
+    Test("t:after(1000000000)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only timelock
+    Test("or_b(d:after(100),ad:after(1000000000))", "?", TESTMODE_VALID); // or_b(timelock, heighlock) valid
+    Test("and_b(d:after(100),ad:after(1000000000))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX); // and_b(timelock, heighlock) invalid
     /* This is correctly detected as non-malleable but for the wrong reason. The type system assumes that branches 1 and 2
        can be spent together to create a non-malleble witness, but because of mixing of timelocks they cannot be spent together.
        But since exactly one of the two after's can be satisfied, the witness involving the key cannot be malleated.
     */
-    Test("thresh(2,ltv:after(1000000000),altv:after(100),a:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", "?", TESTMODE_VALID | TESTMODE_TIMELOCKMIX | TESTMODE_NONMAL); // thresh with k = 2
+    Test("thresh(2,lt:after(1000000000),alt:after(100),a:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", "?", TESTMODE_VALID | TESTMODE_TIMELOCKMIX | TESTMODE_NONMAL); // thresh with k = 2
     // This is actually non-malleable in practice, but we cannot detect it in type system. See above rationale
-    Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),altv:after(1000000000),altv:after(100))", "?", TESTMODE_VALID); // thresh with k = 1
+    Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),alt:after(1000000000),alt:after(100))", "?", TESTMODE_VALID); // thresh with k = 1
 
 
     g_testdata.reset();
