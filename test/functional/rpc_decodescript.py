@@ -136,15 +136,15 @@ class DecodeScriptTest(FreicoinTestFramework):
         # OP_IF
         #   <receiver-pubkey> OP_CHECKSIGVERIFY
         # OP_ELSE
-        #   <lock-until> OP_CHECKLOCKTIMEVERIFY OP_DROP
+        #   <lock-until> OP_CHECKLOCKTIMEVERIFY
         # OP_ENDIF
         # <sender-pubkey> OP_CHECKSIG
         #
         # lock until block 500,000
-        cltv_script = '63' + push_public_key + 'ad670320a107b17568' + push_public_key + 'ac'
+        cltv_script = '63' + push_public_key + 'ad670320a107b168' + push_public_key + 'ac'
         rpc_result = self.nodes[0].decodescript(cltv_script)
         assert_equal('nonstandard', rpc_result['type'])
-        assert_equal('OP_IF ' + public_key + ' OP_CHECKSIGVERIFY OP_ELSE 500000 OP_CHECKLOCKTIMEVERIFY OP_DROP OP_ENDIF ' + public_key + ' OP_CHECKSIG', rpc_result['asm'])
+        assert_equal('OP_IF ' + public_key + ' OP_CHECKSIGVERIFY OP_ELSE 500000 OP_CHECKLOCKTIMEVERIFY OP_ENDIF ' + public_key + ' OP_CHECKSIG', rpc_result['asm'])
         # CLTV script in P2WSH
         cltv_script_hash = sha256(bytes.fromhex(cltv_script)).hex()
         assert_equal('0 ' + cltv_script_hash, rpc_result['segwit']['asm'])
