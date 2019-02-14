@@ -1,13 +1,21 @@
-Bitcoin Core version 0.11.0 is now available from:
+Freicoin version 11.3-8698 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.11.0/>
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v11.3-8698-linux32.zip)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v11.3-8698-linux64.zip)
+  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v11.3-8698-osx.dmg)
+  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v11.3-8698-osx64.tar.gz)
+  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v11.3-8698-win32-setup.exe)
+  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v11.3-8698-win32.zip)
+  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v11.3-8698-win64-setup.exe)
+  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v11.3-8698-win64.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/v11.3-8698.zip)
 
 This is a new major version release, bringing both new features and
 bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tradecraftio/tradecraft/issues>
 
 Upgrading and downgrading
 =========================
@@ -23,9 +31,9 @@ bitcoind/bitcoin-qt (on Linux).
 Downgrade warning
 ------------------
 
-Because release 0.10.0 and later makes use of headers-first synchronization and
+Because release 10.4 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
+backwards-compatible with pre-10 versions of Freicoin or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -38,11 +46,11 @@ stored on disk, which earlier versions won't support.
 If you want to be able to downgrade smoothly, make a backup of your entire data
 directory. Without this your node will need start syncing (or importing from
 bootstrap.dat) anew afterwards. It is possible that the data from a completely
-synchronised 0.10 node may be usable in older versions as-is, but this is not
+synchronised 10.4 node may be usable in older versions as-is, but this is not
 supported and may break as soon as the older version attempts to reindex.
 
 This does not affect wallet forward or backward compatibility. There are no
-known problems when downgrading from 0.11.x to 0.10.x.
+known problems when downgrading from 11.x to 10.x.
 
 Important information
 ======================
@@ -50,15 +58,17 @@ Important information
 Transaction flooding
 ---------------------
 
-At the time of this release, the P2P network is being flooded with low-fee
-transactions. This causes a ballooning of the mempool size.
+At the time of this release, it is possible for the P2P network to be
+flooded with low-fee transactions. This would cause a ballooning of
+the mempool size.
 
-If this growth of the mempool causes problematic memory use on your node, it is
-possible to change a few configuration options to work around this. The growth
-of the mempool can be monitored with the RPC command `getmempoolinfo`.
+If this happens and growth of the mempool causes problematic memory
+use on your node, it is possible to change a few configuration options
+to work around this. The growth of the mempool can be monitored with
+the RPC command `getmempoolinfo`.
 
 One is to increase the minimum transaction relay fee `minrelaytxfee`, which
-defaults to 0.00001. This will cause transactions with fewer BTC/kB fee to be
+defaults to 0.00005. This will cause transactions with fewer BTC/kB fee to be
 rejected, and thus fewer transactions entering the mempool.
 
 The other is to restrict the relaying of free transactions with
@@ -67,12 +77,60 @@ free transactions (with enough priority) will be accepted. It defaults to 15.
 Reducing this number reduces the speed at which the mempool can grow due
 to free transactions.
 
-For example, add the following to `bitcoin.conf`:
+For example, add the following to `freicoin.conf`:
 
-    minrelaytxfee=0.00005 
+    minrelaytxfee=0.00025 
     limitfreerelay=5
 
-More robust solutions are being worked on for a follow-up release.
+More robust solutions will arrive in a future release.
+
+BIP113 mempool-only locktime enforcement using GetMedianTimePast()
+----------------------------------------------------------------
+
+Freicoin transactions currently may specify a locktime indicating when
+they may be added to a valid block.  Current consensus rules require
+that blocks have a block header time greater than the locktime specified
+in any transaction in that block.
+
+Miners get to choose what time they use for their header time, with the
+consensus rule being that no node will accept a block whose time is more
+than two hours in the future.  This creates a incentive for miners to
+set their header times to future values in order to include locktimed
+transactions which weren't supposed to be included for up to two more
+hours.
+
+The consensus rules also specify that valid blocks may have a header
+time greater than that of the median of the 11 previous blocks.  This
+GetMedianTimePast() time has a key feature we generally associate with
+time: it can't go backwards.
+
+[BIP113][] specifies a soft fork (**not enforced in this release**) that
+weakens this perverse incentive for individual miners to use a future
+time by requiring that valid blocks have a computed GetMedianTimePast()
+greater than the locktime specified in any transaction in that block.
+
+Mempool inclusion rules currently require transactions to be valid for
+immediate inclusion in a block in order to be accepted into the mempool.
+This release begins applying the BIP113 rule to received transactions,
+so transaction whose time is greater than the GetMedianTimePast() will
+no longer be accepted into the mempool.
+
+**Implication for miners:** you will begin rejecting transactions that
+would not be valid under BIP113, which will prevent you from producing
+invalid blocks if/when BIP113 is enforced on the network. Any
+transactions which are valid under the current rules but not yet valid
+under the BIP113 rules will either be mined by other miners or delayed
+until they are valid under BIP113. Note, however, that time-based
+locktime transactions are more or less unseen on the network currently.
+
+**Implication for users:** GetMedianTimePast() always trails behind the
+current time, so a transaction locktime set to the present time will be
+rejected by nodes running this release until the median time moves
+forward. To compensate, subtract one hour (3,600 seconds) from your
+locktimes to allow those transactions to be included in mempools at
+approximately the expected time.
+
+[BIP113]: https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
 
 Notable changes
 ===============
@@ -82,11 +140,11 @@ Block file pruning
 
 This release supports running a fully validating node without maintaining a copy 
 of the raw block and undo data on disk. To recap, there are four types of data 
-related to the blockchain in the bitcoin system: the raw blocks as received over 
+related to the blockchain in the freicoin system: the raw blocks as received over 
 the network (blk???.dat), the undo data (rev???.dat), the block index and the 
 UTXO set (both LevelDB databases). The databases are built from the raw data.
 
-Block pruning allows Bitcoin Core to delete the raw block and undo data once 
+Block pruning allows Freicoin to delete the raw block and undo data once 
 it's been validated and used to build the databases. At that point, the raw data 
 is used only to relay blocks to other nodes, to handle reorganizations, to look 
 up old transactions (if -txindex is enabled or via the RPC/REST interfaces), or 
@@ -95,11 +153,16 @@ all blocks in the blockchain.
 
 The user specifies how much space to allot for block & undo files. The minimum 
 allowed is 550MB. Note that this is in addition to whatever is required for the 
-block index and UTXO databases. The minimum was chosen so that Bitcoin Core will 
+block index and UTXO databases. The minimum was chosen so that Freicoin will 
 be able to maintain at least 288 blocks on disk (two days worth of blocks at 10 
 minutes per block). In rare instances it is possible that the amount of space 
 used will exceed the pruning target in order to keep the required last 288 
 blocks on disk.
+
+Note that because the block file size is 2,032 MiB, and pruning occurs
+on full blocks only, the disk usage for this data must exceed 2,032
+MiB for the block file plus the size of the corresponding undo file,
+plus the size of the last 288 blocks before any pruning is to occur.
 
 Block pruning works during initial sync in the same way as during steady state, 
 by deleting block files "as you go" whenever disk space is allocated. Thus, if 
@@ -213,13 +276,13 @@ connections. A user and password is sent where they weren't before. This setup
 is exceedingly rare, but in this case `-proxyrandomize=0` can be passed to
 disable the behavior.
 
-0.11.0 Change log
+11.3-8698 Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect
 behavior, not code moves, refactors and string updates. For convenience in locating
-the code changes and accompanying discussion, both the pull request and
-git merge commit are mentioned.
+the code changes and accompanying discussion, both the bitcoin pull request and git
+merge commit are mentioned.
 
 ### RPC and REST
 - #5461 `5f7279a` signrawtransaction: validate private key
@@ -414,6 +477,41 @@ git merge commit are mentioned.
 - #6264 `94cd705` Remove translation for -help-debug options
 - #6286 `3902c15` Remove berkeley-db4 workaround in MacOSX build docs
 - #6319 `3f8fcc9` doc: update mailing list address
+- #6438 `2531438` openssl: avoid config file load/race
+- #6439 `980f820` Updated URL location of netinstall for Debian
+- #6384 `8e5a969` qt: Force TLS1.0+ for SSL connections
+- #6471 `92401c2` Depends: bump to qt 5.5
+- #6224 `93b606a` Be even stricter in processing unrequested blocks
+- #6571 `100ac4e` libbitcoinconsensus: avoid a crash in multi-threaded environments
+- #6545 `649f5d9` Do not store more than 200 timedata samples.
+- #6694 `834e299` [QT] fix thin space word wrap line break issue
+- #6703 `1cd7952` Backport bugfixes to 0.11
+- #6750 `5ed8d0b` Recent rejects backport to v0.11
+- #6769 `71cc9d9` Test LowS in standardness, removes nuisance malleability vector.
+- #6789 `b4ad73f` Update miniupnpc to 1.9.20151008
+- #6785 `b4dc33e` Backport to v0.11: In (strCommand == "tx"), return if AlreadyHave()
+- #6412 `0095b9a` Test whether created sockets are select()able
+- #6795 `4dbcec0` net: Disable upnp by default
+- #6793 `e7bcc4a` Bump minrelaytxfee default
+- #6124 `684636b` Make CScriptNum() take nMaxNumSize as an argument
+- #6124 `4fa7a04` Replace NOP2 with CHECKLOCKTIMEVERIFY (BIP65)
+- #6124 `6ea5ca4` Enable CHECKLOCKTIMEVERIFY as a standard script verify flag
+- #6351 `5e82e1c` Add CHECKLOCKTIMEVERIFY (BIP65) soft-fork logic
+- #6353 `ba1da90` Show softfork status in getblockchaininfo
+- #6351 `6af25b0` Add BIP65 to getblockchaininfo softforks list
+- #6688 `01878c9` Fix locking in GetTransaction
+- #6653 `b3eaa30` [Qt] Raise debug window when requested
+- #6600 `1e672ae` Debian/Ubuntu: Include bitcoin-tx binary
+- #6600 `2394f4d` Debian/Ubuntu: Split bitcoin-tx into its own package
+- #5987 `33d6825` Bugfix: Allow mining on top of old tip blocks for testnet
+- #6852 `21e58b8` build: make sure OpenSSL heeds noexecstack
+- #6846 `af6edac` alias `-h` for `--help`
+- #6867 `95a5039` Set TCP_NODELAY on P2P sockets.
+- #6856 `dfe55bd` Do not allow blockfile pruning during reindex.
+- #6566 `a1d3c6f` Add rules--presently disabled--for using GetMedianTimePast as end point for lock-time calculations
+- #6566 `f720c5f` Enable policy enforcing GetMedianTimePast as the end point of lock-time constraints
+- #6917 `0af5b8e` leveldb: Win32WritableFile without memory mapping
+- #6948 `4e895b0` Always flush block and undo when switching to new file
 
 Credits
 =======
@@ -430,22 +528,28 @@ Thanks to everyone who directly contributed to this release:
 - BitcoinPRReadingGroup
 - Blake Jakopovic
 - BtcDrak
+- Casey Rodarmor
 - charlescharles
 - Chris Arnesen
+- Chris Kleeschulte
 - Ciemon
 - CohibAA
 - Corinne Dashjr
 - Cory Fields
 - Cozz Lovan
 - Daira Hopwood
+- Daniel Cousens
 - Daniel Kraft
 - Dave Collins
 - David A. Harding
 - dexX7
+- Diego Viola
 - Earlz
 - Eric Lombrozo
 - Eric R. Schulz
+- Esteban Ordano
 - Everett Forth
+- fanquake
 - Flavien Charlon
 - fsb4000
 - Gavin Andresen
@@ -460,17 +564,21 @@ Thanks to everyone who directly contributed to this release:
 - Jonathan Brown
 - Jorge Timón
 - joshr
+- J Ross Nicoll
 - jtimon
 - Julian Yap
 - Luca Venturini
 - Luke Dashjr
 - Manuel Araoz
 - MarcoFalke
+- Marco Falke
+- Mark Friedenbach
 - Matt Bogosian
 - Matt Corallo
 - Micha
 - Michael Ford
 - Mike Hearn
+- Mitchell Cash
 - mrbandrews
 - Nicolas Benoit
 - paveljanik
@@ -491,15 +599,20 @@ Thanks to everyone who directly contributed to this release:
 - sinetek
 - Suhas Daftuar
 - svost
+- tailsjoin
+- ฿tcDrak
 - Thomas Zander
 - Tom Harding
 - UdjinM6
+- Veres Lajos
 - Vitalii Demianets
 - Wladimir J. van der Laan
+- Zak Wilcox
 
 And all those who contributed additional code review and/or security research:
 
 - Sergio Demian Lerner
+- timothy on IRC for reporting the issue
+- Vulnerability in miniupnp discovered by Aleksandar Nikolic of Cisco Talos
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
-
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/tradecraft/freicoin-1/).
