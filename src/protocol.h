@@ -21,6 +21,7 @@
 #ifndef FREICOIN_PROTOCOL_H
 #define FREICOIN_PROTOCOL_H
 
+#include <consensus/params.h>
 #include <netaddress.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -28,6 +29,15 @@
 
 #include <stdint.h>
 #include <string>
+
+/** Maximum length of incoming protocol messages prior to the protocol
+ ** cleanup rule change, before which no message over 4 MB is
+ ** acceptable. */
+static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
+/** The maximum length of an incoming protocol message after taking
+ ** into account whether the protocol cleanup rule change has occured
+ ** (and the number of allowed peers on 32-bit hosts). */
+std::size_t MaxProtocolMessageLength(const Consensus::Params &params, size_t max_untrusted_peers);
 
 /** Message header.
  * (4) message start.
@@ -51,7 +61,7 @@ public:
     CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
-    bool IsValid(const MessageStartChars& messageStart) const;
+    bool IsValid(const MessageStartChars& messageStart, size_t max_untrusted_peers) const;
 
     ADD_SERIALIZE_METHODS;
 

@@ -89,8 +89,16 @@ enum
     // discouraged NOPs fails the script. This verification flag will never be
     // a mandatory flag applied to scripts in a block. NOPs that are not
     // executed, e.g.  within an unexecuted IF ENDIF block, are *not* rejected.
-    // NOPs that have associated forks to give them new meaning (CLTV, CSV)
-    // are not subject to this rule.
+    //
+    // Also discourage use of undefined opcodes after protocol cleanup fork activation
+    //
+    // If the protocol-cleanup fork is activated, undefined opcodes
+    // have "return true" semantics, meaning that encountering such an
+    // opcode results in the immediate SUCCESSFUL(!) termination of
+    // script execution. Before activation they will be given less
+    // dangerous semantics, but until then they are treated as
+    // discouraged as well, even though they aren't 'NOP' opcodes as
+    // the name implies.
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS  = (1U << 7),
 
     // Require that only a single stack element remains after evaluation. This changes the success criterion from
@@ -175,6 +183,13 @@ enum
     // Making OP_CODESEPARATOR and FindAndDelete fail any non-segwit scripts
     //
     SCRIPT_VERIFY_CONST_SCRIPTCODE = (1U << 17),
+
+    // Set if we are relaxing some of the overly restrictive protocol
+    // rules as part of the "protocol cleanup" fork. See commet in
+    // main.h for further description. This flag is a bit unlike the
+    // other script verification flags, but it is the easiest way to
+    // pass this parameter around the script validation code.
+    SCRIPT_VERIFY_PROTOCOL_CLEANUP = (1U << 29),
 
     // If set, do not serialize CTransaction::lock_height in SignatureHash
     //

@@ -772,7 +772,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         if (handled < 0)
             return false;
 
-        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        if (msg.in_data && msg.hdr.nMessageSize > MaxProtocolMessageLength(Params().GetConsensus(), g_connman ? g_connman->MaxUntrustedPeers() : DEFAULT_MAX_PEER_CONNECTIONS)) {
             LogPrint(BCLog::NET, "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }
@@ -847,7 +847,7 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
     }
 
     // reject messages larger than MAX_SIZE
-    if (hdr.nMessageSize > MAX_SIZE)
+    if (hdr.nMessageSize > MaxProtocolMessageLength(Params().GetConsensus(), g_connman ? g_connman->MaxUntrustedPeers() : DEFAULT_MAX_PEER_CONNECTIONS))
         return -1;
 
     // switch state to reading message data
@@ -2519,6 +2519,11 @@ bool CConnman::RemoveAddedNode(const std::string& strNode)
         }
     }
     return false;
+}
+
+size_t CConnman::MaxUntrustedPeers() const
+{
+    return std::max(0, nMaxConnections);
 }
 
 size_t CConnman::GetNodeCount(NumConnections flags)

@@ -209,7 +209,7 @@ int test_one_input(std::vector<uint8_t> buffer) {
             {
                 CMessageHeader mh(pchMessageStart);
                 ds >> mh;
-                if (!mh.IsValid(pchMessageStart)) {return 0;}
+                if (!mh.IsValid(pchMessageStart, DEFAULT_MAX_PEER_CONNECTIONS)) {return 0;}
             } catch (const std::ios_base::failure& e) {return 0;}
             break;
         }
