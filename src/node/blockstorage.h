@@ -173,7 +173,7 @@ private:
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields which are written before it by WriteBlockToDisk (BLOCK_SERIALIZATION_HEADER_SIZE).
      */
-    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
+    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, const Consensus::Params& consensus_params, unsigned int nHeight, uint64_t nTime);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
