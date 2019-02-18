@@ -65,6 +65,7 @@ enum
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_MULTISIG_HINT       = (1U << 4), // require hint field in CHECKMULTISIG which indicates which keys to skip
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT             = (1U << 17), // enable TAPROOT (BIPs 341 & 342)
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_PROTOCOL_CLEANUP    = (1U << 29), // relax consensus rules
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_ALL                 = freicoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH | freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG |
                                                                freicoinconsensus_SCRIPT_FLAGS_VERIFY_MULTISIG_HINT |
                                                                freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS |

@@ -37,6 +37,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <timedata.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/batchpriority.h>
@@ -850,7 +851,7 @@ fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
     return BlockFileSeq().FileName(pos);
 }
 
-bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown)
+bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, const Consensus::Params& consensus_params, unsigned int nHeight, uint64_t nTime, bool fKnown)
 {
     LOCK(cs_LastBlockFile);
 
@@ -870,9 +871,11 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
         m_blockfile_info.resize(nFile + 1);
     }
 
+    const Consensus::RuleSet rules = GetActiveRules(consensus_params, std::chrono::seconds{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())});
+
     bool finalize_undo = false;
     if (!fKnown) {
-        unsigned int max_blockfile_size{MAX_BLOCKFILE_SIZE};
+        unsigned int max_blockfile_size = (rules & Consensus::PROTOCOL_CLEANUP) ? PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE;
         // Use smaller blockfiles in test-only -fastprune mode - but avoid
         // the possibility of having a block not fit into the block file.
         if (m_opts.fast_prune) {
@@ -1127,7 +1130,7 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, cons
         // we add BLOCK_SERIALIZATION_HEADER_SIZE only for new blocks since they will have the serialization header added when written to disk.
         nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
     }
-    if (!FindBlockPos(blockPos, nBlockSize, nHeight, block.GetBlockTime(), position_known)) {
+    if (!FindBlockPos(blockPos, nBlockSize, GetParams().GetConsensus(), nHeight, block.GetBlockTime(), position_known)) {
         error("%s: FindBlockPos failed", __func__);
         return FlatFilePos();
     }
