@@ -71,7 +71,7 @@ static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
 static constexpr auto FEELER_INTERVAL = 2min;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
 static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
-/** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
+/** Maximum length of incoming protocol messages prior to the protocol-cleanup rule change (before which no message over 4 MB was acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 /** Maximum length of the user agent string in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
@@ -274,6 +274,8 @@ public:
     virtual bool Complete() const = 0;
     // set the serialization context version
     virtual void SetVersion(int version) = 0;
+    // set the maximum message length
+    virtual void SetMaxMessageLength(size_t limit) = 0;
     /** read and deserialize data, advances msg_bytes data pointer */
     virtual int Read(Span<const uint8_t>& msg_bytes) = 0;
     // decomposes a message from the context
@@ -294,6 +296,7 @@ private:
     CDataStream vRecv;              // received message data
     unsigned int nHdrPos;
     unsigned int nDataPos;
+    size_t max_message_length;
 
     const uint256& GetMessageHash() const;
     int readHeader(Span<const uint8_t> msg_bytes);
@@ -318,6 +321,7 @@ public:
           vRecv(nTypeIn, nVersionIn)
     {
         Reset();
+        max_message_length = MAX_SIZE;
     }
 
     bool Complete() const override
@@ -330,6 +334,11 @@ public:
     {
         hdrbuf.SetVersion(nVersionIn);
         vRecv.SetVersion(nVersionIn);
+    }
+    void SetMaxMessageLength(size_t limit) override
+    {
+        assert(limit <= MAX_SIZE);
+        max_message_length = limit;
     }
     int Read(Span<const uint8_t>& msg_bytes) override
     {
@@ -370,6 +379,7 @@ struct CNodeOptions
 class CNode
 {
 public:
+    const int max_untrusted_peers{DEFAULT_MAX_PEER_CONNECTIONS};
     const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
     const std::unique_ptr<const TransportSerializer> m_serializer;
 
@@ -556,6 +566,7 @@ public:
     std::atomic<std::chrono::microseconds> m_min_ping_time{std::chrono::microseconds::max()};
 
     CNode(NodeId id,
+          int max_untrusted_peersIn,
           std::shared_ptr<Sock> sock,
           const CAddress& addrIn,
           uint64_t nKeyedNetGroupIn,
@@ -863,6 +874,7 @@ public:
      */
     bool AddConnection(const std::string& address, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
 
+    size_t MaxUntrustedPeers() const;
     size_t GetNodeCount(ConnectionDirection) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
     bool DisconnectNode(const std::string& node);
