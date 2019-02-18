@@ -38,8 +38,28 @@
 /**
  * The maximum size of a serialized object in bytes or number of elements
  * (for eg vectors) when the size is encoded as CompactSize.
+ *
+ * This is set to PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE, plus (one byte
+ * less than) 16 MiB.  The largest serialized item which is critical
+ * to consensus or network synchronization is the block message, which
+ * after activation can be up to 16 bytes more than the maximum
+ * blockfile size, due to various metadata.  Raising the maximum
+ * serialization limit to nearly 16 MiB above that conservatively
+ * allows for messages containing a block and additional metadata, so
+ * that serialization limitations are unlikely to cause an implicit
+ * network serialization rule now or in the future.  "16 MiB ought to
+ * be enough block metadata for everybody."
+ *
+ * Note: submission of a block by JSON-RPC does require reading a data
+ * buffer slightly more than twice the size of a block, due to hex
+ * encoding and JSON formatting.  Should blocks exceed half of
+ * PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE, it would no longer be possible
+ * to submit a block by means of the JSON-RPC 'submitblock' API.
+ * However since it remains possible to submit valid blocks by other
+ * means, such as direct p2p connection, and as once accepted such a
+ * block will relay, this is not considered a critical failure.
  */
-static constexpr uint64_t MAX_SIZE = 0x02000000;
+static constexpr uint64_t MAX_SIZE = std::numeric_limits<std::int32_t>::max();
 
 /** Maximum amount of memory (in bytes) to allocate at once when deserializing vectors. */
 static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
