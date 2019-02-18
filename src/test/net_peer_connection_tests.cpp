@@ -75,6 +75,7 @@ static void AddPeer(NodeId& id, std::vector<CNode*>& nodes, PeerManager& peerman
     const bool inbound_onion{onion_peer && conn_type == ConnectionType::INBOUND};
 
     nodes.emplace_back(new CNode{++id,
+                                 DEFAULT_MAX_PEER_CONNECTIONS,
                                  /*sock=*/nullptr,
                                  addr,
                                  /*nKeyedNetGroupIn=*/0,

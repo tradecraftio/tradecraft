@@ -16,6 +16,8 @@
 #ifndef FREICOIN_CONSENSUS_TX_CHECK_H
 #define FREICOIN_CONSENSUS_TX_CHECK_H
 
+#include <consensus/params.h>
+
 /**
  * Context-independent transaction checking code that can be called outside the
  * freicoin server and doesn't depend on chain or mempool state. Transaction
@@ -26,6 +28,6 @@
 class CTransaction;
 class TxValidationState;
 
-bool CheckTransaction(const CTransaction& tx, TxValidationState& state);
+bool CheckTransaction(const CTransaction& tx, TxValidationState& state, Consensus::RuleSet rules);
 
 #endif // FREICOIN_CONSENSUS_TX_CHECK_H
