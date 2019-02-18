@@ -27,6 +27,7 @@
 #include <shutdown.h>
 #include <signet.h>
 #include <streams.h>
+#include <timedata.h>
 #include <undo.h>
 #include <util/syscall_sandbox.h>
 #include <util/system.h>
@@ -600,9 +601,11 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
         m_blockfile_info.resize(nFile + 1);
     }
 
+    const Consensus::RuleSet rules = GetActiveRules(Params().GetConsensus(), std::chrono::seconds{TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime())});
+
     bool finalize_undo = false;
     if (!fKnown) {
-        while (m_blockfile_info[nFile].nSize + nAddSize >= (gArgs.GetBoolArg("-fastprune", false) ? 0x10000 /* 64kb */ : MAX_BLOCKFILE_SIZE)) {
+        while (m_blockfile_info[nFile].nSize + nAddSize >= (gArgs.GetBoolArg("-fastprune", false) ? 0x10000 /* 64kb */ : ((rules & Consensus::PROTOCOL_CLEANUP) ? PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE))) {
             // when the undo file is keeping up with the block file, we want to flush it explicitly
             // when it is lagging behind (more blocks arrive than are being connected), we let the
             // undo block write case handle it
