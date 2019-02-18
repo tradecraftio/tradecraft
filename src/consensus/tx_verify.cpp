@@ -177,7 +177,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int per_input_adjustment, int nSpendHeight, CAmount& txfee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int per_input_adjustment, int nSpendHeight, bool protocol_cleanup, CAmount& txfee)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -192,13 +192,14 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         assert(!coin.IsSpent());
 
         // If prev is coinbase, check that it's matured
-        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
+        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < (protocol_cleanup ? 1 : COINBASE_MATURITY)) {
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
         // Check that lock_height is monotonically increasing.
-        if (!params.bitcoin_mode && (tx.lock_height < coin.refheight)) {
+        // This restriction is removed for zero-valued inputs in the protocol cleanup.
+        if ((coin.out.GetReferenceValue() || !protocol_cleanup) && !params.bitcoin_mode && (tx.lock_height < coin.refheight)) {
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-non-monotonic-lock-height",
                 strprintf("tx.lock_height < coin.refheight (%d < %d)", tx.lock_height, coin.refheight));
         }

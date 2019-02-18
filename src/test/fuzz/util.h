@@ -311,6 +311,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const bool inbound_onion{conn_type == ConnectionType::INBOUND ? fuzzed_data_provider.ConsumeBool() : false};
     if constexpr (ReturnUniquePtr) {
         return std::make_unique<CNode>(node_id,
+                                       DEFAULT_MAX_PEER_CONNECTIONS,
                                        local_services,
                                        sock,
                                        address,
@@ -322,6 +323,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                                        inbound_onion);
     } else {
         return CNode{node_id,
+                     DEFAULT_MAX_PEER_CONNECTIONS,
                      local_services,
                      sock,
                      address,

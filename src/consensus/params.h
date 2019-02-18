@@ -116,6 +116,8 @@ struct Params {
     uint32_t nRuleChangeActivationThreshold;
     uint32_t nMinerConfirmationWindow;
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
+    /** Scheduled protocol cleanup rule change */
+    int64_t protocol_cleanup_activation_time;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
@@ -156,5 +158,16 @@ struct Params {
 };
 
 } // namespace Consensus
+
+/** It's a bit confusing that this is in a consensus header, as the consensus
+ ** check requires access to the chain data structures for mean block time.
+ ** However running this check with network time is useful for non-consensus
+ ** decisions in places where it would be inappropriate to examine the chain
+ ** tip.
+ **/
+inline bool IsProtocolCleanupActive(const Consensus::Params& params, int64_t now)
+{
+    return (now > (params.protocol_cleanup_activation_time - 2*60*60 /* two hours */));
+}
 
 #endif // FREICOIN_CONSENSUS_PARAMS_H
