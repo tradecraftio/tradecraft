@@ -157,6 +157,26 @@ public:
         nMaxTipAge = 24 * 60 * 60;
 
         /**
+         * The protocol cleanup rule change is scheduled for activation on 2
+         * April 2021 at midnight UTC. This is 4PM PDT, 7PM EDT, and 9AM JST.
+         * Since the activation time is median-time-past, it'll actually
+         * trigger about an hour after this wall-clock time.
+         *
+         * This date is chosen to be roughly 2 years after the expected
+         * release date of official binaries. While the Freicoin developer
+         * team doesn't have the resources to provide strong ongoing support
+         * beyond emergency fixes, we nevertheless have an ideal goal of
+         * supporting release binaries for up to 2 years following the first
+         * release from that series. Any release of a new series prior to the
+         * deployment of forward blocks should set this to be at least two
+         * years from the time of release. When forward blocks is deployed,
+         * this parameter should be set to the highest value used in prior
+         * releases, and becomes the earliest time at which the hard-fork
+         * rules can activate.
+         */
+        protocol_cleanup_activation_time = 1617321600;
+
+        /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
          * be spent as it did not originally exist in the database.
          * 
@@ -240,6 +260,10 @@ public:
         diff_adjust_threshold = 2016;
         alu_activation_height = 2016;
         nMaxTipAge = 0x7fffffff;
+
+        // Nine months prior to main net
+        // 2 July 2020 00:00:00 UTC
+        protocol_cleanup_activation_time = 1593648000;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1356123600;

@@ -868,17 +868,18 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
 
 
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool protocol_cleanup)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.DoS(10, error("CheckTransaction() : vin empty"),
                          REJECT_INVALID, "bad-txns-vin-empty");
-    if (tx.vout.empty())
+    if (!protocol_cleanup && tx.vout.empty())
         return state.DoS(10, error("CheckTransaction() : vout empty"),
                          REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    const std::size_t max_block_size = protocol_cleanup ? MAX_BLOCKFILE_SIZE : MAX_BLOCK_SIZE;
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > max_block_size)
         return state.DoS(100, error("CheckTransaction() : size limits failed"),
                          REJECT_INVALID, "bad-txns-oversize");
 
@@ -910,7 +911,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
     if (tx.IsCoinBase())
     {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
+        if (!protocol_cleanup && (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100))
             return state.DoS(100, error("CheckTransaction() : coinbase script size"),
                              REJECT_INVALID, "bad-cb-length");
     }
@@ -962,7 +963,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state))
+    // Check for activation of rule changes
+    const bool protocol_cleanup = IsProtocolCleanupActive(Params(), chainActive.Tip());
+
+    if (!CheckTransaction(tx, state, protocol_cleanup))
         return error("AcceptToMemoryPool: : CheckTransaction failed");
 
     // Coinbase is only valid in a block, not as a loose transaction
@@ -1046,7 +1050,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // merely non-standard transaction.
         unsigned int nSigOps = GetLegacySigOpCount(tx);
         nSigOps += GetP2SHSigOpCount(tx, view);
-        if (nSigOps > MAX_TX_SIGOPS)
+        if (!protocol_cleanup && (nSigOps > MAX_TX_SIGOPS))
             return state.DoS(0,
                              error("AcceptToMemoryPool : too many sigops %s, %d > %d",
                                    hash.ToString(), nSigOps, MAX_TX_SIGOPS),
@@ -1102,7 +1106,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputs(tx, state, view, 0, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
+        unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS
+                           | (protocol_cleanup? SCRIPT_VERIFY_PROTOCOL_CLEANUP: 0);
+        if (!CheckInputs(tx, state, view, 0, true, flags, true))
         {
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString());
         }
@@ -1116,7 +1122,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputs(tx, state, view, 0, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+        flags = MANDATORY_SCRIPT_VERIFY_FLAGS
+              | (protocol_cleanup? SCRIPT_VERIFY_PROTOCOL_CLEANUP: 0);
+        if (!CheckInputs(tx, state, view, 0, true, flags, true))
         {
             return error("AcceptToMemoryPool: : BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
         }
@@ -1448,6 +1456,9 @@ bool CScriptCheck::operator()() {
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, int per_input_adjustment, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
 {
+    // Check for activation of rule changes
+    const bool protocol_cleanup = (flags & SCRIPT_VERIFY_PROTOCOL_CLEANUP) != 0;
+
     if (!tx.IsCoinBase())
     {
         if (pvChecks)
@@ -1472,14 +1483,16 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 
             // If prev is coinbase, check that it's matured
             if (coins->IsCoinBase()) {
-                if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
+                if (nSpendHeight - coins->nHeight < (protocol_cleanup ? 1 : COINBASE_MATURITY))
                     return state.Invalid(
                         error("CheckInputs() : tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight),
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
             }
 
             // Check that lock_height is monotonically increasing.
-            if (tx.lock_height < coins->refheight)
+            // This restriction is removed for zero-valued inputs in
+            // the protocol cleanup.
+            if ((coins->vout[prevout.n].nValue || !protocol_cleanup) && (tx.lock_height < coins->refheight))
                 return state.DoS(100, error("CheckInputs() : input refheight less than tx lock_height"),
                                  REJECT_INVALID, "bad-txns-non-monotonic-lock-height");
 
@@ -1702,6 +1715,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     bool fScriptChecks = pindex->nHeight >= Checkpoints::GetTotalBlocksEstimate();
 
+    // Check for activation of rule changes
+    const bool protocol_cleanup = IsProtocolCleanupActive(Params(), pindex->pprev);
+
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
     // If such overwrites are allowed, coinbases and transactions depending upon those
@@ -1735,9 +1751,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     bool truncate_inputs = false;
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+    if (protocol_cleanup) {
+        flags |= SCRIPT_VERIFY_PROTOCOL_CLEANUP;
+    }
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded:
-    if (block.nVersion >= 3 && CBlockIndex::IsSuperMajority(3, pindex->pprev, Params().EnforceBlockUpgradeMajority())) {
+    if (protocol_cleanup || (block.nVersion >= 3 && CBlockIndex::IsSuperMajority(3, pindex->pprev, Params().EnforceBlockUpgradeMajority()))) {
         flags |= SCRIPT_VERIFY_DERSIG;
         truncate_inputs = true;
     }
@@ -1791,7 +1810,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         nInputs += tx.vin.size();
         nSigOps += GetLegacySigOpCount(tx);
-        if (nSigOps > MAX_BLOCK_SIGOPS)
+        if (!protocol_cleanup && (nSigOps > MAX_BLOCK_SIGOPS))
             return state.DoS(100, error("ConnectBlock() : too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
@@ -1801,7 +1820,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 return state.DoS(100, error("ConnectBlock() : inputs missing/spent"),
                                  REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
-            if (fStrictPayToScriptHash)
+            if (!protocol_cleanup && fStrictPayToScriptHash)
             {
                 // Add in sigops done by pay-to-script-hash inputs;
                 // this is to prevent a "rogue miner" from creating
@@ -2529,12 +2548,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                              REJECT_INVALID, "bad-txns-duplicate", true);
     }
 
+    // Check if the protocol-cleanup fork has activated
+    const bool protocol_cleanup = IsProtocolCleanupActive(Params(), block);
+
     // All potential-corruption validation must be done before we do any
     // transaction validation, as otherwise we may mark the header as invalid
     // because we receive the wrong transactions for it.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    const std::size_t max_block_size = protocol_cleanup ? (MAX_BLOCKFILE_SIZE-8) : MAX_BLOCK_SIZE;
+    if (block.vtx.empty() || block.vtx.size() > max_block_size || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > max_block_size)
         return state.DoS(100, error("CheckBlock() : size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
@@ -2549,7 +2572,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!CheckTransaction(tx, state))
+        if (!CheckTransaction(tx, state, protocol_cleanup))
             return error("CheckBlock() : CheckTransaction failed");
 
     unsigned int nSigOps = 0;
@@ -2557,7 +2580,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     {
         nSigOps += GetLegacySigOpCount(tx);
     }
-    if (nSigOps > MAX_BLOCK_SIGOPS)
+    if (!protocol_cleanup && (nSigOps > MAX_BLOCK_SIGOPS))
         return state.DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"),
                          REJECT_INVALID, "bad-blk-sigops", true);
 
@@ -2574,9 +2597,11 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     int nHeight = pindexPrev->nHeight+1;
 
+    // Check for activation of rule changes
+    const bool protocol_cleanup = IsProtocolCleanupActive(Params(), pindexPrev);
+
     // Check proof of work
-    if ((!Params().SkipProofOfWorkCheck()) &&
-       (block.nBits != GetNextWorkRequired(pindexPrev, &block)))
+    if (!Params().SkipProofOfWorkCheck() && (protocol_cleanup ? CheckNextWorkRequired(pindexPrev, block) : (block.nBits != GetNextWorkRequired(pindexPrev, &block))))
         return state.DoS(100, error("%s : incorrect proof of work", __func__),
                          REJECT_INVALID, "bad-diffbits");
 
@@ -2596,15 +2621,14 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.DoS(100, error("%s : forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
     // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && 
-        CBlockIndex::IsSuperMajority(2, pindexPrev, Params().RejectBlockOutdatedMajority()))
+    if (!protocol_cleanup && (block.nVersion < 2) && CBlockIndex::IsSuperMajority(2, pindexPrev, Params().RejectBlockOutdatedMajority()))
     {
         return state.Invalid(error("%s : rejected nVersion=1 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
     }
 
     // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 3 && CBlockIndex::IsSuperMajority(3, pindexPrev, Params().RejectBlockOutdatedMajority()))
+    if (!protocol_cleanup && block.nVersion < 3 && CBlockIndex::IsSuperMajority(3, pindexPrev, Params().RejectBlockOutdatedMajority()))
     {
         return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
@@ -2623,6 +2647,9 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 {
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
 
+    // Check for activation of rule changes
+    const bool protocol_cleanup = IsProtocolCleanupActive(Params(), pindexPrev);
+
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
         if (!IsFinalTx(tx, nHeight, block.GetBlockTime())) {
@@ -2631,8 +2658,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && 
-        CBlockIndex::IsSuperMajority(2, pindexPrev, Params().EnforceBlockUpgradeMajority()))
+    if (!protocol_cleanup && (block.nVersion >= 2) && CBlockIndex::IsSuperMajority(2, pindexPrev, Params().EnforceBlockUpgradeMajority()))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||

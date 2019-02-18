@@ -50,6 +50,102 @@ Notable changes
 This fixes a serious problem on Windows with data directories that have non-ASCII
 characters (https://github.com/bitcoin/bitcoin/issues/6078).
 
+Protocol-cleannup flag day fork
+-------------------------------
+
+To achieve desired scaling limits, the forward blocks protocol upgrade
+will eventually trigger a hard-fork modification of the consensus
+rules, for the primary purposes of dropping enforcement of many
+aggregate block limits and altering the difficulty adjustment
+algorithm.
+
+This hard-fork will not activate until it is absolutely necessary for
+it to do so, at the point when measurements of real demand for
+additional shard space in aggregate across all forward block
+shard-chains exceeds the available space in the compatibility
+chain. It is anticipated that this will not occur until many, many
+years into the future, when Freicoin/Tradecraft's usage exceeds even
+the levels of bitcoin usage ca. 2018. However when it does eventually
+trigger, any node enforcing the old rules will be left behind.
+
+Beginning in 10.4, we introduce a flag-day relaxation of the consensus
+rules in preparation for this eventual fork. Since the rule changes
+for forward blocks have not been written yet, any code written now
+wouldn't be able to detect actual activation or enforce the new
+aggregate limits. Instead we schedule a relaxation of the consensus
+rules at the EOL support date for the current release, after which
+rules which we anticipate being changed are simply unenforced, and
+aggregate limits are set to the maximum values the software is able to
+support. After the flag-day, older clients of at least version 10.4
+will continue to receive blocks, but with only SPV security ("trust
+the most work") for the new protocol rules. So activation of forward
+blocks' new scaling limits becomes a soft-fork starting with the
+release of 10.4, with the only concern being the forking off of
+pre-10.4 nodes upon activation.
+
+The protocol cleanup rule change is scheduled for activation on 2
+April 2021 at midnight UTC. This is 4PM PDT, 7PM EDT, and 9AM
+JST. Since the activation time is median-time-past, it'll actually
+trigger about an hour after this wall-clock time.
+
+This date is chosen to be roughly 2 years after the expected release
+date of official binaries for 10.4. While the Freicoin developer team
+doesn't have the resources to provide strong ongoing support beyond
+emergency fixes, we nevertheless have an ideal goal of supporting
+release binaries for up to 2 years following the first release from
+that series. Any release of a new series prior to the deployment of
+forward blocks will reset this to be at least two years from the time
+of release. When forward blocks is deployed, this parameter will be
+set to the highest value used in any prior release, and becomes the
+earliest time at which the hard-fork rules can activate.
+
+All users should be aware that timely updates or modification of their
+own nodes are required within this time window in order to maintain
+full-node security, until such time as a version supporting forward
+blocks is released and adopted. Miners expecially *must* upgrade or
+modify their block-generating nodes before this date, or else they
+place the consensus of the network at risk.
+
+Depreciation of 32-bit clients
+------------------------------
+
+The lifting of aggregate limits in preparation of the new scaling
+limits enabled by forward blocks unfortunately opens a memory
+exhaustion denial of service attack vector after the above-mentioned
+flag-day activation of new rules, even if the actual activation date
+has been pushed back in later releases. To protect against this,
+32-bit clients have smaller network buffers (about 16 MiB under
+default settings), too small to contain the largest block-relay
+message allowed under the new rules (2 GiB).
+
+This unfortunately means that if/when forward blocks is deployed and
+the flexible cap used to grow aggregate block size limits, then 32-bit
+nodes will no longer be able to perform network synchronization once a
+block larger than 17,179,845 bytes is included into the main chain.
+
+For this reason, support for 32-bit clients is officially depreciated
+as of the 10.4 release. Starting with 10.4, 32-bit clients will at
+some point in the future be unable to sync the main chain. Users on
+32-bit hosts should strongly consider upgrading before activation of
+the new rules.
+
+However should you need to continue running 32-bit nodes, be advised
+that the network message limits are informed by the -maxconnections
+option. Specifically the maximum network packet size allowed is
+
+    2^32 / max(125, -maxconnections) / 2,
+
+which for the default of 125 connection slots is 17,179,869 bytes (not
+including the 24-byte header). By providing a lower value for
+-maxconnections this value is increased.  With -maxconnections=1, the
+calculated value is clamped to MAX_BLOCKFILE_SIZE. So a 32-bit node
+with -maxconnections=1 will be able to network synchronize even the
+largest blocks from its (only) peer.
+
+Although depreciated, 32-bit official binaries will continue to be
+provided for releases so long as it remains a reasonable amount of
+work to do so.
+
 Faster synchronization
 ----------------------
 

@@ -80,8 +80,6 @@ static const unsigned int MAX_P2SH_SIGOPS = 20;
 static const unsigned int MAX_TX_SIGOPS = MAX_BLOCK_SIGOPS/5;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
-/** The maximum size of a blk?????.dat file (since 0.8) */
-static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
@@ -113,6 +111,27 @@ static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
 static const unsigned int DATABASE_WRITE_INTERVAL = 3600;
 /** Maximum length of reject messages. */
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
+
+/** Activation of the protocol-cleanup fork depends on the
+ ** median-time-past of the tip relative to a chain parameter. While
+ ** it makes more logical sense for this to be an inline method of the
+ ** chain parameters, doing so would introduce a new dependency on
+ ** CBlockIndex there.
+ **
+ ** There are two implementations that appear to do different things,
+ ** but actually are making the same check. The median-time-past is
+ ** stored in the coinbase of the block within the nLockTime field,
+ ** which allows this check to be made at points where no chain
+ ** context is available.
+ **/
+inline bool IsProtocolCleanupActive(const CChainParams& params, const CBlock& block)
+{
+    return ((!block.vtx.empty() ? block.vtx[0].nLockTime : 0) >= params.ProtocolCleanupActivationTime());
+}
+inline bool IsProtocolCleanupActive(const CChainParams& params, const CBlockIndex* pindex)
+{
+    return ((pindex ? pindex->GetMedianTimePast() : 0) >= params.ProtocolCleanupActivationTime());
+}
 
 /** "reject" message codes */
 static const unsigned char REJECT_MALFORMED = 0x01;
@@ -319,7 +338,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight);
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool protocol_cleanup);
 
 /** Check for standard transaction types
  * @return True if all outputs (scriptPubKeys) use only standard transaction forms
