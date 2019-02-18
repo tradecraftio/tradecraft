@@ -190,10 +190,27 @@ enum : uint32_t {
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION = (1U << 18),
 
     // Making unknown OP_SUCCESS non-standard
+    //
+    // Also discourages use of undefined opcodes in legacy scripts
+    // after the protocol cleanup fork activation.
+    //
+    // If the protocol-cleanup fork is activated, undefined opcodes
+    // have "return true" semantics, meaning that encountering such an
+    // opcode results in the immediate SUCCESSFUL(!) termination of
+    // script execution. Before activation they will be given less
+    // dangerous semantics, but until then they are treated as
+    // discouraged as well.
     SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS = (1U << 19),
 
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
+
+    // Set if we are relaxing some of the overly restrictive protocol
+    // rules as part of the "protocol cleanup" fork. See commet in
+    // main.h for further description. This flag is a bit unlike the
+    // other script verification flags, but it is the easiest way to
+    // pass this parameter around the script validation code.
+    SCRIPT_VERIFY_PROTOCOL_CLEANUP = (1U << 29),
 
     // If set, do not serialize CTransaction::lock_height in SignatureHash
     //
