@@ -26,6 +26,8 @@
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
+/** The maximum size of a blk?????.dat file (since 0.8) (implicit network rule) */
+static const unsigned int MAX_BLOCKFILE_SIZE = 0x7f000000; // (2048 - 16) MiB
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work

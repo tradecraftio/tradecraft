@@ -259,6 +259,10 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
     static const valtype vchZero(0);
     static const valtype vchTrue(1, 1);
 
+    // Check for activation of rule changes
+    const bool protocol_cleanup = (flags & SCRIPT_VERIFY_PROTOCOL_CLEANUP) != 0;
+    const bool discourage_upgradable_nops = (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) != 0;
+
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
     CScript::const_iterator pbegincodehash = script.begin();
@@ -267,7 +271,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
     vector<bool> vfExec;
     vector<valtype> altstack;
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
-    if (script.size() > 10000)
+    if (!protocol_cleanup && (script.size() > 10000))
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
     int nOpCount = 0;
     bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
@@ -281,16 +285,23 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
             //
             // Read instruction
             //
+            // Note: GetOp only fails if the instruction was a
+            // malformed push, or if (due to some bug) the code
+            // pointer points beyond the end of the script. We
+            // therefore don't relax this "bad opcode" restriction in
+            // the protocol cleanup. Valid decoded but unrecognized
+            // instructions will be handled later.
             if (!script.GetOp(pc, opcode, vchPushValue))
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
-            if (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE)
+            if (!protocol_cleanup && (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE))
                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
 
             // Note how OP_RESERVED does not count towards the opcode limit.
-            if (opcode > OP_16 && ++nOpCount > 201)
+            if (!protocol_cleanup && (opcode > OP_16) && (++nOpCount > 201))
                 return set_error(serror, SCRIPT_ERR_OP_COUNT);
 
-            if (opcode == OP_CAT ||
+            if (!protocol_cleanup && (
+                opcode == OP_CAT ||
                 opcode == OP_SUBSTR ||
                 opcode == OP_LEFT ||
                 opcode == OP_RIGHT ||
@@ -304,7 +315,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 opcode == OP_DIV ||
                 opcode == OP_MOD ||
                 opcode == OP_LSHIFT ||
-                opcode == OP_RSHIFT)
+                opcode == OP_RSHIFT))
                 return set_error(serror, SCRIPT_ERR_DISABLED_OPCODE); // Disabled opcodes.
 
             if (fExec && 0 <= opcode && opcode <= OP_PUSHDATA4) {
@@ -886,7 +897,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     if (nKeysCount < 0 || nKeysCount > 20)
                         return set_error(serror, SCRIPT_ERR_PUBKEY_COUNT);
                     nOpCount += nKeysCount;
-                    if (nOpCount > 201)
+                    if (!protocol_cleanup && (nOpCount > 201))
                         return set_error(serror, SCRIPT_ERR_OP_COUNT);
                     int ikey = ++i;
                     i += nKeysCount;
@@ -971,11 +982,17 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 break;
 
                 default:
-                    return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    if (!protocol_cleanup) {
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    }
+                    if (discourage_upgradable_nops) {
+                        return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                    }
+                    return set_success(serror);
             }
 
             // Size limits
-            if (stack.size() + altstack.size() > 1000)
+            if (!protocol_cleanup && (stack.size() + altstack.size() > 1000))
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
         }
     }
