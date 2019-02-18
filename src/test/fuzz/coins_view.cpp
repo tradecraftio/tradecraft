@@ -243,11 +243,11 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                     return;
                 }
                 TxValidationState dummy;
-                if (!CheckTransaction(transaction, dummy)) {
+                if (!CheckTransaction(transaction, dummy, Consensus::NONE)) {
                     // It is not allowed to call CheckTxInputs if CheckTransaction failed
                     return;
                 }
-                if (Consensus::CheckTxInputs(transaction, state, coins_view_cache, Params().GetConsensus(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, transaction.vin.size() + 1), fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out)) {
+                if (Consensus::CheckTxInputs(transaction, state, coins_view_cache, Params().GetConsensus(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, transaction.vin.size() + 1), fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), Consensus::NONE, tx_fee_out)) {
                     assert(MoneyRange(tx_fee_out));
                 }
             },

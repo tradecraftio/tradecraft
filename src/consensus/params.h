@@ -19,12 +19,28 @@
 
 #include <consensus/amount.h>
 #include <uint256.h>
+#include <util/time.h>
 
 #include <chrono>
 #include <limits>
 #include <map>
 
 namespace Consensus {
+
+enum RuleSet : uint8_t {
+    NONE = 0,
+    PROTOCOL_CLEANUP = (1U << 0),
+};
+
+inline RuleSet operator | (RuleSet lhs, RuleSet rhs) {
+    using T = std::underlying_type_t<RuleSet>;
+    return static_cast<RuleSet>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+
+inline RuleSet& operator |= (RuleSet& lhs, RuleSet rhs) {
+    lhs = lhs | rhs;
+    return lhs;
+}
 
 /**
  * A buried deployment is one where the height of the activation has been hardcoded into
@@ -126,6 +142,8 @@ struct Params {
     uint32_t nRuleChangeActivationThreshold;
     uint32_t nMinerConfirmationWindow;
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
+    /** Scheduled protocol cleanup rule change */
+    int64_t protocol_cleanup_activation_time;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
@@ -176,5 +194,27 @@ struct Params {
 };
 
 } // namespace Consensus
+
+/** It's a bit confusing that this is in a consensus header, as the consensus
+ ** check requires access to the chain data structures for mean block time.
+ ** However running this check with network time is useful for non-consensus
+ ** decisions in places where it would be inappropriate to examine the chain
+ ** tip.
+ **/
+inline bool IsProtocolCleanupActive(const Consensus::Params& params, std::chrono::seconds now)
+{
+    // The adjustment of 3 hours from network time is to allow for some variation
+    // in clocks up to a total error of 3 hours.  This prevents nodes from being
+    // banned for relaying invalid transactions moments before the switchover.
+    return (now.count() > (params.protocol_cleanup_activation_time - /* 3 hours */ 3*60*60));
+}
+inline Consensus::RuleSet GetActiveRules(const Consensus::Params& params, std::chrono::seconds now)
+{
+    Consensus::RuleSet rules = Consensus::NONE;
+    if (IsProtocolCleanupActive(params, now)) {
+        rules |= Consensus::PROTOCOL_CLEANUP;
+    }
+    return rules;
+}
 
 #endif // FREICOIN_CONSENSUS_PARAMS_H

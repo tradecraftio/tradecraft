@@ -72,9 +72,9 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
         }
         {
             (void)GetBlockProof(current_block);
-            (void)CalculateNextWorkRequired(&current_block, consensus_params);
+            (void)CalculateNextWorkRequired(&current_block, consensus_params, Consensus::NONE);
             if (current_block.nHeight != std::numeric_limits<int>::max() && current_block.nHeight - (consensus_params.original_adjust_interval - 1) >= 0) {
-                (void)GetNextWorkRequired(&current_block, &(*block_header), consensus_params);
+                (void)GetNextWorkRequired(&current_block, &(*block_header), consensus_params, Consensus::NONE);
             }
         }
         {
@@ -128,6 +128,6 @@ FUZZ_TARGET_INIT(pow_transition, initialize_pow)
         blocks.emplace_back(std::move(current_block));
     }
     auto last_block{blocks.back().get()};
-    unsigned int new_nbits{GetNextWorkRequired(last_block, nullptr, consensus_params)};
+    unsigned int new_nbits{GetNextWorkRequired(last_block, nullptr, consensus_params, Consensus::NONE)};
     Assert(PermittedDifficultyTransition(consensus_params, last_block->nHeight + 1, last_block->nBits, new_nbits));
 }

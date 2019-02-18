@@ -315,6 +315,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     if constexpr (ReturnUniquePtr) {
         return std::make_unique<CNode>(node_id,
+                                       DEFAULT_MAX_PEER_CONNECTIONS,
                                        sock,
                                        address,
                                        keyed_net_group,
@@ -326,6 +327,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                                        CNodeOptions{ .permission_flags = permission_flags });
     } else {
         return CNode{node_id,
+                     DEFAULT_MAX_PEER_CONNECTIONS,
                      sock,
                      address,
                      keyed_net_group,
