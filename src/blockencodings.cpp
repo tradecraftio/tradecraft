@@ -21,6 +21,7 @@
 #include <crypto/siphash.h>
 #include <random.h>
 #include <streams.h>
+#include <timedata.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <util/system.h>
@@ -58,9 +59,12 @@ uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const uint256& txhash) const {
 
 
 ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn) {
+    // Check for protocol cleanup rule activation
+    const bool protocol_cleanup = IsProtocolCleanupActive(Params().GetConsensus(), cmpctblock.header.nTime);
+
     if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
         return READ_STATUS_INVALID;
-    if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MAX_BLOCK_WEIGHT / MIN_SERIALIZABLE_TRANSACTION_WEIGHT)
+    if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > (protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT) / MIN_SERIALIZABLE_TRANSACTION_WEIGHT)
         return READ_STATUS_INVALID;
 
     assert(header.IsNull() && txn_available.empty());
