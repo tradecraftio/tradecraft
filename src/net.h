@@ -74,7 +74,7 @@ static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
 static constexpr auto FEELER_INTERVAL = 2min;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
 static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
-/** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
+/** Maximum length of incoming protocol messages prior to the protocol-cleanup rule change (before which no message over 4 MB was acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 /** Maximum length of the user agent string in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
@@ -280,6 +280,9 @@ public:
     /** Retrieve information about this transport. */
     virtual Info GetInfo() const noexcept = 0;
 
+    /** Set the maximum message length. */
+    virtual void SetMaxMessageLength(size_t limit) = 0;
+
     // 1. Receiver side functions, for decoding bytes received on the wire into transport protocol
     // agnostic CNetMessage (message type & payload) objects.
 
@@ -394,6 +397,7 @@ private:
     CDataStream vRecv GUARDED_BY(m_recv_mutex); // received message data
     unsigned int nHdrPos GUARDED_BY(m_recv_mutex);
     unsigned int nDataPos GUARDED_BY(m_recv_mutex);
+    size_t max_message_length GUARDED_BY(m_recv_mutex);
 
     const uint256& GetMessageHash() const EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
     int readHeader(Span<const uint8_t> msg_bytes) EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
@@ -440,6 +444,11 @@ public:
 
     Info GetInfo() const noexcept override;
 
+    void SetMaxMessageLength(size_t limit) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex) {
+        assert(limit <= MAX_SIZE);
+        max_message_length = limit;
+    }
+
     bool ReceivedBytes(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
         AssertLockNotHeld(m_recv_mutex);
@@ -465,6 +474,8 @@ public:
 class V2Transport final : public Transport
 {
 private:
+    size_t max_message_length GUARDED_BY(m_recv_mutex);
+
     /** Contents of the version packet to send. BIP324 stipulates that senders should leave this
      *  empty, and receivers should ignore it. Future extensions can change what is sent as long as
      *  an empty version packet contents is interpreted as no extensions supported. */
@@ -679,6 +690,11 @@ public:
     // Miscellaneous functions.
     bool ShouldReconnectV1() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex, !m_send_mutex);
     Info GetInfo() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
+
+    void SetMaxMessageLength(size_t limit) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex) {
+        assert(limit <= MAX_SIZE);
+        max_message_length = limit;
+    }
 };
 
 struct CNodeOptions
@@ -694,6 +710,7 @@ struct CNodeOptions
 class CNode
 {
 public:
+    const int max_untrusted_peers{DEFAULT_MAX_PEER_CONNECTIONS};
     /** Transport serializer/deserializer. The receive side functions are only called under cs_vRecv, while
      * the sending side functions are only called under cs_vSend. */
     const std::unique_ptr<Transport> m_transport;
@@ -902,6 +919,7 @@ public:
     std::atomic<std::chrono::microseconds> m_min_ping_time{std::chrono::microseconds::max()};
 
     CNode(NodeId id,
+          int max_untrusted_peersIn,
           std::shared_ptr<Sock> sock,
           const CAddress& addrIn,
           uint64_t nKeyedNetGroupIn,
@@ -1217,6 +1235,7 @@ public:
      */
     bool AddConnection(const std::string& address, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
 
+    size_t MaxUntrustedPeers() const;
     size_t GetNodeCount(ConnectionDirection) const;
     uint32_t GetMappedAS(const CNetAddr& addr) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
