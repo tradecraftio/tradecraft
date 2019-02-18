@@ -493,7 +493,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
     CAddress addr_bind = GetBindAddress(hSocket);
-    CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type);
+    CNode* pnode = new CNode(id, MaxUntrustedPeers(), nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type);
     pnode->AddRef();
 
     // We're making a new connection, harvest entropy from the time (and our peer count)
@@ -644,6 +644,45 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
 }
 #undef X
 
+/** The maximum length of an incoming protocol message after taking into account
+ ** whether the protocol cleanup rule change has occured (and the number of
+ ** allowed peers on 32-bit hosts). */
+static std::size_t MaxProtocolMessageLength(const Consensus::Params &params, size_t max_untrusted_peers, int64_t time)
+{
+    // Unconstraining the block size in the protocol cleanup fork means that
+    // network message size must also be unconstrained, which is a potential DoS
+    // vector.  Unfortunately there is no easy way around this. Until better
+    // tools are available in future versions, we must accept that after
+    // activation of the protocol cleanup fork we might receive a message up to
+    // the largest possible block size, which is limited only by
+    // PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE, which is nearly 2 GiB.
+    //
+    // However this value is dangerously high for 32-bit clients, as it presents
+    // an easy DoS vector for memory exhaustion attacks.  We therefore use a
+    // lower limit for 32-bit builds which prevents exhaustion of the memory
+    // address space with the maximum number of connected peers.  This does mean
+    // that 32-bit clients will stop being able to synchronize from the network
+    // once blocks genuinely grow larger than 16 MiB.  But as it is doubtful
+    // that a true 32-bit peer could keep up with the network in such an
+    // instance, this is deemed an acceptable tradeoff.
+    std::size_t max_msg_size = MAX_PROTOCOL_MESSAGE_LENGTH;
+    if (time > (Params().GetConsensus().protocol_cleanup_activation_time - 2*60*60 /* two hours */)) {
+        // Use no more than 2 GiB for messages in flight on 32-bit peers.  With
+        // the default max of 125 untrusted connections this is slightly more
+        // than 16 MiB.  A 32-bit node operator could indirectly raise this
+        // value by lowering the maximum number of allowed connections in their
+        // node configuration settings.  But we will not decrease below this
+        // amount just because user configured their node to accept more inbound
+        // peers than the default.
+        std::size_t max_data_per_peer = std::numeric_limits<std::size_t>::max() / std::min(std::max((size_t)1, max_untrusted_peers), (size_t)125) / 2;
+        // On 64-bit nodes, the above calculation results in an enormous number,
+        // so we use the lower implicit protocol rule of the maximum blockfile
+        // size--a block larger than this value could not be stored to disk.
+        max_msg_size = std::min(max_data_per_peer, static_cast<std::size_t>(PROTOCOL_CLEANUP_MAX_BLOCK_SERIALIZED_SIZE + 24));
+    }
+    return max_msg_size;
+}
+
 /**
  * Receive bytes from the buffer and deserialize them into messages.
  *
@@ -661,6 +700,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     LOCK(cs_vRecv);
     nLastRecv = std::chrono::duration_cast<std::chrono::seconds>(time).count();
     nRecvBytes += nBytes;
+    m_deserializer->SetMaxMessageLength(MaxProtocolMessageLength(Params().GetConsensus(), max_untrusted_peers, nLastRecv));
     while (nBytes > 0) {
         // absorb network data
         int handled = m_deserializer->Read(pch, nBytes);
@@ -730,7 +770,7 @@ int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
     }
 
     // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
-    if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+    if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > max_message_length) {
         LogPrint(BCLog::NET, "HEADER ERROR - SIZE (%s, %u bytes), peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, m_node_id);
         return -1;
     }
@@ -1152,7 +1192,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
-    CNode* pnode = new CNode(id, nodeServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
+    CNode* pnode = new CNode(id, MaxUntrustedPeers(), nodeServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
     pnode->AddRef();
     pnode->m_permissionFlags = permissionFlags;
     // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
@@ -2772,6 +2812,11 @@ bool CConnman::RemoveAddedNode(const std::string& strNode)
     return false;
 }
 
+size_t CConnman::MaxUntrustedPeers() const
+{
+    return std::max(0, nMaxConnections);
+}
+
 size_t CConnman::GetNodeCount(NumConnections flags)
 {
     LOCK(cs_vNodes);
@@ -2964,8 +3009,9 @@ int CConnman::GetBestHeight() const
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
-CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion)
+CNode::CNode(NodeId idIn, int max_untrusted_peersIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion)
     : nTimeConnected(GetSystemTimeInSeconds()),
+    max_untrusted_peers(max_untrusted_peersIn),
     addr(addrIn),
     addrBind(addrBindIn),
     nKeyedNetGroup(nKeyedNetGroupIn),
