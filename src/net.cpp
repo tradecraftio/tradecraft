@@ -757,7 +757,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         if (handled < 0)
                 return false;
 
-        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        if (msg.in_data && msg.hdr.nMessageSize > MaxProtocolMessageLength(Params().GetConsensus())) {
             LogPrint("net", "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }
@@ -805,7 +805,7 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
     }
 
     // reject messages larger than MAX_SIZE
-    if (hdr.nMessageSize > MAX_SIZE)
+    if (hdr.nMessageSize > MaxProtocolMessageLength(Params().GetConsensus()))
             return -1;
 
     // switch state to reading message data

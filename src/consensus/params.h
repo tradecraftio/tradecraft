@@ -84,6 +84,8 @@ struct Params {
     uint32_t nRuleChangeActivationThreshold;
     uint32_t nMinerConfirmationWindow;
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
+    /** Scheduled protocol cleanup rule change */
+    int64_t protocol_cleanup_activation_time;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
