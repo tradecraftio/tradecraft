@@ -26,6 +26,6 @@
 class CTransaction;
 class CValidationState;
 
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs, bool protocol_cleanup);
 
 #endif // FREICOIN_CONSENSUS_TX_CHECK_H
