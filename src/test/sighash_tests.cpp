@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           stream >> TX_WITH_WITNESS(tx);
 
           TxValidationState state;
-          BOOST_CHECK_MESSAGE(CheckTransaction(*tx, state), strTest);
+          BOOST_CHECK_MESSAGE(CheckTransaction(*tx, state, Consensus::NONE), strTest);
           BOOST_CHECK(state.IsValid());
 
           std::vector<unsigned char> raw = ParseHex(raw_script);

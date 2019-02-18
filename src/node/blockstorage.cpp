@@ -844,7 +844,7 @@ fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
     return m_block_file_seq.FileName(pos);
 }
 
-FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime)
+FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, const Consensus::Params& consensus_params, unsigned int nHeight, uint64_t nTime)
 {
     LOCK(cs_LastBlockFile);
 
@@ -864,8 +864,10 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
         m_blockfile_info.resize(nFile + 1);
     }
 
+    const Consensus::RuleSet rules = GetActiveRules(consensus_params, std::chrono::seconds{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())});
+
     bool finalize_undo = false;
-    unsigned int max_blockfile_size{MAX_BLOCKFILE_SIZE};
+    unsigned int max_blockfile_size{rules & Consensus::PROTOCOL_CLEANUP ? PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE};
     // Use smaller blockfiles in test-only -fastprune mode - but avoid
     // the possibility of having a block not fit into the block file.
     if (m_opts.fast_prune) {
@@ -1144,7 +1146,7 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
     // Account for the 4 magic message start bytes + the 4 length bytes (8 bytes total,
     // defined as BLOCK_SERIALIZATION_HEADER_SIZE)
     nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
-    FlatFilePos blockPos{FindNextBlockPos(nBlockSize, nHeight, block.GetBlockTime())};
+    FlatFilePos blockPos{FindNextBlockPos(nBlockSize, GetParams().GetConsensus(), nHeight, block.GetBlockTime())};
     if (blockPos.IsNull()) {
         LogError("%s: FindNextBlockPos failed\n", __func__);
         return FlatFilePos();

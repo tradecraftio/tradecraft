@@ -122,9 +122,11 @@ static bool GenerateBlock(ChainstateManager& chainman, Mining& miner, CBlock& bl
     block_out.reset();
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, 0, chainman.GetConsensus()) && !chainman.m_interrupt) {
-        ++block.nNonce;
-        --max_tries;
+    if (!IsProtocolCleanupActive(chainman.GetConsensus(), block)) {
+        while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, 0, chainman.GetConsensus()) && !chainman.m_interrupt) {
+            ++block.nNonce;
+            --max_tries;
+        }
     }
     if (max_tries == 0 || chainman.m_interrupt) {
         return false;
