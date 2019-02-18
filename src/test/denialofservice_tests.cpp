@@ -73,6 +73,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     CNode dummyNode1{id++,
+                     DEFAULT_MAX_PEER_CONNECTIONS,
                      ServiceFlags(NODE_NETWORK | NODE_WITNESS),
                      /*sock=*/nullptr,
                      addr1,
@@ -131,6 +132,7 @@ static void AddRandomOutboundPeer(std::vector<CNode*>& vNodes, PeerManager& peer
 {
     CAddress addr(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
     vNodes.emplace_back(new CNode{id++,
+                                  DEFAULT_MAX_PEER_CONNECTIONS,
                                   ServiceFlags(NODE_NETWORK | NODE_WITNESS),
                                   /*sock=*/nullptr,
                                   addr,
@@ -311,6 +313,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
     banman->ClearBanned();
     nodes[0] = new CNode{id++,
+                         DEFAULT_MAX_PEER_CONNECTIONS,
                          NODE_NETWORK,
                          /*sock=*/nullptr,
                          addr[0],
@@ -334,6 +337,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
     nodes[1] = new CNode{id++,
+                         DEFAULT_MAX_PEER_CONNECTIONS,
                          NODE_NETWORK,
                          /*sock=*/nullptr,
                          addr[1],
@@ -372,6 +376,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     // Make sure non-IP peers are discouraged and disconnected properly.
 
     nodes[2] = new CNode{id++,
+                         DEFAULT_MAX_PEER_CONNECTIONS,
                          NODE_NETWORK,
                          /*sock=*/nullptr,
                          addr[2],
@@ -417,6 +422,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
     CNode dummyNode{id++,
+                    DEFAULT_MAX_PEER_CONNECTIONS,
                     NODE_NETWORK,
                     /*sock=*/nullptr,
                     addr,

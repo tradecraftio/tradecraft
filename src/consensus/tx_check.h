@@ -26,6 +26,6 @@
 class CTransaction;
 class TxValidationState;
 
-bool CheckTransaction(const CTransaction& tx, TxValidationState& state);
+bool CheckTransaction(const CTransaction& tx, TxValidationState& state, bool protocol_cleanup);
 
 #endif // FREICOIN_CONSENSUS_TX_CHECK_H
