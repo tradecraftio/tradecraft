@@ -68,7 +68,9 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_LOCATOR_SZ = 101;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
-/** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
+/** Maximum length of incoming protocol messages prior to the protocol
+ ** cleanup rule change, before which no message over 4 MB is
+ ** acceptable. */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 /** Maximum length of the user agent string in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
@@ -284,6 +286,7 @@ public:
     bool RemoveAddedNode(const std::string& node);
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
+    size_t MaxUntrustedPeers() const;
     size_t GetNodeCount(NumConnections num);
     void GetNodeStats(std::vector<CNodeStats>& vstats);
     bool DisconnectNode(const std::string& node);
@@ -653,6 +656,8 @@ public:
     virtual bool Complete() const = 0;
     // set the serialization context version
     virtual void SetVersion(int version) = 0;
+    // set the maximum message length
+    virtual void SetMaxMessageLength(size_t limit) = 0;
     // read and deserialize data
     virtual int Read(const char *data, unsigned int bytes) = 0;
     // decomposes a message from the context
@@ -671,6 +676,7 @@ private:
     CDataStream vRecv;              // received message data
     unsigned int nHdrPos;
     unsigned int nDataPos;
+    size_t max_message_length;
 
     const uint256& GetMessageHash() const;
     int readHeader(const char *pch, unsigned int nBytes);
@@ -691,6 +697,7 @@ public:
 
     V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
         Reset();
+        max_message_length = MAX_SIZE;
     }
 
     bool Complete() const override
@@ -703,6 +710,11 @@ public:
     {
         hdrbuf.SetVersion(nVersionIn);
         vRecv.SetVersion(nVersionIn);
+    }
+    void SetMaxMessageLength(size_t limit) override
+    {
+        assert(limit <= MAX_SIZE);
+        max_message_length = limit;
     }
     int Read(const char *pch, unsigned int nBytes) override {
         int ret = in_data ? readData(pch, nBytes) : readHeader(pch, nBytes);
@@ -733,6 +745,7 @@ class CNode
     friend struct ConnmanTestMsg;
 
 public:
+    int max_untrusted_peers{DEFAULT_MAX_PEER_CONNECTIONS};
     std::unique_ptr<TransportDeserializer> m_deserializer;
     std::unique_ptr<TransportSerializer> m_serializer;
 
@@ -871,7 +884,7 @@ public:
 
     std::set<uint256> orphan_work_set;
 
-    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool block_relay_only = false);
+    CNode(NodeId id, int max_untrusted_peersIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool block_relay_only = false);
     ~CNode();
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
