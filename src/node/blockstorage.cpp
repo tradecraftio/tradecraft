@@ -26,6 +26,7 @@
 #include <shutdown.h>
 #include <signet.h>
 #include <streams.h>
+#include <timedata.h>
 #include <undo.h>
 #include <util/system.h>
 #include <validation.h>
@@ -253,9 +254,11 @@ bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight,
         vinfoBlockFile.resize(nFile + 1);
     }
 
+    const bool protocol_cleanup = IsProtocolCleanupActive(Params().GetConsensus(), GetAdjustedTime());
+
     bool finalize_undo = false;
     if (!fKnown) {
-        while (vinfoBlockFile[nFile].nSize + nAddSize >= (gArgs.GetBoolArg("-fastprune", false) ? 0x10000 /* 64kb */ : MAX_BLOCKFILE_SIZE)) {
+        while (vinfoBlockFile[nFile].nSize + nAddSize >= (gArgs.GetBoolArg("-fastprune", false) ? 0x10000 /* 64kb */ : (protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE))) {
             // when the undo file is keeping up with the block file, we want to flush it explicitly
             // when it is lagging behind (more blocks arrive than are being connected), we let the
             // undo block write case handle it
