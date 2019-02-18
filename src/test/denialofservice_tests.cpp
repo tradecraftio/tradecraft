@@ -69,6 +69,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
     CNode dummyNode1{id++,
+                     DEFAULT_MAX_PEER_CONNECTIONS,
                      /*sock=*/nullptr,
                      addr1,
                      /*nKeyedNetGroupIn=*/0,
@@ -135,6 +136,7 @@ static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerM
     }
 
     vNodes.emplace_back(new CNode{id++,
+                                  DEFAULT_MAX_PEER_CONNECTIONS,
                                   /*sock=*/nullptr,
                                   addr,
                                   /*nKeyedNetGroupIn=*/0,
@@ -337,6 +339,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     banman->ClearBanned();
     NodeId id{0};
     nodes[0] = new CNode{id++,
+                         DEFAULT_MAX_PEER_CONNECTIONS,
                          /*sock=*/nullptr,
                          addr[0],
                          /*nKeyedNetGroupIn=*/0,
@@ -357,6 +360,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
     nodes[1] = new CNode{id++,
+                         DEFAULT_MAX_PEER_CONNECTIONS,
                          /*sock=*/nullptr,
                          addr[1],
                          /*nKeyedNetGroupIn=*/1,
@@ -388,6 +392,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     // Make sure non-IP peers are discouraged and disconnected properly.
 
     nodes[2] = new CNode{id++,
+                         DEFAULT_MAX_PEER_CONNECTIONS,
                          /*sock=*/nullptr,
                          addr[2],
                          /*nKeyedNetGroupIn=*/1,
@@ -430,6 +435,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
     CNode dummyNode{id++,
+                    DEFAULT_MAX_PEER_CONNECTIONS,
                     /*sock=*/nullptr,
                     addr,
                     /*nKeyedNetGroupIn=*/4,

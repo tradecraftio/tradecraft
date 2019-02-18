@@ -75,7 +75,7 @@ FUZZ_TARGET(transaction, .init = initialize_transaction)
 
     {
         TxValidationState state_with_dupe_check;
-        const bool res{CheckTransaction(tx, state_with_dupe_check)};
+        const bool res{CheckTransaction(tx, state_with_dupe_check, Consensus::NONE)};
         Assert(res == state_with_dupe_check.IsValid());
     }
 
