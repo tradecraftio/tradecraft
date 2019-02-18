@@ -108,6 +108,27 @@ public:
         // This is 4PM PDT, 7PM EDT, and 9AM JST.
         consensus.verify_coinbase_lock_time_timeout = 1569974400;
 
+         /**
+         * The protocol cleanup rule change is scheduled for
+         * activation on 16 Apr 2021 at midnight UTC. This is 4PM
+         * PDT, 7PM EDT, and 9AM JST.  Since the activation time is
+         * median-time-past, it'll actually trigger about an hour
+         * after this wall-clock time.
+         *
+         * This date is chosen to be roughly 2 years after the expected
+         * release date of official binaries. While the Freicoin developer
+         * team doesn't have the resources to provide strong ongoing support
+         * beyond emergency fixes, we nevertheless have an ideal goal of
+         * supporting release binaries for up to 2 years following the first
+         * release from that series. Any release of a new series prior to the
+         * deployment of forward blocks should set this to be at least two
+         * years from the time of release. When forward blocks is deployed,
+         * this parameter should be set to the highest value used in prior
+         * releases, and becomes the earliest time at which the hard-fork
+         * rules can activate.
+         */
+        consensus.protocol_cleanup_activation_time = 1618531200;
+
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
         consensus.diff_adjust_threshold = 28336;
@@ -267,6 +288,10 @@ public:
         // Tuesday, April 2, 2019 00:00:00 UTC
         consensus.verify_coinbase_lock_time_timeout = 1554163200;
 
+        // Two months prior to main net
+        // 16 November 2020 00:00:00 UTC
+        consensus.protocol_cleanup_activation_time = 1605484800;
+
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
         consensus.diff_adjust_threshold = 144;
@@ -396,6 +421,10 @@ public:
         consensus.verify_coinbase_lock_time_activation_height = std::numeric_limits<int64_t>::max();
         consensus.verify_coinbase_lock_time_timeout = 1356123600;
 
+        // Two months prior to main net
+        // 16 November 2020 00:00:00 UTC
+        consensus.protocol_cleanup_activation_time = 1605484800;
+
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
         consensus.diff_adjust_threshold = std::numeric_limits<int64_t>::max();
@@ -518,6 +547,17 @@ public:
 
         consensus.verify_coinbase_lock_time_activation_height = std::numeric_limits<int64_t>::max();
         consensus.verify_coinbase_lock_time_timeout = 1356123600;
+
+        /**
+         * Effectively never.
+         *
+         * Unit tests which check the protocol cleanup rule activation should
+         * set this consensus parameter manually for the duration of the
+         * test. Setting it to a real value here would make other unit tests
+         * checking pre-activationn rules fail at some point in the future,
+         * which is unacceptable time-dependency in the build process.
+         */
+        consensus.protocol_cleanup_activation_time = std::numeric_limits<int64_t>::max();
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
