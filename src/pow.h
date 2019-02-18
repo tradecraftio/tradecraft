@@ -30,6 +30,10 @@ int64_t GetFilteredTime(const CBlockIndex* pindexLast, const Consensus::Params&)
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params&);
 
+/** Verify that a block's work target is within the range of half to
+ ** twice the targets of the past 12 blocks. */
+bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params&);
+
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned char bias, const Consensus::Params&);
 
