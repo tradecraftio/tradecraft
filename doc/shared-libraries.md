@@ -55,6 +55,7 @@ The interface is defined in the C header `freicoinconsensus.h` located in `src/s
 - `freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG` - Enforce strict DER ([BIP66](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki)) compliance
 - `freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS` - Enable WITNESS ([BIP141](https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki))
 - `freicoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT` - Enable TAPROOT ([BIP340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki), [BIP341](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki), [BIP342](https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki))
+- `freicoinconsensus_SCRIPT_FLAGS_VERIFY_PROTOCOL_CLEANUP` - Relax certain consensus rules
 
 ##### Errors
 - `freicoinconsensus_ERR_OK` - No errors with input parameters *(see the return value of `freicoinconsensus_verify_script` for the verification status)*

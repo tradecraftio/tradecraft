@@ -166,7 +166,7 @@ private:
     /** Return false if undo file flushing fails. */
     [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
 
-    [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
+    [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, const Consensus::Params& consensus_params, unsigned int nHeight, uint64_t nTime, bool fKnown);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
