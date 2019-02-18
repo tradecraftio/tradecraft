@@ -47,6 +47,8 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
+#include <algorithm>
+
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
@@ -679,7 +681,44 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         if (handled < 0)
                 return false;
 
-        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        // Unconstraining the block size in the protocol cleanup fork
+        // means that network message size must also be unconstrained,
+        // which is a potential DoS vector. Unfortunately there is no
+        // easy way around this. Until better tools are available in
+        // future versions, we must accept that after activation of
+        // the protocol cleanup fork we might receive a message up to
+        // the largest possible block size, which is limited only by
+        // MAX_BLOCKFILE_SIZE.
+        //
+        // However this value is dangerously high for 32-bit clients,
+        // as it presents an easy DoS vector for memory exhaustion
+        // attacks. We therefore use a lower limit for 32-bit builds
+        // which prevents exhaustion of the memory address space with
+        // the maximum number of connected peers. This does mean that
+        // 32-bit clients will stop being able to synchronize from the
+        // network once blocks genuinely grow larger than 16MiB. But
+        // as it is doubtful that a true 32-bit peer could keep up
+        // with the network in such an instance, this is deemed an
+        // acceptable tradeoff.
+        size_t max_msg_size = MAX_PROTOCOL_MESSAGE_LENGTH;
+        if (GetAdjustedTime() > (Params().GetConsensus().protocol_cleanup_activation_time - 2*60*60 /* two hours */)) {
+            // Use no more than 2GiB for messages in flight on 32-bit
+            // peers. With the default max of 125 connections this is
+            // slightly more than 16MiB. A 32-bit node operator could
+            // indirectly raise this value by lowering the maximum
+            // number of allowed connections in their configuration
+            // file. But we will not decrease below this amount just
+            // because user configured their node to accept more
+            // inbound peers than the default.
+            size_t max_data_per_peer = numeric_limits<size_t>::max() / std::max(nMaxConnections, 125) / 2;
+            // On 64-bit nodes, the above calculation results in an
+            // enormous number, so we use the lower implicit protocol
+            // rule of the maximum blockfile size--a block larger than
+            // this value could not be stored to disk.
+            max_msg_size = std::min(max_data_per_peer, static_cast<size_t>(MAX_BLOCKFILE_SIZE - 8 + 24));
+        }
+
+        if (msg.in_data && msg.hdr.nMessageSize > max_msg_size) {
             LogPrint("net", "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }

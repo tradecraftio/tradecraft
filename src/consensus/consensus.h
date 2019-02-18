@@ -22,6 +22,8 @@
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
+/** The maximum size of a blk?????.dat file (since 0.8) (post-cleanup network rule) */
+static const unsigned int MAX_BLOCKFILE_SIZE = 0x7f000000; // (2048 - 16) MiB
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
