@@ -64,13 +64,20 @@ static bool SignN(const vector<valtype>& multisigdata, const BaseSignatureCreato
 {
     int nSigned = 0;
     int nRequired = multisigdata.front()[0];
+    int nKeysCount = multisigdata.size() - 2;
+    MultiSigHint hint(nKeysCount, (1 << nKeysCount) - 1);
+    ret.push_back(valtype()); // hint
     for (unsigned int i = 1; i < multisigdata.size()-1 && nSigned < nRequired; i++)
     {
         const valtype& pubkey = multisigdata[i];
         CKeyID keyID = CPubKey(pubkey).GetID();
         if (Sign1(keyID, creator, scriptCode, ret, sigversion))
+        {
+            hint.use_key(nKeysCount-i);
             ++nSigned;
+        }
     }
+    ret[ret.size()-nSigned-1] = hint.getvch();
     return nSigned==nRequired;
 }
 
@@ -119,7 +126,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         return false;
 
     case TX_MULTISIG:
-        ret.push_back(valtype()); // workaround CHECKMULTISIG bug
+        // The MultiSigHint value is added by SignN()
         return (SignN(vSolutions, creator, scriptPubKey, ret, sigversion));
 
     case TX_WITNESS_V0_KEYHASH:
@@ -288,18 +295,22 @@ static vector<valtype> CombineMultisig(const CScript& scriptPubKey, const BaseSi
     }
     // Now build a merged CScript:
     unsigned int nSigsHave = 0;
+    MultiSigHint hint(nPubKeys, (1 << nPubKeys) - 1);
     std::vector<valtype> result; result.push_back(valtype()); // pop-one-too-many workaround
     for (unsigned int i = 0; i < nPubKeys && nSigsHave < nSigsRequired; i++)
     {
         if (sigs.count(vSolutions[i+1]))
         {
             result.push_back(sigs[vSolutions[i+1]]);
+            hint.use_key(nPubKeys-i-1);
             ++nSigsHave;
         }
     }
     // Fill any missing with OP_0:
     for (unsigned int i = nSigsHave; i < nSigsRequired; i++)
         result.push_back(valtype());
+    // Overwrite first entry with hint value
+    result[result.size()-nSigsRequired-1] = hint.getvch();
 
     return result;
 }

@@ -66,6 +66,7 @@ enum
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG              = (1U << 2), // enforce strict DER (BIP66) compliance
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY           = (1U << 4), // enforce NULLDUMMY (BIP147)
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_MULTISIG_HINT       = (1U << 15), // require hint field in CHECKMULTISIG which indicates which keys to skip
 };
 
 /// Returns 1 if the input nIn of the serialized transaction pointed to by

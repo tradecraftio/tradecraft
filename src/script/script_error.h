@@ -78,6 +78,10 @@ typedef enum ScriptError_t
     SCRIPT_ERR_WITNESS_UNEXPECTED,
     SCRIPT_ERR_WITNESS_PUBKEYTYPE,
 
+    /* require valid signatures */
+    SCRIPT_ERR_MULTISIG_HINT,
+    SCRIPT_ERR_FAILED_SIGNATURE_CHECK,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 
