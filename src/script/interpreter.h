@@ -121,9 +121,51 @@ enum
     //
     SCRIPT_VERIFY_NULLFAIL = (1U << 14),
 
+    // Requires the presence of a bitfield specifying which keys are
+    // skipped during signature validation of a CHECKMULTISIG, using the
+    // extra data push that opcode consumes (softfork safe, replaces BIP62
+    // rule 7, and is not compatible with NULLDUMMY). Originally coded as
+    // REQUIRE_VALID_SIGS in a softfork deployed on v12.1, the script
+    // verification codes for that soft fork have now been split into
+    // NULLFAIL which requires that failing signatures be empty, and
+    // MULTISIG_HINT which allows matching keys to signatures prior to
+    // signature verification.
+    //
+    // CHECKMULTISIG and CHECKMULTISIGVERIFY present a significant
+    // challenge to preventing failed signature checks in that the
+    // original data format did not indicate which public keys were
+    // matched with which signatures, other than the ordering. For a
+    // k-of-n multisig, there are n-choose-(n-k) possibilities. For
+    // example, a 2-of-3 multisig would have three public keys matched
+    // with two signatures, resulting in three possible assignments of
+    // pubkeys to signatures. In the original implementation this is done
+    // by attempting to validate a signature, starting with the first
+    // public key and the first signature, and then moving to the next
+    // pubkey if validation fails. It is not known in advance to the
+    // validator which attempts will fail.
+    //
+    // Thankfully, however, a bug in the original implementation causes an
+    // extra, unused item to be removed from stack after validation. Since
+    // this value is given no previous consensus meaning, we use it as a
+    // bitfield to indicate which pubkeys to skip. (Note that NULLDUMMY
+    // would require this field to be zero, which is incompatible with
+    // MULTISIG_HINT when any keys must be skipped. NULLDUMMY is retained
+    // only for the purpose of compatibility with unit tests inherited
+    // from the bitcoin code base.)
+    //
+    // Enforcing MULTISIG_HINT and NULLFAIL are necessary precursor steps
+    // to performing batch validation, since in a batch validation regime
+    // individual pubkey-signature combinations would not be checked for
+    // validity.
+    //
+    // Like bitcoin's SCRIPT_VERIFY_NULLDUMMY, this also serves as a
+    // malleability fix since the bitmask value is provided by the
+    // witness.
+    SCRIPT_VERIFY_MULTISIG_HINT = (1U << 15),
+
     // Public keys in segregated witness scripts must be compressed
     //
-    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 15),
+    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 16),
 
     // If set, do not serialize CTransaction::lock_height in SignatureHash
     //
