@@ -122,7 +122,7 @@ void ValidateCheckInputsForAllFlags(CMutableTransaction &tx, uint32_t failing_fl
     PrecomputedTransactionData txdata(tx);
     // If we add many more flags, this loop can get too expensive, but we can
     // rewrite in the future to randomly pick a set of flags to evaluate.
-    for (uint32_t test_flags=0; test_flags < (1U << 16); test_flags += 1) {
+    for (uint32_t test_flags=0; test_flags < (1U << 17); test_flags += 1) {
         CValidationState state;
         // Filter out incompatible flag choices
         if ((test_flags & SCRIPT_VERIFY_CLEANSTACK)) {
