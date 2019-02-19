@@ -60,13 +60,21 @@ static bool SignN(const vector<valtype>& multisigdata, const BaseSignatureCreato
 {
     int nSigned = 0;
     int nRequired = multisigdata.front()[0];
+    int nKeysCount = multisigdata.size() - 2;
+    MultiSigHint hint(nKeysCount, (1 << nKeysCount) - 1);
+    CScript scriptSig;
     for (unsigned int i = 1; i < multisigdata.size()-1 && nSigned < nRequired; i++)
     {
         const valtype& pubkey = multisigdata[i];
         CKeyID keyID = CPubKey(pubkey).GetID();
-        if (Sign1(keyID, creator, scriptCode, scriptSigRet))
+        if (Sign1(keyID, creator, scriptCode, scriptSig))
+        {
+            hint.use_key(nKeysCount-i);
             ++nSigned;
+        }
     }
+    scriptSigRet << hint;
+    scriptSigRet += scriptSig;
     return nSigned==nRequired;
 }
 
@@ -109,7 +117,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         return creator.KeyStore().GetCScript(uint160(vSolutions[0]), scriptSigRet);
 
     case TX_MULTISIG:
-        scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
+        // The MultiSigHint value is added by SignN()
         return (SignN(vSolutions, creator, scriptPubKey, scriptSigRet));
     }
     return false;
@@ -214,12 +222,14 @@ static CScript CombineMultisig(const CScript& scriptPubKey, const BaseSignatureC
     }
     // Now build a merged CScript:
     unsigned int nSigsHave = 0;
-    CScript result; result << OP_0; // pop-one-too-many workaround
+    MultiSigHint hint(nPubKeys, (1 << nPubKeys) - 1);
+    CScript result;
     for (unsigned int i = 0; i < nPubKeys && nSigsHave < nSigsRequired; i++)
     {
         if (sigs.count(vSolutions[i+1]))
         {
             result << sigs[vSolutions[i+1]];
+            hint.use_key(nPubKeys-i-1);
             ++nSigsHave;
         }
     }
@@ -227,7 +237,7 @@ static CScript CombineMultisig(const CScript& scriptPubKey, const BaseSignatureC
     for (unsigned int i = nSigsHave; i < nSigsRequired; i++)
         result << OP_0;
 
-    return result;
+    return (CScript(hint) + result);
 }
 
 static CScript CombineSignatures(const CScript& scriptPubKey, const BaseSignatureChecker& checker,

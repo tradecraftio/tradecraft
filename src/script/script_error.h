@@ -66,6 +66,10 @@ typedef enum ScriptError_t
     /* softfork safeness */
     SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS,
 
+    /* require valid signatures */
+    SCRIPT_ERR_MULTISIG_HINT,
+    SCRIPT_ERR_FAILED_SIGNATURE_CHECK,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 

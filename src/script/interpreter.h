@@ -71,6 +71,46 @@ enum
     // verify dummy stack item consumed by CHECKMULTISIG is of zero-length (softfork safe, BIP62 rule 7).
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4),
 
+    // Require all signature checks to pass (softfork safe, replaces BIP62
+    // rule 7, and is not compatible with SCRIPT_VERIFY_NULLDUMMY). It is
+    // still possible for the non-VERIFY forms of CHECKSIG or
+    // CHECKMULTISIG to be executed and return false, but you MUST do so
+    // by passing in the empty string (OP_0) for all signatures. The way
+    // this is implemented is different for the two opcodes:
+    //
+    // CHECKSIG and CHECKSIGVERIFY will abort script validation with error
+    // code SCRIPT_ERR_FAILED_SIGNATURE_CHECK if the signature validation
+    // code returns false for any reason other than the passed-in
+    // signature being empty.
+    //
+    // CHECKMULTISIG and CHECKMULTISIGVERIFY present a significant
+    // challenge to enforcing this requirement in that the original data
+    // format did not indicate which public keys were matched with which
+    // signatures, other than the ordering. For a k-of-n multisig, there
+    // are n-choose-(n-k) possibilities. For example, a 2-of-3 multisig
+    // would have three public keys matched with two signatures, resulting
+    // in three possible assignments of pubkeys to signatures. In the
+    // original implementation this is done by attempting to validate a
+    // signature, starting with the first public key and the first
+    // signature, and then moving to the next pubkey if validation
+    // fails. It is not known in advance to the validator which attempts
+    // will fail.
+    //
+    // Thankfully, however, a bug in the original implementation causes an
+    // extra, unused item to be removed from stack after validation. Since
+    // this value is given no previous consensus meaning, we use it as a
+    // bitfield to indicate which pubkeys to skip.
+    //
+    // Enforcing this requirement is a necessary precursor step to
+    // performing batch validation, since in a batch validation regime
+    // individual pubkey-signature combinations would not be checked for
+    // validity.
+    //
+    // Like bitcoin's SCRIPT_VERIFY_NULLDUMMY, this also serves as a
+    // malleability fix since the bitmask value is provided by the
+    // witness.
+    SCRIPT_VERIFY_REQUIRE_VALID_SIGS = (1U << 20),
+
     // Using a non-push operator in the scriptSig causes script failure (softfork safe, BIP62 rule 2).
     SCRIPT_VERIFY_SIGPUSHONLY = (1U << 5),
 
