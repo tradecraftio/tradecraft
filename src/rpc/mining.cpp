@@ -621,6 +621,7 @@ static RPCHelpMan getblocktemplate()
                 {RPCResult::Type::NUM, "weightlimit", /*optional=*/true, "limit of block weight"},
                 {RPCResult::Type::NUM_TIME, "curtime", "current timestamp in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::STR, "bits", "compressed target of next block"},
+                {RPCResult::Type::NUM_TIME, "locktime", "The median-time-past commitment which must be used in the coinbase nLockTime value"},
                 {RPCResult::Type::NUM, "height", "The height of the next block"},
                 {RPCResult::Type::STR_HEX, "signet_challenge", /*optional=*/true, "Only on signet"},
                 {RPCResult::Type::STR_HEX, "default_witness_commitment", /*optional=*/true, "a valid witness commitment for the unmodified block template"},
@@ -944,6 +945,7 @@ static RPCHelpMan getblocktemplate()
     }
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
+    result.pushKV("locktime", (int64_t)(pindexPrev->GetMedianTimePast()));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
     if (pblocktemplate->has_block_final_tx) {
         UniValue finaltx_prevout(UniValue::VARR);
