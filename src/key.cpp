@@ -205,7 +205,9 @@ public:
         const EC_GROUP *group = EC_KEY_get0_group(pkey);
         const EC_POINT *pubkey = EC_KEY_get0_public_key(pkey);
         BIGNUM *order = BN_CTX_get(ctx);
+        BIGNUM *halforder = BN_CTX_get(ctx);
         EC_GROUP_get_order(group, order, ctx);
+        BN_rshift1(halforder, order);
         BIGNUM *m = BN_CTX_get(ctx);
         BIGNUM *w = BN_CTX_get(ctx);
         BIGNUM *u = BN_CTX_get(ctx);
@@ -239,6 +241,11 @@ public:
             sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
             if (sig == NULL)
                 return false;
+
+            // Enforce low S values, by negating the value (modulo the order) if above order/2.
+            if (BN_cmp(sig->s, halforder) > 0) {
+                BN_sub(sig->s, order, sig->s);
+            }
 
             // Now we verify the ECDSA signature step-by-step, since
             // we need the full R point value.
