@@ -123,6 +123,9 @@ public:
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000003e328537a467ba2c7de"};
         consensus.defaultAssumeValid = uint256{"ea767ef6150a2fe2c1d3be59464db199adb14e9197e8277acf2db68fe9896eec"}; // 424780
 
+        // Locked-in via checkpoint:
+        consensus.verify_coinbase_lock_time_activation_height = 247554;
+
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
         consensus.diff_adjust_threshold = 28336;
@@ -286,6 +289,8 @@ public:
         consensus.nMinimumChainWork = uint256{"00000000000000000000000000000000000000000000001d134f91d559fc28fb"};
         consensus.defaultAssumeValid = uint256{"58c121907bf5f005acdddf38da413fcd2c9f7048163bcfa0310fa7bd067b7e44"}; // 25259
 
+        consensus.verify_coinbase_lock_time_activation_height = 2016;
+
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
         consensus.diff_adjust_threshold = 144;
@@ -408,6 +413,8 @@ public:
         if (options.seeds) {
             vSeeds = *options.seeds;
         }
+
+        consensus.verify_coinbase_lock_time_activation_height = std::numeric_limits<int64_t>::max();
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
@@ -533,6 +540,8 @@ public:
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
 
+        consensus.verify_coinbase_lock_time_activation_height = std::numeric_limits<int64_t>::max();
+
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
         consensus.diff_adjust_threshold = std::numeric_limits<int64_t>::max();
@@ -590,9 +599,9 @@ public:
         m_assumeutxo_data = {
             {   // For use by unit tests
                 .height = 110,
-                .hash_serialized = AssumeutxoHash{uint256{"aa46cd10504dd7b9174be6414bbce34633b1633c89ea112519490ff8187739c1"}},
+                .hash_serialized = AssumeutxoHash{uint256{"30ea54a8d11c73c578b7168e7362d8ecc5e60a67f8e075d1c98049d244548e1f"}},
                 .m_chain_tx_count = 121,
-                .blockhash = consteval_ctor(uint256{"1603f4cdfde6fe56a1232602fe9e04440b1839c3490135566c819cbf67d45b13"}),
+                .blockhash = consteval_ctor(uint256{"03bed2ff4d5385186ea33f6a058f4180e2d12d979f25cd2ff08f954e3ac98ea0"}),
             },
             {
                 // For use by fuzz target src/test/fuzz/utxo_snapshot.cpp
@@ -604,9 +613,9 @@ public:
             {
                 // For use by test/functional/feature_assumeutxo.py
                 .height = 299,
-                .hash_serialized = AssumeutxoHash{uint256{"7d417a8013ac7fd67ecddeadedcb23cd9a2d3329eecaf9e0f07e61e259f6dcb1"}},
+                .hash_serialized = AssumeutxoHash{uint256{"2ccb4b15d51be9ff215ffb2696b2edf69cdd7a857059dfce5bd8115d187eefa6"}},
                 .m_chain_tx_count = 533,
-                .blockhash = consteval_ctor(uint256{"69deca48d0cfb29e5d8bb803b858ef3108c06a9c3515b08a909ce49284058ae8"}),
+                .blockhash = consteval_ctor(uint256{"5bb87581319dc1656013d5faa334a0d9da8fbcbc63415a853a886447d1479b73"}),
             },
         };
 
