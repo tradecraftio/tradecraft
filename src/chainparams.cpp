@@ -146,6 +146,8 @@ public:
         nEnforceBlockUpgradeMajority = 750;
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
+        activate_bit_upgrade_majority = 958;
+        to_check_bit_upgrade_majority = 1008;
         nMinerThreads = 0;
         target_spacing = 10 * 60;
         original_interval = 2016; //! two weeks
@@ -178,6 +180,10 @@ public:
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x000000005b1e3d23ecfd2dd4a6e1a35238aa0392c0a8528c40df52376d7efe2c"));
         assert(genesis.hashMerkleRoot == uint256("0xf53b1baa971ea40be88cf51288aabd700dfec96c486bf7155a53a4919af4c8bd"));
+
+        // Wednesday, October 2, 2019 00:00:00 UTC
+        // This is 4PM PDT, 7PM EDT, and 9AM JST.
+        verify_coinbase_timelock_activation_time = 1569974400;
 
         vSeeds.push_back(CDNSSeedData("node.freico.in", "seed.freico.in"));
         vSeeds.push_back(CDNSSeedData("abacus.freico.in", "fledge.freico.in"));
@@ -225,6 +231,8 @@ public:
         nEnforceBlockUpgradeMajority = 51;
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
+        activate_bit_upgrade_majority = 108;
+        to_check_bit_upgrade_majority = 144;
         nMinerThreads = 0;
         target_spacing = 10 * 60;
         original_interval = 2016; //! two weeks
@@ -238,6 +246,9 @@ public:
         genesis.nNonce = 3098244593UL;
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x00000000a52504ffe3420a43bd385ef24f81838921a903460b235d95f37cd65e"));
+
+        // Tuesday, April 2, 2019 00:00:00 UTC
+        verify_coinbase_timelock_activation_time = 1554163200;
 
         vFixedSeeds.clear();
         vSeeds.clear();
