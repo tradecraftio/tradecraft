@@ -257,6 +257,12 @@ public:
      */
     static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart,
                                 unsigned int nRequired);
+    /**
+     * Returns true if there are nRequried or more version-bits blocks
+     * signaling the bit indicated in the last nToCheck blocks,
+     * starting at pstart and going backwards.
+     */
+    static bool IsSuperMajorityBit(int bit, const CBlockIndex* pstart);
 
     std::string ToString() const
     {

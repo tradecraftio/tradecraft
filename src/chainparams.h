@@ -65,6 +65,9 @@ public:
     int EnforceBlockUpgradeMajority() const { return nEnforceBlockUpgradeMajority; }
     int RejectBlockOutdatedMajority() const { return nRejectBlockOutdatedMajority; }
     int ToCheckBlockUpgradeMajority() const { return nToCheckBlockUpgradeMajority; }
+    /** Used to check majorities for hybrid version bits upgrade */
+    int ActivateBitUpgradeMajority() const { return activate_bit_upgrade_majority; }
+    int ToCheckBitUpgradeMajority() const { return to_check_bit_upgrade_majority; }
 
     /** Used if GenerateFreicoins is called with a negative number of threads */
     int DefaultMinerThreads() const { return nMinerThreads; }
@@ -87,6 +90,8 @@ public:
     int64_t FilteredTargetTimespan() const { return filtered_interval * target_spacing; }
     int64_t DiffAdjustThreshold() const { return diff_adjust_threshold; }
     int64_t AluActivationHeight() const { return alu_activation_height; }
+    int64_t VerifyCoinbaseLockTimeMinimumHeight() const { return verify_coinbase_lock_time_minimum_height; }
+    int64_t VerifyCoinbaseLockTimeActivationTime() const { return verify_coinbase_lock_time_activation_time; }
     int64_t MaxTipAge() const { return nMaxTipAge; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
@@ -111,11 +116,15 @@ protected:
     int nEnforceBlockUpgradeMajority;
     int nRejectBlockOutdatedMajority;
     int nToCheckBlockUpgradeMajority;
+    int activate_bit_upgrade_majority;
+    int to_check_bit_upgrade_majority;
     int64_t target_spacing;
     int64_t original_interval;
     int64_t filtered_interval;
     int64_t diff_adjust_threshold;
     int64_t alu_activation_height;
+    int64_t verify_coinbase_lock_time_minimum_height;
+    int64_t verify_coinbase_lock_time_activation_time;
     int nMinerThreads;
     long nMaxTipAge;
     std::vector<CDNSSeedData> vSeeds;
