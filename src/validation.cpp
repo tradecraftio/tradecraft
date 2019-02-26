@@ -2306,6 +2306,14 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         use_alu = true;
     }
 
+    // Verify that the lock-time of the coinbase is equal to the
+    // current median-time-past value, if that rule is active.
+    if (pindex->nHeight >= params.GetConsensus().verify_coinbase_lock_time_activation_height) {
+        if (!block.vtx.empty() && (block.vtx[0]->nLockTime != pindex->pprev->GetMedianTimePast())) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "coinbase-locktime-not-mtp", "ConnectBlock(): coinbase locktime must equal current median-time-past value");
+        }
+    }
+
     // Enforce BIP68 (sequence locks)
     int nLockTimeFlags = 0;
     if (DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_LOCKTIME)) {
