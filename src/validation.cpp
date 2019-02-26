@@ -1851,6 +1851,14 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         }
     }
 
+    // Expect bit #28 to be set prior to the closure of the coinbase-mtp
+    // soft-fork window.  We hard-code this exemption rather than use the
+    // version bits logic because the mechanics of that soft-fork differed from
+    // BIP9 by requiring the bit to be set even after activation.
+    if (pindexPrev && (pindexPrev->GetMedianTimePast() < params.verify_coinbase_lock_time_timeout)) {
+        nVersion |= (1 << 28);
+    }
+
     return nVersion;
 }
 
@@ -2020,6 +2028,14 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     bool use_alu = false;
     if (pindex->nHeight >= chainparams.GetConsensus().alu_activation_height) {
         use_alu = true;
+    }
+
+    // Verify that the lock-time of the coinbase is equal to the
+    // current median-time-past value, if that rule is active.
+    if (pindex->nHeight >= chainparams.GetConsensus().verify_coinbase_lock_time_activation_height) {
+        if (!block.vtx.empty() && (block.vtx[0]->nLockTime != pindex->pprev->GetMedianTimePast())) {
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, error("ConnectBlock(): coinbase locktime must equal current median-time-past value"), REJECT_INVALID, "coinbase-locktime-not-mtp");
+        }
     }
 
     // Start enforcing BIP68 (sequence locks)
@@ -3561,6 +3577,11 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
        (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height))
             return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
+
+    // Reject non-signaling blocks when 95% (75% on testnet) of the
+    // network has upgraded (until timeout activation):
+    if (((pindexPrev->nHeight + 1) >= consensusParams.verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_timeout) && ((block.nVersion >> 28) != 3))
+        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_OBSOLETE, "bad-version", "rejected non-coinbase-mtp block before activation timeout");
 
     return true;
 }

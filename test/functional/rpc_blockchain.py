@@ -143,7 +143,7 @@ class BlockchainTest(FreicoinTestFramework):
                 'type': 'bip9',
                 'bip9': {
                     'status': 'started',
-                    'bit': 28,
+                    'bit': 27,
                     'start_time': 0,
                     'timeout': 0x7fffffffffffffff,  # testdummy does not have a timeout so is set to the max int64 value
                     'since': 144,

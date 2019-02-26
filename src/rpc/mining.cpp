@@ -660,6 +660,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     }
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
+    result.pushKV("locktime", (int64_t)(pindexPrev->GetMedianTimePast()));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
     if (pblocktemplate->has_block_final_tx) {
         UniValue finaltx_prevout(UniValue::VARR);
