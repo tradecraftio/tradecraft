@@ -679,6 +679,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
             txCoinbase.vout[0].nValue = 50 * COIN;
             txCoinbase.vout[0].scriptPubKey = CScript();
+            txCoinbase.nLockTime = 0;
             txCoinbase.lock_height = m_node.chainman->ActiveChain().Height() + 1;
             pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
             if (txFirst.size() == 0)

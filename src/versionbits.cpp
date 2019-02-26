@@ -246,6 +246,14 @@ int32_t VersionBitsCache::ComputeBlockVersion(const CBlockIndex* pindexPrev, con
         }
     }
 
+    // Expect bit #28 to be set prior to the closure of the coinbase-mtp
+    // soft-fork window.  We hard-code this exemption rather than use the
+    // version bits logic because the mechanics of that soft-fork differed from
+    // BIP9 by requiring the bit to be set even after activation.
+    if (pindexPrev && (pindexPrev->GetMedianTimePast() < params.verify_coinbase_lock_time_timeout)) {
+        nVersion |= (1 << 28);
+    }
+
     return nVersion;
 }
 

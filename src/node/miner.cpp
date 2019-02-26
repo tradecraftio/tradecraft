@@ -225,6 +225,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.vout.insert(coinbaseTx.vout.begin(), txout);
     }
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    // Consensus rule: lock-time of coinbase MUST be median-time-past
+    coinbaseTx.nLockTime = static_cast<uint32_t>(m_median_time_past);
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
