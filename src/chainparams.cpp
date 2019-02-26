@@ -258,6 +258,10 @@ Let this be the awaited dawn.";
         diff_adjust_threshold = 28336;
         alu_activation_height = 229376;
 
+        // Wednesday, October 2, 2019 00:00:00 UTC
+        // This is 4PM PDT, 7PM EDT, and 9AM JST.
+        verify_coinbase_timelock_activation_time = 1569974400;
+
         vSeeds.push_back(CDNSSeedData("node.freico.in", "seed.freico.in"));
         vSeeds.push_back(CDNSSeedData("abacus.freico.in", "fledge.freico.in"));
         vSeeds.push_back(CDNSSeedData("seed.sicanet.net", "dnsseed.sicanet.net"));
@@ -323,6 +327,9 @@ public:
         assert(hashGenesisBlock == uint256("0x00000000a52504ffe3420a43bd385ef24f81838921a903460b235d95f37cd65e"));
         diff_adjust_threshold = 2016;
         alu_activation_height = 2016;
+
+        // Tuesday, April 2, 2019 00:00:00 UTC
+        verify_coinbase_timelock_activation_time = 1554163200;
 
         vFixedSeeds.clear();
         vSeeds.clear();

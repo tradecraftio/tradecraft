@@ -1941,6 +1941,35 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
         use_alu = true;
     }
 
+    // Verify that the lock-time of the coinbase is equal to the
+    // current median-time-past value, if that rule is active.
+    //
+    // The following code enforces the verify-coinbase-locktime rule
+    // if the median time past exceeds some default flag date, OR if
+    // 95% of the last 1,008(=1 week) blocks (75% of the last 144[=1
+    // day] blocks on testnet) signal support. A separate rule in
+    // AcceptBlock() rejects non-signaling blocks once activation has
+    // triggered, until the timeout date.
+    //
+    // This is a hybrid of the old-style super-majority rollout
+    // mechanism with BIP8/BIP9-like version bits and BIP8-like
+    // activation-on-timeout semantics. It's not strictly compatible
+    // with those BIPs though, as we didn't want to back port all the
+    // necessary state management code. But miners using BIP8/BIP9
+    // compatible version bit software should work with this rollout
+    // by configuring their devices to signal bit #28 (the
+    // highest-order BIP8/BIP9 bit).
+    if ((pindex->GetBlockTime() >= Params().VerifyCoinbaseLocktimeActivationTime()) ||
+        (((nVersion >> 28) == 3) &&
+         ((!fTestNet && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 958, 1008)) ||
+          (fTestNet && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 108, 144)))))
+   {
+        if (!block.vtx.empty() && (block.vtx[0].nTimeLock != pindexPrev->GetMedianTimePast())) {
+            return state.DoS(100, error("ConnectBlock() : coinbase lock-time not median-time-past"),
+                             REJECT_INVALID, "coinbase-locktime-not-mtp");
+        }
+    }
+
     CBlockUndo blockundo;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
@@ -2577,6 +2606,16 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
                                      REJECT_OBSOLETE, "bad-version");
             }
         }
+        // Reject non-signaling blocks when 95% (75% on testnet) of
+        // the network has upgraded (until timeout activation):
+        if ((pindex->GetBlockTime() < Params().VerifyCoinbaseLocktimeActivationTime()) && ((nVersion >> 28) != 3))
+        {
+            if ((!fTestNet && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 958, 1008)) ||
+                (fTestNet && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 108, 144)))
+            {
+                return state.Invalid(error("AcceptBlock() : rejected non-coinbase-mtp block before activation timeout"));
+            }
+        }
         // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
         if (block.nVersion >= 2)
         {
@@ -2629,6 +2668,18 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
     {
         if (pstart->nVersion >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
+    }
+    return (nFound >= nRequired);
+}
+
+bool CBlockIndex::IsSuperMajorityBit(int bit, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
+{
+    unsigned int nFound = 0;
+    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
+    {
+        if (((pstart->nVersion >> 29) == 1) && (pstart->nVersion & (1 << bit)))
             ++nFound;
         pstart = pstart->pprev;
     }
