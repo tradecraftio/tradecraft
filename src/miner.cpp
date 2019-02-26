@@ -161,6 +161,19 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     if (chainparams.MineBlocksOnDemand())
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
 
+    // The following is a left-over from the verify-coinbase-locktime
+    // deployment logic, which was a hybrid of the old-style super-
+    // majority rollout mechanism with BIP8/BIP9-like version bits and
+    // BIP8-like activation-on-timeout semantics. It was not strictly
+    // compatible with those BIPs though, as we didn't want to back
+    // port all the necessary state management code to the earlier
+    // version in which it was originally released. One consequence of
+    // that was that once locked-in the signal bit needs to be set
+    // until the final timeout date is reached.
+    if (((pindexPrev->nHeight + 1) >= chainparams.GetConsensus().verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < chainparams.GetConsensus().verify_coinbase_lock_time_timeout)) {
+        pblock->nVersion |= (1<<28);
+    }
+
     pblock->nTime = GetAdjustedTime();
     const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
@@ -191,6 +204,8 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     coinbaseTx.vout[0].SetReferenceValue(nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    // Consensus rule: lock-time of coinbase MUST be median-time-past
+    coinbaseTx.nLockTime = pindexPrev->GetMedianTimePast();
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = coinbaseTx;
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
