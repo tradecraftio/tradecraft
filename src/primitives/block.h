@@ -35,7 +35,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int32_t CURRENT_VERSION=3;
+    static const int32_t CURRENT_VERSION = (01U << 29) | (1U << 28); // Version bits; #28 set
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;

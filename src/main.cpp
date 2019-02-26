@@ -95,6 +95,12 @@ void EraseOrphansFor(NodeId peer);
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
 static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+/**
+ * Returns true if there are 95% (75% on testnet) or more version-bits
+ * blocks signaling the bit indicated in the last 1008 blocks,
+ * starting at pstart and going backwards.
+ */
+static bool IsSuperMajorityBit(int bit, const CBlockIndex* pstart, const Consensus::Params& consensusParams);
 static void CheckBlockIndex();
 
 /** Constant stuff for coinbase transactions we create: */
@@ -1925,6 +1931,31 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         use_alu = true;
     }
 
+    // Verify that the lock-time of the coinbase is equal to the
+    // current median-time-past value, if that rule is active.
+    //
+    // The following code enforces the verify-coinbase-locktime rule
+    // if the median time past exceeds some default flag date, OR if
+    // 95% of the last 1,008(=1 week) blocks (75% of the last 144[=1
+    // day] blocks on testnet) signal support. A separate rule in
+    // AcceptBlock() rejects non-signaling blocks once activation has
+    // triggered, until the timeout date.
+    //
+    // This is a hybrid of the old-style super-majority rollout
+    // mechanism with BIP8/BIP9-like version bits and BIP8-like
+    // activation-on-timeout semantics. It's not strictly compatible
+    // with those BIPs though, as we didn't want to back port all the
+    // necessary state management code. But miners using BIP8/BIP9
+    // compatible version bit software should work with this rollout
+    // by configuring their devices to signal bit #28 (the
+    // highest-order BIP8/BIP9 bit).
+    if ((pindex->pprev->GetMedianTimePast() >= chainparams.GetConsensus().verify_coinbase_lock_time_activation_time) || ((pindex->nHeight >= chainparams.GetConsensus().verify_coinbase_lock_time_minimum_height) && ((block.nVersion >> 28) == 3) && IsSuperMajorityBit(28, pindex->pprev, chainparams.GetConsensus()))) {
+        if (!block.vtx.empty() && (block.vtx[0].nLockTime != pindex->pprev->GetMedianTimePast())) {
+            return state.DoS(100, error("ConnectBlock(): coinbase lock-time not median-time-past"),
+                             REJECT_INVALID, "coinbase-locktime-not-mtp");
+        }
+    }
+
     CBlockUndo blockundo;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
@@ -2845,6 +2876,12 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
 
+    // Reject non-signaling blocks when 95% (75% on testnet) of the network has upgraded
+    // (until timeout activation):
+    if ((pindexPrev->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_activation_time) && (nHeight >= consensusParams.verify_coinbase_lock_time_minimum_height) && ((block.nVersion >> 28) != 3) && IsSuperMajorityBit(28, pindexPrev, consensusParams)) {
+        return state.Invalid(error("%s: rejected non-coinbase-mtp block before activation timeout", __func__));
+    }
+
     return true;
 }
 
@@ -2992,6 +3029,20 @@ static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned 
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
     {
         if (pstart->nVersion >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
+    }
+    return (nFound >= nRequired);
+}
+
+static bool IsSuperMajorityBit(int bit, const CBlockIndex* pstart, const Consensus::Params& consensusParams)
+{
+    const unsigned int nRequired = consensusParams.activate_bit_upgrade_majority;
+    const unsigned int nToCheck = consensusParams.to_check_bit_upgrade_majority;
+    unsigned int nFound = 0;
+    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
+    {
+        if (((pstart->nVersion >> 29) == 1) && (pstart->nVersion & (1 << bit)))
             ++nFound;
         pstart = pstart->pprev;
     }

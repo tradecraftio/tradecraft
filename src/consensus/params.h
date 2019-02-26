@@ -33,10 +33,14 @@ struct Params {
     int equilibrium_height;
     int64_t initial_block_reward;
     int64_t alu_activation_height;
+    int64_t verify_coinbase_lock_time_minimum_height;
+    int64_t verify_coinbase_lock_time_activation_time;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
     int nMajorityWindow;
+    int activate_bit_upgrade_majority;
+    int to_check_bit_upgrade_majority;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;

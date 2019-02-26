@@ -54,6 +54,8 @@ public:
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
+        consensus.activate_bit_upgrade_majority = 958;
+        consensus.to_check_bit_upgrade_majority = 1008;
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -100,6 +102,12 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000005b1e3d23ecfd2dd4a6e1a35238aa0392c0a8528c40df52376d7efe2c"));
         assert(genesis.hashMerkleRoot == uint256S("0xf53b1baa971ea40be88cf51288aabd700dfec96c486bf7155a53a4919af4c8bd"));
+
+        // Most recent checkpoint
+        consensus.verify_coinbase_lock_time_minimum_height = 241920;
+        // Wednesday, October 2, 2019 00:00:00 UTC
+        // This is 4PM PDT, 7PM EDT, and 9AM JST.
+        consensus.verify_coinbase_lock_time_activation_time = 1569974400;
 
         vSeeds.push_back(CDNSSeedData("node.freico.in", "seed.freico.in"));
         vSeeds.push_back(CDNSSeedData("abacus.freico.in", "fledge.freico.in"));
@@ -167,6 +175,8 @@ public:
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
+        consensus.activate_bit_upgrade_majority = 108;
+        consensus.to_check_bit_upgrade_majority = 144;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.diff_adjust_threshold = 2016;
         pchMessageStart[0] = 0x5e;
@@ -178,6 +188,10 @@ public:
         nMinerThreads = 0;
         nMaxTipAge = 0x7fffffff;
         nPruneAfterHeight = 1000;
+
+        consensus.verify_coinbase_lock_time_minimum_height = 2016;
+        // Tuesday, April 2, 2019 00:00:00 UTC
+        consensus.verify_coinbase_lock_time_activation_time = 1554163200;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1356123600;
@@ -226,6 +240,7 @@ public:
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
+        consensus.verify_coinbase_lock_time_minimum_height = 150;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.diff_adjust_threshold = 150;
         pchMessageStart[0] = 0xed;

@@ -160,6 +160,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         txNew.nVersion = 2;
         txNew.lock_height = nHeight;
 
+        // Lock-time of coinbase must be median-time-past
+        txNew.nLockTime = pindexPrev->GetMedianTimePast();
+
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
         map<uint256, vector<COrphan*> > mapDependers;

@@ -94,6 +94,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         txCoinbase.vin[0].scriptSig << CScriptNum(blockinfo[i].extranonce);
         txCoinbase.vout[0].nValue = 50 * COIN;
         txCoinbase.vout[0].scriptPubKey = CScript();
+        txCoinbase.nLockTime = 0;
         txCoinbase.lock_height = chainActive.Height() + 1;
         pblock->vtx[0] = CTransaction(txCoinbase);
         if (txFirst.size() < 2)
