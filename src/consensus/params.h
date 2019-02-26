@@ -96,6 +96,8 @@ struct Params {
     /** Soft-fork activations */
     int64_t truncate_inputs_activation_height;
     int64_t alu_activation_height;
+    int64_t verify_coinbase_lock_time_activation_height;
+    int64_t verify_coinbase_lock_time_timeout;
     /**
      * Hashes of blocks that
      * - are known to be consensus valid, and
