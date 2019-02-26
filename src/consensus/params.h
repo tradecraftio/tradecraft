@@ -73,6 +73,8 @@ struct Params {
     /** Soft-fork activations */
     int64_t truncate_inputs_activation_height;
     int64_t alu_activation_height;
+    int64_t verify_coinbase_lock_time_activation_height;
+    int64_t verify_coinbase_lock_time_timeout;
     /** Block height at which BIP16 becomes active */
     int BIP16Height;
     /** Block height and hash at which BIP34 becomes active */
