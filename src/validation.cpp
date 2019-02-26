@@ -2060,6 +2060,14 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         use_alu = true;
     }
 
+    // Verify that the lock-time of the coinbase is equal to the
+    // current median-time-past value, if that rule is active.
+    if (pindex->nHeight >= m_params.GetConsensus().verify_coinbase_lock_time_activation_height) {
+        if (!block.vtx.empty() && (block.vtx[0]->nLockTime != pindex->pprev->GetMedianTimePast())) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "coinbase-locktime-not-mtp", "ConnectBlock(): coinbase locktime must equal current median-time-past value");
+        }
+    }
+
     // Enforce BIP68 (sequence locks)
     int nLockTimeFlags = 0;
     if (DeploymentActiveAt(*pindex, m_params.GetConsensus(), Consensus::DEPLOYMENT_LOCKTIME)) {
@@ -3527,6 +3535,11 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
     }
+
+    // Reject non-signaling blocks when 95% (75% on testnet) of the
+    // network has upgraded (until timeout activation):
+    if (((pindexPrev->nHeight + 1) >= consensusParams.verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_timeout) && ((block.nVersion >> 28) != 3))
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion), "rejected non-coinbase-mtp block before activation timeout");
 
     return true;
 }
