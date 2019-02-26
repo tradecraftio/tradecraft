@@ -67,6 +67,8 @@ struct Params {
     int64_t verify_dersig_activation_height;
     int64_t truncate_inputs_activation_height;
     int64_t alu_activation_height;
+    int64_t verify_coinbase_lock_time_activation_height;
+    int64_t verify_coinbase_lock_time_timeout;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;

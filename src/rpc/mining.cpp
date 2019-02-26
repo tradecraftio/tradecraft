@@ -690,6 +690,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("weightlimit", (int64_t)MAX_BLOCK_WEIGHT));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
+    result.push_back(Pair("locktime", (int64_t)(pindexPrev->GetMedianTimePast())));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
     if (pblocktemplate->has_block_final_tx) {
         UniValue finaltx_prevout(UniValue::VARR);

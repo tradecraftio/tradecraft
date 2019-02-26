@@ -246,6 +246,8 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
         coinbaseTx.vout[1].scriptPubKey = CScript() << OP_TRUE;
     }
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    // Consensus rule: lock-time of coinbase MUST be median-time-past
+    coinbaseTx.nLockTime = static_cast<uint32_t>(nMedianTimePast);
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = coinbaseTx;
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
