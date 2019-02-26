@@ -1,4 +1,4 @@
-Freicoin 0.9.5.0-6
+Freicoin 0.9.5.1
 =====================
 
 Copyright (c) 2009-2015 Bitcoin Developers
