@@ -1960,11 +1960,11 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     // by configuring their devices to signal bit #28 (the
     // highest-order BIP8/BIP9 bit).
     if ((pindex->GetBlockTime() >= Params().VerifyCoinbaseLocktimeActivationTime()) ||
-        (((nVersion >> 28) == 3) &&
-         ((!fTestNet && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 958, 1008)) ||
-          (fTestNet && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 108, 144)))))
+        ((pindex->nHeight >= Params().VerifyCoinbaseLocktimeMinimumHeight()) && ((block.nVersion >> 28) == 3) &&
+         ((!TestNet() && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 958, 1008)) ||
+          (TestNet() && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 108, 144)))))
    {
-        if (!block.vtx.empty() && (block.vtx[0].nTimeLock != pindexPrev->GetMedianTimePast())) {
+        if (!block.vtx.empty() && (block.vtx[0].nLockTime != pindex->pprev->GetMedianTimePast())) {
             return state.DoS(100, error("ConnectBlock() : coinbase lock-time not median-time-past"),
                              REJECT_INVALID, "coinbase-locktime-not-mtp");
         }
@@ -2608,10 +2608,11 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
         }
         // Reject non-signaling blocks when 95% (75% on testnet) of
         // the network has upgraded (until timeout activation):
-        if ((pindex->GetBlockTime() < Params().VerifyCoinbaseLocktimeActivationTime()) && ((nVersion >> 28) != 3))
+        if ((block.GetBlockTime() < Params().VerifyCoinbaseLocktimeActivationTime()) &&
+            (nHeight >= Params().VerifyCoinbaseLocktimeMinimumHeight()) && ((block.nVersion >> 28) != 3))
         {
-            if ((!fTestNet && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 958, 1008)) ||
-                (fTestNet && CBlockIndex::IsSuperMajorityBit(28, pindex->pprev, 108, 144)))
+            if ((!TestNet() && CBlockIndex::IsSuperMajorityBit(28, pindexPrev, 958, 1008)) ||
+                (TestNet() && CBlockIndex::IsSuperMajorityBit(28, pindexPrev, 108, 144)))
             {
                 return state.Invalid(error("AcceptBlock() : rejected non-coinbase-mtp block before activation timeout"));
             }

@@ -70,7 +70,8 @@ public:
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     int DiffAdjustThreshold() const { return diff_adjust_threshold; }
     int AluActivationHeight() const { return alu_activation_height; }
-    int64_t VerifyCoinbaseTimelockActivationTime() const { return verify_coinbase_timelock_activation_time; }
+    int VerifyCoinbaseLocktimeMinimumHeight() const { return verify_coinbase_locktime_minimum_height; }
+    int64_t VerifyCoinbaseLocktimeActivationTime() const { return verify_coinbase_locktime_activation_time; }
     const vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const CBigNum& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
@@ -89,7 +90,8 @@ protected:
     uint256 hashGenesisBlock;
     int diff_adjust_threshold;
     int alu_activation_height;
-    int64_t verify_coinbase_timelock_activation_time;
+    int verify_coinbase_locktime_minimum_height;
+    int64_t verify_coinbase_locktime_activation_time;
     MessageStartChars pchMessageStart;
     // Raw pub key bytes for the broadcast alert signing key.
     vector<unsigned char> vAlertPubKey;

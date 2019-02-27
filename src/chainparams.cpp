@@ -258,9 +258,11 @@ Let this be the awaited dawn.";
         diff_adjust_threshold = 28336;
         alu_activation_height = 229376;
 
+        // Most recent checkpoint
+        verify_coinbase_locktime_minimum_height = 241920;
         // Wednesday, October 2, 2019 00:00:00 UTC
         // This is 4PM PDT, 7PM EDT, and 9AM JST.
-        verify_coinbase_timelock_activation_time = 1569974400;
+        verify_coinbase_locktime_activation_time = 1569974400;
 
         vSeeds.push_back(CDNSSeedData("node.freico.in", "seed.freico.in"));
         vSeeds.push_back(CDNSSeedData("abacus.freico.in", "fledge.freico.in"));
@@ -328,8 +330,9 @@ public:
         diff_adjust_threshold = 2016;
         alu_activation_height = 2016;
 
+        verify_coinbase_locktime_minimum_height = 1;
         // Tuesday, April 2, 2019 00:00:00 UTC
-        verify_coinbase_timelock_activation_time = 1554163200;
+        verify_coinbase_locktime_activation_time = 1554163200;
 
         vFixedSeeds.clear();
         vSeeds.clear();
