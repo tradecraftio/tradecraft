@@ -152,7 +152,16 @@ public:
      */
     bool SignCompact(const uint256& hash, std::vector<unsigned char>& vchSig) const;
 
-    //! Derive BIP32 child key.
+    /**
+     * Derive BIP32 child key.
+     *
+     * Depreciation warning: This method has been depreciated since
+     * its introduction. It should not be used inn production code,
+     * anywhere. In a future release an alternative derivation method
+     * will be implemented which derives child keys by a process more
+     * amenable to proving under zero knowledge. Until then, please
+     * refrain from depending on this code in any way.
+     */
     bool Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
 
     /**

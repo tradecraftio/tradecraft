@@ -173,6 +173,14 @@ uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
 
 unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char>& vDataToHash);
 
+/**
+ * Depreciation warning: This function has been depreciated since its
+ * introduction. It should not be used inn production code,
+ * anywhere. In a future release an alternative hashing mechanism will
+ * be implemented for deriving child keys by a process more amenable
+ * to proving under zero knowledge. Until then, please refrain from
+ * depending on this code in any way.
+ */
 void BIP32Hash(const unsigned char chainCode[32], unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64]);
 
 #endif // FREICOIN_HASH_H
