@@ -86,6 +86,15 @@ CPubKey CKey::GetPubKey() const {
     return result;
 }
 
+/**
+ * Depreciation warning: This method uses HMAC-SHA256 for derivation
+ * of the deterministic nonce used in signing, which is unnecessarily
+ * complicated to prove under zero knowledge. It also does not produce
+ * optimally small signatures, or signatures with guaranteed quadratic
+ * points for R. In the future this will be changed to be a simpler
+ * hash construct. Do not write code that expects nonces to be
+ * selected in the way shown here in future versions.
+ */
 bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
     if (!fValid)
         return false;
