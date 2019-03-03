@@ -187,7 +187,6 @@ BASE_SCRIPTS = [
     'p2p_leak_tx.py',
     'rpc_signmessage.py',
     'wallet_balance.py --bitcoin-mode',
-    'feature_nulldummy.py',
     'mempool_accept.py',
     'mempool_expiry.py',
     'wallet_import_rescan.py',
