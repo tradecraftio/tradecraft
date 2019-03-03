@@ -121,7 +121,6 @@ BASE_SCRIPTS= [
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
-    'nulldummy.py',
     'import-rescan.py',
     'mining.py',
     'bumpfee.py --bitcoin-mode',
