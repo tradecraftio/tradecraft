@@ -163,7 +163,7 @@ testScripts = [
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
-    'nulldummy.py --bitcoin-mode',
+#    'nulldummy.py --bitcoin-mode', #replaced by require-valid-sigs on Freicoin
     'import-rescan.py',
     'bumpfee.py --bitcoin-mode',
     'rpcnamedargs.py',
