@@ -1744,8 +1744,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     // Whether ALU arithmetic should be used for demurrage calculations.
     bool use_alu = false;
-    if (pindex->nHeight >= Params().AluActivationHeight())
+    if (pindex->nHeight >= Params().AluActivationHeight()) {
         use_alu = true;
+    }
 
     CBlockUndo blockundo;
 
