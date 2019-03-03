@@ -230,8 +230,6 @@ BASE_SCRIPTS = [
     'rpc_generate.py',
     'wallet_balance.py --bitcoin-mode',
     #'wallet_balance.py --descriptors', #times out
-    'feature_nulldummy.py',
-    #'feature_nulldummy.py --descriptors', #times out
     'mempool_accept.py --bitcoin-mode',
     'mempool_expiry.py',
     'wallet_import_rescan.py --legacy-wallet',
