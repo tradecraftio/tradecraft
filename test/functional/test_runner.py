@@ -253,8 +253,6 @@ BASE_SCRIPTS = [
     'rpc_generate.py',
     'wallet_balance.py --legacy-wallet --bitcoin-mode',
     'wallet_balance.py --descriptors --bitcoin-mode',
-    'feature_nulldummy.py --legacy-wallet',
-    'feature_nulldummy.py --descriptors',
     'mempool_accept.py --bitcoin-mode',
     'mempool_expiry.py',
     'wallet_import_rescan.py --legacy-wallet',
