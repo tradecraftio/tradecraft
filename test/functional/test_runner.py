@@ -261,7 +261,6 @@ BASE_SCRIPTS = [
     'wallet_balance.py --legacy-wallet --bitcoin-mode',
     'wallet_balance.py --descriptors --bitcoin-mode',
     'p2p_initial_headers_sync.py',
-    'feature_nulldummy.py --bitcoin-mode',
     'mempool_accept.py --bitcoin-mode',
     'mempool_expiry.py',
     'wallet_import_rescan.py --legacy-wallet',
