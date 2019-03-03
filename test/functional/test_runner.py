@@ -137,7 +137,6 @@ BASE_SCRIPTS = [
     'rpc_zmq.py',
     'rpc_signmessage.py',
     'wallet_balance.py --bitcoin-mode',
-    'feature_nulldummy.py',
     'mempool_accept.py',
     'wallet_import_rescan.py',
     'rpc_bind.py --ipv4',
