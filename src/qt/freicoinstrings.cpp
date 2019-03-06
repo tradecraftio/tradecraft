@@ -11,7 +11,6 @@
 static const char UNUSED *freicoin_strings[] = {
 QT_TRANSLATE_NOOP("freicoin", "Freicoin"),
 QT_TRANSLATE_NOOP("freicoin", "The %s developers"),
-QT_TRANSLATE_NOOP("freicoin", "Freicoin"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "(1 = keep tx meta data e.g. account owner and payment request information, 2 "
 "= drop tx meta data)"),
@@ -223,9 +222,6 @@ QT_TRANSLATE_NOOP("freicoin", ""
 QT_TRANSLATE_NOOP("freicoin", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
-QT_TRANSLATE_NOOP("freicoin", ""
-"Warning: Unknown block versions being mined! It's possible unknown rules are "
-"in effect"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; "
 "if your balance or transactions are incorrect you should restore from a "
