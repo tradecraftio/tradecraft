@@ -47,13 +47,13 @@ Shutdown again, restore using importwallet,
 and confirm again balances are correct.
 """
 
-from test_framework import BitcoinTestFramework
+from test_framework import FreicoinTestFramework
 from util import *
 from random import randint
 import logging
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
-class WalletBackupTest(BitcoinTestFramework):
+class WalletBackupTest(FreicoinTestFramework):
 
     def setup_chain(self):
         logging.info("Initializing test directory "+self.options.tmpdir)

@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_UINT256_H
-#define BITCOIN_UINT256_H
+#ifndef FREICOIN_UINT256_H
+#define FREICOIN_UINT256_H
 
 #include <assert.h>
 #include <cstring>
@@ -333,7 +333,7 @@ public:
      * Thus 0x1234560000 is compact (0x05123456)
      * and  0xc0de000000 is compact (0x0600c0de)
      * 
-     * Bitcoin only uses this "compact" format for encoding difficulty
+     * Freicoin only uses this "compact" format for encoding difficulty
      * targets, which are unsigned 256bit quantities.  Thus, all the
      * complexities of the sign bit and using base 256 are probably an
      * implementation accident.
@@ -344,4 +344,4 @@ public:
     uint64_t GetHash(const uint256& salt) const;
 };
 
-#endif // BITCOIN_UINT256_H
+#endif // FREICOIN_UINT256_H

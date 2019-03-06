@@ -1,9 +1,9 @@
 Sample configuration files for:
 
-SystemD: bitcoind.service
-Upstart: bitcoind.conf
-OpenRC:  bitcoind.openrc
-         bitcoind.openrcconf
+SystemD: freicoind.service
+Upstart: freicoind.conf
+OpenRC:  freicoind.openrc
+         freicoind.openrcconf
 
 have been made available to assist packagers in creating node packages here.
 

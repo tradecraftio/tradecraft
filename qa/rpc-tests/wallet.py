@@ -22,8 +22,8 @@
 # Does the following:
 #   a) creates 3 nodes, with an empty chain (no blocks).
 #   b) node0 mines a block
-#   c) node1 mines 101 blocks, so now nodes 0 and 1 have 50btc, node2 has none. 
-#   d) node0 sends 21 btc to node2, in two transactions (11 btc, then 10 btc).
+#   c) node1 mines 101 blocks, so now nodes 0 and 1 have 50frc, node2 has none. 
+#   d) node0 sends 21 frc to node2, in two transactions (11 frc, then 10 frc).
 #   e) node0 mines a block, collects the fee on the second transaction
 #   f) node1 mines 100 blocks, to mature node0's just-mined block
 #   g) check that node0 has 100-21, node2 has 21
@@ -32,11 +32,11 @@
 #   j) check balances - node0 should have 0, node2 should have 100
 #
 
-from test_framework import BitcoinTestFramework
+from test_framework import FreicoinTestFramework
 from util import *
 
 
-class WalletTest (BitcoinTestFramework):
+class WalletTest (FreicoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -63,7 +63,7 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), 50)
         assert_equal(self.nodes[2].getbalance(), 0)
 
-        # Send 21 BTC from 0 to 2 using sendtoaddress call.
+        # Send 21 FRC from 0 to 2 using sendtoaddress call.
         # Second transaction will be child of first, and will require a fee
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
@@ -76,7 +76,7 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[1].setgenerate(True, 100)
         self.sync_all()
 
-        # node0 should end up with 100 btc in block rewards plus fees, but
+        # node0 should end up with 100 frc in block rewards plus fees, but
         # minus the 21 plus fees sent to node2
         assert_equal(self.nodes[0].getbalance(), 100-21)
         assert_equal(self.nodes[2].getbalance(), 21)

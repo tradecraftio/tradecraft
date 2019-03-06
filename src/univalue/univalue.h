@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_UNIVALUE_UNIVALUE_H
-#define BITCOIN_UNIVALUE_UNIVALUE_H
+#ifndef FREICOIN_UNIVALUE_UNIVALUE_H
+#define FREICOIN_UNIVALUE_UNIVALUE_H
 
 #include <stdint.h>
 #include <string>
@@ -166,4 +166,4 @@ extern enum jtokentype getJsonToken(std::string& tokenVal,
                                     unsigned int& consumed, const char *raw);
 extern const char *uvTypeName(UniValue::VType t);
 
-#endif // BITCOIN_UNIVALUE_UNIVALUE_H
+#endif // FREICOIN_UNIVALUE_UNIVALUE_H

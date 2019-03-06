@@ -16,9 +16,9 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#include "bitcoinamountfield.h"
+#include "freicoinamountfield.h"
 
-#include "bitcoinunits.h"
+#include "freicoinunits.h"
 #include "guiconstants.h"
 #include "qvaluecombobox.h"
 
@@ -38,8 +38,8 @@ class AmountSpinBox: public QAbstractSpinBox
 public:
     explicit AmountSpinBox(QWidget *parent):
         QAbstractSpinBox(parent),
-        currentUnit(BitcoinUnits::BTC),
-        singleStep(100000) // satoshis
+        currentUnit(FreicoinUnits::FRC),
+        singleStep(100000) // kria
     {
         setAlignment(Qt::AlignRight);
 
@@ -62,7 +62,7 @@ public:
         CAmount val = parse(input, &valid);
         if(valid)
         {
-            input = BitcoinUnits::format(currentUnit, val, false, BitcoinUnits::separatorAlways);
+            input = FreicoinUnits::format(currentUnit, val, false, FreicoinUnits::separatorAlways);
             lineEdit()->setText(input);
         }
     }
@@ -74,7 +74,7 @@ public:
 
     void setValue(const CAmount& value)
     {
-        lineEdit()->setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways));
+        lineEdit()->setText(FreicoinUnits::format(currentUnit, value, false, FreicoinUnits::separatorAlways));
         emit valueChanged();
     }
 
@@ -83,7 +83,7 @@ public:
         bool valid = false;
         CAmount val = value(&valid);
         val = val + steps * singleStep;
-        val = qMin(qMax(val, CAmount(0)), BitcoinUnits::maxMoney());
+        val = qMin(qMax(val, CAmount(0)), FreicoinUnits::maxMoney());
         setValue(val);
     }
 
@@ -113,7 +113,7 @@ public:
 
             const QFontMetrics fm(fontMetrics());
             int h = lineEdit()->minimumSizeHint().height();
-            int w = fm.width(BitcoinUnits::format(BitcoinUnits::BTC, BitcoinUnits::maxMoney(), false, BitcoinUnits::separatorAlways));
+            int w = fm.width(FreicoinUnits::format(FreicoinUnits::FRC, FreicoinUnits::maxMoney(), false, FreicoinUnits::separatorAlways));
             w += 2; // cursor blinking space
 
             QStyleOptionSpinBox opt;
@@ -151,10 +151,10 @@ private:
     CAmount parse(const QString &text, bool *valid_out=0) const
     {
         CAmount val = 0;
-        bool valid = BitcoinUnits::parse(currentUnit, text, &val);
+        bool valid = FreicoinUnits::parse(currentUnit, text, &val);
         if(valid)
         {
-            if(val < 0 || val > BitcoinUnits::maxMoney())
+            if(val < 0 || val > FreicoinUnits::maxMoney())
                 valid = false;
         }
         if(valid_out)
@@ -191,7 +191,7 @@ protected:
         {
             if(val > 0)
                 rv |= StepDownEnabled;
-            if(val < BitcoinUnits::maxMoney())
+            if(val < FreicoinUnits::maxMoney())
                 rv |= StepUpEnabled;
         }
         return rv;
@@ -201,9 +201,9 @@ signals:
     void valueChanged();
 };
 
-#include "bitcoinamountfield.moc"
+#include "freicoinamountfield.moc"
 
-BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
+FreicoinAmountField::FreicoinAmountField(QWidget *parent) :
     QWidget(parent),
     amount(0)
 {
@@ -215,7 +215,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->addWidget(amount);
     unit = new QValueComboBox(this);
-    unit->setModel(new BitcoinUnits(this));
+    unit->setModel(new FreicoinUnits(this));
     layout->addWidget(unit);
     layout->addStretch(1);
     layout->setContentsMargins(0,0,0,0);
@@ -233,19 +233,19 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     unitChanged(unit->currentIndex());
 }
 
-void BitcoinAmountField::clear()
+void FreicoinAmountField::clear()
 {
     amount->clear();
     unit->setCurrentIndex(0);
 }
 
-void BitcoinAmountField::setEnabled(bool fEnabled)
+void FreicoinAmountField::setEnabled(bool fEnabled)
 {
     amount->setEnabled(fEnabled);
     unit->setEnabled(fEnabled);
 }
 
-bool BitcoinAmountField::validate()
+bool FreicoinAmountField::validate()
 {
     bool valid = false;
     value(&valid);
@@ -253,7 +253,7 @@ bool BitcoinAmountField::validate()
     return valid;
 }
 
-void BitcoinAmountField::setValid(bool valid)
+void FreicoinAmountField::setValid(bool valid)
 {
     if (valid)
         amount->setStyleSheet("");
@@ -261,7 +261,7 @@ void BitcoinAmountField::setValid(bool valid)
         amount->setStyleSheet(STYLE_INVALID);
 }
 
-bool BitcoinAmountField::eventFilter(QObject *object, QEvent *event)
+bool FreicoinAmountField::eventFilter(QObject *object, QEvent *event)
 {
     if (event->type() == QEvent::FocusIn)
     {
@@ -271,46 +271,46 @@ bool BitcoinAmountField::eventFilter(QObject *object, QEvent *event)
     return QWidget::eventFilter(object, event);
 }
 
-QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
+QWidget *FreicoinAmountField::setupTabChain(QWidget *prev)
 {
     QWidget::setTabOrder(prev, amount);
     QWidget::setTabOrder(amount, unit);
     return unit;
 }
 
-CAmount BitcoinAmountField::value(bool *valid_out) const
+CAmount FreicoinAmountField::value(bool *valid_out) const
 {
     return amount->value(valid_out);
 }
 
-void BitcoinAmountField::setValue(const CAmount& value)
+void FreicoinAmountField::setValue(const CAmount& value)
 {
     amount->setValue(value);
 }
 
-void BitcoinAmountField::setReadOnly(bool fReadOnly)
+void FreicoinAmountField::setReadOnly(bool fReadOnly)
 {
     amount->setReadOnly(fReadOnly);
     unit->setEnabled(!fReadOnly);
 }
 
-void BitcoinAmountField::unitChanged(int idx)
+void FreicoinAmountField::unitChanged(int idx)
 {
     // Use description tooltip for current unit for the combobox
     unit->setToolTip(unit->itemData(idx, Qt::ToolTipRole).toString());
 
     // Determine new unit ID
-    int newUnit = unit->itemData(idx, BitcoinUnits::UnitRole).toInt();
+    int newUnit = unit->itemData(idx, FreicoinUnits::UnitRole).toInt();
 
     amount->setDisplayUnit(newUnit);
 }
 
-void BitcoinAmountField::setDisplayUnit(int newUnit)
+void FreicoinAmountField::setDisplayUnit(int newUnit)
 {
     unit->setValue(newUnit);
 }
 
-void BitcoinAmountField::setSingleStep(const CAmount& step)
+void FreicoinAmountField::setSingleStep(const CAmount& step)
 {
     amount->setSingleStep(step);
 }

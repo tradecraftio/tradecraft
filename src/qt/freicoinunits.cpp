@@ -16,96 +16,96 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#include "bitcoinunits.h"
+#include "freicoinunits.h"
 
 #include "primitives/transaction.h"
 
 #include <QStringList>
 
-BitcoinUnits::BitcoinUnits(QObject *parent):
+FreicoinUnits::FreicoinUnits(QObject *parent):
         QAbstractListModel(parent),
         unitlist(availableUnits())
 {
 }
 
-QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
+QList<FreicoinUnits::Unit> FreicoinUnits::availableUnits()
 {
-    QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    QList<FreicoinUnits::Unit> unitlist;
+    unitlist.append(FRC);
+    unitlist.append(mFRC);
+    unitlist.append(uFRC);
     return unitlist;
 }
 
-bool BitcoinUnits::valid(int unit)
+bool FreicoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case FRC:
+    case mFRC:
+    case uFRC:
         return true;
     default:
         return false;
     }
 }
 
-QString BitcoinUnits::id(int unit)
+QString FreicoinUnits::id(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("btc");
-    case mBTC: return QString("mbtc");
-    case uBTC: return QString("ubtc");
+    case FRC: return QString("frc");
+    case mFRC: return QString("mfrc");
+    case uFRC: return QString("ufrc");
     default: return QString("???");
     }
 }
 
-QString BitcoinUnits::name(int unit)
+QString FreicoinUnits::name(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("μBTC");
+    case FRC: return QString("FRC");
+    case mFRC: return QString("mFRC");
+    case uFRC: return QString::fromUtf8("μFRC");
     default: return QString("???");
     }
 }
 
-QString BitcoinUnits::description(int unit)
+QString FreicoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("Bitcoins");
-    case mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Bitcoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case FRC: return QString("Freicoins");
+    case mFRC: return QString("Milli-Freicoins (1 / 1" THIN_SP_UTF8 "000)");
+    case uFRC: return QString("Micro-Freicoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
 
-qint64 BitcoinUnits::factor(int unit)
+qint64 FreicoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
+    case FRC:  return 100000000;
+    case mFRC: return 100000;
+    case uFRC: return 100;
     default:   return 100000000;
     }
 }
 
-int BitcoinUnits::decimals(int unit)
+int FreicoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case FRC: return 8;
+    case mFRC: return 5;
+    case uFRC: return 2;
     default: return 0;
     }
 }
 
-QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators)
+QString FreicoinUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -141,7 +141,7 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
 }
 
 
-// TODO: Review all remaining calls to BitcoinUnits::formatWithUnit to
+// TODO: Review all remaining calls to FreicoinUnits::formatWithUnit to
 // TODO: determine whether the output is used in a plain text context
 // TODO: or an HTML context (and replace with
 // TODO: BtcoinUnits::formatHtmlWithUnit in the latter case). Hopefully
@@ -156,12 +156,12 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
 // Please take care to use formatHtmlWithUnit instead, when
 // appropriate.
 
-QString BitcoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString FreicoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     return format(unit, amount, plussign, separators) + QString(" ") + name(unit);
 }
 
-QString BitcoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString FreicoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     QString str(formatWithUnit(unit, amount, plussign, separators));
     str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
@@ -169,7 +169,7 @@ QString BitcoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool p
 }
 
 
-bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
+bool FreicoinUnits::parse(int unit, const QString &value, CAmount *val_out)
 {
     if(!valid(unit) || value.isEmpty())
         return false; // Refuse to parse invalid unit or empty string
@@ -208,23 +208,23 @@ bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
     return ok;
 }
 
-QString BitcoinUnits::getAmountColumnTitle(int unit)
+QString FreicoinUnits::getAmountColumnTitle(int unit)
 {
     QString amountTitle = QObject::tr("Amount");
-    if (BitcoinUnits::valid(unit))
+    if (FreicoinUnits::valid(unit))
     {
-        amountTitle += " ("+BitcoinUnits::name(unit) + ")";
+        amountTitle += " ("+FreicoinUnits::name(unit) + ")";
     }
     return amountTitle;
 }
 
-int BitcoinUnits::rowCount(const QModelIndex &parent) const
+int FreicoinUnits::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return unitlist.size();
 }
 
-QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
+QVariant FreicoinUnits::data(const QModelIndex &index, int role) const
 {
     int row = index.row();
     if(row >= 0 && row < unitlist.size())
@@ -244,7 +244,7 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-CAmount BitcoinUnits::maxMoney()
+CAmount FreicoinUnits::maxMoney()
 {
     return MAX_MONEY;
 }

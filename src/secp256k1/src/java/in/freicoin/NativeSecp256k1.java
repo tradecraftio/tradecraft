@@ -1,4 +1,4 @@
-package org.bitcoin;
+package in.freico;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_SERIALIZE_H
-#define BITCOIN_SERIALIZE_H
+#ifndef FREICOIN_SERIALIZE_H
+#define FREICOIN_SERIALIZE_H
 
 #include <algorithm>
 #include <assert.h>
@@ -822,4 +822,4 @@ public:
     }
 };
 
-#endif // BITCOIN_SERIALIZE_H
+#endif // FREICOIN_SERIALIZE_H

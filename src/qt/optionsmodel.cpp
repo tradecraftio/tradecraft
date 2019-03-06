@@ -17,12 +17,12 @@
 // <http://www.opensource.org/licenses/mit-license.php>
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/freicoin-config.h"
 #endif
 
 #include "optionsmodel.h"
 
-#include "bitcoinunits.h"
+#include "freicoinunits.h"
 #include "guiutil.h"
 
 #include "amount.h"
@@ -72,7 +72,7 @@ void OptionsModel::Init()
 
     // Display
     if (!settings.contains("nDisplayUnit"))
-        settings.setValue("nDisplayUnit", BitcoinUnits::BTC);
+        settings.setValue("nDisplayUnit", FreicoinUnits::FRC);
     nDisplayUnit = settings.value("nDisplayUnit").toInt();
 
     if (!settings.contains("strThirdPartyTxUrls"))

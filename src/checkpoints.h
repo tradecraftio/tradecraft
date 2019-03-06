@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_CHECKPOINTS_H
-#define BITCOIN_CHECKPOINTS_H
+#ifndef FREICOIN_CHECKPOINTS_H
+#define FREICOIN_CHECKPOINTS_H
 
 #include "uint256.h"
 
@@ -55,4 +55,4 @@ extern bool fEnabled;
 
 } //namespace Checkpoints
 
-#endif // BITCOIN_CHECKPOINTS_H
+#endif // FREICOIN_CHECKPOINTS_H

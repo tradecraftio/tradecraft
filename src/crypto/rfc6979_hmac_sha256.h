@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_RFC6979_HMAC_SHA256_H
-#define BITCOIN_RFC6979_HMAC_SHA256_H
+#ifndef FREICOIN_RFC6979_HMAC_SHA256_H
+#define FREICOIN_RFC6979_HMAC_SHA256_H
 
 #include "crypto/hmac_sha256.h"
 
@@ -47,4 +47,4 @@ public:
     ~RFC6979_HMAC_SHA256();
 };
 
-#endif // BITCOIN_RFC6979_HMAC_SHA256_H
+#endif // FREICOIN_RFC6979_HMAC_SHA256_H

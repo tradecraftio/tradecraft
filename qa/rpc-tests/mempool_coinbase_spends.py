@@ -22,14 +22,14 @@
 # that spend (directly or indirectly) coinbase transactions.
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from test_framework import FreicoinTestFramework
+from freicoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 import os
 import shutil
 
 # Create one-input, one-output, no-fee transaction:
-class MempoolCoinbaseTest(BitcoinTestFramework):
+class MempoolCoinbaseTest(FreicoinTestFramework):
 
     alert_filename = None  # Set by setup_network
 

@@ -21,11 +21,11 @@
 # Test fee estimation code
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from test_framework import FreicoinTestFramework
+from freicoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(FreicoinTestFramework):
 
     def setup_network(self):
         self.nodes = []

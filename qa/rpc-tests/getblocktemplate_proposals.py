@@ -17,8 +17,8 @@
 # program.  If not, see <https://www.gnu.org/licenses/> and
 # <http://www.opensource.org/licenses/mit-license.php>
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from test_framework import FreicoinTestFramework
+from freicoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
 from binascii import a2b_hex, b2a_hex
@@ -102,7 +102,7 @@ def assert_template(node, tmpl, txlist, expect):
     if rsp != expect:
         raise AssertionError('unexpected: %s' % (rsp,))
 
-class GetBlockTemplateProposalTest(BitcoinTestFramework):
+class GetBlockTemplateProposalTest(FreicoinTestFramework):
     '''
     Test block proposals with getblocktemplate.
     '''

@@ -112,7 +112,7 @@ Value getgenerate(const Array& params, bool fHelp)
         throw runtime_error(
             "getgenerate\n"
             "\nReturn if the server is set to generate coins or not. The default is false.\n"
-            "It is set with the command line argument -gen (or bitcoin.conf setting gen)\n"
+            "It is set with the command line argument -gen (or freicoin.conf setting gen)\n"
             "It can also be set with the setgenerate call.\n"
             "\nResult\n"
             "true|false      (boolean) If the server is set to generate coins or not\n"
@@ -209,7 +209,7 @@ Value setgenerate(const Array& params, bool fHelp)
     {
         mapArgs["-gen"] = (fGenerate ? "1" : "0");
         mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
-        GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
+        GenerateFreicoins(fGenerate, pwalletMain, nGenProcLimit);
     }
 
     return Value::null;
@@ -280,7 +280,7 @@ Value getmininginfo(const Array& params, bool fHelp)
 }
 
 
-// NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
+// NOTE: Unlike wallet RPC (which use FRC values), mining RPCs follow GBT (BIP 22) in using kria amounts
 Value prioritisetransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
@@ -291,8 +291,8 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             "1. \"txid\"       (string, required) The transaction id.\n"
             "2. priority delta (numeric, required) The priority to add or subtract.\n"
             "                  The transaction selection algorithm considers the tx as it would have a higher priority.\n"
-            "                  (priority of a transaction is calculated: coinage * value_in_satoshis / txsize) \n"
-            "3. fee delta      (numeric, required) The fee value (in satoshis) to add (or subtract, if negative).\n"
+            "                  (priority of a transaction is calculated: coinage * value_in_kria / txsize) \n"
+            "3. fee delta      (numeric, required) The fee value (in kria) to add (or subtract, if negative).\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee.\n"
             "\nResult\n"
@@ -443,10 +443,10 @@ Value getblocktemplate(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
     if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Freicoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Freicoin is downloading blocks...");
 
     static unsigned int nTransactionsUpdatedLast;
 

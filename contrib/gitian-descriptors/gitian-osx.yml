@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-osx-0.10"
+name: "freicoin-osx-0.10"
 enable_cache: true
 suites:
 - "precise"
@@ -21,8 +21,8 @@ packages:
 - "libbz2-dev"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/freicoin/freicoin.git"
+  "dir": "freicoin"
 files:
 - "MacOSX10.7.sdk.tar.gz"
 script: |
@@ -69,7 +69,7 @@ script: |
   done
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd bitcoin
+  cd freicoin
   BASEPREFIX=`pwd`/depends
 
   mkdir -p ${BASEPREFIX}/SDKs
@@ -84,14 +84,14 @@ script: |
   ./autogen.sh
   ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   make dist
-  SOURCEDIST=`echo bitcoin-*.tar.gz`
+  SOURCEDIST=`echo freicoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
 
   # Correct tar file order
   mkdir -p temp
   pushd temp
   tar xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  find freicoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
 
   ORIGPATH="$PATH"
@@ -121,7 +121,7 @@ script: |
     popd
 
     make deploy
-    ${WRAP_DIR}/dmg dmg Bitcoin-Qt.dmg ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
+    ${WRAP_DIR}/dmg dmg Freicoin-Qt.dmg ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
 
     cd installed
     find . -name "lib*.la" -delete
