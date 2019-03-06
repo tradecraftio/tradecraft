@@ -11,7 +11,6 @@
 static const char UNUSED *freicoin_strings[] = {
 QT_TRANSLATE_NOOP("freicoin", "Freicoin"),
 QT_TRANSLATE_NOOP("freicoin", "The %s developers"),
-QT_TRANSLATE_NOOP("freicoin", "Freicoin"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "(1 = keep tx meta data e.g. account owner and payment request information, 2 "
 "= drop tx meta data)"),
