@@ -160,8 +160,7 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = "
 "no limit (default: %d)"),
 QT_TRANSLATE_NOOP("freicoin", ""
-"Unable to bind to %s on this computer. Freicoin is probably already "
-"running."),
+"Unable to bind to %s on this computer. Freicoin is probably already running."),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Unsupported argument -socks found. Setting SOCKS version isn't possible "
 "anymore, only SOCKS5 proxies are supported."),
