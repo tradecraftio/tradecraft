@@ -11,12 +11,12 @@
 static const char UNUSED *freicoin_strings[] = {
 QT_TRANSLATE_NOOP("freicoin", "The %s developers"),
 QT_TRANSLATE_NOOP("freicoin", ""
-"%s corrupt. Try using the wallet tool freicoin-wallet to salvage or restoring "
-"a backup."),
+"%s corrupt. Try using the wallet tool freicoin-wallet to salvage or "
+"restoring a backup."),
 QT_TRANSLATE_NOOP("freicoin", ""
 "%s request to listen on port %u. This port is considered \"bad\" and thus it "
-"is unlikely that any Freicoin peers connect to it. See doc/p2p-bad-ports."
-"md for details and a full list."),
+"is unlikely that any Freicoin peers connect to it. See doc/p2p-bad-ports.md "
+"for details and a full list."),
 QT_TRANSLATE_NOOP("freicoin", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
