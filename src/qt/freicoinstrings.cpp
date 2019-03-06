@@ -11,8 +11,8 @@
 static const char UNUSED *freicoin_strings[] = {
 QT_TRANSLATE_NOOP("freicoin", "The %s developers"),
 QT_TRANSLATE_NOOP("freicoin", ""
-"%s corrupt. Try using the wallet tool freicoin-wallet to salvage or restoring "
-"a backup."),
+"%s corrupt. Try using the wallet tool freicoin-wallet to salvage or "
+"restoring a backup."),
 QT_TRANSLATE_NOOP("freicoin", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
