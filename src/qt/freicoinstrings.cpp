@@ -130,10 +130,10 @@ QT_TRANSLATE_NOOP("freicoin-core", ""
 "If the file does not exist, create it with owner-readable-only file "
 "permissions.\n"
 "It is also recommended to set alertnotify so you are notified of problems;\n"
-"for example: alertnotify=echo %%s | mail -s \"Freicoin Alert\" admin@foo.com\n"),
+"for example: alertnotify=echo %%s | mail -s \"Freicoin Alert\" admin@foo."
+"com\n"),
 QT_TRANSLATE_NOOP("freicoin-core", ""
-"Unable to bind to %s on this computer. Freicoin is probably already "
-"running."),
+"Unable to bind to %s on this computer. Freicoin is probably already running."),
 QT_TRANSLATE_NOOP("freicoin-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
 "%s)"),
