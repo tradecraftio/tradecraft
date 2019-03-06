@@ -321,685 +321,89 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
       </trans-unit>
     </group>
   </body></file>
-  <file original="../freicoin.cpp" datatype="cpp" source-language="en" target-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="FreicoinApplication">
-      <trans-unit id="_msg58">
-        <source xml:space="preserve">Runaway exception</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">432</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg59">
-        <source xml:space="preserve">A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">433</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg60">
-        <source xml:space="preserve">Internal error</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">442</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg61">
-        <source xml:space="preserve">An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">443</context></context-group>
-      </trans-unit>
-    </group>
-    <group restype="x-trolltech-linguist-context" resname="QObject">
-      <trans-unit id="_msg62">
-        <source xml:space="preserve">Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">555</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg63">
-        <source xml:space="preserve">Error: Cannot parse configuration file: %1.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">561</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg64">
-        <source xml:space="preserve">Error: %1</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">576</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg65">
-        <source xml:space="preserve">Error initializing settings: %1</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">585</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg66">
-        <source xml:space="preserve">%1 didn&apos;t yet exit safely…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">648</context></context-group>
-      </trans-unit>
-    </group>
-  </body></file>
-  <file original="../freicoingui.cpp" datatype="cpp" source-language="en" target-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="FreicoinGUI">
-      <trans-unit id="_msg67" approved="yes">
-        <source xml:space="preserve">&amp;Overview</source>
-        <target xml:space="preserve">&amp;Overview</target>
-        <context-group purpose="location"><context context-type="linenumber">256</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg68" approved="yes">
-        <source xml:space="preserve">Show general overview of wallet</source>
-        <target xml:space="preserve">Show general overview of wallet</target>
-        <context-group purpose="location"><context context-type="linenumber">257</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg69" approved="yes">
-        <source xml:space="preserve">&amp;Transactions</source>
-        <target xml:space="preserve">&amp;Transactions</target>
-        <context-group purpose="location"><context context-type="linenumber">285</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg70" approved="yes">
-        <source xml:space="preserve">Browse transaction history</source>
-        <target xml:space="preserve">Browse transaction history</target>
-        <context-group purpose="location"><context context-type="linenumber">286</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg71" approved="yes">
-        <source xml:space="preserve">E&amp;xit</source>
-        <target xml:space="preserve">E&amp;xit</target>
-        <context-group purpose="location"><context context-type="linenumber">309</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg72" approved="yes">
-        <source xml:space="preserve">Quit application</source>
-        <target xml:space="preserve">Quit application</target>
-        <context-group purpose="location"><context context-type="linenumber">310</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg73">
-        <source xml:space="preserve">&amp;About %1</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">313</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg74">
-        <source xml:space="preserve">Show information about %1</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">314</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg75" approved="yes">
-        <source xml:space="preserve">About &amp;Qt</source>
-        <target xml:space="preserve">About &amp;Qt</target>
-        <context-group purpose="location"><context context-type="linenumber">317</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg76" approved="yes">
-        <source xml:space="preserve">Show information about Qt</source>
-        <target xml:space="preserve">Show information about Qt</target>
-        <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg77">
-        <source xml:space="preserve">Modify configuration options for %1</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">321</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg78">
-        <source xml:space="preserve">Create a new wallet</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">367</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg79">
-        <source xml:space="preserve">Wallet:</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">576</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg80">
-        <source xml:space="preserve">Network activity disabled.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">949</context></context-group>
-        <note annotates="source" from="developer">A substring of the tooltip.</note>
-      </trans-unit>
-      <trans-unit id="_msg81">
-        <source xml:space="preserve">Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1379</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg82" approved="yes">
-        <source xml:space="preserve">Send coins to a Freicoin address</source>
-        <target xml:space="preserve">Send coins to a Freicoin address</target>
-        <context-group purpose="location"><context context-type="linenumber">264</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg83" approved="yes">
-        <source xml:space="preserve">Backup wallet to another location</source>
-        <target xml:space="preserve">Backup wallet to another location</target>
-        <context-group purpose="location"><context context-type="linenumber">331</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg84" approved="yes">
-        <source xml:space="preserve">Change the passphrase used for wallet encryption</source>
-        <target xml:space="preserve">Change the passphrase used for wallet encryption</target>
-        <context-group purpose="location"><context context-type="linenumber">333</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg85" approved="yes">
-        <source xml:space="preserve">&amp;Send</source>
-        <target xml:space="preserve">&amp;Send</target>
-        <context-group purpose="location"><context context-type="linenumber">263</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg86" approved="yes">
-        <source xml:space="preserve">&amp;Receive</source>
-        <target xml:space="preserve">&amp;Receive</target>
-        <context-group purpose="location"><context context-type="linenumber">274</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg87">
-        <source xml:space="preserve">&amp;Options…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">320</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg88" approved="yes">
-        <source xml:space="preserve">&amp;Show / Hide</source>
-        <target xml:space="preserve">&amp;Show / Hide</target>
-        <context-group purpose="location"><context context-type="linenumber">324</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg89" approved="yes">
-        <source xml:space="preserve">Show or hide the main Window</source>
-        <target xml:space="preserve">Show or hide the main Window</target>
-        <context-group purpose="location"><context context-type="linenumber">325</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg90">
-        <source xml:space="preserve">&amp;Encrypt Wallet…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">327</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg91" approved="yes">
-        <source xml:space="preserve">Encrypt the private keys that belong to your wallet</source>
-        <target xml:space="preserve">Encrypt the private keys that belong to your wallet</target>
-        <context-group purpose="location"><context context-type="linenumber">328</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg92">
-        <source xml:space="preserve">&amp;Backup Wallet…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">330</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg93">
-        <source xml:space="preserve">&amp;Change Passphrase…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">332</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg94">
-        <source xml:space="preserve">Sign &amp;message…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">334</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg95" approved="yes">
-        <source xml:space="preserve">Sign messages with your Freicoin addresses to prove you own them</source>
-        <target xml:space="preserve">Sign messages with your Freicoin addresses to prove you own them</target>
-        <context-group purpose="location"><context context-type="linenumber">335</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg96">
-        <source xml:space="preserve">&amp;Verify message…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">336</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg97" approved="yes">
-        <source xml:space="preserve">Verify messages to ensure they were signed with specified Freicoin addresses</source>
-        <target xml:space="preserve">Verify messages to ensure they were signed with specified Freicoin addresses</target>
-        <context-group purpose="location"><context context-type="linenumber">337</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg98">
-        <source xml:space="preserve">&amp;Load PST from file…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">338</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg99">
-        <source xml:space="preserve">Load PST from clipboard…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">340</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg100">
-        <source xml:space="preserve">Open &amp;URI…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">354</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg101">
-        <source xml:space="preserve">Close Wallet…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">362</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg102">
-        <source xml:space="preserve">Create Wallet…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">365</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg103">
-        <source xml:space="preserve">Close All Wallets…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">369</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg104" approved="yes">
-        <source xml:space="preserve">&amp;File</source>
-        <target xml:space="preserve">&amp;File</target>
-        <context-group purpose="location"><context context-type="linenumber">466</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg105" approved="yes">
-        <source xml:space="preserve">&amp;Settings</source>
-        <target xml:space="preserve">&amp;Settings</target>
-        <context-group purpose="location"><context context-type="linenumber">484</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg106" approved="yes">
-        <source xml:space="preserve">&amp;Help</source>
-        <target xml:space="preserve">&amp;Help</target>
-        <context-group purpose="location"><context context-type="linenumber">545</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg107" approved="yes">
-        <source xml:space="preserve">Tabs toolbar</source>
-        <target xml:space="preserve">Tabs toolbar</target>
-        <context-group purpose="location"><context context-type="linenumber">556</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg108">
-        <source xml:space="preserve">Syncing Headers (%1%)…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">993</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg109">
-        <source xml:space="preserve">Synchronizing with network…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1039</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg110">
-        <source xml:space="preserve">Indexing blocks on disk…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1044</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg111">
-        <source xml:space="preserve">Processing blocks on disk…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1046</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg112">
-        <source xml:space="preserve">Reindexing blocks on disk…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1050</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg113">
-        <source xml:space="preserve">Connecting to peers…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1056</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg114">
-        <source xml:space="preserve">Request payments (generates QR codes and freicoin: URIs)</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">275</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg115">
-        <source xml:space="preserve">Show the list of used sending addresses and labels</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">350</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg116">
-        <source xml:space="preserve">Show the list of used receiving addresses and labels</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">352</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg117">
-        <source xml:space="preserve">&amp;Command-line options</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">372</context></context-group>
-      </trans-unit>
-      <group restype="x-gettext-plurals">
-        <context-group purpose="location"><context context-type="linenumber">1065</context></context-group>
-        <trans-unit id="_msg118[0]" approved="yes">
-          <source xml:space="preserve">Processed %n block(s) of transaction history.</source>
-          <target xml:space="preserve">Processed %n block of transaction history.</target>
-        </trans-unit>
-        <trans-unit id="_msg118[1]" approved="yes">
-          <source xml:space="preserve">Processed %n block(s) of transaction history.</source>
-          <target xml:space="preserve">Processed %n blocks of transaction history.</target>
-        </trans-unit>
-      </group>
-      <trans-unit id="_msg119" approved="yes">
-        <source xml:space="preserve">%1 behind</source>
-        <target xml:space="preserve">%1 behind</target>
-        <context-group purpose="location"><context context-type="linenumber">1088</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg120">
-        <source xml:space="preserve">Catching up…</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1093</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg121" approved="yes">
-        <source xml:space="preserve">Last received block was generated %1 ago.</source>
-        <target xml:space="preserve">Last received block was generated %1 ago.</target>
-        <context-group purpose="location"><context context-type="linenumber">1112</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg122" approved="yes">
-        <source xml:space="preserve">Transactions after this will not yet be visible.</source>
-        <target xml:space="preserve">Transactions after this will not yet be visible.</target>
-        <context-group purpose="location"><context context-type="linenumber">1114</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg123" approved="yes">
-        <source xml:space="preserve">Error</source>
-        <target xml:space="preserve">Error</target>
-        <context-group purpose="location"><context context-type="linenumber">1139</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg124" approved="yes">
-        <source xml:space="preserve">Warning</source>
-        <target xml:space="preserve">Warning</target>
-        <context-group purpose="location"><context context-type="linenumber">1143</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg125" approved="yes">
-        <source xml:space="preserve">Information</source>
-        <target xml:space="preserve">Information</target>
-        <context-group purpose="location"><context context-type="linenumber">1147</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg126" approved="yes">
-        <source xml:space="preserve">Up to date</source>
-        <target xml:space="preserve">Up to date</target>
-        <context-group purpose="location"><context context-type="linenumber">1069</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg127">
-        <source xml:space="preserve">Load Partially Signed Freicoin Transaction</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">339</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg128">
-        <source xml:space="preserve">Load Partially Signed Freicoin Transaction from clipboard</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">341</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg129">
-        <source xml:space="preserve">Node window</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">343</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg130">
-        <source xml:space="preserve">Open node debugging and diagnostic console</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">344</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg131">
-        <source xml:space="preserve">&amp;Sending addresses</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">349</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg132">
-        <source xml:space="preserve">&amp;Receiving addresses</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">351</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg133">
-        <source xml:space="preserve">Open a freicoin: URI</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">355</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg134">
-        <source xml:space="preserve">Open Wallet</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">357</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg135">
-        <source xml:space="preserve">Open a wallet</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">359</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg136">
-        <source xml:space="preserve">Close wallet</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">363</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg137">
-        <source xml:space="preserve">Close all wallets</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">370</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg138">
-        <source xml:space="preserve">Show the %1 help message to get a list with possible Freicoin command-line options</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">374</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg139">
-        <source xml:space="preserve">&amp;Mask values</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">376</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg140">
-        <source xml:space="preserve">Mask the values in the Overview tab</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">378</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg141">
-        <source xml:space="preserve">default wallet</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">410</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg142">
-        <source xml:space="preserve">No wallets available</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">431</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg143">
-        <source xml:space="preserve">&amp;Window</source>
-        <target xml:space="preserve" state="needs-review-translation">&amp;Window</target>
-        <context-group purpose="location"><context context-type="linenumber">495</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg144">
-        <source xml:space="preserve">Minimize</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">497</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg145">
-        <source xml:space="preserve">Zoom</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">507</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg146">
-        <source xml:space="preserve">Main Window</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">525</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg147">
-        <source xml:space="preserve">%1 client</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">788</context></context-group>
-      </trans-unit>
-      <group restype="x-gettext-plurals">
-        <context-group purpose="location"><context context-type="linenumber">946</context></context-group>
-        <note annotates="source" from="developer">A substring of the tooltip.</note>
-        <trans-unit id="_msg148[0]">
-          <source xml:space="preserve">%n active connection(s) to Freicoin network.</source>
-          <target xml:space="preserve" state="needs-review-translation">%n active connection to Freicoin network.</target>
-        </trans-unit>
-        <trans-unit id="_msg148[1]">
-          <source xml:space="preserve">%n active connection(s) to Freicoin network.</source>
-          <target xml:space="preserve" state="needs-review-translation">%n active connections to Freicoin network.</target>
-        </trans-unit>
-      </group>
-      <trans-unit id="_msg149">
-        <source xml:space="preserve">Click for more actions.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">956</context></context-group>
-        <note annotates="source" from="developer">A substring of the tooltip. &quot;More actions&quot; are available via the context menu.</note>
-      </trans-unit>
-      <trans-unit id="_msg150">
-        <source xml:space="preserve">Show Peers tab</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">973</context></context-group>
-        <note annotates="source" from="developer">A context menu item. The &quot;Peers tab&quot; is an element of the &quot;Node window&quot;.</note>
-      </trans-unit>
-      <trans-unit id="_msg151">
-        <source xml:space="preserve">Disable network activity</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">981</context></context-group>
-        <note annotates="source" from="developer">A context menu item.</note>
-      </trans-unit>
-      <trans-unit id="_msg152">
-        <source xml:space="preserve">Enable network activity</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">983</context></context-group>
-        <note annotates="source" from="developer">A context menu item. The network activity was disabled previously.</note>
-      </trans-unit>
-      <trans-unit id="_msg153">
-        <source xml:space="preserve">Error: %1</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1140</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg154">
-        <source xml:space="preserve">Warning: %1</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1144</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg155">
-        <source xml:space="preserve">Date: %1
-</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1252</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg156">
-        <source xml:space="preserve">Amount: %1
-</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1253</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg157">
-        <source xml:space="preserve">Wallet: %1
-</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1255</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg158">
-        <source xml:space="preserve">Type: %1
-</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1257</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg159">
-        <source xml:space="preserve">Label: %1
-</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1259</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg160">
-        <source xml:space="preserve">Address: %1
-</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1261</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg161" approved="yes">
-        <source xml:space="preserve">Sent transaction</source>
-        <target xml:space="preserve">Sent transaction</target>
-        <context-group purpose="location"><context context-type="linenumber">1262</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg162" approved="yes">
-        <source xml:space="preserve">Incoming transaction</source>
-        <target xml:space="preserve">Incoming transaction</target>
-        <context-group purpose="location"><context context-type="linenumber">1262</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg163">
-        <source xml:space="preserve">HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1314</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg164">
-        <source xml:space="preserve">HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1314</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg165">
-        <source xml:space="preserve">Private key &lt;b&gt;disabled&lt;/b&gt;</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1314</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg166" approved="yes">
-        <source xml:space="preserve">Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <target xml:space="preserve">Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</target>
-        <context-group purpose="location"><context context-type="linenumber">1339</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg167" approved="yes">
-        <source xml:space="preserve">Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <target xml:space="preserve">Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</target>
-        <context-group purpose="location"><context context-type="linenumber">1347</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg168">
-        <source xml:space="preserve">Original message:</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1467</context></context-group>
-      </trans-unit>
-    </group>
-    <group restype="x-trolltech-linguist-context" resname="UnitDisplayStatusBarControl">
-      <trans-unit id="_msg169">
-        <source xml:space="preserve">Unit to show amounts in. Click to select another unit.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">1508</context></context-group>
-      </trans-unit>
-    </group>
-  </body></file>
   <file original="../forms/coincontroldialog.ui" datatype="x-trolltech-designer-ui" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="CoinControlDialog">
-      <trans-unit id="_msg170">
+      <trans-unit id="_msg58">
         <source xml:space="preserve">Coin Selection</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg171">
+      <trans-unit id="_msg59">
         <source xml:space="preserve">Quantity:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">48</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg172">
+      <trans-unit id="_msg60">
         <source xml:space="preserve">Bytes:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">77</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg173">
+      <trans-unit id="_msg61">
         <source xml:space="preserve">Amount:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">122</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg174">
+      <trans-unit id="_msg62">
         <source xml:space="preserve">Fee:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">202</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg175">
+      <trans-unit id="_msg63">
         <source xml:space="preserve">Dust:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">154</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg176">
+      <trans-unit id="_msg64">
         <source xml:space="preserve">After Fee:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">247</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg177">
+      <trans-unit id="_msg65">
         <source xml:space="preserve">Change:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">279</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg178">
+      <trans-unit id="_msg66">
         <source xml:space="preserve">(un)select all</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">335</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg179">
+      <trans-unit id="_msg67">
         <source xml:space="preserve">Tree mode</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">351</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg180">
+      <trans-unit id="_msg68">
         <source xml:space="preserve">List mode</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">364</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg181">
+      <trans-unit id="_msg69">
         <source xml:space="preserve">Amount</source>
         <target xml:space="preserve" state="needs-review-translation">Amount</target>
         <context-group purpose="location"><context context-type="linenumber">420</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg182">
+      <trans-unit id="_msg70">
         <source xml:space="preserve">Received with label</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">425</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg183">
+      <trans-unit id="_msg71">
         <source xml:space="preserve">Received with address</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">430</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg184">
+      <trans-unit id="_msg72">
         <source xml:space="preserve">Date</source>
         <target xml:space="preserve" state="needs-review-translation">Date</target>
         <context-group purpose="location"><context context-type="linenumber">435</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg185">
+      <trans-unit id="_msg73">
         <source xml:space="preserve">Confirmations</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">440</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg186">
+      <trans-unit id="_msg74">
         <source xml:space="preserve">Confirmed</source>
         <target xml:space="preserve" state="needs-review-translation">Confirmed</target>
         <context-group purpose="location"><context context-type="linenumber">443</context></context-group>
@@ -1008,108 +412,108 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
   </body></file>
   <file original="../coincontroldialog.cpp" datatype="cpp" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="CoinControlDialog">
-      <trans-unit id="_msg187">
+      <trans-unit id="_msg75">
         <source xml:space="preserve">Copy amount</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">77</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg188">
+      <trans-unit id="_msg76">
         <source xml:space="preserve">&amp;Copy address</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">66</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg189">
+      <trans-unit id="_msg77">
         <source xml:space="preserve">Copy &amp;label</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">67</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg190">
+      <trans-unit id="_msg78">
         <source xml:space="preserve">Copy &amp;amount</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">68</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg191">
+      <trans-unit id="_msg79">
         <source xml:space="preserve">Copy transaction &amp;ID</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">69</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg192">
+      <trans-unit id="_msg80">
         <source xml:space="preserve">L&amp;ock unspent</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">71</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg193">
+      <trans-unit id="_msg81">
         <source xml:space="preserve">&amp;Unlock unspent</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">72</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg194">
+      <trans-unit id="_msg82">
         <source xml:space="preserve">Copy quantity</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">76</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg195">
+      <trans-unit id="_msg83">
         <source xml:space="preserve">Copy fee</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">78</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg196">
+      <trans-unit id="_msg84">
         <source xml:space="preserve">Copy after fee</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">79</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg197">
+      <trans-unit id="_msg85">
         <source xml:space="preserve">Copy bytes</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">80</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg198">
+      <trans-unit id="_msg86">
         <source xml:space="preserve">Copy dust</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">81</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg199">
+      <trans-unit id="_msg87">
         <source xml:space="preserve">Copy change</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">82</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg200">
+      <trans-unit id="_msg88">
         <source xml:space="preserve">(%1 locked)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">384</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg201">
+      <trans-unit id="_msg89">
         <source xml:space="preserve">yes</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">539</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg202">
+      <trans-unit id="_msg90">
         <source xml:space="preserve">no</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">539</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg203">
+      <trans-unit id="_msg91">
         <source xml:space="preserve">This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">553</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg204">
+      <trans-unit id="_msg92">
         <source xml:space="preserve">Can vary +/- %1 kria per input.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">558</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg205">
+      <trans-unit id="_msg93">
         <source xml:space="preserve">(no label)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">605</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">659</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg206">
+      <trans-unit id="_msg94">
         <source xml:space="preserve">change from %1 (%2)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">652</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg207">
+      <trans-unit id="_msg95">
         <source xml:space="preserve">(change)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">653</context></context-group>
@@ -1118,71 +522,71 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
   </body></file>
   <file original="../walletcontroller.cpp" datatype="cpp" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="CreateWalletActivity">
-      <trans-unit id="_msg208">
+      <trans-unit id="_msg96">
         <source xml:space="preserve">Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">265</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg209">
+      <trans-unit id="_msg97">
         <source xml:space="preserve">Create wallet failed</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">296</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg210">
+      <trans-unit id="_msg98">
         <source xml:space="preserve">Create wallet warning</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">298</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg211">
+      <trans-unit id="_msg99">
         <source xml:space="preserve">Can&apos;t list signers</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">314</context></context-group>
       </trans-unit>
     </group>
     <group restype="x-trolltech-linguist-context" resname="OpenWalletActivity">
-      <trans-unit id="_msg212">
+      <trans-unit id="_msg100">
         <source xml:space="preserve">Open wallet failed</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">346</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg213">
+      <trans-unit id="_msg101">
         <source xml:space="preserve">Open wallet warning</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">348</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg214">
+      <trans-unit id="_msg102">
         <source xml:space="preserve">default wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">358</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg215">
+      <trans-unit id="_msg103">
         <source xml:space="preserve">Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">360</context></context-group>
       </trans-unit>
     </group>
     <group restype="x-trolltech-linguist-context" resname="WalletController">
-      <trans-unit id="_msg216">
+      <trans-unit id="_msg104">
         <source xml:space="preserve">Close wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">98</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg217">
+      <trans-unit id="_msg105">
         <source xml:space="preserve">Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">99</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg218">
+      <trans-unit id="_msg106">
         <source xml:space="preserve">Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">100</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg219">
+      <trans-unit id="_msg107">
         <source xml:space="preserve">Close all wallets</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">113</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg220">
+      <trans-unit id="_msg108">
         <source xml:space="preserve">Are you sure you wish to close all wallets?</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">114</context></context-group>
@@ -1191,72 +595,72 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
   </body></file>
   <file original="../forms/createwalletdialog.ui" datatype="x-trolltech-designer-ui" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="CreateWalletDialog">
-      <trans-unit id="_msg221">
+      <trans-unit id="_msg109">
         <source xml:space="preserve">Create Wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg222">
+      <trans-unit id="_msg110">
         <source xml:space="preserve">Wallet Name</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">25</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg223">
+      <trans-unit id="_msg111">
         <source xml:space="preserve">Wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">38</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg224">
+      <trans-unit id="_msg112">
         <source xml:space="preserve">Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">47</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg225">
+      <trans-unit id="_msg113">
         <source xml:space="preserve">Encrypt Wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">50</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg226">
+      <trans-unit id="_msg114">
         <source xml:space="preserve">Advanced Options</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">76</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg227">
+      <trans-unit id="_msg115">
         <source xml:space="preserve">Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">85</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg228">
+      <trans-unit id="_msg116">
         <source xml:space="preserve">Disable Private Keys</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">88</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg229">
+      <trans-unit id="_msg117">
         <source xml:space="preserve">Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">95</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg230">
+      <trans-unit id="_msg118">
         <source xml:space="preserve">Make Blank Wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">98</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg231">
+      <trans-unit id="_msg119">
         <source xml:space="preserve">Use descriptors for scriptPubKey management</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">105</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg232">
+      <trans-unit id="_msg120">
         <source xml:space="preserve">Descriptor Wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">108</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg233">
+      <trans-unit id="_msg121">
         <source xml:space="preserve">Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">115</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg234">
+      <trans-unit id="_msg122">
         <source xml:space="preserve">External signer</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">118</context></context-group>
@@ -1265,17 +669,17 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
   </body></file>
   <file original="../createwalletdialog.cpp" datatype="cpp" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="CreateWalletDialog">
-      <trans-unit id="_msg235">
+      <trans-unit id="_msg123">
         <source xml:space="preserve">Create</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">33</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg236">
+      <trans-unit id="_msg124">
         <source xml:space="preserve">Compiled without sqlite support (required for descriptor wallets)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">101</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg237">
+      <trans-unit id="_msg125">
         <source xml:space="preserve">Compiled without external signing support (required for external signing)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">115</context></context-group>
@@ -1285,27 +689,27 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
   </body></file>
   <file original="../forms/editaddressdialog.ui" datatype="x-trolltech-designer-ui" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="EditAddressDialog">
-      <trans-unit id="_msg238" approved="yes">
+      <trans-unit id="_msg126" approved="yes">
         <source xml:space="preserve">Edit Address</source>
         <target xml:space="preserve">Edit Address</target>
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg239" approved="yes">
+      <trans-unit id="_msg127" approved="yes">
         <source xml:space="preserve">&amp;Label</source>
         <target xml:space="preserve">&amp;Label</target>
         <context-group purpose="location"><context context-type="linenumber">25</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg240">
+      <trans-unit id="_msg128">
         <source xml:space="preserve">The label associated with this address list entry</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">35</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg241">
+      <trans-unit id="_msg129">
         <source xml:space="preserve">The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">52</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg242" approved="yes">
+      <trans-unit id="_msg130" approved="yes">
         <source xml:space="preserve">&amp;Address</source>
         <target xml:space="preserve">&amp;Address</target>
         <context-group purpose="location"><context context-type="linenumber">42</context></context-group>
@@ -1314,42 +718,42 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
   </body></file>
   <file original="../editaddressdialog.cpp" datatype="cpp" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="EditAddressDialog">
-      <trans-unit id="_msg243">
+      <trans-unit id="_msg131">
         <source xml:space="preserve">New sending address</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">40</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg244">
+      <trans-unit id="_msg132">
         <source xml:space="preserve">Edit receiving address</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">43</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg245">
+      <trans-unit id="_msg133">
         <source xml:space="preserve">Edit sending address</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">47</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg246">
+      <trans-unit id="_msg134">
         <source xml:space="preserve">The entered address &quot;%1&quot; is not a valid Freicoin address.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">124</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg247">
+      <trans-unit id="_msg135">
         <source xml:space="preserve">Address &quot;%1&quot; already exists as a receiving address with label &quot;%2&quot; and so cannot be added as a sending address.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">157</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg248">
+      <trans-unit id="_msg136">
         <source xml:space="preserve">The entered address &quot;%1&quot; is already in the address book with label &quot;%2&quot;.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">162</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg249">
+      <trans-unit id="_msg137">
         <source xml:space="preserve">Could not unlock wallet.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">134</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg250">
+      <trans-unit id="_msg138">
         <source xml:space="preserve">New key generation failed.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">139</context></context-group>
@@ -1358,59 +762,59 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
   </body></file>
   <file original="../intro.cpp" datatype="cpp" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="FreespaceChecker">
-      <trans-unit id="_msg251" approved="yes">
+      <trans-unit id="_msg139" approved="yes">
         <source xml:space="preserve">A new data directory will be created.</source>
         <target xml:space="preserve">A new data directory will be created.</target>
         <context-group purpose="location"><context context-type="linenumber">84</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg252" approved="yes">
+      <trans-unit id="_msg140" approved="yes">
         <source xml:space="preserve">name</source>
         <target xml:space="preserve">name</target>
         <context-group purpose="location"><context context-type="linenumber">106</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg253" approved="yes">
+      <trans-unit id="_msg141" approved="yes">
         <source xml:space="preserve">Directory already exists. Add %1 if you intend to create a new directory here.</source>
         <target xml:space="preserve">Directory already exists. Add %1 if you intend to create a new directory here.</target>
         <context-group purpose="location"><context context-type="linenumber">108</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg254" approved="yes">
+      <trans-unit id="_msg142" approved="yes">
         <source xml:space="preserve">Path already exists, and is not a directory.</source>
         <target xml:space="preserve">Path already exists, and is not a directory.</target>
         <context-group purpose="location"><context context-type="linenumber">111</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg255" approved="yes">
+      <trans-unit id="_msg143" approved="yes">
         <source xml:space="preserve">Cannot create data directory here.</source>
         <target xml:space="preserve">Cannot create data directory here.</target>
         <context-group purpose="location"><context context-type="linenumber">118</context></context-group>
       </trans-unit>
     </group>
     <group restype="x-trolltech-linguist-context" resname="Intro">
-      <trans-unit id="_msg256">
+      <trans-unit id="_msg144">
         <source xml:space="preserve">Freicoin</source>
         <target xml:space="preserve" state="needs-review-translation">Freicoin</target>
         <context-group purpose="location"><context context-type="linenumber">150</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg257">
+      <trans-unit id="_msg145">
         <source xml:space="preserve">%1 GB of free space available</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">312</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg258">
+      <trans-unit id="_msg146">
         <source xml:space="preserve">(of %1 GB needed)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">314</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg259">
+      <trans-unit id="_msg147">
         <source xml:space="preserve">(%1 GB needed for full chain)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">317</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg260">
+      <trans-unit id="_msg148">
         <source xml:space="preserve">At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">389</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg261">
+      <trans-unit id="_msg149">
         <source xml:space="preserve">Approximately %1 GB of data will be stored in this directory.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">392</context></context-group>
@@ -1418,34 +822,630 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
       <group restype="x-gettext-plurals">
         <context-group purpose="location"><context context-type="linenumber">401</context></context-group>
         <note annotates="source" from="developer">Explanatory text on the capability of the current prune target.</note>
-        <trans-unit id="_msg262[0]">
+        <trans-unit id="_msg150[0]">
           <source xml:space="preserve">(sufficient to restore backups %n day(s) old)</source>
           <target xml:space="preserve" state="needs-review-translation">(sufficient to restore backups %n day old)</target>
         </trans-unit>
-        <trans-unit id="_msg262[1]">
+        <trans-unit id="_msg150[1]">
           <source xml:space="preserve">(sufficient to restore backups %n day(s) old)</source>
           <target xml:space="preserve" state="needs-review-translation">(sufficient to restore backups %n days old)</target>
         </trans-unit>
       </group>
-      <trans-unit id="_msg263">
+      <trans-unit id="_msg151">
         <source xml:space="preserve">%1 will download and store a copy of the Freicoin block chain.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">403</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg264">
+      <trans-unit id="_msg152">
         <source xml:space="preserve">The wallet will also be stored in this directory.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">405</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg265">
+      <trans-unit id="_msg153">
         <source xml:space="preserve">Error: Specified data directory &quot;%1&quot; cannot be created.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">261</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg266" approved="yes">
+      <trans-unit id="_msg154" approved="yes">
         <source xml:space="preserve">Error</source>
         <target xml:space="preserve">Error</target>
         <context-group purpose="location"><context context-type="linenumber">291</context></context-group>
+      </trans-unit>
+    </group>
+  </body></file>
+  <file original="../freicoin.cpp" datatype="cpp" source-language="en" target-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="FreicoinApplication">
+      <trans-unit id="_msg155">
+        <source xml:space="preserve">Runaway exception</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">432</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg156">
+        <source xml:space="preserve">A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">433</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg157">
+        <source xml:space="preserve">Internal error</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">442</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg158">
+        <source xml:space="preserve">An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">443</context></context-group>
+      </trans-unit>
+    </group>
+    <group restype="x-trolltech-linguist-context" resname="QObject">
+      <trans-unit id="_msg159">
+        <source xml:space="preserve">Error: Specified data directory &quot;%1&quot; does not exist.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">555</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg160">
+        <source xml:space="preserve">Error: Cannot parse configuration file: %1.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">561</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg161">
+        <source xml:space="preserve">Error: %1</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">576</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg162">
+        <source xml:space="preserve">Error initializing settings: %1</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">585</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg163">
+        <source xml:space="preserve">%1 didn&apos;t yet exit safely…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">648</context></context-group>
+      </trans-unit>
+    </group>
+  </body></file>
+  <file original="../freicoingui.cpp" datatype="cpp" source-language="en" target-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="FreicoinGUI">
+      <trans-unit id="_msg164" approved="yes">
+        <source xml:space="preserve">&amp;Overview</source>
+        <target xml:space="preserve">&amp;Overview</target>
+        <context-group purpose="location"><context context-type="linenumber">256</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg165" approved="yes">
+        <source xml:space="preserve">Show general overview of wallet</source>
+        <target xml:space="preserve">Show general overview of wallet</target>
+        <context-group purpose="location"><context context-type="linenumber">257</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg166" approved="yes">
+        <source xml:space="preserve">&amp;Transactions</source>
+        <target xml:space="preserve">&amp;Transactions</target>
+        <context-group purpose="location"><context context-type="linenumber">285</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg167" approved="yes">
+        <source xml:space="preserve">Browse transaction history</source>
+        <target xml:space="preserve">Browse transaction history</target>
+        <context-group purpose="location"><context context-type="linenumber">286</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg168" approved="yes">
+        <source xml:space="preserve">E&amp;xit</source>
+        <target xml:space="preserve">E&amp;xit</target>
+        <context-group purpose="location"><context context-type="linenumber">309</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg169" approved="yes">
+        <source xml:space="preserve">Quit application</source>
+        <target xml:space="preserve">Quit application</target>
+        <context-group purpose="location"><context context-type="linenumber">310</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg170">
+        <source xml:space="preserve">&amp;About %1</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">313</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg171">
+        <source xml:space="preserve">Show information about %1</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">314</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg172" approved="yes">
+        <source xml:space="preserve">About &amp;Qt</source>
+        <target xml:space="preserve">About &amp;Qt</target>
+        <context-group purpose="location"><context context-type="linenumber">317</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg173" approved="yes">
+        <source xml:space="preserve">Show information about Qt</source>
+        <target xml:space="preserve">Show information about Qt</target>
+        <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg174">
+        <source xml:space="preserve">Modify configuration options for %1</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">321</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg175">
+        <source xml:space="preserve">Create a new wallet</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">367</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg176">
+        <source xml:space="preserve">Wallet:</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">576</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg177">
+        <source xml:space="preserve">Network activity disabled.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">949</context></context-group>
+        <note annotates="source" from="developer">A substring of the tooltip.</note>
+      </trans-unit>
+      <trans-unit id="_msg178">
+        <source xml:space="preserve">Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1379</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg179" approved="yes">
+        <source xml:space="preserve">Send coins to a Freicoin address</source>
+        <target xml:space="preserve">Send coins to a Freicoin address</target>
+        <context-group purpose="location"><context context-type="linenumber">264</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg180" approved="yes">
+        <source xml:space="preserve">Backup wallet to another location</source>
+        <target xml:space="preserve">Backup wallet to another location</target>
+        <context-group purpose="location"><context context-type="linenumber">331</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg181" approved="yes">
+        <source xml:space="preserve">Change the passphrase used for wallet encryption</source>
+        <target xml:space="preserve">Change the passphrase used for wallet encryption</target>
+        <context-group purpose="location"><context context-type="linenumber">333</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg182" approved="yes">
+        <source xml:space="preserve">&amp;Send</source>
+        <target xml:space="preserve">&amp;Send</target>
+        <context-group purpose="location"><context context-type="linenumber">263</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg183" approved="yes">
+        <source xml:space="preserve">&amp;Receive</source>
+        <target xml:space="preserve">&amp;Receive</target>
+        <context-group purpose="location"><context context-type="linenumber">274</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg184">
+        <source xml:space="preserve">&amp;Options…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">320</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg185" approved="yes">
+        <source xml:space="preserve">&amp;Show / Hide</source>
+        <target xml:space="preserve">&amp;Show / Hide</target>
+        <context-group purpose="location"><context context-type="linenumber">324</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg186" approved="yes">
+        <source xml:space="preserve">Show or hide the main Window</source>
+        <target xml:space="preserve">Show or hide the main Window</target>
+        <context-group purpose="location"><context context-type="linenumber">325</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg187">
+        <source xml:space="preserve">&amp;Encrypt Wallet…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">327</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg188" approved="yes">
+        <source xml:space="preserve">Encrypt the private keys that belong to your wallet</source>
+        <target xml:space="preserve">Encrypt the private keys that belong to your wallet</target>
+        <context-group purpose="location"><context context-type="linenumber">328</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg189">
+        <source xml:space="preserve">&amp;Backup Wallet…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">330</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg190">
+        <source xml:space="preserve">&amp;Change Passphrase…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">332</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg191">
+        <source xml:space="preserve">Sign &amp;message…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">334</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg192" approved="yes">
+        <source xml:space="preserve">Sign messages with your Freicoin addresses to prove you own them</source>
+        <target xml:space="preserve">Sign messages with your Freicoin addresses to prove you own them</target>
+        <context-group purpose="location"><context context-type="linenumber">335</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg193">
+        <source xml:space="preserve">&amp;Verify message…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">336</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg194" approved="yes">
+        <source xml:space="preserve">Verify messages to ensure they were signed with specified Freicoin addresses</source>
+        <target xml:space="preserve">Verify messages to ensure they were signed with specified Freicoin addresses</target>
+        <context-group purpose="location"><context context-type="linenumber">337</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg195">
+        <source xml:space="preserve">&amp;Load PST from file…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">338</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg196">
+        <source xml:space="preserve">Load PST from clipboard…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">340</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg197">
+        <source xml:space="preserve">Open &amp;URI…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">354</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg198">
+        <source xml:space="preserve">Close Wallet…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">362</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg199">
+        <source xml:space="preserve">Create Wallet…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">365</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg200">
+        <source xml:space="preserve">Close All Wallets…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">369</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg201" approved="yes">
+        <source xml:space="preserve">&amp;File</source>
+        <target xml:space="preserve">&amp;File</target>
+        <context-group purpose="location"><context context-type="linenumber">466</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg202" approved="yes">
+        <source xml:space="preserve">&amp;Settings</source>
+        <target xml:space="preserve">&amp;Settings</target>
+        <context-group purpose="location"><context context-type="linenumber">484</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg203" approved="yes">
+        <source xml:space="preserve">&amp;Help</source>
+        <target xml:space="preserve">&amp;Help</target>
+        <context-group purpose="location"><context context-type="linenumber">545</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg204" approved="yes">
+        <source xml:space="preserve">Tabs toolbar</source>
+        <target xml:space="preserve">Tabs toolbar</target>
+        <context-group purpose="location"><context context-type="linenumber">556</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg205">
+        <source xml:space="preserve">Syncing Headers (%1%)…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">993</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg206">
+        <source xml:space="preserve">Synchronizing with network…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1039</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg207">
+        <source xml:space="preserve">Indexing blocks on disk…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1044</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg208">
+        <source xml:space="preserve">Processing blocks on disk…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1046</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg209">
+        <source xml:space="preserve">Reindexing blocks on disk…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1050</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg210">
+        <source xml:space="preserve">Connecting to peers…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1056</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg211">
+        <source xml:space="preserve">Request payments (generates QR codes and freicoin: URIs)</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">275</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg212">
+        <source xml:space="preserve">Show the list of used sending addresses and labels</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">350</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg213">
+        <source xml:space="preserve">Show the list of used receiving addresses and labels</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">352</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg214">
+        <source xml:space="preserve">&amp;Command-line options</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">372</context></context-group>
+      </trans-unit>
+      <group restype="x-gettext-plurals">
+        <context-group purpose="location"><context context-type="linenumber">1065</context></context-group>
+        <trans-unit id="_msg215[0]" approved="yes">
+          <source xml:space="preserve">Processed %n block(s) of transaction history.</source>
+          <target xml:space="preserve">Processed %n block of transaction history.</target>
+        </trans-unit>
+        <trans-unit id="_msg215[1]" approved="yes">
+          <source xml:space="preserve">Processed %n block(s) of transaction history.</source>
+          <target xml:space="preserve">Processed %n blocks of transaction history.</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="_msg216" approved="yes">
+        <source xml:space="preserve">%1 behind</source>
+        <target xml:space="preserve">%1 behind</target>
+        <context-group purpose="location"><context context-type="linenumber">1088</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg217">
+        <source xml:space="preserve">Catching up…</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1093</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg218" approved="yes">
+        <source xml:space="preserve">Last received block was generated %1 ago.</source>
+        <target xml:space="preserve">Last received block was generated %1 ago.</target>
+        <context-group purpose="location"><context context-type="linenumber">1112</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg219" approved="yes">
+        <source xml:space="preserve">Transactions after this will not yet be visible.</source>
+        <target xml:space="preserve">Transactions after this will not yet be visible.</target>
+        <context-group purpose="location"><context context-type="linenumber">1114</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg220" approved="yes">
+        <source xml:space="preserve">Error</source>
+        <target xml:space="preserve">Error</target>
+        <context-group purpose="location"><context context-type="linenumber">1139</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg221" approved="yes">
+        <source xml:space="preserve">Warning</source>
+        <target xml:space="preserve">Warning</target>
+        <context-group purpose="location"><context context-type="linenumber">1143</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg222" approved="yes">
+        <source xml:space="preserve">Information</source>
+        <target xml:space="preserve">Information</target>
+        <context-group purpose="location"><context context-type="linenumber">1147</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg223" approved="yes">
+        <source xml:space="preserve">Up to date</source>
+        <target xml:space="preserve">Up to date</target>
+        <context-group purpose="location"><context context-type="linenumber">1069</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg224">
+        <source xml:space="preserve">Load Partially Signed Freicoin Transaction</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">339</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg225">
+        <source xml:space="preserve">Load Partially Signed Freicoin Transaction from clipboard</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">341</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg226">
+        <source xml:space="preserve">Node window</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">343</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg227">
+        <source xml:space="preserve">Open node debugging and diagnostic console</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">344</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg228">
+        <source xml:space="preserve">&amp;Sending addresses</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">349</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg229">
+        <source xml:space="preserve">&amp;Receiving addresses</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">351</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg230">
+        <source xml:space="preserve">Open a freicoin: URI</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">355</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg231">
+        <source xml:space="preserve">Open Wallet</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">357</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg232">
+        <source xml:space="preserve">Open a wallet</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">359</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg233">
+        <source xml:space="preserve">Close wallet</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">363</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg234">
+        <source xml:space="preserve">Close all wallets</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">370</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg235">
+        <source xml:space="preserve">Show the %1 help message to get a list with possible Freicoin command-line options</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">374</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg236">
+        <source xml:space="preserve">&amp;Mask values</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">376</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg237">
+        <source xml:space="preserve">Mask the values in the Overview tab</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">378</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg238">
+        <source xml:space="preserve">default wallet</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">410</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg239">
+        <source xml:space="preserve">No wallets available</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">431</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg240">
+        <source xml:space="preserve">&amp;Window</source>
+        <target xml:space="preserve" state="needs-review-translation">&amp;Window</target>
+        <context-group purpose="location"><context context-type="linenumber">495</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg241">
+        <source xml:space="preserve">Minimize</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">497</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg242">
+        <source xml:space="preserve">Zoom</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">507</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg243">
+        <source xml:space="preserve">Main Window</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">525</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg244">
+        <source xml:space="preserve">%1 client</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">788</context></context-group>
+      </trans-unit>
+      <group restype="x-gettext-plurals">
+        <context-group purpose="location"><context context-type="linenumber">946</context></context-group>
+        <note annotates="source" from="developer">A substring of the tooltip.</note>
+        <trans-unit id="_msg245[0]">
+          <source xml:space="preserve">%n active connection(s) to Freicoin network.</source>
+          <target xml:space="preserve" state="needs-review-translation">%n active connection to Freicoin network.</target>
+        </trans-unit>
+        <trans-unit id="_msg245[1]">
+          <source xml:space="preserve">%n active connection(s) to Freicoin network.</source>
+          <target xml:space="preserve" state="needs-review-translation">%n active connections to Freicoin network.</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="_msg246">
+        <source xml:space="preserve">Click for more actions.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">956</context></context-group>
+        <note annotates="source" from="developer">A substring of the tooltip. &quot;More actions&quot; are available via the context menu.</note>
+      </trans-unit>
+      <trans-unit id="_msg247">
+        <source xml:space="preserve">Show Peers tab</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">973</context></context-group>
+        <note annotates="source" from="developer">A context menu item. The &quot;Peers tab&quot; is an element of the &quot;Node window&quot;.</note>
+      </trans-unit>
+      <trans-unit id="_msg248">
+        <source xml:space="preserve">Disable network activity</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">981</context></context-group>
+        <note annotates="source" from="developer">A context menu item.</note>
+      </trans-unit>
+      <trans-unit id="_msg249">
+        <source xml:space="preserve">Enable network activity</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">983</context></context-group>
+        <note annotates="source" from="developer">A context menu item. The network activity was disabled previously.</note>
+      </trans-unit>
+      <trans-unit id="_msg250">
+        <source xml:space="preserve">Error: %1</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1140</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg251">
+        <source xml:space="preserve">Warning: %1</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1144</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg252">
+        <source xml:space="preserve">Date: %1
+</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1252</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg253">
+        <source xml:space="preserve">Amount: %1
+</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1253</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg254">
+        <source xml:space="preserve">Wallet: %1
+</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1255</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg255">
+        <source xml:space="preserve">Type: %1
+</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1257</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg256">
+        <source xml:space="preserve">Label: %1
+</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1259</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg257">
+        <source xml:space="preserve">Address: %1
+</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1261</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg258" approved="yes">
+        <source xml:space="preserve">Sent transaction</source>
+        <target xml:space="preserve">Sent transaction</target>
+        <context-group purpose="location"><context context-type="linenumber">1262</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg259" approved="yes">
+        <source xml:space="preserve">Incoming transaction</source>
+        <target xml:space="preserve">Incoming transaction</target>
+        <context-group purpose="location"><context context-type="linenumber">1262</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg260">
+        <source xml:space="preserve">HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1314</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg261">
+        <source xml:space="preserve">HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1314</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg262">
+        <source xml:space="preserve">Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1314</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg263" approved="yes">
+        <source xml:space="preserve">Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <target xml:space="preserve">Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</target>
+        <context-group purpose="location"><context context-type="linenumber">1339</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg264" approved="yes">
+        <source xml:space="preserve">Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <target xml:space="preserve">Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</target>
+        <context-group purpose="location"><context context-type="linenumber">1347</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg265">
+        <source xml:space="preserve">Original message:</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1467</context></context-group>
+      </trans-unit>
+    </group>
+    <group restype="x-trolltech-linguist-context" resname="UnitDisplayStatusBarControl">
+      <trans-unit id="_msg266">
+        <source xml:space="preserve">Unit to show amounts in. Click to select another unit.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">1508</context></context-group>
       </trans-unit>
     </group>
   </body></file>
@@ -2408,7 +2408,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
       <trans-unit id="_msg441">
         <source xml:space="preserve">Amount</source>
         <target xml:space="preserve" state="needs-review-translation">Amount</target>
-        <context-group purpose="location"><context context-type="linenumber">224</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">228</context></context-group>
       </trans-unit>
     </group>
   </body></file>
