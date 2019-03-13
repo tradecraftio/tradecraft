@@ -96,9 +96,9 @@ public:
      * support. After the flag-day, older clients of at least version 10.4
      * will continue to receive blocks, but with only SPV security ("trust
      * the most work") for the new protocol rules. So starting with the
-     * release of v10.4-8, activation of forward blocks new scaling limits
-     * becomes a soft-fork, with the only concern being the forking off of
-     * 0.9 series and earlier nodes upon activation.
+     * release of v10.4-7842, activation of forward blocks new scaling
+     * limits becomes a soft-fork, with the only concern being the forking
+     * off of 0.9 series and earlier nodes upon activation.
      *
      * The primary rules which must be altered for forward blocks scaling
      * are:
