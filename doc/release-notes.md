@@ -1,14 +1,14 @@
 Freicoin version 10.4.1 is now available from:
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-0-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-0-linux64.zip)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-0-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-0-osx64.tar.gz)
-  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-0-win32-setup.exe)
-  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-0-win32.zip)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-0-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-0-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v10.4.1-0.zip)
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-7847-linux32.zip)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-7847-linux64.zip)
+  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-7847-osx.dmg)
+  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-7847-osx64.tar.gz)
+  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-7847-win32-setup.exe)
+  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-7847-win32.zip)
+  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-7847-win64-setup.exe)
+  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.1-7847-win64.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/v10.4.1-7847.zip)
 
 This is a new bug fix release, fixing an issue with incorrect display
 of immature and watch-only balances on all platforms. Upgrading to

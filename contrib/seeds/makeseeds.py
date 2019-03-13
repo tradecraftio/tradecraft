@@ -24,7 +24,7 @@ import sys
 import dns.resolver
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):8639$")
-PATTERN_AGENT = re.compile(r"^(\/Satoshi:0.8.6\/|\/Satoshi:0.9.5\/|\/Satoshi:10.4\/)$")
+PATTERN_AGENT = re.compile(r"^(\/Satoshi:0.8.6\/|\/Satoshi:0.9.5\/|\/Satoshi:10.4\/|\/Satoshi:10.4.1\/)$")
 
 def parseline(line):
     sline = line.split()
