@@ -1,4 +1,4 @@
-Freicoin 10.4.1
+Freicoin 10.4.2
 =====================
 
 Intro

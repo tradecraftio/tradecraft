@@ -30,8 +30,8 @@
 //! These need to be macros, as clientversion.cpp's and freicoin*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR 10
 #define CLIENT_VERSION_MINOR 4
-#define CLIENT_VERSION_REVISION 1
-#define CLIENT_VERSION_BUILD 7847
+#define CLIENT_VERSION_REVISION 2
+#define CLIENT_VERSION_BUILD 7851
 
 //! Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE true
