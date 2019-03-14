@@ -21,11 +21,11 @@
  * Server/client environment: argument handling, config file parsing,
  * logging, thread wrappers
  */
-#ifndef BITCOIN_UTIL_H
-#define BITCOIN_UTIL_H
+#ifndef FREICOIN_UTIL_H
+#define FREICOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/freicoin-config.h"
 #endif
 
 #include "compat.h"
@@ -221,7 +221,7 @@ void RenameThread(const char* name);
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("freicoin-%s", name);
     RenameThread(s.c_str());
     try
     {
@@ -244,4 +244,4 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-#endif // BITCOIN_UTIL_H
+#endif // FREICOIN_UTIL_H

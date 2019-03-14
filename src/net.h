@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_NET_H
-#define BITCOIN_NET_H
+#ifndef FREICOIN_NET_H
+#define FREICOIN_NET_H
 
 #include "bloom.h"
 #include "compat.h"
@@ -651,4 +651,4 @@ public:
     bool Read(CAddrMan& addr);
 };
 
-#endif // BITCOIN_NET_H
+#endif // FREICOIN_NET_H

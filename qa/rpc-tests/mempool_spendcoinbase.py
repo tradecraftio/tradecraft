@@ -27,13 +27,13 @@
 # but less mature coinbase spends are NOT.
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import os
 import shutil
 
 # Create one-input, one-output, no-fee transaction:
-class MempoolSpendCoinbaseTest(BitcoinTestFramework):
+class MempoolSpendCoinbaseTest(FreicoinTestFramework):
 
     def setup_network(self):
         # Just need one node for this test

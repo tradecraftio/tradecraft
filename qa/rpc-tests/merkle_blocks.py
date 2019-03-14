@@ -21,12 +21,12 @@
 # Test merkleblock fetch/validation
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import os
 import shutil
 
-class MerkleBlockTest(BitcoinTestFramework):
+class MerkleBlockTest(FreicoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)

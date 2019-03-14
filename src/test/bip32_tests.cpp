@@ -23,7 +23,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #include <string>
 #include <vector>
@@ -103,10 +103,10 @@ void RunTest(const TestVector &test) {
         key.Encode(data);
         pubkey.Encode(data);
         // Test private key
-        CBitcoinExtKey b58key; b58key.SetKey(key);
+        CFreicoinExtKey b58key; b58key.SetKey(key);
         BOOST_CHECK(b58key.ToString() == derive.prv);
         // Test public key
-        CBitcoinExtPubKey b58pubkey; b58pubkey.SetKey(pubkey);
+        CFreicoinExtPubKey b58pubkey; b58pubkey.SetKey(pubkey);
         BOOST_CHECK(b58pubkey.ToString() == derive.pub);
         // Derive new keys
         CExtKey keyNew;

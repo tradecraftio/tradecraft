@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# This is a thin wrapper around bitcoin-cli that strips the Windows-style EOLs
-# from the output if present. It is necessary when using bitcoin-cli.exe on
+# This is a thin wrapper around freicoin-cli that strips the Windows-style EOLs
+# from the output if present. It is necessary when using freicoin-cli.exe on
 # Linux since shells will interpret the line-endings as part of the result.
 
 CURDIR=$(cd $(dirname "$0"); pwd)
-# Get BUILDDIR and REAL_BITCOIND
+# Get BUILDDIR and REAL_FREICOIND
 
-# Grab the value of $REAL_BITCOINCLI which may be bitcoin-cli.exe.
+# Grab the value of $REAL_FREICOINCLI which may be freicoin-cli.exe.
 . "${CURDIR}/tests-config.sh"
 
-"${REAL_BITCOINCLI}" "$@" | sed 's/\r//'
+"${REAL_FREICOINCLI}" "$@" | sed 's/\r//'

@@ -20,8 +20,8 @@
 /**
  * Utilities for converting data from/to strings.
  */
-#ifndef BITCOIN_UTILSTRENCODINGS_H
-#define BITCOIN_UTILSTRENCODINGS_H
+#ifndef FREICOIN_UTILSTRENCODINGS_H
+#define FREICOIN_UTILSTRENCODINGS_H
 
 #include <stdint.h>
 #include <string>
@@ -109,4 +109,4 @@ bool TimingResistantEqual(const T& a, const T& b)
     return accumulator == 0;
 }
 
-#endif // BITCOIN_UTILSTRENCODINGS_H
+#endif // FREICOIN_UTILSTRENCODINGS_H

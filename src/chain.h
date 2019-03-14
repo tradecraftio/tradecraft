@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_CHAIN_H
-#define BITCOIN_CHAIN_H
+#ifndef FREICOIN_CHAIN_H
+#define FREICOIN_CHAIN_H
 
 #include "arith_uint256.h"
 #include "primitives/block.h"
@@ -417,4 +417,4 @@ public:
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
 };
 
-#endif // BITCOIN_CHAIN_H
+#endif // FREICOIN_CHAIN_H

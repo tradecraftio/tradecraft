@@ -19,7 +19,7 @@
 
 # Exercise the listtransactions API
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
 
@@ -44,7 +44,7 @@ def check_array_result(object_array, to_match, expected):
     if num_matched == 0:
         raise AssertionError("No objects matched %s"%(str(to_match)))
 
-class ListTransactionsTest(BitcoinTestFramework):
+class ListTransactionsTest(FreicoinTestFramework):
 
     def run_test(self):
         # Simple send, 0 to 1:

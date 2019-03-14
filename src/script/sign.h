@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_SCRIPT_SIGN_H
-#define BITCOIN_SCRIPT_SIGN_H
+#ifndef FREICOIN_SCRIPT_SIGN_H
+#define FREICOIN_SCRIPT_SIGN_H
 
 #include "script/interpreter.h"
 
@@ -70,4 +70,4 @@ CScript CombineSignatures(const CScript& scriptPubKey, const BaseSignatureChecke
 /** Combine two script signatures on transactions. */
 CScript CombineSignatures(const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, const CScript& scriptSig1, const CScript& scriptSig2);
 
-#endif // BITCOIN_SCRIPT_SIGN_H
+#endif // FREICOIN_SCRIPT_SIGN_H

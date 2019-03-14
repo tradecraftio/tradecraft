@@ -1,12 +1,12 @@
-.TH BITCOIN-CLI "1" "February 2015" "bitcoin-cli 0.10" 
+.TH FREICOIN-CLI "1" "February 2015" "freicoin-cli 0.10" 
 .SH NAME
-bitcoin-cli \- a remote procedure call client for Bitcoin Core. 
+freicoin-cli \- a remote procedure call client for Freicoin. 
 .SH SYNOPSIS
-bitcoin-cli [options] <command> [params] \- Send command to Bitcoin Core. 
+freicoin-cli [options] <command> [params] \- Send command to Freicoin. 
 .TP
-bitcoin-cli [options] help \- Asks Bitcoin Core for a list of supported commands.
+freicoin-cli [options] help \- Asks Freicoin for a list of supported commands.
 .SH DESCRIPTION
-This manual page documents the bitcoin-cli program. bitcoin-cli is an RPC client used to send commands to Bitcoin Core.
+This manual page documents the freicoin-cli program. freicoin-cli is an RPC client used to send commands to Freicoin.
 
 .SH OPTIONS
 .TP
@@ -14,16 +14,16 @@ This manual page documents the bitcoin-cli program. bitcoin-cli is an RPC client
 Show the help message.
 .TP
 \fB\-conf=\fR<file>
-Specify configuration file (default: bitcoin.conf).
+Specify configuration file (default: freicoin.conf).
 .TP
 \fB\-datadir=\fR<dir>
 Specify data directory.
 .TP
 \fB\-testnet\fR
-Connect to a Bitcoin Core instance running in testnet mode.
+Connect to a Freicoin instance running in testnet mode.
 .TP
 \fB\-regtest\fR
-Connect to a Bitcoin Core instance running in regtest mode (see documentation for -regtest on bitcoind).
+Connect to a Freicoin instance running in regtest mode (see documentation for -regtest on freicoind).
 .TP
 \fB\-rpcuser=\fR<user>
 Username for JSON\-RPC connections.
@@ -41,7 +41,7 @@ Send commands to node running on <ip> (default: 127.0.0.1).
 Use OpenSSL (https) for JSON\-RPC connections (see the Bitcoin Wiki for SSL setup instructions).
 
 .SH "SEE ALSO"
-\fBbitcoind\fP, \fBbitcoin.conf\fP
+\fBfreicoind\fP, \fBfreicoin.conf\fP
 .SH AUTHOR
 This manual page was written by Ciemon Dunville <ciemon@gmail.com>. Permission is granted to copy, distribute and/or modify this document under the terms of the MIT License.
 

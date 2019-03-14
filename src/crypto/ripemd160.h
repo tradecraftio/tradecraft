@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_CRYPTO_RIPEMD160_H
-#define BITCOIN_CRYPTO_RIPEMD160_H
+#ifndef FREICOIN_CRYPTO_RIPEMD160_H
+#define FREICOIN_CRYPTO_RIPEMD160_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -39,4 +39,4 @@ public:
     CRIPEMD160& Reset();
 };
 
-#endif // BITCOIN_CRYPTO_RIPEMD160_H
+#endif // FREICOIN_CRYPTO_RIPEMD160_H

@@ -2,7 +2,7 @@
 #
 # bignum.py
 #
-# This file is copied from python-bitcoinlib.
+# This file is copied from python-freicoinlib.
 #
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
@@ -97,7 +97,7 @@ def mpi2bn(s):
         return -v
     return v
 
-# bitcoin-specific little endian format, with implicit size
+# freicoin-specific little endian format, with implicit size
 def mpi2vch(s):
     r = s[4:]           # strip size
     r = r[::-1]         # reverse string, converting BE->LE

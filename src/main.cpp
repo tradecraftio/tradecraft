@@ -49,7 +49,7 @@
 using namespace std;
 
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "Freicoin cannot be compiled without assertions."
 #endif
 
 /**
@@ -77,7 +77,7 @@ size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
 
-/** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
+/** Fees smaller than this (in kria) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(5000);
 
 CTxMemPool mempool(::minRelayTxFee);
@@ -1765,7 +1765,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
-    RenameThread("bitcoin-scriptch");
+    RenameThread("freicoin-scriptch");
     scriptcheckqueue.Thread();
 }
 
@@ -4728,7 +4728,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (fAlerts && strCommand == "alert")
     {
         // Alert message handling disabled
-        // See https://bitcoin.org/en/alert/2016-11-01-alert-retirement
+        // See https://freico.in/en/alert/2016-11-01-alert-retirement
     }
 
 

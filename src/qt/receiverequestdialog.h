@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_RECEIVEREQUESTDIALOG_H
-#define BITCOIN_QT_RECEIVEREQUESTDIALOG_H
+#ifndef FREICOIN_QT_RECEIVEREQUESTDIALOG_H
+#define FREICOIN_QT_RECEIVEREQUESTDIALOG_H
 
 #include "walletmodel.h"
 
@@ -81,4 +81,4 @@ private:
     SendCoinsRecipient info;
 };
 
-#endif // BITCOIN_QT_RECEIVEREQUESTDIALOG_H
+#endif // FREICOIN_QT_RECEIVEREQUESTDIALOG_H

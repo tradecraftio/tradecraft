@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_ECCRYPTOVERIFY_H
-#define BITCOIN_ECCRYPTOVERIFY_H
+#ifndef FREICOIN_ECCRYPTOVERIFY_H
+#define FREICOIN_ECCRYPTOVERIFY_H
 
 #include <vector>
 #include <cstdlib>
@@ -32,4 +32,4 @@ bool CheckSignatureElement(const unsigned char *vch, int len, bool half);
 
 } // eccrypto namespace
 
-#endif // BITCOIN_ECCRYPTOVERIFY_H
+#endif // FREICOIN_ECCRYPTOVERIFY_H

@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_SUPPORT_PAGELOCKER_H
-#define BITCOIN_SUPPORT_PAGELOCKER_H
+#ifndef FREICOIN_SUPPORT_PAGELOCKER_H
+#define FREICOIN_SUPPORT_PAGELOCKER_H
 
 #include "support/cleanse.h"
 
@@ -188,4 +188,4 @@ void UnlockObject(const T& t)
     LockedPageManager::Instance().UnlockRange((void*)(&t), sizeof(T));
 }
 
-#endif // BITCOIN_SUPPORT_PAGELOCKER_H
+#endif // FREICOIN_SUPPORT_PAGELOCKER_H

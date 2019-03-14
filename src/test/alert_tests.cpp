@@ -32,7 +32,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #include <fstream>
 

@@ -21,12 +21,12 @@
 # Test -alertnotify 
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import os
 import shutil
 
-class ForkNotifyTest(BitcoinTestFramework):
+class ForkNotifyTest(FreicoinTestFramework):
 
     alert_filename = None  # Set by setup_network
 

@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_AMOUNT_H
-#define BITCOIN_AMOUNT_H
+#ifndef FREICOIN_AMOUNT_H
+#define FREICOIN_AMOUNT_H
 
 #include "serialize.h"
 
@@ -30,7 +30,7 @@ typedef int64_t CAmount;
 static const CAmount COIN = 100000000;
 static const CAmount CENT = 1000000;
 
-/** No amount larger than this (in satoshi) is valid */
+/** No amount larger than this (in kria) is valid */
 static const CAmount MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
@@ -40,29 +40,29 @@ inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <=
 class CFeeRate
 {
 private:
-    CAmount nSatoshisPerK; // unit is satoshis-per-1,000-bytes
+    CAmount nKriaPerK; // unit is kria-per-1,000-bytes
 public:
-    CFeeRate() : nSatoshisPerK(0) { }
-    explicit CFeeRate(const CAmount& _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
+    CFeeRate() : nKriaPerK(0) { }
+    explicit CFeeRate(const CAmount& _nKriaPerK): nKriaPerK(_nKriaPerK) { }
     CFeeRate(const CAmount& nFeePaid, size_t nSize);
-    CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
+    CFeeRate(const CFeeRate& other) { nKriaPerK = other.nKriaPerK; }
 
-    CAmount GetFee(size_t size) const; // unit returned is satoshis
-    CAmount GetFeePerK() const { return GetFee(1000); } // satoshis-per-1000-bytes
+    CAmount GetFee(size_t size) const; // unit returned is kria
+    CAmount GetFeePerK() const { return GetFee(1000); } // kria-per-1000-bytes
 
-    friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
-    friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
-    friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
-    friend bool operator<=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK <= b.nSatoshisPerK; }
-    friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
+    friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nKriaPerK < b.nKriaPerK; }
+    friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nKriaPerK > b.nKriaPerK; }
+    friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nKriaPerK == b.nKriaPerK; }
+    friend bool operator<=(const CFeeRate& a, const CFeeRate& b) { return a.nKriaPerK <= b.nKriaPerK; }
+    friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nKriaPerK >= b.nKriaPerK; }
     std::string ToString() const;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(nSatoshisPerK);
+        READWRITE(nKriaPerK);
     }
 };
 
-#endif //  BITCOIN_AMOUNT_H
+#endif //  FREICOIN_AMOUNT_H

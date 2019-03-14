@@ -1,6 +1,6 @@
-Bitcoin Core version 0.11.3 is now available from:
+Freicoin version 0.11.3 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.11.3/>
+  <https://freico.in/bin/freicoin-core-0.11.3/>
 
 This is a new minor version release, bringing bug fixes, the BIP65
 (CLTV) consensus change, and relay policy preparation for BIP113. It is
@@ -8,7 +8,7 @@ recommended to upgrade to this version as soon as possible.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/freicoin/freicoin/issues>
 
 Upgrading and downgrading
 =========================
@@ -18,15 +18,15 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+installer (on Windows) or just copy over /Applications/Freicoin-Qt (on Mac) or
+freicoind/freicoin-qt (on Linux).
 
 Downgrade warning
 ------------------
 
 Because release 0.10.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
+backwards-compatible with pre-0.10 versions of Freicoin or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -71,4 +71,4 @@ Thanks to everyone who directly contributed to this release:
 
 And those who contributed additional code review and/or security research.
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/freicoin/).

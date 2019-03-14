@@ -17,7 +17,7 @@
 # program.  If not, see <https://www.gnu.org/licenses/> and
 # <http://www.opensource.org/licenses/mit-license.php>
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
 
@@ -57,7 +57,7 @@ class LongpollThread(threading.Thread):
     def run(self):
         self.node.getblocktemplate({'longpollid':self.longpollid})
 
-class GetBlockTemplateLPTest(BitcoinTestFramework):
+class GetBlockTemplateLPTest(FreicoinTestFramework):
     '''
     Test longpolling with getblocktemplate.
     '''

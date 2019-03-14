@@ -16,8 +16,8 @@
 // You should have received a copy of both licenses along with this
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
-#ifndef BITCOIN_POLICYESTIMATOR_H
-#define BITCOIN_POLICYESTIMATOR_H
+#ifndef FREICOIN_POLICYESTIMATOR_H
+#define FREICOIN_POLICYESTIMATOR_H
 
 #include "amount.h"
 #include "uint256.h"
@@ -287,4 +287,4 @@ private:
     CFeeRate feeLikely, feeUnlikely;
     double priLikely, priUnlikely;
 };
-#endif /*BITCOIN_POLICYESTIMATOR_H */
+#endif /*FREICOIN_POLICYESTIMATOR_H */

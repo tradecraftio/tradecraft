@@ -1,7 +1,7 @@
 #
 # script.py
 #
-# This file is modified from python-bitcoinlib.
+# This file is modified from python-freicoinlib.
 #
 # Copyright (c) 2010-2019 The Freicoin Developers
 #

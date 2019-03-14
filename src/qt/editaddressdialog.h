@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_EDITADDRESSDIALOG_H
-#define BITCOIN_QT_EDITADDRESSDIALOG_H
+#ifndef FREICOIN_QT_EDITADDRESSDIALOG_H
+#define FREICOIN_QT_EDITADDRESSDIALOG_H
 
 #include <QDialog>
 
@@ -68,4 +68,4 @@ private:
     QString address;
 };
 
-#endif // BITCOIN_QT_EDITADDRESSDIALOG_H
+#endif // FREICOIN_QT_EDITADDRESSDIALOG_H

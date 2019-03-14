@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_RPCSERVER_H
-#define BITCOIN_RPCSERVER_H
+#ifndef FREICOIN_RPCSERVER_H
+#define FREICOIN_RPCSERVER_H
 
 #include "amount.h"
 #include "rpcprotocol.h"
@@ -115,7 +115,7 @@ public:
 };
 
 /**
- * Bitcoin RPC command dispatcher.
+ * Freicoin RPC command dispatcher.
  */
 class CRPCTable
 {
@@ -257,4 +257,4 @@ extern bool HTTPReq_REST(AcceptedConnection *conn,
                   const std::map<std::string, std::string>& mapHeaders,
                   bool fRun);
 
-#endif // BITCOIN_RPCSERVER_H
+#endif // FREICOIN_RPCSERVER_H
