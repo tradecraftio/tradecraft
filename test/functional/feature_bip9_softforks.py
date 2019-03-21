@@ -275,20 +275,12 @@ class BIP9SoftForksTest(ComparisonTestFramework):
     def get_tests(self):
         for test in itertools.chain(
                 self.test_BIP('csv', 0x20000001, self.sequence_lock_invalidate, self.donothing, 0),
-                self.test_BIP('csv', 0x20000001, self.mtp_invalidate, self.donothing, 0),
-                self.test_BIP('csv', 0x20000001, self.donothing, self.csv_invalidate, 0)
+                self.test_BIP('csv', 0x20000001, self.mtp_invalidate, self.donothing, 0)
         ):
             yield test
 
     def donothing(self, tx):
         return
-
-    def csv_invalidate(self, tx):
-        """Modify the signature in vin 0 of the tx to fail CSV
-        Prepends -1 CSV DROP in the scriptSig itself.
-        """
-        tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP] +
-                                      list(CScript(tx.vin[0].scriptSig)))
 
     def sequence_lock_invalidate(self, tx):
         """Modify the nSequence to make it fails once sequence lock rule is
