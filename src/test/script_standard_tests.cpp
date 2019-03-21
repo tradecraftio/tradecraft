@@ -93,14 +93,11 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(solutions[3] == ToByteVector(pubkeys[2]));
     BOOST_CHECK(solutions[4] == std::vector<unsigned char>({3}));
 
-    // TX_NULL_DATA
+    // TX_UNSPENDABLE
     s.clear();
-    s << OP_RETURN <<
-        std::vector<unsigned char>({0}) <<
-        std::vector<unsigned char>({75}) <<
-        std::vector<unsigned char>({255});
+    s << OP_RETURN;
     BOOST_CHECK(Solver(s, whichType, solutions));
-    BOOST_CHECK_EQUAL(whichType, TX_NULL_DATA);
+    BOOST_CHECK_EQUAL(whichType, TX_UNSPENDABLE);
     BOOST_CHECK_EQUAL(solutions.size(), 0U);
 
     // TX_WITNESS_V0_KEYHASH
@@ -176,7 +173,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     s << OP_1 << OP_1 << OP_CHECKMULTISIG;
     BOOST_CHECK(!Solver(s, whichType, solutions));
 
-    // TX_NULL_DATA with other opcodes
+    // TX_UNSPENDABLE with other opcodes
     s.clear();
     s << OP_RETURN << std::vector<unsigned char>({75}) << OP_ADD;
     BOOST_CHECK(!Solver(s, whichType, solutions));
@@ -224,7 +221,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s << OP_1 << ToByteVector(pubkey) << OP_1 << OP_CHECKMULTISIG;
     BOOST_CHECK(!ExtractDestination(s, address));
 
-    // TX_NULL_DATA
+    // TX_UNSPENDABLE
     s.clear();
     s << OP_RETURN << std::vector<unsigned char>({75});
     BOOST_CHECK(!ExtractDestination(s, address));
@@ -316,7 +313,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK(boost::get<CKeyID>(&addresses[1]) &&
                 *boost::get<CKeyID>(&addresses[1]) == pubkeys[1].GetID());
 
-    // TX_NULL_DATA
+    // TX_UNSPENDABLE
     s.clear();
     s << OP_RETURN << std::vector<unsigned char>({75});
     BOOST_CHECK(!ExtractDestinations(s, whichType, addresses, nRequired));
