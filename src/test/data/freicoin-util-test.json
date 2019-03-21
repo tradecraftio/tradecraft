@@ -111,14 +111,14 @@
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
-     "outdata=4:badhexdata"],
+     "outdestroy=4:badhexdata"],
     "return_code": 1
   },
   { "exec": "./freicoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
-     "outdata=badhexdata"],
+     "outdestroy=badhexdata"],
     "return_code": 1
   },
   { "exec": "./freicoin-tx",
@@ -126,7 +126,15 @@
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
-     "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+     "outdestroy=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+    "return_code": 1
+  },
+  { "exec": "./freicoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
+     "outdestroy=4"],
     "output_cmp": "txcreatedata1.hex"
   },
   { "exec": "./freicoin-tx",
@@ -135,7 +143,7 @@
      "-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
-     "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+     "outdestroy=4"],
     "output_cmp": "txcreatedata1.json"
   },
   { "exec": "./freicoin-tx",
@@ -143,7 +151,15 @@
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
-     "outdata=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+     "outdestroy=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+    "return_code": 1
+  },
+  { "exec": "./freicoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
+     "outdestroy=0"],
     "output_cmp": "txcreatedata2.hex"
   },
   { "exec": "./freicoin-tx",
@@ -152,7 +168,7 @@
      "-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
-     "outdata=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+     "outdestroy=0"],
     "output_cmp": "txcreatedata2.json"
   },
   { "exec": "./freicoin-tx",

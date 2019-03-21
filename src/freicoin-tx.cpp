@@ -94,7 +94,7 @@ static int AppInitRawTx(int argc, char* argv[])
         strUsage += HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
         strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
         strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
-        strUsage += HelpMessageOpt("outdata=[VALUE:]DATA", _("Add data-based output to TX"));
+        strUsage += HelpMessageOpt("outdestroy=VALUE", _("Add unspendable output with specified value to TX"));
         strUsage += HelpMessageOpt("outscript=VALUE:SCRIPT", _("Add raw script output to TX"));
         strUsage += HelpMessageOpt("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
             _("This command requires JSON registers:") +
@@ -265,32 +265,14 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const string& strInput)
     tx.vout.push_back(txout);
 }
 
-static void MutateTxAddOutData(CMutableTransaction& tx, const string& strInput)
+static void MutateTxAddOutDestroy(CMutableTransaction& tx, const string& strInput)
 {
     CAmount value = 0;
 
-    // separate [VALUE:]DATA in string
-    size_t pos = strInput.find(':');
+    if (!ParseMoney(strInput, value))
+        throw runtime_error("invalid TX output value");
 
-    if (pos==0)
-        throw runtime_error("TX output value not specified");
-
-    if (pos != string::npos) {
-        // extract and validate VALUE
-        string strValue = strInput.substr(0, pos);
-        if (!ParseMoney(strValue, value))
-            throw runtime_error("invalid TX output value");
-    }
-
-    // extract and validate DATA
-    string strData = strInput.substr(pos + 1, string::npos);
-
-    if (!IsHex(strData))
-        throw runtime_error("invalid TX output data");
-
-    std::vector<unsigned char> data = ParseHex(strData);
-
-    CTxOut txout(value, CScript() << OP_RETURN << data);
+    CTxOut txout(value, CScript() << OP_RETURN);
     tx.vout.push_back(txout);
 }
 
@@ -556,8 +538,8 @@ static void MutateTx(CMutableTransaction& tx, const string& command,
         MutateTxDelOutput(tx, commandVal);
     else if (command == "outaddr")
         MutateTxAddOutAddr(tx, commandVal);
-    else if (command == "outdata")
-        MutateTxAddOutData(tx, commandVal);
+    else if (command == "outdestroy")
+        MutateTxAddOutDestroy(tx, commandVal);
     else if (command == "outscript")
         MutateTxAddOutScript(tx, commandVal);
 
