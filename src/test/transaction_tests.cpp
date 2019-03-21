@@ -845,51 +845,47 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
 
-    // Enable -datacarrier for the following tests
-    bool saved_datacarrier = fAcceptDatacarrier;
-    fAcceptDatacarrier = true;
-
-    // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
+    // MAX_OP_RETURN_RELAY-byte TxoutType::UNSPENDABLE (non-standard since removal of '-datacarrier')
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe554827");
-    BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY, t.vout[0].scriptPubKey.size());
-    CheckIsStandard(t);
+    BOOST_CHECK_EQUAL(51, t.vout[0].scriptPubKey.size());
+    CheckIsNotStandard(t, "scriptpubkey");
 
-    // MAX_OP_RETURN_RELAY+1-byte TxoutType::NULL_DATA (non-standard)
+    // MAX_OP_RETURN_RELAY+1-byte TxoutType::UNSPENDABLE (non-standard always)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe55482719");
-    BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY + 1, t.vout[0].scriptPubKey.size());
+    BOOST_CHECK_EQUAL(51 + 1, t.vout[0].scriptPubKey.size());
     CheckIsNotStandard(t, "scriptpubkey");
 
     // Data payload can be encoded in any way...
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("");
-    CheckIsStandard(t);
+    CheckIsNotStandard(t, "scriptpubkey");
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("00") << ParseHex("01");
-    CheckIsStandard(t);
+    CheckIsNotStandard(t, "scriptpubkey");
     // OP_RESERVED *is* considered to be a PUSHDATA type opcode by IsPushOnly()!
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RESERVED << -1 << 0 << ParseHex("01") << 2 << 3 << 4 << 5 << 6 << 7 << 8 << 9 << 10 << 11 << 12 << 13 << 14 << 15 << 16;
-    CheckIsStandard(t);
+    CheckIsNotStandard(t, "scriptpubkey");
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << 0 << ParseHex("01") << 2 << ParseHex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-    CheckIsStandard(t);
+    CheckIsNotStandard(t, "scriptpubkey");
 
     // ...so long as it only contains PUSHDATA's
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RETURN;
     CheckIsNotStandard(t, "scriptpubkey");
 
-    // TxoutType::NULL_DATA w/o PUSHDATA
+    // TxoutType::UNSPENDABLE: TX_NULL_DATA from bitcoin w/o PUSHDATA
     t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     CheckIsStandard(t);
 
-    // Only one TxoutType::NULL_DATA permitted in all cases
+    // Only one TxoutType::UNSPENDABLE permitted in all cases
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[0].nValue = 0;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].nValue = 0;
-    CheckIsNotStandard(t, "multi-op-return");
+    CheckIsNotStandard(t, "scriptpubkey");
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    CheckIsNotStandard(t, "multi-op-return");
+    CheckIsNotStandard(t, "scriptpubkey");
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
@@ -949,7 +945,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     //                      ===============================
     //                                total: 400000 vbytes
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400000);
-    CheckIsStandard(t);
+    CheckIsNotStandard(t, "scriptpubkey");
 
     // increase output size by one byte, so we end up with 400004 vbytes
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(20, 0); // output size: 31 bytes
@@ -990,9 +986,6 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         t.vout[0].nValue = 239;
         CheckIsNotStandard(t, "dust");
     }
-
-    // Return to default settings
-    fAcceptDatacarrier = saved_datacarrier;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

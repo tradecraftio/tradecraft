@@ -26,8 +26,6 @@
 #include <string>
 #include <variant>
 
-static const bool DEFAULT_ACCEPT_DATACARRIER = false;
-
 class CKeyID;
 class CScript;
 struct ScriptHash;
@@ -41,21 +39,6 @@ public:
     explicit CScriptID(const uint160& in) : BaseHash(in) {}
     explicit CScriptID(const ScriptHash& in);
 };
-
-/**
- * Default setting for nMaxDatacarrierBytes. 48 bytes of data, +1 for OP_RETURN,
- * +2 for the pushdata opcodes.
- */
-static const unsigned int MAX_OP_RETURN_RELAY = 51;
-
-/**
- * A data carrying output is an unspendable output containing data. The script
- * type is designated as TxoutType::NULL_DATA.
- */
-extern bool fAcceptDatacarrier;
-
-/** Maximum size of TxoutType::NULL_DATA scripts that this node considers standard. */
-extern unsigned nMaxDatacarrierBytes;
 
 /**
  * Mandatory script verification flags that all new blocks must comply with for
@@ -74,7 +57,7 @@ enum class TxoutType {
     PUBKEYHASH,
     SCRIPTHASH,
     MULTISIG,
-    NULL_DATA, //!< unspendable OP_RETURN script that carries data
+    UNSPENDABLE, //!< TX_NULL_DATA in bitcoin, but without data
     WITNESS_V0_SCRIPTHASH,
     WITNESS_V0_KEYHASH,
     WITNESS_V1_TAPROOT,

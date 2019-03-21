@@ -55,7 +55,6 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         self.extra_args = [[
             '-txindex',
             '-permitbaremultisig=0',
-            '-datacarrier=1',  # We still test OP_RETURN
         ]] * self.num_nodes
         self.supports_cli = False
 
@@ -324,7 +323,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'\xff'])
         tx.vout = [tx.vout[0]] * 2
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'multi-op-return'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptpubkey'}],
             rawtxs=[tx.serialize().hex()],
         )
 

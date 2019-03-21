@@ -66,7 +66,7 @@ static void SetupFreicoinTxArgs(ArgsManager &argsman)
     argsman.AddArg("locktime=N", "Set TX lock time to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("nversion=N", "Set TX version to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("outaddr=VALUE:ADDRESS", "Add address-based output to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("outdata=[VALUE:]DATA", "Add data-based output to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    argsman.AddArg("outdestroy=VALUE", "Add unspendable output to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("outmultisig=VALUE:REQUIRED:PUBKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]", "Add Pay To n-of-m Multi-sig output to TX. n = REQUIRED, m = PUBKEYS. "
         "Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output. "
         "Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
@@ -438,33 +438,9 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     tx.vout.push_back(txout);
 }
 
-static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strInput)
+static void MutateTxAddOutDestroy(CMutableTransaction& tx, const std::string& strInput)
 {
-    CAmount value = 0;
-
-    // separate [VALUE:]DATA in string
-    size_t pos = strInput.find(':');
-
-    if (pos==0)
-        throw std::runtime_error("TX output value not specified");
-
-    if (pos == std::string::npos) {
-        pos = 0;
-    } else {
-        // Extract and validate VALUE
-        value = ExtractAndValidateValue(strInput.substr(0, pos));
-        ++pos;
-    }
-
-    // extract and validate DATA
-    const std::string strData{strInput.substr(pos, std::string::npos)};
-
-    if (!IsHex(strData))
-        throw std::runtime_error("invalid TX output data");
-
-    std::vector<unsigned char> data = ParseHex(strData);
-
-    CTxOut txout(value, CScript() << OP_RETURN << data);
+    CTxOut txout(ExtractAndValidateValue(strInput), CScript() << OP_RETURN);
     tx.vout.push_back(txout);
 }
 
@@ -740,8 +716,8 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxAddOutMultiSig(tx, commandVal);
     } else if (command == "outscript")
         MutateTxAddOutScript(tx, commandVal);
-    else if (command == "outdata")
-        MutateTxAddOutData(tx, commandVal);
+    else if (command == "outdestroy")
+        MutateTxAddOutDestroy(tx, commandVal);
 
     else if (command == "sign") {
         ecc.reset(new Secp256k1Init());

@@ -27,9 +27,6 @@
 
 typedef std::vector<unsigned char> valtype;
 
-bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
-unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
-
 CScriptID::CScriptID(const CScript& in) : BaseHash(Hash160(in)) {}
 CScriptID::CScriptID(const ScriptHash& in) : BaseHash(static_cast<uint160>(in)) {}
 
@@ -65,7 +62,7 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::PUBKEYHASH: return "pubkeyhash";
     case TxoutType::SCRIPTHASH: return "scripthash";
     case TxoutType::MULTISIG: return "multisig";
-    case TxoutType::NULL_DATA: return "nulldata";
+    case TxoutType::UNSPENDABLE: return "unspendable";
     case TxoutType::WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TxoutType::WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
@@ -188,13 +185,9 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
         return TxoutType::NONSTANDARD;
     }
 
-    // Provably prunable, data-carrying output
-    //
-    // So long as script passes the IsUnspendable() test and all but the first
-    // byte passes the IsPushOnly() test we don't care what exactly is in the
-    // script.
-    if (scriptPubKey.size() >= 1 && scriptPubKey[0] == OP_RETURN && scriptPubKey.IsPushOnly(scriptPubKey.begin()+1)) {
-        return TxoutType::NULL_DATA;
+    // Provably prunable, minimally-sized output
+    if (scriptPubKey == (CScript() << OP_RETURN)) {
+        return TxoutType::UNSPENDABLE;
     }
 
     std::vector<unsigned char> data;
@@ -270,7 +263,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         return true;
     }
     case TxoutType::MULTISIG:
-    case TxoutType::NULL_DATA:
+    case TxoutType::UNSPENDABLE:
     case TxoutType::NONSTANDARD:
         return false;
     } // no default case, so the compiler can warn about missing cases

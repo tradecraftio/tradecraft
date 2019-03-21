@@ -117,7 +117,7 @@ static std::vector<RPCArg> CreateTxDoc()
                 },
                 {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                     {
-                        {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                        {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key must be \"destroy\", the value is amount of bitcoin to send to an unspendable output."},
                     },
                 },
             },
@@ -442,9 +442,9 @@ static RPCHelpMan createrawtransaction()
                 },
                 RPCExamples{
                     HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"address\\\":0.01}]\"")
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"destroy\\\":\\\"00010203\\\"}]\"")
             + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"address\\\":0.01}]\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"destroy\\\":\\\"00010203\\\"}]\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -613,7 +613,7 @@ static RPCHelpMan decodescript()
         case TxoutType::WITNESS_V0_SCRIPTHASH:
             // Can be wrapped if the checks below pass
             break;
-        case TxoutType::NULL_DATA:
+        case TxoutType::UNSPENDABLE:
         case TxoutType::SCRIPTHASH:
         case TxoutType::WITNESS_UNKNOWN:
         case TxoutType::WITNESS_V1_TAPROOT:
@@ -653,7 +653,7 @@ static RPCHelpMan decodescript()
             case TxoutType::PUBKEYHASH:
                 // Can be P2WSH wrapped
                 return true;
-            case TxoutType::NULL_DATA:
+            case TxoutType::UNSPENDABLE:
             case TxoutType::SCRIPTHASH:
             case TxoutType::WITNESS_UNKNOWN:
             case TxoutType::WITNESS_V0_KEYHASH:
@@ -1664,7 +1664,7 @@ static RPCHelpMan createpst()
                     RPCResult::Type::STR, "", "The resulting raw transaction (base64-encoded string)"
                 },
                 RPCExamples{
-                    HelpExampleCli("createpst", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+                    HelpExampleCli("createpst", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"destroy\\\":\\\"00010203\\\"}]\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1724,7 +1724,7 @@ static RPCHelpMan converttopst()
                 },
                 RPCExamples{
                             "\nCreate a transaction\n"
-                            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"") +
+                            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"destroy\\\":\\\"00010203\\\"}]\"") +
                             "\nConvert the transaction to a PST\n"
                             + HelpExampleCli("converttopst", "\"rawtransaction\"")
                 },
