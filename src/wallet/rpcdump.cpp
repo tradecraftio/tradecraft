@@ -977,7 +977,7 @@ static std::string RecurseImportData(const CScript& script, ImportData& import_d
         }
         return "";
     }
-    case TX_NULL_DATA:
+    case TX_UNSPENDABLE:
         return "unspendable script";
     case TX_NONSTANDARD:
     case TX_WITNESS_UNKNOWN:

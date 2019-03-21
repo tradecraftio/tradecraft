@@ -80,9 +80,6 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TX_NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes)) {
-          return false;
     }
 
     return true;
@@ -124,7 +121,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         }
     }
 
-    unsigned int nDataOut = 0;
+    unsigned int num_unspendable = 0;
     txnouttype whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
@@ -132,8 +129,8 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
             return false;
         }
 
-        if (whichType == TX_NULL_DATA)
-            nDataOut++;
+        if (whichType == TX_UNSPENDABLE)
+            num_unspendable++;
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
@@ -144,7 +141,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     }
 
     // only one OP_RETURN txout is permitted
-    if (nDataOut > 1) {
+    if (num_unspendable > 1) {
         reason = "multi-op-return";
         return false;
     }

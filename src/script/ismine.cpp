@@ -77,7 +77,7 @@ IsMineResult IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey,
     switch (whichType)
     {
     case TX_NONSTANDARD:
-    case TX_NULL_DATA:
+    case TX_UNSPENDABLE:
     case TX_WITNESS_UNKNOWN:
         break;
     case TX_PUBKEY:

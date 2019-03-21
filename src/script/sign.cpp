@@ -119,7 +119,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     switch (whichTypeRet)
     {
     case TX_NONSTANDARD:
-    case TX_NULL_DATA:
+    case TX_UNSPENDABLE:
     case TX_WITNESS_UNKNOWN:
         return false;
     case TX_PUBKEY:
