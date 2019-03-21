@@ -47,7 +47,6 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             '-txindex',
-            '-datacarrier=1',  # We still test OP_RETURN
         ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
@@ -297,7 +296,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'\xff'])
         tx.vout = [tx.vout[0]] * 2
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '64: multi-op-return'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '64: scriptpubkey'}],
             rawtxs=[tx.serialize().hex()],
         )
 
