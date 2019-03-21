@@ -113,17 +113,17 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
 
     // Duplicate checking
     std::set<CTxDestination> destinations;
-    bool has_data{false};
+    bool has_destroy{false};
 
     for (const std::string& name_ : outputs.getKeys()) {
-        if (name_ == "data") {
-            if (has_data) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: data");
+        if (name_ == "destroy") {
+            if (has_destroy) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: destroy");
             }
-            has_data = true;
-            std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
+            has_destroy = true;
+            CAmount nAmount = AmountFromValue(outputs[name_]);
 
-            CTxOut out(0, CScript() << OP_RETURN << data);
+            CTxOut out(nAmount, CScript() << OP_RETURN);
             rawTx.vout.push_back(out);
         } else {
             CTxDestination destination = DecodeDestination(name_);

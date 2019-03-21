@@ -40,21 +40,21 @@ class WalletSendTest(FreicoinTestFramework):
         self.num_nodes = 2
         # whitelist all peers to speed up tx relay / mempool sync
         self.extra_args = [
-            ["-whitelist=127.0.0.1","-walletrbf=1","-datacarrier=1"],
-            ["-whitelist=127.0.0.1","-walletrbf=1","-datacarrier=1"],
+            ["-whitelist=127.0.0.1","-walletrbf=1"],
+            ["-whitelist=127.0.0.1","-walletrbf=1"],
         ]
         getcontext().prec = 8 # Satoshi precision for Decimal
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def test_send(self, from_wallet, to_wallet=None, amount=None, data=None,
+    def test_send(self, from_wallet, to_wallet=None, amount=None, destroy=None,
                   arg_conf_target=None, arg_estimate_mode=None, arg_fee_rate=None,
                   conf_target=None, estimate_mode=None, fee_rate=None, add_to_wallet=None, pst=None,
                   inputs=None, add_inputs=None, include_unsafe=None, change_address=None, change_position=None, change_type=None,
                   include_watching=None, locktime=None, lock_unspents=None, replaceable=None, subtract_fee_from_outputs=None,
                   expect_error=None, solving_data=None):
-        assert (amount is None) != (data is None)
+        assert (amount is None) != (destroy is None)
 
         from_balance_before = from_wallet.getbalances()["mine"]["trusted"]
         if include_unsafe:
@@ -69,7 +69,7 @@ class WalletSendTest(FreicoinTestFramework):
             dest = to_wallet.getnewaddress()
             outputs = {dest: amount}
         else:
-            outputs = {"data": data}
+            outputs = {"destroy": destroy}
 
         # Construct options dictionary
         options = {}
@@ -176,7 +176,7 @@ class WalletSendTest(FreicoinTestFramework):
                 else:
                     assert_greater_than(from_balance_before - from_balance, amount)
             else:
-                assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "OP_RETURN 35"), None)
+                assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "OP_RETURN"), None)
         else:
             assert_equal(from_balance_before, from_balance)
 
@@ -323,9 +323,9 @@ class WalletSendTest(FreicoinTestFramework):
 
         self.log.info("Create OP_RETURN...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1)
-        self.test_send(from_wallet=w0, data="Hello World", expect_error=(-8, "Data must be hexadecimal string (not 'Hello World')"))
-        self.test_send(from_wallet=w0, data="23")
-        res = self.test_send(from_wallet=w3, data="23")
+        self.test_send(from_wallet=w0, destroy="Hello World", expect_error=(-3, "Invalid amount"))
+        self.test_send(from_wallet=w0, destroy="1")
+        res = self.test_send(from_wallet=w3, destroy="1")
         res = w2.walletprocesspst(res["pst"])
         assert res["complete"]
 

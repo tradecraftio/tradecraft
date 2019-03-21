@@ -37,11 +37,11 @@
         }
     ],
     [
-        "6a00",
+        "6a",
         {
-            "asm": "OP_RETURN 0",
-            "desc": "raw(6a00)#ncfmkl43",
-            "type": "nulldata"
+            "asm": "OP_RETURN",
+            "desc": "raw(6a)#4mhr9ur5",
+            "type": "unspendable"
         }
     ],
     [

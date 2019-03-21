@@ -1040,7 +1040,7 @@ RPCHelpMan send()
         "\nSend a transaction.\n",
         {
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
-                    "That is, each address can only appear once and there can only be one 'data' object.\n"
+                    "That is, each address can only appear once and there can only be one 'destroy' object.\n"
                     "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
                 {
                     {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
@@ -1050,7 +1050,7 @@ RPCHelpMan send()
                         },
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                         {
-                            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                            {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key must be \"destroy\", the value is amount of bitcoin to send to an unspendable output."},
                         },
                     },
                 },
@@ -1338,7 +1338,7 @@ RPCHelpMan walletcreatefundedpst()
                         },
                         },
                     {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
-                            "That is, each address can only appear once and there can only be one 'data' object.\n"
+                            "That is, each address can only appear once and there can only be one 'destroy' object.\n"
                             "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
                             "accepted as second parameter.",
                         {
@@ -1349,7 +1349,7 @@ RPCHelpMan walletcreatefundedpst()
                                 },
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                 {
-                                    {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                                    {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key must be \"destroy\", the value is amount of bitcoin to send to an unspendable output."},
                                 },
                             },
                         },

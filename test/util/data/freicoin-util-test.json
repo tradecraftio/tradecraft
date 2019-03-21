@@ -486,18 +486,18 @@
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
-     "outdata=4:badhexdata"],
+     "outdestroy=4:badhexdata"],
     "return_code": 1,
-    "error_txt": "error: invalid TX output data",
+    "error_txt": "error: invalid TX output value",
     "description": "Attempts to create a new transaction with one input and an output with malformed hex data. Expected to fail"
   },
   { "exec": "./freicoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
-     "outdata=badhexdata"],
+     "outdestroy=badhexdata"],
     "return_code": 1,
-    "error_txt": "error: invalid TX output data",
+    "error_txt": "error: invalid TX output value",
     "description": "Attempts to create a new transaction with one input and an output with no value and malformed hex data. Expected to fail"
   },
   { "exec": "./freicoin-tx",
@@ -505,9 +505,9 @@
     ["-create", "nversion=1",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
-     "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+     "outdestroy=4"],
     "output_cmp": "txcreatedata1.hex",
-    "description": "Creates a new transaction with one input, one address output and one data output"
+    "description": "Creates a new transaction with one input, one address output and one OP_RETURN output"
   },
   { "exec": "./freicoin-tx",
     "args":
@@ -515,28 +515,19 @@
      "-create", "nversion=1",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
-     "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+     "outdestroy=4"],
     "output_cmp": "txcreatedata1.json",
-    "description": "Creates a new v1 transaction with one input, one address output and one data output (output in json)"
+    "description": "Creates a new v1 transaction with one input, one address output and one OP_RETURN output (output in json)"
   },
   { "exec": "./freicoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
-     "outdata=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
-    "output_cmp": "txcreatedata2.hex",
-    "description": "Creates a new transaction with one input, one address output and one data (zero value) output"
-  },
-  { "exec": "./freicoin-tx",
-    "args":
-    ["-json",
-     "-create",
-     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
-     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
-     "outdata=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
-    "output_cmp": "txcreatedata2.json",
-    "description": "Creates a new transaction with one input, one address output and one data (zero value) output (output in json)"
+     "outdestroy"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX output value",
+    "description": "Creates a new transaction with one input, one address output and one OP_RETURN (zero value) output"
   },
   { "exec": "./freicoin-tx",
     "args":
