@@ -211,7 +211,6 @@ class BlockchainTest(BitcoinTestFramework):
           "deployments": {
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
             'bip66': {'type': 'buried', 'active': True, 'height': 3},
-            'bip65': {'type': 'buried', 'active': True, 'height': 4},
             'locktime': {'type': 'buried', 'active': True, 'height': 5},
             'finaltx': {
                 'type': 'bip9',
@@ -274,7 +273,6 @@ class BlockchainTest(BitcoinTestFramework):
         self.start_node(0, extra_args=[
             '-testactivationheight=bip34@2',
             '-testactivationheight=dersig@3',
-            '-testactivationheight=cltv@4',
             '-testactivationheight=locktime@5',
             '-testactivationheight=segwit@6',
         ])
