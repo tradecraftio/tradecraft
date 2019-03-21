@@ -38,8 +38,6 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
     switch (dep) {
     case Consensus::DEPLOYMENT_HEIGHTINCB:
         return "bip34";
-    case Consensus::DEPLOYMENT_CLTV:
-        return "bip65";
     case Consensus::DEPLOYMENT_DERSIG:
         return "bip66";
     case Consensus::DEPLOYMENT_LOCKTIME:
