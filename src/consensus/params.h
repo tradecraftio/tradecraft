@@ -29,7 +29,6 @@ namespace Consensus {
 enum BuriedDeployment : int16_t {
     // buried deployments get negative values to avoid overlap with DeploymentPos
     DEPLOYMENT_HEIGHTINCB = std::numeric_limits<int16_t>::min(),
-    DEPLOYMENT_CLTV,
     DEPLOYMENT_DERSIG,
     DEPLOYMENT_LOCKTIME,
     DEPLOYMENT_SEGWIT,
@@ -87,8 +86,6 @@ struct Params {
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
-    /** Block height at which BIP65 becomes active */
-    int BIP65Height;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
     /** Block height at which locktime restrictions (BIP68 and BIP113) become active */
@@ -132,8 +129,6 @@ struct Params {
         switch (dep) {
         case DEPLOYMENT_HEIGHTINCB:
             return BIP34Height;
-        case DEPLOYMENT_CLTV:
-            return BIP65Height;
         case DEPLOYMENT_DERSIG:
             return BIP66Height;
         case DEPLOYMENT_LOCKTIME:
