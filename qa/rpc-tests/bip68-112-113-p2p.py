@@ -229,11 +229,11 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
 
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'defined')
+        assert_equal(get_bip9_status(self.nodes[0], 'locktime')['status'], 'defined')
         test_blocks = self.generate_blocks(61, 4)
         yield TestInstance(test_blocks, sync_every_block=False) # 1
         # Advanced from DEFINED to STARTED, height = 143
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'locktime')['status'], 'started')
 
         # Fail to achieve LOCKED_IN 100 out of 144 signal bit 0
         # using a variety of bits to simulate multiple parallel softforks
@@ -243,7 +243,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test_blocks = self.generate_blocks(24, 536936448, test_blocks) # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False) # 2
         # Failed to advance past STARTED, height = 287
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'locktime')['status'], 'started')
 
         # 108 out of 144 signal bit 0 to achieve lock-in
         # using a variety of bits to simulate multiple parallel softforks
@@ -253,7 +253,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test_blocks = self.generate_blocks(10, 536936448, test_blocks) # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False) # 3
         # Advanced from STARTED to LOCKED_IN, height = 431
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'locktime')['status'], 'locked_in')
 
         # 140 more version 4 blocks
         test_blocks = self.generate_blocks(140, 4)
@@ -297,7 +297,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test_blocks = self.generate_blocks(2, 4)
         yield TestInstance(test_blocks, sync_every_block=False) # 5
         # Not yet advanced to ACTIVE, height = 574 (will activate for block 576, not 575)
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'locktime')['status'], 'locked_in')
 
         # Test both version 1 and version 2 transactions for all tests
         # BIP113 test transaction will be modified before each use to put in appropriate block time
@@ -374,7 +374,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         # 1 more version 4 block to get us to height 575 so the fork should now be active for the next block
         test_blocks = self.generate_blocks(1, 4)
         yield TestInstance(test_blocks, sync_every_block=False) # 8
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'active')
+        assert_equal(get_bip9_status(self.nodes[0], 'locktime')['status'], 'active')
 
 
         #################################
@@ -453,10 +453,17 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
 
+        ## Note: The following tests of BIP 112 (checksequenceverify)
+        ##       have been modified to assume that BIP 112 hass NOT
+        ##       activated. This should be reverted back to the
+        ##       original behaviour and the tests modified to use
+        ##       segwit script whenn CHECKSEQUENCEVERIFY is finally
+        ##       deployed as part of the segwit script update.
+
         ### BIP 112 ###
         ### Version 1 txs ###
         # -1 OP_CSV tx should fail
-        yield TestInstance([[self.create_test_block([bip112tx_special_v1]), False]]) #32
+        yield TestInstance([[self.create_test_block([bip112tx_special_v1]), True]]) #32
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
         success_txs = []
         for b25 in range(2):
@@ -464,7 +471,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
                 for b18 in range(2):
                     success_txs.append(bip112txs_vary_OP_CSV_v1[1][b25][b22][b18])
                     success_txs.append(bip112txs_vary_OP_CSV_9_v1[1][b25][b22][b18])
-        yield TestInstance([[self.create_test_block(success_txs), True]]) # 33
+        yield TestInstance([[self.create_test_block(success_txs), False]]) # 33
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is unset in argument to OP_CSV, version 1 txs should now fail
@@ -492,7 +499,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
                     success_txs.append(bip112txs_vary_OP_CSV_v2[1][b25][b22][b18]) # 8/16 of vary_OP_CSV
                     success_txs.append(bip112txs_vary_OP_CSV_9_v2[1][b25][b22][b18]) # 8/16 of vary_OP_CSV_9
 
-        yield TestInstance([[self.create_test_block(success_txs), True]]) # 83
+        yield TestInstance([[self.create_test_block(success_txs), False]]) # 83
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         ## SEQUENCE_LOCKTIME_DISABLE_FLAG is unset in argument to OP_CSV for all remaining txs ##
@@ -531,7 +538,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
             for b18 in range(2):
                 success_txs.append(bip112txs_vary_nSequence_v2[0][b25][0][b18]) # 16/16 of vary_nSequence
                 success_txs.append(bip112txs_vary_OP_CSV_v2[0][b25][0][b18]) # 16/16 of vary_OP_CSV
-        yield TestInstance([[self.create_test_block(success_txs), True]]) # 124
+        yield TestInstance([[self.create_test_block(success_txs), False]]) # 124
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # Additional test, of checking that comparison of two time types works properly
@@ -542,7 +549,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
                 tx.vin[0].nSequence = base_relative_locktime | seq_type_flag
                 signtx = self.sign_transaction(self.nodes[0], tx)
                 time_txs.append(signtx)
-        yield TestInstance([[self.create_test_block(time_txs), True]]) # 125
+        yield TestInstance([[self.create_test_block(time_txs), False]]) # 125
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         ### Missing aspects of test

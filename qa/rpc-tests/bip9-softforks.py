@@ -224,9 +224,9 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
     def get_tests(self):
         for test in itertools.chain(
-                self.test_BIP('csv', 0x20000001, self.sequence_lock_invalidate, self.donothing, 0),
-                self.test_BIP('csv', 0x20000001, self.mtp_invalidate, self.donothing, 0),
-                self.test_BIP('csv', 0x20000001, self.donothing, self.csv_invalidate, 0),
+                self.test_BIP('locktime', 0x20000001, self.sequence_lock_invalidate, self.donothing, 0),
+                self.test_BIP('locktime', 0x20000001, self.mtp_invalidate, self.donothing, 0),
+                #self.test_BIP('locktime', 0x20000001, self.donothing, self.csv_invalidate, 0), #disabled on Freicoin
                 self.test_BIP('finaltx', 0x20001000, self.finaltx_invalidate, self.donothing, 12)
         ):
             yield test

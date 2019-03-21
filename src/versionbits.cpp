@@ -26,7 +26,7 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
         /*.gbt_force =*/ true,
     },
     {
-        /*.name =*/ "csv",
+        /*.name =*/ "locktime",
         /*.gbt_force =*/ true,
     },
     {
