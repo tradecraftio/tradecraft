@@ -27,8 +27,6 @@
 
 #include <stdint.h>
 
-static const bool DEFAULT_ACCEPT_DATACARRIER = false;
-
 class CKeyID;
 class CScript;
 
@@ -40,10 +38,6 @@ public:
     CScriptID(const CScript& in);
     CScriptID(const uint160& in) : uint160(in) {}
 };
-
-static const unsigned int MAX_OP_RETURN_RELAY = 56; //!< bytes (+1 for OP_RETURN, +2 for the pushdata opcodes)
-extern bool fAcceptDatacarrier;
-extern unsigned nMaxDatacarrierBytes;
 
 /**
  * Mandatory script verification flags that all new blocks must comply with for
@@ -64,7 +58,7 @@ enum txnouttype
     TX_PUBKEYHASH,
     TX_SCRIPTHASH,
     TX_MULTISIG,
-    TX_NULL_DATA,
+    TX_UNSPENDABLE, // TX_NULL_DATA in bitcoin, but without data
     TX_WITNESS_V0_SCRIPTHASH,
     TX_WITNESS_V0_KEYHASH,
 };

@@ -3779,37 +3779,37 @@
 <context>
     <name>freicoin</name>
     <message>
-        <location filename="../freicoinstrings.cpp" line="+311"/>
+        <location filename="../freicoinstrings.cpp" line="+308"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+29"/>
         <source>Specify data directory</source>
         <translation>Specify data directory</translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-91"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Connect to a node to retrieve peer addresses, and disconnect</translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+94"/>
         <source>Specify your own public address</source>
         <translation>Specify your own public address</translation>
     </message>
     <message>
-        <location line="-112"/>
+        <location line="-111"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
-        <location line="-131"/>
+        <location line="-128"/>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+29"/>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3844,7 +3844,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Run in the background as a daemon and accept commands</translation>
     </message>
@@ -3854,12 +3854,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-128"/>
+        <location line="-127"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
-        <location line="-221"/>
+        <location line="-218"/>
         <source>Freicoin</source>
         <translation type="unfinished">Freicoin</translation>
     </message>
@@ -3934,7 +3934,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+4"/>
         <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4254,7 +4254,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Rewinding blocks...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4359,7 +4359,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-343"/>
+        <location line="-339"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4419,12 +4419,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+21"/>
+        <location line="+28"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4544,7 +4539,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4654,17 +4649,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="-225"/>
+        <location line="-222"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <location line="+149"/>
+        <location line="+146"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
@@ -4674,7 +4669,7 @@
         <translation>Loading addresses...</translation>
     </message>
     <message>
-        <location line="-284"/>
+        <location line="-281"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4709,7 +4704,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+10"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4820,11 +4815,6 @@
     </message>
     <message>
         <location line="+10"/>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4869,7 +4859,7 @@
         <translation>Unknown network specified in -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-76"/>
         <source>Insufficient funds</source>
         <translation>Insufficient funds</translation>
     </message>
@@ -4899,12 +4889,12 @@
         <translation>Cannot write default address</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>Rescanning...</source>
         <translation>Rescanning...</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Done loading</translation>
     </message>
