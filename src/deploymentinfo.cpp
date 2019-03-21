@@ -40,8 +40,6 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
     switch (dep) {
     case Consensus::DEPLOYMENT_HEIGHTINCB:
         return "bip34";
-    case Consensus::DEPLOYMENT_CLTV:
-        return "bip65";
     case Consensus::DEPLOYMENT_DERSIG:
         return "bip66";
     case Consensus::DEPLOYMENT_LOCKTIME:
@@ -60,8 +58,6 @@ std::optional<Consensus::BuriedDeployment> GetBuriedDeployment(const std::string
         return Consensus::BuriedDeployment::DEPLOYMENT_HEIGHTINCB;
     } else if (name == "dersig") {
         return Consensus::BuriedDeployment::DEPLOYMENT_DERSIG;
-    } else if (name == "cltv") {
-        return Consensus::BuriedDeployment::DEPLOYMENT_CLTV;
     } else if (name == "locktime") {
         return Consensus::BuriedDeployment::DEPLOYMENT_LOCKTIME;
     }
