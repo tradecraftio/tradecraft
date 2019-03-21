@@ -253,7 +253,6 @@ BASE_SCRIPTS = [
     'wallet_encryption.py',
     #'wallet_encryption.py --descriptors', #times out
     'feature_dersig.py',
-    'feature_cltv.py',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     #'wallet_resendwallettransactions.py --descriptors', #times out
