@@ -187,8 +187,8 @@ testScriptsExt = [
     'p2p-feefilter.py',
     'rpcbind_test.py',
     # vv Tests less than 30s vv
-    'bip65-cltv.py',
-    'bip65-cltv-p2p.py',
+#    'bip65-cltv.py', #not deployed on Freicoin
+#    'bip65-cltv-p2p.py', #not deployed on Freicoin
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_proposals.py',
