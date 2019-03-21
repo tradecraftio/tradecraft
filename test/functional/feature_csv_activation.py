@@ -399,16 +399,23 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.send_blocks([self.create_test_block(bip68success_txs)])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
+        ## Note: The following tests of BIP 112 (checksequenceverify)
+        ##       have been modified to assume that BIP 112 hass NOT
+        ##       activated. This should be reverted back to the
+        ##       original behaviour and the tests modified to use
+        ##       segwit script whenn CHECKSEQUENCEVERIFY is finally
+        ##       deployed as part of the segwit script update.
+
         self.log.info("BIP 112 tests")
         self.log.info("Test version 1 txs")
 
         # -1 OP_CSV tx should fail
-        self.send_blocks([self.create_test_block([bip112tx_special_v1])], success=False)
+        self.send_blocks([self.create_test_block([bip112tx_special_v1])])
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
 
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v1 if tx['sdf']]
         success_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v1 if tx['sdf']]
-        self.send_blocks([self.create_test_block(success_txs)])
+        self.send_blocks([self.create_test_block(success_txs)], success=False)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is unset in argument to OP_CSV, version 1 txs should now fail
@@ -428,7 +435,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if tx['sdf']]
         success_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v2 if tx['sdf']]
 
-        self.send_blocks([self.create_test_block(success_txs)])
+        self.send_blocks([self.create_test_block(success_txs)], success=False)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # SEQUENCE_LOCKTIME_DISABLE_FLAG is unset in argument to OP_CSV for all remaining txs ##
@@ -453,7 +460,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # Remaining txs should pass, just test masking works properly
         success_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if not tx['sdf'] and not tx['stf']]
         success_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if not tx['sdf'] and not tx['stf']]
-        self.send_blocks([self.create_test_block(success_txs)])
+        self.send_blocks([self.create_test_block(success_txs)], success=False)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # Additional test, of checking that comparison of two time types works properly
@@ -463,7 +470,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             signtx = sign_transaction(self.nodes[0], tx)
             time_txs.append(signtx)
 
-        self.send_blocks([self.create_test_block(time_txs)])
+        self.send_blocks([self.create_test_block(time_txs)], success=False)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # TODO: Test empty stack fails
