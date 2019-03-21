@@ -23,8 +23,6 @@
 #include <boost/variant.hpp>
 
 
-static const bool DEFAULT_ACCEPT_DATACARRIER = false;
-
 class CKeyID;
 class CScript;
 
@@ -36,21 +34,6 @@ public:
     explicit CScriptID(const CScript& in);
     CScriptID(const uint160& in) : uint160(in) {}
 };
-
-/**
- * Default setting for nMaxDatacarrierBytes. 48 bytes of data, +1 for OP_RETURN,
- * +2 for the pushdata opcodes.
- */
-static const unsigned int MAX_OP_RETURN_RELAY = 51;
-
-/**
- * A data carrying output is an unspendable output containing data. The script
- * type is designated as TX_NULL_DATA.
- */
-extern bool fAcceptDatacarrier;
-
-/** Maximum size of TX_NULL_DATA scripts that this node considers standard. */
-extern unsigned nMaxDatacarrierBytes;
 
 /**
  * Mandatory script verification flags that all new blocks must comply with for
@@ -71,7 +54,7 @@ enum txnouttype
     TX_PUBKEYHASH,
     TX_SCRIPTHASH,
     TX_MULTISIG,
-    TX_NULL_DATA, //!< unspendable OP_RETURN script that carries data
+    TX_UNSPENDABLE, //!< TX_NULL_DATA in bitcoin, but without data
     TX_WITNESS_V0_SCRIPTHASH,
     TX_WITNESS_V0_KEYHASH,
     TX_WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
