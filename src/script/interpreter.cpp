@@ -532,7 +532,10 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 case OP_CHECKLOCKTIMEVERIFY:
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
-                        // not enabled; treat as a NOP2
+                        // not enabled; treat as a NOP2.  We ought to return an
+                        // error if DISCOURAGE_UPGRADABLE_NOPS is set, but
+                        // unfortunately doing so would break the test framework
+                        // which assumes all script flags are soft-forks.
                         break;
                     }
 
