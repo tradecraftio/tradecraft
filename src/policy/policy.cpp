@@ -57,9 +57,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TX_NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
-          return false;
+    }
 
     else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH))
         return false;
@@ -103,7 +101,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         }
     }
 
-    unsigned int nDataOut = 0;
+    unsigned int num_unspendable = 0;
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType, witnessEnabled)) {
@@ -111,8 +109,8 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
             return false;
         }
 
-        if (whichType == TX_NULL_DATA)
-            nDataOut++;
+        if (whichType == TX_UNSPENDABLE)
+            num_unspendable++;
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
@@ -123,7 +121,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
     }
 
     // only one OP_RETURN txout is permitted
-    if (nDataOut > 1) {
+    if (num_unspendable > 1) {
         reason = "multi-op-return";
         return false;
     }

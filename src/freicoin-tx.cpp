@@ -92,7 +92,7 @@ static int AppInitRawTx(int argc, char* argv[])
         strUsage += HelpMessageOpt("outpubkey=VALUE:PUBKEY[:FLAGS]", _("Add pay-to-pubkey output to TX") + ". " +
             _("Optionally add the \"W\" flag to produce a pay-to-witness-pubkey-hash output") + ". " +
             _("Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash."));
-        strUsage += HelpMessageOpt("outdata=[VALUE:]DATA", _("Add data-based output to TX"));
+        strUsage += HelpMessageOpt("outdestroy=VALUE", _("Add unspendable output with specified value to TX"));
         strUsage += HelpMessageOpt("outscript=VALUE:SCRIPT[:FLAGS]", _("Add raw script output to TX") + ". " +
             _("Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output") + ". " +
             _("Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash."));
@@ -383,30 +383,9 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     tx.vout.push_back(txout);
 }
 
-static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strInput)
+static void MutateTxAddOutDestroy(CMutableTransaction& tx, const std::string& strInput)
 {
-    CAmount value = 0;
-
-    // separate [VALUE:]DATA in string
-    size_t pos = strInput.find(':');
-
-    if (pos==0)
-        throw std::runtime_error("TX output value not specified");
-
-    if (pos != std::string::npos) {
-        // Extract and validate VALUE
-        value = ExtractAndValidateValue(strInput.substr(0, pos));
-    }
-
-    // extract and validate DATA
-    std::string strData = strInput.substr(pos + 1, std::string::npos);
-
-    if (!IsHex(strData))
-        throw std::runtime_error("invalid TX output data");
-
-    std::vector<unsigned char> data = ParseHex(strData);
-
-    CTxOut txout(value, CScript() << OP_RETURN << data);
+    CTxOut txout(ExtractAndValidateValue(strInput), CScript() << OP_RETURN);
     tx.vout.push_back(txout);
 }
 
@@ -690,8 +669,8 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxAddOutMultiSig(tx, commandVal);
     else if (command == "outscript")
         MutateTxAddOutScript(tx, commandVal);
-    else if (command == "outdata")
-        MutateTxAddOutData(tx, commandVal);
+    else if (command == "outdestroy")
+        MutateTxAddOutDestroy(tx, commandVal);
 
     else if (command == "sign") {
         if (!ecc) { ecc.reset(new Secp256k1Init()); }
