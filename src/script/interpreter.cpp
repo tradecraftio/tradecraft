@@ -571,7 +571,10 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 case OP_CHECKSEQUENCEVERIFY:
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
-                        // not enabled; treat as a NOP3
+                        // not enabled; treat as a NOP3.  We ought to return an
+                        // error if DISCOURAGE_UPGRADABLE_NOPS is set, but
+                        // unfortunately doing so would break the test framework
+                        // which assumes all script flags are soft-forks.
                         break;
                     }
 
