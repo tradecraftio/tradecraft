@@ -98,9 +98,6 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "Maintain a full transaction index, used by the getrawtransaction rpc call "
 "(default: %u)"),
 QT_TRANSLATE_NOOP("freicoin", ""
-"Maximum size of data in data carrier transactions we relay and mine "
-"(default: %u)"),
-QT_TRANSLATE_NOOP("freicoin", ""
 "Maximum total fees (in %s) to use in a single wallet transaction; setting "
 "this too low may abort large transactions (default: %s)"),
 QT_TRANSLATE_NOOP("freicoin", ""
@@ -300,7 +297,6 @@ QT_TRANSLATE_NOOP("freicoin", "RPC server options:"),
 QT_TRANSLATE_NOOP("freicoin", "Rebuild block chain index from current blk000??.dat files on startup"),
 QT_TRANSLATE_NOOP("freicoin", "Receive and display P2P network alerts (default: %u)"),
 QT_TRANSLATE_NOOP("freicoin", "Reducing -maxconnections from %d to %d, because of system limitations."),
-QT_TRANSLATE_NOOP("freicoin", "Relay and mine data carrier transactions (default: %u)"),
 QT_TRANSLATE_NOOP("freicoin", "Relay non-P2SH multisig (default: %u)"),
 QT_TRANSLATE_NOOP("freicoin", "Rescan the block chain for missing wallet transactions on startup"),
 QT_TRANSLATE_NOOP("freicoin", "Rescanning..."),
