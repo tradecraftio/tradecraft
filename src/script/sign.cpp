@@ -120,7 +120,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     switch (whichTypeRet)
     {
     case TxoutType::NONSTANDARD:
-    case TxoutType::NULL_DATA:
+    case TxoutType::UNSPENDABLE:
     case TxoutType::WITNESS_UNKNOWN:
     case TxoutType::WITNESS_V1_TAPROOT:
         return false;

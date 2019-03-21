@@ -3930,7 +3930,7 @@ RPCHelpMan getaddressinfo()
                         {RPCResult::Type::NUM, "witness_version", /* optional */ true, "The version number of the witness program."},
                         {RPCResult::Type::STR_HEX, "witness_program", /* optional */ true, "The hex value of the witness program."},
                         {RPCResult::Type::STR, "script", /* optional */ true, "The output script type. Only if isscript is true and the redeemscript is known. Possible\n"
-                                                                     "types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash,\n"
+                                                                     "types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, unspendable, witness_v0_keyhash,\n"
                             "witness_v0_scripthash, witness_unknown."},
                         {RPCResult::Type::STR_HEX, "hex", /* optional */ true, "The redeemscript for the p2sh address."},
                         {RPCResult::Type::ARR, "pubkeys", /* optional */ true, "Array of pubkeys associated with the known redeemscript (only if script is multisig).",
@@ -4150,7 +4150,7 @@ static RPCHelpMan send()
         "\nSend a transaction.\n",
         {
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
-                    "That is, each address can only appear once and there can only be one 'data' object.\n"
+                    "That is, each address can only appear once and there can only be one 'destroy' object.\n"
                     "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
                 {
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -4160,7 +4160,7 @@ static RPCHelpMan send()
                         },
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                         {
-                            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                            {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key must be \"destroy\", the value is amount of bitcoin to send to an unspendable output"},
                         },
                     },
                 },
@@ -4496,7 +4496,7 @@ static RPCHelpMan walletcreatefundedpst()
                         },
                         },
                     {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
-                            "That is, each address can only appear once and there can only be one 'data' object.\n"
+                            "That is, each address can only appear once and there can only be one 'destroy' object.\n"
                             "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
                             "accepted as second parameter.",
                         {
@@ -4507,7 +4507,7 @@ static RPCHelpMan walletcreatefundedpst()
                                 },
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                 {
-                                    {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                                    {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key must be \"destroy\", the value is amount of bitcoin to send to an unspendable output"},
                                 },
                             },
                         },

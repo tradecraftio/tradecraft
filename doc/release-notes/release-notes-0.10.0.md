@@ -300,12 +300,6 @@ Support for BIP 23 block proposals is now available in Bitcoin Core's
 their next block before expending work on it, reducing risks of accidental
 hardforks or mining invalid blocks.
 
-Two new options to control mining policy:
-- `-datacarrier=0/1` : Relay and mine "data carrier" (OP_RETURN) transactions
-if this is 1.
-- `-datacarriersize=n` : Maximum size, in bytes, we consider acceptable for
-"data carrier" outputs.
-
 The relay policy has changed to more properly implement the desired behavior of not 
 relaying free (or very low fee) transactions unless they have a priority above the 
 AllowFreeThreshold(), in which case they are relayed subject to the rate limiter.
@@ -345,7 +339,6 @@ RPC:
 - `99ddc6c` Add nLocalServices info to RPC getinfo
 - `cf0c47b` Remove getwork() RPC call
 - `2a72d45` prioritisetransaction <txid> <priority delta> <priority tx fee>
-- `e44fea5` Add an option `-datacarrier` to allow users to disable relaying/mining data carrier transactions
 - `2ec5a3d` Prevent easy RPC memory exhaustion attack
 - `d4640d7` Added argument to getbalance to include watchonly addresses and fixed errors in balance calculation
 - `83f3543` Added argument to listaccounts to include watchonly addresses
@@ -370,7 +363,6 @@ RPC:
 - `b5ec5fe` update getnetworkinfo help with subversion
 - `ad6e601` RPC additions after headers-first
 - `33dfbf5` rpc: Fix leveldb iterator leak, and flush before `gettxoutsetinfo`
-- `2aa6329` Enable customising node policy for datacarrier data size with a -datacarriersize option
 - `f877aaa` submitblock: Use a temporary CValidationState to determine accurately the outcome of ProcessBlock
 - `e69a587` submitblock: Support for returning specific rejection reasons
 - `af82884` Add "warmup mode" for RPC server
