@@ -89,7 +89,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     switch (whichTypeRet)
     {
     case TX_NONSTANDARD:
-    case TX_NULL_DATA:
+    case TX_UNSPENDABLE:
     case TX_WITNESS_UNKNOWN:
         return false;
     case TX_PUBKEY:
@@ -320,7 +320,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     switch (txType)
     {
     case TX_NONSTANDARD:
-    case TX_NULL_DATA:
+    case TX_UNSPENDABLE:
     case TX_WITNESS_UNKNOWN:
         // Don't know anything about this, assume bigger one is correct:
         if (sigs1.script.size() >= sigs2.script.size())
