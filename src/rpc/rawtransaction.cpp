@@ -416,7 +416,7 @@ static RPCHelpMan createrawtransaction()
                                 },
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                 {
-                                    {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                                    {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key must be \"destroy\", the value is amount of bitcoin to send to an unspendable output"},
                                 },
                                 },
                         },
@@ -1484,7 +1484,7 @@ static RPCHelpMan createpst()
                                 },
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                 {
-                                    {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                                    {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key must be \"destroy\", the value is amount of bitcoin to send to an unspendable output"},
                                 },
                                 },
                         },

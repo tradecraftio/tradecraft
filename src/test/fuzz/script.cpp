@@ -80,26 +80,26 @@ FUZZ_TARGET_INIT(script, initialize_script)
         } else {
             assert(type_ret == TxoutType::PUBKEY ||
                    type_ret == TxoutType::NONSTANDARD ||
-                   type_ret == TxoutType::NULL_DATA);
+                   type_ret == TxoutType::UNSPENDABLE);
         }
     } else {
         assert(required_ret >= 1 && required_ret <= 16);
         assert((unsigned long)required_ret == addresses.size());
         assert(type_ret == TxoutType::MULTISIG || required_ret == 1);
     }
-    if (type_ret == TxoutType::NONSTANDARD || type_ret == TxoutType::NULL_DATA) {
+    if (type_ret == TxoutType::NONSTANDARD || type_ret == TxoutType::UNSPENDABLE) {
         assert(!extract_destinations_ret);
     }
     if (!extract_destination_ret) {
         assert(type_ret == TxoutType::PUBKEY ||
                type_ret == TxoutType::NONSTANDARD ||
-               type_ret == TxoutType::NULL_DATA ||
+               type_ret == TxoutType::UNSPENDABLE ||
                type_ret == TxoutType::MULTISIG);
     } else {
         assert(address == addresses[0]);
     }
     if (type_ret == TxoutType::NONSTANDARD ||
-        type_ret == TxoutType::NULL_DATA ||
+        type_ret == TxoutType::UNSPENDABLE ||
         type_ret == TxoutType::MULTISIG) {
         assert(!extract_destination_ret);
     }
@@ -109,17 +109,17 @@ FUZZ_TARGET_INIT(script, initialize_script)
     assert(type_ret == which_type);
     if (!is_standard_ret) {
         assert(which_type == TxoutType::NONSTANDARD ||
-               which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::UNSPENDABLE ||
                which_type == TxoutType::MULTISIG);
     }
     if (which_type == TxoutType::NONSTANDARD) {
         assert(!is_standard_ret);
     }
-    if (which_type == TxoutType::NULL_DATA) {
+    if (which_type == TxoutType::UNSPENDABLE) {
         assert(script.IsUnspendable());
     }
     if (script.IsUnspendable()) {
-        assert(which_type == TxoutType::NULL_DATA ||
+        assert(which_type == TxoutType::UNSPENDABLE ||
                which_type == TxoutType::NONSTANDARD);
     }
 
