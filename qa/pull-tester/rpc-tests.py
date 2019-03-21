@@ -164,8 +164,8 @@ if ENABLE_ZMQ:
 
 testScriptsExt = [
     'bip9-softforks.py',
-    'bip65-cltv.py',
-    'bip65-cltv-p2p.py',
+#    'bip65-cltv.py', #not deployed on Freicoin
+#    'bip65-cltv-p2p.py', #not deployed on Freicoin
     'bip68-sequence.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
