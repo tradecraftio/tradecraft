@@ -103,11 +103,11 @@ class BIP68Test(FreicoinTestFramework):
 
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx2))
 
-        # Setting the version back down to 1 should disable the sequence lock,
-        # so this should be accepted.
+        # Setting the version back down to 1 does not disable the
+        # sequence lock, unlike bitcoin, so this is still rejected.
         tx2.nVersion = 1
 
-        self.nodes[0].sendrawtransaction(ToHex(tx2))
+        assert_raises_rpc_error(-26, "non-BIP68-final", self.nodes[0].sendrawtransaction, ToHex(tx2))
 
     # Calculate the median time past of a prior block ("confirmations" before
     # the current tip).
