@@ -1427,7 +1427,7 @@ class TaprootTest(FreicoinTestFramework):
             # Construct CTransaction with random version, nLocktime
             tx = CTransaction()
             tx.version = random.choice([1, 2, random.getrandbits(32)])
-            min_sequence = (tx.version != 1 and tx.version != 0) * 0x80000000  # The minimum sequence number to disable relative locktime
+            min_sequence = 0x80000000  # The minimum sequence number to disable relative locktime
             if random.choice([True, False]):
                 tx.nLockTime = random.randrange(LOCKTIME_THRESHOLD, self.lastblocktime - 7200)  # all absolute locktimes in the past
             else:
