@@ -59,11 +59,10 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
     int nMinHeight = -1;
     int64_t nMinTime = -1;
 
-    // tx.nVersion is signed integer so requires cast to unsigned otherwise
-    // we would be doing a signed comparison and half the range of nVersion
-    // wouldn't support BIP 68.
-    bool fEnforceBIP68 = static_cast<uint32_t>(tx.nVersion) >= 2
-                      && flags & LOCKTIME_VERIFY_SEQUENCE;
+    // Bitcoin also has the requirement that tx.nVersion be not 0 or
+    // 1, as a soft-fork upgrade protection.  We don't have the same
+    // requirement.
+    bool fEnforceBIP68 = (flags & LOCKTIME_VERIFY_SEQUENCE) != 0;
 
     // Do not enforce sequence numbers as a relative lock time
     // unless we have been instructed to
