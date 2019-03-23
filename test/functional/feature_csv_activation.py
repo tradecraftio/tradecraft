@@ -383,13 +383,6 @@ class BIP68_112_113Test(FreicoinTestFramework):
         self.send_blocks(test_blocks)
 
         self.log.info("BIP 68 tests")
-        self.log.info("Test version 1 txs - all should still pass")
-
-        success_txs = []
-        success_txs.extend(all_rlt_txs(bip68txs_v1))
-        self.send_blocks([self.create_test_block(success_txs)])
-        self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
-
         self.log.info("Test version 2 txs")
 
         # All txs with SEQUENCE_LOCKTIME_DISABLE_FLAG set pass
