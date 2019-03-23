@@ -128,11 +128,11 @@ class BIP68Test(FreicoinTestFramework):
 
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx2.serialize().hex())
 
-        # Setting the version back down to 1 should disable the sequence lock,
-        # so this should be accepted.
+        # Setting the version back down to 1 does not disable the
+        # sequence lock, unlike bitcoin, so this is still rejected.
         tx2.nVersion = 1
 
-        self.wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=tx2.serialize().hex())
+        assert_raises_rpc_error(-26, "non-BIP68-final", self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx2.serialize().hex())
 
     # Calculate the median time past of a prior block ("confirmations" before
     # the current tip).
