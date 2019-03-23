@@ -880,11 +880,11 @@ static std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, in
     int nMinHeight = -1;
     int64_t nMinTime = -1;
 
-    // tx.nVersion is signed integer so requires cast to unsigned otherwise
-    // we would be doing a signed comparison and half the range of nVersion
-    // wouldn't support BIP 68.
-    bool fEnforceBIP68 = static_cast<uint32_t>(tx.nVersion) >= 2
-                      && flags & LOCKTIME_VERIFY_SEQUENCE;
+    // Bitcoin also has the requirement that tx.nVersion be not 0 or
+    // 1, as a soft-fork upgrade protection. We don't have the same
+    // requirement since we lack the ability to change tx.nVersion
+    // until the protocol cleanup rule-change activates.
+    bool fEnforceBIP68 = (flags & LOCKTIME_VERIFY_SEQUENCE) != 0;
 
     // Do not enforce sequence numbers as a relative lock time
     // unless we have been instructed to
@@ -1169,14 +1169,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.DoS(100, false, REJECT_INVALID, "coinbase");
-
-    // Don't relay version 2 transactions until CSV is active, and we can be
-    // sure that such transactions will be mined (unless we're on
-    // -testnet/-regtest).
-    const CChainParams& chainparams = Params();
-    if (fRequireStandard && tx.nVersion >= 2 && VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_LOCKTIME) != THRESHOLD_ACTIVE) {
-        return state.DoS(0, false, REJECT_NONSTANDARD, "premature-version2-tx");
-    }
 
     // Reject transactions with witness before segregated witness activates (override with -prematurewitness)
     bool witnessEnabled = IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus());
