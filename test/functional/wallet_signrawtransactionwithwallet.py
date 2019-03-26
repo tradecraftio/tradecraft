@@ -35,7 +35,6 @@ from test_framework.script import (
     CScript,
     OP_CHECKLOCKTIMEVERIFY,
     OP_CHECKSEQUENCEVERIFY,
-    OP_DROP,
     OP_TRUE,
 )
 
@@ -194,7 +193,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
         assert self.nodes[0].getdeploymentinfo()['deployments']['locktime']['active']
 
         # Create a P2WSH script with CSV
-        script = CScript([1, OP_CHECKSEQUENCEVERIFY, OP_DROP])
+        script = CScript([1, OP_CHECKSEQUENCEVERIFY])
         address = script_to_p2wsh(script)
 
         # Fund that address and make the spend
