@@ -293,6 +293,10 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     }
 #endif
 
+    // The following tests no longer work with a CSV that pops arguments off
+    // the stack.  In a later commit we remove SCRIPT_VERIFY_CHECKSEQUENCEVERIFY
+    // entirely, so we don't even bother fixing the test.
+#if 0
     // TEST CHECKSEQUENCEVERIFY
     {
         CMutableTransaction invalid_with_csv_tx;
@@ -321,6 +325,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
         PrecomputedTransactionData txdata(invalid_with_csv_tx);
         BOOST_CHECK(CheckInputs(invalid_with_csv_tx, state, pcoinsTip.get(), Params().GetConsensus(), 0, true, SCRIPT_VERIFY_CHECKSEQUENCEVERIFY, true, true, txdata, nullptr));
     }
+#endif
 
     // TODO: add tests for remaining script flags
 
