@@ -515,7 +515,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+164"/>
         <source>yes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -561,8 +561,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+46"/>
-        <location line="+60"/>
+        <location line="+48"/>
+        <location line="+61"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3372,7 +3372,7 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+260"/>
+        <location filename="../transactiontablemodel.cpp" line="+261"/>
         <source>Date</source>
         <translation type="unfinished">Date</translation>
     </message>
@@ -3485,7 +3485,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+213"/>
+        <location line="+224"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3649,7 +3649,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+194"/>
         <source>Export Transaction History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3743,7 +3743,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+302"/>
+        <location filename="../walletmodel.cpp" line="+303"/>
         <source>Send Coins</source>
         <translation type="unfinished">Send Coins</translation>
     </message>
