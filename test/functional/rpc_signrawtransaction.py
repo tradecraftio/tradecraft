@@ -38,7 +38,6 @@ from test_framework.script import (
     OP_CHECKLOCKTIMEVERIFY,
     OP_CHECKSIG,
     OP_CHECKSEQUENCEVERIFY,
-    OP_DROP,
     OP_TRUE,
 )
 from test_framework.script_util import (
@@ -288,7 +287,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         self.nodes[0].generate(500)
 
         # Create a P2WSH script with CSV
-        script = CScript([1, OP_CHECKSEQUENCEVERIFY, OP_DROP])
+        script = CScript([1, OP_CHECKSEQUENCEVERIFY])
         address = script_to_p2wsh(script)
 
         # Fund that address and make the spend
