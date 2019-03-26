@@ -434,7 +434,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     // nSequence, like nLockTime, is a 32-bit unsigned integer
                     // field. See the comment in CHECKLOCKTIMEVERIFY regarding
                     // 5-byte numeric operands.
-                    const CScriptNum nSequence(stacktop(-1), fRequireMinimal, 5);
+                    const CScriptNum nSequence(stacktop(-1), true, 5);
 
                     // In the rare event that the argument may be < 0 due to
                     // some arithmetic being done first, you can always use
