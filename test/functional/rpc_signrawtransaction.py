@@ -20,7 +20,7 @@ from test_framework.key import ECKey
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, get_refheight_for_tx, hex_str_to_bytes
 from test_framework.messages import sha256, CTransaction, CTxInWitness
-from test_framework.script import CScript, OP_0, OP_CHECKSIG, OP_CHECKSEQUENCEVERIFY, OP_CHECKLOCKTIMEVERIFY, OP_DROP, OP_TRUE
+from test_framework.script import CScript, OP_0, OP_CHECKSIG, OP_CHECKSEQUENCEVERIFY, OP_CHECKLOCKTIMEVERIFY, OP_TRUE
 from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_p2wsh_script, script_to_p2wsh_script
 from test_framework.wallet_util import bytes_to_wif
 
@@ -262,7 +262,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         self.nodes[0].generate(500)
 
         # Create a P2WSH script with CSV
-        script = CScript([1, OP_CHECKSEQUENCEVERIFY, OP_DROP])
+        script = CScript([1, OP_CHECKSEQUENCEVERIFY])
         address = script_to_p2wsh(script)
 
         # Fund that address and make the spend
