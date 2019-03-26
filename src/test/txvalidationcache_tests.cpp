@@ -203,7 +203,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     spend_tx.vout[2].nValue = 11*CENT;
     spend_tx.vout[2].scriptPubKey = CScript() << OP_CHECKLOCKTIMEVERIFY << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     spend_tx.vout[3].nValue = 11*CENT;
-    spend_tx.vout[3].scriptPubKey = CScript() << OP_CHECKSEQUENCEVERIFY << OP_DROP << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    spend_tx.vout[3].scriptPubKey = CScript() << OP_CHECKSEQUENCEVERIFY << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     spend_tx.lock_height = m_coinbase_txns[0]->lock_height;
 
     // Sign, with a non-DER signature
@@ -303,6 +303,10 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     }
 #endif
 
+    // The following tests no longer work with a CSV that pops arguments off
+    // the stack.  In a later commit we remove SCRIPT_VERIFY_CHECKSEQUENCEVERIFY
+    // entirely, so we don't even bother fixing the test.
+#if 0
     // TEST CHECKSEQUENCEVERIFY
     {
         CMutableTransaction invalid_with_csv_tx;
@@ -331,6 +335,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         PrecomputedTransactionData txdata;
         BOOST_CHECK(CheckInputScripts(CTransaction(invalid_with_csv_tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), Params().GetConsensus(), 0, 0, true, true, txdata, nullptr));
     }
+#endif
 
     // TODO: add tests for remaining script flags
 
