@@ -29,7 +29,6 @@ void CCoinControl::SetNull()
     m_feerate.reset();
     fOverrideFeeRate = false;
     m_confirm_target.reset();
-    m_signal_bip125_rbf.reset();
     m_fee_mode = FeeEstimateMode::UNSET;
     m_min_depth = DEFAULT_MIN_DEPTH;
     m_max_depth = DEFAULT_MAX_DEPTH;

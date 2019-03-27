@@ -131,9 +131,6 @@ class RawTransactionsTest(FreicoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, locktime out of range", self.nodes[0].createrawtransaction, [], {}, -1)
         assert_raises_rpc_error(-8, "Invalid parameter, locktime out of range", self.nodes[0].createrawtransaction, [], {}, 4294967296)
 
-        # Test `createrawtransaction` invalid `replaceable`
-        assert_raises_rpc_error(-3, "Expected type bool", self.nodes[0].createrawtransaction, [], {}, 0, 'foo')
-
         self.log.info('Check that createrawtransaction accepts an array and object as outputs')
         tx = CTransaction()
         # One output

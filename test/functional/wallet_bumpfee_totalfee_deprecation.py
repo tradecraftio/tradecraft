@@ -16,7 +16,7 @@
 """Test deprecation of passing `totalFee` to the bumpfee RPC."""
 from decimal import Decimal
 
-from test_framework.messages import BIP125_SEQUENCE_NUMBER
+from test_framework.messages import MAX_SEQUENCE_NUMBER
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
@@ -24,7 +24,6 @@ class BumpFeeWithTotalFeeArgumentDeprecationTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[
-            "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
         ] for i in range(self.num_nodes)]
 
@@ -52,7 +51,7 @@ class BumpFeeWithTotalFeeArgumentDeprecationTest(FreicoinTestFramework):
         rbf_node.bumpfee(rbfid)
 
 def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
-    tx_input = dict(sequence=BIP125_SEQUENCE_NUMBER,
+    tx_input = dict(sequence=MAX_SEQUENCE_NUMBER,
                     **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
     destinations = {dest_address: Decimal("0.00050000")}
     destinations[node.getrawchangeaddress()] = change_size

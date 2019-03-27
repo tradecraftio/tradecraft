@@ -530,7 +530,6 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
 bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
 {
     CCoinControl coin_control;
-    coin_control.m_signal_bip125_rbf = true;
     std::vector<std::string> errors;
     CAmount old_fee;
     CAmount new_fee;

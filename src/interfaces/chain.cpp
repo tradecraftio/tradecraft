@@ -25,7 +25,6 @@
 #include <node/transaction.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -285,11 +284,6 @@ public:
     {
         LOCK(cs_main);
         return GuessVerificationProgress(Params().TxData(), LookupBlockIndex(block_hash));
-    }
-    RBFTransactionState isRBFOptIn(const CTransaction& tx) override
-    {
-        LOCK(::mempool.cs);
-        return IsRBFOptIn(tx, ::mempool);
     }
     bool hasDescendantsInMempool(const uint256& txid) override
     {

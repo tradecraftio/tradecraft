@@ -16,7 +16,7 @@
 """Test the listsincelast RPC."""
 
 from test_framework.test_framework import FreicoinTestFramework
-from test_framework.messages import BIP125_SEQUENCE_NUMBER
+from test_framework.messages import MAX_SEQUENCE_NUMBER
 from test_framework.util import (
     assert_array_result,
     assert_equal,
@@ -314,7 +314,7 @@ class ListSinceBlockTest(FreicoinTestFramework):
         dest_address = spending_node.getnewaddress()
 
         tx_input = dict(
-            sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in spending_node.listunspent()))
+            sequence=MAX_SEQUENCE_NUMBER, **next(u for u in spending_node.listunspent()))
         rawtx = spending_node.createrawtransaction(
             [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00051000"),
                          spending_node.getrawchangeaddress(): Decimal("0.00050000")})

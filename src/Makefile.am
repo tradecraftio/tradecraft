@@ -176,7 +176,6 @@ FREICOIN_CORE_H = \
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
-  policy/rbf.h \
   policy/settings.h \
   pow.h \
   protocol.h \
@@ -223,7 +222,6 @@ FREICOIN_CORE_H = \
   util/system.h \
   util/memory.h \
   util/moneystr.h \
-  util/rbf.h \
   util/string.h \
   util/threadnames.h \
   util/time.h \
@@ -296,7 +294,6 @@ libfreicoin_server_a_SOURCES = \
   node/transaction.cpp \
   noui.cpp \
   policy/fees.cpp \
-  policy/rbf.cpp \
   policy/settings.cpp \
   pow.cpp \
   rest.cpp \
@@ -515,7 +512,6 @@ libfreicoin_util_a_SOURCES = \
   util/fees.cpp \
   util/system.cpp \
   util/moneystr.cpp \
-  util/rbf.cpp \
   util/threadnames.cpp \
   util/strencodings.cpp \
   util/string.cpp \

@@ -28,7 +28,6 @@
 #include <index/blockfilterindex.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -409,8 +408,7 @@ static std::string EntryDescriptionString()
            "       ... ]\n"
            "    \"spentby\" : [           (array) unconfirmed transactions spending outputs from this transaction\n"
            "        \"transactionid\",    (string) child transaction id\n"
-           "       ... ]\n"
-           "    \"bip125-replaceable\" : true|false,  (boolean) Whether this transaction could be replaced due to BIP125 (replace-by-fee)\n";
+           "       ... ]\n";
 }
 
 static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
@@ -462,17 +460,6 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     }
 
     info.pushKV("spentby", spent);
-
-    // Add opt-in RBF status
-    bool rbfStatus = false;
-    RBFTransactionState rbfState = IsRBFOptIn(tx, pool);
-    if (rbfState == RBFTransactionState::UNKNOWN) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Transaction is not in mempool");
-    } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
-        rbfStatus = true;
-    }
-
-    info.pushKV("bip125-replaceable", rbfStatus);
 }
 
 UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose)
