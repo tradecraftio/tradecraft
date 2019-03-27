@@ -19,7 +19,6 @@
 #include "wallet/wallet.h"
 #include "policy/fees.h"
 #include "policy/policy.h"
-#include "policy/rbf.h"
 #include "validation.h" //for mempool access
 #include "txmempool.h"
 #include "utilmoneystr.h"
@@ -96,12 +95,6 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
     const CWalletTx& wtx = it->second;
 
     if (!preconditionChecks(pWallet, wtx)) {
-        return;
-    }
-
-    if (!SignalsOptInRBF(wtx)) {
-        vErrors.push_back("Transaction is not BIP 125 replaceable");
-        currentResult = BumpFeeResult::WALLET_ERROR;
         return;
     }
 
@@ -229,13 +222,6 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
         LogPrint(BCLog::RPC, "Bumping fee and discarding dust output\n");
         nNewFee += poutput->nValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
-    }
-
-    // Mark new tx not replaceable, if requested.
-    if (!coin_control.signalRbf) {
-        for (auto& input : mtx.vin) {
-            if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
-        }
     }
 
     currentResult = BumpFeeResult::OK;

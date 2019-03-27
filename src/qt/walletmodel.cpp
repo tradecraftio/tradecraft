@@ -31,7 +31,6 @@
 #include "validation.h"
 #include "net.h" // for g_connman
 #include "policy/fees.h"
-#include "policy/rbf.h"
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h" // for GetBoolArg
@@ -672,7 +671,7 @@ bool WalletModel::transactionCanBeBumped(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     const CWalletTx *wtx = wallet->GetWalletTx(hash);
-    return wtx && SignalsOptInRBF(*wtx) && !wtx->mapValue.count("replaced_by_txid");
+    return wtx && !wtx->mapValue.count("replaced_by_txid");
 }
 
 bool WalletModel::bumpFee(uint256 hash)
@@ -680,7 +679,6 @@ bool WalletModel::bumpFee(uint256 hash)
     std::unique_ptr<CFeeBumper> feeBump;
     {
         CCoinControl coin_control;
-        coin_control.signalRbf = true;
         LOCK2(cs_main, wallet->cs_wallet);
         feeBump.reset(new CFeeBumper(wallet, hash, coin_control, 0));
     }
@@ -761,9 +759,4 @@ bool WalletModel::hdEnabled() const
 int WalletModel::getDefaultConfirmTarget() const
 {
     return nTxConfirmTarget;
-}
-
-bool WalletModel::getDefaultWalletRbf() const
-{
-    return fWalletRbf;
 }
