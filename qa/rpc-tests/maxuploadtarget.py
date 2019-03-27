@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 # <http://www.opensource.org/licenses/mit-license.php>
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import time
 
@@ -93,15 +93,15 @@ class TestNode(NodeConnCB):
         self.ping_counter += 1
         return success
 
-class MaxUploadTest(BitcoinTestFramework):
+class MaxUploadTest(FreicoinTestFramework):
     def __init__(self):
         self.utxo = []
         self.txouts = gen_return_txouts()
  
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to test")
+                          default=os.getenv("FREICOIND", "freicoind"),
+                          help="freicoind binary to test")
 
     def setup_chain(self):
         initialize_chain_clean(self.options.tmpdir, 2)

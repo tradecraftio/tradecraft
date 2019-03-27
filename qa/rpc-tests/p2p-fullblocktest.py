@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ class PreviousSpendableOutput(object):
         self.n = n  # the output we're spending
 
 '''
-This reimplements tests from the bitcoinj/FullBlockTestGenerator used
+This reimplements tests from the freicoinj/FullBlockTestGenerator used
 by the pull-tester.
 
 We use the testing framework in which we expect a particular answer from
@@ -66,7 +66,7 @@ class FullBlockTest(ComparisonTestFramework):
         return block
     
     # Create a block on top of self.tip, and advance self.tip to point to the new block
-    # if spend is specified, then 1 satoshi will be spent from that to an anyone-can-spend output,
+    # if spend is specified, then 1 kria will be spent from that to an anyone-can-spend output,
     # and rest will go to fees.
     def next_block(self, number, spend=None, additional_coinbase_value=0, script=None):
         if self.tip == None:
@@ -78,7 +78,7 @@ class FullBlockTest(ComparisonTestFramework):
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         coinbase.vout[0].nValue += additional_coinbase_value
         if (spend != None):
-            coinbase.vout[0].nValue += spend.tx.vout[spend.n].nValue - 1 # all but one satoshi to fees
+            coinbase.vout[0].nValue += spend.tx.vout[spend.n].nValue - 1 # all but one kria to fees
         coinbase.rehash()
         block = create_block(base_block_hash, coinbase, self.block_time)
         if (spend != None):
@@ -381,7 +381,7 @@ class FullBlockTest(ComparisonTestFramework):
         b26 = update_block(26, [])
         yield rejected(RejectResult(16, b'bad-cb-length'))
 
-        # Extend the b26 chain to make sure bitcoind isn't accepting b26
+        # Extend the b26 chain to make sure freicoind isn't accepting b26
         b27 = block(27, spend=out7)
         yield rejected()
 
@@ -393,7 +393,7 @@ class FullBlockTest(ComparisonTestFramework):
         b28 = update_block(28, [])
         yield rejected(RejectResult(16, b'bad-cb-length'))
 
-        # Extend the b28 chain to make sure bitcoind isn't accepted b28
+        # Extend the b28 chain to make sure freicoind isn't accepted b28
         b29 = block(29, spend=out7)
         # TODO: Should get a reject message back with "bad-prevblk", except
         # there's a bug that prevents this from being detected.  Just note

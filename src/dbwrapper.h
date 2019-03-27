@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_DBWRAPPER_H
-#define BITCOIN_DBWRAPPER_H
+#ifndef FREICOIN_DBWRAPPER_H
+#define FREICOIN_DBWRAPPER_H
 
 #include "clientversion.h"
 #include "serialize.h"
@@ -290,5 +290,5 @@ public:
 
 };
 
-#endif // BITCOIN_DBWRAPPER_H
+#endif // FREICOIN_DBWRAPPER_H
 

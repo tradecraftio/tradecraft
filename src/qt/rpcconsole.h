@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_RPCCONSOLE_H
-#define BITCOIN_QT_RPCCONSOLE_H
+#ifndef FREICOIN_QT_RPCCONSOLE_H
+#define FREICOIN_QT_RPCCONSOLE_H
 
 #include "guiutil.h"
 #include "peertablemodel.h"
@@ -39,7 +39,7 @@ class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
 
-/** Local Bitcoin RPC console. */
+/** Local Freicoin RPC console. */
 class RPCConsole: public QWidget
 {
     Q_OBJECT
@@ -150,4 +150,4 @@ private:
     QMenu *banTableContextMenu;
 };
 
-#endif // BITCOIN_QT_RPCCONSOLE_H
+#endif // FREICOIN_QT_RPCCONSOLE_H

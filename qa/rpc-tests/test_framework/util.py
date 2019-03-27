@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 # Helpful routines for regression testing
 #
 
-# Add python-bitcoinrpc to module search path:
+# Add python-freicoinrpc to module search path:
 import os
 import sys
 
@@ -101,10 +101,10 @@ def rpc_port(n):
     return 12000 + n + os.getpid()%999
 
 def check_json_precision():
-    """Make sure json library being used does not lose precision converting BTC values"""
+    """Make sure json library being used does not lose precision converting FRC values"""
     n = Decimal("20000000.00000003")
-    satoshis = int(json.loads(json.dumps(float(n)))*1.0e8)
-    if satoshis != 2000000000000003:
+    kria = int(json.loads(json.dumps(float(n)))*1.0e8)
+    if kria != 2000000000000003:
         raise RuntimeError("JSON encode/decode loses precision")
 
 def count_bytes(hex_string):
@@ -144,13 +144,13 @@ def sync_mempools(rpc_connections, wait=1):
             break
         time.sleep(wait)
 
-bitcoind_processes = {}
+freicoind_processes = {}
 
 def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
+    with open(os.path.join(datadir, "freicoin.conf"), 'w') as f:
         f.write("regtest=1\n")
         f.write("rpcuser=rt\n")
         f.write("rpcpassword=rt\n")
@@ -162,14 +162,14 @@ def initialize_datadir(dirname, n):
 def rpc_url(i, rpchost=None):
     return "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
 
-def wait_for_bitcoind_start(process, url, i):
+def wait_for_freicoind_start(process, url, i):
     '''
-    Wait for bitcoind to start. This means that RPC is accessible and fully initialized.
-    Raise an exception if bitcoind exits during initialization.
+    Wait for freicoind to start. This means that RPC is accessible and fully initialized.
+    Raise an exception if freicoind exits during initialization.
     '''
     while True:
         if process.poll() is not None:
-            raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
+            raise Exception('freicoind exited with status %i during initialization' % process.returncode)
         try:
             rpc = get_rpc_proxy(url, i)
             blocks = rpc.getblockcount()
@@ -198,16 +198,16 @@ def initialize_chain(test_dir):
             if os.path.isdir(os.path.join("cache","node"+str(i))):
                 shutil.rmtree(os.path.join("cache","node"+str(i)))
 
-        # Create cache directories, run bitcoinds:
+        # Create cache directories, run freicoinds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
-            args = [ os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            args = [ os.getenv("FREICOIND", "freicoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
-            bitcoind_processes[i] = subprocess.Popen(args)
+            freicoind_processes[i] = subprocess.Popen(args)
             if os.getenv("PYTHON_DEBUG", ""):
-                print("initialize_chain: bitcoind started, waiting for RPC to come up")
-            wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
+                print("initialize_chain: freicoind started, waiting for RPC to come up")
+            wait_for_freicoind_start(freicoind_processes[i], rpc_url(i), i)
             if os.getenv("PYTHON_DEBUG", ""):
                 print("initialize_chain: RPC succesfully started")
 
@@ -236,7 +236,7 @@ def initialize_chain(test_dir):
 
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
-        wait_bitcoinds()
+        wait_freicoinds()
         disable_mocktime()
         for i in range(4):
             os.remove(log_filename("cache", i, "debug.log"))
@@ -248,7 +248,7 @@ def initialize_chain(test_dir):
         from_dir = os.path.join("cache", "node"+str(i))
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
-        initialize_datadir(test_dir, i) # Overwrite port/rpcport in bitcoin.conf
+        initialize_datadir(test_dir, i) # Overwrite port/rpcport in freicoin.conf
 
 def initialize_chain_clean(test_dir, num_nodes):
     """
@@ -281,19 +281,19 @@ def _rpchost_to_args(rpchost):
 
 def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
     """
-    Start a bitcoind and return RPC connection to it
+    Start a freicoind and return RPC connection to it
     """
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
-        binary = os.getenv("BITCOIND", "bitcoind")
+        binary = os.getenv("FREICOIND", "freicoind")
     # RPC tests still depend on free transactions
     args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000", "-mocktime="+str(get_mocktime()) ]
     if extra_args is not None: args.extend(extra_args)
-    bitcoind_processes[i] = subprocess.Popen(args)
+    freicoind_processes[i] = subprocess.Popen(args)
     if os.getenv("PYTHON_DEBUG", ""):
-        print("start_node: bitcoind started, waiting for RPC to come up")
+        print("start_node: freicoind started, waiting for RPC to come up")
     url = rpc_url(i, rpchost)
-    wait_for_bitcoind_start(bitcoind_processes[i], url, i)
+    wait_for_freicoind_start(freicoind_processes[i], url, i)
     if os.getenv("PYTHON_DEBUG", ""):
         print("start_node: RPC succesfully started")
     proxy = get_rpc_proxy(url, i, timeout=timewait)
@@ -305,7 +305,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
 
 def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
     """
-    Start multiple bitcoinds, return RPC connections to them
+    Start multiple freicoinds, return RPC connections to them
     """
     if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
     if binary is None: binary = [ None for i in range(num_nodes) ]
@@ -323,8 +323,8 @@ def log_filename(dirname, n_node, logname):
 
 def stop_node(node, i):
     node.stop()
-    bitcoind_processes[i].wait()
-    del bitcoind_processes[i]
+    freicoind_processes[i].wait()
+    del freicoind_processes[i]
 
 def stop_nodes(nodes):
     for node in nodes:
@@ -335,11 +335,11 @@ def set_node_times(nodes, t):
     for node in nodes:
         node.setmocktime(t)
 
-def wait_bitcoinds():
-    # Wait for all bitcoinds to cleanly exit
-    for bitcoind in bitcoind_processes.values():
-        bitcoind.wait()
-    bitcoind_processes.clear()
+def wait_freicoinds():
+    # Wait for all freicoinds to cleanly exit
+    for freicoind in freicoind_processes.values():
+        freicoind.wait()
+    freicoind_processes.clear()
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(p2p_port(node_num))
@@ -523,7 +523,7 @@ def assert_array_result(object_array, to_match, expected, should_not_find = Fals
     if num_matched > 0 and should_not_find == True:
         raise AssertionError("Objects were found %s"%(str(to_match)))
 
-def satoshi_round(amount):
+def kria_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
 # Helper to create at least "count" utxos
@@ -542,8 +542,8 @@ def create_confirmed_utxos(fee, node, count):
         inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
         outputs = {}
         send_value = t['amount'] - fee
-        outputs[addr1] = satoshi_round(send_value/2)
-        outputs[addr2] = satoshi_round(send_value/2)
+        outputs[addr1] = kria_round(send_value/2)
+        outputs[addr2] = kria_round(send_value/2)
         raw_tx = node.createrawtransaction(inputs, outputs)
         signed_tx = node.signrawtransaction(raw_tx)["hex"]
         txid = node.sendrawtransaction(signed_tx)
@@ -594,7 +594,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, fee):
         inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
         outputs = {}
         send_value = t['amount'] - fee
-        outputs[addr] = satoshi_round(send_value)
+        outputs[addr] = kria_round(send_value)
         rawtx = node.createrawtransaction(inputs, outputs)
         newtx = rawtx[0:92]
         newtx = newtx + txouts

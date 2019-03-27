@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_ADDRESSBOOKPAGE_H
-#define BITCOIN_QT_ADDRESSBOOKPAGE_H
+#ifndef FREICOIN_QT_ADDRESSBOOKPAGE_H
+#define FREICOIN_QT_ADDRESSBOOKPAGE_H
 
 #include <QDialog>
 
@@ -99,4 +99,4 @@ Q_SIGNALS:
     void sendCoins(QString addr);
 };
 
-#endif // BITCOIN_QT_ADDRESSBOOKPAGE_H
+#endif // FREICOIN_QT_ADDRESSBOOKPAGE_H

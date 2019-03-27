@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_COINCONTROL_H
-#define BITCOIN_COINCONTROL_H
+#ifndef FREICOIN_COINCONTROL_H
+#define FREICOIN_COINCONTROL_H
 
 #include "primitives/transaction.h"
 
@@ -82,4 +82,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // BITCOIN_COINCONTROL_H
+#endif // FREICOIN_COINCONTROL_H

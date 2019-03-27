@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,11 +17,11 @@
 # program.  If not, see <https://www.gnu.org/licenses/> and
 # <http://www.opensource.org/licenses/mit-license.php>
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
 
-class ZapWalletTXesTest (BitcoinTestFramework):
+class ZapWalletTXesTest (FreicoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -65,18 +65,18 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         tx3 = self.nodes[0].gettransaction(txid3)
         assert_equal(tx3['txid'], txid3) #tx3 must be available (unconfirmed)
         
-        #restart bitcoind
+        #restart freicoind
         self.nodes[0].stop()
-        bitcoind_processes[0].wait()
+        freicoind_processes[0].wait()
         self.nodes[0] = start_node(0,self.options.tmpdir)
         
         tx3 = self.nodes[0].gettransaction(txid3)
         assert_equal(tx3['txid'], txid3) #tx must be available (unconfirmed)
         
         self.nodes[0].stop()
-        bitcoind_processes[0].wait()
+        freicoind_processes[0].wait()
         
-        #restart bitcoind with zapwallettxes
+        #restart freicoind with zapwallettxes
         self.nodes[0] = start_node(0,self.options.tmpdir, ["-zapwallettxes=1"])
         
         assert_raises(JSONRPCException, self.nodes[0].gettransaction, [txid3])

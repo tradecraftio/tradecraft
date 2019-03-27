@@ -17,11 +17,11 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_BITCOINCONSENSUS_H
-#define BITCOIN_BITCOINCONSENSUS_H
+#ifndef FREICOIN_FREICOINCONSENSUS_H
+#define FREICOIN_FREICOINCONSENSUS_H
 
-#if defined(BUILD_BITCOIN_INTERNAL) && defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#if defined(BUILD_FREICOIN_INTERNAL) && defined(HAVE_CONFIG_H)
+#include "config/freicoin-config.h"
   #if defined(_WIN32)
     #if defined(DLL_EXPORT)
       #if defined(HAVE_FUNC_ATTRIBUTE_DLLEXPORT)
@@ -33,7 +33,7 @@
   #elif defined(HAVE_FUNC_ATTRIBUTE_VISIBILITY)
     #define EXPORT_SYMBOL __attribute__ ((visibility ("default")))
   #endif
-#elif defined(MSC_VER) && !defined(STATIC_LIBBITCOINCONSENSUS)
+#elif defined(MSC_VER) && !defined(STATIC_LIBFREICOINCONSENSUS)
   #define EXPORT_SYMBOL __declspec(dllimport)
 #endif
 
@@ -45,33 +45,33 @@
 extern "C" {
 #endif
 
-#define BITCOINCONSENSUS_API_VER 0
+#define FREICOINCONSENSUS_API_VER 0
 
-typedef enum bitcoinconsensus_error_t
+typedef enum freicoinconsensus_error_t
 {
-    bitcoinconsensus_ERR_OK = 0,
-    bitcoinconsensus_ERR_TX_INDEX,
-    bitcoinconsensus_ERR_TX_SIZE_MISMATCH,
-    bitcoinconsensus_ERR_TX_DESERIALIZE,
-} bitcoinconsensus_error;
+    freicoinconsensus_ERR_OK = 0,
+    freicoinconsensus_ERR_TX_INDEX,
+    freicoinconsensus_ERR_TX_SIZE_MISMATCH,
+    freicoinconsensus_ERR_TX_DESERIALIZE,
+} freicoinconsensus_error;
 
 /** Script verification flags */
 enum
 {
-    bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE                = 0,
-    bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH                = (1U << 0), // evaluate P2SH (BIP16) subscripts
-    bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG              = (1U << 2), // enforce strict DER (BIP66) compliance
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_NONE                = 0,
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH                = (1U << 0), // evaluate P2SH (BIP16) subscripts
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG              = (1U << 2), // enforce strict DER (BIP66) compliance
 };
 
 /// Returns 1 if the input nIn of the serialized transaction pointed to by
 /// txTo correctly spends the scriptPubKey pointed to by scriptPubKey under
 /// the additional constraints specified by flags.
 /// If not NULL, err will contain an error/success code for the operation
-EXPORT_SYMBOL int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
+EXPORT_SYMBOL int freicoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
                                     const unsigned char *txTo        , unsigned int txToLen,
-                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err);
+                                    unsigned int nIn, unsigned int flags, freicoinconsensus_error* err);
 
-EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
+EXPORT_SYMBOL unsigned int freicoinconsensus_version();
 
 #ifdef __cplusplus
 } // extern "C"
@@ -79,4 +79,4 @@ EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
 
 #undef EXPORT_SYMBOL
 
-#endif // BITCOIN_BITCOINCONSENSUS_H
+#endif // FREICOIN_FREICOINCONSENSUS_H

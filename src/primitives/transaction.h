@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
-#define BITCOIN_PRIMITIVES_TRANSACTION_H
+#ifndef FREICOIN_PRIMITIVES_TRANSACTION_H
+#define FREICOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
 #include "script/script.h"
@@ -174,13 +174,13 @@ public:
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,
-        // which has units satoshis-per-kilobyte.
+        // which has units kria-per-kilobyte.
         // If you'd pay more than 1/3 in fees
         // to spend something, then we consider it dust.
         // A typical spendable txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend:
         // so dust is a spendable txout less than
-        // 546*minRelayTxFee/1000 (in satoshis)
+        // 546*minRelayTxFee/1000 (in kria)
         if (scriptPubKey.IsUnspendable())
             return 0;
 
@@ -325,4 +325,4 @@ struct CMutableTransaction
     uint256 GetHash() const;
 };
 
-#endif // BITCOIN_PRIMITIVES_TRANSACTION_H
+#endif // FREICOIN_PRIMITIVES_TRANSACTION_H

@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_CRYPTO_HMAC_SHA512_H
-#define BITCOIN_CRYPTO_HMAC_SHA512_H
+#ifndef FREICOIN_CRYPTO_HMAC_SHA512_H
+#define FREICOIN_CRYPTO_HMAC_SHA512_H
 
 #include "crypto/sha512.h"
 
@@ -43,4 +43,4 @@ public:
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
 };
 
-#endif // BITCOIN_CRYPTO_HMAC_SHA512_H
+#endif // FREICOIN_CRYPTO_HMAC_SHA512_H

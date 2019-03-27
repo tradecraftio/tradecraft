@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_ADDRMAN_H
-#define BITCOIN_ADDRMAN_H
+#ifndef FREICOIN_ADDRMAN_H
+#define FREICOIN_ADDRMAN_H
 
 #include "netbase.h"
 #include "protocol.h"
@@ -591,4 +591,4 @@ public:
 
 };
 
-#endif // BITCOIN_ADDRMAN_H
+#endif // FREICOIN_ADDRMAN_H

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,23 +21,23 @@
 # Test mulitple rpc user config option rpcauth
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
 import http.client
 import urllib.parse
 
-class HTTPBasicsTest (BitcoinTestFramework):
+class HTTPBasicsTest (FreicoinTestFramework):
     def setup_nodes(self):
         return start_nodes(4, self.options.tmpdir)
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
         initialize_chain(self.options.tmpdir)
-        #Append rpcauth to bitcoin.conf before initialization
+        #Append rpcauth to freicoin.conf before initialization
         rpcauth = "rpcauth=rt:93648e835a54c573682c2eb19f882535$7681e9c5b74bdd85e78166031d2058e1069b3ed7ed967c93fc63abba06f31144"
         rpcauth2 = "rpcauth=rt2:f8607b1a88861fac29dfccf9b52ff9f$ff36a0c23c8c62b4846112e50fa888416e94c17bfd4c42f88fd8f55ec6a3137e"
-        with open(os.path.join(self.options.tmpdir+"/node0", "bitcoin.conf"), 'a') as f:
+        with open(os.path.join(self.options.tmpdir+"/node0", "freicoin.conf"), 'a') as f:
             f.write(rpcauth+"\n")
             f.write(rpcauth2+"\n")
 

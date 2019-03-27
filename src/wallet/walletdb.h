@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_WALLET_WALLETDB_H
-#define BITCOIN_WALLET_WALLETDB_H
+#ifndef FREICOIN_WALLET_WALLETDB_H
+#define FREICOIN_WALLET_WALLETDB_H
 
 #include "amount.h"
 #include "wallet/db.h"
@@ -157,4 +157,4 @@ private:
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 void ThreadFlushWalletDB(const std::string& strFile);
 
-#endif // BITCOIN_WALLET_WALLETDB_H
+#endif // FREICOIN_WALLET_WALLETDB_H

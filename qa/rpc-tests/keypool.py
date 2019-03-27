@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,18 +19,18 @@
 
 # Exercise the wallet keypool, and interaction with wallet encryption/locking
 
-# Add python-bitcoinrpc to module search path:
+# Add python-freicoinrpc to module search path:
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
-class KeyPoolTest(BitcoinTestFramework):
+class KeyPoolTest(FreicoinTestFramework):
 
     def run_test(self):
         nodes = self.nodes
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
-        bitcoind_processes[0].wait()
+        freicoind_processes[0].wait()
         # Restart node 0
         nodes[0] = start_node(0, self.options.tmpdir)
         # Keep creating keys

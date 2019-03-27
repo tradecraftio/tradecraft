@@ -24,7 +24,7 @@
 #include "script/interpreter.h"
 #include "script/sign.h"
 #include "uint256.h"
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet_ismine.h"

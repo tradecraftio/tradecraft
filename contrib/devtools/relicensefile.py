@@ -85,7 +85,7 @@ program.  If not, see <https://www.gnu.org/licenses/> and
 <http://www.opensource.org/licenses/mit-license.php>
 """],
 
-# C/C++ source files. Work on the Freicoin fork of Bitcoin started in
+# C/C++ source files. Work on the Freicoin fork of Freicoin started in
 # 2011, and the current codebase is a direct continuation of that.
     ["""
 // Distributed under the MIT software license, see the accompanying
