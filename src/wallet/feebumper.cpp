@@ -21,7 +21,6 @@
 #include <wallet/wallet.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <validation.h> //for mempool access
 #include <txmempool.h>
 #include <util/moneystr.h>
@@ -48,11 +47,6 @@ static feebumper::Result PreconditionChecks(interfaces::Chain::Lock& locked_chai
 
     if (wtx.GetDepthInMainChain(locked_chain) != 0) {
         errors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
-        return feebumper::Result::WALLET_ERROR;
-    }
-
-    if (!SignalsOptInRBF(*wtx.tx)) {
-        errors.push_back("Transaction is not BIP 125 replaceable");
         return feebumper::Result::WALLET_ERROR;
     }
 
@@ -213,14 +207,6 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
         new_fee += poutput->nValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }
-
-    // Mark new tx not replaceable, if requested.
-    if (!coin_control.m_signal_bip125_rbf.get_value_or(wallet->m_signal_rbf)) {
-        for (auto& input : mtx.vin) {
-            if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
-        }
-    }
-
 
     return Result::OK;
 }

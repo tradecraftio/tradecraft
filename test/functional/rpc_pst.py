@@ -17,13 +17,12 @@
 """
 
 from decimal import Decimal
+from test_framework.messages import MAX_SEQUENCE_NUMBER
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, connect_nodes_bi, disconnect_nodes, find_output, sync_blocks
 
 import json
 import os
-
-MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 
 # Create one-input, one-output, no-fee transaction:
 class PSTTest(FreicoinTestFramework):
@@ -32,8 +31,8 @@ class PSTTest(FreicoinTestFramework):
         self.setup_clean_chain = False
         self.num_nodes = 3
         self.extra_args = [
-            ["-walletrbf=1"],
-            ["-walletrbf=0"],
+            [],
+            [],
             []
         ]
 
@@ -213,21 +212,20 @@ class PSTTest(FreicoinTestFramework):
         # Test additional args in walletcreatepst
         # Make sure both pre-included and funded inputs
         # have the correct sequence numbers based on
-        # replaceable arg
         block_height = self.nodes[0].getblockcount()
         unspent = self.nodes[0].listunspent()[0]
-        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height+2, {"replaceable":False}, False)
+        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height+2, {}, False)
         decoded_pst = self.nodes[0].decodepst(pstx_info["pst"])
         for tx_in, pst_in in zip(decoded_pst["tx"]["vin"], decoded_pst["inputs"]):
-            assert_greater_than(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
+            assert_equal(tx_in["sequence"], MAX_SEQUENCE_NUMBER)
             assert "bip32_derivs" not in pst_in
         assert_equal(decoded_pst["tx"]["locktime"], block_height+2)
 
-        # Same construction with only locktime set and RBF explicitly enabled
-        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height, {"replaceable": True}, True)
+        # Same construction with only locktime set
+        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height, {}, True)
         decoded_pst = self.nodes[0].decodepst(pstx_info["pst"])
         for tx_in, pst_in in zip(decoded_pst["tx"]["vin"], decoded_pst["inputs"]):
-            assert_equal(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
+            assert_equal(tx_in["sequence"], MAX_SEQUENCE_NUMBER)
             assert "bip32_derivs" in pst_in
         assert_equal(decoded_pst["tx"]["locktime"], block_height)
 
@@ -235,15 +233,15 @@ class PSTTest(FreicoinTestFramework):
         pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}])
         decoded_pst = self.nodes[0].decodepst(pstx_info["pst"])
         for tx_in in decoded_pst["tx"]["vin"]:
-            assert_equal(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
+            assert tx_in["sequence"] >= MAX_SEQUENCE_NUMBER
         assert_equal(decoded_pst["tx"]["locktime"], 0)
 
-        # Same construction without optional arguments, for a node with -walletrbf=0
+        # Same construction without optional arguments
         unspent1 = self.nodes[1].listunspent()[0]
         pstx_info = self.nodes[1].walletcreatefundedpst([{"txid":unspent1["txid"], "vout":unspent1["vout"]}], [{self.nodes[2].getnewaddress():unspent1["amount"]+1}], block_height)
         decoded_pst = self.nodes[1].decodepst(pstx_info["pst"])
         for tx_in in decoded_pst["tx"]["vin"]:
-            assert_greater_than(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
+            assert_equal(tx_in["sequence"], MAX_SEQUENCE_NUMBER)
 
         # Make sure change address wallet does not have P2SH innerscript access to results in success
         # when attempting BnB coin selection

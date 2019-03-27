@@ -171,7 +171,6 @@ FREICOIN_CORE_H = \
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
-  policy/rbf.h \
   pow.h \
   protocol.h \
   pst.h \
@@ -277,7 +276,6 @@ libfreicoin_server_a_SOURCES = \
   outputtype.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
-  policy/rbf.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \

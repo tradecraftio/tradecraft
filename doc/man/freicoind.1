@@ -395,10 +395,6 @@ exists, otherwise <datadir>)
 Execute command when a wallet transaction changes (%s in cmd is replaced
 by TxID)
 .HP
-\fB\-walletrbf\fR
-.IP
-Send transactions with full\-RBF opt\-in enabled (RPC only, default: 0)
-.HP
 \fB\-zapwallettxes=\fR<mode>
 .IP
 Delete all wallet transactions and only recover those parts of the
@@ -501,10 +497,6 @@ Node relay options:
 .IP
 Equivalent bytes per sigop in transactions for relay and mining
 (default: 20)
-.HP
-\fB\-mempoolreplacement\fR
-.IP
-Enable transaction replacement in the memory pool (default: 1)
 .HP
 \fB\-minrelaytxfee=\fR<amt>
 .IP
