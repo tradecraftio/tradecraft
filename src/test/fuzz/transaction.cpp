@@ -26,7 +26,6 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <univalue.h>
-#include <util/rbf.h>
 #include <validation.h>
 #include <version.h>
 
@@ -105,7 +104,6 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)IsFinalTx(tx, /* nBlockHeight= */ 1024, /* nBlockTime= */ 1024);
     (void)IsStandardTx(tx, reason);
     (void)RecursiveDynamicUsage(tx);
-    (void)SignalsOptInRBF(tx);
 
     CCoinsView coins_view;
     const CCoinsViewCache coins_view_cache(&coins_view);
