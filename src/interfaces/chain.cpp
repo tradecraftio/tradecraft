@@ -27,7 +27,6 @@
 #include <node/ui_interface.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -284,12 +283,6 @@ public:
             }
         }
         return false;
-    }
-    RBFTransactionState isRBFOptIn(const CTransaction& tx) override
-    {
-        if (!m_node.mempool) return IsRBFOptInEmptyMempool(tx);
-        LOCK(m_node.mempool->cs);
-        return IsRBFOptIn(tx, *m_node.mempool);
     }
     bool hasDescendantsInMempool(const uint256& txid) override
     {

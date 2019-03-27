@@ -44,7 +44,7 @@ class MempoolPackagesTest(FreicoinTestFramework):
         outputs = {}
         for _ in range(num_outputs):
             outputs[node.getnewaddress()] = send_value
-        rawtx = node.createrawtransaction(inputs, outputs, 0, True)
+        rawtx = node.createrawtransaction(inputs, outputs, 0)
         signedtx = node.signrawtransactionwithwallet(rawtx)
         txid = node.sendrawtransaction(signedtx['hex'])
         fulltx = node.getrawtransaction(txid, 1)

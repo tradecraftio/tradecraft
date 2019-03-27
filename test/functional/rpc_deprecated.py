@@ -51,7 +51,7 @@ class DeprecatedRpcTest(FreicoinTestFramework):
             txid = w0.sendtoaddress(address=address, amount=10)
             vout = find_vout_for_address(w0, txid, address)
             self.nodes[0].generate(1)
-            rawtx = w0.createrawtransaction([{'txid': txid, 'vout': vout}], {w0.getnewaddress(): 5}, 0, True)
+            rawtx = w0.createrawtransaction([{'txid': txid, 'vout': vout}], {w0.getnewaddress(): 5}, 0)
             rawtx = w0.fundrawtransaction(rawtx, {'changeAddress': change_addr})
             signed_tx = w0.signrawtransactionwithwallet(rawtx['hex'])['hex']
 

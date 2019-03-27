@@ -22,7 +22,7 @@ import math
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.key import ECKey
 from test_framework.messages import (
-    BIP125_SEQUENCE_NUMBER,
+    MAX_SEQUENCE_NUMBER,
     COIN,
     COutPoint,
     CTransaction,
@@ -97,7 +97,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         self.log.info('A transaction not in the mempool')
         fee = Decimal('0.000007')
         raw_tx_0 = node.signrawtransactionwithwallet(node.createrawtransaction(
-            inputs=[{"txid": txid_in_block, "vout": 0, "sequence": BIP125_SEQUENCE_NUMBER}],  # RBF is used later
+            inputs=[{"txid": txid_in_block, "vout": 0, "sequence": MAX_SEQUENCE_NUMBER}],
             outputs=[{node.getnewaddress(): Decimal('0.3') - fee}],
         ))['hex']
         tx = CTransaction()
@@ -137,7 +137,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         self.log.info('A transaction that replaces a mempool transaction')
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         tx.vout[0].nValue -= int(fee * COIN)  # Double the fee
-        tx.vin[0].nSequence = BIP125_SEQUENCE_NUMBER + 1  # Now, opt out of RBF
+        tx.vin[0].nSequence = MAX_SEQUENCE_NUMBER  # Finalize transaction
         raw_tx_0 = node.signrawtransactionwithwallet(tx.serialize().hex())['hex']
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         txid_0 = tx.rehash()
@@ -147,14 +147,14 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         )
 
         self.log.info('A transaction that conflicts with an unconfirmed tx')
-        # Send the transaction that replaces the mempool transaction and opts out of replaceability
+        # Send the transaction that replaces the mempool transaction
         node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
         # take original raw_tx_0
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         tx.vout[0].nValue -= int(4 * fee * COIN)  # Set more fee
         # skip re-signing the tx
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'txn-mempool-conflict'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Signature must be zero for failed CHECK(MULTI)SIG operation)'}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
