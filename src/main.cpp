@@ -958,10 +958,10 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool prot
     if (!protocol_cleanup && tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
-    // Technically should be MAX_BLOCKFILE_SIZE-8 (see CheckBlock),
-    // but this isn't accounting for the size of the block header,
-    // coinbase transaction, etc. anyway.
-    const std::size_t max_block_size = protocol_cleanup ? MAX_BLOCKFILE_SIZE : MAX_BLOCK_SIZE;
+    // Technically should be PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE - 8
+    // (see CheckBlock), but this isn't accounting for the size of the
+    // block header, coinbase transaction, etc. anyway.
+    const std::size_t max_block_size = protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE : MAX_BLOCK_SIZE;
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > max_block_size)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
@@ -3186,8 +3186,10 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
         vinfoBlockFile.resize(nFile + 1);
     }
 
+    const size_t protocol_cleanup = IsProtocolCleanupActive(Params().GetConsensus(), GetAdjustedTime());
+
     if (!fKnown) {
-        while (vinfoBlockFile[nFile].nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
+        while (vinfoBlockFile[nFile].nSize + nAddSize >= (protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE)) {
             nFile++;
             if (vinfoBlockFile.size() <= nFile) {
                 vinfoBlockFile.resize(nFile + 1);
@@ -3316,7 +3318,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // because we receive the wrong transactions for it.
 
     // Size limits
-    const std::size_t max_block_size = protocol_cleanup ? (MAX_BLOCKFILE_SIZE-8) : MAX_BLOCK_SIZE;
+    const std::size_t max_block_size = protocol_cleanup ? (PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE - 8) : MAX_BLOCK_SIZE;
     if (block.vtx.empty() || block.vtx.size() > max_block_size || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > max_block_size)
         return state.DoS(100, error("CheckBlock(): size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
@@ -4084,7 +4086,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
 
     // If the protocol cleanup fork has activated, then we should
     // allow importing blocks larger than than the old MAX_BLOCK_SIZE.
-    const bool protocol_cleanup = (GetAdjustedTime() >= chainparams.GetConsensus().protocol_cleanup_activation_time);
+    const bool protocol_cleanup = IsProtocolCleanupActive(chainparams.GetConsensus(), GetAdjustedTime());
 
     int nLoaded = 0;
     try {
@@ -4108,7 +4110,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                     continue;
                 // read size
                 blkdat >> nSize;
-                if (nSize < 80 || nSize > (protocol_cleanup ? (MAX_BLOCKFILE_SIZE - 8) : MAX_BLOCK_SIZE))
+                if (nSize < 80 || nSize > (protocol_cleanup ? (PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE - 8) : MAX_BLOCK_SIZE))
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain

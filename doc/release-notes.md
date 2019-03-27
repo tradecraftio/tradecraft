@@ -218,6 +218,24 @@ Libsecp256k1 has undergone very extensive testing and validation.
 A side effect of this change is that libconsensus no longer depends on
 OpenSSL.
 
+Block file and undo file size
+-----------------------------
+
+v10 introduced the time-delayed protocol-cleanup rule change, which
+required increasing the maximum block file size from 128 MB to nearly
+2GB. This setting controls the size of the blk*.dat and rev*.dat files
+in the `blocks` subdirectory of the Freicoin data directory. Starting
+in v12, the original 128 MB limit is restored until the protocol
+cleanup rule change activates.
+
+Existing files will not be rewritten, however, so if you were at any
+point running a v10 or v11 client prior to 2 April 2021 you may have
+some historical block chain data files that are larger than 128 MB.
+This will not interfere with normal operation of your client. Should
+you wish to split these files up you will need to shutdown your node,
+delete the `blocks` subdirectory, and restart your node to re-download
+and re-index the block chain.
+
 Reduce upload traffic
 ---------------------
 

@@ -24,6 +24,7 @@
 #ifndef FREICOIN_PROTOCOL_H
 #define FREICOIN_PROTOCOL_H
 
+#include "consensus/params.h"
 #include "netbase.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -33,6 +34,15 @@
 #include <string>
 
 #define MESSAGE_START_SIZE 4
+
+/** Maximum length of incoming protocol messages prior to the protocol
+ ** cleanup rule change, before which no message over 2 MiB is
+ ** acceptable. */
+static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;
+/** The maximum length of an incoming protocol message after taking
+ ** into account whether the protocol cleanup rule change has occured
+ ** (and the number of allowed peers on 32-bit hosts). */
+size_t MaxProtocolMessageLength(const Consensus::Params &params);
 
 /** Message header.
  * (4) message start.
