@@ -86,7 +86,6 @@ class ReplaceByFeeTest(FreicoinTestFramework):
                 "-limitdescendantsize=101",
             ],
             [
-                "-mempoolreplacement=0",
             ],
         ]
 
@@ -159,17 +158,12 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, True)
-        # This will raise an exception due to transaction replacement being disabled
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[1].sendrawtransaction, tx1b_hex, True)
 
         # Extra 0.1 FRC fee
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
         tx1b.vout = [CTxOut(int(0.9 * COIN), CScript([b'b' * 35]))]
         tx1b_hex = txToHex(tx1b)
-        # Replacement still disabled even with "enough fee"
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[1].sendrawtransaction, tx1b_hex, True)
-        # Works when enabled
         tx1b_txid = self.nodes[0].sendrawtransaction(tx1b_hex, True)
 
         mempool = self.nodes[0].getrawmempool()
@@ -442,42 +436,21 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         """Replacing should only work if orig tx opted in"""
         tx0_outpoint = make_utxo(self.nodes[0], int(1.1*COIN))
 
-        # Create a non-opting in transaction
         tx1a = CTransaction()
         tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0xffffffff)]
         tx1a.vout = [CTxOut(1 * COIN, CScript([b'a' * 35]))]
         tx1a_hex = txToHex(tx1a)
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, True)
 
-        # Shouldn't be able to double-spend
-        tx1b = CTransaction()
-        tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1b.vout = [CTxOut(int(0.9 * COIN), CScript([b'b' * 35]))]
-        tx1b_hex = txToHex(tx1b)
-
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx1b_hex, True)
-
         tx1_outpoint = make_utxo(self.nodes[0], int(1.1*COIN))
 
-        # Create a different non-opting in transaction
         tx2a = CTransaction()
         tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0xfffffffe)]
         tx2a.vout = [CTxOut(1 * COIN, CScript([b'a' * 35]))]
         tx2a_hex = txToHex(tx2a)
         tx2a_txid = self.nodes[0].sendrawtransaction(tx2a_hex, True)
 
-        # Still shouldn't be able to double-spend
-        tx2b = CTransaction()
-        tx2b.vin = [CTxIn(tx1_outpoint, nSequence=0)]
-        tx2b.vout = [CTxOut(int(0.9 * COIN), CScript([b'b' * 35]))]
-        tx2b_hex = txToHex(tx2b)
-
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx2b_hex, True)
-
         # Now create a new transaction that spends from tx1a and tx2a
-        # opt-in on one of the inputs
         # Transaction should be replaceable on either input
 
         tx1a_txid = int(tx1a_txid, 16)
@@ -567,21 +540,18 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         us0 = self.nodes[0].listunspent()[0]
         ins = [us0]
         outs = {self.nodes[0].getnewaddress() : Decimal(1.0000000)}
-        rawtx0 = self.nodes[0].createrawtransaction(ins, outs, 0, True)
-        rawtx1 = self.nodes[0].createrawtransaction(ins, outs, 0, False)
+        rawtx0 = self.nodes[0].createrawtransaction(ins, outs, 1)
+        rawtx1 = self.nodes[0].createrawtransaction(ins, outs, 0)
         json0  = self.nodes[0].decoderawtransaction(rawtx0)
         json1  = self.nodes[0].decoderawtransaction(rawtx1)
-        assert_equal(json0["vin"][0]["sequence"], 4294967293)
+        assert_equal(json0["vin"][0]["sequence"], 4294967294)
         assert_equal(json1["vin"][0]["sequence"], 4294967295)
 
         rawtx2 = self.nodes[0].createrawtransaction([], outs)
-        frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": True})
-        frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": False})
+        frawtx2a = self.nodes[0].fundrawtransaction(rawtx2)
 
         json0  = self.nodes[0].decoderawtransaction(frawtx2a['hex'])
-        json1  = self.nodes[0].decoderawtransaction(frawtx2b['hex'])
-        assert_equal(json0["vin"][0]["sequence"], 4294967293)
-        assert_equal(json1["vin"][0]["sequence"], 4294967294)
+        assert_equal(json0["vin"][0]["sequence"], 4294967294)
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
