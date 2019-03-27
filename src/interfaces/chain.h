@@ -32,7 +32,6 @@ class CScheduler;
 class Coin;
 class uint256;
 enum class MemPoolRemovalReason;
-enum class RBFTransactionState;
 struct CBlockLocator;
 struct FeeCalculation;
 struct NodeContext;
@@ -156,9 +155,6 @@ public:
     //! Estimate fraction of total transactions verified if blocks up to
     //! the specified block hash are verified.
     virtual double guessVerificationProgress(const uint256& block_hash) = 0;
-
-    //! Check if transaction is RBF opt in.
-    virtual RBFTransactionState isRBFOptIn(const CTransaction& tx) = 0;
 
     //! Check if transaction has descendants in mempool.
     virtual bool hasDescendantsInMempool(const uint256& txid) = 0;

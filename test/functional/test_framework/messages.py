@@ -52,7 +52,7 @@ MAX_BLOCK_BASE_SIZE = 1000000
 COIN = 100000000  # 1 frc in kria
 MAX_MONEY = 21000000 * COIN
 
-BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is BIP 125 opt-in and BIP 68-opt-out
+MAX_SEQUENCE_NUMBER = 0xfffffffe  # Sequence number that is non-final and BIP 68-opt-out
 
 NODE_NETWORK = (1 << 0)
 NODE_GETUTXO = (1 << 1)

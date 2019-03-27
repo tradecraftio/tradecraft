@@ -28,7 +28,7 @@ from decimal import Decimal
 import io
 
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, get_final_tx_info, add_final_tx, send_to_witness
-from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
+from test_framework.messages import MAX_SEQUENCE_NUMBER, CTransaction
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -53,7 +53,6 @@ class BumpFeeTest(FreicoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.extra_args = [[
-            "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
             "-addresstype=bech32",
         ] for i in range(self.num_nodes)]
@@ -89,14 +88,12 @@ class BumpFeeTest(FreicoinTestFramework):
         test_simple_bumpfee_succeeds(self, "fee_rate", rbf_node, peer_node, dest_address)
         test_feerate_args(self, rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(self, rbf_node, dest_address)
-        test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
         test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_address)
         test_dust_to_fee(self, rbf_node, dest_address)
         test_settxfee(self, rbf_node, dest_address)
         test_watchonly_pst(self, peer_node, rbf_node, dest_address)
         test_rebumping(self, rbf_node, dest_address)
-        test_rebumping_not_replaceable(self, rbf_node, dest_address)
         test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address)
         test_bumpfee_metadata(self, rbf_node, dest_address)
         test_locked_wallet_fails(self, rbf_node, dest_address)
@@ -172,7 +169,7 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     rbfraw = rbf_node.createrawtransaction([{
         'txid': segwitid,
         'vout': 0,
-        "sequence": BIP125_SEQUENCE_NUMBER
+        "sequence": MAX_SEQUENCE_NUMBER
     }], {dest_address: Decimal("0.0005"),
          rbf_node.getrawchangeaddress(): Decimal("0.0003")})
     rbfsigned = rbf_node.signrawtransactionwithwallet(rbfraw)
@@ -182,12 +179,6 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     bumped_tx = rbf_node.bumpfee(rbfid)
     assert bumped_tx["txid"] in rbf_node.getrawmempool()
     assert rbfid not in rbf_node.getrawmempool()
-
-
-def test_nonrbf_bumpfee_fails(self, peer_node, dest_address):
-    self.log.info('Test that we cannot replace a non RBF transaction')
-    not_rbfid = peer_node.sendtoaddress(dest_address, Decimal("0.00090000"))
-    assert_raises_rpc_error(-4, "not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
 
 
 def test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address):
@@ -200,7 +191,7 @@ def test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address):
         "txid": utxo["txid"],
         "vout": utxo["vout"],
         "address": utxo["address"],
-        "sequence": BIP125_SEQUENCE_NUMBER
+        "sequence": MAX_SEQUENCE_NUMBER
     } for utxo in utxos]
     output_val = sum(utxo["amount"] for utxo in utxos) - Decimal("0.001")
     rawtx = rbf_node.createrawtransaction(inputs, {dest_address: output_val})
@@ -400,14 +391,6 @@ def test_rebumping(self, rbf_node, dest_address):
     rbf_node.bumpfee(bumped["txid"], {"fee_rate": NORMAL})
 
 
-def test_rebumping_not_replaceable(self, rbf_node, dest_address):
-    self.log.info('Test that re-bumping non-replaceable fails')
-    rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"fee_rate": ECONOMICAL, "replaceable": False})
-    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                            {"fee_rate": NORMAL})
-
-
 def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     self.log.info('Test that unconfirmed outputs from bumped txns are not spendable')
     rbfid = spend_one_input(rbf_node, rbf_node_address)
@@ -487,7 +470,7 @@ def test_change_script_match(self, rbf_node, dest_address):
 
 def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     tx_input = dict(
-        sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
+        sequence=MAX_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
     destinations = {dest_address: Decimal("0.00050000")}
     if change_size > 0:
         destinations[node.getrawchangeaddress()] = change_size

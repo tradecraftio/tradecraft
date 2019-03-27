@@ -2787,7 +2787,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+629"/>
+        <location filename="../sendcoinsdialog.cpp" line="+615"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -2904,7 +2904,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+166"/>
+        <location line="+156"/>
         <source>Send to multiple recipients at once</source>
         <translation>Send to multiple recipients at once</translation>
     </message>
@@ -2919,7 +2919,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-800"/>
+        <location line="-790"/>
         <source>Dust:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2944,17 +2944,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+58"/>
-        <source>Enable Replace-By-Fee</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>With Replace-By-Fee (BIP-125) you can increase a transaction&apos;s fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+65"/>
+        <location line="+116"/>
         <source>Clear &amp;All</source>
         <translation>Clear &amp;All</translation>
     </message>
@@ -2974,7 +2964,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation>S&amp;end</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-528"/>
+        <location filename="../sendcoinsdialog.cpp" line="-514"/>
         <source>Copy quantity</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3014,7 +3004,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+17"/>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3054,17 +3044,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+34"/>
         <source>or</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-19"/>
-        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-22"/>
+        <location line="-32"/>
         <source>Please, review your transaction.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3074,12 +3059,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Not signalling Replace-By-Fee, BIP-125.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+14"/>
+        <location line="+21"/>
         <source>Total Amount</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3159,7 +3139,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+118"/>
+        <location line="+117"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
             <numerusform>Estimated to begin confirmation within %n block.</numerusform>
@@ -4146,7 +4126,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished">Send Coins</translation>
     </message>
     <message>
-        <location line="+288"/>
+        <location line="+287"/>
         <location line="+45"/>
         <location line="+13"/>
         <location line="+5"/>
