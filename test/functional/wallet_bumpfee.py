@@ -33,8 +33,8 @@ from test_framework.util import *
 
 import io
 
-# Sequence number that is BIP 125 opt-in and BIP 68-compliant
-BIP125_SEQUENCE_NUMBER = 0xfffffffd
+# Sequence number that is BIP 68-compliant
+MAX_SEQUENCE_NUMBER = 0xfffffffe
 
 WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600
@@ -74,14 +74,12 @@ class BumpFeeTest(FreicoinTestFramework):
         dest_address = peer_node.getnewaddress()
         test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(rbf_node, dest_address)
-        test_nonrbf_bumpfee_fails(peer_node, dest_address)
         test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address)
         test_small_output_fails(rbf_node, dest_address)
         test_dust_to_fee(rbf_node, dest_address)
         test_settxfee(rbf_node, dest_address)
         test_rebumping(rbf_node, dest_address)
-        test_rebumping_not_replaceable(rbf_node, dest_address)
         test_unconfirmed_not_spendable(rbf_node, rbf_node_address)
         test_bumpfee_metadata(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
@@ -129,7 +127,7 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
     rbfraw = rbf_node.createrawtransaction([{
         'txid': segwitid,
         'vout': 0,
-        "sequence": BIP125_SEQUENCE_NUMBER
+        "sequence": MAX_SEQUENCE_NUMBER
     }], {dest_address: Decimal("0.0005"),
          rbf_node.getrawchangeaddress(): Decimal("0.0003")})
     rbfsigned = rbf_node.signrawtransaction(rbfraw)
@@ -139,12 +137,6 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
     bumped_tx = rbf_node.bumpfee(rbfid)
     assert bumped_tx["txid"] in rbf_node.getrawmempool()
     assert rbfid not in rbf_node.getrawmempool()
-
-
-def test_nonrbf_bumpfee_fails(peer_node, dest_address):
-    # cannot replace a non RBF transaction (from node which did not enable RBF)
-    not_rbfid = peer_node.sendtoaddress(dest_address, Decimal("0.00090000"))
-    assert_raises_rpc_error(-4, "not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
 
 
 def test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address):
@@ -157,7 +149,7 @@ def test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address):
         "txid": utxo["txid"],
         "vout": utxo["vout"],
         "address": utxo["address"],
-        "sequence": BIP125_SEQUENCE_NUMBER
+        "sequence": MAX_SEQUENCE_NUMBER
     } for utxo in utxos]
     output_val = sum(utxo["amount"] for utxo in utxos) - Decimal("0.001")
     rawtx = rbf_node.createrawtransaction(inputs, {dest_address: output_val})
@@ -220,14 +212,6 @@ def test_rebumping(rbf_node, dest_address):
     rbf_node.bumpfee(bumped["txid"], {"totalFee": 3000})
 
 
-def test_rebumping_not_replaceable(rbf_node, dest_address):
-    # check that re-bumping a non-replaceable bump tx fails
-    rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "replaceable": False})
-    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                          {"totalFee": 20000})
-
-
 def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
     # check that unconfirmed outputs from bumped transactions are not spendable
     rbfid = spend_one_input(rbf_node, rbf_node_address)
@@ -281,7 +265,7 @@ def test_locked_wallet_fails(rbf_node, dest_address):
 
 def spend_one_input(node, dest_address):
     tx_input = dict(
-        sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
+        sequence=MAX_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
     rawtx = node.createrawtransaction(
         [tx_input], {dest_address: Decimal("0.00050000"),
                      node.getrawchangeaddress(): Decimal("0.00049000")})

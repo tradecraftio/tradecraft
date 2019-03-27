@@ -41,8 +41,6 @@ public:
     boost::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
     boost::optional<unsigned int> m_confirm_target;
-    //! Signal BIP-125 replace by fee.
-    bool signalRbf;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
 
@@ -61,7 +59,6 @@ public:
         m_feerate.reset();
         fOverrideFeeRate = false;
         m_confirm_target.reset();
-        signalRbf = fWalletRbf;
         m_fee_mode = FeeEstimateMode::UNSET;
     }
 

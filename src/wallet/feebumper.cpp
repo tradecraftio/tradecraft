@@ -20,7 +20,6 @@
 #include <wallet/wallet.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <validation.h> //for mempool access
 #include <txmempool.h>
 #include <utilmoneystr.h>
@@ -85,7 +84,7 @@ bool TransactionCanBeBumped(CWallet* wallet, const uint256& txid)
 {
     LOCK2(cs_main, wallet->cs_wallet);
     const CWalletTx* wtx = wallet->GetWalletTx(txid);
-    return wtx && SignalsOptInRBF(*wtx->tx) && !wtx->mapValue.count("replaced_by_txid");
+    return wtx && !wtx->mapValue.count("replaced_by_txid");
 }
 
 Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoinControl& coin_control, CAmount total_fee, std::vector<std::string>& errors,
@@ -103,11 +102,6 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     Result result = PreconditionChecks(wallet, wtx, errors);
     if (result != Result::OK) {
         return result;
-    }
-
-    if (!SignalsOptInRBF(*wtx.tx)) {
-        errors.push_back("Transaction is not BIP 125 replaceable");
-        return Result::WALLET_ERROR;
     }
 
     if (wtx.mapValue.count("replaced_by_txid")) {
@@ -230,13 +224,6 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
         LogPrint(BCLog::RPC, "Bumping fee and discarding dust output\n");
         new_fee += poutput->nValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
-    }
-
-    // Mark new tx not replaceable, if requested.
-    if (!coin_control.signalRbf) {
-        for (auto& input : mtx.vin) {
-            if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
-        }
     }
 
     return Result::OK;

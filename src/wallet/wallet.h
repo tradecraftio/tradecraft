@@ -50,7 +50,6 @@ extern std::vector<CWalletRef> vpwallets;
 extern CFeeRate payTxFee;
 extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
-extern bool fWalletRbf;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
@@ -61,7 +60,7 @@ static const CAmount DEFAULT_FALLBACK_FEE = 20000;
 static const CAmount DEFAULT_DISCARD_FEE = 10000;
 //! -mintxfee default
 static const CAmount DEFAULT_TRANSACTION_MINFEE = 1000;
-//! minimum recommended increment for BIP 125 replacement txs
+//! minimum recommended increment for replacement txs
 static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 5000;
 //! target minimum change amount
 static const CAmount MIN_CHANGE = CENT;
@@ -73,8 +72,6 @@ static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 static const bool DEFAULT_WALLET_REJECT_LONG_CHAINS = false;
 //! -txconfirmtarget default
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
-//! -walletrbf default
-static const bool DEFAULT_WALLET_RBF = false;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
@@ -1112,7 +1109,7 @@ public:
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
 
-    /** Mark a transaction as replaced by another transaction (e.g., BIP 125). */
+    /** Mark a transaction as replaced by another transaction. */
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */

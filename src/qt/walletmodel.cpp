@@ -31,7 +31,6 @@
 #include <validation.h>
 #include <net.h> // for g_connman
 #include <policy/fees.h>
-#include <policy/rbf.h>
 #include <sync.h>
 #include <ui_interface.h>
 #include <util.h> // for GetBoolArg
@@ -676,7 +675,6 @@ bool WalletModel::transactionCanBeBumped(uint256 hash) const
 bool WalletModel::bumpFee(uint256 hash)
 {
     CCoinControl coin_control;
-    coin_control.signalRbf = true;
     std::vector<std::string> errors;
     CAmount old_fee;
     CAmount new_fee;

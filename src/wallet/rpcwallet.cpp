@@ -25,7 +25,6 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <rpc/mining.h>
 #include <rpc/safemode.h>
 #include <rpc/server.h>
@@ -116,18 +115,6 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     entry.push_back(Pair("walletconflicts", conflicts));
     entry.push_back(Pair("time", wtx.GetTxTime()));
     entry.push_back(Pair("timereceived", (int64_t)wtx.nTimeReceived));
-
-    // Add opt-in RBF status
-    std::string rbfStatus = "no";
-    if (confirms <= 0) {
-        LOCK(mempool.cs);
-        RBFTransactionState rbfState = IsRBFOptIn(*wtx.tx, mempool);
-        if (rbfState == RBF_TRANSACTIONSTATE_UNKNOWN)
-            rbfStatus = "unknown";
-        else if (rbfState == RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125)
-            rbfStatus = "yes";
-    }
-    entry.push_back(Pair("bip125-replaceable", rbfStatus));
 
     for (const std::pair<std::string, std::string>& item : wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
@@ -458,9 +445,9 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 7)
         throw std::runtime_error(
-            "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount replaceable conf_target \"estimate_mode\")\n"
+            "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount conf_target \"estimate_mode\")\n"
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
@@ -473,9 +460,8 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "                             The recipient will receive less freicoins than you enter in the amount field.\n"
-            "6. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
-            "7. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
-            "8. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
+            "6. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
+            "7. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
@@ -520,15 +506,11 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
-        coin_control.signalRbf = request.params[5].get_bool();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[5]);
     }
 
     if (!request.params[6].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
-    }
-
-    if (!request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
+        if (!FeeModeFromString(request.params[6].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
@@ -1032,9 +1014,9 @@ UniValue sendmany(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 7)
         throw std::runtime_error(
-            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] replaceable conf_target \"estimate_mode\")\n"
+            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] conf_target \"estimate_mode\")\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -1054,9 +1036,8 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      \"address\"          (string) Subtract fee from this address\n"
             "      ,...\n"
             "    ]\n"
-            "6. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
-            "7. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
-            "8. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
+            "6. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
+            "7. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
@@ -1103,15 +1084,11 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
-        coin_control.signalRbf = request.params[5].get_bool();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[5]);
     }
 
     if (!request.params[6].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
-    }
-
-    if (!request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
+        if (!FeeModeFromString(request.params[6].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
@@ -1783,8 +1760,6 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "    \"otheraccount\": \"accountname\",  (string) DEPRECATED. For the 'move' category of transactions, the account the funds came \n"
             "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
             "                                          negative amounts).\n"
-            "    \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
-            "                                                     may be unknown for unconfirmed transactions not in the mempool\n"
             "    \"abandoned\": xxx          (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
             "                                         'send' category of transactions.\n"
             "  }\n"
@@ -1993,8 +1968,6 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "    \"txid\": \"transactionid\",  (string) The transaction id. Available for 'send' and 'receive' category of transactions.\n"
             "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT).\n"
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (Jan 1 1970 GMT). Available for 'send' and 'receive' category of transactions.\n"
-            "    \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
-            "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "    \"abandoned\": xxx,         (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the 'send' category of transactions.\n"
             "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
             "    \"label\" : \"label\"       (string) A comment for the address/transaction, if any\n"
@@ -2124,8 +2097,6 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"txid\" : \"transactionid\",   (string) The transaction id.\n"
             "  \"time\" : ttt,            (numeric) The transaction time in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
-            "  \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
-            "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "  \"details\" : [\n"
             "    {\n"
             "      \"account\" : \"accountname\",      (string) DEPRECATED. The account name involved in the transaction, can be \"\" for the default account.\n"
@@ -3086,8 +3057,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "                              Those recipients will receive less freicoins than you enter in their corresponding amount field.\n"
                             "                              If no outputs are specified here, the sender pays the fee.\n"
                             "                                  [vout_index,...]\n"
-                            "     \"replaceable\"            (boolean, optional) Marks this transaction as BIP125 replaceable.\n"
-                            "                              Allows this transaction to be replaced by a transaction with higher fees\n"
                             "     \"conf_target\"            (numeric, optional) Confirmation target (in blocks)\n"
                             "     \"estimate_mode\"          (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
                             "         \"UNSET\"\n"
@@ -3148,7 +3117,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"reserveChangeKey", UniValueType(UniValue::VBOOL)}, // DEPRECATED (and ignored), should be removed in v16 or so.
                 {"feeRate", UniValueType()}, // will be checked below
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
-                {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
@@ -3192,9 +3160,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         if (options.exists("subtractFeeFromOutputs"))
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
 
-        if (options.exists("replaceable")) {
-            coinControl.signalRbf = options["replaceable"].get_bool();
-        }
         if (options.exists("conf_target")) {
             if (options.exists("feeRate")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
@@ -3262,8 +3227,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw std::runtime_error(
             "bumpfee \"txid\" ( options ) \n"
-            "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
-            "An opt-in RBF transaction with the given txid must be in the wallet.\n"
+            "\nBumps the fee of a transaction T, replacing it with a new transaction B.\n"
+            "A transaction with the given txid must be in the wallet.\n"
             "The command will pay the additional fee by decreasing (or perhaps removing) its change output.\n"
             "If the change output is not big enough to cover the increased fee, the command will currently fail\n"
             "instead of adding new inputs to compensate. (A future implementation could improve this.)\n"
@@ -3282,13 +3247,6 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "                         In rare cases, the actual fee paid might be slightly higher than the specified\n"
             "                         totalFee if the tx change output has to be removed because it is too close to\n"
             "                         the dust threshold.\n"
-            "     \"replaceable\"       (boolean, optional, default true) Whether the new transaction should still be\n"
-            "                         marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
-            "                         be left unchanged from the original. If false, any input sequence numbers in the\n"
-            "                         original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
-            "                         so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
-            "                         still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
-            "                         are replaceable).\n"
             "     \"estimate_mode\"     (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
             "         \"UNSET\"\n"
             "         \"ECONOMICAL\"\n"
@@ -3313,14 +3271,12 @@ UniValue bumpfee(const JSONRPCRequest& request)
     // optional parameters
     CAmount totalFee = 0;
     CCoinControl coin_control;
-    coin_control.signalRbf = true;
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
                 {"totalFee", UniValueType(UniValue::VNUM)},
-                {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
             true, true);
@@ -3336,9 +3292,6 @@ UniValue bumpfee(const JSONRPCRequest& request)
             }
         }
 
-        if (options.exists("replaceable")) {
-            coin_control.signalRbf = options["replaceable"].get_bool();
-        }
         if (options.exists("estimate_mode")) {
             if (!FeeModeFromString(options["estimate_mode"].get_str(), coin_control.m_fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
@@ -3587,8 +3540,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "lockunspent",              &lockunspent,              {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  {"fromaccount","toaccount","amount","minconf","comment"} },
     { "wallet",             "sendfrom",                 &sendfrom,                 {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","conf_target","estimate_mode"} },
     { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
     { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },
     { "wallet",             "signmessage",              &signmessage,              {"address","message"} },

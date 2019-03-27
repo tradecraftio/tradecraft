@@ -2623,7 +2623,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+595"/>
+        <location filename="../sendcoinsdialog.cpp" line="+581"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -2754,7 +2754,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+175"/>
         <source>Send to multiple recipients at once</source>
         <translation>Send to multiple recipients at once</translation>
     </message>
@@ -2769,7 +2769,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-833"/>
+        <location line="-823"/>
         <source>Dust:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2779,17 +2779,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+74"/>
-        <source>Enable Replace-By-Fee</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>With Replace-By-Fee (BIP-125) you can increase a transaction&apos;s fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+65"/>
+        <location line="+132"/>
         <source>Clear &amp;All</source>
         <translation>Clear &amp;All</translation>
     </message>
@@ -2809,7 +2799,7 @@
         <translation>S&amp;end</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-500"/>
+        <location filename="../sendcoinsdialog.cpp" line="-486"/>
         <source>Copy quantity</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2849,7 +2839,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+127"/>
+        <location line="+122"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+4"/>
@@ -2877,17 +2867,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location line="+2"/>
-        <source>Not signalling Replace-By-Fee, BIP-125.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
         <source>Confirm send coins</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2942,7 +2922,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+42"/>
+        <location line="+41"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
             <numerusform>Estimated to begin confirmation within %n block.</numerusform>
@@ -3899,12 +3879,12 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+301"/>
+        <location filename="../walletmodel.cpp" line="+300"/>
         <source>Send Coins</source>
         <translation type="unfinished">Send Coins</translation>
     </message>
     <message>
-        <location line="+384"/>
+        <location line="+383"/>
         <location line="+39"/>
         <location line="+6"/>
         <source>Fee bump error</source>
@@ -3997,27 +3977,27 @@
 <context>
     <name>freicoin</name>
     <message>
-        <location filename="../freicoinstrings.cpp" line="+362"/>
+        <location filename="../freicoinstrings.cpp" line="+361"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>Specify data directory</source>
         <translation>Specify data directory</translation>
     </message>
     <message>
-        <location line="-101"/>
+        <location line="-99"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Connect to a node to retrieve peer addresses, and disconnect</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+102"/>
         <source>Specify your own public address</source>
         <translation>Specify your own public address</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-117"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
@@ -4042,7 +4022,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+156"/>
+        <location line="+155"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4062,12 +4042,12 @@
         <translation>Run in the background as a daemon and accept commands</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+40"/>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-406"/>
         <source>Freicoin</source>
         <translation type="unfinished">Freicoin</translation>
     </message>
@@ -4373,11 +4353,6 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Enable transaction replacement in the memory pool (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error creating %s: You can&apos;t create non-HD wallets with this version.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4538,11 +4513,6 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4632,7 +4602,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-406"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4717,7 +4687,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+21"/>
         <source>Error loading %s: You can&apos;t disable HD on an already existing HD wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4797,7 +4767,7 @@
         <translation>Send trace/debug info to console instead of debug.log file</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4922,12 +4892,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-80"/>
+        <location line="-79"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="-266"/>
+        <location line="-265"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
@@ -5097,7 +5067,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+33"/>
         <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5167,7 +5137,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5247,7 +5217,7 @@
         <translation>Unknown network specified in -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-85"/>
         <source>Insufficient funds</source>
         <translation>Insufficient funds</translation>
     </message>
@@ -5262,22 +5232,22 @@
         <translation>Loading wallet...</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-63"/>
         <source>Cannot downgrade wallet</source>
         <translation>Cannot downgrade wallet</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+88"/>
         <source>Rescanning...</source>
         <translation>Rescanning...</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-75"/>
         <source>Done loading</source>
         <translation>Done loading</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
