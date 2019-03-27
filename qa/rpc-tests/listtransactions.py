@@ -109,7 +109,8 @@ class ListTransactionsTest(FreicoinTestFramework):
                            {"category":"receive","amount":Decimal("0.1")},
                            {"txid":txid, "account" : "watchonly"} )
 
-        self.run_rbf_opt_in_test()
+        # Disaable the opt-in RBF tests.
+        #self.run_rbf_opt_in_test()
 
     # Check that the opt-in-rbf flag works properly, for sent and received
     # transactions.
