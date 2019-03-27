@@ -122,9 +122,6 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         print("Running test too many replacements...")
         self.test_too_many_replacements()
 
-        print("Running test opt-in...")
-        self.test_opt_in()
-
         print("Running test prioritised transactions...")
         self.test_prioritised_transactions()
 
