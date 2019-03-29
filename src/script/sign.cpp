@@ -164,8 +164,14 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutab
 static CScript PushAll(const vector<valtype>& values)
 {
     CScript result;
-    BOOST_FOREACH(const valtype& v, values)
-        result << v;
+    BOOST_FOREACH(const valtype& v, values) {
+        if ((v.size() == 1) && (v[0] == 0x81))
+            result << OP_1NEGATE;
+        else if ((v.size() == 1) && ((1 <= v[0]) && (v[0] <= 16)))
+            result << static_cast<opcodetype>(OP_1 + (v[0] - 1));
+        else
+            result << v;
+    }
     return result;
 }
 
