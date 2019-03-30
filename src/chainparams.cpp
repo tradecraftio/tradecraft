@@ -70,6 +70,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
+        consensus.permit_disable_time_adjust = false;
         consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.equilibrium_height = 161280; // three years
@@ -206,6 +207,7 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
+        consensus.permit_disable_time_adjust = false;
         consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.equilibrium_height = 161280; // three years
@@ -293,6 +295,7 @@ class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
+        consensus.permit_disable_time_adjust = true;
         consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.equilibrium_height = 161280; // three years

@@ -56,7 +56,7 @@ class FreicoinTestFramework(object):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+        initialize_chain(self.options.tmpdir, bitcoinmode=self.options.bitcoinmode)
 
     def setup_nodes(self):
         return start_nodes(4, self.options.tmpdir)
@@ -124,6 +124,8 @@ class FreicoinTestFramework(object):
                           help="Print out all RPC calls as they are made")
         parser.add_option("--coveragedir", dest="coveragedir",
                           help="Write tested RPC commands into this directory")
+        parser.add_option("--bitcoin-mode", dest="bitcoinmode", default=False, action="store_true",
+                          help="Disable demurrage calculations for regression test compatibility")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 
@@ -201,7 +203,7 @@ class ComparisonTestFramework(FreicoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+        initialize_chain_clean(self.options.tmpdir, self.num_nodes, bitcoinmode=self.options.bitcoinmode)
 
     def setup_network(self):
         self.nodes = start_nodes(

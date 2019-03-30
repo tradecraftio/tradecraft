@@ -23,8 +23,19 @@
 
 const std::string CURRENCY_UNIT = "FRC";
 
+/** Only set to true when running the regtest chain with the
+ ** '-notimeadjust' option set, making TimeAdjustValueForward() and
+ ** TimeAdjustValueBackward() return their inputs unmodified. This
+ ** enables running bitcoin regression tests unmodified. */
+bool disable_time_adjust = DEFAULT_DISABLE_TIME_ADJUST;
+
 CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance)
 {
+    /* If we're in bitcoin unit test compatibility mode, return our
+     * input unmodified, with no demurrage adjustment. */
+    if (disable_time_adjust)
+        return initial_value;
+
     /* We accept a signed initial_value as input, but perform
      * demurrage calculations on that value's absolute magnitude. */
     const int sign = (initial_value > 0) - (initial_value < 0);
@@ -194,6 +205,11 @@ CAmount TimeAdjustValueForward(const CAmount& initial_value, uint32_t distance)
 
 CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance)
 {
+    /* If we're in bitcoin unit test compatibility mode, return our
+     * input unmodified, with no demurrage adjustment. */
+    if (disable_time_adjust)
+        return initial_value;
+
     /* We accept a signed initial_value as input, but perform
      * demurrage calculations on that value's absolute magnitude. */
     const int sign = (initial_value > 0) - (initial_value < 0);

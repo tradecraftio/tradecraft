@@ -51,6 +51,8 @@ struct BIP9Deployment {
  */
 struct Params {
     uint256 hashGenesisBlock;
+    /** Demurrage settings */
+    bool permit_disable_time_adjust; // is '-notimeadjust' allowed
     int per_block_demurrage_factor;
     int64_t equilibrium_monetary_base;
     int equilibrium_height;

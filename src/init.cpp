@@ -454,6 +454,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-testsafemode", strprintf("Force safe mode (default: %u)", DEFAULT_TESTSAFEMODE));
         strUsage += HelpMessageOpt("-dropmessagestest=<n>", "Randomly drop 1 of every <n> network messages");
         strUsage += HelpMessageOpt("-fuzzmessagestest=<n>", "Randomly fuzz 1 of every <n> network messages");
+        strUsage += HelpMessageOpt("-notimeadjust", strprintf("Disable demurrage calculations for regression test compatibility mode (%sdefault: %u)", "regtest only; ", DEFAULT_DISABLE_TIME_ADJUST));
 #ifdef ENABLE_WALLET
         strUsage += HelpMessageOpt("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET));
 #endif
@@ -908,6 +909,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (GetBoolArg("-whitelistalwaysrelay", false))
         InitWarning(_("Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay."));
 
+    if (!GetBoolArg("-timeadjust", true) && !chainparams.GetConsensus().permit_disable_time_adjust)
+        return InitError(_("Unsupported argument: -notimeadjust only permitted with -regtest."));
+
     // Checkmempool and checkblockindex default to true in regtest mode
     int ratio = std::min<int>(std::max<int>(GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
@@ -1037,6 +1041,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (GetBoolArg("-peerbloomfilters", true))
         nLocalServices |= NODE_BLOOM;
+
+    // Already checked that we're in regtest mode, if specified.
+    disable_time_adjust = !GetBoolArg("-timeadjust", !DEFAULT_DISABLE_TIME_ADJUST);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 

@@ -40,6 +40,27 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     BOOST_CHECK(nSum == 9999990463180220LL);
 }
 
+BOOST_AUTO_TEST_CASE(subsidy_limit_test_bitcoin_mode)
+{
+    const Consensus::Params& consensusParams = Params(CBaseChainParams::REGTEST).GetConsensus();
+    bool old_disable_time_adjust = disable_time_adjust;
+    disable_time_adjust = true;
+    try {
+        CAmount nSum = 0;
+        for (int nHeight = 1; nHeight <= 424242; ++nHeight) {
+            CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
+            BOOST_CHECK(nSubsidy == 5000000000LL);
+            nSum += GetTimeAdjustedValue(nSubsidy, consensusParams.equilibrium_height-nHeight);
+            BOOST_CHECK(nSum <= 2121210000000000LL);
+        }
+        BOOST_CHECK(nSum == 2121210000000000LL);
+    } catch (...) {
+        disable_time_adjust = old_disable_time_adjust;
+        throw;
+    }
+    disable_time_adjust = old_disable_time_adjust;
+}
+
 bool ReturnFalse() { return false; }
 bool ReturnTrue() { return true; }
 

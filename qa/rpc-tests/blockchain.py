@@ -48,7 +48,7 @@ class BlockchainTest(FreicoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory " + self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+        initialize_chain(self.options.tmpdir, bitcoinmode=self.options.bitcoinmode)
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(2, self.options.tmpdir)
