@@ -56,7 +56,7 @@ struct Params {
     int per_block_demurrage_factor;
     int64_t equilibrium_monetary_base;
     int equilibrium_height;
-    int64_t initial_block_reward;
+    int64_t initial_excess_subsidy;
     int64_t alu_activation_height;
     int64_t verify_coinbase_lock_time_activation_height;
     int64_t verify_coinbase_lock_time_timeout;
