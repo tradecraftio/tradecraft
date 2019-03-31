@@ -71,9 +71,9 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.permit_disable_time_adjust = false;
-        consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
-        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
         consensus.equilibrium_height = 161280; // three years
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.alu_activation_height = 229376;
         consensus.nMajorityEnforceBlockUpgrade = 750;
@@ -208,9 +208,9 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.permit_disable_time_adjust = false;
-        consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
-        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
         consensus.equilibrium_height = 161280; // three years
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.alu_activation_height = 2016;
         consensus.nMajorityEnforceBlockUpgrade = 51;
@@ -296,9 +296,9 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.permit_disable_time_adjust = true;
-        consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
-        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
         consensus.equilibrium_height = 161280; // three years
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.alu_activation_height = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;

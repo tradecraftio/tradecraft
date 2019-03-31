@@ -1565,9 +1565,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     }
 
     // Perpetual demurrage-compensating subsidy
-    return nSubsidy +
-          (consensusParams.equilibrium_monetary_base /
-           consensusParams.per_block_demurrage_factor);
+    return (nSubsidy + consensusParams.perpetual_subsidy);
 }
 
 bool IsInitialBlockDownload()

@@ -20,6 +20,7 @@
 #ifndef FREICOIN_CONSENSUS_PARAMS_H
 #define FREICOIN_CONSENSUS_PARAMS_H
 
+#include "amount.h"
 #include "uint256.h"
 #include <map>
 #include <string>
@@ -53,10 +54,12 @@ struct Params {
     uint256 hashGenesisBlock;
     /** Demurrage settings */
     bool permit_disable_time_adjust; // is '-notimeadjust' allowed
-    int per_block_demurrage_factor;
+    CAmount perpetual_subsidy; // equilibrium_monetary_base * demurrage rate
+    /** Initial distribution via excess subsidy */
+    int64_t equilibrium_height;
     int64_t equilibrium_monetary_base;
-    int equilibrium_height;
-    int64_t initial_excess_subsidy;
+    CAmount initial_excess_subsidy;
+    /** Soft-fork activations */
     int64_t alu_activation_height;
     int64_t verify_coinbase_lock_time_activation_height;
     int64_t verify_coinbase_lock_time_timeout;
