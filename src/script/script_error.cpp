@@ -77,6 +77,10 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Non-canonical signature: S value is unnecessarily high";
         case SCRIPT_ERR_SIG_NULLDUMMY:
             return "Dummy CHECKMULTISIG argument must be zero";
+        case SCRIPT_ERR_MULTISIG_HINT:
+            return "Incorrect or invalid hint provided in CHECKMULTISIG's last argument";
+        case SCRIPT_ERR_FAILED_SIGNATURE_CHECK:
+            return "Failed signature check with non-empty signature argument";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS:
             return "NOPx reserved for soft-fork upgrades";
         case SCRIPT_ERR_PUBKEYTYPE:

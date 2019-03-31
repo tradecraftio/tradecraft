@@ -27,6 +27,8 @@
 #include "script/script.h"
 #include "uint256.h"
 
+#include <bitset>
+
 using namespace std;
 
 typedef vector<unsigned char> valtype;
@@ -269,6 +271,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
     int nOpCount = 0;
     bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
+    const bool require_valid_sigs = (flags & SCRIPT_VERIFY_REQUIRE_VALID_SIGS) != 0;
 
     try
     {
@@ -906,6 +909,13 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     }
                     bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode);
 
+                    // If the require-valid-signatures flag is set, we make sure that
+                    // *IF* the signature check failed, it is because the signature
+                    // was empty. Any other reason and we terminate script validation.
+                    if (require_valid_sigs && !fSuccess && !vchSig.empty()) {
+                        return set_error(serror, SCRIPT_ERR_FAILED_SIGNATURE_CHECK);
+                    }
+
                     popstack(stack);
                     popstack(stack);
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
@@ -951,10 +961,53 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     CScript scriptCode(pbegincodehash, pend);
 
                     // Drop the signatures, since there's no way for a signature to sign itself
+                    //
+                    // When SCRIPT_VERIFY_REQUIRE_VALID_SIGSS is in effect, a requirement
+                    // is added that when CHECKMULTISIG fails, ALL signatures must have
+                    // been empty. So that we can later verify this requirement, we record
+                    // whether all signatures are provided, valid or otherwise.
+                    int empty_sigs = 0;
                     for (int k = 0; k < nSigsCount; k++)
                     {
                         valtype& vchSig = stacktop(-isig-k);
                         scriptCode.FindAndDelete(CScript(vchSig));
+                        empty_sigs += !!vchSig.empty();
+                    }
+                    // If any signature is empty, then they all must be empty; or
+                    // if any signature is non-empty, then they all must be non-empty.
+                    if (require_valid_sigs && (empty_sigs > 0) && (empty_sigs != nSigsCount)) {
+                        return set_error(serror, SCRIPT_ERR_FAILED_SIGNATURE_CHECK);
+                    }
+
+                    // A bug in the original CHECKMULTISIG implementation caused an
+                    // extra item to be popped off the stack upon completion. When
+                    // SCRIPT_VERIFY_REQUIRE_VALID_SIGS is in effect, this otherwise
+                    // unused parameter is a bitfield indicating which keys are NOT
+                    // used. With this hint we can avoid expensive signature
+                    // validation checks that might fail.
+                    MultiSigHint hint(nKeysCount); // defaults to no-skipped-keys
+                    if (require_valid_sigs) {
+                        // There cannot be more than 20 keys, so our serialized
+                        // hint cannot be more than 20 unsigned bits, which fits
+                        // fine inside a 3-byte signed CScriptNum.
+                        CScriptNum ser_hint(stacktop(-i), true, 3);
+                        // Make sure that bits is within the numeric range of integers
+                        // corresponding to our bitfield length, so that we don't risk
+                        // any malleability or implementation / platform-defined behavior.
+                        if ((ser_hint < 0) || (ser_hint >= (1 << nKeysCount))) {
+                            return set_error(serror, SCRIPT_ERR_MULTISIG_HINT);
+                        }
+                        // Fill the skip-bitfield of our MultiSigHint object
+                        hint << ser_hint;
+                        // For a k-of-n multisig, there must be k signatures present and
+                        // (n-k) keys marked unused. We require that the skip-bits for
+                        // these keys be set in the hint's skipped_keys field. Note in
+                        // particular that the corresponding bits must be set for keys
+                        // in the final positions, if unused, even though the signature
+                        // verification loop below terminates early in that situation.
+                        if (hint.count_sigs() != (empty_sigs ? 0 : nSigsCount)) {
+                            return set_error(serror, SCRIPT_ERR_MULTISIG_HINT);
+                        }
                     }
 
                     bool fSuccess = true;
@@ -971,8 +1024,18 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                             return false;
                         }
 
+                        // The first pubkey is at position (-ikey == -2),
+                        // which is bit index 0 of hint's skipped_keys.
+                        bool have_sig = hint.have_sig_for_key(ikey-2);
+
                         // Check signature
-                        bool fOk = checker.CheckSig(vchSig, vchPubKey, scriptCode);
+                        bool fOk = have_sig && checker.CheckSig(vchSig, vchPubKey, scriptCode);
+
+                        // Skipped keys MUST be reported in the hint if
+                        // SCRIPT_VERIFY_REQUIRE_VALID_SIGS is in effect.
+                        if (require_valid_sigs && have_sig && !fOk) {
+                            return set_error(serror, SCRIPT_ERR_FAILED_SIGNATURE_CHECK);
+                        }
 
                         if (fOk) {
                             isig++;
@@ -988,6 +1051,13 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                             fSuccess = false;
                     }
 
+                    // The only way in which a CHECKMULTISIG can fail without aborting
+                    // execution is by leaving all signatures empty (and simultaneously
+                    // marking all keys as skipped, but that is already checked for).
+                    if (require_valid_sigs && !fSuccess && !empty_sigs) {
+                        return set_error(serror, SCRIPT_ERR_FAILED_SIGNATURE_CHECK);
+                    }
+
                     // Clean up stack of actual arguments
                     while (i-- > 1)
                         popstack(stack);
@@ -1000,6 +1070,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     // to removing it from the stack.
                     if (stack.size() < 1)
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    // (Not compatible with SCRIPT_VERIFY_REQUIRE_VALID_SIGS:)
                     if ((flags & SCRIPT_VERIFY_NULLDUMMY) && stacktop(-1).size())
                         return set_error(serror, SCRIPT_ERR_SIG_NULLDUMMY);
                     popstack(stack);

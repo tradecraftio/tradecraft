@@ -24,6 +24,7 @@
 #include "prevector.h"
 
 #include <assert.h>
+#include <bitset>
 #include <climits>
 #include <limits>
 #include <stdexcept>
@@ -381,6 +382,112 @@ private:
     int64_t m_value;
 };
 
+// A helper class for creating, reading, and writing the multisig hint
+// field placed in the extra stack position of a CHECKMULTISIG when
+// SCRIPT_VERIFY_REQUIRE_VALID_SIGNATURES is in effect.
+class MultiSigHint
+{
+protected:
+    // A bitset is used to indicate which keys do NOT have signatures
+    // present, and should be skipped over. Keys for which there is a
+    // signature present have their corresponding bit clear.
+    //
+    // The ordering of bits within the hint is the same as the
+    // ordering of the pubkeys on the stack: if there are N public
+    // keys, the 1st public key (closest to the top of the stack) is
+    // indicated by the lowest-order bit in the hint; use of the Nth
+    // public key (nearest the bottom of the stack) is indicated with
+    // the Nth bit. For example:
+    //
+    //     <hint> <sigB> <sigA> 2 <pubC> <pubB> <pubA> 3 CHECKMULTISIG
+    //     hint:               0b     1      0      0  = 4
+    //
+    // Since the hint is pushed onto the stack as an integer, it can
+    // be more space efficient to drop the signature(s) corresponding
+    // to the last keys of a threshold when all keys are available.
+    // For example, an 11-of-15 threshold has a hint value of 0x000f
+    // when it is the first 11 public keys that are used. This is
+    // compactly pushed onto the stsack with a single byte, the OP_16
+    // opcode.
+    std::bitset<MAX_PUBKEYS_PER_MULTISIG> skipped_keys;
+    // The skipped_keys bitset is setup to store bits for 20 keys, the
+    // maximum number of pubkeys allowed in a single CHECKMULTISIG.
+    // We need the actual number of keys in order to calculate how
+    // many signatures should be present, since higher order bits of
+    // the bitfield are not significant.
+    int num_keys;
+
+public:
+    // By default no bits are set, which means ALL keys are used. This
+    // can only be valid for a n-of-n multisig. However a reasonable
+    // way to use this class is to initialize a hint object with this
+    // default value and then call skip_key() for the pubkeys which
+    // are not used.
+    MultiSigHint(int _num_keys)
+        : skipped_keys(0)
+        , num_keys(_num_keys)
+    {
+        assert(_num_keys >= 0);
+        assert(_num_keys <= MAX_PUBKEYS_PER_MULTISIG);
+    }
+
+    // Alternatively we can initialize with an integer or CScriptNum
+    // that is the integer-serialized representation of the hint bitfield.
+    MultiSigHint(int _num_keys, int int_hint)
+        : skipped_keys(0)     // When we switch to C++11, we can
+        , num_keys(_num_keys) // delegate to the other constructor
+    {                         // instead of duplicating code.
+        assert(_num_keys >= 0);
+        assert(_num_keys <= MAX_PUBKEYS_PER_MULTISIG);
+        *this << CScriptNum(int_hint);
+    }
+    MultiSigHint(int _num_keys, const CScriptNum& ser_hint)
+        : skipped_keys(0)     // When we switch to C++11, we can
+        , num_keys(_num_keys) // delegate to the other constructor
+    {                         // instead of duplicating code.
+        assert(_num_keys >= 0);
+        assert(_num_keys <= MAX_PUBKEYS_PER_MULTISIG);
+        *this << ser_hint;
+    }
+
+    // In some instances, such as the implementation of CHECKMULTISIG
+    // itself, it makes sense to later read the serialized hint after
+    // initialization to default values. We provide an input operator
+    // for that purpoes.
+    inline MultiSigHint& operator<<(const CScriptNum& ser_hint) {
+        const int int_hint = ser_hint.getint();
+        assert(int_hint >= 0);
+        assert(int_hint < (1 << num_keys));
+        skipped_keys = static_cast<unsigned>(int_hint);
+        return *this;
+    }
+
+    // hint.use_key(N) will clear the Nth skip bit
+    inline MultiSigHint& use_key(int which) {
+        skipped_keys.set(which, false);
+        return *this;
+    }
+
+    // hint.skip_key(N) will set the Nth skip bit
+    inline MultiSigHint& skip_key(int which) {
+        skipped_keys.set(which, true);
+        return *this;
+    }
+
+    // hint.have_sig_for_key(N) checks if the Nth skip bit is NOT set
+    inline bool have_sig_for_key(int which) const
+        { return !skipped_keys.test(which); }
+
+    // Returns the total number of signatures present, which is the
+    // number of clear bits in the bitfield, *ignoring higher-order
+    // bits beyond the actual number of keys*.
+    inline int count_sigs() const
+        { return (num_keys - skipped_keys.count()); }
+
+    // for CScript::operator<<(const MultiSigHint&)
+    friend class CScript;
+};
+
 typedef prevector<28, unsigned char> CScriptBase;
 
 /** Serialized script, used inside transaction inputs and outputs */
@@ -428,6 +535,7 @@ public:
     explicit CScript(opcodetype b)     { operator<<(b); }
     explicit CScript(const CScriptNum& b) { operator<<(b); }
     explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
+    explicit CScript(const MultiSigHint& b) { operator<<(b); }
 
 
     CScript& operator<<(int64_t b) { return push_int64(b); }
@@ -474,6 +582,11 @@ public:
         insert(end(), b.begin(), b.end());
         return *this;
     }
+
+    // Pushes an integer representation of the hint's skip-bitfield,
+    // using minimal pushes.
+    CScript& operator<<(const MultiSigHint& hint)
+        { return push_int64(hint.skipped_keys.to_ulong()); }
 
     CScript& operator<<(const CScript& b)
     {

@@ -23,6 +23,7 @@
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
+#include "policy/policy.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "script/sign.h"
@@ -975,33 +976,101 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     sig3.push_back(SIGHASH_SINGLE);
 
     // Not fussy about order (or even existence) of placeholders or signatures:
-    CScript partial1a = CScript() << OP_0 << sig1 << OP_0;
-    CScript partial1b = CScript() << OP_0 << OP_0 << sig1;
-    CScript partial2a = CScript() << OP_0 << sig2;
-    CScript partial2b = CScript() << sig2 << OP_0;
-    CScript partial3a = CScript() << sig3;
-    CScript partial3b = CScript() << OP_0 << OP_0 << sig3;
-    CScript partial3c = CScript() << OP_0 << sig3 << OP_0;
-    CScript complete12 = CScript() << OP_0 << sig1 << sig2;
-    CScript complete13 = CScript() << OP_0 << sig1 << sig3;
-    CScript complete23 = CScript() << OP_0 << sig2 << sig3;
+    static const CScript expected[1 << 3] = {
+        CScript() << OP_7 << OP_0 << OP_0,
+        CScript() << OP_3 << sig1 << OP_0,
+        CScript() << OP_5 << sig2 << OP_0,
+        CScript() << OP_1 << sig1 << sig2,
+        CScript() << OP_6 << sig3 << OP_0,
+        CScript() << OP_2 << sig1 << sig3,
+        CScript() << OP_4 << sig2 << sig3,
+        CScript() << OP_1 << sig1 << sig2,
+    };
 
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1a, partial1b);
-    BOOST_CHECK(combined == partial1a);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1a, partial2a);
-    BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial1a);
-    BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1b, partial2b);
-    BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial1b);
-    BOOST_CHECK(combined == complete13);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial3a);
-    BOOST_CHECK(combined == complete23);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial2b);
-    BOOST_CHECK(combined == complete23);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial3a);
-    BOOST_CHECK(combined == partial3c);
+    ScriptError err;
+    for (std::size_t i = 0; i < 3; ++i) {
+        for (std::size_t j = 0; j < 3; ++j) {
+            int which = (1 << i) | (1 << j);
+            if (i == j) {
+                BOOST_CHECK(!VerifyScript(expected[which], scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&txTo, 0), &err));
+                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_FAILED_SIGNATURE_CHECK, ScriptErrorString(err));
+            } else {
+                BOOST_CHECK(VerifyScript(expected[which], scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&txTo, 0), &err));
+                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+            }
+        }
+    }
+
+    static const std::pair<int, CScript> partials[] = {
+        std::make_pair(0, CScript() << OP_0 << OP_0 << OP_0),
+        std::make_pair(0, CScript() << OP_0 << OP_0),
+        std::make_pair(0, CScript() << OP_0),
+        std::make_pair(0, CScript()),
+        std::make_pair(1, CScript() << OP_0 << OP_0 << sig1),
+        std::make_pair(1, CScript() << OP_0 << sig1 << OP_0),
+        std::make_pair(1, CScript() << sig1 << OP_0 << OP_0),
+        std::make_pair(1, CScript() << OP_0 << sig1),
+        std::make_pair(1, CScript() << sig1 << OP_0),
+        std::make_pair(1, CScript() << sig1),
+        std::make_pair(2, CScript() << OP_0 << OP_0 << sig2),
+        std::make_pair(2, CScript() << OP_0 << sig2 << OP_0),
+        std::make_pair(2, CScript() << sig2 << OP_0 << OP_0),
+        std::make_pair(2, CScript() << OP_0 << sig2),
+        std::make_pair(2, CScript() << sig2 << OP_0),
+        std::make_pair(2, CScript() << sig2),
+        std::make_pair(3, CScript() << OP_0 << sig1 << sig2),
+        std::make_pair(3, CScript() << OP_0 << sig2 << sig1),
+        std::make_pair(3, CScript() << sig1 << OP_0 << sig2),
+        std::make_pair(3, CScript() << sig2 << OP_0 << sig1),
+        std::make_pair(3, CScript() << sig1 << sig2 << OP_0),
+        std::make_pair(3, CScript() << sig2 << sig1 << OP_0),
+        std::make_pair(3, CScript() << sig1 << sig2),
+        std::make_pair(3, CScript() << sig2 << sig1),
+        std::make_pair(4, CScript() << OP_0 << OP_0 << sig3),
+        std::make_pair(4, CScript() << OP_0 << sig3 << OP_0),
+        std::make_pair(4, CScript() << sig3 << OP_0 << OP_0),
+        std::make_pair(4, CScript() << OP_0 << sig3),
+        std::make_pair(4, CScript() << sig3 << OP_0),
+        std::make_pair(4, CScript() << sig3),
+        std::make_pair(5, CScript() << OP_0 << sig1 << sig3),
+        std::make_pair(5, CScript() << OP_0 << sig3 << sig1),
+        std::make_pair(5, CScript() << sig1 << OP_0 << sig3),
+        std::make_pair(5, CScript() << sig3 << OP_0 << sig1),
+        std::make_pair(5, CScript() << sig1 << sig3 << OP_0),
+        std::make_pair(5, CScript() << sig3 << sig1 << OP_0),
+        std::make_pair(5, CScript() << sig1 << sig3),
+        std::make_pair(5, CScript() << sig3 << sig1),
+        std::make_pair(6, CScript() << OP_0 << sig2 << sig3),
+        std::make_pair(6, CScript() << OP_0 << sig3 << sig2),
+        std::make_pair(6, CScript() << sig2 << OP_0 << sig3),
+        std::make_pair(6, CScript() << sig3 << OP_0 << sig2),
+        std::make_pair(6, CScript() << sig2 << sig3 << OP_0),
+        std::make_pair(6, CScript() << sig3 << sig2 << OP_0),
+        std::make_pair(6, CScript() << sig2 << sig3),
+        std::make_pair(6, CScript() << sig3 << sig2),
+        std::make_pair(7, CScript() << OP_0 << sig1 << sig2 << sig3),
+        std::make_pair(7, CScript() << sig1 << OP_0 << sig2 << sig3),
+        std::make_pair(7, CScript() << sig1 << sig2 << OP_0 << sig3),
+        std::make_pair(7, CScript() << sig1 << sig2 << sig3 << OP_0),
+        std::make_pair(7, CScript() << sig1 << sig2 << sig3),
+        std::make_pair(0, expected[0]),
+        std::make_pair(1, expected[1]),
+        std::make_pair(2, expected[2]),
+        std::make_pair(3, expected[3]),
+        std::make_pair(4, expected[4]),
+        std::make_pair(5, expected[5]),
+        std::make_pair(6, expected[6]),
+        std::make_pair(7, expected[7]),
+    };
+
+    for (std::size_t i = 0; i < ARRAYLEN(partials); ++i) {
+        for (std::size_t j = 0; j < ARRAYLEN(partials); ++j) {
+            combined = CombineSignatures(scriptPubKey, txTo, 0, partials[i].second, partials[j].second);
+            BOOST_CHECK(combined == expected[partials[i].first | partials[j].first]);
+            combined = CombineSignatures(scriptPubKey, txTo, 0, partials[j].second, partials[i].second);
+            BOOST_CHECK(combined == expected[partials[i].first | partials[j].first]);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_push)

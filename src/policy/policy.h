@@ -50,6 +50,7 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
                                                          SCRIPT_VERIFY_DERSIG |
                                                          SCRIPT_VERIFY_STRICTENC |
                                                          SCRIPT_VERIFY_MINIMALDATA |
+                                                         SCRIPT_VERIFY_REQUIRE_VALID_SIGS |
                                                          SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
                                                          SCRIPT_VERIFY_CLEANSTACK;
 
