@@ -296,10 +296,10 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.permit_disable_time_adjust = true;
-        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
-        consensus.equilibrium_height = 161280; // three years
-        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
-        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.perpetual_subsidy = 5000000000; // 50.000,000,00fc
+        consensus.equilibrium_height = 1; // disable
+        consensus.equilibrium_monetary_base = 0;
+        consensus.initial_excess_subsidy = 0;
         consensus.alu_activation_height = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
