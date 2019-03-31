@@ -76,6 +76,8 @@ static const unsigned int DEFAULT_DESCENDANT_LIMIT = 25;
 static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 101;
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 72;
+/** The maximum size of a blk?????.dat file (since 0.8) */
+static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
@@ -272,6 +274,15 @@ inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBloc
 {
     return ((pindex ? pindex->GetMedianTimePast() : 0) >= params.protocol_cleanup_activation_time);
 }
+/** Finally, a version based on network time, for places in
+ ** non-consensus code where it would be inappropriate to examine the
+ ** chain tip.
+ **/
+inline bool IsProtocolCleanupActive(const Consensus::Params& params, int64_t now)
+{
+    return (now > (params.protocol_cleanup_activation_time - 2*60*60 /* two hours */));
+}
+
 
 struct BlockHasher
 {

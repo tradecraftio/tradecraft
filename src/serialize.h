@@ -37,16 +37,16 @@
 #include "prevector.h"
 
 /**
- * This is set to MAX_BLOCKFILE_SIZE, plus 1.25kB. The largest
- * possible thing that is currently serialized is a relay message for
- * a full block after activation of the protocol-cleanup rule changes,
- * which is limited to MAX_BLOCKFILE_SIZE - 8 + 24 bytes. But it is
- * rather costless to add more than a full kilobyte of extra space
- * just to be sure that we aren't accidentally adding a network
- * synchronization consensus rule now or as a result of future chages.
- * "1.25kB should be enough block metadata for anybody."
+ * This is set to 2*MAX_BLOCK_SIZE, plus 1.25kB. The largest possible
+ * thing that is currently serialized is the submission of a block by
+ * JSON-RPC, which is limited to MAX_BLOCK_SIZE hex-encoded bytes (so,
+ * doubled) plus some JSON formatting. But it is rather costless to
+ * add more than a full kilobyte of extra space just to be sure that
+ * we aren't accidentally adding a network synchronization consensus
+ * rule now or as a result of future chages.  "1.25kB should be enough
+ * block metadata for anybody."
  */
-static const unsigned int MAX_SIZE = 0x7f000500; /* MAX_BLOCKFILE_SIZE + 1.25kB */
+static const unsigned int MAX_SIZE = 0x02000500; /* 2*MAX_BLOCK_SIZE + 1.25kB */
 
 /**
  * Used to bypass the rule against non-const reference to temporary
