@@ -224,7 +224,7 @@ CAmount TimeAdjustValueReverse(const CAmount& initial_value, uint32_t distance)
 
     /* A distance of 2^26 blocks and beyond are sufficient to decay
      * even MAX_MONEY to zero going forward, which in reverse implies
-     * d a single kria would exceed MAX_MONEY. */
+     * a single kria would exceed MAX_MONEY. */
     const CAmount kOverflow(sign * MAX_MONEY);
     if (distance >= ((uint32_t)1<<26))
         return kOverflow;
