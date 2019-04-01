@@ -126,7 +126,7 @@ testScripts = [
     'nodehandling.py',
     'reindex.py',
     'decodescript.py',
-#    'p2p-fullblocktest.py --bitcoin-mode', #unknown error
+    'p2p-fullblocktest.py --bitcoin-mode',
     'blockchain.py',
     'disablewallet.py',
     'sendheaders.py',
