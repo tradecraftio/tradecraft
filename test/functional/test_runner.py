@@ -149,7 +149,7 @@ BASE_SCRIPTS = [
     'rpc_users.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py --bitcoin-mode',
-    'wallet_groups.py',
+    'wallet_groups.py --bitcoin-mode',
     'p2p_disconnect_ban.py',
     'rpc_decodescript.py',
     'rpc_blockchain.py',
