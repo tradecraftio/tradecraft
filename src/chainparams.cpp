@@ -216,7 +216,7 @@ public:
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.verify_dersig_activation_height = 1;
         consensus.truncate_inputs_activation_height = 1;
-        consensus.alu_activation_height = 2016;
+        consensus.alu_activation_height = 1;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
@@ -306,7 +306,7 @@ public:
         consensus.initial_excess_subsidy = 0;
         consensus.verify_dersig_activation_height = 1;
         consensus.truncate_inputs_activation_height = 1;
-        consensus.alu_activation_height = 150;
+        consensus.alu_activation_height = 1;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
