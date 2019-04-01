@@ -200,6 +200,69 @@ space for Forward Blocks scriptPubKey prefixes.
 For more information about the implementation, see
 <https://github.com/bitcoin/bitcoin/pull/7524>
 
+SCRIPT_VERIFY_REQUIRE_VALID_SIGS
+--------------------------------
+
+A new rule is introduced which considers a transaction as non-standard
+if verification of that transaction requires a failed signature check,
+even if the script is written in such a way as to allow that failure.
+Evaluating such a script is still possible, but the CHECKSIG opcode
+must be provided with an empty / zero-length signature value, or k
+such empty values for a k-of-n CHECKMULTISIG.
+
+Since the mapping of signatures to keys was not previouly specified in
+the inputs of a CHECKMULTISIG, the additional extra/unused dummy
+argument to CHECKMULTISIG is required to be a bitfield specifying
+which public keys do NOT have corresponding signatures. Wallets which
+sign for multisig outputs MUST be updated to produce this bitfield in
+order for the generated transaction to be considered standard and
+relayed by upgraded nodes.
+
+This change is currently not scheduled for consensus enforcement, but
+eventually it will be as it is necessary in order to allow for batch
+validation of ECDSA signatures. For now it elimiates a source of
+witness malleability that presented a nuisance and possible DoS
+vector. Eventually soft-fork logic will be added to a future release
+once it is observed that most if not all wallets are producing
+conformant transactions.
+
+**Implications for miners**: No special action is required.
+Transactions which violate this rule will be rejected and not enter
+into your mempool, if you run with the default policy settings.
+
+**Implications for users**: In order to have your transactions relayed
+and reliably included in a block, your wallet must create the skipped
+key bitfield parameter for multisig scripts. The reference Freicoin
+wallet has been updated to generate these values. If your third party
+wallet software does not create conformant transactions, you may have
+Freicoin generate this value for you by passing the already-signed
+transaction through the `signrawtransaction` RPC, which will inject
+the proper skipped key bitfield when it re-serializes the scriptSig in
+the "combine signatures" step. Note that this necessarily malleates
+the transaction, changing its txid and invalidating any pre-signed
+dependent transactions.
+
+Finally, it is possible, though very unlikely, that someone out there
+has outputs controlled by a P2SH redeem script written in such a way
+as to require passing an invalid signature to a non-verify CHECKSIG
+(e.g. because the output of the CHECKSIG is then used as a branching
+condition), or by a multisig script where the dummy value is injected
+by the scriptPubKey or redeem script. If you know this applies to you,
+then you are encouraged in the strongest possible terms to move your
+funds to new scripts as quickly as possible. Once it is observed that
+people making regular transactions have upgraded, a soft fork to add
+SCRIPT_VERIFY_REQUIRE_VALID_SIGS to the consensus rules will be
+scheduled, which will make your funds permanently inaccessible. (If
+you are not sure if this applies to you, then it almost certainly does
+not. The development team's prior expectation is that nobody is using
+scripts in such a way as to have their funds permanently inaccessible
+as a result of this change, and they would only be doing so as a
+result of a conscious choice.)
+
+If you believe you are affected by these changes and are not able to
+move your funds, please contact the development team, e.g. by filing
+an issue on our issue tracker, or by email if you require privacy.
+
 Signature validation using libsecp256k1
 ---------------------------------------
 
@@ -970,6 +1033,117 @@ both the pull request and git merge commit are mentioned.
 - #7747 `4d035bc` added depends cross compile info (accraze)
 - #7741 `a0cea89` Mark p2p alert system as deprecated (btcdrak)
 - #7780 `c5f94f6` Disable bad-chain alert (btcdrak)
+
+### Tradecraft pull requests
+
+- #25 Add SCRIPT_VERIFY_REQUIRE_VALID_SIGS flag and make standard
+
+  The SCRIPT_VERIFY_REQUIRE_VALID_SIGS enforces that every signature
+  check passes when the signature field is non-empty (softfork safe,
+  replaces BIP62 rule 7).
+
+  It is still possible for the non-VERIFY forms of CHECKSIG or
+  CHECKMULTISIG to be executed and return false, but you MUST do so by
+  passing in an empty (OP_0) signature. The way this is implemented is
+  different for the two opcodes:
+
+  CHECKSIG and CHECKSIGVERIFY will abort script validation with error
+  code SCRIPT_ERR_FAILED_SIGNATURE_CHECK if the signature validation
+  code returns false for any reason other than the passed-in signature
+  being the empty.
+
+  CHECKMULTISIG and CHECKMULTISIGVERIFY present a significant
+  challenge to enforcing this requirement in that the original data
+  format did not indicate which public keys were matched with which
+  signatures, other than the ordering. For a k-of-n multisig, there
+  are n-choose-(n-k) possibilities. For example, a 2-of-3 multisig
+  would have three public keys matched with two signatures, resulting
+  in three possible assignments of pubkeys to signatures. In the
+  original implementation this is done by attempting to validate a
+  signature, starting with the first public key and the first
+  signature, and then moving to the next pubkey if validation
+  fails. It is not known in advance to the validator which attempts
+  will fail.
+
+  Thankfully, however, a bug in the original implementation causes an
+  extra, unused item to be removed from stack after validation. Since
+  this value is given no previous consensus meaning, we use it as a
+  bitfield to indicate which pubkeys to skip.
+
+  Enforcing this requirement is a necessary precursor step to
+  performing batch validation, since in a batch validation regime
+  individual pubkey-signature combinations would not be checked for
+  validity.
+
+  Like bitcoin's SCRIPT_VERIFY_NULLDUMMY, this also serves as a
+  malleability fix since the bitmask value is provided by the witness.
+
+- #36 Delay block file size increase until after the protocol cleanup rules activate
+
+  This is a follow-up to #26. By comparing against `GetAdjustedTime`
+  we can check if we are running in the protocol cleanup regime, and
+  only then use the higher limits for block file size. In the mean
+  time we'll still use smaller block files which is beneficial for
+  pruning.
+
+  It's slightly layer violating to access the chain consensus
+  parameters in some cases, e.g. from the network and protocol message
+  handling code. But it doesn't break the build and is better than the
+  alternative.
+
+- #37 Remove ability to "opt-out" from replace-by-fee semantics.
+
+  Bitcoin v0.12 introduces "opt-in" replace-by-fee semantics. This was
+  an unfortunate political compromise as a result of situational
+  context we are fortunate not to have to deal with. There is no such
+  thing as optionality to RBF because there is no way to prevent
+  transaction replacement in miner mempools. It is trivial to execute
+  a double-spend even when the transaction being replaces is not
+  BIP-125 compatible, and there are tools available to do this.
+  Supporting this feature and advertising it is confusing and a
+  potential source of security failures.
+
+- #40 Re-enable RPC regression tests from bitcoin with "bitcoin mode" (no demurrage) regtest chain
+
+  For the past couple of releases the majority of RPC regression tests
+  have bee disabled due to their implementation making certain
+  assumptions about the behavior of the chain, such as blocks having
+  50 BTC subsidy, and not taking into account value decay due to
+  demurrage. For example:
+
+    * A test that mines 25 blocks, then 100 blocks for maturity, and
+      checks that the available balance is 1250 coins is intending to
+      test the wallet coinbase maturity code, not the block reward
+      schedule. (These tests needed updating because the freicoin
+      subsidy schedule is different from bitcoin's.)
+
+    * A test that records the wallets balance, sends all available
+      coins to a external address, checks the new balance is zero,
+      then reorgs to a longer chain containing a double-spends back to
+      itself and checks the wallet balance has returned to its
+      original value is not supposed to be testing for demurrage.
+      (These tests needed updating because wallet balances decay with
+      each mined block.)
+
+  Previously we updated these tests individually, but this proved
+  difficult to maintain. In recent rebasing efforts we delayed
+  introduction of demurrage and changing subsidy until the end so the
+  tests could at least be run against earlier patches. This PR
+  introduces a more long-term solution.
+
+  This PR changes the subsidy on regtest to resemble bitcoin's (50
+  coins per block), and introduces a new consensus-impacting option
+  `-notimeadjust` (only available with `-regtest`) which disables
+  demurrage / time-value adjustment. Running the JSON-RPC python test
+  framework with the `--bitcoin-mode` command line option turns on
+  this no-demurrage mode.
+
+- #41 Fix final jsonrpc tests
+
+  Re-enables the final set of tests disabled by the demurrage patch
+  set. The problem here was not just demurrage but also the fact that
+  the input truncation and ALU demurrage soft-forks hadn't activated
+  on the regtest chain.
 
 Credits
 =======
