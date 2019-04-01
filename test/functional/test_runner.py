@@ -178,7 +178,7 @@ BASE_SCRIPTS = [
     'feature_proxy.py',
     'rpc_signrawtransaction.py --bitcoin-mode',
     #'rpc_signrawtransaction.py --descriptors', #times out
-    'wallet_groups.py',
+    'wallet_groups.py --bitcoin-mode',
     'p2p_addrv2_relay.py',
     #'wallet_groups.py --descriptors', #times out
     'p2p_disconnect_ban.py',
