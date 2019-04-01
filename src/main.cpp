@@ -2448,9 +2448,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
-    // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
-    // when 75% of the network has upgraded:
-    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
+    // Enforce the DERSIG (BIP66) rules, at the point in which
+    // block.nVersion=3 blocks became manditory:
+    if (pindex->nHeight >= chainparams.GetConsensus().verify_dersig_activation_height) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
