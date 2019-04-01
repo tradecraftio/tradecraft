@@ -1,14 +1,14 @@
-Freicoin version 12.1-0 is now available from:
+Freicoin version 12.1-10123 is now available from:
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-0-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-0-linux64.zip)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-0-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-0-osx64.tar.gz)
-  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-0-win32-setup.exe)
-  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-0-win32.zip)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-0-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-0-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1-0.zip)
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-10123-linux32.zip)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-10123-linux64.zip)
+  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-10123-osx.dmg)
+  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-10123-osx64.tar.gz)
+  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-10123-win32-setup.exe)
+  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-10123-win32.zip)
+  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-10123-win64-setup.exe)
+  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1-10123-win64.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1-10123.zip)
 
 This is a new major version release, bringing sequence locks and
 lock-time soft-fork, new features, and other improvements.
@@ -692,8 +692,8 @@ instead a new RPC call (`clearbanned`) can be used to manually clear
 the list.  The new `setban` RPC call can also be used to manually ban
 or unban a peer.
 
-12.1-0 Change log
-=================
+12.1-10123 Change log
+=====================
 
 Detailed release notes follow. This overview includes changes that
 affect behavior, not code moves, refactors and string updates. For
