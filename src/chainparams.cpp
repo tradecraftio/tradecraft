@@ -75,6 +75,7 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.truncate_inputs_activation_height = 158425;
         consensus.alu_activation_height = 229376;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -212,6 +213,7 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.truncate_inputs_activation_height = 1;
         consensus.alu_activation_height = 2016;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
@@ -300,6 +302,7 @@ public:
         consensus.equilibrium_height = 1; // disable
         consensus.equilibrium_monetary_base = 0;
         consensus.initial_excess_subsidy = 0;
+        consensus.truncate_inputs_activation_height = 1;
         consensus.alu_activation_height = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;

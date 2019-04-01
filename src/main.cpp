@@ -2293,10 +2293,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nBIP16SwitchTime = 1333238400;
     bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
 
-    // Whether fractional inputs should be summed or ignored. Bundled as part of the
-    // BIP66 soft-fork in Freicoin.
-    bool truncate_inputs = false;
-
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
     if (protocol_cleanup) {
         flags |= SCRIPT_VERIFY_PROTOCOL_CLEANUP;
@@ -2306,6 +2302,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // when 75% of the network has upgraded:
     if (protocol_cleanup || (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus()))) {
         flags |= SCRIPT_VERIFY_DERSIG;
+    }
+
+    // Whether fractional inputs should be summed or ignored.
+    bool truncate_inputs = false;
+    if (pindex->nHeight >= chainparams.GetConsensus().truncate_inputs_activation_height) {
         truncate_inputs = true;
     }
 
