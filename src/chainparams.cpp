@@ -75,6 +75,8 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.verify_dersig_activation_height = 158425;
+        consensus.truncate_inputs_activation_height = 158425;
         consensus.alu_activation_height = 229376;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -212,7 +214,9 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
-        consensus.alu_activation_height = 2016;
+        consensus.verify_dersig_activation_height = 1;
+        consensus.truncate_inputs_activation_height = 1;
+        consensus.alu_activation_height = 1;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
@@ -300,7 +304,9 @@ public:
         consensus.equilibrium_height = 1; // disable
         consensus.equilibrium_monetary_base = 0;
         consensus.initial_excess_subsidy = 0;
-        consensus.alu_activation_height = 150;
+        consensus.verify_dersig_activation_height = 1;
+        consensus.truncate_inputs_activation_height = 1;
+        consensus.alu_activation_height = 1;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;

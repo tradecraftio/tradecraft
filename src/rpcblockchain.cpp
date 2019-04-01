@@ -475,6 +475,7 @@ UniValue gettxoutsetinfo(const UniValue& params, bool fHelp)
         ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
         ret.push_back(Pair("bytes_serialized", (int64_t)stats.nSerializedSize));
         ret.push_back(Pair("hash_serialized", stats.hashSerialized.GetHex()));
+        ret.push_back(Pair("total_value", ValueFromAmount(stats.nTotalValue)));
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
     }
     return ret;
