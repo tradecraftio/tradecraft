@@ -146,7 +146,7 @@ def sync_mempools(rpc_connections, wait=1):
 
 freicoind_processes = {}
 
-def initialize_datadir(dirname, n):
+def initialize_datadir(dirname, n, bitcoinmode=False):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
@@ -157,6 +157,8 @@ def initialize_datadir(dirname, n):
         f.write("port="+str(p2p_port(n))+"\n")
         f.write("rpcport="+str(rpc_port(n))+"\n")
         f.write("listenonion=0\n")
+        if bitcoinmode:
+            f.write("notimeadjust=1\n")
     return datadir
 
 def rpc_url(i, rpchost=None):
@@ -182,7 +184,7 @@ def wait_for_freicoind_start(process, url, i):
                 raise # unkown JSON RPC exception
         time.sleep(0.25)
 
-def initialize_chain(test_dir):
+def initialize_chain(test_dir, bitcoinmode=False):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
@@ -200,7 +202,7 @@ def initialize_chain(test_dir):
 
         # Create cache directories, run freicoinds:
         for i in range(4):
-            datadir=initialize_datadir("cache", i)
+            datadir=initialize_datadir("cache", i, bitcoinmode)
             args = [ os.getenv("FREICOIND", "freicoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
@@ -248,15 +250,15 @@ def initialize_chain(test_dir):
         from_dir = os.path.join("cache", "node"+str(i))
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
-        initialize_datadir(test_dir, i) # Overwrite port/rpcport in freicoin.conf
+        initialize_datadir(test_dir, i, bitcoinmode) # Overwrite port/rpcport in freicoin.conf
 
-def initialize_chain_clean(test_dir, num_nodes):
+def initialize_chain_clean(test_dir, num_nodes, bitcoinmode=False):
     """
     Create an empty blockchain and num_nodes wallets.
     Useful if a test case wants complete control over initialization.
     """
     for i in range(num_nodes):
-        datadir=initialize_datadir(test_dir, i)
+        datadir=initialize_datadir(test_dir, i, bitcoinmode)
 
 
 def _rpchost_to_args(rpchost):

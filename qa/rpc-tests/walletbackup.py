@@ -57,7 +57,7 @@ class WalletBackupTest(FreicoinTestFramework):
 
     def setup_chain(self):
         logging.info("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 4)
+        initialize_chain_clean(self.options.tmpdir, 4, bitcoinmode=self.options.bitcoinmode)
 
     # This mirrors how the network was setup in the bash test
     def setup_network(self, split=False):

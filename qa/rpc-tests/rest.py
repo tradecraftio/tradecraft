@@ -63,7 +63,7 @@ class RESTTest (FreicoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 3)
+        initialize_chain_clean(self.options.tmpdir, 3, bitcoinmode=self.options.bitcoinmode)
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(3, self.options.tmpdir)

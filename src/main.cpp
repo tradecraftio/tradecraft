@@ -1557,7 +1557,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
         nSubsidy += 4 * consensusParams.equilibrium_monetary_base;
         nSubsidy += 5
             * (consensusParams.equilibrium_height-nHeight)
-            * consensusParams.initial_block_reward;
+            * consensusParams.initial_excess_subsidy;
         nSubsidy /= 5 * consensusParams.equilibrium_height;
         ++nSubsidy; // Integer truncation can cause an error of up to
                     // 1 kria for the above calculation + residual
@@ -1565,9 +1565,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     }
 
     // Perpetual demurrage-compensating subsidy
-    return nSubsidy +
-          (consensusParams.equilibrium_monetary_base /
-           consensusParams.per_block_demurrage_factor);
+    return (nSubsidy + consensusParams.perpetual_subsidy);
 }
 
 bool IsInitialBlockDownload()

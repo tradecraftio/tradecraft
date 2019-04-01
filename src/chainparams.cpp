@@ -70,10 +70,11 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
-        consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
-        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.permit_disable_time_adjust = false;
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
         consensus.equilibrium_height = 161280; // three years
-        consensus.initial_block_reward = 15916928404LL; // 1519.1692,8404fc
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.alu_activation_height = 229376;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -206,10 +207,11 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
-        consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
-        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.permit_disable_time_adjust = false;
+        consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
         consensus.equilibrium_height = 161280; // three years
-        consensus.initial_block_reward = 15916928404LL; // 1519.1692,8404fc
+        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
+        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.alu_activation_height = 2016;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
@@ -293,10 +295,11 @@ class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
-        consensus.per_block_demurrage_factor = 1048576; // 1.0 - 2**-20
-        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
-        consensus.equilibrium_height = 161280; // three years
-        consensus.initial_block_reward = 15916928404LL; // 1519.1692,8404fc
+        consensus.permit_disable_time_adjust = true;
+        consensus.perpetual_subsidy = 5000000000; // 50.000,000,00fc
+        consensus.equilibrium_height = 1; // disable
+        consensus.equilibrium_monetary_base = 0;
+        consensus.initial_excess_subsidy = 0;
         consensus.alu_activation_height = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
