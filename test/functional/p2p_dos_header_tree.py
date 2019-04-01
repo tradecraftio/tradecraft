@@ -61,9 +61,9 @@ class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
         peer_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())
         peer_checkpoint.send_and_ping(msg_headers(self.headers))
         assert {
-            'height': 546,
-            'hash': '000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70',
-            'branchlen': 546,
+            'height': 3,
+            'hash': '00000000b3e5521c0d5cb5930c3fd737029218f98def9f363df540a31f90cdc9',
+            'branchlen': 3,
             'status': 'headers-only',
         } in self.nodes[0].getchaintips()
 
@@ -79,7 +79,7 @@ class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
         peer_no_checkpoint.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
-            "hash": "00000000b0494bd6c3d5ff79c497cfce40831871cbf39b1bc28bd1dac817dc39",
+            "hash": "00000000c4aead1d82a04b516ce7edd402ca851333eff8fd8c3ae0ada1af1890",
             "branchlen": 2,
             "status": "headers-only",
         } in self.nodes[0].getchaintips()
@@ -89,7 +89,7 @@ class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
         peer_before_checkpoint.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
-            "hash": "00000000b0494bd6c3d5ff79c497cfce40831871cbf39b1bc28bd1dac817dc39",
+            "hash": "00000000c4aead1d82a04b516ce7edd402ca851333eff8fd8c3ae0ada1af1890",
             "branchlen": 2,
             "status": "headers-only",
         } in self.nodes[1].getchaintips()
