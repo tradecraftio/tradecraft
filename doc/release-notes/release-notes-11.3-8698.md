@@ -281,8 +281,8 @@ disable the behavior.
 
 Detailed release notes follow. This overview includes changes that affect
 behavior, not code moves, refactors and string updates. For convenience in locating
-the code changes and accompanying discussion, both the bitcoinn pull request and
-git merge commit are mentioned.
+the code changes and accompanying discussion, both the bitcoin pull request and git
+merge commit are mentioned.
 
 ### RPC and REST
 - #5461 `5f7279a` signrawtransaction: validate private key

@@ -11,7 +11,7 @@ Freicoin version 10.4.2 is now available from:
   * [Source](https://github.com/tradecraftio/tradecraft/archive/v10.4.2-7851.zip)
 
 This is a new bug fix release, adding support for pool software that
-rely on freicoind for the correct coinbases commitments, including
+rely on freicoind for the correct coinbase commitments, including
 median time past. Upgrading to this release is required for miners
 which use pool software that depends on the availability of the
 "locktime" field from 'getblocktemplate,' but otherwise it is not
