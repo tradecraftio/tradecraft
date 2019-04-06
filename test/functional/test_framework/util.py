@@ -305,7 +305,7 @@ def rpc_url(datadir, i, chain, rpchost):
 # Node functions
 ################
 
-def initialize_datadir(dirname, n, chain):
+def initialize_datadir(dirname, n, chain, bitcoinmode=False):
     datadir = get_datadir_path(dirname, n)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
@@ -319,6 +319,8 @@ def initialize_datadir(dirname, n, chain):
     with open(os.path.join(datadir, "freicoin.conf"), 'w', encoding='utf8') as f:
         f.write("{}=1\n".format(chain_name_conf_arg))
         f.write("[{}]\n".format(chain_name_conf_section))
+        if bitcoinmode:
+            f.write("bitcoinmode=1\n")
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
         f.write("server=1\n")
