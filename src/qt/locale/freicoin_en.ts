@@ -4275,7 +4275,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+74"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4290,7 +4290,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-167"/>
+        <location line="-168"/>
         <source>The %s developers</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4382,6 +4382,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
     <message>
         <location line="+2"/>
         <source>-maxmempool must be at least %d MB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bitcoin unit test compatibility mode only allowed on regtest.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4620,7 +4625,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-156"/>
+        <location line="-157"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4640,7 +4645,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Error reading from database, shutting down.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4776,7 +4781,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-179"/>
+        <location line="-180"/>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4801,7 +4806,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4851,7 +4856,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation>Insufficient funds</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-108"/>
         <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4866,7 +4871,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 kria 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+26"/>
         <source>Cannot write to data directory &apos;%s&apos;; check permissions.</source>
         <translation type="unfinished"></translation>
     </message>
