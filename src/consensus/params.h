@@ -80,6 +80,8 @@ struct BIP9Deployment {
  */
 struct Params {
     uint256 hashGenesisBlock;
+    /** Bitcoin unit test compatibility mode */
+    bool bitcoin_mode;
     int nSubsidyHalvingInterval;
     /* Block hash that is excepted from BIP16 enforcement */
     uint256 BIP16Exception;

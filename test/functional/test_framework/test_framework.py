@@ -210,6 +210,8 @@ class FreicoinTestFramework(metaclass=FreicoinTestMetaClass):
         group.add_argument("--legacy-wallet", action='store_const', const=False,
                             help="Run test using legacy wallets", dest='descriptors')
 
+        parser.add_argument("--bitcoin-mode", dest="bitcoinmode", default=False, action="store_true",
+                            help="Enable bitcoin unit test compatibility mode, where certain Freicoin-specific consensus rules are ignored (passes -regtest -bitcoinmode=1 to freicoind)")
         self.add_options(parser)
         # Running TestShell in a Jupyter notebook causes an additional -f argument
         # To keep TestShell from failing with an "unrecognized argument" error, we add a dummy "-f" argument
@@ -761,7 +763,7 @@ class FreicoinTestFramework(metaclass=FreicoinTestMetaClass):
         if not os.path.isdir(cache_node_dir):
             self.log.debug("Creating cache directory {}".format(cache_node_dir))
 
-            initialize_datadir(self.options.cachedir, CACHE_NODE_ID, self.chain, self.disable_autoconnect)
+            initialize_datadir(self.options.cachedir, CACHE_NODE_ID, self.chain, self.disable_autoconnect, bitcoinmode=self.options.bitcoinmode)
             self.nodes.append(
                 TestNode(
                     CACHE_NODE_ID,
@@ -820,7 +822,7 @@ class FreicoinTestFramework(metaclass=FreicoinTestMetaClass):
             self.log.debug("Copy cache directory {} to node {}".format(cache_node_dir, i))
             to_dir = get_datadir_path(self.options.tmpdir, i)
             shutil.copytree(cache_node_dir, to_dir)
-            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)  # Overwrite port/rpcport in freicoin.conf
+            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect, bitcoinmode=self.options.bitcoinmode)  # Overwrite port/rpcport in freicoin.conf
 
     def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.
@@ -828,7 +830,7 @@ class FreicoinTestFramework(metaclass=FreicoinTestMetaClass):
         Create an empty blockchain and num_nodes wallets.
         Useful if a test case wants complete control over initialization."""
         for i in range(self.num_nodes):
-            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)
+            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect, bitcoinmode=self.options.bitcoinmode)
 
     def skip_if_no_py3_zmq(self):
         """Attempt to import the zmq package and skip the test if the import fails."""

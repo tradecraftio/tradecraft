@@ -366,17 +366,17 @@ def rpc_url(datadir, i, chain, rpchost):
 ################
 
 
-def initialize_datadir(dirname, n, chain, disable_autoconnect=True):
+def initialize_datadir(dirname, n, chain, disable_autoconnect=True, bitcoinmode=False):
     datadir = get_datadir_path(dirname, n)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    write_config(os.path.join(datadir, "freicoin.conf"), n=n, chain=chain, disable_autoconnect=disable_autoconnect)
+    write_config(os.path.join(datadir, "freicoin.conf"), n=n, chain=chain, disable_autoconnect=disable_autoconnect, bitcoinmode=bitcoinmode)
     os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
     os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
 
 
-def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=True):
+def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=True, bitcoinmode=False):
     # Translate chain subdirectory name to config name
     if chain == 'testnet3':
         chain_name_conf_arg = 'testnet'
@@ -389,6 +389,8 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
             f.write("{}=1\n".format(chain_name_conf_arg))
         if chain_name_conf_section:
             f.write("[{}]\n".format(chain_name_conf_section))
+        if bitcoinmode:
+            f.write("bitcoinmode=1\n")
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
         f.write("fallbackfee=0.0002\n")
