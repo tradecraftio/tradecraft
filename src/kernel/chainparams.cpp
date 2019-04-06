@@ -93,6 +93,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         m_chain_type = ChainType::MAIN;
+        consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
@@ -224,6 +225,7 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         m_chain_type = ChainType::TESTNET;
+        consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
@@ -475,6 +477,7 @@ public:
         }
 
         m_chain_type = ChainType::SIGNET;
+        consensus.bitcoin_mode = false;
         consensus.signet_blocks = true;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
         consensus.nSubsidyHalvingInterval = 210000;
@@ -557,6 +560,7 @@ public:
     explicit CRegTestParams(const RegTestOptions& opts)
     {
         m_chain_type = ChainType::REGTEST;
+        consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 150;
