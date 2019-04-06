@@ -31,6 +31,16 @@ versions), then run the installer (on Windows) or just copy over
 Downgrade warning
 -----------------
 
+### Downgrade to a version < v12
+
+Because release v12 and later will obfuscate the chainstate on every
+fresh sync or reindex, the chainstate is not backwards-compatible with
+pre-v12 versions of Freicoin or other software.
+
+If you want to downgrade after you have done a reindex with v12 or
+later, you will need to reindex when you first start Freicoin version
+v11 or earlier.
+
 ### Downgrade to a version < v10
 
 Because release v10 and later makes use of headers-first
@@ -74,7 +84,7 @@ First version bits BIP9 softfork deployment
 This release includes a soft fork deployment to enforce [BIP68][] and
 [BIP113][] using the [BIP9][] deployment mechanism.
 
-The deployment sets the block version number to 0x20000001 between
+The deployment sets the block version number to 0x30000001 between
 midnight 2nd April 2019 and midnight 2nd October 2019 to signal
 readiness for deployment. The version number consists of 0x30000000 to
 indicate version bits together with setting bit 0 to indicate support
@@ -238,9 +248,9 @@ wallet software does not create conformant transactions, you may have
 Freicoin generate this value for you by passing the already-signed
 transaction through the `signrawtransaction` RPC, which will inject
 the proper skipped key bitfield when it re-serializes the scriptSig in
-the "combine signatures" step. Note that this necessarily malleates
-the transaction, changing its txid and invalidating any pre-signed
-dependent transactions.
+its internal "combine signatures" step. Note that this necessarily
+malleates the transaction, changing its txid and invalidating any
+pre-signed dependent transactions.
 
 Finally, it is possible, though very unlikely, that someone out there
 has outputs controlled by a P2SH redeem script written in such a way
@@ -261,12 +271,13 @@ result of a conscious choice.)
 
 If you believe you are affected by these changes and are not able to
 move your funds, please contact the development team, e.g. by filing
-an issue on our issue tracker, or by email if you require privacy.
+an issue on our issue tracker, or by email if your situation requires
+discretion.
 
 Signature validation using libsecp256k1
 ---------------------------------------
 
-ECDSA signatures inside Freicoin transactions now use validation using
+ECDSA signatures inside Freicoin transactions are now validated with
 [libsecp256k1](https://github.com/bitcoin-core/secp256k1) instead of
 OpenSSL.
 
@@ -323,10 +334,10 @@ counts for calculating the target.
 A more detailed documentation about keeping traffic low can be found
 in [/doc/reduce-traffic.md](/doc/reduce-traffic.md).
 
-Direct headers announcement (BIP 130)
+Direct headers announcement (BIP130)
 -------------------------------------
 
-Between compatible peers, [BIP 130]
+Between compatible peers, [BIP130]
 (https://github.com/bitcoin/bips/blob/master/bip-0130.mediawiki)
 direct headers announcement is used. This means that blocks are
 advertised by announcing their headers directly, instead of just
@@ -343,7 +354,7 @@ Memory pool limiting
 Previous versions of Freicoin had their mempool limited by checking a
 transaction's fees against the node's minimum relay fee. There was no
 upper bound on the size of the mempool and attackers could send a
-large number of transactions paying just slighly more than the default
+large number of transactions paying just slightly more than the default
 minimum relay fee to crash nodes with relatively low RAM. A temporary
 workaround for previous versions of Freicoin was to raise the default
 minimum relay fee.
@@ -367,33 +378,89 @@ overriden using command line arguments; see the extended help (`--help
 Replace-by-fee transaction semantics
 ------------------------------------
 
-It is now possible to replace transactions in the transaction memory
-pool of Freicoin v12 nodes. Freicoin will only allow replacement of
-transactions which have any of their inputs' `nSequence` number set to
-less than `0xffffffff - 1`.  Moreover, a replacement transaction may
-only be accepted when it pays sufficient fee, as described in [BIP
-125] (https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki).
+Freicoin v12 introduces replace-by-fee transaction semantics, where
+one or more transactions in the mempool can be replaced by a
+conflicting transaction that pays a greater amount of fee.  The
+criteria for replacing transactions is at this time unchanged from
+bitcoin's [BIP125][], except that ALL transactions are treated as
+having explicit replace-by-fee semantics regardless of whether it has
+any non-final inputs.  Namely,
 
-Transaction replacement can be disabled with a new command line
-option, `-mempoolreplacement=0`.  Transactions signaling replacement
-under BIP125 will still be allowed into the mempool in this
-configuration, but replacements will be rejected.  This option is
-intended for miners who want to continue the transaction selection
-behavior of previous releases.
+One or more transactions currently in the mempool (original
+transactions) will be replaced by a new transaction (replacement
+transaction) that spends one or more of the same inputs if,
 
-The `-mempoolreplacement` option is *not recommended* for wallet users
-seeking to avoid receipt of unconfirmed opt-in transactions, because
-this option does not prevent transactions which are replaceable under
-BIP 125 from being accepted (only subsequent replacements, which other
-nodes on the network that implement BIP 125 are likely to relay and
-mine).  Wallet users wishing to detect whether a transaction is
-subject to replacement under BIP 125 should instead use the updated
-RPC calls `gettransaction` and `listtransactions`, which now have an
-additional field in the output indicating if a transaction is
-replaceable under BIP125 ("bip125-replaceable").
+  1. (Rule #1 of BIP125 having to do with opt-in replace-by-signaling
+      has been removed.  All transactions are treated as replaceable.)
 
-Note that the wallet in Freicoin v12 does not yet have support for
-creating transactions that would be replaceable under BIP 125.
+  2. The replacement transaction may only include an unconfirmed input
+     if that input was included in one of the original transactions.
+     (An unconfirmed input spends an output from a
+     currently-unconfirmed transaction.)
+
+  3. The replacement transaction pays an absolute fee of at least the
+     sum paid by the original transactions.
+
+  4. The replacement transaction must also pay for its own bandwidth
+     at or above the rate set by the node's minimum relay fee setting.
+     For example, if the minimum relay fee is 1 kria/byte and the
+     replacement transaction is 500 bytes total, then the replacement
+     must pay a fee at least 500 kria higher than the sum of the
+     originals.
+
+  5. The number of original transactions to be replaced and their
+     descendant transactions which will be evicted from the mempool
+     must not exceed a total of 100 transactions.
+
+Be advised that the Freicoin development team *is* looking into
+altering these rules further in future releases.  Specifically,
+changes currently under consideration for future releases include:
+
+  1. **Batch replace-by-fee semantics** in which potentially many
+     replacement transactions are considered for simultaneous RBF
+     replacement.  This would allow a child transaction to provide the
+     necessary fee to cover replacement of its unconfirmed and
+     conflicting parent.
+
+     This would necessarily have to be accompanied by batch transaction
+     relay, where more than one transaction are relayed together at the
+     network layer and processed as a group, in instances where the
+     dependent transaction(s) pay higher fee rate than the parent.
+
+  2. **Strict fee-rate instead of absolute-fee consideration**.  The
+     BIP125 rules for transaction replacement are not incentive
+     aligned with miners in a blocks-always-full regime, who have
+     incentives structured to make them care more about fee rate
+     than absolute fee.
+
+No mechanims is provided for disabling transaction replacement.
+Should you wish to keep a transaction from being replaced in your own
+mempool, the `prioritisetransaction` RPC allows assigning a
+transaction an additional, fake fee with which to bias the
+replace-by-fee calculation.
+
+**Implication for miners**: you don't need to do anything.  Your
+Freicoin node will automatically eject lower-fee transactions from its
+mempool in favor of transactions paying sufficiently higher fee, and
+the blocks you mine using block templates generated by your node will
+automatically include the transactions from your mempool paying the
+highest fees.
+
+**Implication for users**: transactions involving any outputs you do
+not have sole spending authority over should not be considered trusted
+until they have received a sufficient number of block confirmations.
+This was true before, but is even more relevant now.  All transactions
+are considered replaceable, so there is nothing you or your wallet
+needs to do to signal this capability.
+
+Note that the graphical wallet in Freicoin v12 does not yet have
+support for creating transactions which conflict with known wallet
+transactions for the purpose of triggering mempool replacement.  Such
+transactions can be generated with the JSON-RPC interface however, and
+the wallet will display details of conflicting transactions it does
+know about.
+
+[BIP125]: https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
 
 RPC: Random-cookie RPC authentication
 -------------------------------------
@@ -590,8 +657,11 @@ RPC: Low-level API changes
   signature hash type for each signature that provides a valid defined
   hash type.
 
-* NOP2 has been renamed to CHECKLOCKTIMEVERIFY by [BIP
-  65](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki)
+* NOP2 has been renamed to CHECKLOCKTIMEVERIFY by
+  [BIP65](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki)
+
+* NOP3 has been renamed to CHECKSEQUENCEVERIFY by
+  [BIP112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki)
 
 The following items contain assembly representations of scriptSig
 signatures and are affected by this change:
@@ -644,8 +714,8 @@ It can also be set up system-wide in inetd style.
 
 Another way to re-attain SSL would be to setup a httpd reverse
 proxy. This solution would allow the use of different authentication,
-loadbalancing, on-the-fly compression and caching. A sample config for
-apache2 could look like:
+load-balancing, on-the-fly compression and caching. A sample config
+for apache2 could look like:
 
     Listen 443
 
@@ -692,7 +762,7 @@ instead a new RPC call (`clearbanned`) can be used to manually clear
 the list.  The new `setban` RPC call can also be used to manually ban
 or unban a peer.
 
-12.1-10123 Change log
+12.1-10123 Change Log
 =====================
 
 Detailed release notes follow. This overview includes changes that
@@ -1080,11 +1150,11 @@ both the pull request and git merge commit are mentioned.
 
 - #36 Delay block file size increase until after the protocol cleanup rules activate
 
-  This is a follow-up to #26. By comparing against `GetAdjustedTime`
-  we can check if we are running in the protocol cleanup regime, and
-  only then use the higher limits for block file size. In the mean
-  time we'll still use smaller block files which is beneficial for
-  pruning.
+  This is a follow-up to #26 included in Freicoin v10.4. By comparing
+  against `GetAdjustedTime` we can check if we are running in the
+  protocol cleanup regime, and only then use the higher limits for
+  block file size. In the mean time we'll still use smaller block
+  files which is beneficial for pruning.
 
   It's slightly layer violating to access the chain consensus
   parameters in some cases, e.g. from the network and protocol message
@@ -1099,7 +1169,7 @@ both the pull request and git merge commit are mentioned.
   thing as optionality to RBF because there is no way to prevent
   transaction replacement in miner mempools. It is trivial to execute
   a double-spend even when the transaction being replaces is not
-  BIP-125 compatible, and there are tools available to do this.
+  BIP125 compatible, and there are tools available to do this.
   Supporting this feature and advertising it is confusing and a
   potential source of security failures.
 
@@ -1197,6 +1267,7 @@ Thanks to everyone who directly contributed to this release:
 - Jorge Timón
 - Josh Lehan
 - J Ross Nicoll
+- Karl-Johan Alm
 - kazcw
 - Kevin Cooper
 - lpescher
