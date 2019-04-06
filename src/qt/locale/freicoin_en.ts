@@ -5103,6 +5103,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <location line="+1"/>
+        <source>Bitcoin unit test compatibility mode only allowed on regtest.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Cannot resolve -%s address: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>

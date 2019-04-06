@@ -371,17 +371,17 @@ def rpc_url(datadir, i, chain, rpchost):
 ################
 
 
-def initialize_datadir(dirname, n, chain):
+def initialize_datadir(dirname, n, chain, bitcoinmode=False):
     datadir = get_datadir_path(dirname, n)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    write_config(os.path.join(datadir, "freicoin.conf"), n=n, chain=chain)
+    write_config(os.path.join(datadir, "freicoin.conf"), n=n, chain=chain, bitcoinmode=bitcoinmode)
     os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
     os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
 
 
-def write_config(config_path, *, n, chain, extra_config=""):
+def write_config(config_path, *, n, chain, extra_config="", bitcoinmode=False):
     # Translate chain subdirectory name to config name
     if chain == 'testnet3':
         chain_name_conf_arg = 'testnet'
@@ -394,6 +394,8 @@ def write_config(config_path, *, n, chain, extra_config=""):
             f.write("{}=1\n".format(chain_name_conf_arg))
         if chain_name_conf_section:
             f.write("[{}]\n".format(chain_name_conf_section))
+        if bitcoinmode:
+            f.write("bitcoinmode=1\n")
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
         f.write("fallbackfee=0.0002\n")
