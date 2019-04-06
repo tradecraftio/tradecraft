@@ -140,6 +140,8 @@ class FreicoinTestFramework(metaclass=FreicoinTestMetaClass):
                             help="use freicoin-cli instead of RPC for all commands")
         parser.add_argument("--perf", dest="perf", default=False, action="store_true",
                             help="profile running nodes with perf for the duration of the test")
+        parser.add_argument("--bitcoin-mode", dest="bitcoinmode", default=False, action="store_true",
+                            help="Enable bitcoin unit test compatibility mode, where certain Freicoin-specific consensus rules are ignored (passes -regtest -bitcoinmode=1 to freicoind)")
         self.add_options(parser)
         self.options = parser.parse_args()
 
@@ -477,7 +479,7 @@ class FreicoinTestFramework(metaclass=FreicoinTestMetaClass):
 
             # Create cache directories, run freicoinds:
             for i in range(MAX_NODES):
-                datadir = initialize_datadir(self.options.cachedir, i)
+                datadir = initialize_datadir(self.options.cachedir, i, bitcoinmode=self.options.bitcoinmode)
                 args = [self.options.freicoind, "-datadir=" + datadir, '-disablewallet']
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
@@ -530,7 +532,7 @@ class FreicoinTestFramework(metaclass=FreicoinTestMetaClass):
             from_dir = get_datadir_path(self.options.cachedir, i)
             to_dir = get_datadir_path(self.options.tmpdir, i)
             shutil.copytree(from_dir, to_dir)
-            initialize_datadir(self.options.tmpdir, i)  # Overwrite port/rpcport in freicoin.conf
+            initialize_datadir(self.options.tmpdir, i, bitcoinmode=self.options.bitcoinmode)  # Overwrite port/rpcport in freicoin.conf
 
     def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.
@@ -538,7 +540,7 @@ class FreicoinTestFramework(metaclass=FreicoinTestMetaClass):
         Create an empty blockchain and num_nodes wallets.
         Useful if a test case wants complete control over initialization."""
         for i in range(self.num_nodes):
-            initialize_datadir(self.options.tmpdir, i)
+            initialize_datadir(self.options.tmpdir, i, bitcoinmode=self.options.bitcoinmode)
 
     def skip_if_no_py3_zmq(self):
         """Attempt to import the zmq package and skip the test if the import fails."""
