@@ -113,6 +113,7 @@ QT_TRANSLATE_NOOP("freicoin", ""
 QT_TRANSLATE_NOOP("freicoin", "%s is set very high!"),
 QT_TRANSLATE_NOOP("freicoin", "-maxmempool must be at least %d MB"),
 QT_TRANSLATE_NOOP("freicoin", "A fatal internal error occurred, see debug.log for details"),
+QT_TRANSLATE_NOOP("freicoin", "Bitcoin unit test compatibility mode only allowed on regtest."),
 QT_TRANSLATE_NOOP("freicoin", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("freicoin", "Cannot resolve -%s address: '%s'"),
 QT_TRANSLATE_NOOP("freicoin", "Cannot set -peerblockfilters without -blockfilterindex."),

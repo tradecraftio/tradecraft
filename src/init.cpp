@@ -100,6 +100,7 @@
 static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
+static const bool DEFAULT_BITCOINMODE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 static const bool DEFAULT_STRATUM_ENABLE = false;
 
@@ -535,6 +536,7 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-checkpoints", strprintf("Enable rejection of any forks from the known historical chain until block %s (default: %u)", defaultChainParams->Checkpoints().GetHeight(), DEFAULT_CHECKPOINTS_ENABLED), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-deprecatedrpc=<method>", "Allows deprecated RPC method(s) to be used", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-dropmessagestest=<n>", "Randomly drop 1 of every <n> network messages", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-bitcoinmode", strprintf("Enable bitcoin unit test compatibility mode, where certain Freicoin-specific consensus rules are ignored (-regtest only; default: %u)", DEFAULT_BITCOINMODE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-stopafterblockimport", strprintf("Stop running after importing blocks from disk (default: %u)", DEFAULT_STOPAFTERBLOCKIMPORT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-stopatheight", strprintf("Stop running after reaching the given height in the main chain (default: %u)", DEFAULT_STOPATHEIGHT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitancestorcount=<n>", strprintf("Do not accept transactions if number of in-mempool ancestors is <n> or more (default: %u)", DEFAULT_ANCESTOR_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -1074,6 +1076,25 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
+
+    if (gArgs.GetBoolArg("-bitcoinmode", DEFAULT_BITCOINMODE)) {
+        /*
+         * Bitcoin unit test compatibility mode selectively disables
+         * some Freicoin consensus rules having to do with demurrage,
+         * subsidy, and lock height monotonicity in order to allow
+         * bitcoin regression tests to run with minimal changes.
+         */
+        if (!chainparams.MineBlocksOnDemand()) {
+            return InitError(_("Bitcoin unit test compatibility mode only allowed on regtest."));
+        }
+
+        /*
+         * Overwrite the original chain params, so any code that
+         * accesses Consensus::Params::bitcoin_mode in this process
+         * will get the correct value.
+         */
+        *const_cast<bool*>(&chainparams.GetConsensus().bitcoin_mode) = true;
+    }
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (args.IsArgSet("-debug")) {
