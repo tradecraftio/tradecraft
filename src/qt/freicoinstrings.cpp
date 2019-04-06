@@ -238,6 +238,7 @@ QT_TRANSLATE_NOOP("freicoin", "Always query for peer addresses via DNS lookup (d
 QT_TRANSLATE_NOOP("freicoin", "Append comment to the user agent string"),
 QT_TRANSLATE_NOOP("freicoin", "Attempt to recover private keys from a corrupt wallet on startup"),
 QT_TRANSLATE_NOOP("freicoin", "Automatically create Tor hidden service (default: %d)"),
+QT_TRANSLATE_NOOP("freicoin", "Bitcoin unit test compatibility mode only allowed on regtest."),
 QT_TRANSLATE_NOOP("freicoin", "Block creation options:"),
 QT_TRANSLATE_NOOP("freicoin", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("freicoin", "Cannot resolve -%s address: '%s'"),
