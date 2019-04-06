@@ -59,9 +59,9 @@ class FreicoinTestFramework(object):
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
         if self.setup_clean_chain:
-            initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+            initialize_chain_clean(self.options.tmpdir, self.num_nodes, bitcoinmode=self.options.bitcoinmode)
         else:
-            initialize_chain(self.options.tmpdir, self.num_nodes)
+            initialize_chain(self.options.tmpdir, self.num_nodes, bitcoinmode=self.options.bitcoinmode)
 
     def stop_node(self, num_node):
         stop_node(self.nodes[num_node], num_node)
@@ -131,6 +131,8 @@ class FreicoinTestFramework(object):
                           help="The seed to use for assigning port numbers (default: current process id)")
         parser.add_option("--coveragedir", dest="coveragedir",
                           help="Write tested RPC commands into this directory")
+        parser.add_option("--bitcoin-mode", dest="bitcoinmode", default=False, action="store_true",
+                          help="Enable bitcoin unit test compatibility mode, where certain Freicoin-specific consensus rules are ignored (passes -regtest -bitcoinmode=1 to freicoind)")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 

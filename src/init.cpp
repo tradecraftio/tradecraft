@@ -420,6 +420,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-testsafemode", strprintf("Force safe mode (default: %u)", DEFAULT_TESTSAFEMODE));
         strUsage += HelpMessageOpt("-dropmessagestest=<n>", "Randomly drop 1 of every <n> network messages");
         strUsage += HelpMessageOpt("-fuzzmessagestest=<n>", "Randomly fuzz 1 of every <n> network messages");
+        strUsage += HelpMessageOpt("-bitcoinmode", "Enable bitcoin unit test compatibility mode, where certain Freicoin-specific consensus rules are ignored (-regtest only)");
         strUsage += HelpMessageOpt("-stopafterblockimport", strprintf("Stop running after importing blocks from disk (default: %u)", DEFAULT_STOPAFTERBLOCKIMPORT));
         strUsage += HelpMessageOpt("-limitancestorcount=<n>", strprintf("Do not accept transactions if number of in-mempool ancestors is <n> or more (default: %u)", DEFAULT_ANCESTOR_LIMIT));
         strUsage += HelpMessageOpt("-limitancestorsize=<n>", strprintf("Do not accept transactions whose size with all in-mempool ancestors exceeds <n> kilobytes (default: %u)", DEFAULT_ANCESTOR_SIZE_LIMIT));
@@ -884,6 +885,25 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
+
+    if (GetBoolArg("-bitcoinmode", false)) {
+        /*
+         * Bitcoin unit test compatibility mode selectively disables
+         * some Freicoin consensus rules having to do with demurrage,
+         * subsidy, and lock height monotonicity in order to allow
+         * bitcoin regression tests to run with minimal changes.
+         */
+        if (!chainparams.MineBlocksOnDemand()) {
+            return InitError(_("Bitcoin unit test compatibility mode only allowed on regtest."));
+        }
+
+        /*
+         * Overwrite the original chain params, so any code that
+         * accesses Consensus::Params::bitcoin_mode in this process
+         * will get the correct value.
+         */
+        *const_cast<bool*>(&chainparams.GetConsensus().bitcoin_mode) = true;
+    }
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 

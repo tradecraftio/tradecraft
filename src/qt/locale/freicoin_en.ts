@@ -4010,6 +4010,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>Bitcoin unit test compatibility mode only allowed on regtest.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Block creation options:</source>
         <translation>Block creation options:</translation>
     </message>
