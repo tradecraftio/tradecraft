@@ -191,13 +191,15 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
 
 freicoind_processes = {}
 
-def initialize_datadir(dirname, n):
+def initialize_datadir(dirname, n, bitcoinmode=False):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     rpc_u, rpc_p = rpc_auth_pair(n)
     with open(os.path.join(datadir, "freicoin.conf"), 'w', encoding='utf8') as f:
         f.write("regtest=1\n")
+        if bitcoinmode:
+            f.write("bitcoinmode=1\n")
         f.write("rpcuser=" + rpc_u + "\n")
         f.write("rpcpassword=" + rpc_p + "\n")
         f.write("port="+str(p2p_port(n))+"\n")
@@ -241,7 +243,7 @@ def wait_for_freicoind_start(process, url, i):
                 raise # unknown JSON RPC exception
         time.sleep(0.25)
 
-def initialize_chain(test_dir, num_nodes, cachedir):
+def initialize_chain(test_dir, num_nodes, cachedir, bitcoinmode=False):
     """
     Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
     Afterward, create num_nodes copies from the cache
@@ -263,7 +265,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
 
         # Create cache directories, run freicoinds:
         for i in range(MAX_NODES):
-            datadir=initialize_datadir(cachedir, i)
+            datadir=initialize_datadir(cachedir, i, bitcoinmode=bitcoinmode)
             args = [ os.getenv("FREICOIND", "freicoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
@@ -313,15 +315,15 @@ def initialize_chain(test_dir, num_nodes, cachedir):
         from_dir = os.path.join(cachedir, "node"+str(i))
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
-        initialize_datadir(test_dir, i) # Overwrite port/rpcport in freicoin.conf
+        initialize_datadir(test_dir, i, bitcoinmode=bitcoinmode) # Overwrite port/rpcport in freicoin.conf
 
-def initialize_chain_clean(test_dir, num_nodes):
+def initialize_chain_clean(test_dir, num_nodes, bitcoinmode=False):
     """
     Create an empty blockchain and num_nodes wallets.
     Useful if a test case wants complete control over initialization.
     """
     for i in range(num_nodes):
-        datadir=initialize_datadir(test_dir, i)
+        datadir=initialize_datadir(test_dir, i, bitcoinmode=bitcoinmode)
 
 
 def _rpchost_to_args(rpchost):
