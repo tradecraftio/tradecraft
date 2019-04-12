@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_TEST_PAYMENTSERVERTESTS_H
-#define BITCOIN_QT_TEST_PAYMENTSERVERTESTS_H
+#ifndef FREICOIN_QT_TEST_PAYMENTSERVERTESTS_H
+#define FREICOIN_QT_TEST_PAYMENTSERVERTESTS_H
 
 #include "../paymentserver.h"
 
@@ -46,4 +46,4 @@ public:
     SendCoinsRecipient recipient;
 };
 
-#endif // BITCOIN_QT_TEST_PAYMENTSERVERTESTS_H
+#endif // FREICOIN_QT_TEST_PAYMENTSERVERTESTS_H

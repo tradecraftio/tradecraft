@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # blocktools.py - utilities for manipulating blocks and transactions
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify

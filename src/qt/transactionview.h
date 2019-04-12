@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_QT_TRANSACTIONVIEW_H
-#define BITCOIN_QT_TRANSACTIONVIEW_H
+#ifndef FREICOIN_QT_TRANSACTIONVIEW_H
+#define FREICOIN_QT_TRANSACTIONVIEW_H
 
 #include "guiutil.h"
 
@@ -131,4 +131,4 @@ public Q_SLOTS:
 
 };
 
-#endif // BITCOIN_QT_TRANSACTIONVIEW_H
+#endif // FREICOIN_QT_TRANSACTIONVIEW_H

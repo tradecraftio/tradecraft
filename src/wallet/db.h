@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_WALLET_DB_H
-#define BITCOIN_WALLET_DB_H
+#ifndef FREICOIN_WALLET_DB_H
+#define FREICOIN_WALLET_DB_H
 
 #include "clientversion.h"
 #include "serialize.h"
@@ -323,4 +323,4 @@ public:
     bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
 };
 
-#endif // BITCOIN_WALLET_DB_H
+#endif // FREICOIN_WALLET_DB_H

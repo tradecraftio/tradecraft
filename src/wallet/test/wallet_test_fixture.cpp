@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016 The Freicoin developers
 // Copyright (c) 2011-2019 The Freicoin Developers
 //
 // This program is free software: you can redistribute it and/or

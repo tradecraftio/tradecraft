@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,11 +21,11 @@
 # Exercise API with -disablewallet.
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
 
-class DisableWalletTest (BitcoinTestFramework):
+class DisableWalletTest (FreicoinTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -38,7 +38,7 @@ class DisableWalletTest (BitcoinTestFramework):
         self.sync_all()
 
     def run_test (self):
-        # Check regression: https://github.com/bitcoin/bitcoin/issues/6963#issuecomment-154548880
+        # Check regression: https://github.com/freicoin/freicoin/issues/6963#issuecomment-154548880
         x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
         assert(x['isvalid'] == False)
         x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')

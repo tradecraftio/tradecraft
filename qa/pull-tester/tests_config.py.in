@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2013-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -23,6 +23,6 @@ EXEEXT="@EXEEXT@"
 
 # These will turn into comments if they were disabled when configuring.
 @ENABLE_WALLET_TRUE@ENABLE_WALLET=1
-@BUILD_BITCOIN_UTILS_TRUE@ENABLE_UTILS=1
-@BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=1
+@BUILD_FREICOIN_UTILS_TRUE@ENABLE_UTILS=1
+@BUILD_FREICOIND_TRUE@ENABLE_FREICOIND=1
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=1

@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef _BITCOIN_PREVECTOR_H_
-#define _BITCOIN_PREVECTOR_H_
+#ifndef _FREICOIN_PREVECTOR_H_
+#define _FREICOIN_PREVECTOR_H_
 
 #include <stdlib.h>
 #include <stdint.h>

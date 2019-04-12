@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_HTTPRPC_H
-#define BITCOIN_HTTPRPC_H
+#ifndef FREICOIN_HTTPRPC_H
+#define FREICOIN_HTTPRPC_H
 
 #include <string>
 #include <map>

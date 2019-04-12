@@ -16,9 +16,9 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_NOUI_H
-#define BITCOIN_NOUI_H
+#ifndef FREICOIN_NOUI_H
+#define FREICOIN_NOUI_H
 
 extern void noui_connect();
 
-#endif // BITCOIN_NOUI_H
+#endif // FREICOIN_NOUI_H

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 #
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import time
 
@@ -59,7 +59,7 @@ class TestNode(SingleNodeConnCB):
         self.send_message(msg_feefilter(feerate))
         self.sync_with_ping()
 
-class FeeFilterTest(BitcoinTestFramework):
+class FeeFilterTest(FreicoinTestFramework):
 
     def __init__(self):
         super().__init__()

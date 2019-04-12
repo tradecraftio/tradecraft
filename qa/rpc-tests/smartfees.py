@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Freicoin developers
 # Copyright (c) 2010-2019 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 #
 
 from collections import OrderedDict
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
@@ -49,7 +49,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     # Exponentially distributed from 1-128 * fee_increment
     rand_fee = float(fee_increment)*(1.1892**random.randint(0,28))
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
-    fee = min_fee - fee_increment + satoshi_round(rand_fee)
+    fee = min_fee - fee_increment + kria_round(rand_fee)
     inputs = []
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
@@ -94,7 +94,7 @@ def split_inputs(from_node, txins, txouts, initial_split = False):
     prevtxout = txins.pop()
     inputs = []
     inputs.append({ "txid" : prevtxout["txid"], "vout" : prevtxout["vout"] })
-    half_change = satoshi_round(prevtxout["amount"]/2)
+    half_change = kria_round(prevtxout["amount"]/2)
     rem_change = prevtxout["amount"] - half_change  - Decimal("0.00001000")
     outputs = OrderedDict([(P2SH_1, half_change), (P2SH_2, rem_change)])
     rawtx = from_node.createrawtransaction(inputs, outputs)
@@ -157,7 +157,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     return all_estimates
 
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(FreicoinTestFramework):
 
     def __init__(self):
         super().__init__()

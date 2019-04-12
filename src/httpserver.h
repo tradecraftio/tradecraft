@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_HTTPSERVER_H
-#define BITCOIN_HTTPSERVER_H
+#ifndef FREICOIN_HTTPSERVER_H
+#define FREICOIN_HTTPSERVER_H
 
 #include <string>
 #include <stdint.h>
@@ -160,4 +160,4 @@ private:
     struct event* ev;
 };
 
-#endif // BITCOIN_HTTPSERVER_H
+#endif // FREICOIN_HTTPSERVER_H

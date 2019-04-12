@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_UNDO_H
-#define BITCOIN_UNDO_H
+#ifndef FREICOIN_UNDO_H
+#define FREICOIN_UNDO_H
 
 #include "compressor.h" 
 #include "primitives/transaction.h"
@@ -96,4 +96,4 @@ public:
     }
 };
 
-#endif // BITCOIN_UNDO_H
+#endif // FREICOIN_UNDO_H
