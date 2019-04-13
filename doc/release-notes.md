@@ -1,14 +1,14 @@
-Freicoin version 12.1.1 is now available from:
+Freicoin version 12.1.1-10130 is now available from:
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-0-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-0-linux64.zip)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-0-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-0-osx64.tar.gz)
-  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-0-win32-setup.exe)
-  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-0-win32.zip)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-0-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-0-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1.1-0.zip)
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-10130-linux32.zip)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-10130-linux64.zip)
+  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-10130-osx.dmg)
+  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-10130-osx64.tar.gz)
+  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-10130-win32-setup.exe)
+  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-10130-win32.zip)
+  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-10130-win64-setup.exe)
+  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.1-10130-win64.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1.1-10130.zip)
 
 This is a new bug fix release, fixing an erroneous report of
 unexpected version / possible versionbits upgrade on all platforms.
@@ -51,8 +51,8 @@ warnings about the activation of new consensus rules until 2 Oct 2019
 
 [BIP9]: https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
 
-12.1.1 changelog
-================
+12.1.1-10130 Change log
+=======================
 
 - `658b0cde1` [Alert]
   Do not warn about unexpected versionbits upgrade for the forced
