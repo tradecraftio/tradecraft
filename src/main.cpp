@@ -2745,6 +2745,7 @@ void PruneAndFlush() {
 
 /** Update chainActive and related internal data structures. */
 void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
+    const Consensus::Params& consensusParams = chainParams.GetConsensus();
     chainActive.SetTip(pindexNew);
 
     // New best block
@@ -2759,7 +2760,11 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
     {
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
-        for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
+        int versionbits_num_bits = VERSIONBITS_NUM_BITS;
+        if (pindex->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_timeout) {
+            --versionbits_num_bits;
+        }
+        for (int bit = 0; bit < versionbits_num_bits; bit++) {
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
             if (state == THRESHOLD_ACTIVE || state == THRESHOLD_LOCKED_IN) {
@@ -2778,6 +2783,9 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
             int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
+            if (pindex->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_timeout) {
+                nExpectedVersion |= (1 << 28);
+            }
             if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
                 ++nUpgraded;
             pindex = pindex->pprev;
