@@ -78,22 +78,13 @@ v11 or earlier.
 Notable changes
 ===============
 
-First version bits BIP9 softfork deployment
--------------------------------------------
+Preparation for first version bits BIP9 softfork deployment
+-----------------------------------------------------------
 
-This release includes a soft fork deployment to enforce [BIP68][] and
-[BIP113][] using the [BIP9][] deployment mechanism.
-
-The deployment sets the block version number to 0x30000001 between
-midnight 2nd April 2019 and midnight 2nd October 2019 to signal
-readiness for deployment. The version number consists of 0x30000000 to
-indicate version bits together with setting bit 0 to indicate support
-for this combined deployment, shown as "locktime" in the
-`getblockchaininfo` RPC call.
-
-(The leading bits to indicate version bits is actually 0x20000000, but
-version bits MUST be indicated and bit 28 set during this time period
-due to the earlier deployment of the coinbase-MTP soft-fork.)
+This release includes all except for the activation logic for a soft
+fork deployment to enforce [BIP68][] and [BIP113][] using the [BIP9][]
+deployment mechanism.  A future release of the v12 series will include
+the [BIP9][] activation parameters.
 
 For more information about the soft forking change, please see
 <https://github.com/bitcoin/bitcoin/pull/7648>
