@@ -39,39 +39,7 @@ If you want to downgrade after you have done a reindex with v12 or
 later, you will need to reindex when you first start Freicoin version
 v11 or earlier.
 
-### Downgrade to a version < v10
-
-Because release v10 and later makes use of headers-first
-synchronization and parallel block download (see further), the block
-files and databases are not backwards-compatible with pre-v10 versions
-of Freicoin or other software:
-
-* Blocks will be stored on disk out of order (in the order they are
-  received, really), which makes it incompatible with some tools or
-  other programs. Reindexing using earlier versions will also not work
-  anymore as a result of this.
-
-* The block index database will now hold headers for which no block is
-  stored on disk, which earlier versions won't support.
-
-If you want to be able to downgrade smoothly, make a backup of your
-entire data directory. Without this your node will need start syncing
-(or importing from bootstrap.dat) anew afterwards. It is possible that
-the data from a completely synchronised 0.10 node may be usable in
-older versions as-is, but this is not supported and may break as soon
-as the older version attempts to reindex.
-
 This does not affect wallet forward or backward compatibility.
-
-### Downgrade to a version < v12
-
-Because release v12 and later will obfuscate the chainstate on every
-fresh sync or reindex, the chainstate is not backwards-compatible with
-pre-v12 versions of Freicoin or other software.
-
-If you want to downgrade after you have done a reindex with v12 or
-later, you will need to reindex when you first start Freicoin version
-v11 or earlier.
 
 Notable changes
 ===============

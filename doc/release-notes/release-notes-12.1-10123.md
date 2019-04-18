@@ -65,16 +65,6 @@ as the older version attempts to reindex.
 
 This does not affect wallet forward or backward compatibility.
 
-### Downgrade to a version < v12
-
-Because release v12 and later will obfuscate the chainstate on every
-fresh sync or reindex, the chainstate is not backwards-compatible with
-pre-v12 versions of Freicoin or other software.
-
-If you want to downgrade after you have done a reindex with v12 or
-later, you will need to reindex when you first start Freicoin version
-v11 or earlier.
-
 Notable changes
 ===============
 
