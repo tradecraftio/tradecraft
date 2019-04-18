@@ -86,6 +86,12 @@ v12.1-10123.
 12.1.2-10135 Change log
 =======================
 
+  * `26c3508b` [Chainparams]
+    Add recent checkpoint, block #250992.
+
+  * `989cc70c` [Consensus]
+    Add activation logic for BIP68 and BIP113.
+
 Credits
 --------
 
