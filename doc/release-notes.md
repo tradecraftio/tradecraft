@@ -1,14 +1,14 @@
-Freicoin version 12.1.2-0 is now available from:
+Freicoin version 12.1.2-10135 is now available from:
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-0-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-0-linux64.zip)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-0-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-0-osx64.tar.gz)
-  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-0-win32-setup.exe)
-  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-0-win32.zip)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-0-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-0-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1.2-0.zip)
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-10135-linux32.zip)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-10135-linux64.zip)
+  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-10135-osx.dmg)
+  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-10135-osx64.tar.gz)
+  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-10135-win32-setup.exe)
+  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-10135-win32.zip)
+  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-10135-win64-setup.exe)
+  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.2-10135-win64.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1.2-10135.zip)
 
 This is a new point release, enabling soft-fork deployment of a
 collection of time-lock related protocol features.
@@ -115,8 +115,8 @@ v12.1-10123.
 [BIP112]: https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki
 [BIP113]: https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
 
-12.1.2-0 Change log
-===================
+12.1.2-10135 Change log
+=======================
 
 Credits
 --------
