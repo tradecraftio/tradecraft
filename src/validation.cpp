@@ -5046,6 +5046,7 @@ bool ChainstateManager::ActivateSnapshot(
         bool in_memory)
 {
     uint256 base_blockhash = metadata.m_base_blockhash;
+    BlockFinalTxEntry final_tx = metadata.m_final_tx;
 
     if (this->SnapshotBlockhash()) {
         LogPrintf("[snapshot] can't activate a snapshot-based chainstate more than once\n");
@@ -5181,6 +5182,8 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     uint256 base_blockhash = metadata.m_base_blockhash;
 
+    BlockFinalTxEntry final_tx = metadata.m_final_tx;
+
     CBlockIndex* snapshot_start_block = WITH_LOCK(::cs_main, return m_blockman.LookupBlockIndex(base_blockhash));
 
     if (!snapshot_start_block) {
@@ -5257,9 +5260,30 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
                 // to its correct value (`base_blockhash`) below after the coins are loaded.
                 coins_cache.SetBestBlock(GetRandHash());
 
+                // Likewise for the block-final transaction
+                coins_cache.SetFinalTx(BlockFinalTxEntry(GetRandHash(), 1));
+
                 // No need to acquire cs_main since this chainstate isn't being used yet.
                 FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/false);
             }
+        }
+    }
+
+    // Check that the block-final transaction entry is valid and reflects the
+    // coin database.
+    if (final_tx.hash.IsNull() && final_tx.size != 0) {
+        LogPrintf("[snapshot] bad snapshot - final_tx hash is null, but non-zero size (%d)\n",
+            final_tx.size);
+        return false;
+    }
+
+    for (uint32_t i = 0; i < final_tx.size; ++i) {
+        COutPoint outpoint(final_tx.hash, i);
+        Coin coin;
+        if (!coins_cache.GetCoin(outpoint, coin)) {
+            LogPrintf("[snapshot] bad snapshot - final_tx outpoint %s not found\n",
+                outpoint.ToString());
+            return false;
         }
     }
 
@@ -5269,6 +5293,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     // embed them in a snapshot-activation-specific CCoinsViewCache bulk load
     // method.
     coins_cache.SetBestBlock(base_blockhash);
+    coins_cache.SetFinalTx(final_tx);
 
     bool out_of_coins{false};
     try {
@@ -5292,6 +5317,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/true);
 
     assert(coins_cache.GetBestBlock() == base_blockhash);
+    assert(coins_cache.GetFinalTx() == final_tx);
 
     // As above, okay to immediately release cs_main here since no other context knows
     // about the snapshot_chainstate.
