@@ -15,6 +15,10 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.name =*/ "taproot",
         /*.gbt_force =*/ true,
     },
+    {
+        /*.name =*/ "finaltx",
+        /*.gbt_force =*/ true,
+    },
 };
 
 std::string DeploymentName(Consensus::BuriedDeployment dep)
@@ -31,6 +35,8 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
         return "csv";
     case Consensus::DEPLOYMENT_SEGWIT:
         return "segwit";
+    case Consensus::DEPLOYMENT_FINALTX:
+        return "finaltx";
     } // no default case, so the compiler can warn about missing cases
     return "";
 }
