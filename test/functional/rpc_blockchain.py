@@ -158,7 +158,24 @@ class BlockchainTest(BitcoinTestFramework):
                 },
                 'height': 0,
                 'active': True
-            }
+            },
+            'finaltx': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'started',
+                    'bit': 12,
+                    'start_time': 0,
+                    'timeout': 999999999999,
+                    'since': 144,
+                    'statistics': {
+                        'period': 144,
+                        'threshold': 108,
+                        'elapsed': 57,
+                        'count': 57,
+                        'possible': True
+                    }
+                },
+                'active': False}
         })
 
     def _test_getchaintxstats(self):
