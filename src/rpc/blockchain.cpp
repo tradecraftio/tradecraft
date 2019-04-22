@@ -2571,6 +2571,7 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
     std::unique_ptr<CCoinsViewCursor> pcursor;
     CCoinsStats stats{CoinStatsHashType::NONE};
     CBlockIndex* tip;
+    BlockFinalTxEntry final_tx;
 
     {
         // We need to lock cs_main to ensure that the coinsdb isn't written to
@@ -2595,10 +2596,11 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
 
         pcursor = chainstate.CoinsDB().Cursor();
         tip = chainstate.m_blockman.LookupBlockIndex(stats.hashBlock);
+        final_tx = chainstate.CoinsDB().GetFinalTx();
         CHECK_NONFATAL(tip);
     }
 
-    SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
+    SnapshotMetadata metadata{tip->GetBlockHash(), final_tx, stats.coins_count, tip->nChainTx};
 
     afile << metadata;
 
@@ -2623,6 +2625,12 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
     result.pushKV("coins_written", stats.coins_count);
     result.pushKV("base_hash", tip->GetBlockHash().ToString());
     result.pushKV("base_height", tip->nHeight);
+    UniValue entry(UniValue::VOBJ);
+    if (!final_tx.IsNull()) {
+        entry.pushKV("hash", final_tx.hash.ToString());
+        entry.pushKV("size", (int64_t)final_tx.size);
+    }
+    result.pushKV("final_tx", entry);
 
     return result;
 }
