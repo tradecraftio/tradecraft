@@ -146,7 +146,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 bool expected_code_path = false;
                 try {
                     auto cursor{CoinsViewCacheCursor(usage, sentinel, coins_map, /*will_erase=*/true)};
-                    coins_view_cache.BatchWrite(cursor, fuzzed_data_provider.ConsumeBool() ? ConsumeUInt256(fuzzed_data_provider) : coins_view_cache.GetBestBlock());
+                    coins_view_cache.BatchWrite(cursor, fuzzed_data_provider.ConsumeBool() ? ConsumeUInt256(fuzzed_data_provider) : coins_view_cache.GetBestBlock(), fuzzed_data_provider.ConsumeBool() ? BlockFinalTxEntry(Txid::FromUint256(ConsumeUInt256(fuzzed_data_provider)), 1) : coins_view_cache.GetFinalTx());
                     expected_code_path = true;
                 } catch (const std::logic_error& e) {
                     if (e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"}) {

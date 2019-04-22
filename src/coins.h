@@ -208,6 +208,54 @@ public:
     }
 };
 
+struct BlockFinalTxEntry
+{
+    Txid hash;
+    uint32_t size;
+
+    BlockFinalTxEntry() : size(0) {}
+    BlockFinalTxEntry(const Txid& _hash, uint32_t _size) : hash(_hash), size(_size) {}
+
+    bool IsNull() const {
+        return (size == 0);
+    }
+
+    void SetNull() {
+        hash.SetNull();
+        size = 0;
+    }
+
+    friend bool operator<(const BlockFinalTxEntry& a, const BlockFinalTxEntry& b) {
+        return (a.hash < b.hash || (a.hash == b.hash && a.size < b.size));
+    }
+
+    friend bool operator==(const BlockFinalTxEntry& a, const BlockFinalTxEntry& b) {
+        return (a.hash == b.hash && a.size == b.size);
+    }
+
+    friend bool operator!=(const BlockFinalTxEntry& a, const BlockFinalTxEntry& b) {
+        return !(a == b);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        ::Serialize(s, VARINT(size));
+        if (!IsNull()) {
+            ::Serialize(s, hash);
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s) {
+        ::Unserialize(s, VARINT(size));
+        if (!size) {
+            hash.SetNull();
+        } else {
+            ::Unserialize(s, hash);
+        }
+    }
+};
+
 /**
  * PoolAllocator's MAX_BLOCK_SIZE_BYTES parameter here uses sizeof the data, and adds the size
  * of 4 pointers. We do not know the exact node size used in the std::unordered_node implementation
@@ -322,9 +370,12 @@ public:
     //! the old block hash, in that order.
     virtual std::vector<uint256> GetHeadBlocks() const;
 
+    //! Retrieve the hash of the block-final transaction in the chain tip.
+    virtual BlockFinalTxEntry GetFinalTx() const;
+
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
     //! The passed cursor is used to iterate through the coins.
-    virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock);
+    virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock, const BlockFinalTxEntry &final_tx);
 
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
@@ -349,8 +400,9 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
+    BlockFinalTxEntry GetFinalTx() const override;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) override;
+    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
 };
@@ -368,6 +420,7 @@ protected:
      * declared as "const".
      */
     mutable std::optional<uint256> hashBlock;
+    mutable std::optional<BlockFinalTxEntry> finalTxEntry;
     mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
     /* The starting sentinel of the flagged entry circular doubly linked list. */
     mutable CoinsCachePair m_sentinel;
@@ -389,7 +442,9 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) override;
+    BlockFinalTxEntry GetFinalTx() const override;
+    void SetFinalTx(const BlockFinalTxEntry &final_tx);
+    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
