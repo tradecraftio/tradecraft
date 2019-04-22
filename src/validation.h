@@ -263,6 +263,13 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 /* Mempool validation helper functions */
 
 /**
+ * Check whether the specified output of the coin/transaction can be spent with
+ * an empty scriptSig.
+ */
+bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned int flags);
+bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags);
+
+/**
  * Check if transaction will be final in the next block to be created.
  */
 bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
