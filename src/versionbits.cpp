@@ -28,6 +28,10 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
     {
         /*.name =*/ "locktime",
         /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "blockfinal",
+        /*.gbt_force =*/ true,
     }
 };
 
