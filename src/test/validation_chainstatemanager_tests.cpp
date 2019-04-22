@@ -73,8 +73,19 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
         /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
     {
         LOCK(::cs_main);
+        auto finaltx = c1.CoinsTip().GetFinalTx();
+        std::map<uint32_t, Coin> coins;
+        for (uint32_t i = 0; i < finaltx.size; ++i) {
+            Coin coin;
+            BOOST_CHECK(c1.CoinsTip().GetCoin({finaltx.hash, i}, coin));
+            coins[i] = coin;
+        }
         c2.InitCoinsCache(1 << 23);
         c2.CoinsTip().SetBestBlock(active_tip->GetBlockHash());
+        c2.CoinsTip().SetFinalTx(finaltx);
+        for (auto&& [i, coin] : coins) {
+            c2.CoinsTip().AddCoin({finaltx.hash, i}, std::move(coin), true);
+        }
         c2.setBlockIndexCandidates.insert(manager.m_blockman.LookupBlockIndex(active_tip->GetBlockHash()));
         c2.LoadChainTip();
     }
