@@ -1562,6 +1562,40 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
+bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned int flags)
+{
+    // Build a transaction attempting to spend the output.
+    CMutableTransaction txTo;
+    txTo.nVersion = 2;
+    txTo.vin.resize(1);
+    txTo.vin[0].prevout = prevout;
+    txTo.vin[0].scriptSig = CScript();
+    txTo.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    txTo.vout.resize(1);
+    txTo.vout[0].nValue = 0;
+    txTo.vout[0].scriptPubKey = (CScript() << OP_TRUE);
+    txTo.nLockTime = 0;
+    CTransaction to(txTo);
+    // Ideally we shouldn't need this structure, since it requires some hash
+    // operations to setup and is never used.  However CScriptCheck calls
+    // VerifyScript with a signature checker that is constructed with a
+    // reference to this struct, so until we refactor, it needs to exist.
+    PrecomputedTransactionData txdata(to);
+    // Must be able to spend the script with an empty scriptSig.
+    const CScript& scriptPubKey = from.out.scriptPubKey;
+    const CAmount amount = from.out.nValue;
+    CScriptCheck check(scriptPubKey, amount, to, 0, flags, false, &txdata);
+    return check();
+}
+
+bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags)
+{
+    // Build the coin object from which we will attempt to spend the output:
+    Coin from(txFrom.vout[0], 0, false);
+    // Then call the common implementation.
+    return IsTriviallySpendable(from, COutPoint(txFrom.GetHash(), n), flags);
+}
+
 // Protected by cs_main
 VersionBitsCache versionbitscache;
 
