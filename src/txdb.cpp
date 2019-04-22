@@ -25,6 +25,7 @@ static const char DB_BEST_BLOCK = 'B';
 static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
+static const char DB_LAST_TX = 'a';
 
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
@@ -46,7 +47,16 @@ uint256 CCoinsViewDB::GetBestBlock() const {
     return hashBestChain;
 }
 
-bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
+uint256 CCoinsViewDB::GetFinalTx() const {
+    uint256 hashFinalTx;
+    if (!db.Read(DB_LAST_TX, hashFinalTx)) {
+        // When upgrading from a version that did not support block-final
+        // transactions, there will be no DB_LAST_TX record in the database.
+        hashFinalTx.SetNull();
+    }
+    return hashFinalTx;
+}
+bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const uint256 &hashFinalTx) {
     CDBBatch batch(db);
     size_t count = 0;
     size_t changed = 0;
@@ -63,6 +73,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
         mapCoins.erase(itOld);
     }
     batch.Write(DB_BEST_BLOCK, hashBlock);
+    batch.Write(DB_LAST_TX, hashFinalTx);
 
     LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
     return db.WriteBatch(batch);

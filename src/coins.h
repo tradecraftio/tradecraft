@@ -335,9 +335,12 @@ public:
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const;
 
+    //! Retrieve the hash of the block-final transaction in the chain tip.
+    virtual uint256 GetFinalTx() const;
+
     //! Do a bulk modification (multiple CCoins changes + BestBlock change).
     //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const uint256 &hashFinalTx);
 
     //! Get a cursor to iterate over the whole state
     virtual CCoinsViewCursor *Cursor() const;
@@ -358,8 +361,9 @@ public:
     bool GetCoins(const uint256 &txid, CCoins &coins) const;
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
+    uint256 GetFinalTx() const;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const uint256 &hashFinalTx);
     CCoinsViewCursor *Cursor() const;
 };
 
@@ -399,6 +403,7 @@ protected:
      * declared as "const".  
      */
     mutable boost::optional<uint256> hashBlock;
+    mutable boost::optional<uint256> hashFinalTx;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner CCoins objects. */
@@ -413,7 +418,9 @@ public:
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    uint256 GetFinalTx() const;
+    void SetFinalTx(const uint256 &hashFinalTx);
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const uint256 &hashFinalTx);
 
     /**
      * Check if we have the given tx already loaded in this cache.
