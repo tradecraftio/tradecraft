@@ -25,6 +25,7 @@ static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
 static constexpr uint8_t DB_FLAG{'F'};
 static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
+static constexpr uint8_t DB_LAST_TX{'a'};
 
 // Keys used in previous version that might still be found in the DB:
 static constexpr uint8_t DB_COINS{'c'};
@@ -111,7 +112,17 @@ std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
     return vhashHeadBlocks;
 }
 
-bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
+BlockFinalTxEntry CCoinsViewDB::GetFinalTx() const {
+    BlockFinalTxEntry finalTxEntry;
+    if (!m_db->Read(DB_LAST_TX, finalTxEntry)) {
+        // When upgrading from a version that did not support block-final
+        // transactions, there will be no DB_LAST_TX record in the database.
+        finalTxEntry.SetNull();
+    }
+    return finalTxEntry;
+}
+
+bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx) {
     CDBBatch batch(*m_db);
     size_t count = 0;
     size_t changed = 0;
@@ -165,6 +176,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     // In the last batch, mark the database as consistent with hashBlock again.
     batch.Erase(DB_HEAD_BLOCKS);
     batch.Write(DB_BEST_BLOCK, hashBlock);
+    batch.Write(DB_LAST_TX, final_tx);
 
     LogPrint(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));
     bool ret = m_db->WriteBatch(batch);

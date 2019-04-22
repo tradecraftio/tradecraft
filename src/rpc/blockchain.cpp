@@ -2288,6 +2288,11 @@ static RPCHelpMan dumptxoutset()
                     {RPCResult::Type::STR, "path", "the absolute path that the snapshot was written to"},
                     {RPCResult::Type::STR_HEX, "txoutset_hash", "the hash of the UTXO set contents"},
                     {RPCResult::Type::NUM, "nchaintx", "the number of transactions in the chain up to and including the base block"},
+                    {RPCResult::Type::OBJ, "final_tx", /*optional=*/true, "(Only if block-final transaction information is available)",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The block-final transaction hash."},
+                        {RPCResult::Type::NUM, "size", "The number of spendable outputs in the block-final transaction."},
+                    }},
                 }
         },
         RPCExamples{
@@ -2337,6 +2342,7 @@ UniValue CreateUTXOSnapshot(
     std::unique_ptr<CCoinsViewCursor> pcursor;
     std::optional<CCoinsStats> maybe_stats;
     const CBlockIndex* tip;
+    BlockFinalTxEntry final_tx;
 
     {
         // We need to lock cs_main to ensure that the coinsdb isn't written to
@@ -2362,13 +2368,14 @@ UniValue CreateUTXOSnapshot(
 
         pcursor = chainstate.CoinsDB().Cursor();
         tip = CHECK_NONFATAL(chainstate.m_blockman.LookupBlockIndex(maybe_stats->hashBlock));
+        final_tx = chainstate.CoinsDB().GetFinalTx();
     }
 
     LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
 
-    SnapshotMetadata metadata{tip->GetBlockHash(), maybe_stats->coins_count, tip->nChainTx};
+    SnapshotMetadata metadata{tip->GetBlockHash(), final_tx, maybe_stats->coins_count, tip->nChainTx};
 
     afile << metadata;
 
@@ -2398,6 +2405,13 @@ UniValue CreateUTXOSnapshot(
     // Cast required because univalue doesn't have serialization specified for
     // `unsigned int`, nChainTx's type.
     result.pushKV("nchaintx", uint64_t{tip->nChainTx});
+    if (!final_tx.IsNull()) {
+        UniValue entry(UniValue::VOBJ);
+        entry.pushKV("hash", final_tx.hash.ToString());
+        entry.pushKV("size", (int64_t)final_tx.size);
+        result.pushKV("final_tx", entry);
+    }
+
     return result;
 }
 
