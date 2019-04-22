@@ -95,8 +95,8 @@ public:
 
         // Deployment of block-final miner commitment transaction.
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 1599004800; // September 2, 2020
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1719878400; // July 2, 2024
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 1562068800; // July 2, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1587038400; // April 16, 2020
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 2;
@@ -259,8 +259,8 @@ public:
 
         // Deployment of block-final miner commitment transaction.
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 1599004800; // September 2, 2020
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1719878400; // July 2, 2024
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 1562068800; // July 2, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1587038400; // April 16, 2020
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 2;
