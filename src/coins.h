@@ -156,6 +156,41 @@ struct CCoinsCacheEntry
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
 };
 
+struct BlockFinalTxEntry
+{
+    uint256 hash;
+    uint32_t size;
+
+    BlockFinalTxEntry() : size(0) {}
+
+    bool IsNull() const {
+        return (size == 0);
+    }
+
+    void SetNull() {
+        hash.SetNull();
+        size = 0;
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        ::Serialize(s, VARINT(size));
+        if (!IsNull()) {
+            ::Serialize(s, hash);
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s) {
+        ::Unserialize(s, VARINT(size));
+        if (!size) {
+            hash.SetNull();
+        } else {
+            ::Unserialize(s, hash);
+        }
+    }
+};
+
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
 
 /** Cursor for iterating over CoinsView state */
@@ -200,9 +235,12 @@ public:
     //! the old block hash, in that order.
     virtual std::vector<uint256> GetHeadBlocks() const;
 
+    //! Retrieve the hash of the block-final transaction in the chain tip.
+    virtual BlockFinalTxEntry GetFinalTx() const;
+
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
     //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx);
 
     //! Get a cursor to iterate over the whole state
     virtual CCoinsViewCursor *Cursor() const;
@@ -227,8 +265,9 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
+    BlockFinalTxEntry GetFinalTx() const override;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx) override;
     CCoinsViewCursor *Cursor() const override;
     size_t EstimateSize() const override;
 };
@@ -243,6 +282,7 @@ protected:
      * declared as "const".
      */
     mutable boost::optional<uint256> hashBlock;
+    mutable boost::optional<BlockFinalTxEntry> finalTxEntry;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
@@ -261,7 +301,9 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
+    BlockFinalTxEntry GetFinalTx() const override;
+    void SetFinalTx(const BlockFinalTxEntry &final_tx);
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx) override;
     CCoinsViewCursor* Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
