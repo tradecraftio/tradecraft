@@ -493,6 +493,12 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
  */
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
+/**
+ * Check whether the specified output of the coin/transaction can be spent with
+ * an empty scriptSig.
+ */
+bool IsTriviallySpendable(const CCoins& from, const COutPoint& prevout, unsigned int flags);
+bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags);
 
 /**
  * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)

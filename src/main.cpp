@@ -2167,6 +2167,34 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     }
 }
 
+bool IsTriviallySpendable(const CCoins& from, const COutPoint& prevout, unsigned int flags)
+{
+    // Build a transaction attempting to spend the output.
+    CMutableTransaction txTo;
+    txTo.nVersion = 2;
+    txTo.vin.resize(1);
+    txTo.vin[0].prevout = prevout;
+    txTo.vin[0].scriptSig = CScript();
+    txTo.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    txTo.vout.resize(1);
+    txTo.vout[0].SetReferenceValue(0);
+    txTo.vout[0].scriptPubKey = (CScript() << OP_TRUE);
+    txTo.nLockTime = 0;
+    txTo.lock_height = from.nHeight;
+    CTransaction to(txTo);
+    // Must be able to spend the script with an empty scriptSig.
+    CScriptCheck check(from, to, 0, flags, false);
+    return check();
+}
+
+bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags)
+{
+    // Build the coin object from which we will attempt to spend the output:
+    CCoins from(txFrom, txFrom.lock_height);
+    // Now call the common implementation
+    return IsTriviallySpendable(from, COutPoint(txFrom.GetHash(), n), flags);
+}
+
 // Protected by cs_main
 VersionBitsCache versionbitscache;
 
