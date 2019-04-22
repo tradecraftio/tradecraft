@@ -30,6 +30,10 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
         /*.gbt_force =*/ true,
     },
     {
+        /*.name =*/ "blockfinal",
+        /*.gbt_force =*/ true,
+    },
+    {
         /*.name =*/ "segwit",
         /*.gbt_force =*/ false,
     }
