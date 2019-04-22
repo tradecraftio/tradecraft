@@ -776,7 +776,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     const CCoinsViewCache& coins_cache = m_active_chainstate.CoinsTip();
     // do all inputs exist?
+    const BlockFinalTxEntry& final_tx = m_view.GetFinalTx();
     for (const CTxIn& txin : tx.vin) {
+        if (txin.prevout.hash == final_tx.hash && txin.prevout.n < final_tx.size) {
+            return state.Invalid(TxValidationResult::TX_SPEND_BLOCK_FINAL, "spend-block-final-txn");
+        }
+
         if (!coins_cache.HaveCoinInCache(txin.prevout)) {
             coins_to_uncache.push_back(txin.prevout);
         }
