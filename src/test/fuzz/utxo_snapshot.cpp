@@ -89,8 +89,9 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
             auto msg_start = chainman.GetParams().MessageStart();
             int base_blockheight{fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 2 * COINBASE_MATURITY)};
             uint256 base_blockhash{g_chain->at(base_blockheight - 1)->GetHash()};
+            BlockFinalTxEntry final_tx(Txid::FromUint256(base_blockhash), 1);
             uint64_t m_coins_count{fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(1, 3 * COINBASE_MATURITY)};
-            SnapshotMetadata metadata{msg_start, base_blockhash, m_coins_count};
+            SnapshotMetadata metadata{msg_start, base_blockhash, final_tx, m_coins_count};
             outfile << metadata;
         }
         // Coins
