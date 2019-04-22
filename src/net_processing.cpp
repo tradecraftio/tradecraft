@@ -1073,6 +1073,7 @@ static bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, 
     case TxValidationResult::TX_NOT_STANDARD:
     case TxValidationResult::TX_MISSING_INPUTS:
     case TxValidationResult::TX_PREMATURE_SPEND:
+    case TxValidationResult::TX_SPEND_BLOCK_FINAL:
     case TxValidationResult::TX_WITNESS_MUTATED:
     case TxValidationResult::TX_CONFLICT:
     case TxValidationResult::TX_MEMPOOL_POLICY:
