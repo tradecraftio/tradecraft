@@ -510,6 +510,13 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
 int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
 
 /**
+ * Check whether the specified output of the coin/transaction can be spent with
+ * an empty scriptSig.
+ */
+bool IsTriviallySpendable(const CCoins& from, const COutPoint& prevout, unsigned int flags);
+bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags);
+
+/**
  * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
  * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
  * instead of being performed inline.
