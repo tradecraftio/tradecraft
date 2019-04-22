@@ -191,6 +191,27 @@ class BlockchainTest(BitcoinTestFramework):
             'bip66': {'type': 'buried', 'active': True, 'height': 3},
             'bip65': {'type': 'buried', 'active': True, 'height': 4},
             'csv': {'type': 'buried', 'active': True, 'height': 5},
+            'finaltx': {
+                'type': 'bip9',
+                'active': False,
+                'bip9': {
+                    'bit': 12,
+                    'start_time': 0,
+                    'timeout': 0x7fffffffffffffff,
+                    'min_activation_height': 0,
+                    'status': 'started',
+                    'since': 144,
+                    'status_next': status_next,
+                    'statistics': {
+                        'period': 144,
+                        'elapsed': height - 143,
+                        'count': height - 143,
+                        'threshold': 108,
+                        'possible': True
+                    },
+                    'signalling': '#'*(height-143),
+                },
+            },
             'segwit': {'type': 'buried', 'active': True, 'height': 6},
             'testdummy': {
                 'type': 'bip9',
