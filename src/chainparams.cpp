@@ -100,8 +100,8 @@ public:
 
         // Deployment of block-final miner commitment transaction.
         consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nStartTime = 1562068800; // July 2, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nTimeout = 1587038400; // April 16, 2020
 
         // Locked-in via checkpoint:
         consensus.verify_coinbase_lock_time_activation_height = 247554;
@@ -245,8 +245,8 @@ public:
 
         // Deployment of block-final miner commitment transaction.
         consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nStartTime = 1562068800; // July 2, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nTimeout = 1587038400; // April 16, 2020
 
         consensus.verify_coinbase_lock_time_activation_height = 2016;
         // Tuesday, April 2, 2019 00:00:00 UTC
@@ -336,8 +336,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nTimeout = 999999999999ULL;
         consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nTimeout = 999999999999ULL;
 
         consensus.verify_coinbase_lock_time_activation_height = std::numeric_limits<int64_t>::max();
         consensus.verify_coinbase_lock_time_timeout = 1356123600;
