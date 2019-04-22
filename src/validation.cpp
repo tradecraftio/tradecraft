@@ -1827,6 +1827,38 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
+bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned int flags)
+{
+    // Build a transaction attempting to spend the output.
+    CMutableTransaction txTo;
+    txTo.nVersion = 2;
+    txTo.vin.resize(1);
+    txTo.vin[0].prevout = prevout;
+    txTo.vin[0].scriptSig = CScript();
+    txTo.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    txTo.vout.resize(1);
+    txTo.vout[0].nValue = 0;
+    txTo.vout[0].scriptPubKey = (CScript() << OP_TRUE);
+    txTo.nLockTime = 0;
+    CTransaction to(txTo);
+    // Ideally we shouldn't need this structure, since it requires some hash
+    // operations to setup and is never used.  However CScriptCheck calls
+    // VerifyScript with a signature checker that is constructed with a
+    // reference to this struct, so until we refactor, it needs to exist.
+    PrecomputedTransactionData txdata(to);
+    // Must be able to spend the script with an empty scriptSig.
+    CScriptCheck check(from.out, to, 0, flags, false, &txdata);
+    return check();
+}
+
+bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags)
+{
+    // Build the coin object from which we will attempt to spend the output:
+    Coin from(txFrom.vout[0], 0, false);
+    // Then call the common implementation.
+    return IsTriviallySpendable(from, COutPoint(txFrom.GetHash(), n), flags);
+}
+
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
 DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
