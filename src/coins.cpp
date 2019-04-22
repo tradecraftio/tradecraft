@@ -12,7 +12,8 @@
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
-bool CCoinsView::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) { return false; }
+BlockFinalTxEntry CCoinsView::GetFinalTx() const { return BlockFinalTxEntry(); }
+bool CCoinsView::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx) { return false; }
 std::unique_ptr<CCoinsViewCursor> CCoinsView::Cursor() const { return nullptr; }
 
 bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
@@ -26,8 +27,9 @@ bool CCoinsViewBacked::GetCoin(const COutPoint &outpoint, Coin &coin) const { re
 bool CCoinsViewBacked::HaveCoin(const COutPoint &outpoint) const { return base->HaveCoin(outpoint); }
 uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
 std::vector<uint256> CCoinsViewBacked::GetHeadBlocks() const { return base->GetHeadBlocks(); }
+BlockFinalTxEntry CCoinsViewBacked::GetFinalTx() const { return base->GetFinalTx(); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
-bool CCoinsViewBacked::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) { return base->BatchWrite(cursor, hashBlock); }
+bool CCoinsViewBacked::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx) { return base->BatchWrite(cursor, hashBlock, final_tx); }
 std::unique_ptr<CCoinsViewCursor> CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
 
@@ -183,7 +185,18 @@ void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
     hashBlock = hashBlockIn;
 }
 
-bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlockIn) {
+BlockFinalTxEntry CCoinsViewCache::GetFinalTx() const {
+    if (!finalTxEntry) {
+        finalTxEntry = base->GetFinalTx();
+    }
+    return *finalTxEntry;
+}
+
+void CCoinsViewCache::SetFinalTx(const BlockFinalTxEntry &final_tx) {
+    finalTxEntry = final_tx;
+}
+
+bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlockIn, const BlockFinalTxEntry &final_tx) {
     for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) {
         // Ignore non-dirty entries (optimization).
         if (!it->second.IsDirty()) {
@@ -249,12 +262,13 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
         }
     }
     hashBlock = hashBlockIn;
+    finalTxEntry = final_tx;
     return true;
 }
 
 bool CCoinsViewCache::Flush() {
     auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/true)};
-    bool fOk = base->BatchWrite(cursor, GetBestBlock());
+    bool fOk = base->BatchWrite(cursor, GetBestBlock(), GetFinalTx());
     if (fOk) {
         cacheCoins.clear();
         ReallocateCache();
@@ -266,7 +280,7 @@ bool CCoinsViewCache::Flush() {
 bool CCoinsViewCache::Sync()
 {
     auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/false)};
-    bool fOk = base->BatchWrite(cursor, GetBestBlock());
+    bool fOk = base->BatchWrite(cursor, GetBestBlock(), GetFinalTx());
     if (fOk) {
         if (m_sentinel.second.Next() != &m_sentinel) {
             /* BatchWrite must clear flags of all entries */

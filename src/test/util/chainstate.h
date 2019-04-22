@@ -73,6 +73,7 @@ CreateAndActivateUTXOSnapshot(
             LOCK(::cs_main);
             CBlockIndex *orig_tip = node.chainman->ActiveChainstate().m_chain.Tip();
             uint256 gen_hash = node.chainman->ActiveChainstate().m_chain[0]->GetBlockHash();
+            BlockFinalTxEntry finaltx = node.chainman->ActiveChainstate().CoinsTip().GetFinalTx();
             node.chainman->ResetChainstates();
             node.chainman->InitializeChainstate(node.mempool.get());
             Chainstate& chain = node.chainman->ActiveChainstate();
@@ -81,6 +82,7 @@ CreateAndActivateUTXOSnapshot(
             chain.InitCoinsDB(1 << 20, true, false, "");
             chain.InitCoinsCache(1 << 20);
             chain.CoinsTip().SetBestBlock(gen_hash);
+            chain.CoinsTip().SetFinalTx(finaltx);
             chain.setBlockIndexCandidates.insert(node.chainman->m_blockman.LookupBlockIndex(gen_hash));
             chain.LoadChainTip();
             node.chainman->MaybeRebalanceCaches();
