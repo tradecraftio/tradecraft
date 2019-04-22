@@ -2762,6 +2762,7 @@ UniValue CreateUTXOSnapshot(
     std::unique_ptr<CCoinsViewCursor> pcursor;
     CCoinsStats stats{CoinStatsHashType::HASH_SERIALIZED};
     CBlockIndex* tip;
+    BlockFinalTxEntry final_tx;
 
     {
         // We need to lock cs_main to ensure that the coinsdb isn't written to
@@ -2786,6 +2787,7 @@ UniValue CreateUTXOSnapshot(
 
         pcursor = chainstate.CoinsDB().Cursor();
         tip = chainstate.m_blockman.LookupBlockIndex(stats.hashBlock);
+        final_tx = chainstate.CoinsDB().GetFinalTx();
         CHECK_NONFATAL(tip);
     }
 
@@ -2793,7 +2795,7 @@ UniValue CreateUTXOSnapshot(
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
 
-    SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
+    SnapshotMetadata metadata{tip->GetBlockHash(), final_tx, stats.coins_count, tip->nChainTx};
 
     afile << metadata;
 
@@ -2823,6 +2825,13 @@ UniValue CreateUTXOSnapshot(
     // Cast required because univalue doesn't have serialization specified for
     // `unsigned int`, nChainTx's type.
     result.pushKV("nchaintx", uint64_t{tip->nChainTx});
+    UniValue entry(UniValue::VOBJ);
+    if (!final_tx.IsNull()) {
+        entry.pushKV("hash", final_tx.hash.ToString());
+        entry.pushKV("size", (int64_t)final_tx.size);
+    }
+    result.pushKV("final_tx", entry);
+
     return result;
 }
 
