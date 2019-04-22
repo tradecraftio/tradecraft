@@ -104,6 +104,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
 
+        // Deployment of block-final miner commitment transaction.
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 12;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
+
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000063c4ebd298db40af57541800");
         consensus.defaultAssumeValid = uint256S("0x000000000000000000026811d149d4d261995ec5b3f64f439a0a10e1a464af9a"); // 824000
 
@@ -224,6 +230,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
+
+        // Deployment of block-final miner commitment transaction.
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 12;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000c59b14e264ba6c15db9");
         consensus.defaultAssumeValid = uint256S("0x000000000001323071f38f21ea5aae529ece491eadaccce506a59bcc2d968917"); // 2550000
@@ -365,6 +377,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
+        // Activation of block-final transactions
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 12;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
+
         // message start is defined as the first 4 bytes of the sha256d of the block script
         HashWriter h{};
         h << consensus.signet_challenge;
@@ -441,6 +459,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 12;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
+
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
 
@@ -509,7 +532,7 @@ public:
                 .height = 299,
                 .hash_serialized = AssumeutxoHash{uint256S("0xa4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27")},
                 .nChainTx = 334,
-                .blockhash = uint256S("0x3bb7ce5eba0be48939b7a521ac1ba9316afee2c7bada3a0cca24188e6d7d96c0")
+                .blockhash = uint256S("0x3d1f7c510e5ae1c540549402ab72ec8235a57b3866f6441ed512af01a634c1ff")
             },
         };
 

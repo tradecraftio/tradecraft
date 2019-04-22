@@ -120,7 +120,9 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         new_blocks = []
         hashPrevBlock = int(node.getblockhash(0), 16)
         for i in range(2000):
-            block = create_block(hashprev = hashPrevBlock, tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
+            gbt_request_params = NORMAL_GBT_REQUEST_PARAMS.copy()
+            gbt_request_params['rules'].append('finaltx') # remove after 'finaltx' support is added
+            block = create_block(hashprev = hashPrevBlock, tmpl=node.getblocktemplate(gbt_request_params))
             block.solve()
             new_blocks.append(block)
             hashPrevBlock = block.sha256
