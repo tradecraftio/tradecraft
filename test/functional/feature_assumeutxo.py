@@ -71,6 +71,10 @@ class AssumeutxoTest(BitcoinTestFramework):
             valid_snapshot_contents = f.read()
         bad_snapshot_path = valid_snapshot_path + '.mod'
 
+        # block hash of the snapshot base is stored right at the start (first 32 bytes)
+        assert_equal(valid_snapshot_contents[:32][::-1].hex(),
+            '12d7dbe45c375a6ca4bbcdf60a9691f2f69c8d07d95bca4f9faa0551e61e8aaf')
+
         def expected_error(log_msg="", rpc_details=""):
             with self.nodes[1].assert_debug_log([log_msg]):
                 assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot{rpc_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
