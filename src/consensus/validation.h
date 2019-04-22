@@ -36,6 +36,7 @@ enum class TxValidationResult {
     TX_NOT_STANDARD,          //!< otherwise didn't meet our local policy rules
     TX_MISSING_INPUTS,        //!< transaction was missing some of its inputs
     TX_PREMATURE_SPEND,       //!< transaction spends a coinbase too early, or violates locktime/sequence locks
+    TX_SPEND_BLOCK_FINAL,     //!< spends one of the prior block-final transaction's output(s)
     /**
      * Transaction might have a witness prior to SegWit
      * activation, or witness may have been malleated (which includes
