@@ -276,6 +276,13 @@ PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTx
 /** Transaction validation functions */
 
 /**
+ * Check whether the specified output of the coin/transaction can be spent with
+ * an empty scriptSig.
+ */
+bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned int flags);
+bool IsTriviallySpendable(const CTransaction& txFrom, uint32_t n, unsigned int flags);
+
+/**
  * Check if transaction will be final in the next block to be created.
  *
  * Calls IsFinalTx() with current block height and appropriate block time.
