@@ -132,6 +132,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Cannot write to data directory '%s'; check pe
 QT_TRANSLATE_NOOP("bitcoin-core", "Change index out of range"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Copyright (C) %i-%i"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Corrupted block database detected"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Database corruption likely.  Try restarting with `-reindex=1`."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Enable stratum server (default: off)"),

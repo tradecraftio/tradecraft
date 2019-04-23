@@ -8,10 +8,10 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 1351.
 """
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.blocktools import create_coinbase, create_block, create_transaction, add_final_tx
 from test_framework.messages import CTransaction, msg_block, ToHex
 from test_framework.mininode import mininode_lock, P2PInterface
-from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, CScriptNum
+from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, OP_TRUE, CScriptNum
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, bytes_to_hex_str, hex_str_to_bytes, wait_until
 
@@ -77,8 +77,9 @@ class BIP65Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
+        add_final_tx(self.nodes[0], block)
         block.nVersion = 3
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
@@ -89,6 +90,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
+        add_final_tx(self.nodes[0], block)
         block.nVersion = 3
         block.solve()
         self.nodes[0].p2p.send_and_ping(msg_block(block))
@@ -117,7 +119,7 @@ class BIP65Test(BitcoinTestFramework):
         )
 
         # Now we verify that a block with this transaction is also invalid.
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
@@ -139,7 +141,7 @@ class BIP65Test(BitcoinTestFramework):
         spendtx.rehash()
 
         block.vtx.pop(1)
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
