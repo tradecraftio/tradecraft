@@ -41,6 +41,7 @@ struct CBlockTemplate
     CBlock block;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOps;
+    bool has_block_final;
 };
 
 /** Run the miner threads */
