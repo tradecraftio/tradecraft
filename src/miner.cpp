@@ -190,10 +190,8 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
         prev_final = pcoinsTip->AccessCoins(prevout.hash);
         if (!prev_final) {
             // Should never happen
-            // FIXME: Change to "return NULL" once the FinalTx code is being
-            //        tracked, and remove the "else".
-            block_final_state = NO_BLOCK_FINAL_TX;
-        } else
+            return NULL;
+        }
         // If it was a coinbase, meaning we're in the first 100 blocks after
         // activation, then we need to make sure it has matured, otherwise
         // we do nothing at all.

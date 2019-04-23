@@ -4060,6 +4060,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Database corruption likely.  Try restarting with `-reindex=1`.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Debugging/Testing options:</source>
         <translation type="unfinished"></translation>
     </message>
