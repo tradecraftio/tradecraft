@@ -118,6 +118,7 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
     fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE-1000);
 
     nMedianTimePast = 0;
+    block_final_state = NO_BLOCK_FINAL_TX;
 }
 
 void BlockAssembler::resetBlock()
@@ -138,6 +139,7 @@ void BlockAssembler::resetBlock()
     blockFinished = false;
 
     nMedianTimePast = 0;
+    block_final_state = NO_BLOCK_FINAL_TX;
 }
 
 CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
@@ -185,6 +187,47 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
                        ? nMedianTimePast
                        : pblock->GetBlockTime();
 
+
+    // Check if block-final tx rules are enforced. For the moment this
+    // tracks just whether the soft-fork is active, but by the time we get
+    // to transaction selection it will only be true if there is a
+    // block-final transaction in this block template.
+    if (VersionBitsState(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BLOCKFINAL, versionbitscache) == THRESHOLD_ACTIVE) {
+        block_final_state = HAS_BLOCK_FINAL_TX;
+    }
+
+    // Check if this is the first block for which the block-final rules are
+    // enforced, in which case all we need to do is add the initial
+    // anyone-can-spend output.
+    if ((block_final_state == HAS_BLOCK_FINAL_TX) && pindexPrev->pprev && (VersionBitsState(pindexPrev->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BLOCKFINAL, versionbitscache) != THRESHOLD_ACTIVE)) {
+        block_final_state = INITIAL_BLOCK_FINAL_TXOUT;
+    }
+
+    // Otherwise we will need to check if the prior block-final transaction
+    // was a coinbase and if insufficient blocks have occured for it to mature.
+    const CCoins* prev_final = NULL;
+    if (block_final_state == HAS_BLOCK_FINAL_TX) {
+        // Fetch the last block-final tx. The index, 0, is just a
+        // placeholder and might not be the actual index we're looking for,
+        // but that's okay. This call should never fail because the prior
+        // block-final transaction was the last processed transaction (so
+        // none of the outputs could have been spent) or a previously
+        // immature coinbase.
+        COutPoint prevout(pcoinsTip->GetFinalTx(), 0);
+        prev_final = pcoinsTip->AccessCoins(prevout.hash);
+        if (!prev_final) {
+            // Should never happen
+            return NULL;
+        }
+        // If it was a coinbase, meaning we're in the first 100 blocks after
+        // activation, then we need to make sure it has matured, otherwise
+        // we do nothing at all.
+        if (prev_final->IsCoinBase() && (nHeight - prev_final->nHeight < COINBASE_MATURITY)) {
+            // Still maturing. Nothing to do.
+            block_final_state = NO_BLOCK_FINAL_TX;
+        }
+    }
+
     // Decide whether to include witness transactions
     // This is only needed in case the witness softfork activation is reverted
     // (which would require a very deep reorganization) or when
@@ -192,6 +235,9 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     // TODO: replace this with a call to main to assess validity of a mempool
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
+
+    if (block_final_state == HAS_BLOCK_FINAL_TX)
+        initFinalTx(*prev_final);
 
     addPriorityTxs();
     addPackageTxs();
@@ -218,11 +264,17 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     coinbaseTx.nLockTime = nMedianTimePast;
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = coinbaseTx;
-    pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+    if (block_final_state != INITIAL_BLOCK_FINAL_TXOUT) {
+        pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+    }
     pblocktemplate->vTxFees[0] = -nFees;
 
+    // The miner needs to know whether the last transaction is a special
+    // transaction, or not.
+    pblocktemplate->has_block_final_tx = (block_final_state == HAS_BLOCK_FINAL_TX);
+
     uint64_t nSerializeSize = GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
-    LogPrintf("CreateNewBlock(): total size: %u block weight: %u txs: %u fees: %ld sigops %d\n", nSerializeSize, GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    LogPrintf("CreateNewBlock(): total size: %u block weight: %u txs: %u fees: %ld sigops %d\n", nSerializeSize, GetBlockWeight(*pblock), nBlockTx, (block_final_state == HAS_BLOCK_FINAL_TX) ? nFees - pblocktemplate->vTxFees.back() : nFees, nBlockSigOpsCost);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -351,9 +403,11 @@ bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
 
 void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 {
-    pblock->vtx.push_back(iter->GetTx());
-    pblocktemplate->vTxFees.push_back(iter->GetFee());
-    pblocktemplate->vTxSigOpsCost.push_back(iter->GetSigOpCost());
+    // If we have a block-final transaction, insert just
+    // before the end, so the block-final tx remains last.
+    pblock->vtx.insert(pblock->vtx.end() - (block_final_state == HAS_BLOCK_FINAL_TX), iter->GetTx());
+    pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.end() - (block_final_state == HAS_BLOCK_FINAL_TX), iter->GetFee());
+    pblocktemplate->vTxSigOpsCost.insert(pblocktemplate->vTxSigOpsCost.end() - (block_final_state == HAS_BLOCK_FINAL_TX), iter->GetSigOpCost());
     if (fNeedSizeAccounting) {
         nBlockSize += ::GetSerializeSize(iter->GetTx(), SER_NETWORK, PROTOCOL_VERSION);
     }
@@ -425,6 +479,66 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemP
     sortedEntries.clear();
     sortedEntries.insert(sortedEntries.begin(), package.begin(), package.end());
     std::sort(sortedEntries.begin(), sortedEntries.end(), CompareTxIterByAncestorCount());
+}
+
+void BlockAssembler::initFinalTx(const CCoins& prev_final)
+{
+    // Block-final transactions are only created after we have
+    // reached the final state of activation.
+    if (block_final_state != HAS_BLOCK_FINAL_TX) {
+        return;
+    }
+
+    // Create block-final tx
+    CMutableTransaction txFinal;
+    txFinal.nVersion = 2;
+    txFinal.vout.resize(1);
+    txFinal.vout[0].scriptPubKey = CScript() << OP_TRUE;
+    txFinal.vout[0].SetReferenceValue(0);
+    txFinal.nLockTime = nMedianTimePast;
+    txFinal.lock_height = nHeight;
+
+    // Add all outputs from the prior block-final transaction.
+    // We do nothing here to prevent selected transactions from
+    // spending these same outputs out from underneath us; we depend
+    // insted on mempool protections that prevent such transactions
+    // from being considered in the first place.
+    COutPoint prevout(pcoinsTip->GetFinalTx(), 0);
+    for (; prevout.n < prev_final.vout.size(); ++prevout.n) {
+        txFinal.vin.push_back(CTxIn(prevout, CScript(), CTxIn::SEQUENCE_FINAL));
+    }
+
+    // The previous loop should have found and added at least one
+    // input from the prior block-final transaction, so this check
+    // should never pass. The situation in which it would is if the
+    // fork is aborted after lock-in or activation, a truly abornmal
+    // circumstance in which this version of the client should stop
+    // generating blocks anyway.
+    assert(!txFinal.vin.empty());
+
+    // Add block-final transaction to block template.
+    pblock->vtx.push_back(txFinal);
+    ++nBlockTx;
+
+    // Record the fees forwarded by the block-final transaction to
+    // the coinbase.
+    CAmount nTxFees = pcoinsTip->GetValueIn(pblock->vtx.back())
+                    - pblock->vtx.back().GetValueOut();
+    nTxFees = GetTimeAdjustedValue(nTxFees, nHeight - txFinal.lock_height);
+    pblocktemplate->vTxFees.push_back(nTxFees);
+    nFees += nTxFees;
+
+    // The block-final transaction contributes to aggregate limits:
+    // the number of sigops is tracked...
+    int64_t nTxSigOpsCost = GetLegacySigOpCount(txFinal)
+                          + GetP2SHSigOpCount(txFinal, pcoinsTip);
+    pblocktemplate->vTxSigOpsCost.push_back(nTxSigOpsCost);
+    nBlockSigOpsCost += nTxSigOpsCost;
+
+    // ...the size is not:
+    uint64_t nTxSize = ::GetSerializeSize(txFinal, SER_NETWORK, PROTOCOL_VERSION);
+    nBlockWeight += nTxSize;
+    nBlockSize += nTxSize;
 }
 
 // This transaction selection algorithm orders the mempool based
