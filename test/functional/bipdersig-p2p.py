@@ -10,7 +10,7 @@ Test that the DERSIG soft-fork activates at (regtest) height 1251.
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import *
-from test_framework.blocktools import create_coinbase, create_block
+from test_framework.blocktools import create_coinbase, create_block, add_final_tx
 from test_framework.script import CScript
 from io import BytesIO
 
@@ -77,8 +77,9 @@ class BIP66Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time)
+        add_final_tx(self.nodes[0], block)
         block.nVersion = 2
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()
@@ -90,6 +91,7 @@ class BIP66Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
+        add_final_tx(self.nodes[0], block)
         block.nVersion = 2
         block.rehash()
         block.solve()
@@ -118,7 +120,7 @@ class BIP66Test(BitcoinTestFramework):
         assert spendtx.hash in self.nodes[0].getrawmempool()
 
         # Now we verify that a block with this transaction is invalid.
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()

@@ -6,6 +6,7 @@
 
 from .mininode import *
 from .script import CScript, OP_TRUE, OP_CHECKSIG, OP_RETURN
+from .util import unhexlify
 
 # Create a block (with regtest difficulty)
 def create_block(hashprev, coinbase, nTime=None):
@@ -21,6 +22,21 @@ def create_block(hashprev, coinbase, nTime=None):
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
     return block
+
+def add_final_tx(node, block):
+    try:
+        finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+    except:
+        finaltx_prevout = []
+    finaltx = CTransaction()
+    finaltx.nLockTime = block.vtx[0].nLockTime
+    finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+    for prevout in finaltx_prevout:
+        finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
+        finaltx.vout[-1].nValue += prevout['amount']
+    finaltx.rehash()
+    block.vtx.append(finaltx)
+    block.hashMerkleRoot = block.calc_merkle_root()
 
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
