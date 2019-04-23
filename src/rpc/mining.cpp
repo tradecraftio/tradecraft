@@ -568,11 +568,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     UniValue transactions(UniValue::VARR);
     map<uint256, int64_t> setTxIndex;
-    int i = 0;
-    for (const auto& it : pblock->vtx) {
-        const CTransaction& tx = *it;
+    for (int i = 0; i < pblock->vtx.size() - !!pblocktemplate->has_block_final_tx; ++i) {
+        const CTransaction& tx = *pblock->vtx[i];
         uint256 txHash = tx.GetHash();
-        setTxIndex[txHash] = i++;
+        setTxIndex[txHash] = i;
 
         if (tx.IsCoinBase())
             continue;
@@ -591,7 +590,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         }
         entry.push_back(Pair("depends", deps));
 
-        int index_in_template = i - 1;
+        int index_in_template = i;
         entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
         int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
         if (fPreSegWit) {
@@ -675,7 +674,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
     result.push_back(Pair("coinbaseaux", aux));
-    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue));
+    CAmount finaltx_fee = pblocktemplate->has_block_final_tx
+                           ? pblocktemplate->vTxFees.back()
+                           : 0;
+    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue - finaltx_fee));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
     result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));

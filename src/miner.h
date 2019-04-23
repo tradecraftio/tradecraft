@@ -30,6 +30,7 @@ struct CBlockTemplate
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
+    bool has_block_final_tx;
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
@@ -155,12 +156,21 @@ private:
 
     // Chain context for the block
     int nHeight;
+    int64_t nMedianTimePast;
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
 
     // Variables used for addPriorityTxs
     int lastFewTxs;
     bool blockFinished;
+
+    // The current state of the block-final activation logic
+    enum BlockFinalState {
+        NO_BLOCK_FINAL_TX = 0,
+        INITIAL_BLOCK_FINAL_TXOUT = 1,
+        HAS_BLOCK_FINAL_TX = 2,
+    };
+    int block_final_state;
 
 public:
     BlockAssembler(const CChainParams& chainparams);
@@ -173,6 +183,10 @@ private:
     void resetBlock();
     /** Add a tx to the block */
     void AddToBlock(CTxMemPool::txiter iter);
+
+    // block-final transaction logic
+    /** Create the block-final transaction, before any other transactions have been added */
+    void initFinalTx(const CCoins& prev_final);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on tx "priority" */
