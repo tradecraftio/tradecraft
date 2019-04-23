@@ -353,6 +353,7 @@ static RPCHelpMan generateblock()
 
     const bool process_new_block{request.params[2].isNull() ? true : request.params[2].get_bool()};
     CBlock block;
+    bool has_block_final_tx = false;
 
     ChainstateManager& chainman = EnsureChainman(node);
     {
@@ -363,12 +364,13 @@ static RPCHelpMan generateblock()
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
         block = blocktemplate->block;
+        has_block_final_tx = blocktemplate->has_block_final_tx;
     }
 
-    CHECK_NONFATAL(block.vtx.size() == 1);
+    CHECK_NONFATAL(block.vtx.size() == (1 + !!has_block_final_tx));
 
     // Add transactions
-    block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
+    block.vtx.insert(block.vtx.end() - !!has_block_final_tx, txs.begin(), txs.end());
     RegenerateCommitments(block, chainman);
 
     {
@@ -812,11 +814,10 @@ static RPCHelpMan getblocktemplate()
 
     UniValue transactions(UniValue::VARR);
     std::map<uint256, int64_t> setTxIndex;
-    int i = 0;
-    for (const auto& it : pblock->vtx) {
-        const CTransaction& tx = *it;
+    for (size_t i = 0; i < pblock->vtx.size() - !!pblocktemplate->has_block_final_tx; ++i) {
+        const CTransaction& tx = *pblock->vtx[i];
         uint256 txHash = tx.GetHash();
-        setTxIndex[txHash] = i++;
+        setTxIndex[txHash] = i;
 
         if (tx.IsCoinBase())
             continue;
@@ -835,7 +836,7 @@ static RPCHelpMan getblocktemplate()
         }
         entry.pushKV("depends", deps);
 
-        int index_in_template = i - 1;
+        int index_in_template = i;
         entry.pushKV("fee", pblocktemplate->vTxFees[index_in_template]);
         int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
         if (fPreSegWit) {
@@ -917,7 +918,10 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
     result.pushKV("transactions", transactions);
     result.pushKV("coinbaseaux", aux);
-    result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
+    CAmount finaltx_fee = pblocktemplate->has_block_final_tx
+                           ? pblocktemplate->vTxFees.back()
+                           : 0;
+    result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->GetValueOut() - finaltx_fee);
     result.pushKV("longpollid", active_chain.Tip()->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
