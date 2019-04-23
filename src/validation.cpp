@@ -2326,6 +2326,8 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
         }
     }
 
+    // restore the previous block-final transaction hash
+    view.SetFinalTx(blockUndo.final_tx);
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
 
@@ -2595,6 +2597,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<MillisecondsDouble>(m_chainman.time_forks) / m_chainman.num_blocks_total);
 
     CBlockUndo blockundo;
+    blockundo.final_tx = view.GetFinalTx();
 
     // Precomputed transaction data pointers must not be invalidated
     // until after `control` has run the script checks (potentially
