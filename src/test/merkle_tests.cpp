@@ -1182,7 +1182,7 @@ BOOST_AUTO_TEST_CASE(fast_merkle_branch)
       (CHashWriter(SER_GETHASH, PROTOCOL_VERSION) << 'c').GetHash(),
     };
     const uint256 root = ComputeFastMerkleRoot(leaves);
-    BOOST_CHECK(root == uint256S("0x9cde1ad752292baac9c86e91d0c0e506a3bc0e7f11fd449c8c54bbd3e46d91a1"));
+    BOOST_CHECK(root == uint256S("0x35d7dea3df173ecb85f59ebb88b2003be3c94b576576b12eb8d017f9fc33b289"));
     {
         std::vector<uint256> branch;
         uint32_t path;
@@ -1209,7 +1209,7 @@ BOOST_AUTO_TEST_CASE(fast_merkle_branch)
         std::tie(branch, path) = ComputeFastMerkleBranch(leaves, 2);
         BOOST_CHECK(path == 1);
         BOOST_CHECK(branch.size() == 1);
-        BOOST_CHECK(branch[0] == uint256S("0xc771140365578d348d7ffc6e04a102ecf3e2eea51177d38fac92f954aebdd1cd"));
+        BOOST_CHECK(branch[0] == uint256S("0xa6e8f6cfa607807d35da463f0599aa0d8032dda4e5635c806098a9ed332b6279"));
         BOOST_CHECK(root == ComputeFastMerkleRootFromBranch(leaves[2], branch, path));
     }
     BOOST_CHECK(ComputeFastMerkleRoot({}) == MerkleTree().GetHash());
