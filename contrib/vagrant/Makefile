@@ -224,25 +224,25 @@ gitian-host: .stamp-gitian-host.manifest
 .stamp-gitian-host.manifest: \
 	.stamp-check-requirements.h \
 	$(foreach FILE,$(GITIAN_HOST_FILES),$(shell echo $(FILE) | $(SED) 's:^contrib/vagrant/::g'))
-	
+
 	-$(call VAGRANT_DESTROY)
-	
+
 	# Remove any temporary files from interupted builds that would
 	# interfere if present.
 	if [ -e output-gitian-host-bionic64 ]; then \
 	    rm -rf output-gitian-host-bionic64; \
 	fi
-	
+
 	packer build gitian-host.json
 	vagrant box add --name gitian-host-bionic64 --force box/virtualbox/gitian-host-bionic64-0.box
 	-rm -rf box
-	
+
 	$(call VAGRANT_UP)
-	
+
 	-$(call VAGRANT_HALT)
-	
+
 	rm -f .stamp-lxc-base.manifest
-	
+
 	echo $(GITIAN_HOST_MANIFEST) > "$@"
 
 .PHONY: pass-gitian-host
@@ -266,9 +266,9 @@ lxc-base: .stamp-lxc-base.manifest
 .stamp-lxc-base.manifest: \
 	.stamp-gitian-host.manifest \
 	$(foreach FILE,$(LXC_BASE_FILES),$(shell echo $(FILE) | $(SED) 's:^contrib/vagrant/::g'))
-	
+
 	$(call VAGRANT_UP)
-	
+
 	vagrant ssh --command "\
 	    if [ -d ~/gitian-builder ]; then \
 	        sudo rm -rf ~/gitian-builder; \
@@ -283,11 +283,11 @@ lxc-base: .stamp-lxc-base.manifest
 	    ln -s '$(GUEST_CACHE_DIR)' inputs; \
 	    env LXC_BRIDGE=lxcbr0 LXC_GUEST_IP=10.0.3.2 GITIAN_HOST_IP=10.0.3.1 \
 	        bin/make-base-vm --lxc --suite trusty --arch amd64"
-	
+
 ifdef VAGRANT_CYCLE
 	-$(call VAGRANT_HALT)
 endif
-	
+
 	echo $(LXC_BASE_MANIFEST) > "$@"
 
 .PHONY: pass-lxc-base
@@ -324,7 +324,7 @@ $(HOST_CACHE_DIR)/src-local.manifest: $(HOST_CACHE_DIR)/src-local.tar.xz
 	@echo $(SOURCE_MANIFEST) >'$@'
 $(HOST_CACHE_DIR)/src-local.tar.xz: \
 	$(foreach FILE,$(SOURCE_FILES),$(shell echo $(FILE) | $(SED) 's:^:../../:g'))
-	
+
 	mkdir -p '$(HOST_CACHE_DIR)'
 	rm -f '$(HOST_CACHE_DIR)'/src-local.{tar,tar.xz}
 	if git log -1 2>&1 >> /dev/null && [ -z "$(shell git status --untracked-files=no --porcelain)" ]; then \
@@ -466,17 +466,17 @@ $(foreach OUTPUT,$($(1)_OUTPUTS),$(eval $(call OUTPUT_RULE,$(OUTPUT),$(1))))
 	$(HOST_CACHE_DIR)/src-local.manifest \
 	$(foreach TARGET,$($(1)_DEPS),$(TARGET)) \
 	$(foreach PACKAGE,$($(1)_PKGS),$(HOST_CACHE_DIR)/$(PACKAGE))
-	
+
 	mkdir -p $(HOST_OUTPUT_DIR)
-	
+
 	$(call VAGRANT_UP)
-	
+
 	vagrant ssh --command "rm -rf ~/'$(PROJECT)'"
 	vagrant ssh --command "rm -rf ~/gitian-builder/inputs/'$(PROJECT)'"
 	$(call DEPLOY_SOURCE_BUNDLE,$(PROJECT))
-	
+
 	echo `$($(1)_MANIFEST)` > .$(1).manifest
-	
+
 	have_outputs=yes; \
 	if [ -d '$(HOST_CACHE_DIR)/$(1)/'`cat .$(1).manifest` ]; then \
 	    $(foreach OUTPUT,$($(1)_OUTPUTS), \
@@ -530,7 +530,7 @@ $(foreach OUTPUT,$($(1)_OUTPUTS),$(eval $(call OUTPUT_RULE,$(OUTPUT),$(1))))
 	        mv var/install.log \
 	           '$(GUEST_CACHE_DIR)/$(1)/'`cat .$(1).manifest`'/$($(1)_NAME)-gitian-install.log'" || exit 1; \
 	fi
-	
+
 	$(foreach OUTPUT,$($(1)_OUTPUTS),cp '$(HOST_CACHE_DIR)/$(1)/'`cat .$(1).manifest`'/$(OUTPUT)' '$(HOST_OUTPUT_DIR)/';)
 	$(if $($(1)_DISTFILE),vagrant ssh --command "mkdir -p ~/gitian-builder/build/out && \
 	    cd ~/gitian-builder/build/out && \
@@ -540,10 +540,10 @@ $(foreach OUTPUT,$($(1)_OUTPUTS),$(eval $(call OUTPUT_RULE,$(OUTPUT),$(1))))
 	cp '$(HOST_CACHE_DIR)/$(1)/'`cat .$(1).manifest`'/$($(1)_NAME)-gitian-res.yml' '$(HOST_OUTPUT_DIR)/'
 	cp '$(HOST_CACHE_DIR)/$(1)/'`cat .$(1).manifest`'/$($(1)_NAME)-gitian-build.log' '$(HOST_OUTPUT_DIR)/'
 	cp '$(HOST_CACHE_DIR)/$(1)/'`cat .$(1).manifest`'/$($(1)_NAME)-gitian-install.log' '$(HOST_OUTPUT_DIR)/'
-	
+
 	mv .$(1).manifest .stamp-$(1).manifest
 	touch .stamp-$(1).manifest
-	
+
 	vagrant ssh --command "rm -rf ~/'$(PROJECT)'"
 	vagrant ssh --command "rm -rf ~/gitian-builder/inputs/'$(PROJECT)'"
 ifdef VAGRANT_CYCLE
