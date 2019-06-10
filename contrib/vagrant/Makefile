@@ -280,7 +280,6 @@ lxc-base: .stamp-lxc-base.manifest
 	    echo 'lxc.cgroup.devices.allow = c 108:0 rwm' >> etc/lxc.config.in; \
 	    echo 'lxc.cgroup.devices.allow = b 7:0 rwm' >> etc/lxc.config.in; \
 	    echo 'lxc.cgroup.devices.allow = c 10:200 rwm' >> etc/lxc.config.in; \
-	    ln -s '$(GUEST_CACHE_DIR)' inputs; \
 	    env LXC_BRIDGE=lxcbr0 LXC_GUEST_IP=10.0.3.2 GITIAN_HOST_IP=10.0.3.1 \
 	        bin/make-base-vm --lxc --suite trusty --arch amd64"
 
@@ -489,12 +488,20 @@ $(foreach OUTPUT,$($(1)_OUTPUTS),$(eval $(call OUTPUT_RULE,$(OUTPUT),$(1))))
 	        rm -f ~/gitian-builder/cache; \
 	        mkdir -p '$(GUEST_CACHE_DIR)/gitian/cache'; \
 	        mkdir -p '$(GUEST_CACHE_DIR)/$(1)/`cat .$(1).manifest`/'; \
-	        cd ~/gitian-builder; \
+	        mkdir -p upperdir; \
+	        mkdir -p workdir; \
+	        mkdir -p gitian-builder/inputs; \
+	        sudo mount -t overlay overlay -o lowerdir='$(GUEST_CACHE_DIR)',upperdir=upperdir,workdir=workdir gitian-builder/inputs || exit 1; \
+	        pushd ~/gitian-builder; \
 	        ln -s '$(GUEST_CACHE_DIR)/gitian/cache' cache || exit 1; \
 	        env LXC_BRIDGE=lxcbr0 LXC_GUEST_IP=10.0.3.2 GITIAN_HOST_IP=10.0.3.1 USE_LXC=1 \
 	            bin/gbuild ../$(PROJECT)/$($(1)_SCRIPT) --memory 2000 \
 	                       --url $(PROJECT)=~/$(PROJECT) \
-	                       --commit $(PROJECT)=master" || exit 1; \
+	                       --commit $(PROJECT)=master || exit 1; \
+	        popd; \
+	        sudo umount gitian-builder/inputs; \
+	        rm -rf upperdir/'$(PROJECT)'; \
+	        rsync -av --progress --partial --append upperdir/ '$(GUEST_CACHE_DIR)'" || exit 1; \
 	    $(foreach OUTPUT,$($(1)_OUTPUTS),vagrant ssh --command "cd ~/gitian-builder && \
 	        mv 'build/out/$(OUTPUT)' \
 	           '$(GUEST_CACHE_DIR)/$(1)/`cat .$(1).manifest`/'" || exit 1;) \
