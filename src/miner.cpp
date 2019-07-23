@@ -164,7 +164,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         // version in which it was originally released. One consequence of
         // that was that once locked-in the signal bit needs to be set
         // until the final timeout date is reached.
-        if (((pindexPrev->nHeight + 1) >= chainparams.GetConsensus().verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < chainparams.GetConsensus().verify_coinbase_lock_time_timeout)) {
+        if ((nHeight >= chainparams.GetConsensus().verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < chainparams.GetConsensus().verify_coinbase_lock_time_timeout)) {
             pblock->nVersion |= (1<<28);
         }
 
