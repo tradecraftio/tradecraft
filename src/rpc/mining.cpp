@@ -585,6 +585,15 @@ static RPCHelpMan getblocktemplate()
                 {RPCResult::Type::NUM, "height", "The height of the next block"},
                 {RPCResult::Type::STR_HEX, "signet_challenge", /*optional=*/true, "Only on signet"},
                 {RPCResult::Type::STR_HEX, "default_witness_commitment", /*optional=*/true, "a valid witness commitment for the unmodified block template"},
+                {RPCResult::Type::OBJ, "finaltx", /*optional=*/true, "information necessary to construct the block-final transaction", {
+                    {RPCResult::Type::ARR, "prevout", "UTXO records of inputs which must be included in the block-final transaction", {
+                        {RPCResult::Type::OBJ, "", "", {
+                            {RPCResult::Type::STR_HEX, "txid", "input txid encoded in little-endian hexadecimal"},
+                            {RPCResult::Type::NUM, "vout", "index to the output vector of the previous transaction"},
+                            {RPCResult::Type::NUM, "amount", "value of input"},
+                        }},
+                    }},
+                }},
             }},
         },
         RPCExamples{
@@ -897,6 +906,23 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
+    if (pblocktemplate->has_block_final_tx) {
+        UniValue finaltx_prevout(UniValue::VARR);
+        for (const CTxIn& txin : pblock->vtx.back()->vin) {
+            UniValue in(UniValue::VOBJ);
+            in.pushKV("txid", txin.prevout.hash.GetHex());
+            in.pushKV("vout", (int64_t)txin.prevout.n);
+            const Coin& coin = active_chainstate.CoinsTip().AccessCoin(txin.prevout);
+            if (coin.IsSpent()) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("UTXO record for block-final input '%s:%d' not found", txin.prevout.hash.GetHex(), txin.prevout.n));
+            }
+            in.pushKV("amount", (int64_t)coin.out.nValue);
+            finaltx_prevout.push_back(in);
+        }
+        UniValue finaltx(UniValue::VOBJ);
+        finaltx.pushKV("prevout", finaltx_prevout);
+        result.pushKV("finaltx", finaltx);
+    }
 
     if (consensusParams.signet_blocks) {
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));
