@@ -233,6 +233,7 @@ BASE_SCRIPTS = [
     'rpc_decodescript.py',
     'rpc_blockchain.py',
     'rpc_blockchain.py --v2transport',
+    'feature_block_final_tx.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
     'wallet_change_address.py --legacy-wallet',
