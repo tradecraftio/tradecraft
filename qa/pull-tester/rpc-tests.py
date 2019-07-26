@@ -140,6 +140,7 @@ testScripts = [
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
+    'block-final-tx.py',
     'keypool.py',
     'p2p-mempool.py',
     'prioritise_transaction.py',
