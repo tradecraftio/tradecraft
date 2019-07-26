@@ -216,6 +216,7 @@ BASE_SCRIPTS = [
     'feature_posix_fs_permissions.py',
     'rpc_decodescript.py',
     'rpc_blockchain.py',
+    'feature_block_final_tx.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
     'wallet_change_address.py --legacy-wallet',
