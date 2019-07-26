@@ -96,6 +96,7 @@ BASE_SCRIPTS= [
     'proxy_test.py',
     'signrawtransactions.py',
     'disconnect_ban.py',
+    'block-final-tx.py',
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
