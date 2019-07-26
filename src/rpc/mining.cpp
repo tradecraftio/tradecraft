@@ -388,6 +388,15 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
+            "  \"finaltx\" : {                  (json object) information necessary to construct the block-final transaction\n"
+            "      \"prevout\" : [                 (array) UTXO records of inputs which must be included in the block-final transaction\n"
+            "          {\n"
+            "              \"txid\" : txid,        (string) input txid\n"
+            "              \"vout\" : n,           (numeric) index of input\n"
+            "              \"amount\" : n,         (numeric) value of input\n"
+            "          }, ...\n"
+            "      ],\n"
+            "  }\n"
             "}\n"
 
             "\nExamples:\n"
@@ -686,6 +695,23 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
+    if (pblocktemplate->has_block_final_tx) {
+        UniValue finaltx_prevout(UniValue::VARR);
+        BOOST_FOREACH(const CTxIn& txin, pblock->vtx.back().vin) {
+            UniValue in(UniValue::VOBJ);
+            in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
+            in.push_back(Pair("vout", (int64_t)txin.prevout.n));
+            CCoins coins;
+            if (!pcoinsTip->GetCoins(txin.prevout.hash, coins) || txin.prevout.n>=coins.vout.size() || coins.vout[txin.prevout.n].IsNull()) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("UTXO record for block-final input '%s:%d' not found", txin.prevout.hash.GetHex(), txin.prevout.n));
+            }
+            in.push_back(Pair("amount", (int64_t)coins.vout[txin.prevout.n].nValue));
+            finaltx_prevout.push_back(in);
+        }
+        UniValue finaltx(UniValue::VOBJ);
+        finaltx.push_back(Pair("prevout", finaltx_prevout));
+        result.push_back(Pair("finaltx", finaltx));
+    }
 
     const struct BIP9DeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
     if (!pblocktemplate->vchCoinbaseCommitment.empty() && setClientRules.find(segwit_info.name) != setClientRules.end()) {
