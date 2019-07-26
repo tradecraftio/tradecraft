@@ -349,6 +349,15 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
+            "  \"finaltx\" : {                  (json object) information necessary to construct the block-final transaction\n"
+            "      \"prevout\" : [                 (array) UTXO records of inputs which must be included in the block-final transaction\n"
+            "          {\n"
+            "              \"txid\" : txid,        (string) input txid\n"
+            "              \"vout\" : n,           (numeric) index of input\n"
+            "              \"amount\" : n,         (numeric) value of input\n"
+            "          }, ...\n"
+            "      ],\n"
+            "  }\n"
             "}\n"
                 },
                 RPCExamples{
@@ -659,6 +668,23 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
+    if (pblocktemplate->has_block_final_tx) {
+        UniValue finaltx_prevout(UniValue::VARR);
+        for (const CTxIn& txin : pblock->vtx.back()->vin) {
+            UniValue in(UniValue::VOBJ);
+            in.pushKV("txid", txin.prevout.hash.GetHex());
+            in.pushKV("vout", (int64_t)txin.prevout.n);
+            const Coin& coin = ::ChainstateActive().CoinsTip().AccessCoin(txin.prevout);
+            if (coin.IsSpent()) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("UTXO record for block-final input '%s:%d' not found", txin.prevout.hash.GetHex(), txin.prevout.n));
+            }
+            in.pushKV("amount", (int64_t)coin.out.nValue);
+            finaltx_prevout.push_back(in);
+        }
+        UniValue finaltx(UniValue::VOBJ);
+        finaltx.pushKV("prevout", finaltx_prevout);
+        result.pushKV("finaltx", finaltx);
+    }
 
     if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
         result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
