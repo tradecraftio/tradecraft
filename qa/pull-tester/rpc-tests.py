@@ -147,6 +147,7 @@ testScriptsExt = [
     'bip68-sequence.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
+    'block-final-tx.py',
     'getblocktemplate_longpoll.py',
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',

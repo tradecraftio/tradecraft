@@ -41,6 +41,7 @@ static const char DB_BEST_BLOCK = 'B';
 static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
+static const char DB_LAST_TX = 'a';
 
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
@@ -62,7 +63,15 @@ uint256 CCoinsViewDB::GetBestBlock() const {
     return hashBestChain;
 }
 
-bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
+uint256 CCoinsViewDB::GetFinalTx() const {
+    uint256 hashFinalTx;
+    if (!db.Read(DB_LAST_TX, hashFinalTx)) {
+        return uint256();
+    }
+    return hashFinalTx;
+}
+
+bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const uint256 &hashFinalTx) {
     CDBBatch batch(&db.GetObfuscateKey());
     size_t count = 0;
     size_t changed = 0;
@@ -80,6 +89,15 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     }
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
+    if (!hashFinalTx.IsNull()) {
+        batch.Write(DB_LAST_TX, hashFinalTx);
+    } else if (db.Exists(DB_LAST_TX)) {
+        // This branch is only ever encountered if there is a block
+        // reorganization past the point of activation of the
+        // "blockfinal" soft-fork.  It can be removed once the
+        // activation block is sufficiently buried.
+        batch.Erase(DB_LAST_TX);
+    }
 
     LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
     return db.WriteBatch(batch);

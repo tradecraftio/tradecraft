@@ -153,6 +153,96 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         // Lock-time of coinbase must be median-time-past
         txNew.nLockTime = pindexPrev->GetMedianTimePast();
 
+        // Check if block-final tx rules are enforced. For the moment this
+        // tracks just whether the soft-fork is active, but by the time we get
+        // to transaction selection it will only be true if there is a
+        // block-final transaction in this block template.
+        bool has_block_final = VersionBitsState(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BLOCKFINAL, versionbitscache) == THRESHOLD_ACTIVE;
+
+        // Check if this is the first block for which the block-final rules are
+        // enforced, in which case all we need to do is add the initial
+        // anyone-can-spend output.
+        if (has_block_final && pindexPrev->pprev && (VersionBitsState(pindexPrev->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BLOCKFINAL, versionbitscache) != THRESHOLD_ACTIVE)) {
+            txNew.vout.push_back(CTxOut());
+            txNew.vout.back().SetReferenceValue(0);
+            txNew.vout.back().scriptPubKey << OP_TRUE;
+            has_block_final = false;
+        }
+
+        // Otherwise we will need to check if the prior block-final transaction
+        // was a coinbase and if insufficient blocks have occured for it to
+        // mature.
+        if (has_block_final) {
+            // Fetch the last block-final tx. The index, 0, is just a
+            // placeholder and might not be the actual index we're looking for,
+            // but that's okay. This call should never fail because the prior
+            // block-final transaction was the last processed transaction (so
+            // none of the outputs could have been spent) or a previously
+            // immature coinbase.
+            COutPoint prevout(pcoinsTip->GetFinalTx(), 0);
+            const CCoins* prev_final = pcoinsTip->AccessCoins(prevout.hash);
+            if (!prev_final) {
+                return NULL;
+            }
+            // If it was a coinbase, meaning we're in the first 100 blocks after
+            // activation, then we need to make sure it has matured, otherwise
+            // we do nothing at all.
+            if (prev_final->IsCoinBase() && (nHeight - prev_final->nHeight < COINBASE_MATURITY)) {
+                // Still maturing. Nothing to do.
+                has_block_final = false;
+            } else {
+                // Create block-final tx
+                CMutableTransaction txFinal;
+                txFinal.nVersion = 2;
+                txFinal.nLockTime = txNew.nLockTime;
+                txFinal.lock_height = txNew.lock_height;
+                txFinal.vout.resize(1);
+                txFinal.vout[0].SetReferenceValue(0);
+                txFinal.vout[0].scriptPubKey << OP_TRUE;
+                // Add spendable outputs from the prior block-final transaction.
+                // We do nothing here to prevent selected transactions from
+                // spending these same outputs out from underneath us; we depend
+                // insted on mempool protections that prevent such transactions
+                // from being considered in the first place.
+                for (; prevout.n < prev_final->vout.size(); ++prevout.n) {
+                    if (IsTriviallySpendable(*prev_final, prevout, MANDATORY_SCRIPT_VERIFY_FLAGS|SCRIPT_VERIFY_CLEANSTACK)) {
+                        txFinal.vin.push_back(CTxIn(prevout, CScript(), CTxIn::SEQUENCE_FINAL));
+                    }
+                }
+                // The previous loop should have found and added at least one
+                // input from the prior block-final transaction, so this check
+                // should never pass. The situation in which it would is if the
+                // fork is aborted after lock-in or activation, a truly abornmal
+                // circumstance in which this version of the client should stop
+                // generating blocks anyway.
+                if (txFinal.vin.empty()) {
+                    return NULL;
+                }
+                // Add block-final transaction to block template.
+                pblock->vtx.push_back(txFinal);
+                ++nBlockTx;
+                // Record the fees forwarded by the block-final transaction to
+                // the coinbase.
+                CAmount nTxFees = pcoinsTip->GetValueIn(pblock->vtx.back())
+                                - pblock->vtx.back().GetValueOut();
+                nTxFees = GetTimeAdjustedValue(nTxFees, nHeight - txFinal.lock_height);
+                pblocktemplate->vTxFees.push_back(nTxFees);
+                nFees += nTxFees;
+                // The block-final transaction contributes to aggregate limits:
+                // the number of sigops is tracked...
+                int64_t nTxSigOps = GetLegacySigOpCount(txFinal)
+                                  + GetP2SHSigOpCount(txFinal, pcoinsTip);
+                pblocktemplate->vTxSigOps.push_back(nTxSigOps);
+                nBlockSigOps += nTxSigOps;
+                /// ...the size is not:
+                nBlockSize += GetSerializeSize(txFinal, SER_NETWORK, PROTOCOL_VERSION);
+            }
+        }
+
+        // The miner needs to know whether the last transaction is a special
+        // transaction, or not.
+        pblocktemplate->has_block_final = has_block_final;
+
         pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
 
         // The following is a left-over from the verify-coinbase-locktime
@@ -164,7 +254,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         // version in which it was originally released. One consequence of
         // that was that once locked-in the signal bit needs to be set
         // until the final timeout date is reached.
-        if (((pindexPrev->nHeight + 1) >= chainparams.GetConsensus().verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < chainparams.GetConsensus().verify_coinbase_lock_time_timeout)) {
+        if ((nHeight >= chainparams.GetConsensus().verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < chainparams.GetConsensus().verify_coinbase_lock_time_timeout)) {
             pblock->nVersion |= (1<<28);
         }
 
@@ -276,9 +366,11 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 
             CAmount nTxFees = GetTimeAdjustedValue(iter->GetFee(), nHeight - tx.lock_height);
             // Added
-            pblock->vtx.push_back(tx);
-            pblocktemplate->vTxFees.push_back(nTxFees);
-            pblocktemplate->vTxSigOps.push_back(nTxSigOps);
+            // If we have a block-final transaction, insert just
+            // before the end, so the block-final tx remains last.
+            pblock->vtx.insert(pblock->vtx.end() - !!has_block_final, tx);
+            pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.end() - !!has_block_final, nTxFees);
+            pblocktemplate->vTxSigOps.insert(pblocktemplate->vTxSigOps.end() - !!has_block_final, nTxSigOps);
             nBlockSize += nTxSize;
             ++nBlockTx;
             nBlockSigOps += nTxSigOps;
