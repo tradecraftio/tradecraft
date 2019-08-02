@@ -1,14 +1,14 @@
-Freicoin version 12.1.3-00000 is now available from:
+Freicoin version 12.1.3-10161 is now available from:
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-00000-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-00000-linux64.zip)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-00000-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-00000-osx64.tar.gz)
-  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-00000-win32-setup.exe)
-  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-00000-win32.zip)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-00000-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-00000-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1.3-00000.zip)
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-linux32.zip)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-linux64.zip)
+  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-osx.dmg)
+  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-osx64.tar.gz)
+  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-win32-setup.exe)
+  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-win32.zip)
+  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-win64-setup.exe)
+  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-win64.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1.3-10161.zip)
 
 This is a new point release, enabling soft-fork deployment of the
 block-final transaction protocol rule update, a prerequisite for
@@ -193,7 +193,7 @@ additional steps in future soft-forks, which is why it must be
 constructed by the miner. Pay close attention to release notes for
 future releases.
 
-12.1.3-00000 Change log
+12.1.3-10161 Change log
 =======================
 
   * `12cf4e24` [Checkpoint]

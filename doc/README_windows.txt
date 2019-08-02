@@ -1,4 +1,4 @@
-Freicoin 12.1.2
+Freicoin 12.1.3
 =====================
 
 Intro
