@@ -156,6 +156,15 @@ public:
         vSeeds.push_back(CDNSSeedData("node.freico.in", "seed.freico.in"));
         vSeeds.push_back(CDNSSeedData("abacus.freico.in", "fledge.freico.in"));
         vSeeds.push_back(CDNSSeedData("seed.sicanet.net", "dnsseed.sicanet.net"));
+        vSeeds.push_back(CDNSSeedData("ap-northeast-1.aws.node.tradecraft.io", "ap-northeast-1.aws.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("eu-west-1.aws.node.tradecraft.io", "eu-west-1.aws.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("us-west-2.aws.node.tradecraft.io", "us-west-2.aws.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("asia-east1.gcp.node.tradecraft.io", "asia-east1.gcp.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("asia-south1.gcp.node.tradecraft.io", "asia-south1.gcp.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("australia-southeast1.gcp.node.tradecraft.io", "australia-southeast1.gcp.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("europe-north1.gcp.node.tradecraft.io", "europe-north1.gcp.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("northamerica-northeast1.gcp.node.tradecraft.io", "northamerica-northeast1.gcp.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("southamerica-east1.gcp.node.tradecraft.io", "southamerica-east1.gcp.seed.tradecraft.io"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
