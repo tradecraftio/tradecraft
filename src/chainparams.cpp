@@ -164,6 +164,9 @@ public:
         vSeeds.push_back(CDNSSeedData("node.freico.in", "seed.freico.in")); // Mark Friedenbach
         vSeeds.push_back(CDNSSeedData("abacus.freico.in", "fledge.freico.in")); // @galambo
         vSeeds.push_back(CDNSSeedData("seed.sicanet.net", "dnsseed.sicanet.net")); // Fredrik Bodin
+        vSeeds.push_back(CDNSSeedData("ap-northeast-1.aws.node.tradecraft.io", "ap-northeast-1.aws.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("eu-west-1.aws.node.tradecraft.io", "eu-west-1.aws.seed.tradecraft.io"));
+        vSeeds.push_back(CDNSSeedData("us-west-2.aws.node.tradecraft.io", "us-west-2.aws.seed.tradecraft.io"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
