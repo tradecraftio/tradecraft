@@ -59,9 +59,9 @@ readiness for deployment.  Note that as a residual effect of the
 coinbase-MTP soft-fork, the high-order nyble of a block's version
 field must 0b0011 until 2 October 2019 (0b001 to indicate version
 bits, and the highest version bit set).  The "locktime" soft-fork is
-also being signalled for during this time, using the first (1 << 0)
+also being signaled for during this time, using the first (1 << 0)
 version bit.  Please see the v12.1.2-10135 release notes for more
-informatoin regarding that soft-fork deployment.
+information regarding that soft-fork deployment.
 
 The status of the block-final soft-fork deployment can be queried as
 the "blockfinal" soft-fork reported by the `getblockchaininfo` RPC
@@ -102,7 +102,7 @@ clients, or or block header commitments providing log-sized "proofs of
 proof of work" for sidechain pegs and other protocols.
 
 Having the last transaction of a block available for miners to use is
-also vitally important, it turns out, for varoius schemes that involve
+also vitally important, it turns out, for various schemes that involve
 protocol-managed pots of funds, such as rebateable fees or the cross-
 shard transfers that are a part of forward blocks.  In these proposals
 "anyone-can-spend" user outputs of a certain form are collected
@@ -147,7 +147,7 @@ which `scriptPubKey = CScript([OP_TRUE])` suffices.
 
 It is not recommended that mining software re-implement the [BIP9]()
 version bits soft-fork activation logic, due to the inherent risk of
-reimplementing consensus code.  Instead it is recommened that mining
+reimplementing consensus code.  Instead it is recommended that mining
 software include a zero-valued OP_TRUE output in their coinbase if all
 three of the following conditions are met:
 
