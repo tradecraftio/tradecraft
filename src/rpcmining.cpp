@@ -397,9 +397,6 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "              \"amount\" : n,         (numeric) value at current refheight\n"
             "          }, ...\n"
             "      ],\n"
-            "      \"data\" : \"xxxx\",          (string) bloc-final transaction data encoded in hexadecimal (byte-for-byte)\n"
-            "      \"fee\": n,                   (numeric) amount forwarded on to the coinbase as \"fee\" (in Satoshis)\n"
-            "      \"sigops\" : n,               (numeric) total number of SigOps, as counted for purposes of block limits\n"
             "  }\n"
             "}\n"
 
@@ -700,9 +697,6 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         }
         UniValue blockfinal(UniValue::VOBJ);
         blockfinal.push_back(Pair("prevout", blockfinal_prevout));
-        blockfinal.push_back(Pair("data", EncodeHexTx(pblock->vtx.back())));
-        blockfinal.push_back(Pair("fee", (int64_t)pblocktemplate->vTxFees.back()));
-        blockfinal.push_back(Pair("sigops", (int64_t)pblocktemplate->vTxSigOps.back()));
         result.push_back(Pair("blockfinal", blockfinal));
     }
 
