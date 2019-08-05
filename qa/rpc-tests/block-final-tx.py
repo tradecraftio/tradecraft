@@ -228,8 +228,6 @@ class BlockFinalTxTest(ComparisonTestFramework):
         assert_equal(tmpl['blockfinal']['prevout'][0]['txid'], encode(ser_uint256(non_protected_output.hash)[::-1], 'hex_codec').decode('ascii'))
         assert_equal(tmpl['blockfinal']['prevout'][0]['vout'], non_protected_output.n)
         assert_equal(tmpl['blockfinal']['prevout'][0]['amount'], 624940398)
-        assert_equal(tmpl['blockfinal']['fee'], 624940398)
-        assert_equal(tmpl['blockfinal']['sigops'], 0)
 
         # Extra pass-through value is not included in the
         # coinbasevalue field.
@@ -274,8 +272,6 @@ class BlockFinalTxTest(ComparisonTestFramework):
         assert_equal(tmpl['blockfinal']['prevout'][0]['txid'], encode(ser_uint256(tx_final.sha256)[::-1], 'hex_codec').decode('ascii'))
         assert_equal(tmpl['blockfinal']['prevout'][0]['vout'], 0)
         assert_equal(tmpl['blockfinal']['prevout'][0]['amount'], 624939802)
-        assert_equal(tmpl['blockfinal']['fee'], 624939802)
-        assert_equal(tmpl['blockfinal']['sigops'], 0)
 
         # Test 12
         # Create a block-final transaction with multiple outputs,
