@@ -689,10 +689,10 @@ be installed with:
 
     sudo apt-get install stunnel4
 
-Then, to tunnel a SSL connection on 28638 to a RPC server bound on
+Then, to tunnel a SSL connection on 38638 to a RPC server bound on
 localhost on port 18638 do:
 
-    stunnel -d 28638 -r 127.0.0.1:18638 -p stunnel.pem -P ''
+    stunnel -d 38638 -r 127.0.0.1:18638 -p stunnel.pem -P ''
 
 It can also be set up system-wide in inetd style.
 
