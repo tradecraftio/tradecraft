@@ -66,7 +66,7 @@ address. The same address can be used in more than one notification.
 
 For instance:
 
-    $ freicoind -zmqpubhashtx=tcp://127.0.0.1:28638 \
+    $ freicoind -zmqpubhashtx=tcp://127.0.0.1:28102 \
                -zmqpubrawtx=ipc:///tmp/freicoind.tx.raw
 
 Each PUB notification has a topic and body, where the header
