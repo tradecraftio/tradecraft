@@ -570,7 +570,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     for (int i = 0; i < pblock->vtx.size() - !!pblocktemplate->has_block_final; ++i) {
         const CTransaction& tx = pblock->vtx[i];
         uint256 txHash = tx.GetHash();
-        setTxIndex[txHash] = i++;
+        setTxIndex[txHash] = i;
 
         if (tx.IsCoinBase())
             continue;
