@@ -25,7 +25,7 @@ from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 
-DEFAULT_MAX_TIP_AGE = 24 * 60 * 60
+DEFAULT_MAX_TIP_AGE = 14 * 24 * 60 * 60
 
 
 class MaxTipAgeTest(FreicoinTestFramework):
@@ -55,7 +55,7 @@ class MaxTipAgeTest(FreicoinTestFramework):
         assert_equal(node_ibd.getblockchaininfo()['initialblockdownload'], False)
 
     def run_test(self):
-        self.log.info("Test IBD with maximum tip age of 24 hours (default).")
+        self.log.info("Test IBD with maximum tip age of 14 days (default).")
         self.test_maxtipage(DEFAULT_MAX_TIP_AGE, set_parameter=False)
 
         for hours in [20, 10, 5, 2, 1]:
