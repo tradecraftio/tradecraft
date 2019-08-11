@@ -40,7 +40,7 @@ class MinimumChainWorkTest(FreicoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
 
-        self.extra_args = [[], ["-minimumchainwork=0x65"], ["-minimumchainwork=0x65"]]
+        self.extra_args = [[], ["-minimumchainwork=0x65"], ["-maxtipage=86400", "-minimumchainwork=0x65"]]
         self.node_min_work = [0, 101, 101]
 
     def setup_network(self):
