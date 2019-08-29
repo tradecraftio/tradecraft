@@ -28,7 +28,7 @@ import random
 from binascii import hexlify
 
 # The versionbit bit used to signal activation of SegWit
-VB_WITNESS_BIT = 1
+VB_WITNESS_BIT = 2
 VB_PERIOD = 144
 VB_ACTIVATION_THRESHOLD = 108
 VB_TOP_BITS = 0x20000000
