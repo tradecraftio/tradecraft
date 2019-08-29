@@ -201,7 +201,13 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
-    coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+    if (block_final_state == INITIAL_BLOCK_FINAL_TXOUT) {
+        // Due to a bug in earlier deployed releases, the activation block's
+        // coinbase must contain only trivially-spendable outputs.
+        coinbaseTx.vout[0].scriptPubKey = CScript() << OP_TRUE;
+    } else {
+        coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+    }
     coinbaseTx.vout[0].SetReferenceValue(nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     // Consensus rule: lock-time of coinbase MUST be median-time-past
