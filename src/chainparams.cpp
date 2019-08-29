@@ -96,8 +96,8 @@ public:
 
         // Deployment of BIP68 and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nStartTime = 1462060800; // May 1st, 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nTimeout = 1493596800; // May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nStartTime = 1555372800; // April 16, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nTimeout = 1569974400; // October 2, 2019
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
@@ -243,8 +243,8 @@ public:
 
         // Deployment of BIP68 and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nStartTime = 1456790400; // March 1st, 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nTimeout = 1493596800; // May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nStartTime = 1555372800; // April 16, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nTimeout = 1569974400; // October 2, 2019
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
