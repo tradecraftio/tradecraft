@@ -408,7 +408,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         }
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
-        LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nBlockSigOps);
+        LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, has_block_final ? nFees - pblock->vtx.back().GetValueOut() : nFees, nBlockSigOps);
 
         // Compute final coinbase transaction.
         txNew.vout[0].SetReferenceValue(GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
