@@ -163,6 +163,9 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         // enforced, in which case all we need to do is add the initial
         // anyone-can-spend output.
         if (has_block_final && pindexPrev->pprev && (VersionBitsState(pindexPrev->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BLOCKFINAL, versionbitscache) != THRESHOLD_ACTIVE)) {
+            // Due to a bug in earlier deployed releases, the activation block's
+            // coinbase must contain only trivially-spendable outputs.
+            txNew.vout.clear();
             txNew.vout.push_back(CTxOut());
             txNew.vout.back().SetReferenceValue(0);
             txNew.vout.back().scriptPubKey << OP_TRUE;
