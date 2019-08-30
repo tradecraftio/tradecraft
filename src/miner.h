@@ -168,6 +168,7 @@ private:
 
     // Chain context for the block
     int nHeight;
+    int64_t nMedianTimePast;
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
 

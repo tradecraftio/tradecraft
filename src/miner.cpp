@@ -116,6 +116,8 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
 
     // Whether we need to account for byte usage (in addition to weight usage)
     fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE-1000);
+
+    nMedianTimePast = 0;
 }
 
 void BlockAssembler::resetBlock()
@@ -134,6 +136,8 @@ void BlockAssembler::resetBlock()
 
     lastFewTxs = 0;
     blockFinished = false;
+
+    nMedianTimePast = 0;
 }
 
 CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
@@ -175,7 +179,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     }
 
     pblock->nTime = GetAdjustedTime();
-    const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
+    nMedianTimePast = pindexPrev->GetMedianTimePast();
 
     nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
                        ? nMedianTimePast
@@ -211,7 +215,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     coinbaseTx.vout[0].SetReferenceValue(nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     // Consensus rule: lock-time of coinbase MUST be median-time-past
-    coinbaseTx.nLockTime = pindexPrev->GetMedianTimePast();
+    coinbaseTx.nLockTime = nMedianTimePast;
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = coinbaseTx;
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
