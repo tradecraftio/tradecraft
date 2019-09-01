@@ -170,6 +170,18 @@ CSHA512::CSHA512() : bytes(0)
     sha512::Initialize(s);
 }
 
+CSHA512::CSHA512(const unsigned char iv[OUTPUT_SIZE]) : bytes(0)
+{
+    s[0] = ReadBE64(iv);
+    s[1] = ReadBE64(iv + 4);
+    s[2] = ReadBE64(iv + 8);
+    s[3] = ReadBE64(iv + 12);
+    s[4] = ReadBE64(iv + 16);
+    s[5] = ReadBE64(iv + 20);
+    s[6] = ReadBE64(iv + 24);
+    s[7] = ReadBE64(iv + 28);
+}
+
 CSHA512& CSHA512::Write(const unsigned char* data, size_t len)
 {
     const unsigned char* end = data + len;
@@ -203,6 +215,11 @@ void CSHA512::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteBE64(sizedesc + 8, bytes << 3);
     Write(pad, 1 + ((239 - (bytes % 128)) % 128));
     Write(sizedesc, 16);
+    Midstate(hash, NULL, NULL);
+}
+
+void CSHA512::Midstate(unsigned char hash[OUTPUT_SIZE], unsigned char* buffer, size_t* length)
+{
     WriteBE64(hash, s[0]);
     WriteBE64(hash + 8, s[1]);
     WriteBE64(hash + 16, s[2]);
@@ -211,6 +228,12 @@ void CSHA512::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteBE64(hash + 40, s[5]);
     WriteBE64(hash + 48, s[6]);
     WriteBE64(hash + 56, s[7]);
+    if (length) {
+        *length = bytes << 3;
+    }
+    if (buffer) {
+        memcpy(buffer, buf, bytes % 128);
+    }
 }
 
 CSHA512& CSHA512::Reset()

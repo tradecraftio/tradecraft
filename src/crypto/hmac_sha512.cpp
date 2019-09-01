@@ -40,6 +40,12 @@ CHMAC_SHA512::CHMAC_SHA512(const unsigned char* key, size_t keylen)
     inner.Write(rkey, 128);
 }
 
+void CHMAC_SHA512::Midstate(unsigned char hash[OUTPUT_SIZE*2], unsigned char* buffer, size_t* length)
+{
+    outer.Midstate(hash, NULL, NULL);
+    inner.Midstate(hash+OUTPUT_SIZE, buffer, length);
+}
+
 void CHMAC_SHA512::Finalize(unsigned char hash[OUTPUT_SIZE])
 {
     unsigned char temp[64];
