@@ -3731,9 +3731,8 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
 void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev) const
 {
-    int commitpos = GetWitnessCommitmentIndex(block);
     static const std::vector<unsigned char> nonce; // empty
-    if (commitpos != NO_WITNESS_COMMITMENT && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
+    if (GetWitnessCommitment(block, nullptr, nullptr) && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
         tx.vin[0].scriptWitness.stack.resize(1);
         tx.vin[0].scriptWitness.stack[0] = nonce;
@@ -3744,19 +3743,25 @@ void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CB
 std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev) const
 {
     std::vector<unsigned char> commitment;
-    int commitpos = GetWitnessCommitmentIndex(block);
-    if (commitpos == NO_WITNESS_COMMITMENT) {
+    if (!GetWitnessCommitment(block, nullptr, nullptr)) {
         uint256 witnessroot = BlockWitnessMerkleRoot(block);
         CTxOut out;
         out.SetReferenceValue(0);
-        out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-        out.scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
-        out.scriptPubKey[1] = 0xaa;
-        out.scriptPubKey[2] = 0x21;
-        out.scriptPubKey[3] = 0xa9;
-        out.scriptPubKey[4] = 0xed;
-        out.scriptPubKey[5] = 0x01;
-        memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
+        const int excess = 4 * !!(block.vtx[0]->nVersion == 1);
+        out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + excess);
+        out.scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT + excess - 1;
+        out.scriptPubKey[1] = 0x01;
+        memcpy(&out.scriptPubKey[2], witnessroot.begin(), 32);
+        out.scriptPubKey[34] = 0x4b;
+        out.scriptPubKey[35] = 0x4a;
+        out.scriptPubKey[36] = 0x49;
+        out.scriptPubKey[37] = 0x48;
+        if (excess) {
+            out.scriptPubKey[38] = 0;
+            out.scriptPubKey[39] = 0;
+            out.scriptPubKey[40] = 0;
+            out.scriptPubKey[41] = 0;
+        }
         commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
         CMutableTransaction tx(*block.vtx[0]);
         tx.vout.push_back(out);
@@ -3902,16 +3907,15 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     //   are multiple, the last one is used.
     bool fHaveWitness = false;
     if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT)) {
-        int commitpos = GetWitnessCommitmentIndex(block);
-        if (commitpos != NO_WITNESS_COMMITMENT) {
+        uint8_t witnesspath = 0; // Defensively chosen default value to
+        uint256 commithash;      // force a failure if not set.
+        if (GetWitnessCommitment(block, &witnesspath, &commithash)) {
             uint256 hashWitness = BlockWitnessMerkleRoot(block);
             // The malleation check is ignored; as the transaction tree itself
             // already does not permit it, it is impossible to trigger in the
             // witness tree.  If that weren't enough, the fast Merkle trees used
             // structurally prevent malleation from being possible, unlike the
             // legacy Merkle trees used for the stripped transaction tree.
-            const CScript& commitscript = block.vtx[0]->vout[commitpos].scriptPubKey;
-            const unsigned char& witnesspath = commitscript[commitscript.size()-33];
             if (witnesspath == 0) {
                 return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-witness-path", strprintf("%s : witness commitment path is not present", __func__));
             }
@@ -3935,7 +3939,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             }
             bool invalid = true;
             hashWitness = ComputeFastMerkleRootFromBranch(hashWitness, branch, witnesspath ^ (1 << witnessdepth), &invalid);
-            if (invalid || memcmp(hashWitness.begin(), &commitscript[commitscript.size()-32], 32)) {
+            if (invalid || hashWitness != commithash) {
                 return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-witness-merkle-match", strprintf("%s : witness merkle commitment mismatch", __func__));
             }
             fHaveWitness = true;
