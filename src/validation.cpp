@@ -3829,8 +3829,9 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
     if (expect_witness_commitment) {
         if (block.m_checked_witness_commitment) return true;
 
-        int commitpos = GetWitnessCommitmentIndex(block);
-        if (commitpos != NO_WITNESS_COMMITMENT) {
+        uint8_t witnesspath = 0; // Defensively chosen default value to
+        uint256 commithash;      // force a failure if not set.
+        if (GetWitnessCommitment(block, &witnesspath, &commithash)) {
             assert(!block.vtx.empty() && !block.vtx[0]->vin.empty());
             const auto& witness_stack{block.vtx[0]->vin[0].scriptWitness.stack};
 
@@ -3848,8 +3849,6 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
             // legacy Merkle trees used for the stripped transaction tree.
             uint256 hash_witness = BlockWitnessMerkleRoot(block);
 
-            const CScript& commitscript = block.vtx[0]->vout[commitpos].scriptPubKey;
-            const unsigned char& witnesspath = commitscript[commitscript.size()-33];
             if (witnesspath == 0) {
                 return state.Invalid(
                     /*result=*/BlockValidationResult::BLOCK_MUTATED,
@@ -3876,7 +3875,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
             }
             bool invalid = true;
             hash_witness = ComputeFastMerkleRootFromBranch(hash_witness, branch, witnesspath ^ (1 << witnessdepth), &invalid);
-            if (invalid || memcmp(hash_witness.begin(), &commitscript[commitscript.size()-32], 32)) {
+            if (invalid || hash_witness != commithash) {
                 return state.Invalid(
                     /*result=*/BlockValidationResult::BLOCK_MUTATED,
                     /*reject_reason=*/"bad-witness-merkle-match",
@@ -3972,9 +3971,8 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
 void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev) const
 {
-    int commitpos = GetWitnessCommitmentIndex(block);
     static const std::vector<unsigned char> nonce; // empty
-    if (commitpos != NO_WITNESS_COMMITMENT && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
+    if (GetWitnessCommitment(block, nullptr, nullptr) && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
         tx.vin[0].scriptWitness.stack.resize(1);
         tx.vin[0].scriptWitness.stack[0] = nonce;
@@ -3985,19 +3983,25 @@ void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CB
 std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev) const
 {
     std::vector<unsigned char> commitment;
-    int commitpos = GetWitnessCommitmentIndex(block);
-    if (commitpos == NO_WITNESS_COMMITMENT) {
+    if (!GetWitnessCommitment(block, nullptr, nullptr)) {
         uint256 witnessroot = BlockWitnessMerkleRoot(block);
         CTxOut out;
         out.SetReferenceValue(0);
-        out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-        out.scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
-        out.scriptPubKey[1] = 0xaa;
-        out.scriptPubKey[2] = 0x21;
-        out.scriptPubKey[3] = 0xa9;
-        out.scriptPubKey[4] = 0xed;
-        out.scriptPubKey[5] = 0x01;
-        memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
+        const int excess = 4 * !!(block.vtx[0]->nVersion == 1);
+        out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + excess);
+        out.scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT + excess - 1;
+        out.scriptPubKey[1] = 0x01;
+        memcpy(&out.scriptPubKey[2], witnessroot.begin(), 32);
+        out.scriptPubKey[34] = 0x4b;
+        out.scriptPubKey[35] = 0x4a;
+        out.scriptPubKey[36] = 0x49;
+        out.scriptPubKey[37] = 0x48;
+        if (excess) {
+            out.scriptPubKey[38] = 0;
+            out.scriptPubKey[39] = 0;
+            out.scriptPubKey[40] = 0;
+            out.scriptPubKey[41] = 0;
+        }
         commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
         CMutableTransaction tx(*block.vtx[0]);
         tx.vout.push_back(out);
