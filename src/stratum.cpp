@@ -128,10 +128,9 @@ void UpdateSegwitCommitment(const StratumWork& current_work, CMutableTransaction
     block2.vtx.back() = CTransaction(bf);
     block2.vtx[0] = CTransaction(cb);
     // Erase any existing commitments:
-    int commitpos = -1;
-    while ((commitpos = GetWitnessCommitmentIndex(block2)) != -1) {
+    while (GetWitnessCommitment(block2, nullptr, nullptr)) {
         CMutableTransaction mtx(block2.vtx[0]);
-        mtx.vout.erase(mtx.vout.begin()+commitpos);
+        mtx.vout.erase(mtx.vout.end()-1);
         block2.vtx[0] = CTransaction(mtx);
     }
     // Generate new commitment:

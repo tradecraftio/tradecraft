@@ -478,7 +478,7 @@ class SegWitTest(FreicoinTestFramework):
         # Add a witness commitment with an invalid path ("0" as a path
         # means an empty Merkle tree, but there must be at least one
         # hash--the witness root).  This block should fail.
-        block_3.vtx[0].vout.append(CTxOut(0, CScript([WITNESS_COMMITMENT_HEADER + b'\x00' + ser_uint256(2)])))
+        block_3.vtx[0].vout.append(CTxOut(0, CScript([b'\x00' + ser_uint256(2) + WITNESS_COMMITMENT_HEADER])))
         block_3.vtx[0].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
         block_3.rehash()
@@ -1778,7 +1778,7 @@ class SegWitTest(FreicoinTestFramework):
                 witness_root = block.get_fast_merkle_root([ser_uint256(0), ser_uint256(txid)])
 
                 from test_framework.blocktools import WITNESS_COMMITMENT_HEADER
-                output_data = WITNESS_COMMITMENT_HEADER + bytes((0x01,)) + ser_uint256(witness_root)
+                output_data = bytes((0x01,)) + ser_uint256(witness_root) + WITNESS_COMMITMENT_HEADER
                 script = CScript([output_data])
                 assert_equal(witness_commitment, bytes_to_hex_str(script))
 
