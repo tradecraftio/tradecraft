@@ -22,6 +22,7 @@
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <primitives/block.h>
+#include <streams.h>
 
 /** Index marker for when no witness commitment is present in a coinbase transaction. */
 static constexpr int NO_WITNESS_COMMITMENT{-1};
@@ -171,34 +172,45 @@ static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
     return ::GetSerializeSize(txin, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(txin, SER_NETWORK, PROTOCOL_VERSION) + ::GetSerializeSize(txin.scriptWitness.stack, SER_NETWORK, PROTOCOL_VERSION);
 }
 
-/** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found */
-inline bool IsCoinbaseCommitment(const CTxOut& txout)
+/** Extract witness commitment information from the coinbase transaction. */
+inline bool GetWitnessCommitment(const CBlock& block, uint8_t* path, uint256* hash)
 {
-    if (   txout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT
-        && txout.scriptPubKey.size() <= MAXIMUM_WITNESS_COMMITMENT
-        && txout.scriptPubKey[0] == (txout.scriptPubKey.size()-1)
-        && txout.scriptPubKey[1] == 0xaa
-        && txout.scriptPubKey[2] == 0x21
-        && txout.scriptPubKey[3] == 0xa9
-        && txout.scriptPubKey[4] == 0xed)
-    {
-        return true;
+    // The witness commitment is in the coinbase, so there must be a coinbase.
+    if (block.vtx.empty()) {
+        return false;
     }
 
-    return false;
-}
+    // Since the consumer of a midstate compression proof does not have access
+    // to the whole transaction, they cannot prove the size of the last output's
+    // scriptPubKey.  It is possible that a determined adversary could grind a
+    // transaction which has a witness commitment spread across more than just
+    // the last output, and the consumer of a midstate proof would have no way
+    // of knowing.
 
-inline int GetWitnessCommitmentIndex(const CBlock& block)
-{
-    int commitpos = NO_WITNESS_COMMITMENT;
-    if (!block.vtx.empty()) {
-        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            if (IsCoinbaseCommitment(block.vtx[0]->vout[o])) {
-                commitpos = o;
-            }
-        }
+    // TODO: It would be more efficient to reverse-serialize the last 45 bytes,
+    // which is all we need, and in the common case just pull the info we want
+    // from the last output's scriptPubKey.  Such code would need to be written
+    // very carefully so as to have the same behavior in all cases as this:
+    CDataStream tx(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    tx << block.vtx[0];
+
+    if (tx.size() < (1 + 32 + 4 + 4 + 4)         // <- 1 byte for witness path
+        || tx[tx.size()-8-4] != std::byte{0x4b}  //   32 bytes for merkle root
+        || tx[tx.size()-8-3] != std::byte{0x4a}  //    4 bytes for magic value
+        || tx[tx.size()-8-2] != std::byte{0x49}  //    4 bytes for nLockTime
+        || tx[tx.size()-8-1] != std::byte{0x48}) //    4 bytes for lock_height
+    {                                            //      (end of transaction)
+        return false;
     }
-    return commitpos;
+
+    if (path) {
+        *path = std::to_integer<uint8_t>(tx[tx.size()-8-4-32-1]);
+    }
+    if (hash) {
+        *hash = uint256(std::vector<unsigned char>(UCharCast(&tx[tx.size()-8-4-32]), UCharCast(&tx[tx.size()-8-4])));
+    }
+
+    return true;
 }
 
 #endif // FREICOIN_CONSENSUS_VALIDATION_H
