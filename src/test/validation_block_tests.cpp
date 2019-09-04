@@ -415,19 +415,18 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
 
     CTxOut witness;
     witness.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-    witness.scriptPubKey[0] = OP_RETURN;
-    witness.scriptPubKey[1] = 0x24;
-    witness.scriptPubKey[2] = 0xaa;
-    witness.scriptPubKey[3] = 0x21;
-    witness.scriptPubKey[4] = 0xa9;
-    witness.scriptPubKey[5] = 0xed;
+    witness.scriptPubKey[0] = 0x24;
+    witness.scriptPubKey[1] = 0xaa;
+    witness.scriptPubKey[2] = 0x21;
+    witness.scriptPubKey[3] = 0xa9;
+    witness.scriptPubKey[4] = 0xed;
 
     // A witness larger than the minimum size is still valid
     CTxOut min_plus_one = witness;
     min_plus_one.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + 1);
 
     CTxOut invalid = witness;
-    invalid.scriptPubKey[0] = OP_VERIFY;
+    invalid.scriptPubKey[1] = 0xab;
 
     CMutableTransaction txCoinbase(*pblock.vtx[0]);
     txCoinbase.vout.resize(4);
