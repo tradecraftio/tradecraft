@@ -23,6 +23,7 @@ from test_framework.messages import (
     from_hex,
 )
 from test_framework.muhash import MuHash3072
+from test_framework.script import OP_RETURN
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
@@ -40,11 +41,9 @@ class UTXOSetHashTest(FreicoinTestFramework):
         mocktime = node.getblockheader(node.getblockhash(0))['time'] + 1
         node.setmocktime(mocktime)
 
-        # Generate 100 blocks and remove the first since we plan to spend its
-        # coinbase
+        # Generate 100 blocks
         block_hashes = self.generate(wallet, 1) + self.generate(node, 99)
         blocks = list(map(lambda block: from_hex(CBlock(), node.getblock(block, False)), block_hashes))
-        blocks.pop(0)
 
         # Create a spending transaction and mine a block which includes it
         txid = wallet.send_self_transfer(from_node=node)['txid']
@@ -56,16 +55,21 @@ class UTXOSetHashTest(FreicoinTestFramework):
         muhash = MuHash3072()
 
         for height, block in enumerate(blocks):
-            # The Genesis block coinbase is not part of the UTXO set and we
-            # spent the first mined block
-            height += 2
+            # The Genesis block coinbase is not part of the UTXO set
+            height += 1
 
             for tx in block.vtx:
                 for n, tx_out in enumerate(tx.vout):
                     coinbase = 1 if not tx.vin[0].prevout.hash else 0
 
-                    # Skip witness commitment
-                    if (coinbase and n > 0):
+                    # Skip first two outputs of coinbase in first block,
+                    # which were spent by us and by the first block-final
+                    # transaction
+                    if (height == 1 and coinbase and n <= 1):
+                        continue
+
+                    # Skip unspendable outputs
+                    if (tx.vout[n].scriptPubKey[0] == OP_RETURN):
                         continue
 
                     data = COutPoint(int(tx.rehash(), 16), n).serialize()
@@ -81,8 +85,8 @@ class UTXOSetHashTest(FreicoinTestFramework):
         assert_equal(finalized[::-1].hex(), node_muhash)
 
         self.log.info("Test deterministic UTXO set hash results")
-        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "73c83e153247f56fb88f573c1fc7e7f4894c047a113bad8447878029f9647bf9")
-        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "ff192f3b821921cc8ddec5d43d24c3b1e6aa8f6372494c9c40479506b18039fd")
+        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "5f022f398a2406f9d2b331f8bb9e3300f634eb85c22660d1c509f2787bf6352e")
+        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "03b33aba896fac41fe9686136aa72a131a4caab84444262e858527339ea6bc2e")
 
     def run_test(self):
         self.test_muhash_implementation()
