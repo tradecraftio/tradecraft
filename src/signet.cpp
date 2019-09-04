@@ -99,12 +99,11 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
     if (block.vtx.empty()) return nullopt; // no coinbase tx in block; invalid
     CMutableTransaction modified_cb(*block.vtx.at(0));
 
-    const int cidx = GetWitnessCommitmentIndex(block);
-    if (cidx == NO_WITNESS_COMMITMENT) {
+    if (!GetWitnessCommitment(block, nullptr, nullptr)) {
         return nullopt; // require a witness commitment
     }
 
-    CScript& witness_commitment = modified_cb.vout.at(cidx).scriptPubKey;
+    CScript& witness_commitment = modified_cb.vout.back().scriptPubKey;
 
     std::vector<uint8_t> signet_solution;
     if (!FetchAndClearCommitmentSection(SIGNET_HEADER, witness_commitment, signet_solution)) {
