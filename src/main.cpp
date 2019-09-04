@@ -3705,40 +3705,52 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
     return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
-inline bool IsCoinbaseCommitment(const CTxOut& txout)
-{
-    if (   txout.scriptPubKey.size() >= (1 + 4 + 1 + 32)
-        && txout.scriptPubKey.size() <= (1 + 0x4b)
-        && txout.scriptPubKey[0] == (txout.scriptPubKey.size()-1)
-        && txout.scriptPubKey[1] == 0xaa
-        && txout.scriptPubKey[2] == 0x21
-        && txout.scriptPubKey[3] == 0xa9
-        && txout.scriptPubKey[4] == 0xed)
-    {
-        return true;
-    }
-
-    return false;
-}
-
 // Compute at which vout of the block's coinbase transaction the witness
 // commitment occurs, or -1 if not found.
-static int GetWitnessCommitmentIndex(const CBlock& block)
+static bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* hash)
 {
-    int commitpos = -1;
-    for (size_t o = 0; o < block.vtx[0].vout.size(); o++) {
-        if (IsCoinbaseCommitment(block.vtx[0].vout[o])) {
-            commitpos = o;
-        }
+    // The witness commitment is in the coinbase, so there must be a coinbase.
+    if (block.vtx.empty()) {
+        return false;
     }
-    return commitpos;
+
+    // Since the consumer of a midstate compression proof does not have access
+    // to the whole transaction, they cannot prove the size of the last output's
+    // scriptPubKey.  It is possible that a determined adversary could grind a
+    // transaction which has a witness commitment spread across more than just
+    // the last output, and the consumer of a midstate proof would have no way
+    // of knowing.
+
+    // TODO: It would be more efficient to reverse-serialize the last 45 bytes,
+    // which is all we need, and in the common case just pull the info we want
+    // from the last output's scriptPubKey.  Such code would need to be written
+    // very carefully so as to have the same behavior in all cases as this:
+    CDataStream tx(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    tx << block.vtx[0];
+
+    if (tx.size() < (1 + 32 + 4 + 4 + 4) // <- 1 byte for witness path
+        || tx[tx.size()-8-4] != 0x4b     //   32 bytes for merkle root
+        || tx[tx.size()-8-3] != 0x4a     //    4 bytes for magic value
+        || tx[tx.size()-8-2] != 0x49     //    4 bytes for nLockTime
+        || tx[tx.size()-8-1] != 0x48)    //    4 bytes for lock_height
+    {                                    //      (end of transaction)
+        return false;
+    }
+
+    if (path) {
+        *path = tx[tx.size()-8-4-32-1];
+    }
+    if (hash) {
+        *hash = uint256(std::vector<unsigned char>(&tx[tx.size()-8-4-32], &tx[tx.size()-8-4]));
+    }
+
+    return true;
 }
 
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
-    int commitpos = GetWitnessCommitmentIndex(block);
     static const std::vector<unsigned char> nonce; // empty
-    if (commitpos != -1 && IsWitnessEnabled(pindexPrev, consensusParams) && block.vtx[0].wit.IsEmpty()) {
+    if (GetWitnessCommitment(block, NULL, NULL) && IsWitnessEnabled(pindexPrev, consensusParams) && block.vtx[0].wit.IsEmpty()) {
         block.vtx[0].wit.vtxinwit.resize(1);
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.resize(1);
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack[0] = nonce;
@@ -3748,20 +3760,26 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
     std::vector<unsigned char> commitment;
-    int commitpos = GetWitnessCommitmentIndex(block);
     if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
-        if (commitpos == -1) {
+        if (!GetWitnessCommitment(block, NULL, NULL)) {
             uint256 witnessroot = BlockWitnessMerkleRoot(block);
             CTxOut out;
             out.SetReferenceValue(0);
-            out.scriptPubKey.resize(38);
-            out.scriptPubKey[0] = 0x25;
-            out.scriptPubKey[1] = 0xaa;
-            out.scriptPubKey[2] = 0x21;
-            out.scriptPubKey[3] = 0xa9;
-            out.scriptPubKey[4] = 0xed;
-            out.scriptPubKey[5] = 0x01;
-            memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
+            const int excess = 4 * !!(block.vtx[0].nVersion == 1);
+            out.scriptPubKey.resize(38 + excess);
+            out.scriptPubKey[0] = 0x25 + excess;
+            out.scriptPubKey[1] = 0x01;
+            memcpy(&out.scriptPubKey[2], witnessroot.begin(), 32);
+            out.scriptPubKey[34] = 0x4b;
+            out.scriptPubKey[35] = 0x4a;
+            out.scriptPubKey[36] = 0x49;
+            out.scriptPubKey[37] = 0x48;
+            if (excess) {
+                out.scriptPubKey[38] = 0;
+                out.scriptPubKey[39] = 0;
+                out.scriptPubKey[40] = 0;
+                out.scriptPubKey[41] = 0;
+            }
             commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
             const_cast<std::vector<CTxOut>*>(&block.vtx[0].vout)->push_back(out);
             block.vtx[0].UpdateHash();
@@ -3850,16 +3868,15 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     //   are multiple, the last one is used.
     bool fHaveWitness = false;
     if (IsWitnessEnabled(pindexPrev, consensusParams)) {
-        int commitpos = GetWitnessCommitmentIndex(block);
-        if (commitpos != -1) {
+        unsigned char witnesspath = 0; // Defensively chosen default value to
+        uint256 commithash;            // force a failure if not set.
+        if (GetWitnessCommitment(block, &witnesspath, &commithash)) {
             uint256 hashWitness = BlockWitnessMerkleRoot(block);
             // The malleation check is ignored; as the transaction tree itself
             // already does not permit it, it is impossible to trigger in the
             // witness tree.  If that weren't enough, the fast Merkle trees used
             // structurally prevent malleation from being possible, unlike the
             // legacy Merkle trees used for the stripped transaction tree.
-            const CScript& commitscript = block.vtx[0].vout[commitpos].scriptPubKey;
-            const unsigned char& witnesspath = commitscript[commitscript.size()-33];
             if (witnesspath == 0) {
                 return state.DoS(100, error("%s : witness commitment path is not present", __func__), REJECT_INVALID, "bad-witness-path", true);
             }
@@ -3882,7 +3899,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
                 ds >> branch[pos];
             }
             hashWitness = ComputeFastMerkleRootFromBranch(hashWitness, branch, witnesspath ^ (1 << witnessdepth));
-            if (memcmp(hashWitness.begin(), &commitscript[commitscript.size()-32], 32)) {
+            if (hashWitness != commithash) {
                 return state.DoS(100, error("%s : witness merkle commitment mismatch", __func__), REJECT_INVALID, "bad-witness-merkle-match", true);
             }
             fHaveWitness = true;

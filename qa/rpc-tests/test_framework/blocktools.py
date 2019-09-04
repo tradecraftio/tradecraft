@@ -37,7 +37,7 @@ def create_block(hashprev, coinbase, nTime=None):
     return block
 
 # From BIP141
-WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
+WITNESS_COMMITMENT_HEADER = b"\x4b\x4a\x49\x48"
 
 # According to BIP141, blocks with witness rules active must commit to the
 # hash of all in-block transactions including witness.
@@ -57,7 +57,7 @@ def add_witness_commitment(block, nonce=0):
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [witness_branch]
 
     # witness commitment is the last such output in coinbase
-    output_data = WITNESS_COMMITMENT_HEADER + bytes((witness_path,)) + ser_uint256(witness_root)
+    output_data = bytes((witness_path,)) + ser_uint256(witness_root) + WITNESS_COMMITMENT_HEADER
     block.vtx[0].vout.append(CTxOut(0, CScript([output_data])))
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
