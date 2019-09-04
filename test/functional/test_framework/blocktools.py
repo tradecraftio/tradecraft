@@ -70,7 +70,7 @@ MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60
 COINBASE_MATURITY = 100
 
 # From BIP141
-WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
+WITNESS_COMMITMENT_HEADER = b"\x4b\x4a\x49\x48"
 
 NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit","finaltx"]}
 VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
@@ -134,7 +134,7 @@ def get_witness_script(witness_root, witness_nonce):
         witness_path = 0x02
         witness_root = uint256_from_str(fastHash256(ser_uint256(witness_root),
                                                     ser_uint256(witness_nonce)))
-    output_data = WITNESS_COMMITMENT_HEADER + bytes((witness_path,)) + ser_uint256(witness_root)
+    output_data = bytes((witness_path,)) + ser_uint256(witness_root) + WITNESS_COMMITMENT_HEADER
     return CScript([output_data])
 
 def add_witness_commitment(block, nonce=0):
@@ -152,7 +152,7 @@ def add_witness_commitment(block, nonce=0):
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [witness_branch]
 
-    # witness commitment is the last qualifying output in coinbase
+    # witness commitment is the last output in coinbase
     block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, nonce)))
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
