@@ -834,10 +834,10 @@ class SegWitTest(FreicoinTestFramework):
 
         block_3 = self.build_next_block()
         self.update_witness_block_with_transactions(block_3, [tx, tx2], nonce=1)
-        # Add an extra OP_RETURN output that matches the witness commitment template,
+        # Add an extra output that matches the witness commitment template,
         # even though it has extra data after the incorrect commitment.
         # This block should fail.
-        block_3.vtx[0].vout.append(CTxOut(0, CScript([OP_RETURN, WITNESS_COMMITMENT_HEADER + ser_uint256(2), 10])))
+        block_3.vtx[0].vout.append(CTxOut(0, CScript([WITNESS_COMMITMENT_HEADER + ser_uint256(2), 10])))
         block_3.vtx[0].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
         block_3.solve()
