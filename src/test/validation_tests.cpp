@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *ExpectedAssumeutxo(110, *params);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "c556634bf5e262fcd2e4d7f4ebdce879312f0dc955fc305258dbac760175a759");
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "3ea018ad48b2faa5308769613e750790a4fda69cacc108a52b0fe970682877c5");
     BOOST_CHECK_EQUAL(out110.nChainTx, 110U);
 
     const auto out210 = *ExpectedAssumeutxo(200, *params);
@@ -216,11 +216,11 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         coinbase.vout.resize(1);
         coinbase.vout[0].scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
         coinbase.vout[0].scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
-        coinbase.vout[0].scriptPubKey[1] = 0xaa;
-        coinbase.vout[0].scriptPubKey[2] = 0x21;
-        coinbase.vout[0].scriptPubKey[3] = 0xa9;
-        coinbase.vout[0].scriptPubKey[4] = 0xed;
-        coinbase.vout[0].scriptPubKey[5] = 0x01;
+        coinbase.vout[0].scriptPubKey[1] = 0x01;
+        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-4] = 0x4b;
+        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-3] = 0x4a;
+        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-2] = 0x49;
+        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-1] = 0x48;
 
         auto tx = MakeTransactionRef(coinbase);
         assert(tx->IsCoinBase());
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         assert(!block.vtx.empty() && block.vtx[0]->IsCoinBase() && !block.vtx[0]->vout.empty());
 
         CMutableTransaction mtx{*block.vtx[0]};
-        memcpy(&mtx.vout[0].scriptPubKey[6], commitment.begin(), 32);
+        memcpy(&mtx.vout[0].scriptPubKey[2], commitment.begin(), 32);
         block.vtx[0] = MakeTransactionRef(mtx);
     };
 
