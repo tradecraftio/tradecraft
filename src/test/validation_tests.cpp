@@ -177,11 +177,11 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *params->AssumeutxoForHeight(110);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "4ab2aab6f9ccc48de7d1175ec57bbbaa8b0249ba036962d8bed7e19f4b270429");
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "67088cccadbb1a8e34fd8b03e65c247df1e38260b3bac6d9fdba096affdae1ea");
     BOOST_CHECK_EQUAL(out110.nChainTx, 121U);
 
-    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256S("0x4180e1c5c6cb4acb76afe13b70d47bbe8ce63b68334c245fb5a215454055f753"));
-    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "4ab2aab6f9ccc48de7d1175ec57bbbaa8b0249ba036962d8bed7e19f4b270429");
+    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256S("0x0ba0bd14a3fdcd7b9a5c37dc949210331fc377c7c38797d534160a70583129d9"));
+    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "67088cccadbb1a8e34fd8b03e65c247df1e38260b3bac6d9fdba096affdae1ea");
     BOOST_CHECK_EQUAL(out110_2.nChainTx, 121U);
 }
 
@@ -217,11 +217,11 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         coinbase.vout.resize(1);
         coinbase.vout[0].scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
         coinbase.vout[0].scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
-        coinbase.vout[0].scriptPubKey[1] = 0xaa;
-        coinbase.vout[0].scriptPubKey[2] = 0x21;
-        coinbase.vout[0].scriptPubKey[3] = 0xa9;
-        coinbase.vout[0].scriptPubKey[4] = 0xed;
-        coinbase.vout[0].scriptPubKey[5] = 0x01;
+        coinbase.vout[0].scriptPubKey[1] = 0x01;
+        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-4] = 0x4b;
+        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-3] = 0x4a;
+        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-2] = 0x49;
+        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-1] = 0x48;
 
         auto tx = MakeTransactionRef(coinbase);
         assert(tx->IsCoinBase());
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         assert(!block.vtx.empty() && block.vtx[0]->IsCoinBase() && !block.vtx[0]->vout.empty());
 
         CMutableTransaction mtx{*block.vtx[0]};
-        memcpy(&mtx.vout[0].scriptPubKey[6], commitment.begin(), 32);
+        memcpy(&mtx.vout[0].scriptPubKey[2], commitment.begin(), 32);
         block.vtx[0] = MakeTransactionRef(mtx);
     };
 
