@@ -179,10 +179,9 @@ void UpdateSegwitCommitment(const ChainstateManager& chainman, const StratumWork
         block2.vtx.back() = MakeTransactionRef(std::move(bf));
     }
     // Erase any existing commitments:
-    int commitpos = -1;
-    while ((commitpos = GetWitnessCommitmentIndex(block2)) != -1) {
+    while (GetWitnessCommitment(block2, nullptr, nullptr)) {
         CMutableTransaction mtx(*block2.vtx[0]);
-        mtx.vout.erase(mtx.vout.begin()+commitpos);
+        mtx.vout.erase(mtx.vout.end()-1);
         block2.vtx[0] = MakeTransactionRef(std::move(mtx));
     }
     // Generate new commitment:
