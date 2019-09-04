@@ -415,19 +415,19 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     CTxOut witness;
     witness.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
     witness.scriptPubKey[0] = 0x25;
-    witness.scriptPubKey[1] = 0xaa;
-    witness.scriptPubKey[2] = 0x21;
-    witness.scriptPubKey[3] = 0xa9;
-    witness.scriptPubKey[4] = 0xed;
-    witness.scriptPubKey[5] = 0x01;
+    witness.scriptPubKey[1] = 0x01;
+    witness.scriptPubKey[witness.scriptPubKey.size()-4] = 0x4b;
+    witness.scriptPubKey[witness.scriptPubKey.size()-3] = 0x4a;
+    witness.scriptPubKey[witness.scriptPubKey.size()-2] = 0x49;
+    witness.scriptPubKey[witness.scriptPubKey.size()-1] = 0x48;
 
     // A witness larger than the minimum size is still valid
     CTxOut min_plus_one = witness;
-    min_plus_one.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + 1);
+    min_plus_one.scriptPubKey.insert(min_plus_one.scriptPubKey.begin() + 1, 0);
     ++min_plus_one.scriptPubKey[0];
 
     CTxOut invalid = witness;
-    invalid.scriptPubKey[1] = 0xab;
+    invalid.scriptPubKey.back() ^= 1;
 
     CMutableTransaction txCoinbase(*pblock.vtx[0]);
     txCoinbase.vout.resize(4);
@@ -437,6 +437,13 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     txCoinbase.vout[3] = invalid;
     pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
-    BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
+    // The last output is invalid
+    BOOST_CHECK(!GetWitnessCommitment(pblock, nullptr, nullptr));
+
+    // Remove the invalid output and it should work
+    CMutableTransaction txCoinbase2(*pblock.vtx[0]);
+    txCoinbase2.vout.pop_back();
+    pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase2));
+    BOOST_CHECK(GetWitnessCommitment(pblock, nullptr, nullptr));
 }
 BOOST_AUTO_TEST_SUITE_END()
