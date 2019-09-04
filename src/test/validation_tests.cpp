@@ -117,14 +117,14 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
     for (int i = 0; i < 32; ++i) {
         witness_commitment_section_141.push_back(0xff);
     }
-    cb.vout.at(0).scriptPubKey = CScript{} << OP_RETURN << witness_commitment_section_141;
+    cb.vout.at(0).scriptPubKey = CScript{} << witness_commitment_section_141;
     block.vtx.at(0) = MakeTransactionRef(cb);
     BOOST_CHECK(SignetTxs::Create(block, challenge));
     BOOST_CHECK(CheckSignetBlockSolution(block, signet_params->GetConsensus()));
 
     // no data after header, valid
     std::vector<uint8_t> witness_commitment_section_325{0xec, 0xc7, 0xda, 0xa2};
-    cb.vout.at(0).scriptPubKey = CScript{} << OP_RETURN << witness_commitment_section_141 << witness_commitment_section_325;
+    cb.vout.at(0).scriptPubKey = CScript{} << witness_commitment_section_141 << witness_commitment_section_325;
     block.vtx.at(0) = MakeTransactionRef(cb);
     BOOST_CHECK(SignetTxs::Create(block, challenge));
     BOOST_CHECK(CheckSignetBlockSolution(block, signet_params->GetConsensus()));
@@ -132,21 +132,21 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
     // Premature end of data, invalid
     witness_commitment_section_325.push_back(0x01);
     witness_commitment_section_325.push_back(0x51);
-    cb.vout.at(0).scriptPubKey = CScript{} << OP_RETURN << witness_commitment_section_141 << witness_commitment_section_325;
+    cb.vout.at(0).scriptPubKey = CScript{} << witness_commitment_section_141 << witness_commitment_section_325;
     block.vtx.at(0) = MakeTransactionRef(cb);
     BOOST_CHECK(!SignetTxs::Create(block, challenge));
     BOOST_CHECK(!CheckSignetBlockSolution(block, signet_params->GetConsensus()));
 
     // has data, valid
     witness_commitment_section_325.push_back(0x00);
-    cb.vout.at(0).scriptPubKey = CScript{} << OP_RETURN << witness_commitment_section_141 << witness_commitment_section_325;
+    cb.vout.at(0).scriptPubKey = CScript{} << witness_commitment_section_141 << witness_commitment_section_325;
     block.vtx.at(0) = MakeTransactionRef(cb);
     BOOST_CHECK(SignetTxs::Create(block, challenge));
     BOOST_CHECK(CheckSignetBlockSolution(block, signet_params->GetConsensus()));
 
     // Extraneous data, invalid
     witness_commitment_section_325.push_back(0x00);
-    cb.vout.at(0).scriptPubKey = CScript{} << OP_RETURN << witness_commitment_section_141 << witness_commitment_section_325;
+    cb.vout.at(0).scriptPubKey = CScript{} << witness_commitment_section_141 << witness_commitment_section_325;
     block.vtx.at(0) = MakeTransactionRef(cb);
     BOOST_CHECK(!SignetTxs::Create(block, challenge));
     BOOST_CHECK(!CheckSignetBlockSolution(block, signet_params->GetConsensus()));
