@@ -42,19 +42,19 @@ class DumptxoutsetTest(FreicoinTestFramework):
 
         assert expected_path.is_file()
 
-        assert_equal(out['coins_written'], 101)
+        assert_equal(out['coins_written'], 201)
         assert_equal(out['base_height'], 100)
         assert_equal(out['path'], str(expected_path))
         # Blockhash should be deterministic based on mocked time.
         assert_equal(
             out['base_hash'],
-            '4495887973dd0dda4f9c44ec5333df0f9803f7e4dd247e986081881c101925e1')
+            '283ea537d27a8abe097312248d230a061bc5bfddd669b9109350e44cade891a0')
 
         with open(str(expected_path), 'rb') as f:
             digest = hashlib.sha256(f.read()).hexdigest()
             # UTXO snapshot hash should be deterministic based on mocked time.
             assert_equal(
-                digest, 'b6ea70dbc6e7bc76f5081f5bedbbb2e75a01bbd366ec9b4a9ade281a00ffffd8')
+                digest, '361965e5937d253b4676e7b32d2a763609c80915cb0196c6df4c68e515df6e69')
 
         # Specifying a path to an existing file will fail.
         assert_raises_rpc_error(
