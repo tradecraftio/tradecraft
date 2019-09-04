@@ -3886,7 +3886,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
             uint256 hash_witness = BlockWitnessMerkleRoot(block, /*mutated=*/nullptr);
 
             CHash256().Write(hash_witness).Write(witness_stack[0]).Finalize(hash_witness);
-            if (memcmp(hash_witness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
+            if (memcmp(hash_witness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[5], 32)) {
                 return state.Invalid(
                     /*result=*/BlockValidationResult::BLOCK_MUTATED,
                     /*reject_reason=*/"bad-witness-merkle-match",
@@ -4003,13 +4003,12 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
         CTxOut out;
         out.SetReferenceValue(0);
         out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-        out.scriptPubKey[0] = OP_RETURN;
-        out.scriptPubKey[1] = 0x24;
-        out.scriptPubKey[2] = 0xaa;
-        out.scriptPubKey[3] = 0x21;
-        out.scriptPubKey[4] = 0xa9;
-        out.scriptPubKey[5] = 0xed;
-        memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
+        out.scriptPubKey[0] = 0x24;
+        out.scriptPubKey[1] = 0xaa;
+        out.scriptPubKey[2] = 0x21;
+        out.scriptPubKey[3] = 0xa9;
+        out.scriptPubKey[4] = 0xed;
+        memcpy(&out.scriptPubKey[5], witnessroot.begin(), 32);
         commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
         CMutableTransaction tx(*block.vtx[0]);
         tx.vout.push_back(out);
