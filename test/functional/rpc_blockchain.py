@@ -326,8 +326,8 @@ class BlockchainTest(FreicoinTestFramework):
         assert_equal(res['total_amount'], Decimal('8724.07323074'))
         assert_equal(res['transactions'], HEIGHT + 1)
         assert_equal(res['height'], HEIGHT)
-        assert_equal(res['txouts'], HEIGHT + 1)
-        assert_equal(res['bogosize'], 17655),
+        assert_equal(res['txouts'], 2*HEIGHT + 1)
+        assert_equal(res['bogosize'], 35855),
         assert_equal(res['bestblock'], node.getblockhash(HEIGHT))
         size = res['disk_size']
         assert size > 6400
