@@ -214,7 +214,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             }
 
             BOOST_CHECK_EQUAL(total_coins, initial_total_coins);
-            BOOST_CHECK_EQUAL(initial_size, initial_total_coins + 3);
+            BOOST_CHECK_EQUAL(initial_size, initial_total_coins + COINBASE_MATURITY + 1 + 3);
         }
 
         Chainstate& validation_chainstate = chainman.ActiveChainstate();
@@ -322,7 +322,7 @@ struct SnapshotTestSetup : TestChain100Setup {
                     total_coins++;
                 }
 
-                BOOST_CHECK_EQUAL(initial_size , coinscache.GetCacheSize() + 3);
+                BOOST_CHECK_EQUAL(initial_size , coinscache.GetCacheSize() + COINBASE_MATURITY + 1 + 3);
                 BOOST_CHECK_EQUAL(total_coins, initial_total_coins);
                 chains_tested++;
             }
