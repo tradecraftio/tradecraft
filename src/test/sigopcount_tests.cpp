@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
 
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
         // No signature operations if we don't verify the witness.
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_EQUALVERIFY);
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         witness.scriptWitness = scriptWitness;
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_EQUALVERIFY);
     }
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         witness.scriptWitness = scriptWitness;
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         witness.scriptWitness = scriptWitness;
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
 }
