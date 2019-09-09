@@ -141,7 +141,6 @@ FUZZ_TARGET_INIT(script, initialize_script)
             for (const auto& s : random_string_vector) {
                 wit.stack.emplace_back(s.begin(), s.end());
             }
-            (void)CountWitnessSigOps(script, *other_script, &wit, flags);
             wit.SetNull();
         }
     }
