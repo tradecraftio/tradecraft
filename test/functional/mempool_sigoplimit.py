@@ -117,7 +117,7 @@ class BytesPerSigOpTest(FreicoinTestFramework):
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad-1)])
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['allowed'], True)
-        assert_equal(res['vsize'], sigop_equivalent_vsize)
+        assert_equal(res['vsize'], sigop_equivalent_vsize-1)
 
         # check that the ancestor and descendant size calculations in the mempool
         # also use the same max(sigop_equivalent_vsize, serialized_vsize) logic
@@ -134,15 +134,15 @@ class BytesPerSigOpTest(FreicoinTestFramework):
 
         entry_child = self.nodes[0].getmempoolentry(tx.rehash())
         assert_equal(entry_child['descendantcount'], 1)
-        assert_equal(entry_child['descendantsize'], sigop_equivalent_vsize)
+        assert_equal(entry_child['descendantsize'], tx.get_vsize())
         assert_equal(entry_child['ancestorcount'], 2)
-        assert_equal(entry_child['ancestorsize'], sigop_equivalent_vsize + parent_tx.get_vsize())
+        assert_equal(entry_child['ancestorsize'], parent_tx.get_vsize() + tx.get_vsize())
 
         entry_parent = self.nodes[0].getmempoolentry(parent_tx.rehash())
         assert_equal(entry_parent['ancestorcount'], 1)
         assert_equal(entry_parent['ancestorsize'], parent_tx.get_vsize())
         assert_equal(entry_parent['descendantcount'], 2)
-        assert_equal(entry_parent['descendantsize'], parent_tx.get_vsize() + sigop_equivalent_vsize)
+        assert_equal(entry_parent['descendantsize'], parent_tx.get_vsize() + tx.get_vsize())
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
