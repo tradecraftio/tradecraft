@@ -1705,7 +1705,12 @@ class SegWitTest(FreicoinTestFramework):
 
         block_2 = self.build_next_block()
         self.update_witness_block_with_transactions(block_2, [tx2])
-        self.test_node.test_witness_block(block_2, accepted=False)
+        self.test_node.test_witness_block(block_2, accepted=True)
+
+        # Reset the tip back down for the next test
+        sync_blocks(self.nodes)
+        for x in self.nodes:
+            x.invalidateblock(block_2.hash)
 
         # Try dropping the last input in tx2, and add an output that has
         # too many sigops (contributing to legacy sigop count).
@@ -1718,7 +1723,12 @@ class SegWitTest(FreicoinTestFramework):
         tx2.rehash()
         block_3 = self.build_next_block()
         self.update_witness_block_with_transactions(block_3, [tx2])
-        self.test_node.test_witness_block(block_3, accepted=False)
+        self.test_node.test_witness_block(block_3, accepted=True)
+
+        # Reset the tip back down for the next test
+        sync_blocks(self.nodes)
+        for x in self.nodes:
+            x.invalidateblock(block_3.hash)
 
         # If we drop the last checksig in this output, the tx should succeed.
         block_4 = self.build_next_block()
