@@ -530,14 +530,13 @@ void BlockAssembler::initFinalTx(const CCoins& prev_final)
 
     // The block-final transaction contributes to aggregate limits:
     // the number of sigops is tracked...
-    int64_t nTxSigOpsCost = GetLegacySigOpCount(txFinal)
-                          + GetP2SHSigOpCount(txFinal, pcoinsTip);
+    int64_t nTxSigOpsCost = GetTransactionSigOpCost(txFinal, pcoinsTip, STANDARD_SCRIPT_VERIFY_FLAGS);
     pblocktemplate->vTxSigOpsCost.push_back(nTxSigOpsCost);
     nBlockSigOpsCost += nTxSigOpsCost;
 
     // ...the size is not:
     uint64_t nTxSize = ::GetSerializeSize(txFinal, SER_NETWORK, PROTOCOL_VERSION);
-    nBlockWeight += nTxSize;
+    nBlockWeight += WITNESS_SCALE_FACTOR * nTxSize;
     nBlockSize += nTxSize;
 }
 
