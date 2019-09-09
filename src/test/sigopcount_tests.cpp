@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
 
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
         // No signature operations if we don't verify the witness.
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_EQUALVERIFY);
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_EQUALVERIFY);
     }
 
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         scriptWitness.stack.push_back(std::vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         scriptWitness.stack.push_back(std::vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
 }
