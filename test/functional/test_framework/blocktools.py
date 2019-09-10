@@ -36,7 +36,7 @@ def create_block(hashprev, coinbase, nTime=None):
 
 def add_final_tx(node, block):
     try:
-        finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+        finaltx_prevout = node.getblocktemplate({'rules':['finaltx','segwit']})['finaltx']['prevout']
     except:
         finaltx_prevout = []
     finaltx = CTransaction()

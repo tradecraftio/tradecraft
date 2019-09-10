@@ -20,22 +20,28 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
     {
         /*.name =*/ "testdummy",
         /*.gbt_force =*/ true,
+        /*.dependencies =*/ {},
     },
     {
         /*.name =*/ "locktime",
         /*.gbt_force =*/ true,
+        /*.dependencies =*/ {},
     },
     {
         /*.name =*/ "finaltx",
         /*.gbt_force =*/ false,
+        /*.dependencies =*/ {},
     },
     {
         /*.name =*/ "segwit",
         /*.gbt_force =*/ false,
+        /*.dependencies =*/ {
+            Consensus::DEPLOYMENT_FINALTX
+        },
     }
 };
 
-ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
+ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache, bool blocked) const
 {
     int nPeriod = Period(params);
     int nThreshold = Threshold(params);
@@ -78,7 +84,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             case THRESHOLD_DEFINED: {
                 if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
                     stateNext = THRESHOLD_FAILED;
-                } else if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
+                } else if (!blocked && pindexPrev->GetMedianTimePast() >= nTimeStart) {
                     stateNext = THRESHOLD_STARTED;
                 }
                 break;
@@ -149,9 +155,9 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
     return stats;
 }
 
-int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
+int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache, bool blocked) const
 {
-    const ThresholdState initialState = GetStateFor(pindexPrev, params, cache);
+    const ThresholdState initialState = GetStateFor(pindexPrev, params, cache, blocked);
 
     // BIP 9 about state DEFINED: "The genesis block is by definition in this state for each deployment."
     if (initialState == THRESHOLD_DEFINED) {
@@ -170,7 +176,7 @@ int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex*
 
     const CBlockIndex* previousPeriodParent = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
 
-    while (previousPeriodParent != nullptr && GetStateFor(previousPeriodParent, params, cache) == initialState) {
+    while (previousPeriodParent != nullptr && GetStateFor(previousPeriodParent, params, cache, blocked) == initialState) {
         pindexPrev = previousPeriodParent;
         previousPeriodParent = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
     }
@@ -206,9 +212,24 @@ public:
 
 } // namespace
 
+static bool IsBlocked(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
+{
+    for (const Consensus::DeploymentPos& dep : VersionBitsDeploymentInfo[pos].dependencies) {
+        ThresholdState dep_state = VersionBitsState(pindexPrev, params, dep, cache);
+        // All dependencies must be in their ACTIVE state one period prior to
+        // activation.  That means they can be in either ACTIVE or LOCKED_IN
+        // when this bit enters STARTING state.  (See how the blocked parameter
+        // is used in VersionBitsConditionChecker::GetStateFor().)
+        if (dep_state != THRESHOLD_ACTIVE && dep_state != THRESHOLD_LOCKED_IN) {
+            return true;
+        }
+    }
+    return false;
+}
+
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
 {
-    return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, cache.caches[pos]);
+    return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, cache.caches[pos], IsBlocked(pindexPrev, params, pos, cache));
 }
 
 BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
@@ -218,7 +239,7 @@ BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::
 
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
 {
-    return VersionBitsConditionChecker(pos).GetStateSinceHeightFor(pindexPrev, params, cache.caches[pos]);
+    return VersionBitsConditionChecker(pos).GetStateSinceHeightFor(pindexPrev, params, cache.caches[pos], IsBlocked(pindexPrev, params, pos, cache));
 }
 
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos)
