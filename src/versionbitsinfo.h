@@ -16,6 +16,10 @@
 #ifndef FREICOIN_VERSIONBITSINFO_H
 #define FREICOIN_VERSIONBITSINFO_H
 
+#include <consensus/params.h>
+
+#include <vector>
+
 struct VBDeploymentInfo {
     /** Deployment name */
     const char *name;

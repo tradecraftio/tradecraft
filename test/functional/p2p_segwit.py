@@ -199,7 +199,7 @@ class SegWitTest(FreicoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
-        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0", "-vbparams=finaltx:0:999999999999"]]
+        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:0"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -219,7 +219,7 @@ class SegWitTest(FreicoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            final_tx = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            final_tx = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit']})['finaltx']['prevout']
             add_final_tx(final_tx, block)
         except KeyError:
             pass
@@ -570,10 +570,16 @@ class SegWitTest(FreicoinTestFramework):
         height = self.nodes[0].getblockcount()
         # Will need to rewrite the tests here if we are past the first period
         assert(height < VB_PERIOD - 1)
-        # Advance to end of period, status should now be 'started'
+        # Advance to end of period, status should now be 'started' for finaltx
         self.nodes[0].generate(VB_PERIOD - height - 1)
         assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'started')
         self.finaltx_status = 'started'
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'defined')
+        self.segwit_status = 'defined'
+        # Advance one more period, status should now be 'locked_in' for finaltx and 'started' for segwit
+        self.nodes[0].generate(VB_PERIOD)
+        assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'locked_in')
+        self.finaltx_status = 'locked_in'
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         self.segwit_status = 'started'
 
@@ -582,7 +588,7 @@ class SegWitTest(FreicoinTestFramework):
         txid = int(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1), 16)
 
         for node in [self.nodes[0], self.nodes[2]]:
-            gbt_results = node.getblocktemplate({"rules": ["segwit","finaltx"]})
+            gbt_results = node.getblocktemplate({"rules": ["finaltx","segwit"]})
             block_version = gbt_results['version']
             if node == self.nodes[2]:
                 # If this is a non-segwit node, we should not get a witness
@@ -610,11 +616,11 @@ class SegWitTest(FreicoinTestFramework):
         self.nodes[0].generate(VB_PERIOD - 1)
         height = self.nodes[0].getblockcount()
         assert((height % VB_PERIOD) == VB_PERIOD - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'locked_in')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'locked_in')
-        self.finaltx_status = 'locked_in'
+        assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'active')
+        self.finaltx_status = 'active'
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         self.segwit_status = 'locked_in'
 
@@ -742,23 +748,12 @@ class SegWitTest(FreicoinTestFramework):
         """Mine enough blocks to activate segwit."""
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(VB_PERIOD - (height % VB_PERIOD) - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         self.nodes[0].generate(1)
         assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'active')
-        self.finaltx_status = 'active'
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
         self.segwit_status = 'active'
-        # Advance a further 100 blocks to finish activation of block-final rules
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
-        assert('finaltx' not in gbt)
-        self.nodes[0].generate(99)
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
-        assert('finaltx' not in gbt)
-        self.nodes[0].generate(1)
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
-        assert('finaltx' in gbt)
-        assert('prevout' in gbt['finaltx'])
 
     @subtest
     def test_p2sh_witness(self):
