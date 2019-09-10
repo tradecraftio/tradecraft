@@ -75,7 +75,7 @@ def create_block(hashprev, coinbase, ntime=None):
 
 def get_final_tx_info(node):
     try:
-        finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+        finaltx_prevout = node.getblocktemplate({'rules':['finaltx','segwit']})['finaltx']['prevout']
     except KeyError:
         finaltx_prevout = []
     return finaltx_prevout
