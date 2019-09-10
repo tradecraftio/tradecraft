@@ -46,6 +46,8 @@ struct VBDeploymentInfo {
     const char *name;
     /** Whether GBT clients can safely ignore this rule in simplified usage */
     bool gbt_force;
+    /** Which other rules must be activated first */
+    std::vector<Consensus::DeploymentPos> dependencies;
 };
 
 struct BIP9Stats {
@@ -72,8 +74,8 @@ protected:
 public:
     BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const;
     // Note that the functions below take a pindexPrev as input: they compute information for block B based on its parent.
-    ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
-    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
+    ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache, bool blocked) const;
+    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache, bool blocked) const;
 };
 
 struct VersionBitsCache
