@@ -222,7 +222,6 @@ class SegWitTest(FreicoinTestFramework):
             finaltx = CTransaction()
             finaltx.nLockTime = block.vtx[0].nLockTime
             finaltx.lock_height = block.vtx[0].lock_height
-            finaltx.lock_height = block.vtx[0].lock_height
             finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
             for prevout in blockfinal_prevout:
                 finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
@@ -382,9 +381,13 @@ class SegWitTest(FreicoinTestFramework):
         # Genesis block is 'defined'.
         assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'defined')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'defined')
-        # Advance to end of period, status should now be 'started'
+        # Advance to end of period, status should now be 'started' for blockfinal
         self.nodes[0].generate(VB_PERIOD-height-1)
         assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'defined')
+        # Advance one more period, status should now be 'locked_in' for blockfinal and 'started' for segwit
+        self.nodes[0].generate(VB_PERIOD)
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
 
     # Mine enough blocks to lock in segwit, but don't activate.
@@ -392,16 +395,16 @@ class SegWitTest(FreicoinTestFramework):
     # signalling blocks, rather than just at the right period boundary.
     def advance_to_segwit_lockin(self):
         height = self.nodes[0].getblockcount()
-        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         # Advance to end of period, and verify lock-in happens at the end
         self.nodes[0].generate(VB_PERIOD-1)
         height = self.nodes[0].getblockcount()
         assert((height % VB_PERIOD) == VB_PERIOD - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
 
 
@@ -409,25 +412,15 @@ class SegWitTest(FreicoinTestFramework):
     # TODO: we could verify that activation only happens at the right threshold
     # of signalling blocks, rather than just at the right period boundary.
     def advance_to_segwit_active(self):
-        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(VB_PERIOD - (height%VB_PERIOD) - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         self.nodes[0].generate(1)
         assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
-        # Advance a further 100 blocks to finish activation of block-final rules
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit"]})
-        assert('blockfinal' not in gbt)
-        self.nodes[0].generate(99)
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit"]})
-        assert('blockfinal' not in gbt)
-        self.nodes[0].generate(1)
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit"]})
-        assert('blockfinal' in gbt)
-        assert('prevout' in gbt['blockfinal'])
 
     # This test can only be run after segwit has activated
     def test_witness_commitments(self):
