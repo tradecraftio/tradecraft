@@ -107,14 +107,16 @@ class SegWitTest(FreicoinTestFramework):
 
     def success_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
+        has_block_final = "finaltx" in node.getblocktemplate({'rules':['finaltx','segwit']})
         block = node.generate(1)
-        assert_equal(len(node.getblock(block[0])["tx"]), 2)
+        assert_equal(len(node.getblock(block[0])["tx"]), 2 + has_block_final)
         sync_blocks(self.nodes)
 
     def skip_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
+        has_block_final = "finaltx" in node.getblocktemplate({'rules':['finaltx','segwit']})
         block = node.generate(1)
-        assert_equal(len(node.getblock(block[0])["tx"]), 1)
+        assert_equal(len(node.getblock(block[0])["tx"]), 1 + has_block_final)
         sync_blocks(self.nodes)
 
     def fail_accept(self, node, txid, sign, redeem_script=""):
@@ -146,7 +148,7 @@ class SegWitTest(FreicoinTestFramework):
         assert(tmpl['sigoplimit'] == 20000)
         assert(tmpl['transactions'][0]['hash'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 2)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit']})
         assert(tmpl['sizelimit'] == 1000000)
         assert('weightlimit' not in tmpl)
         assert(tmpl['sigoplimit'] == 20000)
@@ -184,7 +186,7 @@ class SegWitTest(FreicoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), 20*Decimal("49.999"))
         assert_equal(self.nodes[2].getbalance(), 20*Decimal("49.999"))
 
-        self.nodes[0].generate(260) #block 423
+        self.nodes[0].generate(404) #block 423 (+ 144)
         sync_blocks(self.nodes)
 
         print("Verify default node can't accept any witness format txs before fork")
@@ -227,7 +229,7 @@ class SegWitTest(FreicoinTestFramework):
         block = self.nodes[2].generate(1) #block 432 (first block with new rules; 432 = 144 * 3)
         sync_blocks(self.nodes)
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
-        segwit_tx_list = self.nodes[2].getblock(block[0])["tx"]
+        segwit_tx_list = self.nodes[2].getblock(block[0])["tx"][:-1]
         assert_equal(len(segwit_tx_list), 5)
 
         print("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
@@ -255,7 +257,7 @@ class SegWitTest(FreicoinTestFramework):
 
         print("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit']})
         assert(tmpl['sizelimit'] >= 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
         assert(tmpl['weightlimit'] == 4000000)
         assert(tmpl['sigoplimit'] == 80000)

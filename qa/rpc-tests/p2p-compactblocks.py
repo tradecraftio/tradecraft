@@ -145,7 +145,7 @@ class CompactBlocksTest(FreicoinTestFramework):
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
         block.nVersion = 4
         try:
-            finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            finaltx_prevout = node.getblocktemplate({'rules':['finaltx','segwit']})['finaltx']['prevout']
         except KeyError:
             finaltx_prevout = []
         if finaltx_prevout:
@@ -752,7 +752,7 @@ class CompactBlocksTest(FreicoinTestFramework):
             assert(test_node.last_blocktxn is None)
 
     def activate_segwit(self, node):
-        node.generate(144*3)
+        node.generate(144*4)
         assert_equal(get_bip9_status(node, "segwit")["status"], 'active')
 
     def test_end_to_end_block_relay(self, node, listeners):
