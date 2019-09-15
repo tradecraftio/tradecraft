@@ -710,11 +710,6 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         result.push_back(Pair("blockfinal", blockfinal));
     }
 
-    const struct BIP9DeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
-    if (!pblocktemplate->vchCoinbaseCommitment.empty() && setClientRules.find(segwit_info.name) != setClientRules.end()) {
-        result.push_back(Pair("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end())));
-    }
-
     return result;
 }
 

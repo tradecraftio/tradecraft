@@ -251,7 +251,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     coinbaseTx.nLockTime = nMedianTimePast;
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = coinbaseTx;
-    pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+    GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
 
     // The miner needs to know whether the last transaction is a special

@@ -1748,9 +1748,8 @@ class SegWitTest(FreicoinTestFramework):
             gbt_results = node.getblocktemplate()
             block_version = gbt_results['version']
             # If we're not indicating segwit support, we should not be signalling
-            # for segwit activation, nor should we get a witness commitment.
+            # for segwit activation.
             assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
-            assert('default_witness_commitment' not in gbt_results)
 
         # Workaround:
         # Can either change the tip, or change the mempool and wait 5 seconds
@@ -1765,27 +1764,12 @@ class SegWitTest(FreicoinTestFramework):
             gbt_results = node.getblocktemplate({"rules" : ["segwit"]})
             block_version = gbt_results['version']
             if node == self.nodes[2]:
-                # If this is a non-segwit node, we should still not get a witness
-                # commitment, nor a version bit signalling segwit.
+                # If this is a non-segwit node, we should still not get a
+                # version bit signalling segwit.
                 assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
-                assert('default_witness_commitment' not in gbt_results)
             else:
-                # For segwit-aware nodes, check the version bit and the witness
-                # commitment are correct.
+                # For segwit-aware nodes, check the version bit is correct
                 assert(block_version & (1 << VB_WITNESS_BIT) != 0)
-                assert('default_witness_commitment' in gbt_results)
-                witness_commitment = gbt_results['default_witness_commitment']
-
-                # TODO: this duplicates some code from blocktools.py, would be nice
-                # to refactor.
-                # Check that default_witness_commitment is present.
-                block = CBlock()
-                witness_root = block.get_fast_merkle_root([ser_uint256(0), ser_uint256(txid)])
-
-                from test_framework.blocktools import WITNESS_COMMITMENT_HEADER
-                output_data = bytes((0x01,)) + ser_uint256(witness_root) + WITNESS_COMMITMENT_HEADER
-                script = CScript([output_data])
-                assert_equal(witness_commitment, bytes_to_hex_str(script))
 
         # undo mocktime
         self.nodes[0].setmocktime(0)
