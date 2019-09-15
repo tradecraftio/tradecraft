@@ -152,16 +152,8 @@ class MiningTest(FreicoinTestFramework):
         txid = int(self.wallet.send_self_transfer(from_node=node)['wtxid'], 16)
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
 
-        # Check that default_witness_commitment is present.
-        assert 'default_witness_commitment' in tmpl
-        witness_commitment = tmpl['default_witness_commitment']
-
-        # Check that default_witness_commitment is correct.
-        witness_root = CBlock.get_merkle_root([ser_uint256(0),
-                                               ser_uint256(txid)])
-        script = get_witness_script(witness_root, 0)
-        # This test stops making sense with block-final transactions.
-        #assert_equal(witness_commitment, script.hex())
+        # default_witness_commitment is only for bitcoin
+        assert 'default_witness_commitment' not in tmpl
 
         # Mine a block to leave initial block download and clear the mempool
         self.generatetoaddress(node, 1, node.get_deterministic_priv_key().address)
