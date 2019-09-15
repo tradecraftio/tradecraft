@@ -694,10 +694,6 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         result.pushKV("finaltx", finaltx);
     }
 
-    if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
-        result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
-    }
-
     return result;
 }
 

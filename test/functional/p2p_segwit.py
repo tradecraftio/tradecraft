@@ -592,21 +592,11 @@ class SegWitTest(FreicoinTestFramework):
             block_version = gbt_results['version']
             if node == self.nodes[2]:
                 # If this is a non-segwit node, we should not get a witness
-                # commitment, nor a version bit signalling segwit.
+                # version bit signalling segwit.
                 assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
-                assert('default_witness_commitment' not in gbt_results)
             else:
-                # For segwit-aware nodes, check the version bit and the witness
-                # commitment are correct.
+                # For segwit-aware nodes, check the version bit is correct.
                 assert(block_version & (1 << VB_WITNESS_BIT) != 0)
-                assert('default_witness_commitment' in gbt_results)
-                witness_commitment = gbt_results['default_witness_commitment']
-
-                # Check that default_witness_commitment is present.
-                witness_root = CBlock.get_fast_merkle_root([ser_uint256(0),
-                                                            ser_uint256(txid)])
-                script = get_witness_script(witness_root, 0)
-                assert_equal(witness_commitment, bytes_to_hex_str(script))
 
     @subtest
     def advance_to_segwit_lockin(self):
