@@ -921,10 +921,6 @@ static RPCHelpMan getblocktemplate()
         result.pushKV("finaltx", finaltx);
     }
 
-    if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
-        result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment));
-    }
-
     return result;
 },
     };
