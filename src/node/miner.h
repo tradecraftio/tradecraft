@@ -49,7 +49,6 @@ struct CBlockTemplate
     CBlock block;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
-    std::vector<unsigned char> vchCoinbaseCommitment;
     bool has_block_final_tx;
     std::map<COutPoint, Coin> block_final_tx_coin_map;
 };
