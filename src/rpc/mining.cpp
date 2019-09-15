@@ -680,11 +680,6 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         result.pushKV("finaltx", finaltx);
     }
 
-    const auto& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
-    if (!pblocktemplate->vchCoinbaseCommitment.empty() && setClientRules.find(segwit_info.name) != setClientRules.end()) {
-        result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
-    }
-
     return result;
 }
 
