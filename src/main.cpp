@@ -2521,8 +2521,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     LogPrint("bench", "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
 
     CBlockUndo blockundo;
-    if (enforce_block_final)
-        blockundo.final_tx = view.GetFinalTx();
+    blockundo.final_tx = view.GetFinalTx();
 
     if (initial_block_final) {
         // Should be caught by prior call to CheckBlock, but we check again here
@@ -2548,8 +2547,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                  REJECT_INVALID, "bad-cb-non-trivial-output");
             }
         }
-        // Save the hash to the coin view.
-        view.SetFinalTx(coinbaseTx.GetHash());
         // Rules for the initial block final are different from those
         // that are enforced later.
         enforce_block_final = false;
