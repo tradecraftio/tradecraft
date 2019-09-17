@@ -228,6 +228,9 @@ class SegWitTest(FreicoinTestFramework):
         segwit_tx_list = self.nodes[2].getblock(block[0])["tx"]
         assert_equal(len(segwit_tx_list), 5)
 
+        # skip non-wallet coinbase due to block-final activation
+        segwit_tx_list = segwit_tx_list[1:]
+
         print("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
         assert(self.nodes[2].getblock(block[0], False) !=  self.nodes[0].getblock(block[0], False))
         assert(self.nodes[1].getblock(block[0], False) ==  self.nodes[2].getblock(block[0], False))

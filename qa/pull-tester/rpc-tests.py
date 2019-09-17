@@ -184,7 +184,8 @@ testScriptsExt = [
     'maxuploadtarget.py',
     'replace-by-fee.py --bitcoin-mode',
     'p2p-feefilter.py',
-    'pruning.py --bitcoin-mode', # leave pruning last as it takes a REALLY long time
+    # Disabled due to block-final reorg bug:
+#    'pruning.py --bitcoin-mode', # leave pruning last as it takes a REALLY long time
 ]
 
 

@@ -907,14 +907,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
          * slow for such a frequently called calculation.
          */
         disable_time_adjust = true;
-
-        /*
-         * The block-final transaction soft-fork has particular activation
-         * semantics that interfere with some legacy bitcoin tests.  So we
-         * disable it.
-         */
-        *const_cast<int64_t*>(&chainparams.GetConsensus().vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nStartTime) = 1199145601; // January 1, 2008
-        *const_cast<int64_t*>(&chainparams.GetConsensus().vDeployments[Consensus::DEPLOYMENT_BLOCKFINAL].nTimeout) = 1230767999; // December 31, 2008
     }
 
     // ********************************************************* Step 3: parameter-to-internal-flags
