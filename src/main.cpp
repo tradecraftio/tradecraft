@@ -3698,9 +3698,7 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
     return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
-// Compute at which vout of the block's coinbase transaction the witness
-// commitment occurs, or -1 if not found.
-static bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* hash)
+bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* hash)
 {
     // The witness commitment is in the coinbase, so there must be a coinbase.
     if (block.vtx.empty()) {
@@ -3754,14 +3752,12 @@ void GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, co
 {
     if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         if (!GetWitnessCommitment(block, NULL, NULL)) {
-            uint256 witnessroot = BlockWitnessMerkleRoot(block);
             CTxOut out;
             out.SetReferenceValue(0);
             const int excess = 4 * !!(block.vtx[0].nVersion == 1);
             out.scriptPubKey.resize(38 + excess);
             out.scriptPubKey[0] = 0x25 + excess;
-            out.scriptPubKey[1] = 0x01;
-            memcpy(&out.scriptPubKey[2], witnessroot.begin(), 32);
+            std::fill_n(&out.scriptPubKey[1], 33, 0x00);
             out.scriptPubKey[34] = 0x4b;
             out.scriptPubKey[35] = 0x4a;
             out.scriptPubKey[36] = 0x49;
@@ -3775,6 +3771,11 @@ void GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, co
             const_cast<std::vector<CTxOut>*>(&block.vtx[0].vout)->push_back(out);
             block.vtx[0].UpdateHash();
         }
+        unsigned char* scriptPubKey = const_cast<unsigned char*>(&block.vtx[0].vout.back().scriptPubKey[0]);
+        scriptPubKey[1] = 0x01;
+        uint256 witnessroot = BlockWitnessMerkleRoot(block);
+        memcpy(&scriptPubKey[2], witnessroot.begin(), 32);
+        block.vtx[0].UpdateHash();
     }
     UpdateUncommittedBlockStructures(block, pindexPrev, consensusParams);
 }
