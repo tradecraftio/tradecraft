@@ -15,6 +15,7 @@
 
 #include "merkle.h"
 #include "hash.h"
+#include "streams.h"
 #include "utilstrencodings.h"
 
 /*     WARNING! If you're reading this because you're learning about crypto
@@ -400,10 +401,36 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block)
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
-    leaves[0].SetNull(); // The witness hash of the coinbase is 0.
+
+    // The witness Merkle root is placed in the block-final
+    // transaction, but it is a Merkle tree of all transactions,
+    // including itself.  To avoid this impossibility, when computing
+    // the witness Merkle root the commitment is set to zero.
+    CDataStream tx(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    tx << block.vtx.front();
+
+    // No witness commitment:
+    if (tx.size() < (1 + 32 + 4 + 8)  // <- 1 byte for witness path
+        || tx[tx.size()-8-4] != 0x4b  //   32 bytes for merkle root
+        || tx[tx.size()-8-3] != 0x4a  //    4 bytes for magic value
+        || tx[tx.size()-8-2] != 0x49  //    4 bytes for nLockTime
+        || tx[tx.size()-8-1] != 0x48) //    4 bytes for lock_height
+    {                                 //      (end of transaction)
+        leaves.front() = block.vtx.front()->GetWitnessHash();
+    }
+
+    // Has witness commitment:
+    else {
+        // Set the witness commitment bytes to 0.
+        std::fill_n(tx.end()-8-4-32-1, 33, 0);
+        // And we compute the hash of the transaction only.
+        CHash256().Write((unsigned char*)&tx[0], tx.size()).Finalize(leaves[0].begin());
+    }
+
     for (size_t s = 1; s < block.vtx.size(); s++) {
         leaves[s] = block.vtx[s]->GetWitnessHash();
     }
+
     return ComputeFastMerkleRoot(leaves);
 }
 
