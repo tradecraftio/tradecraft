@@ -137,12 +137,6 @@ void UpdateSegwitCommitment(const StratumWork& current_work, CMutableTransaction
     CBlock block2(current_work.GetBlock());
     block2.vtx.front() = MakeTransactionRef(std::move(cb));
     block2.vtx.back() = MakeTransactionRef(std::move(bf));
-    // Erase any existing commitments:
-    while (GetWitnessCommitment(block2, nullptr, nullptr)) {
-        CMutableTransaction mtx(*block2.vtx[0]);
-        mtx.vout.erase(mtx.vout.end()-1);
-        block2.vtx[0] = MakeTransactionRef(std::move(mtx));
-    }
     // Generate new commitment:
     GenerateCoinbaseCommitment(block2, current_work.m_prev_block_index, Params().GetConsensus());
     // Save results from temporary block structure:

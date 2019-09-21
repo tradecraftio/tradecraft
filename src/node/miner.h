@@ -196,7 +196,7 @@ private:
 
     // block-final transaction logic
     /** Create the block-final transaction, before any other transactions have been added */
-    void initFinalTx(const BlockFinalTxEntry& final_tx);
+    void initFinalTx(const BlockFinalTxEntry& final_tx, bool include_witness);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
@@ -226,7 +226,7 @@ private:
 };
 
 /** Modify the extranonce in a block */
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
+void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
