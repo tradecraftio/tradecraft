@@ -57,10 +57,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 {
-    CMutableTransaction tx{*block.vtx.at(0)};
-    tx.vout.pop_back();
-    block.vtx.at(0) = MakeTransactionRef(tx);
-
     CBlockIndex* prev_block = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock));
     GenerateCoinbaseCommitment(block, prev_block, Params().GetConsensus());
 
@@ -213,7 +209,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     fIncludeWitness = DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_SEGWIT);
 
     if (block_final_state == HAS_BLOCK_FINAL_TX)
-        initFinalTx(final_tx);
+        initFinalTx(final_tx, fIncludeWitness);
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
@@ -240,7 +236,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.nLockTime = static_cast<uint32_t>(m_median_time_past);
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+    if (block_final_state == HAS_BLOCK_FINAL_TX) {
+        GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+    }
     pblocktemplate->vTxFees[0] = -nFees;
 
     // The miner needs to know whether the last transaction is a special
@@ -387,7 +385,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
     std::sort(sortedEntries.begin(), sortedEntries.end(), CompareTxIterByAncestorCount());
 }
 
-void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
+void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx, bool include_witness)
 {
     // Block-final transactions are only created after we have reached the final
     // state of activation.
@@ -400,7 +398,11 @@ void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
     txFinal.nVersion = 2;
     txFinal.vout.resize(1);
     txFinal.vout[0].SetReferenceValue(0);
-    txFinal.vout[0].scriptPubKey = CScript() << OP_TRUE;
+    if (!include_witness) {
+        txFinal.vout[0].scriptPubKey = CScript() << OP_TRUE;
+    } else {
+        txFinal.vout[0].scriptPubKey = EMPTY_SEGWIT_COMMITMENT;
+    }
     txFinal.nLockTime = static_cast<uint32_t>(m_median_time_past);
     txFinal.lock_height = nHeight;
 
@@ -592,7 +594,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
     }
 }
 
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -607,6 +609,9 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+    if (GetWitnessCommitment(*pblock, nullptr, nullptr)) {
+        GenerateCoinbaseCommitment(*pblock, pindexPrev, consensusParams);
+    }
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 }
 } // namespace node

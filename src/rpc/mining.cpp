@@ -113,12 +113,12 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 {
     block_hash.SetNull();
 
+    CChainParams chainparams(Params());
+
     {
         LOCK(cs_main);
-        IncrementExtraNonce(&block, chainman.ActiveChain().Tip(), extra_nonce);
+        IncrementExtraNonce(&block, chainparams.GetConsensus(), chainman.ActiveChain().Tip(), extra_nonce);
     }
-
-    CChainParams chainparams(Params());
 
     while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, 0, chainparams.GetConsensus()) && !ShutdownRequested()) {
         ++block.nNonce;
