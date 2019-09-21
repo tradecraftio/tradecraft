@@ -570,7 +570,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 }
 
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -586,5 +586,8 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+    if (GetWitnessCommitment(*pblock, nullptr, nullptr)) {
+        GenerateCoinbaseCommitment(*pblock, pindexPrev, consensusParams);
+    }
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 }
