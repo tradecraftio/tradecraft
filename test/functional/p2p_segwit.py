@@ -410,10 +410,13 @@ class SegWitTest(FreicoinTestFramework):
         add_witness_commitment(block_3, nonce=0)
         block_3.vtx[0].vout[0].nValue -= 1
         block_3.vtx[0].vout[-1].nValue += 1
+        block_3.vtx[0].vout[-1].scriptPubKey = bytes((0,)) + ser_uint256(0) + WITNESS_COMMITMENT_HEADER
+        block_3.vtx[0].rehash()
+        block_3.vtx[0].vout[-1].scriptPubKey = bytes((1,)) + ser_uint256(block_3.calc_witness_merkle_root()) + WITNESS_COMMITMENT_HEADER
         block_3.vtx[0].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
         block_3.rehash()
-        assert(len(block_3.vtx[0].vout) == 4) # 3 OP_returns
+        assert_equal(len(block_3.vtx[0].vout), 3)
         block_3.solve()
         test_witness_block(self.nodes[0].rpc, self.test_node, block_3, accepted=True)
 
