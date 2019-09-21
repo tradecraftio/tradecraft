@@ -49,6 +49,12 @@ def add_witness_commitment(block, nonce=0):
     if nonce:
         witness_path = 0x02
         witness_branch = ser_uint256(nonce)
+    output_data = bytes((0,)) + ser_uint256(0) + WITNESS_COMMITMENT_HEADER
+    if block.vtx[0].vout[-1].scriptPubKey[-4:] == WITNESS_COMMITMENT_HEADER:
+        block.vtx[0].vout[-1].scriptPubKey = CScript([output_data])
+    else:
+        block.vtx[0].vout.append(CTxOut(0, CScript([output_data])))
+    block.vtx[0].rehash()
     witness_root = block.calc_witness_merkle_root()
     if nonce:
         witness_root = uint256_from_str(fastHash256(ser_uint256(witness_root), witness_branch))
@@ -58,7 +64,7 @@ def add_witness_commitment(block, nonce=0):
 
     # witness commitment is the last such output in coinbase
     output_data = bytes((witness_path,)) + ser_uint256(witness_root) + WITNESS_COMMITMENT_HEADER
-    block.vtx[0].vout.append(CTxOut(0, CScript([output_data])))
+    block.vtx[0].vout[-1].scriptPubKey = CScript([output_data])
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()
