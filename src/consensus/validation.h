@@ -28,8 +28,17 @@
 static constexpr int NO_WITNESS_COMMITMENT{-1};
 
 /** Minimum size of a witness commitment structure. Defined in BIP 141. **/
-static constexpr size_t MINIMUM_WITNESS_COMMITMENT{1 + 4 + 1 + 32};
+static constexpr size_t MINIMUM_WITNESS_COMMITMENT{1 + 1 + 32 + 4};
 static constexpr size_t MAXIMUM_WITNESS_COMMITMENT{1 + 0x4b};
+
+/** */
+static const CScript EMPTY_SEGWIT_COMMITMENT = CScript() << std::vector<unsigned char>{
+    /* path */   0x00,
+    /* hash */   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    /* suffix */ 0x4b, 0x4a, 0x49, 0x48};
 
 /** A "reason" why a transaction was invalid, suitable for determining whether the
   * provider of the transaction should be banned/ignored/disconnected/etc.
@@ -174,8 +183,9 @@ static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
 /** Extract witness commitment information from the coinbase transaction. */
 inline bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* hash)
 {
-    // The witness commitment is in the coinbase, so there must be a coinbase.
-    if (block.vtx.empty()) {
+    // The witness commitment is in the block-final transaction, so there must
+    // be a block-final transaction.
+    if (block.vtx.size() <= 1) {
         return false;
     }
 
@@ -191,7 +201,7 @@ inline bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint2
     // from the last output's scriptPubKey.  Such code would need to be written
     // very carefully so as to have the same behavior in all cases as this:
     CDataStream tx(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
-    tx << block.vtx[0];
+    tx << block.vtx.back();
 
     if (tx.size() < (1 + 32 + 4 + 4 + 4) // <- 1 byte for witness path
         || tx[tx.size()-8-4] != 0x4b     //   32 bytes for merkle root
