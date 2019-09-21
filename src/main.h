@@ -648,6 +648,9 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
 /** When there are blocks in the active chain with missing data, rewind the chainstate and remove them from the block index */
 bool RewindBlockIndex(const CChainParams& params);
 
+/** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found. */
+bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* hash);
+
 /** Update uncommitted block structures (currently: only the witness nonce). This is safe for submitted blocks. */
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 
