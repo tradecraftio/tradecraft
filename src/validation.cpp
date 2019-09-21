@@ -3186,14 +3186,12 @@ void GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, co
 {
     if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         if (!GetWitnessCommitment(block, nullptr, nullptr)) {
-            uint256 witnessroot = BlockWitnessMerkleRoot(block);
             CTxOut out;
             out.SetReferenceValue(0);
             const int excess = 4 * !!(block.vtx[0]->nVersion == 1);
             out.scriptPubKey.resize(38 + excess);
             out.scriptPubKey[0] = 0x25 + excess;
-            out.scriptPubKey[1] = 0x01;
-            memcpy(&out.scriptPubKey[2], witnessroot.begin(), 32);
+            std::fill_n(&out.scriptPubKey[1], 33, 0x00);
             out.scriptPubKey[34] = 0x4b;
             out.scriptPubKey[35] = 0x4a;
             out.scriptPubKey[36] = 0x49;
@@ -3208,6 +3206,11 @@ void GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, co
             tx.vout.push_back(out);
             block.vtx[0] = MakeTransactionRef(std::move(tx));
         }
+        CMutableTransaction tx(*block.vtx[0]);
+        tx.vout.back().scriptPubKey[1] = 0x01;
+        uint256 witnessroot = BlockWitnessMerkleRoot(block);
+        memcpy(&tx.vout.back().scriptPubKey[2], witnessroot.begin(), 32);
+        block.vtx[0] = MakeTransactionRef(std::move(tx));
     }
     UpdateUncommittedBlockStructures(block, pindexPrev, consensusParams);
 }
