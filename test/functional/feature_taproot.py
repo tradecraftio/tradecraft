@@ -1755,7 +1755,7 @@ class TaprootTest(FreicoinTestFramework):
         aux = tx_test.setdefault("auxiliary", {})
         aux['fullySignedTx'] = tx.serialize().hex()
         keypath_tests.append(tx_test)
-        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "125c1896f92381e742efc63524f0fb40fdaac1ff1acdd4a99b7a7f6d579d4b1e")
+        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "dad1499506368ba0ce532793b34541d802d2f812a3846a65c7f2db71a14b10e5")
         # Mine the spending transaction
         self.block_submit(self.nodes[1], [tx], "Spending txn", None, sigops_weight=10000, accept=True, witness=True)
 
