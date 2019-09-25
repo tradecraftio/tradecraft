@@ -128,7 +128,7 @@ inline void SerializeBlockUndo(BlockUndoType& block_undo, Stream& s, Operation s
             // which extended parameters are present. This provides an easy
             // mechanism to extend the format in the future without a similarly
             // convoluted serialization hack. So far only one bit is used, to
-            // indicate the presenses of the block-final transaction hash.
+            // indicate the presence of the block-final transaction hash.
             uint8_t flags = 0;
             READWRITE(flags);
             if (flags & ~0x01) {
