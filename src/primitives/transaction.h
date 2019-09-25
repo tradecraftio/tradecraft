@@ -23,6 +23,7 @@
 #include "amount.h"
 #include "script/script.h"
 #include "serialize.h"
+#include "streams.h"
 #include "uint256.h"
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
@@ -367,7 +368,7 @@ struct CMutableTransaction;
  *
  * Extended transaction serialization format:
  * - int32_t nVersion
- * - unsigned char dummy = 0x00
+ * - unsigned char dummy = 0xff
  * - unsigned char flags (!= 0)
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
@@ -383,19 +384,64 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
         const_cast<std::vector<CTxIn>*>(&tx.vin)->clear();
         const_cast<std::vector<CTxOut>*>(&tx.vout)->clear();
         const_cast<CTxWitness*>(&tx.wit)->SetNull();
-        /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
-        READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
-        if (tx.vin.size() == 0 && !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
-            /* We read a dummy or an empty vin. */
+        // We don't know yet if we are reading a CompactSize for the number of
+        // CTxIn structures, or the dummy value indicating an extended
+        // transaction serialization format.
+        unsigned char dummy = 0;
+        unsigned char flags = 0;
+        READWRITE(dummy);
+        // It is impossible to have more than 2^32 inputs in a single
+        // transaction, so we use 0xff (which in the CompactSize format
+        // indicates a 64-bit number follows) as the sentinal value indicating
+        // extended serialization format.
+        if (dummy == 255) {
+            // The dummy value is followed by an integer flags field indicating
+            // which extended parameters are present. This provides an easy
+            // mechanism to extend the format in the future without a similarly
+            // convoluted serialization hack. So far only one bit is used, to
+            // indicate the presence of the input witness vector.
             READWRITE(flags);
-            if (flags != 0) {
-                READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
-                READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
-            }
-        } else {
-            /* We read a non-empty vin. Assume a normal vout follows. */
-            READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
+            // The input vector is read by the other branch (since the "dummy"
+            // value was the first part of its size), so to synchronize state we
+            // also read in the vector here.
+            READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
         }
+        // Otherwise what we read was the first byte of a CompactSize integer
+        // serialization of the length of the input vector in the legacy
+        // transaction serialization structure.
+        else {
+            // There are some data validation checks performed when
+            // deserializing a CompactSize number (see serialization.h).
+            // Since we don't want to replicate that logic, we create a
+            // temporary data stream with the contents of the CompactSize
+            // object, and deserialize from there. It would be better to use
+            // lookahead, but not all streams support that capability.
+            CDataStream ds(nType, nVersion);
+            ser_writedata8(ds, dummy);
+            if (dummy >= 253) {
+                // Either 16 bit, or the first half of 32-bit number.
+                uint16_t lo = 0;
+                READWRITE(lo);
+                ds << lo;
+            }
+            if (dummy == 254) {
+                // Second half of 32-bit number.
+                uint16_t hi = 0;
+                READWRITE(hi);
+                ds << hi;
+            }
+            uint64_t size = ReadCompactSize(ds);
+            assert(ds.empty());
+            // We now read in the CTxIn data into the vin vector. Since we
+            // already read the size off the stream we inline that vector
+            // serialization.
+            const_cast<std::vector<CTxIn>*>(&tx.vin)->resize(size);
+            for (CTxIn& txin : *const_cast<std::vector<CTxIn>*>(&tx.vin)) {
+                READWRITE(txin);
+            }
+        }
+        // Reading vout requires no special handling.
+        READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
         if ((flags & 1) && !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
             /* The witness flag is present, and we support witnesses. */
             flags ^= 1;
@@ -417,8 +463,8 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
         }
         if (flags) {
             /* Use extended format in case witnesses are to be serialized. */
-            std::vector<CTxIn> vinDummy;
-            READWRITE(vinDummy);
+            unsigned char dummy = 255;
+            READWRITE(dummy);
             READWRITE(flags);
         }
         READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
