@@ -1191,8 +1191,7 @@ class SegWitTest(FreicoinTestFramework):
                 r = b""
                 r += struct.pack("<i", self.nVersion)
                 if flags:
-                    dummy = []
-                    r += ser_vector(dummy)
+                    r += struct.pack("<B", 255)
                     r += struct.pack("<B", flags)
                 r += ser_vector(self.vin)
                 r += ser_vector(self.vout)
@@ -2014,8 +2013,7 @@ class SegWitTest(FreicoinTestFramework):
             r = b""
             r += struct.pack("<i", tx.nVersion)
             if flags:
-                dummy = []
-                r += ser_vector(dummy)
+                r += struct.pack("<B", 0xff)
                 r += struct.pack("<B", flags)
             r += ser_vector(tx.vin)
             r += ser_vector(tx.vout)

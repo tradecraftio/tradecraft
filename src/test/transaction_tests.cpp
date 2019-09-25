@@ -271,6 +271,11 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             std::string transaction = test[1].get_str();
             CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION);
             CTransaction tx(deserialize, stream);
+            // Tests imported from bitcoin with witness values use 0x00 for the
+            // dummy value, which often results in a successful deserialization
+            // with an empty input vector and a single output, and don't use up
+            // the serialiation buffer. These tests should fail and be updated.
+            BOOST_CHECK(stream.empty());
 
             TxValidationState state;
             BOOST_CHECK_MESSAGE(CheckTransaction(tx, state, Consensus::NONE), strTest);
@@ -371,6 +376,11 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             std::string transaction = test[1].get_str();
             CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION );
             CTransaction tx(deserialize, stream);
+            // Tests imported from bitcoin with witness values use 0x00 for the
+            // dummy value, which often results in a successful deserialization
+            // with an empty input vector and a single output, and don't use up
+            // the serialiation buffer. These tests should fail and be updated.
+            BOOST_CHECK(stream.empty());
 
             TxValidationState state;
             if (!CheckTransaction(tx, state, Consensus::NONE) || state.IsInvalid()) {
