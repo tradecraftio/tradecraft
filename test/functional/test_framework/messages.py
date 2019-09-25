@@ -570,17 +570,24 @@ class CTransaction:
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
-        self.vin = deser_vector(f, CTxIn)
         flags = 0
-        if len(self.vin) == 0:
+        dummy = struct.unpack("<B", f.read(1))[0]
+        if dummy == 255:
             flags = struct.unpack("<B", f.read(1))[0]
-            # Not sure why flags can't be zero, but this
-            # matches the implementation in freicoind
-            if (flags != 0):
-                self.vin = deser_vector(f, CTxIn)
-                self.vout = deser_vector(f, CTxOut)
+            self.vin = deser_vector(f, CTxIn)
         else:
-            self.vout = deser_vector(f, CTxOut)
+            if dummy <= 252:
+                size = dummy
+            if dummy == 253:
+                size = struct.unpack("<H", f.read(2))[0]
+            if dummy == 254:
+                size = struct.unpack("<I", f.read(4))[0]
+            self.vin = []
+            for _ in range(size):
+                txin = CTxIn()
+                txin.deserialize(f)
+                self.vin.append(txin)
+        self.vout = deser_vector(f, CTxOut)
         if flags != 0:
             self.wit.vtxinwit = [CTxInWitness() for _ in range(len(self.vin))]
             self.wit.deserialize(f)
@@ -610,8 +617,7 @@ class CTransaction:
         r = b""
         r += struct.pack("<i", self.nVersion)
         if flags:
-            dummy = []
-            r += ser_vector(dummy)
+            r += struct.pack("<B", 255)
             r += struct.pack("<B", flags)
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
