@@ -21,6 +21,7 @@
 #include <prevector.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <streams.h>
 #include <uint256.h>
 
 #include <cstddef>
@@ -310,7 +311,7 @@ struct CMutableTransaction;
  *
  * Extended transaction serialization format:
  * - int32_t nVersion
- * - unsigned char dummy = 0x00
+ * - unsigned char dummy = 0xff
  * - unsigned char flags (!= 0)
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
@@ -326,19 +327,64 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
-    /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
-    s >> tx.vin;
-    if (tx.vin.size() == 0 && fAllowWitness) {
-        /* We read a dummy or an empty vin. */
+    // We don't know yet if we are reading a CompactSize for the number of CTxIn
+    // structures, or the dummy value indicating an extended transaction
+    // serialization format.
+    unsigned char dummy = 0;
+    s >> dummy;
+    // It is impossible to have more than 2^32 inputs in a single transaction,
+    // so we use 0xff (which in the CompactSize format indicates a 64-bit number
+    // follows) as the sentinal value indicating extended serialization format.
+    if (dummy == 255) {
+        // The dummy value is followed by an integer flags field indicating
+        // which extended parameters are present. This provides an easy
+        // mechanism to extend the format in the future without a similarly
+        // convoluted serialization hack. So far only one bit is used, to
+        // indicate the presence of the input witness vector.
         s >> flags;
-        if (flags != 0) {
-            s >> tx.vin;
-            s >> tx.vout;
-        }
-    } else {
-        /* We read a non-empty vin. Assume a normal vout follows. */
-        s >> tx.vout;
+        // The input vector is read by the other branch (since the "dummy" value
+        // was the first part of its size), so to synchronize state we also read
+        // in the vector here.
+        s >> tx.vin;
     }
+    // Otherwise what we read was the first byte of a CompactSize integer
+    // serialization of the length of the input vector in the legacy transaction
+    // serialization structure.
+    else {
+        // There are some data validation checks performed when deserializing a
+        // CompactSize number (see serialization.h).  Since we don't want to
+        // replicate that logic, we create a temporary data stream with the
+        // contents of the CompactSize object, and deserialize from there. It
+        // would be better to use lookahead, but not all streams support that
+        // capability.
+        CDataStream ds(s.GetType(), s.GetVersion());
+        ser_writedata8(ds, dummy);
+        if (dummy >= 253) {
+            // Either 16 bit, or the first half of 32-bit number.
+            uint16_t lo = 0;
+            s >> lo;
+            ds << lo;
+        }
+        if (dummy == 254) {
+            // Second half of 32-bit number.
+            uint16_t hi = 0;
+            s >> hi;
+            ds << hi;
+        }
+        uint64_t size = ReadCompactSize(ds);
+        if (!ds.empty()) {
+            // This should never happen.
+            throw std::ios_base::failure("Unexpected data while decoding compact size.");
+        }
+        // We now read in the CTxIn data into the vin vector. Since we already
+        // read the size off the stream we inline that vector serialization.
+        tx.vin.resize(size);
+        for (CTxIn& txin : tx.vin) {
+            s >> txin;
+        }
+    }
+    // Reading vout requires no special handling.
+    s >> tx.vout;
     if ((flags & 1) && fAllowWitness) {
         /* The witness flag is present, and we support witnesses. */
         flags ^= 1;
@@ -377,8 +423,8 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     }
     if (flags) {
         /* Use extended format in case witnesses are to be serialized. */
-        std::vector<CTxIn> vinDummy;
-        s << vinDummy;
+        unsigned char dummy = 255;
+        s << dummy;
         s << flags;
     }
     s << tx.vin;
