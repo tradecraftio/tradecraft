@@ -4279,7 +4279,7 @@ bool TestBlockValidity(BlockValidationState& state,
     if (!ContextualCheckBlock(block, state, chainstate.m_chainman, pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.ToString());
     if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true)) {
-        return false;
+        return error("%s: Consensus::ConnectBlock: %s", __func__, state.ToString());
     }
     assert(state.IsValid());
 
