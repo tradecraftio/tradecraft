@@ -91,10 +91,14 @@ std::shared_ptr<CBlock> Block(const uint256& prev_hash, int height, BlockFinalTx
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
     const CScript op_true = CScript() << OP_TRUE;
     bool initial_block_final = (txCoinbase.vout[0].scriptPubKey == op_true);
-    txCoinbase.vout.resize(2 + initial_block_final);
+    txCoinbase.vout.resize(2 + initial_block_final + entry.IsNull());
     txCoinbase.vout[1 + initial_block_final].scriptPubKey = pubKey;
     txCoinbase.vout[1 + initial_block_final].nValue = txCoinbase.vout[0 + initial_block_final].nValue;
     txCoinbase.vout[0 + initial_block_final].nValue = 0;
+    if (entry.IsNull()) {
+        txCoinbase.vout.back().nValue = 0;
+        txCoinbase.vout.back().scriptPubKey = CScript() << OP_TRUE;
+    }
     txCoinbase.vin[0].scriptWitness.SetNull();
     txCoinbase.lock_height = (uint32_t)height;
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
@@ -112,9 +116,6 @@ std::shared_ptr<CBlock> Block(const uint256& prev_hash, int height, BlockFinalTx
         }
         final_tx.vout.emplace_back(0, CScript() << OP_TRUE);
         final_tx.lock_height = (uint32_t)height;
-        // Store block-final info for next block
-        entry.hash = final_tx.GetHash();
-        entry.size = 1;
         // Add it to the block
         pblock->vtx.push_back(MakeTransactionRef(std::move(final_tx)));
     }
@@ -122,10 +123,15 @@ std::shared_ptr<CBlock> Block(const uint256& prev_hash, int height, BlockFinalTx
     return pblock;
 }
 
-std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock)
+std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock, BlockFinalTxEntry& entry)
 {
     LOCK(cs_main); // For LookupBlockIndex
     GenerateCoinbaseCommitment(*pblock, LookupBlockIndex(pblock->hashPrevBlock), Params().GetConsensus());
+    // Store block-final info for next block
+    if (!entry.IsNull()) {
+        entry.hash = pblock->vtx.back()->GetHash();
+        entry.size = 1;
+    }
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
@@ -139,7 +145,7 @@ std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock)
 // construct a valid block
 std::shared_ptr<const CBlock> GoodBlock(const uint256& prev_hash, int height, BlockFinalTxEntry& entry)
 {
-    return FinalizeBlock(Block(prev_hash, height, entry));
+    return FinalizeBlock(Block(prev_hash, height, entry), entry);
 }
 
 // construct an invalid block (but with a valid header)
@@ -155,7 +161,7 @@ std::shared_ptr<const CBlock> BadBlock(const uint256& prev_hash, int height, Blo
     CTransactionRef tx = MakeTransactionRef(coinbase_spend);
     pblock->vtx.insert(pblock->vtx.end() - !entry.IsNull(), tx);
 
-    auto ret = FinalizeBlock(pblock);
+    auto ret = FinalizeBlock(pblock, entry);
     return ret;
 }
 

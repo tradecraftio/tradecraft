@@ -226,7 +226,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.nLockTime = static_cast<uint32_t>(nMedianTimePast);
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+    if (block_final_state == HAS_BLOCK_FINAL_TX) {
+        GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+    }
     pblocktemplate->vTxFees[0] = -nFees;
 
     // The miner needs to know whether the last transaction is a special
