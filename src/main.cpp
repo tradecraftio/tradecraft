@@ -3696,8 +3696,9 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
 
 bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* hash)
 {
-    // The witness commitment is in the coinbase, so there must be a coinbase.
-    if (block.vtx.empty()) {
+    // The witness commitment is in the block-final transaction, so there must
+    // be a block-final transaction.
+    if (block.vtx.size() <= 1) {
         return false;
     }
 
@@ -3713,7 +3714,7 @@ bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* has
     // from the last output's scriptPubKey.  Such code would need to be written
     // very carefully so as to have the same behavior in all cases as this:
     CDataStream tx(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
-    tx << block.vtx[0];
+    tx << block.vtx.back();
 
     if (tx.size() < (1 + 32 + 4 + 4 + 4) // <- 1 byte for witness path
         || tx[tx.size()-8-4] != 0x4b     //   32 bytes for merkle root
@@ -3746,32 +3747,23 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
 
 void GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
-    if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
-        if (!GetWitnessCommitment(block, NULL, NULL)) {
-            CTxOut out;
-            out.SetReferenceValue(0);
-            const int excess = 4 * !!(block.vtx[0].nVersion == 1);
-            out.scriptPubKey.resize(38 + excess);
-            out.scriptPubKey[0] = 0x25 + excess;
-            std::fill_n(&out.scriptPubKey[1], 33, 0x00);
-            out.scriptPubKey[34] = 0x4b;
-            out.scriptPubKey[35] = 0x4a;
-            out.scriptPubKey[36] = 0x49;
-            out.scriptPubKey[37] = 0x48;
-            if (excess) {
-                out.scriptPubKey[38] = 0;
-                out.scriptPubKey[39] = 0;
-                out.scriptPubKey[40] = 0;
-                out.scriptPubKey[41] = 0;
-            }
-            const_cast<std::vector<CTxOut>*>(&block.vtx[0].vout)->push_back(out);
-            block.vtx[0].UpdateHash();
-        }
-        unsigned char* scriptPubKey = const_cast<unsigned char*>(&block.vtx[0].vout.back().scriptPubKey[0]);
-        scriptPubKey[1] = 0x01;
+    using std::swap;
+    if (IsWitnessEnabled(pindexPrev, consensusParams)) {
+        CScript script;
+        script.resize(38);
+        script[0] = 0x25;
+        std::fill_n(&script[1], 33, 0x00);
+        script[34] = 0x4b;
+        script[35] = 0x4a;
+        script[36] = 0x49;
+        script[37] = 0x48;
+        swap(script, const_cast<CTxOut*>(&block.vtx.back().vout.back())->scriptPubKey);
+        block.vtx.back().UpdateHash();
         uint256 witnessroot = BlockWitnessMerkleRoot(block);
+        unsigned char* scriptPubKey = &const_cast<CTxOut*>(&block.vtx.back().vout.back())->scriptPubKey[0];
+        scriptPubKey[1] = 0x01;
         memcpy(&scriptPubKey[2], witnessroot.begin(), 32);
-        block.vtx[0].UpdateHash();
+        block.vtx.back().UpdateHash();
     }
     UpdateUncommittedBlockStructures(block, pindexPrev, consensusParams);
 }
