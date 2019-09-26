@@ -4835,6 +4835,7 @@ bool TestBlockValidity(BlockValidationState& state,
         return false;
     }
     if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true)) {
+        LogError("%s: Consensus::ConnectBlock: %s\n", __func__, state.ToString());
         return false;
     }
     assert(state.IsValid());
