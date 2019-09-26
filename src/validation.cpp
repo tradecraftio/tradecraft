@@ -3592,31 +3592,29 @@ void GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, co
 {
     if (consensusParams.SegwitHeight != std::numeric_limits<int>::max()) {
         if (!GetWitnessCommitment(block, nullptr, nullptr)) {
-            CTxOut out;
-            out.SetReferenceValue(0);
-            const int excess = 4 * !!(block.vtx[0]->nVersion == 1);
-            out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + excess);
-            out.scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT + excess - 1;
-            std::fill_n(&out.scriptPubKey[1], 33, 0x00);
-            out.scriptPubKey[34] = 0x4b;
-            out.scriptPubKey[35] = 0x4a;
-            out.scriptPubKey[36] = 0x49;
-            out.scriptPubKey[37] = 0x48;
-            if (excess) {
-                out.scriptPubKey[38] = 0;
-                out.scriptPubKey[39] = 0;
-                out.scriptPubKey[40] = 0;
-                out.scriptPubKey[41] = 0;
-            }
-            CMutableTransaction tx(*block.vtx[0]);
-            tx.vout.push_back(out);
-            block.vtx[0] = MakeTransactionRef(std::move(tx));
+            // No existing commitment; leave block alone
+            return;
         }
-        CMutableTransaction tx(*block.vtx[0]);
-        tx.vout.back().scriptPubKey[1] = 0x01;
-        uint256 witnessroot = BlockWitnessMerkleRoot(block);
-        memcpy(&tx.vout.back().scriptPubKey[2], witnessroot.begin(), 32);
-        block.vtx[0] = MakeTransactionRef(std::move(tx));
+        Assert(!block.vtx.empty());
+        Assert(!block.vtx.back()->vout.empty());
+        // First setup an "empty" commitment in the last output of the last
+        // transaction, so that BlockWitnessMerkleRoot() will give the correct
+        // commitment value.
+        {
+            CMutableTransaction tx(*block.vtx.back());
+            tx.vout.back().scriptPubKey = EMPTY_SEGWIT_COMMITMENT;
+            block.vtx.back() = MakeTransactionRef(std::move(tx));
+        }
+        // Then fill in the actual commitment calculated by
+        // BlockWitnessMerkleRoot()
+        {
+            uint256 witnessroot = BlockWitnessMerkleRoot(block);
+            CMutableTransaction tx(*block.vtx.back());
+            CScript& script = tx.vout.back().scriptPubKey;
+            script[1] = 0x01;
+            memcpy(&script[2], witnessroot.begin(), 32);
+            block.vtx.back() = MakeTransactionRef(std::move(tx));
+        }
     }
     UpdateUncommittedBlockStructures(block, pindexPrev, consensusParams);
 }

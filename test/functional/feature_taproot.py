@@ -1230,7 +1230,8 @@ class TaprootTest(FreicoinTestFramework):
             tx.rehash()
             block.vtx.insert(-1, tx)
         block.hashMerkleRoot = block.calc_merkle_root()
-        witness and add_witness_commitment(block)
+        if witness:
+            final_tx = add_witness_commitment(block)
         block.rehash()
         block.solve()
         block_response = node.submitblock(block.serialize().hex())

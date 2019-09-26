@@ -96,12 +96,9 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         for (uint32_t n = 0; n < entry.size; ++n) {
             final_tx.vin.emplace_back(COutPoint(entry.hash, n));
         }
-        final_tx.vout.emplace_back(0, CScript() << OP_TRUE);
+        final_tx.vout.emplace_back(0, EMPTY_SEGWIT_COMMITMENT);
         final_tx.nLockTime = prev->GetMedianTimePast();
         final_tx.lock_height = (uint32_t)prev->nHeight + 1;
-        // Store block-final info for next block
-        entry.hash = final_tx.GetHash();
-        entry.size = 1;
         // Add it to the block
         block.vtx.push_back(MakeTransactionRef(std::move(final_tx)));
     }
@@ -111,6 +108,12 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
 
     // Regenerate the segwit commitment
     RegenerateCommitments(block);
+
+    if (!entry.IsNull()) {
+        // Store block-final info for next block
+        entry.hash = block.vtx.back()->GetHash();
+        entry.size = 1;
+    }
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, 0, chainparams.GetConsensus())) ++block.nNonce;
 

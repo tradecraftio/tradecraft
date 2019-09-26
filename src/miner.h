@@ -192,7 +192,7 @@ private:
 
     // block-final transaction logic
     /** Create the block-final transaction, before any other transactions have been added */
-    void initFinalTx(const BlockFinalTxEntry& final_tx);
+    void initFinalTx(const BlockFinalTxEntry& final_tx, bool include_witness);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
