@@ -453,7 +453,7 @@ class SegWitTest(FreicoinTestFramework):
         block_2.solve()
 
         # The commitment should have changed!
-        assert(block_2.vtx[0].vout[-1] != block.vtx[0].vout[-1])
+        assert(block_2.vtx[-1].vout[-1] != block.vtx[-1].vout[-1])
 
         # This should also be valid.
         self.test_node.test_witness_block(block_2, accepted=True)
@@ -483,8 +483,8 @@ class SegWitTest(FreicoinTestFramework):
         # Add a witness commitment with an invalid path ("0" as a path
         # means an empty Merkle tree, but there must be at least one
         # hash--the witness root).  This block should fail.
-        block_3.vtx[0].vout.append(CTxOut(0, CScript([b'\x00' + ser_uint256(2) + WITNESS_COMMITMENT_HEADER])))
-        block_3.vtx[0].rehash()
+        block_3.vtx[-1].vout[-1].scriptPubKey = CScript([b'\x00' + ser_uint256(2) + WITNESS_COMMITMENT_HEADER])
+        block_3.vtx[-1].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
         block_3.rehash()
         block_3.solve()
@@ -492,19 +492,8 @@ class SegWitTest(FreicoinTestFramework):
         self.test_node.test_witness_block(block_3, accepted=False)
 
         # Add a different commitment with different nonce, but in the
-        # right location, and with some funds burned(!).
-        # This should succeed (nValue shouldn't affect finding the
-        # witness commitment).
-        add_witness_commitment(block_3, nonce=0)
-        block_3.vtx[0].vout[0].nValue -= 1
-        block_3.vtx[0].vout[-1].nValue += 1
-        block_3.vtx[0].vout[-1].scriptPubKey = bytes((0,)) + ser_uint256(0) + WITNESS_COMMITMENT_HEADER
-        block_3.vtx[0].rehash()
-        block_3.vtx[0].vout[-1].scriptPubKey = bytes((1,)) + ser_uint256(block_3.calc_witness_merkle_root()) + WITNESS_COMMITMENT_HEADER
-        block_3.vtx[0].rehash()
-        block_3.hashMerkleRoot = block_3.calc_merkle_root()
-        block_3.rehash()
-        assert_equal(len(block_3.vtx[0].vout), 3)
+        # right location.
+        add_witness_commitment(block_3, nonce=1)
         block_3.solve()
         self.test_node.test_witness_block(block_3, accepted=True)
 
@@ -619,7 +608,6 @@ class SegWitTest(FreicoinTestFramework):
             additional_bytes -= extra_bytes
             i += 1
 
-        block.vtx[0].vout.pop()  # Remove old commitment
         add_witness_commitment(block)
         block.solve()
         vsize = get_virtual_size(block)
@@ -633,7 +621,6 @@ class SegWitTest(FreicoinTestFramework):
         # Now resize the second transaction to make the block fit.
         cur_length = len(block.vtx[-2].wit.vtxinwit[0].scriptWitness.stack[0])
         block.vtx[-2].wit.vtxinwit[0].scriptWitness.stack[0] = b'a'*(cur_length-1)
-        block.vtx[0].vout.pop()
         add_witness_commitment(block)
         block.solve()
         assert(get_virtual_size(block) == MAX_BLOCK_BASE_SIZE)
@@ -674,7 +661,7 @@ class SegWitTest(FreicoinTestFramework):
         block_2.solve()
 
         # Drop commitment and nonce -- submitblock should not fill in.
-        block_2.vtx[0].vout.pop()
+        block_2.vtx[-1].vout[-1].scriptPubKey = CScript([OP_TRUE])
         block_2.vtx[0].wit = CTxWitness()
 
         self.nodes[0].submitblock(bytes_to_hex_str(block_2.serialize(True)))
@@ -1330,8 +1317,8 @@ class SegWitTest(FreicoinTestFramework):
         witness_hash = sha256(witness_program)
         scriptPubKey = CScript([OP_0, witness_hash])
         block.vtx[0].vout[0].scriptPubKey = scriptPubKey
-        # This next line will rehash the coinbase and update the merkle
-        # root, and solve.
+        block.vtx[0].rehash()
+        # This next line will update the merkle root, and solve.
         self.update_witness_block_with_transactions(block, [])
         self.test_node.test_witness_block(block, accepted=True)
 
