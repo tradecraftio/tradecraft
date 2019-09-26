@@ -286,32 +286,31 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block)
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
 
-    // The witness Merkle root is placed in the coinbase transaction, but it is
-    // a Merkle tree of all transactions, including the coinbase tx.  To avoid
-    // this impossibility, when computing the witness Merkle root the commitment
-    // is set to zero.
+    // The coinbase's witness contains the witness nonce, which cannot be
+    // included under the witness Merkle root.
+    leaves.front() = block.vtx.front().GetHash();
+
+    // The witness Merkle root is placed in the block-final transaction, but it
+    // is a Merkle tree of all transactions, including itself.  To avoid this
+    // impossibility, when computing the witness Merkle root the commitment is
+    // set to zero.
     CDataStream tx(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
-    tx << block.vtx.front();
+    tx << block.vtx.back();
 
-    // No witness commitment:
-    if (tx.size() < (1 + 32 + 4 + 8)  // <- 1 byte for witness path
-        || tx[tx.size()-8-4] != 0x4b  //   32 bytes for merkle root
-        || tx[tx.size()-8-3] != 0x4a  //    4 bytes for magic value
-        || tx[tx.size()-8-2] != 0x49  //    4 bytes for nLockTime
-        || tx[tx.size()-8-1] != 0x48) //    4 bytes for lock_height
+    // Check if there is a witness commitment:
+    if (tx.size() >= (1 + 32 + 4 + 8) // <- 1 byte for witness path
+        && tx[tx.size()-8-4] == 0x4b  //   32 bytes for merkle root
+        && tx[tx.size()-8-3] == 0x4a  //    4 bytes for magic value
+        && tx[tx.size()-8-2] == 0x49  //    4 bytes for nLockTime
+        && tx[tx.size()-8-1] == 0x48) //    4 bytes for lock_height
     {                                 //      (end of transaction)
-        leaves.front() = block.vtx.front().GetWitnessHash();
-    }
-
-    // Has witness commitment:
-    else {
         // The witness commitment is set to 0.
         std::fill_n(tx.end()-8-4-32-1, 33, 0);
-        // And we compute the hash of the transaction only.
-        CHash256().Write((unsigned char*)&tx[0], tx.size()).Finalize(leaves[0].begin());
     }
+    // The block-final transaction contains no witness data.
+    CHash256().Write((unsigned char*)&tx[0], tx.size()).Finalize(leaves.back().begin());
 
-    for (size_t s = 1; s < block.vtx.size(); s++) {
+    for (size_t s = 1; s < block.vtx.size()-1; s++) {
         leaves[s] = block.vtx[s].GetWitnessHash();
     }
 
