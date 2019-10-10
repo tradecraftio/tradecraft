@@ -2342,6 +2342,14 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         }
     }
 
+    // Expect bit #28 to be set prior to the closure of the coinbase-mtp
+    // soft-fork window.  We hard-code this exemption rather than use the
+    // version bits logic because the mechanics of that soft-fork differed from
+    // BIP9 by requiring the bit to be set even after activation.
+    if (pindexPrev && (pindexPrev->GetMedianTimePast() < params.verify_coinbase_lock_time_timeout)) {
+        nVersion |= (1 << 28);
+    }
+
     return nVersion;
 }
 
@@ -2938,9 +2946,6 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
         int versionbits_num_bits = VERSIONBITS_NUM_BITS;
-        if (pindex->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_timeout) {
-            --versionbits_num_bits;
-        }
         for (int bit = 0; bit < versionbits_num_bits; bit++) {
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
@@ -2960,9 +2965,6 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
             int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
-            if (pindex->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_timeout) {
-                nExpectedVersion |= (1 << 28);
-            }
             if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
                 ++nUpgraded;
             pindex = pindex->pprev;
