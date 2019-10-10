@@ -248,19 +248,6 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 
         pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
 
-        // The following is a left-over from the verify-coinbase-locktime
-        // deployment logic, which was a hybrid of the old-style super-
-        // majority rollout mechanism with BIP8/BIP9-like version bits and
-        // BIP8-like activation-on-timeout semantics. It was not strictly
-        // compatible with those BIPs though, as we didn't want to back
-        // port all the necessary state management code to the earlier
-        // version in which it was originally released. One consequence of
-        // that was that once locked-in the signal bit needs to be set
-        // until the final timeout date is reached.
-        if ((nHeight >= chainparams.GetConsensus().verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < chainparams.GetConsensus().verify_coinbase_lock_time_timeout)) {
-            pblock->nVersion |= (1<<28);
-        }
-
         // -regtest only: allow overriding block.nVersion with
         // -blockversion=N to test forking scenarios
         if (chainparams.MineBlocksOnDemand())
