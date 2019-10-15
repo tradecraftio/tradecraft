@@ -89,6 +89,16 @@ def ripemd160(s):
 def hash256(s):
     return sha256(sha256(s))
 
+from .sha256 import SHA256
+_FastHash256Tag = sha256(b'')
+def fastHash256(l,r):
+    return (SHA256()
+         .update(_FastHash256Tag)
+         .update(_FastHash256Tag)
+         .update(l)
+         .update(r)
+        ).midstate()[0]
+
 def ser_compact_size(l):
     r = b""
     if l < 253:
@@ -456,17 +466,24 @@ class CTransaction(object):
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
-        self.vin = deser_vector(f, CTxIn)
         flags = 0
-        if len(self.vin) == 0:
+        dummy = struct.unpack("<B", f.read(1))[0]
+        if dummy == 255:
             flags = struct.unpack("<B", f.read(1))[0]
-            # Not sure why flags can't be zero, but this
-            # matches the implementation in freicoind
-            if (flags != 0):
-                self.vin = deser_vector(f, CTxIn)
-                self.vout = deser_vector(f, CTxOut)
+            self.vin = deser_vector(f, CTxIn)
         else:
-            self.vout = deser_vector(f, CTxOut)
+            if dummy <= 252:
+                size = dummy
+            if dummy == 253:
+                size = struct.unpack("<H", f.read(2))[0]
+            if dummy == 254:
+                size = struct.unpack("<I", f.read(4))[0]
+            self.vin = []
+            for _ in range(size):
+                txin = CTxIn()
+                txin.deserialize(f)
+                self.vin.append(txin)
+        self.vout = deser_vector(f, CTxOut)
         if flags != 0:
             self.wit.vtxinwit = [CTxInWitness() for i in range(len(self.vin))]
             self.wit.deserialize(f)
@@ -494,8 +511,7 @@ class CTransaction(object):
         r = b""
         r += struct.pack("<i", self.nVersion)
         if flags:
-            dummy = []
-            r += ser_vector(dummy)
+            r += struct.pack("<B", 255)
             r += struct.pack("<B", flags)
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
@@ -640,6 +656,19 @@ class CBlock(CBlockHeader):
             hashes = newhashes
         return uint256_from_str(hashes[0])
 
+    # Calculate the Merkle root using fast Merkle trees, given a
+    # vector of transaction hashes.
+    def get_fast_merkle_root(self, hashes):
+        while len(hashes) > 1:
+            newhashes = []
+            for i in range(0, len(hashes), 2):
+                if i < len(hashes)-1:
+                    newhashes.append(fastHash256(hashes[i], hashes[i+1]))
+                else:
+                    newhashes.append(hashes[i])
+            hashes = newhashes
+        return uint256_from_str(hashes[0])
+
     def calc_merkle_root(self):
         hashes = []
         for tx in self.vtx:
@@ -648,15 +677,25 @@ class CBlock(CBlockHeader):
         return self.get_merkle_root(hashes)
 
     def calc_witness_merkle_root(self):
-        # For witness root purposes, the hash of the
-        # coinbase, with witness, is defined to be 0...0
-        hashes = [ser_uint256(0)]
+        # For witness root purposes, the hash of the coinbase does not include
+        # the coinbase witness, which is the witness nonce
+        if getattr(self.vtx[0], 'sha256', None) is None:
+            self.vtx[0].calc_sha256(False)
+        hashes = [ser_uint256(self.vtx[0].sha256)]
 
-        for tx in self.vtx[1:]:
+        for tx in self.vtx[1:-1]:
             # Calculate the hashes with witness data
             hashes.append(ser_uint256(tx.calc_sha256(True)))
 
-        return self.get_merkle_root(hashes)
+        # Strip the witness commitment from the block-final transaction. The
+        # witness is not serialized, but the block-final transaction never has a
+        # witness anyway.
+        tx = self.vtx[-1].serialize_without_witness()
+        if len(tx) >= (1 + 32 + 4 + 8) and tx[-8-4]==0x4b and tx[-8-3]==0x4a and tx[-8-2]==0x49 and tx[-8-1]==0x48:
+            tx = tx[:-8-4-32-1] + (33 * b'\x00') + tx[-8-4:]
+        hashes.append(hash256(tx))
+
+        return self.get_fast_merkle_root(hashes)
 
     def is_valid(self):
         self.calc_sha256()

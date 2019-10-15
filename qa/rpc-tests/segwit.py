@@ -109,14 +109,16 @@ class SegWitTest(FreicoinTestFramework):
 
     def success_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
+        has_block_final = "blockfinal" in node.getblocktemplate({'rules':['segwit']})
         block = node.generate(1)
-        assert_equal(len(node.getblock(block[0])["tx"]), 2)
+        assert_equal(len(node.getblock(block[0])["tx"]), 2 + has_block_final)
         sync_blocks(self.nodes)
 
     def skip_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
+        has_block_final = "blockfinal" in node.getblocktemplate({'rules':['segwit']})
         block = node.generate(1)
-        assert_equal(len(node.getblock(block[0])["tx"]), 1)
+        assert_equal(len(node.getblock(block[0])["tx"]), 1 + has_block_final)
         sync_blocks(self.nodes)
 
     def fail_accept(self, node, txid, sign, redeem_script=""):
@@ -182,7 +184,7 @@ class SegWitTest(FreicoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), 20*Decimal("49.999"))
         assert_equal(self.nodes[2].getbalance(), 20*Decimal("49.999"))
 
-        self.nodes[0].generate(260) #block 423
+        self.nodes[0].generate(404) #block 423 (+ 144)
         sync_blocks(self.nodes)
 
         print("Verify default node can't accept any witness format txs before fork")
@@ -225,8 +227,11 @@ class SegWitTest(FreicoinTestFramework):
         block = self.nodes[2].generate(1) #block 432 (first block with new rules; 432 = 144 * 3)
         sync_blocks(self.nodes)
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
-        segwit_tx_list = self.nodes[2].getblock(block[0])["tx"]
+        segwit_tx_list = self.nodes[2].getblock(block[0])["tx"][:-1]
         assert_equal(len(segwit_tx_list), 5)
+
+        # skip non-wallet coinbase due to block-final activation
+        segwit_tx_list = segwit_tx_list[1:]
 
         print("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
         assert(self.nodes[2].getblock(block[0], False) !=  self.nodes[0].getblock(block[0], False))

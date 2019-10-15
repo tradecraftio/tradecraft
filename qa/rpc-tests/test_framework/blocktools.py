@@ -19,7 +19,7 @@
 # <http://www.opensource.org/licenses/mit-license.php>
 
 from .mininode import *
-from .script import CScript, OP_TRUE, OP_CHECKSIG, OP_RETURN
+from .script import CScript, OP_TRUE, OP_CHECKSIG
 
 # Create a block (with regtest difficulty)
 def create_block(hashprev, coinbase, nTime=None):
@@ -37,24 +37,32 @@ def create_block(hashprev, coinbase, nTime=None):
     return block
 
 # From BIP141
-WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
+WITNESS_COMMITMENT_HEADER = b"\x4b\x4a\x49\x48"
 
 # According to BIP141, blocks with witness rules active must commit to the
 # hash of all in-block transactions including witness.
 def add_witness_commitment(block, nonce=0):
     # First calculate the merkle root of the block's
     # transactions, with witnesses.
-    witness_nonce = nonce
+    witness_path = 0x01
+    witness_branch = b''
+    if nonce:
+        witness_path = 0x02
+        witness_branch = ser_uint256(nonce)
+    output_data = bytes((0,)) + ser_uint256(0) + WITNESS_COMMITMENT_HEADER
+    block.vtx[-1].vout[-1].scriptPubKey = CScript([output_data])
+    block.vtx[-1].rehash()
     witness_root = block.calc_witness_merkle_root()
-    witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(witness_nonce)))
-    # witness_nonce should go to coinbase witness.
+    if nonce:
+        witness_root = uint256_from_str(fastHash256(ser_uint256(witness_root), witness_branch))
+    # witness_branch should go to coinbase witness.
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
-    block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
+    block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [witness_branch]
 
-    # witness commitment is the last OP_RETURN output in coinbase
-    output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
-    block.vtx[0].vout.append(CTxOut(0, CScript([OP_RETURN, output_data])))
-    block.vtx[0].rehash()
+    # witness commitment is the last such output in coinbase
+    output_data = bytes((witness_path,)) + ser_uint256(witness_root) + WITNESS_COMMITMENT_HEADER
+    block.vtx[-1].vout[-1].scriptPubKey = CScript([output_data])
+    block.vtx[-1].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()
 

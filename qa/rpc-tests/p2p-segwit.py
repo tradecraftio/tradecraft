@@ -214,13 +214,34 @@ class SegWitTest(FreicoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
+        try:
+            blockfinal_prevout = self.nodes[0].getblocktemplate({'rules':['segwit']})['blockfinal']['prevout']
+        except:
+            blockfinal_prevout = []
+        if blockfinal_prevout:
+            finaltx = CTransaction()
+            finaltx.nLockTime = block.vtx[0].nLockTime
+            finaltx.lock_height = block.vtx[0].lock_height
+            finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+            for prevout in blockfinal_prevout:
+                finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
+                finaltx.vout[-1].nValue += prevout['amount']
+            finaltx.rehash()
+            block.vtx.append(finaltx)
+            block.hashMerkleRoot = block.calc_merkle_root()
         block.nVersion = nVersion
         block.rehash()
         return block
 
     # Adds list of transactions to block, adds witness commitment, then solves.
     def update_witness_block_with_transactions(self, block, tx_list, nonce=0):
+        if all(txin.scriptSig == CScript([]) for txin in block.vtx[-1].vin) and all(txout.scriptPubKey == CScript([OP_TRUE]) or txout.scriptPubKey[0] == len(txout.scriptPubKey)-1 for txout in block.vtx[-1].vout):
+            finaltx = block.vtx.pop()
+        else:
+            finaltx = None
         block.vtx.extend(tx_list)
+        if finaltx is not None:
+            block.vtx.append(finaltx)
         add_witness_commitment(block, nonce)
         block.solve()
         return
@@ -358,9 +379,15 @@ class SegWitTest(FreicoinTestFramework):
         # Will need to rewrite the tests here if we are past the first period
         assert(height < VB_PERIOD - 1)
         # Genesis block is 'defined'.
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'defined')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'defined')
-        # Advance to end of period, status should now be 'started'
+        # Advance to end of period, status should now be 'started' for blockfinal
         self.nodes[0].generate(VB_PERIOD-height-1)
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'defined')
+        # Advance one more period, status should now be 'locked_in' for blockfinal and 'started' for segwit
+        self.nodes[0].generate(VB_PERIOD)
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
 
     # Mine enough blocks to lock in segwit, but don't activate.
@@ -368,13 +395,16 @@ class SegWitTest(FreicoinTestFramework):
     # signalling blocks, rather than just at the right period boundary.
     def advance_to_segwit_lockin(self):
         height = self.nodes[0].getblockcount()
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         # Advance to end of period, and verify lock-in happens at the end
         self.nodes[0].generate(VB_PERIOD-1)
         height = self.nodes[0].getblockcount()
         assert((height % VB_PERIOD) == VB_PERIOD - 2)
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'locked_in')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         self.nodes[0].generate(1)
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
 
 
@@ -382,13 +412,15 @@ class SegWitTest(FreicoinTestFramework):
     # TODO: we could verify that activation only happens at the right threshold
     # of signalling blocks, rather than just at the right period boundary.
     def advance_to_segwit_active(self):
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(VB_PERIOD - (height%VB_PERIOD) - 2)
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         self.nodes[0].generate(1)
+        assert_equal(get_bip9_status(self.nodes[0], 'blockfinal')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
-
 
     # This test can only be run after segwit has activated
     def test_witness_commitments(self):
@@ -411,7 +443,7 @@ class SegWitTest(FreicoinTestFramework):
         block_2.solve()
 
         # The commitment should have changed!
-        assert(block_2.vtx[0].vout[-1] != block.vtx[0].vout[-1])
+        assert(block_2.vtx[-1].vout[-1] != block.vtx[-1].vout[-1])
 
         # This should also be valid.
         self.test_node.test_witness_block(block_2, accepted=True)
@@ -438,11 +470,11 @@ class SegWitTest(FreicoinTestFramework):
 
         block_3 = self.build_next_block()
         self.update_witness_block_with_transactions(block_3, [tx, tx2], nonce=1)
-        # Add an extra OP_RETURN output that matches the witness commitment template,
-        # even though it has extra data after the incorrect commitment.
-        # This block should fail.
-        block_3.vtx[0].vout.append(CTxOut(0, CScript([OP_RETURN, WITNESS_COMMITMENT_HEADER + ser_uint256(2), 10])))
-        block_3.vtx[0].rehash()
+        # Add a witness commitment with an invalid path ("0" as a path
+        # means an empty Merkle tree, but there must be at least one
+        # hash--the witness root).  This block should fail.
+        block_3.vtx[-1].vout[-1].scriptPubKey = CScript([b'\x00' + ser_uint256(2) + WITNESS_COMMITMENT_HEADER])
+        block_3.vtx[-1].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
         block_3.rehash()
         block_3.solve()
@@ -450,16 +482,8 @@ class SegWitTest(FreicoinTestFramework):
         self.test_node.test_witness_block(block_3, accepted=False)
 
         # Add a different commitment with different nonce, but in the
-        # right location, and with some funds burned(!).
-        # This should succeed (nValue shouldn't affect finding the
-        # witness commitment).
-        add_witness_commitment(block_3, nonce=0)
-        block_3.vtx[0].vout[0].nValue -= 1
-        block_3.vtx[0].vout[-1].nValue += 1
-        block_3.vtx[0].rehash()
-        block_3.hashMerkleRoot = block_3.calc_merkle_root()
-        block_3.rehash()
-        assert(len(block_3.vtx[0].vout) == 4) # 3 OP_returns
+        # right location.
+        add_witness_commitment(block_3, nonce=1)
         block_3.solve()
         self.test_node.test_witness_block(block_3, accepted=True)
 
@@ -470,7 +494,7 @@ class SegWitTest(FreicoinTestFramework):
         tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), b""))
         tx3.vout.append(CTxOut(tx.vout[0].nValue-1000, witness_program))
         tx3.rehash()
-        block_4.vtx.append(tx3)
+        block_4.vtx.insert(-1, tx3)
         block_4.hashMerkleRoot = block_4.calc_merkle_root()
         block_4.solve()
         self.test_node.test_witness_block(block_4, with_witness=False, accepted=True)
@@ -517,7 +541,7 @@ class SegWitTest(FreicoinTestFramework):
         self.test_node.test_witness_block(block, accepted=False)
 
         # Changing the witness nonce doesn't change the block hash
-        block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ ser_uint256(0) ]
+        block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ b'' ]
         self.test_node.test_witness_block(block, accepted=True)
 
 
@@ -570,11 +594,10 @@ class SegWitTest(FreicoinTestFramework):
         while additional_bytes > 0:
             # Add some more bytes to each input until we hit MAX_BLOCK_SIZE+1
             extra_bytes = min(additional_bytes+1, 55)
-            block.vtx[-1].wit.vtxinwit[int(i/(2*NUM_DROPS))].scriptWitness.stack[i%(2*NUM_DROPS)] = b'a'*(195+extra_bytes)
+            block.vtx[-2].wit.vtxinwit[int(i/(2*NUM_DROPS))].scriptWitness.stack[i%(2*NUM_DROPS)] = b'a'*(195+extra_bytes)
             additional_bytes -= extra_bytes
             i += 1
 
-        block.vtx[0].vout.pop()  # Remove old commitment
         add_witness_commitment(block)
         block.solve()
         vsize = get_virtual_size(block)
@@ -586,9 +609,8 @@ class SegWitTest(FreicoinTestFramework):
         self.test_node.test_witness_block(block, accepted=False)
 
         # Now resize the second transaction to make the block fit.
-        cur_length = len(block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0])
-        block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0] = b'a'*(cur_length-1)
-        block.vtx[0].vout.pop()
+        cur_length = len(block.vtx[-2].wit.vtxinwit[0].scriptWitness.stack[0])
+        block.vtx[-2].wit.vtxinwit[0].scriptWitness.stack[0] = b'a'*(cur_length-1)
         add_witness_commitment(block)
         block.solve()
         assert(get_virtual_size(block) == MAX_BLOCK_SIZE)
@@ -597,7 +619,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Update available utxo's
         self.utxo.pop(0)
-        self.utxo.append(UTXO(block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue))
+        self.utxo.append(UTXO(block.vtx[-2].sha256, 0, block.vtx[-2].vout[0].nValue))
 
 
     # submitblock will try to add the nonce automatically, so that mining
@@ -629,7 +651,7 @@ class SegWitTest(FreicoinTestFramework):
         block_2.solve()
 
         # Drop commitment and nonce -- submitblock should not fill in.
-        block_2.vtx[0].vout.pop()
+        block_2.vtx[-1].vout[-1].scriptPubKey = CScript([OP_TRUE])
         block_2.vtx[0].wit = CTxWitness()
 
         self.nodes[0].submitblock(bytes_to_hex_str(block_2.serialize(True)))
@@ -794,7 +816,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin[0].prevout.hash = tx.sha256
         tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a']*43 + [witness_program]
         tx2.rehash()
-        block.vtx = [block.vtx[0]]
+        block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx, tx2])
         self.test_node.test_witness_block(block, accepted=True)
 
@@ -835,8 +857,7 @@ class SegWitTest(FreicoinTestFramework):
                 r = b""
                 r += struct.pack("<i", self.nVersion)
                 if flags:
-                    dummy = []
-                    r += ser_vector(dummy)
+                    r += struct.pack("<B", 255)
                     r += struct.pack("<B", flags)
                 r += ser_vector(self.vin)
                 r += ser_vector(self.vout)
@@ -865,7 +886,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.wit.vtxinwit.pop()
         tx2.wit.vtxinwit.pop()
 
-        block.vtx = [block.vtx[0]]
+        block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx2])
         self.test_node.test_witness_block(block, accepted=False)
 
@@ -874,13 +895,13 @@ class SegWitTest(FreicoinTestFramework):
         tx2.wit.vtxinwit[-1].scriptWitness.stack = [b'a', witness_program]
         tx2.wit.vtxinwit[5].scriptWitness.stack = [ witness_program ]
 
-        block.vtx = [block.vtx[0]]
+        block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx2])
         self.test_node.test_witness_block(block, accepted=False)
 
         # Fix the broken witness and the block should be accepted.
         tx2.wit.vtxinwit[5].scriptWitness.stack = [b'a', witness_program]
-        block.vtx = [block.vtx[0]]
+        block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx2])
         self.test_node.test_witness_block(block, accepted=True)
 
@@ -1287,8 +1308,8 @@ class SegWitTest(FreicoinTestFramework):
         witness_hash = sha256(witness_program)
         scriptPubKey = CScript([OP_0, witness_hash])
         block.vtx[0].vout[0].scriptPubKey = scriptPubKey
-        # This next line will rehash the coinbase and update the merkle
-        # root, and solve.
+        block.vtx[0].rehash()
+        # This next line will update the merkle root, and solve.
         self.update_witness_block_with_transactions(block, [])
         self.test_node.test_witness_block(block, accepted=True)
 
@@ -1356,13 +1377,13 @@ class SegWitTest(FreicoinTestFramework):
 
                 # Too-small input value
                 sign_P2PK_witness_input(witness_program, tx, 0, hashtype, prev_utxo.nValue-1, key)
-                block.vtx.pop() # remove last tx
+                block.vtx.pop(-2) # remove last tx
                 self.update_witness_block_with_transactions(block, [tx])
                 self.test_node.test_witness_block(block, accepted=False)
 
                 # Now try correct value
                 sign_P2PK_witness_input(witness_program, tx, 0, hashtype, prev_utxo.nValue, key)
-                block.vtx.pop()
+                block.vtx.pop(-2)
                 self.update_witness_block_with_transactions(block, [tx])
                 self.test_node.test_witness_block(block, accepted=True)
 
@@ -1425,7 +1446,7 @@ class SegWitTest(FreicoinTestFramework):
                 temp_utxos.append(UTXO(tx.sha256, i, split_value))
             temp_utxos = temp_utxos[num_inputs:]
 
-            block.vtx.append(tx)
+            block.vtx.insert(-1, tx)
 
             # Test the block periodically, if we're close to maxblocksize
             if (get_virtual_size(block) > MAX_BLOCK_SIZE - 1000):
@@ -1436,7 +1457,7 @@ class SegWitTest(FreicoinTestFramework):
         if (not used_sighash_single_out_of_bounds):
             print("WARNING: this test run didn't attempt SIGHASH_SINGLE with out-of-bounds index value")
         # Test the transactions we've added to the block
-        if (len(block.vtx) > 1):
+        if (len(block.vtx) > 2):
             self.update_witness_block_with_transactions(block, [])
             self.test_node.test_witness_block(block, accepted=True)
 
@@ -1463,7 +1484,7 @@ class SegWitTest(FreicoinTestFramework):
         self.test_node.test_witness_block(block, accepted=False)
 
         # Move the signature to the witness.
-        block.vtx.pop()
+        block.vtx.pop(-2)
         tx2.wit.vtxinwit.append(CTxInWitness())
         tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, pubkey]
         tx2.vin[0].scriptSig = b""
@@ -1659,7 +1680,12 @@ class SegWitTest(FreicoinTestFramework):
 
         block_2 = self.build_next_block()
         self.update_witness_block_with_transactions(block_2, [tx2])
-        self.test_node.test_witness_block(block_2, accepted=False)
+        self.test_node.test_witness_block(block_2, accepted=True)
+
+        # Reset the tip back down for the next test
+        sync_blocks(self.nodes)
+        for x in self.nodes:
+            x.invalidateblock(block_2.hash)
 
         # Try dropping the last input in tx2, and add an output that has
         # too many sigops (contributing to legacy sigop count).
@@ -1672,7 +1698,12 @@ class SegWitTest(FreicoinTestFramework):
         tx2.rehash()
         block_3 = self.build_next_block()
         self.update_witness_block_with_transactions(block_3, [tx2])
-        self.test_node.test_witness_block(block_3, accepted=False)
+        self.test_node.test_witness_block(block_3, accepted=True)
+
+        # Reset the tip back down for the next test
+        sync_blocks(self.nodes)
+        for x in self.nodes:
+            x.invalidateblock(block_3.hash)
 
         # If we drop the last checksig in this output, the tx should succeed.
         block_4 = self.build_next_block()
@@ -1706,9 +1737,8 @@ class SegWitTest(FreicoinTestFramework):
             gbt_results = node.getblocktemplate()
             block_version = gbt_results['version']
             # If we're not indicating segwit support, we should not be signalling
-            # for segwit activation, nor should we get a witness commitment.
+            # for segwit activation.
             assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
-            assert('default_witness_commitment' not in gbt_results)
 
         # Workaround:
         # Can either change the tip, or change the mempool and wait 5 seconds
@@ -1723,27 +1753,12 @@ class SegWitTest(FreicoinTestFramework):
             gbt_results = node.getblocktemplate({"rules" : ["segwit"]})
             block_version = gbt_results['version']
             if node == self.nodes[2]:
-                # If this is a non-segwit node, we should still not get a witness
-                # commitment, nor a version bit signalling segwit.
+                # If this is a non-segwit node, we should still not get a
+                # version bit signalling segwit.
                 assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
-                assert('default_witness_commitment' not in gbt_results)
             else:
-                # For segwit-aware nodes, check the version bit and the witness
-                # commitment are correct.
+                # For segwit-aware nodes, check the version bit is correct
                 assert(block_version & (1 << VB_WITNESS_BIT) != 0)
-                assert('default_witness_commitment' in gbt_results)
-                witness_commitment = gbt_results['default_witness_commitment']
-
-                # TODO: this duplicates some code from blocktools.py, would be nice
-                # to refactor.
-                # Check that default_witness_commitment is present.
-                block = CBlock()
-                witness_root = block.get_merkle_root([ser_uint256(0), ser_uint256(txid)])
-                check_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(0)))
-                from test_framework.blocktools import WITNESS_COMMITMENT_HEADER
-                output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(check_commitment)
-                script = CScript([OP_RETURN, output_data])
-                assert_equal(witness_commitment, bytes_to_hex_str(script))
 
         # undo mocktime
         self.nodes[0].setmocktime(0)

@@ -18,6 +18,7 @@
 
 #include "merkle.h"
 #include "hash.h"
+#include "streams.h"
 #include "utilstrencodings.h"
 
 /*     WARNING! If you're reading this because you're learning about crypto
@@ -280,15 +281,40 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     return ComputeMerkleRoot(leaves, mutated);
 }
 
-uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
+uint256 BlockWitnessMerkleRoot(const CBlock& block)
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
-    leaves[0].SetNull(); // The witness hash of the coinbase is 0.
-    for (size_t s = 1; s < block.vtx.size(); s++) {
+
+    // The coinbase's witness contains the witness nonce, which cannot be
+    // included under the witness Merkle root.
+    leaves.front() = block.vtx.front().GetHash();
+
+    // The witness Merkle root is placed in the block-final transaction, but it
+    // is a Merkle tree of all transactions, including itself.  To avoid this
+    // impossibility, when computing the witness Merkle root the commitment is
+    // set to zero.
+    CDataStream tx(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    tx << block.vtx.back();
+
+    // Check if there is a witness commitment:
+    if (tx.size() >= (1 + 32 + 4 + 8) // <- 1 byte for witness path
+        && tx[tx.size()-8-4] == 0x4b  //   32 bytes for merkle root
+        && tx[tx.size()-8-3] == 0x4a  //    4 bytes for magic value
+        && tx[tx.size()-8-2] == 0x49  //    4 bytes for nLockTime
+        && tx[tx.size()-8-1] == 0x48) //    4 bytes for lock_height
+    {                                 //      (end of transaction)
+        // The witness commitment is set to 0.
+        std::fill_n(tx.end()-8-4-32-1, 33, 0);
+    }
+    // The block-final transaction contains no witness data.
+    CHash256().Write((unsigned char*)&tx[0], tx.size()).Finalize(leaves.back().begin());
+
+    for (size_t s = 1; s < block.vtx.size()-1; s++) {
         leaves[s] = block.vtx[s].GetWitnessHash();
     }
-    return ComputeMerkleRoot(leaves, mutated);
+
+    return ComputeFastMerkleRoot(leaves);
 }
 
 std::vector<uint256> BlockMerkleBranch(const CBlock& block, uint32_t position)

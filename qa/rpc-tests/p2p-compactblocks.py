@@ -143,6 +143,23 @@ class CompactBlocksTest(FreicoinTestFramework):
         mtp = node.getblockheader(tip)['mediantime']
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
         block.nVersion = 4
+        try:
+            blockfinal_prevout = node.getblocktemplate({'rules':['segwit']})['blockfinal']['prevout']
+        except:
+            blockfinal_prevout = []
+        if blockfinal_prevout:
+            finaltx = CTransaction()
+            finaltx.nVersion = 2
+            finaltx.nLockTime = block.vtx[0].nLockTime
+            finaltx.lock_height = block.vtx[0].lock_height
+            finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+            for prevout in blockfinal_prevout:
+                finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
+                finaltx.vout[-1].nValue += prevout['amount']
+            finaltx.rehash()
+            block.vtx.append(finaltx)
+            block.hashMerkleRoot = block.calc_merkle_root()
+            block.rehash()
         if segwit:
             add_witness_commitment(block)
         block.solve()
@@ -423,18 +440,18 @@ class CompactBlocksTest(FreicoinTestFramework):
             comp_block.header = CBlockHeader(block)
             comp_block.nonce = 0
             [k0, k1] = comp_block.get_siphash_keys()
-            coinbase_hash = block.vtx[0].sha256
+            tx_hashes = [tx.sha256 for tx in block.vtx]
             if version == 2:
-                coinbase_hash = block.vtx[0].calc_sha256(True)
+                tx_hashes = [tx.calc_sha256(True) for tx in block.vtx]
             comp_block.shortids = [
-                    calculate_shortid(k0, k1, coinbase_hash) ]
+                    calculate_shortid(k0, k1, txhash) for txhash in tx_hashes ]
             test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
             assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
             # Expect a getblocktxn message.
             with mininode_lock:
                 assert(test_node.last_getblocktxn is not None)
                 absolute_indexes = test_node.last_getblocktxn.block_txn_request.to_absolute()
-            assert_equal(absolute_indexes, [0])  # should be a coinbase request
+            assert_equal(absolute_indexes, list(range(len(block.vtx))))  # should be a coinbase request
 
             # Send the coinbase, and verify that the tip advances.
             if version == 2:
@@ -442,13 +459,18 @@ class CompactBlocksTest(FreicoinTestFramework):
             else:
                 msg = msg_blocktxn()
             msg.block_transactions.blockhash = block.sha256
-            msg.block_transactions.transactions = [block.vtx[0]]
+            msg.block_transactions.transactions = block.vtx
             test_node.send_and_ping(msg)
             assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     # Create a chain of transactions from given utxo, and add to a new block.
     def build_block_with_transactions(self, node, utxo, num_transactions):
         block = self.build_block_on_tip(node)
+
+        if all(txin.scriptSig == CScript([]) for txin in block.vtx[-1].vin) and all(txout.scriptPubKey == CScript([OP_TRUE]) or txout.scriptPubKey[0] == len(txout.scriptPubKey)-1 for txout in block.vtx[-1].vout):
+            finaltx = block.vtx.pop()
+        else:
+            finaltx = None
 
         for i in range(num_transactions):
             tx = CTransaction()
@@ -457,6 +479,9 @@ class CompactBlocksTest(FreicoinTestFramework):
             tx.rehash()
             utxo = [tx.sha256, 0, tx.vout[0].nValue]
             block.vtx.append(tx)
+
+        if finaltx is not None:
+            block.vtx.append(finaltx)
 
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
@@ -485,11 +510,11 @@ class CompactBlocksTest(FreicoinTestFramework):
         utxo = self.utxos.pop(0)
 
         block = self.build_block_with_transactions(node, utxo, 5)
-        self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
+        self.utxos.append([block.vtx[5].sha256, 0, block.vtx[5].vout[0].nValue])
         comp_block = HeaderAndShortIDs()
         comp_block.initialize_from_block(block, use_witness=with_witness)
 
-        test_getblocktxn_response(comp_block, test_node, [1, 2, 3, 4, 5])
+        test_getblocktxn_response(comp_block, test_node, list(range(1, len(block.vtx))))
 
         msg_bt = msg_blocktxn()
         if with_witness:
@@ -499,27 +524,27 @@ class CompactBlocksTest(FreicoinTestFramework):
 
         utxo = self.utxos.pop(0)
         block = self.build_block_with_transactions(node, utxo, 5)
-        self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
+        self.utxos.append([block.vtx[5].sha256, 0, block.vtx[5].vout[0].nValue])
 
         # Now try interspersing the prefilled transactions
         comp_block.initialize_from_block(block, prefill_list=[0, 1, 5], use_witness=with_witness)
-        test_getblocktxn_response(comp_block, test_node, [2, 3, 4])
-        msg_bt.block_transactions = BlockTransactions(block.sha256, block.vtx[2:5])
+        test_getblocktxn_response(comp_block, test_node, list(sorted(set(range(len(block.vtx))) - set([0, 1, 5]))))
+        msg_bt.block_transactions = BlockTransactions(block.sha256, block.vtx[2:5] + block.vtx[6:])
         test_tip_after_message(node, test_node, msg_bt, block.sha256)
 
         # Now try giving one transaction ahead of time.
         utxo = self.utxos.pop(0)
         block = self.build_block_with_transactions(node, utxo, 5)
-        self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
+        self.utxos.append([block.vtx[5].sha256, 0, block.vtx[5].vout[0].nValue])
         test_node.send_and_ping(msg_tx(block.vtx[1]))
         assert(block.vtx[1].hash in node.getrawmempool())
 
         # Prefill 4 out of the 6 transactions, and verify that only the one
         # that was not in the mempool is requested.
         comp_block.initialize_from_block(block, prefill_list=[0, 2, 3, 4], use_witness=with_witness)
-        test_getblocktxn_response(comp_block, test_node, [5])
+        test_getblocktxn_response(comp_block, test_node, [5] + list(range(len(block.vtx)))[6:])
 
-        msg_bt.block_transactions = BlockTransactions(block.sha256, [block.vtx[5]])
+        msg_bt.block_transactions = BlockTransactions(block.sha256, [block.vtx[5]] + block.vtx[6:])
         test_tip_after_message(node, test_node, msg_bt, block.sha256)
 
         # Now provide all transactions to the node before the block is
@@ -527,12 +552,12 @@ class CompactBlocksTest(FreicoinTestFramework):
         utxo = self.utxos.pop(0)
         block = self.build_block_with_transactions(node, utxo, 10)
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
-        for tx in block.vtx[1:]:
+        for tx in block.vtx[1:(1+10)]:
             test_node.send_message(msg_tx(tx))
         test_node.sync_with_ping()
         # Make sure all transactions were accepted.
         mempool = node.getrawmempool()
-        for tx in block.vtx[1:]:
+        for tx in block.vtx[1:(1+10)]:
             assert(tx.hash in mempool)
 
         # Clear out last request.
@@ -540,7 +565,7 @@ class CompactBlocksTest(FreicoinTestFramework):
             test_node.last_getblocktxn = None
 
         # Send compact block
-        comp_block.initialize_from_block(block, prefill_list=[0], use_witness=with_witness)
+        comp_block.initialize_from_block(block, prefill_list=[0] + list(set(range(len(block.vtx))) - set(range(1+10))), use_witness=with_witness)
         test_tip_after_message(node, test_node, msg_cmpctblock(comp_block.to_p2p()), block.sha256)
         with mininode_lock:
             # Shouldn't have gotten a request for any transaction
@@ -554,7 +579,7 @@ class CompactBlocksTest(FreicoinTestFramework):
         utxo = self.utxos.pop(0)
 
         block = self.build_block_with_transactions(node, utxo, 10)
-        self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
+        self.utxos.append([block.vtx[10].sha256, 0, block.vtx[10].vout[0].nValue])
         # Relay the first 5 transactions from the block in advance
         for tx in block.vtx[1:6]:
             test_node.send_message(msg_tx(tx))
@@ -566,7 +591,7 @@ class CompactBlocksTest(FreicoinTestFramework):
 
         # Send compact block
         comp_block = HeaderAndShortIDs()
-        comp_block.initialize_from_block(block, prefill_list=[0], use_witness=(version == 2))
+        comp_block.initialize_from_block(block, prefill_list=[0] + list(sorted(set(range(len(block.vtx))) - set(range(1+10)))), use_witness=(version == 2))
         test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
         absolute_indexes = []
         with mininode_lock:
@@ -711,7 +736,7 @@ class CompactBlocksTest(FreicoinTestFramework):
             assert(test_node.last_blocktxn is None)
 
     def activate_segwit(self, node):
-        node.generate(144*3)
+        node.generate(144*4)
         assert_equal(get_bip9_status(node, "segwit")["status"], 'active')
 
     def test_end_to_end_block_relay(self, node, listeners):

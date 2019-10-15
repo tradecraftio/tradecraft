@@ -251,9 +251,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     coinbaseTx.nLockTime = nMedianTimePast;
     coinbaseTx.lock_height = nHeight;
     pblock->vtx[0] = coinbaseTx;
-    if (block_final_state != INITIAL_BLOCK_FINAL_TXOUT) {
-        pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
-    }
+    GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
 
     // The miner needs to know whether the last transaction is a special
@@ -517,14 +515,13 @@ void BlockAssembler::initFinalTx(const CCoins& prev_final)
 
     // The block-final transaction contributes to aggregate limits:
     // the number of sigops is tracked...
-    int64_t nTxSigOpsCost = GetLegacySigOpCount(txFinal)
-                          + GetP2SHSigOpCount(txFinal, pcoinsTip);
+    int64_t nTxSigOpsCost = GetTransactionSigOpCost(txFinal, pcoinsTip, STANDARD_SCRIPT_VERIFY_FLAGS);
     pblocktemplate->vTxSigOpsCost.push_back(nTxSigOpsCost);
     nBlockSigOpsCost += nTxSigOpsCost;
 
     // ...the size is not:
     uint64_t nTxSize = ::GetSerializeSize(txFinal, SER_NETWORK, PROTOCOL_VERSION);
-    nBlockWeight += nTxSize;
+    nBlockWeight += WITNESS_SCALE_FACTOR * nTxSize;
     nBlockSize += nTxSize;
 }
 
@@ -736,7 +733,7 @@ void BlockAssembler::addPriorityTxs()
     fNeedSizeAccounting = fSizeAccounting;
 }
 
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -752,5 +749,8 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = txCoinbase;
+    if (GetWitnessCommitment(*pblock, NULL, NULL)) {
+        GenerateCoinbaseCommitment(*pblock, pindexPrev, consensusParams);
+    }
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 }

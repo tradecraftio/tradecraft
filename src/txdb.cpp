@@ -64,7 +64,9 @@ uint256 CCoinsViewDB::GetBestBlock() const {
 uint256 CCoinsViewDB::GetFinalTx() const {
     uint256 hashFinalTx;
     if (!db.Read(DB_LAST_TX, hashFinalTx)) {
-        return uint256();
+        // When upgrading from a version that did not support block-final
+        // transactions, there will be no DB_LAST_TX record in the database.
+        hashFinalTx.SetNull();
     }
     return hashFinalTx;
 }
@@ -86,15 +88,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, con
     }
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
-    if (!hashFinalTx.IsNull()) {
-        batch.Write(DB_LAST_TX, hashFinalTx);
-    } else if (db.Exists(DB_LAST_TX)) {
-        // This branch is only ever encountered if there is a block
-        // reorganization past the point of activation of the
-        // "blockfinal" soft-fork.  It can be removed once the
-        // activation block is sufficiently buried.
-        batch.Erase(DB_LAST_TX);
-    }
+    batch.Write(DB_LAST_TX, hashFinalTx);
 
     LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
     return db.WriteBatch(batch);
