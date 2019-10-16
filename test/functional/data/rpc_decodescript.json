@@ -68,12 +68,12 @@
             "type": "nonstandard",
             "p2sh": "2N34iiGoUUkVSPiaaTFpJjB1FR9TXQu3PGM",
             "segwit": {
-                "asm": "0 96c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42",
+                "asm": "0 c06133bb2d34fc811005c23314cc0a2f255a3c93f42d1f05030295cdcc3f5c91",
                 "desc": "wsh(raw(02eeee))#gtay4y0z",
-                "hex": "002096c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42",
-                "address": "bcrt1qjmprdr7rq522gw9ghkgfly7yng25n4m3nrxtmdujqsakvm9jfapqk795l5",
+                "hex": "0020c06133bb2d34fc811005c23314cc0a2f255a3c93f42d1f05030295cdcc3f5c91",
+                "address": "bcrt1qcpsn8wedxn7gzyq9cge3fnq29uj450yn7sk37pgrq22umnpltjgs2e3yg4",
                 "type": "witness_v0_scripthash",
-                "p2sh-segwit": "2MtoejEictTQ6XtmHYzoYttt35Ec6krqFKN"
+                "p2sh-segwit": "2N4hQgEtCk92gAfpiCt1AqLEmDC5iE5rAaG"
             }
         }
     ],
