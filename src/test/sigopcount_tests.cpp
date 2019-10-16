@@ -212,12 +212,13 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     // P2WSH witness program
     {
         CScript witnessScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
-        CScript scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
+        CScript scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, witnessScript));
         CScript scriptSig = CScript();
         CScriptWitness scriptWitness;
         scriptWitness.stack.emplace_back(1, 3); // MultiSigHint
         scriptWitness.stack.emplace_back(0);
-        scriptWitness.stack.emplace_back(witnessScript.begin(), witnessScript.end());
+        scriptWitness.stack.emplace_back(1, 0); // version
+        scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), witnessScript.begin(), witnessScript.end());
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);
@@ -228,13 +229,14 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     // P2WSH nested in P2SH
     {
         CScript witnessScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
-        CScript redeemScript = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
+        CScript redeemScript = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, witnessScript));
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << ToByteVector(redeemScript);
         CScriptWitness scriptWitness;
         scriptWitness.stack.emplace_back(1, 3); // MultiSigHint
         scriptWitness.stack.emplace_back(0);
-        scriptWitness.stack.emplace_back(witnessScript.begin(), witnessScript.end());
+        scriptWitness.stack.emplace_back(1, 0); // version
+        scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), witnessScript.begin(), witnessScript.end());
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);

@@ -41,9 +41,22 @@ CScriptID ToScriptID(const ScriptHash& script_hash)
     return CScriptID{uint160{script_hash}};
 }
 
-WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
+WitnessV0ScriptHash::WitnessV0ScriptHash(unsigned char version, const CScript& innerscript)
 {
-    CSHA256().Write(in.data(), in.size()).Finalize(begin());
+    CSHA256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
+}
+
+WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript)
+{
+    m_script.push_back(version);
+    m_script.insert(m_script.end(), innerscript.begin(), innerscript.end());
+}
+
+WitnessV0ScriptHash WitnessV0ScriptEntry::GetScriptHash() const
+{
+    uint256 hash;
+    CSHA256().Write(&m_script[0], m_script.size()).Finalize(hash.begin());
+    return WitnessV0ScriptHash(hash);
 }
 
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)

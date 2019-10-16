@@ -642,8 +642,10 @@ static RPCHelpMan decodescript()
                 segwitScr = GetScriptForDestination(WitnessV0KeyHash(uint160{solutions_data[0]}));
             } else {
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
-                provider.scripts[CScriptID(script)] = script;
-                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
+                WitnessV0ScriptEntry entry(0 /* vesion */, script);
+                WitnessV0ScriptHash longid = entry.GetScriptHash();
+                provider.witscripts[longid] = entry;
+                segwitScr = GetScriptForDestination(longid);
             }
             ScriptToUniv(segwitScr, /*out=*/sr, /*include_hex=*/true, /*include_address=*/true, /*provider=*/&provider);
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
@@ -889,9 +891,10 @@ const RPCResult decodepst_inputs{
                 {RPCResult::Type::STR_HEX, "hex", "The raw redeem script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
+            {RPCResult::Type::NUM, "witscript_version", /*optional=*/true, "The inner script version"},
             {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
             {
-                {RPCResult::Type::STR, "asm", "Disassembly of the witness script"},
+                {RPCResult::Type::STR, "asm", /*optional=*/true, "Disassembly of the witness script"},
                 {RPCResult::Type::STR_HEX, "hex", "The raw witness script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
@@ -995,9 +998,10 @@ const RPCResult decodepst_outputs{
                 {RPCResult::Type::STR_HEX, "hex", "The raw redeem script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
+            {RPCResult::Type::NUM, "witscript_version", /*optional=*/true, "The inner script version"},
             {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
             {
-                {RPCResult::Type::STR, "asm", "Disassembly of the witness script"},
+                {RPCResult::Type::STR, "asm", /*optional=*/true, "Disassembly of the witness script"},
                 {RPCResult::Type::STR_HEX, "hex", "The raw witness script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
@@ -1225,9 +1229,15 @@ static RPCHelpMan decodepst()
             ScriptToUniv(input.redeem_script, /*out=*/r);
             in.pushKV("redeem_script", r);
         }
-        if (!input.witness_script.empty()) {
+        if (!input.witness_entry.m_script.empty()) {
+            in.pushKV("witscript_version", (int64_t)input.witness_entry.m_script[0]);
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.witness_script, /*out=*/r);
+            if (input.witness_entry.m_script[0] == 0x00) {
+                ScriptToUniv(CScript(input.witness_entry.m_script.begin() + 1, input.witness_entry.m_script.end()), /*out=*/r);
+            } else {
+                r.pushKV("hex", HexStr({&input.witness_entry.m_script[1], input.witness_entry.m_script.size() - 1}));
+                r.pushKV("type", "unknown");
+            }
             in.pushKV("witness_script", r);
         }
 
@@ -1401,9 +1411,15 @@ static RPCHelpMan decodepst()
             ScriptToUniv(output.redeem_script, /*out=*/r);
             out.pushKV("redeem_script", r);
         }
-        if (!output.witness_script.empty()) {
+        if (!output.witness_entry.m_script.empty()) {
+            out.pushKV("witscript_version", (int64_t)output.witness_entry.m_script[0]);
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.witness_script, /*out=*/r);
+            if (output.witness_entry.m_script[0] == 0x00) {
+                ScriptToUniv(CScript(output.witness_entry.m_script.begin() + 1, output.witness_entry.m_script.end()), /*out=*/r);
+            } else {
+                r.pushKV("hex", HexStr({&output.witness_entry.m_script[1], output.witness_entry.m_script.size() - 1}));
+                r.pushKV("type", "unknown");
+            }
             out.pushKV("witness_script", r);
         }
 

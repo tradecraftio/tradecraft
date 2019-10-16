@@ -72,7 +72,8 @@ const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
-const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
+const std::string WITNESS_V0{"witv0"};
+const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS, WITNESS_V0};
 } // namespace DBKeys
 
 //
@@ -165,6 +166,11 @@ bool WalletBatch::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
 bool WalletBatch::WriteCScript(const uint160& hash, const CScript& redeemScript)
 {
     return WriteIC(std::make_pair(DBKeys::CSCRIPT, hash), redeemScript, false);
+}
+
+bool WalletBatch::WriteWitnessV0Script(const uint160& scriptid, const WitnessV0ScriptEntry& entry)
+{
+    return WriteIC(std::make_pair(DBKeys::WITNESS_V0, scriptid), entry, false);
 }
 
 bool WalletBatch::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMeta)
@@ -708,6 +714,21 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, watch_script_res.m_result);
+
+    // Load witnessv0 scripts
+    LoadResult witnessv0_script_res = LoadRecords(pwallet, batch, DBKeys::WITNESS_V0,
+        [] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) {
+        uint160 shorthash;
+        key >> shorthash;
+        WitnessV0ScriptEntry entry;
+        value >> entry;
+        if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadWitnessV0Script(entry)) {
+            pwallet->WalletLogPrintf("Error reading wallet database: LoadWitnessV0Script failed");
+            return DBErrors::CORRUPT;
+        }
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, witnessv0_script_res.m_result);
 
     // Load watchonly meta
     LoadResult watch_meta_res = LoadRecords(pwallet, batch, DBKeys::WATCHMETA,
