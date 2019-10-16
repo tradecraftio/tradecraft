@@ -172,16 +172,16 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
             // P2WSH inside P2WSH is invalid.
             return IsMineResult::INVALID;
         }
-        if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+        WitnessV0ScriptHash withash(uint256{vSolutions[0]});
+        WitnessV0ScriptEntry entry;
+        if (!keystore.GetWitnessV0Script(withash, entry)) {
             break;
         }
-        uint160 hash;
-        CRIPEMD160().Write(vSolutions[0].data(), vSolutions[0].size()).Finalize(hash.begin());
-        CScriptID scriptID = CScriptID(hash);
-        CScript subscript;
-        if (keystore.GetCScript(scriptID, subscript)) {
-            ret = std::max(ret, recurse_scripthash ? IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0) : IsMineResult::SPENDABLE);
+        if (entry.m_script.empty() || (entry.m_script[0] != 0x00)) {
+            break;
         }
+        CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+        ret = std::max(ret, recurse_scripthash ? IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0) : IsMineResult::SPENDABLE);
         break;
     }
 
@@ -785,6 +785,11 @@ bool LegacyScriptPubKeyMan::LoadCScript(const CScript& redeemScript)
     }
 
     return FillableSigningProvider::AddCScript(redeemScript);
+}
+
+bool LegacyScriptPubKeyMan::LoadWitnessV0Script(const WitnessV0ScriptEntry& entry)
+{
+    return FillableSigningProvider::AddWitnessV0Script(entry);
 }
 
 void LegacyScriptPubKeyMan::LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata& meta)
@@ -1556,6 +1561,26 @@ bool LegacyScriptPubKeyMan::AddCScriptWithDB(WalletBatch& batch, const CScript& 
     return false;
 }
 
+bool LegacyScriptPubKeyMan::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
+{
+    WalletBatch batch(m_storage.GetDatabase());
+    return AddWitnessV0ScriptWithDB(batch, entry);
+}
+
+bool LegacyScriptPubKeyMan::AddWitnessV0ScriptWithDB(WalletBatch& batch, const WitnessV0ScriptEntry& entry)
+{
+    if (!FillableSigningProvider::AddWitnessV0Script(entry))
+        return false;
+    WitnessV0ScriptHash longid = entry.GetScriptHash();
+    uint160 shortid;
+    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
+    if (batch.WriteWitnessV0Script(shortid, entry)) {
+        m_storage.UnsetBlankWalletFlag(batch);
+        return true;
+    }
+    return false;
+}
+
 bool LegacyScriptPubKeyMan::AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info)
 {
     LOCK(cs_KeyStore);
@@ -1582,6 +1607,27 @@ bool LegacyScriptPubKeyMan::ImportScripts(const std::set<CScript> scripts, int64
         if (timestamp > 0) {
             m_script_metadata[CScriptID(entry)].nCreateTime = timestamp;
         }
+    }
+    if (timestamp > 0) {
+        UpdateTimeFirstKey(timestamp);
+    }
+
+    return true;
+}
+
+bool LegacyScriptPubKeyMan::ImportWitnessV0Scripts(const std::set<WitnessV0ScriptEntry> witscripts, int64_t timestamp)
+{
+    WalletBatch batch(m_storage.GetDatabase());
+    for (const auto& entry : witscripts) {
+        if (HaveWitnessV0Script(entry.GetScriptHash())) {
+            WalletLogPrintf("Already have witscript %s, skipping\n", HexStr(entry.m_script));
+            continue;
+        }
+        if (!AddWitnessV0Script(entry)) {
+            return false;
+        }
+
+        // FIXME: Record timestamp to witscript metadata
     }
     if (timestamp > 0) {
         UpdateTimeFirstKey(timestamp);
@@ -1938,7 +1984,7 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
         TxoutType type = Solver(script, sols);
         if (type == TxoutType::MULTISIG) {
             CScript sh_spk = GetScriptForDestination(ScriptHash(script));
-            CTxDestination witdest = WitnessV0ScriptHash(script);
+            CTxDestination witdest = WitnessV0ScriptHash(/*version=*/0, script);
             CScript witprog = GetScriptForDestination(witdest);
             CScript sh_wsh_spk = GetScriptForDestination(ScriptHash(witprog));
 
