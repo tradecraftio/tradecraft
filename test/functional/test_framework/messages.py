@@ -880,6 +880,16 @@ class CBlock(CBlockHeader):
         without_witness_size = len(self.serialize(with_witness=False))
         return (WITNESS_SCALE_FACTOR - 1) * without_witness_size + with_witness_size
 
+    def get_virtual_size(witness_block):
+        """Calculate the virtual size of a witness block.
+
+        Virtual size is base + witness/4."""
+        base_size = len(witness_block.serialize(with_witness=False))
+        total_size = len(witness_block.serialize())
+        # the "+3" is so we round up
+        vsize = int((3 * base_size + total_size + 3) / 4)
+        return vsize
+
     def __repr__(self):
         return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
