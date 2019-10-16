@@ -98,7 +98,7 @@ bool PartiallySignedTransaction::GetInputUTXO(SpentOutput& utxo, int input_index
 
 bool PSTInput::IsNull() const
 {
-    return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
+    return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_entry.IsNull();
 }
 
 void PSTInput::FillSignatureData(SignatureData& sigdata) const
@@ -119,8 +119,8 @@ void PSTInput::FillSignatureData(SignatureData& sigdata) const
     if (!redeem_script.empty()) {
         sigdata.redeem_script = redeem_script;
     }
-    if (!witness_script.empty()) {
-        sigdata.witness_script = witness_script;
+    if (!witness_entry.IsNull()) {
+        sigdata.witness_entry = witness_entry;
     }
     for (const auto& key_pair : hd_keypaths) {
         sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
@@ -163,7 +163,7 @@ void PSTInput::FromSignatureData(const SignatureData& sigdata)
         partial_sigs.clear();
         hd_keypaths.clear();
         redeem_script.clear();
-        witness_script.clear();
+        witness_entry.SetNull();
 
         if (!sigdata.scriptSig.empty()) {
             final_script_sig = sigdata.scriptSig;
@@ -178,8 +178,8 @@ void PSTInput::FromSignatureData(const SignatureData& sigdata)
     if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
         redeem_script = sigdata.redeem_script;
     }
-    if (witness_script.empty() && !sigdata.witness_script.empty()) {
-        witness_script = sigdata.witness_script;
+    if (witness_entry.IsNull() && !sigdata.witness_entry.IsNull()) {
+        witness_entry = sigdata.witness_entry;
     }
     for (const auto& entry : sigdata.misc_pubkeys) {
         hd_keypaths.emplace(entry.second);
@@ -224,7 +224,7 @@ void PSTInput::Merge(const PSTInput& input)
     m_tap_bip32_paths.insert(input.m_tap_bip32_paths.begin(), input.m_tap_bip32_paths.end());
 
     if (redeem_script.empty() && !input.redeem_script.empty()) redeem_script = input.redeem_script;
-    if (witness_script.empty() && !input.witness_script.empty()) witness_script = input.witness_script;
+    if (witness_entry.IsNull() && !input.witness_entry.IsNull()) witness_entry = input.witness_entry;
     if (final_script_sig.empty() && !input.final_script_sig.empty()) final_script_sig = input.final_script_sig;
     if (final_script_witness.IsNull() && !input.final_script_witness.IsNull()) final_script_witness = input.final_script_witness;
     if (m_tap_key_sig.empty() && !input.m_tap_key_sig.empty()) m_tap_key_sig = input.m_tap_key_sig;
@@ -237,8 +237,8 @@ void PSTOutput::FillSignatureData(SignatureData& sigdata) const
     if (!redeem_script.empty()) {
         sigdata.redeem_script = redeem_script;
     }
-    if (!witness_script.empty()) {
-        sigdata.witness_script = witness_script;
+    if (!witness_entry.IsNull()) {
+        sigdata.witness_entry = witness_entry;
     }
     for (const auto& key_pair : hd_keypaths) {
         sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
@@ -265,8 +265,8 @@ void PSTOutput::FromSignatureData(const SignatureData& sigdata)
     if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
         redeem_script = sigdata.redeem_script;
     }
-    if (witness_script.empty() && !sigdata.witness_script.empty()) {
-        witness_script = sigdata.witness_script;
+    if (witness_entry.IsNull() && !sigdata.witness_entry.IsNull()) {
+        witness_entry = sigdata.witness_entry;
     }
     for (const auto& entry : sigdata.misc_pubkeys) {
         hd_keypaths.emplace(entry.second);
@@ -284,7 +284,7 @@ void PSTOutput::FromSignatureData(const SignatureData& sigdata)
 
 bool PSTOutput::IsNull() const
 {
-    return redeem_script.empty() && witness_script.empty() && hd_keypaths.empty() && unknown.empty();
+    return redeem_script.empty() && witness_entry.IsNull() && hd_keypaths.empty() && unknown.empty();
 }
 
 void PSTOutput::Merge(const PSTOutput& output)
@@ -294,7 +294,7 @@ void PSTOutput::Merge(const PSTOutput& output)
     m_tap_bip32_paths.insert(output.m_tap_bip32_paths.begin(), output.m_tap_bip32_paths.end());
 
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
-    if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
+    if (witness_entry.IsNull() && !output.witness_entry.IsNull()) witness_entry = output.witness_entry;
     if (m_tap_internal_key.IsNull() && !output.m_tap_internal_key.IsNull()) m_tap_internal_key = output.m_tap_internal_key;
     if (m_tap_tree.empty() && !output.m_tap_tree.empty()) m_tap_tree = output.m_tap_tree;
 }
@@ -362,7 +362,7 @@ void UpdatePSTOutput(const SigningProvider& provider, PartiallySignedTransaction
     MutableTransactionSignatureCreator creator(tx, /*input_idx=*/0, out.GetReferenceValue(), pst.tx->lock_height, SIGHASH_ALL);
     ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
 
-    // Put redeem_script, witness_script, key paths, into PSTOutput.
+    // Put redeem_script, witness_entry, key paths, into PSTOutput.
     pst_out.FromSignatureData(sigdata);
 }
 
