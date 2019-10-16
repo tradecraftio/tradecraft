@@ -300,7 +300,7 @@ def default_witness_witv0(ctx):
     if script is None:
         return inputs
     else:
-        return inputs + [script]
+        return inputs + [b'\x00' + script]
 
 def default_witness(ctx):
     """Default expression for "witness", delegating to "witness_taproot" or "witness_witv0" as needed."""
@@ -477,7 +477,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
             conf["inputs"] = [getter("sign"), pkh]
         elif script is not None:
             # P2WSH
-            spk = CScript([OP_0, sha256(script)])
+            spk = CScript([OP_0, sha256(b'\x00' + script)])
             conf["scriptcode"] = script
             conf["script_witv0"] = script
         else:

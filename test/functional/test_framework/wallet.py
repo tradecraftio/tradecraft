@@ -68,7 +68,7 @@ class MiniWallet:
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']))]
         tx.vout = [CTxOut(int(send_value * COIN), self._scriptPubKey)]
         tx.wit.vtxinwit = [CTxInWitness()]
-        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [b'\x00' + CScript([OP_TRUE])]
         tx.lock_height = utxo_to_spend['refheight']
         tx_hex = tx.serialize().hex()
 

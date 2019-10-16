@@ -27,8 +27,8 @@ from .util import assert_equal, hex_str_to_bytes
 
 ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
-# Coins sent to this address can be spent with a witness stack of just OP_TRUE
-ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qft5p2uhsdcdc3l2ua4ap5qqfg4pjaqlp250x7us7a8qqhrxrxfsqseac85'
+# Coins sent to this address can be spent with a version=0 witness stack of just OP_TRUE
+ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qadv29xzkvgm7tlzvtgxg0xaeu9fhqxfermqxj68ynq5slwpf8zmshjwsdt'
 
 
 class AddressType(enum.Enum):
@@ -119,7 +119,7 @@ def program_to_witness(version, program, main=False):
 
 def script_to_p2wsh(script, main=False):
     script = check_script(script)
-    return program_to_witness(0, sha256(script), main)
+    return program_to_witness(0, sha256(b'\x00' + script), main)
 
 def key_to_p2wpkh(key, main=False):
     key = check_key(key)
@@ -127,7 +127,7 @@ def key_to_p2wpkh(key, main=False):
 
 def script_to_p2sh_p2wsh(script, main=False):
     script = check_script(script)
-    p2shscript = CScript([OP_0, sha256(script)])
+    p2shscript = CScript([OP_0, sha256(b'\x00' + script)])
     return script_to_p2sh(p2shscript, main)
 
 def check_key(key):
