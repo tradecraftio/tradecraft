@@ -1007,6 +1007,7 @@ class Witnessifier : public boost::static_visitor<bool>
 {
 public:
     CWallet * const pwallet;
+    WitnessV0ScriptEntry entry;
     CTxDestination result;
     bool already_witness;
 
@@ -1015,6 +1016,9 @@ public:
     bool operator()(const PKHash &pkhash) {
         if (pwallet) {
             CScript basescript = GetScriptForDestination(pkhash);
+            WitnessV0ScriptEntry other(0 /* version */, basescript);
+            entry.m_script = std::move(other.m_script);
+            pwallet->AddWitnessV0Script(entry);
             CScript witscript = GetScriptForWitness(basescript);
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
@@ -1034,6 +1038,9 @@ public:
                 already_witness = true;
                 return true;
             }
+            WitnessV0ScriptEntry other(0 /* version */, subscript);
+            entry.m_script = std::move(other.m_script);
+            pwallet->AddWitnessV0Script(entry);
             CScript witscript = GetScriptForWitness(subscript);
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
@@ -3063,21 +3070,17 @@ static UniValue listunspent(const JSONRPCRequest& request)
                         assert(extracted);
                         // Also return the witness script
                         const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
-                        CScriptID id;
-                        CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
-                        CScript witnessScript;
-                        if (pwallet->GetCScript(id, witnessScript)) {
-                            entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+                        WitnessV0ScriptEntry witentry;
+                        if (pwallet->GetWitnessV0Script(whash, witentry)) {
+                            entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
                         }
                     }
                 }
             } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
                 const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
-                CScriptID id;
-                CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
-                CScript witnessScript;
-                if (pwallet->GetCScript(id, witnessScript)) {
-                    entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+                WitnessV0ScriptEntry witentry;
+                if (pwallet->GetWitnessV0Script(whash, witentry)) {
+                    entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
                 }
             }
         }
@@ -3731,12 +3734,15 @@ public:
     UniValue operator()(const WitnessV0ScriptHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
-        CScript subscript;
-        CRIPEMD160 hasher;
-        uint160 hash;
-        hasher.Write(id.begin(), 32).Finalize(hash.begin());
-        if (pwallet && pwallet->GetCScript(CScriptID(hash), subscript)) {
-            ProcessSubScript(subscript, obj);
+        WitnessV0ScriptEntry entry;
+        if (pwallet && pwallet->GetWitnessV0Script(id, entry)) {
+            if (!entry.m_script.empty()) {
+                obj.pushKV("witscript_version", (int64_t)entry.m_script[0]);
+                if (entry.m_script[0] == 0x00) {
+                    CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+                    ProcessSubScript(subscript, obj);
+                }
+            }
         }
         return obj;
     }

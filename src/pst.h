@@ -58,7 +58,7 @@ struct PSTInput
     CTxOut witness_utxo;
     uint32_t witness_refheight;
     CScript redeem_script;
-    CScript witness_script;
+    WitnessV0ScriptEntry witness_entry;
     CScript final_script_sig;
     CScriptWitness final_script_witness;
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
@@ -106,9 +106,9 @@ struct PSTInput
             }
 
             // Write the witness script
-            if (!witness_script.empty()) {
+            if (!witness_entry.IsNull()) {
                 SerializeToVector(s, PST_IN_WITNESSSCRIPT);
-                s << witness_script;
+                s << witness_entry;
             }
 
             // Write any hd keypaths
@@ -220,12 +220,12 @@ struct PSTInput
                 }
                 case PST_IN_WITNESSSCRIPT:
                 {
-                    if (!witness_script.empty()) {
+                    if (!witness_entry.IsNull()) {
                         throw std::ios_base::failure("Duplicate Key, input witnessScript already provided");
                     } else if (key.size() != 1) {
                         throw std::ios_base::failure("Input witnessScript key is more than one byte type");
                     }
-                    s >> witness_script;
+                    s >> witness_entry;
                     break;
                 }
                 case PST_IN_BIP32_DERIVATION:
@@ -281,7 +281,7 @@ struct PSTInput
 struct PSTOutput
 {
     CScript redeem_script;
-    CScript witness_script;
+    WitnessV0ScriptEntry witness_entry;
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
 
@@ -301,9 +301,9 @@ struct PSTOutput
         }
 
         // Write the witness script
-        if (!witness_script.empty()) {
+        if (!witness_entry.IsNull()) {
             SerializeToVector(s, PST_OUT_WITNESSSCRIPT);
-            s << witness_script;
+            s << witness_entry;
         }
 
         // Write any hd keypaths
@@ -352,12 +352,12 @@ struct PSTOutput
                 }
                 case PST_OUT_WITNESSSCRIPT:
                 {
-                    if (!witness_script.empty()) {
+                    if (!witness_entry.IsNull()) {
                         throw std::ios_base::failure("Duplicate Key, output witnessScript already provided");
                     } else if (key.size() != 1) {
                         throw std::ios_base::failure("Output witnessScript key is more than one byte type");
                     }
-                    s >> witness_script;
+                    s >> witness_entry;
                     break;
                 }
                 case PST_OUT_BIP32_DERIVATION:

@@ -96,7 +96,7 @@ bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, uint32_t& refheight,
 
 bool PSTInput::IsNull() const
 {
-    return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
+    return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_entry.IsNull();
 }
 
 void PSTInput::FillSignatureData(SignatureData& sigdata) const
@@ -117,8 +117,8 @@ void PSTInput::FillSignatureData(SignatureData& sigdata) const
     if (!redeem_script.empty()) {
         sigdata.redeem_script = redeem_script;
     }
-    if (!witness_script.empty()) {
-        sigdata.witness_script = witness_script;
+    if (!witness_entry.IsNull()) {
+        sigdata.witness_entry = witness_entry;
     }
     for (const auto& key_pair : hd_keypaths) {
         sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
@@ -131,7 +131,7 @@ void PSTInput::FromSignatureData(const SignatureData& sigdata)
         partial_sigs.clear();
         hd_keypaths.clear();
         redeem_script.clear();
-        witness_script.clear();
+        witness_entry.SetNull();
 
         if (!sigdata.scriptSig.empty()) {
             final_script_sig = sigdata.scriptSig;
@@ -146,8 +146,8 @@ void PSTInput::FromSignatureData(const SignatureData& sigdata)
     if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
         redeem_script = sigdata.redeem_script;
     }
-    if (witness_script.empty() && !sigdata.witness_script.empty()) {
-        witness_script = sigdata.witness_script;
+    if (witness_entry.IsNull() && !sigdata.witness_entry.IsNull()) {
+        witness_entry = sigdata.witness_entry;
     }
     for (const auto& entry : sigdata.misc_pubkeys) {
         hd_keypaths.emplace(entry.second);
@@ -168,7 +168,7 @@ void PSTInput::Merge(const PSTInput& input)
     unknown.insert(input.unknown.begin(), input.unknown.end());
 
     if (redeem_script.empty() && !input.redeem_script.empty()) redeem_script = input.redeem_script;
-    if (witness_script.empty() && !input.witness_script.empty()) witness_script = input.witness_script;
+    if (witness_entry.IsNull() && !input.witness_entry.IsNull()) witness_entry = input.witness_entry;
     if (final_script_sig.empty() && !input.final_script_sig.empty()) final_script_sig = input.final_script_sig;
     if (final_script_witness.IsNull() && !input.final_script_witness.IsNull()) final_script_witness = input.final_script_witness;
 }
@@ -178,8 +178,8 @@ bool PSTInput::IsSane() const
     // Cannot have both witness and non-witness utxos
     if (!witness_utxo.IsNull() && non_witness_utxo) return false;
 
-    // If we have a witness_script or a scriptWitness, we must also have a witness utxo
-    if (!witness_script.empty() && witness_utxo.IsNull()) return false;
+    // If we have a witness_entry or a scriptWitness, we must also have a witness utxo
+    if (!witness_entry.IsNull() && witness_utxo.IsNull()) return false;
     if (!final_script_witness.IsNull() && witness_utxo.IsNull()) return false;
 
     return true;
@@ -190,8 +190,8 @@ void PSTOutput::FillSignatureData(SignatureData& sigdata) const
     if (!redeem_script.empty()) {
         sigdata.redeem_script = redeem_script;
     }
-    if (!witness_script.empty()) {
-        sigdata.witness_script = witness_script;
+    if (!witness_entry.IsNull()) {
+        sigdata.witness_entry = witness_entry;
     }
     for (const auto& key_pair : hd_keypaths) {
         sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
@@ -203,8 +203,8 @@ void PSTOutput::FromSignatureData(const SignatureData& sigdata)
     if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
         redeem_script = sigdata.redeem_script;
     }
-    if (witness_script.empty() && !sigdata.witness_script.empty()) {
-        witness_script = sigdata.witness_script;
+    if (witness_entry.IsNull() && !sigdata.witness_entry.IsNull()) {
+        witness_entry = sigdata.witness_entry;
     }
     for (const auto& entry : sigdata.misc_pubkeys) {
         hd_keypaths.emplace(entry.second);
@@ -213,7 +213,7 @@ void PSTOutput::FromSignatureData(const SignatureData& sigdata)
 
 bool PSTOutput::IsNull() const
 {
-    return redeem_script.empty() && witness_script.empty() && hd_keypaths.empty() && unknown.empty();
+    return redeem_script.empty() && witness_entry.IsNull() && hd_keypaths.empty() && unknown.empty();
 }
 
 void PSTOutput::Merge(const PSTOutput& output)
@@ -222,7 +222,7 @@ void PSTOutput::Merge(const PSTOutput& output)
     unknown.insert(output.unknown.begin(), output.unknown.end());
 
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
-    if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
+    if (witness_entry.IsNull() && !output.witness_entry.IsNull()) witness_entry = output.witness_entry;
 }
 bool PSTInputSigned(const PSTInput& input)
 {

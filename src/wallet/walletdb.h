@@ -90,6 +90,7 @@ extern const std::string TX;
 extern const std::string VERSION;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
+extern const std::string WITNESS_V0;
 } // namespace DBKeys
 
 /* simple HD chain data model */
@@ -239,6 +240,7 @@ public:
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
+    bool WriteWitnessV0Script(const uint160& scriptid, const WitnessV0ScriptEntry& entry);
 
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
     bool EraseWatchOnly(const CScript &script);

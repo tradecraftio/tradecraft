@@ -589,12 +589,18 @@ BOOST_AUTO_TEST_CASE(test_witness)
     BOOST_CHECK(keystore.AddCScript(scriptPubkey1L));
     BOOST_CHECK(keystore.AddCScript(scriptPubkey2L));
     BOOST_CHECK(keystore.AddCScript(scriptMulti));
+    BOOST_CHECK(keystore.AddWitnessV0Script(WitnessV0ScriptEntry(ToByteVector((CScript() << OP_FALSE) + scriptPubkey1))));
+    BOOST_CHECK(keystore.AddWitnessV0Script(WitnessV0ScriptEntry(ToByteVector((CScript() << OP_FALSE) + scriptPubkey2))));
+    BOOST_CHECK(keystore.AddWitnessV0Script(WitnessV0ScriptEntry(ToByteVector((CScript() << OP_FALSE) + scriptPubkey1L))));
+    BOOST_CHECK(keystore.AddWitnessV0Script(WitnessV0ScriptEntry(ToByteVector((CScript() << OP_FALSE) + scriptPubkey2L))));
+    BOOST_CHECK(keystore.AddWitnessV0Script(WitnessV0ScriptEntry(ToByteVector((CScript() << OP_FALSE) + scriptMulti))));
     BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptPubkey1)));
     BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptPubkey2)));
     BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptPubkey1L)));
     BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptPubkey2L)));
     BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptMulti)));
     BOOST_CHECK(keystore2.AddCScript(scriptMulti));
+    BOOST_CHECK(keystore2.AddWitnessV0Script(WitnessV0ScriptEntry(ToByteVector((CScript() << OP_FALSE) + scriptMulti))));
     BOOST_CHECK(keystore2.AddCScript(GetScriptForWitness(scriptMulti)));
     BOOST_CHECK(keystore2.AddKeyPubKey(key3, pubkey3));
 

@@ -540,6 +540,21 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return FillableSigningProvider::AddCScript(redeemScript);
 }
 
+bool CWallet::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
+{
+    if (!FillableSigningProvider::AddWitnessV0Script(entry))
+        return false;
+    WitnessV0ScriptHash longid = entry.GetScriptHash();
+    uint160 shortid;
+    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
+    return WalletBatch(*database).WriteWitnessV0Script(shortid, entry);
+}
+
+bool CWallet::LoadWitnessV0Script(const WitnessV0ScriptEntry& entry)
+{
+    return FillableSigningProvider::AddWitnessV0Script(entry);
+}
+
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 {
     std::vector<std::vector<unsigned char>> solutions;
@@ -1846,6 +1861,27 @@ bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
         if (timestamp > 0) {
             m_script_metadata[CScriptID(entry)].nCreateTime = timestamp;
         }
+    }
+    if (timestamp > 0) {
+        UpdateTimeFirstKey(timestamp);
+    }
+
+    return true;
+}
+
+bool CWallet::ImportWitnessV0Scripts(const std::set<WitnessV0ScriptEntry> witscripts, int64_t timestamp)
+{
+    WalletBatch batch(*database);
+    for (const auto& entry : witscripts) {
+        if (HaveWitnessV0Script(entry.GetScriptHash())) {
+            WalletLogPrintf("Already have witscript %s, skipping\n", HexStr(entry.m_script));
+            continue;
+        }
+        if (!AddWitnessV0Script(entry)) {
+            return false;
+        }
+
+        // FIXME: Record timestamp to witscript metadata
     }
     if (timestamp > 0) {
         UpdateTimeFirstKey(timestamp);

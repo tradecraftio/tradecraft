@@ -135,16 +135,16 @@ IsMineResult IsMineInner(const CWallet& keystore, const CScript& scriptPubKey, I
             // P2WSH inside P2WSH is invalid.
             return IsMineResult::INVALID;
         }
-        if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+        WitnessV0ScriptHash withash(vSolutions[0]);
+        WitnessV0ScriptEntry entry;
+        if (!keystore.GetWitnessV0Script(withash, entry)) {
             break;
         }
-        uint160 hash;
-        CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(hash.begin());
-        CScriptID scriptID = CScriptID(hash);
-        CScript subscript;
-        if (keystore.GetCScript(scriptID, subscript)) {
-            ret = std::max(ret, IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0));
+        if (entry.m_script.empty() || (entry.m_script[0] != 0x00)) {
+            break;
         }
+        CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+        ret = std::max(ret, IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0));
         break;
     }
 

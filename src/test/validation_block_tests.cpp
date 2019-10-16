@@ -35,7 +35,7 @@ struct RegtestingSetup : public TestingSetup {
     RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {}
 };
 
-static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
+static const std::vector<unsigned char> V_OP_TRUE{0x00, OP_TRUE};
 
 BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegtestingSetup)
 
