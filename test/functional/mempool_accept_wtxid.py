@@ -40,6 +40,7 @@ from test_framework.script import (
     OP_TRUE,
     hash160,
 )
+from test_framework.script_util import script_to_witness
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -61,7 +62,7 @@ class MempoolWtxidTest(FreicoinTestFramework):
 
         self.log.info("Submit parent with multiple script branches to mempool")
         hashlock = hash160(b'Preimage')
-        witness_script = CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF])
+        witness_script = script_to_witness(CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF]))
         witness_program = sha256(witness_script)
         script_pubkey = CScript([OP_0, witness_program])
 
@@ -79,7 +80,7 @@ class MempoolWtxidTest(FreicoinTestFramework):
         peer_wtxid_relay = node.add_p2p_connection(P2PTxInvStore())
 
         # Create a new transaction with witness solving first branch
-        child_witness_script = CScript([OP_TRUE])
+        child_witness_script = script_to_witness(CScript([OP_TRUE]))
         child_witness_program = sha256(child_witness_script)
         child_script_pubkey = CScript([OP_0, child_witness_program])
 

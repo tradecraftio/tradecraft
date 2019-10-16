@@ -293,23 +293,61 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 }
 
                 // work from witnessScript when possible
-                std::vector<unsigned char> scriptData(!ws.isNull() ? ParseHexV(ws, "witnessScript") : ParseHexV(rs, "redeemScript"));
-                CScript script(scriptData.begin(), scriptData.end());
-                keystore->AddCScript(script);
-                // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
-                // This is done for redeemScript only for compatibility, it is encouraged to use the explicit witnessScript field instead.
-                CScript witness_output_script{GetScriptForDestination(WitnessV0ScriptHash(script))};
-                keystore->AddCScript(witness_output_script);
+                CScript script;
+                if (!ws.isNull()) {
+                    std::vector<unsigned char> witnessScriptData = ParseHexV(ws, "witnessScript");
+                    if (witnessScriptData.empty() || witnessScriptData[0] != 0x00) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unrecognized witnessScript version");
+                    }
+                    WitnessV0ScriptEntry entry(witnessScriptData);
+                    keystore->AddWitnessV0Script(entry);
+                    script = CScript(witnessScriptData.begin() + 1, witnessScriptData.end());
+                    keystore->AddCScript(script);
+                    std::vector<std::vector<unsigned char>> vSolutions;
+                    TxoutType typ = Solver(script, vSolutions);
+                    CScript witness_output_script;
+                    if (typ == TxoutType::PUBKEY) {
+                        witness_output_script = GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0])));
+                    } else if (typ == TxoutType::PUBKEYHASH) {
+                        witness_output_script = GetScriptForDestination(WitnessV0KeyHash(uint160{vSolutions[0]}));
+                    } else {
+                        witness_output_script = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, script));
+                    }
+                    keystore->AddCScript(witness_output_script);
+                    keystore->AddCScript(GetScriptForDestination(entry.GetScriptHash()));
+                } else if (!rs.isNull()) {
+                    std::vector<unsigned char> redeemScriptData = ParseHexV(rs, "redeemScript");
+                    script = CScript(redeemScriptData.begin(), redeemScriptData.end());
+                    keystore->AddCScript(script);
+                    // Automatically also add the P2WSH wrapped version of the
+                    // script (to deal with P2SH-P2WSH).
+                    // This is done for redeemScript only for compatibility, it
+                    // is encouraged to use the explicit witnessScript field
+                    // instead.
+                    std::vector<std::vector<unsigned char>> vSolutions;
+                    TxoutType typ = Solver(script, vSolutions);
+                    CScript witness_output_script;
+                    if (typ == TxoutType::PUBKEY) {
+                        witness_output_script = GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0])));
+                    } else if (typ == TxoutType::PUBKEYHASH) {
+                        witness_output_script = GetScriptForDestination(WitnessV0KeyHash(uint160{vSolutions[0]}));
+                    } else {
+                        witness_output_script = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, script));
+                    }
+                    keystore->AddCScript(witness_output_script);
+                    WitnessV0ScriptEntry entry(0 /* version */, script);
+                    keystore->AddWitnessV0Script(entry);
+                }
 
                 if (!ws.isNull() && !rs.isNull()) {
                     // if both witnessScript and redeemScript are provided,
                     // they should either be the same (for backwards compat),
                     // or the redeemScript should be the encoded form of
                     // the witnessScript (ie, for p2sh-p2wsh)
-                    if (ws.get_str() != rs.get_str()) {
-                        std::vector<unsigned char> redeemScriptData(ParseHexV(rs, "redeemScript"));
-                        CScript redeemScript(redeemScriptData.begin(), redeemScriptData.end());
-                        if (redeemScript != witness_output_script) {
+                    std::vector<unsigned char> redeemScriptData = ParseHexV(rs, "redeemScript");
+                    CScript redeem_script = CScript(redeemScriptData.begin(), redeemScriptData.end());
+                    if (redeem_script != script) {
+                        if (redeem_script != GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, script))) {
                             throw JSONRPCError(RPC_INVALID_PARAMETER, "redeemScript does not correspond to witnessScript");
                         }
                     }
@@ -317,7 +355,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
 
                 if (is_p2sh) {
                     const CTxDestination p2sh{ScriptHash(script)};
-                    const CTxDestination p2sh_p2wsh{ScriptHash(witness_output_script)};
+                    const CTxDestination p2sh_p2wsh{ScriptHash(GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, script)))};
                     if (scriptPubKey == GetScriptForDestination(p2sh)) {
                         // traditional p2sh; arguably an error if
                         // we got here with rs.IsNull(), because
@@ -340,7 +378,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     // was specified by redeemScript rather than
                     // witnessScript (ie, ws.IsNull() == true), but
                     // accept it for backwards compat
-                    const CTxDestination p2wsh{WitnessV0ScriptHash(script)};
+                    const CTxDestination p2wsh{WitnessV0ScriptHash(0 /* version */, script)};
                     if (scriptPubKey != GetScriptForDestination(p2wsh)) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, "redeemScript/witnessScript does not match scriptPubKey");
                     }

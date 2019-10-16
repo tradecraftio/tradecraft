@@ -108,9 +108,33 @@ static bool GetCScript(const SigningProvider& provider, const SignatureData& sig
     if (CScriptID(sigdata.redeem_script) == scriptid) {
         script = sigdata.redeem_script;
         return true;
-    } else if (CScriptID(sigdata.witness_script) == scriptid) {
-        script = sigdata.witness_script;
+    }
+    if (!sigdata.witness_entry.m_script.empty()) {
+        CScript witness_script(sigdata.witness_entry.m_script.begin() + 1, sigdata.witness_entry.m_script.end());
+        if (CScriptID(witness_script) == scriptid) {
+            script = witness_script;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool GetWitnessV0Script(const SigningProvider& provider, const SignatureData& sigdata, const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry)
+{
+    if (provider.GetWitnessV0Script(id, entry)) {
         return true;
+    }
+    // Look for witscripts in SignatureData
+    WitnessV0ScriptEntry redeem_entry(0 /* version */, sigdata.redeem_script);
+    if (redeem_entry.GetScriptHash() == id) {
+        entry = std::move(redeem_entry);
+        return true;
+    }
+    if (!sigdata.witness_entry.IsNull()) {
+        if (sigdata.witness_entry.GetScriptHash() == id) {
+            entry = sigdata.witness_entry;
+            return true;
+        }
     }
     return false;
 }
@@ -295,8 +319,6 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
 static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& scriptPubKey,
                      std::vector<valtype>& ret, TxoutType& whichTypeRet, SigVersion sigversion, SignatureData& sigdata)
 {
-    CScript scriptRet;
-    uint160 h160;
     ret.clear();
     std::vector<unsigned char> sig;
 
@@ -327,14 +349,17 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         return true;
     }
     case TxoutType::SCRIPTHASH:
-        h160 = uint160(vSolutions[0]);
-        if (GetCScript(provider, sigdata, CScriptID{h160}, scriptRet)) {
-            ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
+    {
+        CScript script_ret;
+        uint160 h160(vSolutions[0]);
+        if (GetCScript(provider, sigdata, CScriptID{h160}, script_ret)) {
+            ret.push_back(std::vector<unsigned char>(script_ret.begin(), script_ret.end()));
             return true;
         }
         // Could not find redeemScript, add to missing
         sigdata.missing_redeem_script = h160;
         return false;
+    }
 
     case TxoutType::MULTISIG: {
         size_t required = vSolutions.front()[0];
@@ -365,14 +390,23 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         return true;
 
     case TxoutType::WITNESS_V0_SCRIPTHASH:
-        CRIPEMD160().Write(vSolutions[0].data(), vSolutions[0].size()).Finalize(h160.begin());
-        if (GetCScript(provider, sigdata, CScriptID{h160}, scriptRet)) {
-            ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
-            return true;
+    {
+        WitnessV0ScriptHash withash(uint256{vSolutions[0]});
+        WitnessV0ScriptEntry entry;
+        if (GetWitnessV0Script(provider, sigdata, withash, entry)) {
+            if (!entry.m_script.empty() && (entry.m_script[0] == 0x00)) {
+                // Return the WitnessV0ScriptEntry field in its entirety, so it
+                // can be put into the SignatureData structure.
+                ret.emplace_back();
+                CVectorWriter ss(SER_NETWORK, PROTOCOL_VERSION, ret.back(), 0);
+                ss << entry;
+                return true;
+            }
         }
         // Could not find witnessScript, add to missing
-        sigdata.missing_witness_script = uint256(vSolutions[0]);
+        sigdata.missing_witness_script = withash;
         return false;
+    }
 
     case TxoutType::WITNESS_V1_TAPROOT:
         return SignTaproot(provider, creator, WitnessV1Taproot(XOnlyPubKey{vSolutions[0]}), sigdata, ret);
@@ -430,11 +464,15 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
     }
     else if (solved && whichType == TxoutType::WITNESS_V0_SCRIPTHASH)
     {
-        CScript witnessscript(result[0].begin(), result[0].end());
-        sigdata.witness_script = witnessscript;
+        CDataStream ss(result[0], SER_NETWORK, PROTOCOL_VERSION);
+        ss >> sigdata.witness_entry;
+        assert(ss.empty());
+        CScript witnessscript(sigdata.witness_entry.m_script.begin() + 1, sigdata.witness_entry.m_script.end());
         TxoutType subType;
         solved = solved && SignStep(provider, creator, witnessscript, result, subType, SigVersion::WITNESS_V0, sigdata) && subType != TxoutType::SCRIPTHASH && subType != TxoutType::WITNESS_V0_SCRIPTHASH && subType != TxoutType::WITNESS_V0_KEYHASH;
-        result.push_back(std::vector<unsigned char>(witnessscript.begin(), witnessscript.end()));
+        // The only item on the stack is the witness script, which is
+        // contained in the WitnessV0ScriptEntry passed back to us.
+        result.push_back(sigdata.witness_entry.m_script);
         sigdata.scriptWitness.stack = result;
         sigdata.witness = true;
         result.clear();
@@ -495,6 +533,8 @@ struct Stacks
 // Extracts signatures and scripts from incomplete scriptSigs. Please do not extend this, use PST instead
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout, int64_t refheight)
 {
+    using std::swap;
+
     SignatureData data;
     assert(tx.vin.size() > nIn);
     data.scriptSig = tx.vin[nIn].scriptSig;
@@ -525,11 +565,11 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
         script_type = Solver(next_script, solutions);
         stack.script.pop_back();
     }
-    if (script_type == TxoutType::WITNESS_V0_SCRIPTHASH && !stack.witness.empty() && !stack.witness.back().empty()) {
+    if (script_type == TxoutType::WITNESS_V0_SCRIPTHASH && !stack.witness.empty() && !stack.witness.back().empty() && (stack.witness.back()[0] == 0x00)) {
         // Get the witnessScript
-        CScript witness_script(stack.witness.back().begin(), stack.witness.back().end());
-        data.witness_script = witness_script;
-        next_script = std::move(witness_script);
+        swap(data.witness_entry.m_script, stack.witness.back());
+        stack.witness.pop_back();
+        next_script = CScript(data.witness_entry.m_script.begin() + 1, data.witness_entry.m_script.end());
 
         // Get witnessScript type
         script_type = Solver(next_script, solutions);
@@ -574,8 +614,8 @@ void SignatureData::MergeSignatureData(SignatureData sigdata)
     if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
         redeem_script = sigdata.redeem_script;
     }
-    if (witness_script.empty() && !sigdata.witness_script.empty()) {
-        witness_script = sigdata.witness_script;
+    if (witness_entry.IsNull() && !sigdata.witness_entry.IsNull()) {
+        witness_entry = sigdata.witness_entry;
     }
     signatures.insert(std::make_move_iterator(sigdata.signatures.begin()), std::make_move_iterator(sigdata.signatures.end()));
 }

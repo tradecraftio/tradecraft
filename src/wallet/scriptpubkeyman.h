@@ -320,8 +320,11 @@ private:
 
     void AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const bool internal, WalletBatch& batch);
 
-    //! Adds a script to the store and saves it to disk
+    //! Adds a legacy script to the store and saves it to disk
     bool AddCScriptWithDB(WalletBatch& batch, const CScript& script);
+
+    //! Adds a witness script to the store and saves it to disk
+    bool AddWitnessV0ScriptWithDB(WalletBatch& batch, const WitnessV0ScriptEntry& entry);
 
     /** Add a KeyOriginInfo to the wallet */
     bool AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info);
@@ -440,6 +443,8 @@ public:
     void UpdateTimeFirstKey(int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     //! Adds a CScript to the store
     bool LoadCScript(const CScript& redeemScript);
+    //! Adds a WitnessScriptEntry to the store
+    bool LoadWitnessV0Script(const WitnessV0ScriptEntry& entry);
     //! Load metadata (used by LoadWallet)
     void LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &metadata);
     void LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata &metadata);
@@ -471,6 +476,7 @@ public:
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
     bool AddCScript(const CScript& redeemScript) override;
+    bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry) override;
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
 
     //! Load a keypool entry
@@ -479,6 +485,7 @@ public:
     void MarkPreSplitKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool ImportWitnessV0Scripts(const std::set<WitnessV0ScriptEntry> witscripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     bool ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
@@ -542,6 +549,8 @@ public:
 
     bool GetCScript(const CScriptID &scriptid, CScript& script) const override { return m_spk_man.GetCScript(scriptid, script); }
     bool HaveCScript(const CScriptID &scriptid) const override { return m_spk_man.HaveCScript(scriptid); }
+    bool GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const override { return m_spk_man.GetWitnessV0Script(id, entry); }
+    bool HaveWitnessV0Script(const WitnessV0ScriptHash& id) const override { return m_spk_man.HaveWitnessV0Script(id); }
     bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const override { return m_spk_man.GetPubKey(address, pubkey); }
     bool GetKey(const CKeyID &address, CKey& key) const override { return false; }
     bool HaveKey(const CKeyID &address) const override { return false; }

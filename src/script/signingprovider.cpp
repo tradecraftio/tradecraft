@@ -38,6 +38,11 @@ bool HidingSigningProvider::GetCScript(const CScriptID& scriptid, CScript& scrip
     return m_provider->GetCScript(scriptid, script);
 }
 
+bool HidingSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const
+{
+    return m_provider->GetWitnessV0Script(id, entry);
+}
+
 bool HidingSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
 {
     return m_provider->GetPubKey(keyid, pubkey);
@@ -65,6 +70,7 @@ bool HidingSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tap
 }
 
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
+bool FlatSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const { return LookupHelper(witscripts, id, entry); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
 bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
 {
@@ -91,6 +97,7 @@ bool FlatSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tapro
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
     scripts.merge(b.scripts);
+    witscripts.merge(b.witscripts);
     pubkeys.merge(b.pubkeys);
     keys.merge(b.keys);
     origins.merge(b.origins);
@@ -199,6 +206,31 @@ bool FillableSigningProvider::GetCScript(const CScriptID &hash, CScript& redeemS
     if (mi != mapScripts.end())
     {
         redeemScriptOut = (*mi).second;
+        return true;
+    }
+    return false;
+}
+
+bool FillableSigningProvider::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
+{
+    LOCK(cs_KeyStore);
+    mapWitnessV0Scripts[entry.GetScriptHash()] = entry;
+    return true;
+}
+
+bool FillableSigningProvider::HaveWitnessV0Script(const WitnessV0ScriptHash& witnessprogram) const
+{
+    LOCK(cs_KeyStore);
+    return mapWitnessV0Scripts.count(witnessprogram) > 0;
+}
+
+bool FillableSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
+{
+    LOCK(cs_KeyStore);
+    auto mi = mapWitnessV0Scripts.find(witnessprogram);
+    if (mi != mapWitnessV0Scripts.end())
+    {
+        entryOut = (*mi).second;
         return true;
     }
     return false;
