@@ -501,7 +501,7 @@ class ImportMultiTest(FreicoinTestFramework):
         self.log.info("Should import a p2wsh with respective witness script and private keys")
         self.test_importmulti({"scriptPubKey": {"address": multisig.p2wsh_addr},
                                "timestamp": "now",
-                               "witnessscript": multisig.redeem_script,
+                               "witnessscript": multisig.witness_script,
                                "keys": multisig.privkeys},
                               success=True)
         test_address(self.nodes[1],
@@ -553,7 +553,7 @@ class ImportMultiTest(FreicoinTestFramework):
         self.test_importmulti({"scriptPubKey": {"address": multisig.p2sh_p2wsh_addr},
                                "timestamp": "now",
                                "redeemscript": multisig.p2wsh_script,
-                               "witnessscript": multisig.redeem_script},
+                               "witnessscript": multisig.witness_script},
                               success=True,
                               warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         test_address(self.nodes[1],

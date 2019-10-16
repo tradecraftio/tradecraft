@@ -102,7 +102,9 @@ CTxDestination AddAndGetDestinationForScript(FlatSigningProvider& keystore, cons
         return ScriptHash(script);
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
-        CTxDestination witdest = WitnessV0ScriptHash(script);
+        WitnessV0ScriptEntry entry(/*version=*/0, script);
+        keystore.witscripts.emplace(entry.GetScriptHash(), entry);
+        CTxDestination witdest = entry.GetScriptHash();
         CScript witprog = GetScriptForDestination(witdest);
         // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.
         keystore.scripts.emplace(CScriptID(witprog), witprog);
