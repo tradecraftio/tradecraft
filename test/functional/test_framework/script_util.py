@@ -66,9 +66,12 @@ def program_to_witness_script(version, program, main = False):
     assert version > 0 or len(program) in [20, 32]
     return CScript([version, program])
 
+def script_to_witness(script):
+    return b'\x00' + script
+
 def script_to_p2wsh_script(script, main = False):
     script = check_script(script)
-    return program_to_witness_script(0, sha256(script), main)
+    return program_to_witness_script(0, sha256(script_to_witness(script)), main)
 
 def key_to_p2wpkh_script(key, main = False):
     key = check_key(key)
@@ -76,7 +79,7 @@ def key_to_p2wpkh_script(key, main = False):
 
 def script_to_p2sh_p2wsh_script(script, main = False):
     script = check_script(script)
-    p2shscript = CScript([OP_0, sha256(script)])
+    p2shscript = CScript([OP_0, sha256(script_to_witness(script))])
     return script_to_p2sh_script(p2shscript, main)
 
 def check_key(key):
