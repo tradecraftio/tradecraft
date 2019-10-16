@@ -902,10 +902,11 @@ struct ImportData
 {
     // Input data
     std::unique_ptr<CScript> redeemscript; //!< Provided redeemScript; will be moved to `import_scripts` if relevant.
-    std::unique_ptr<CScript> witnessscript; //!< Provided witnessScript; will be moved to `import_scripts` if relevant.
+    std::unique_ptr<WitnessV0ScriptEntry> witnessscript; //!< Provided witnessScript; will be moved to `import_witscripts` if relevant.
 
     // Output data
     std::set<CScript> import_scripts;
+    std::set<WitnessV0ScriptEntry> import_witscripts;
     std::map<CKeyID, bool> used_keys; //!< Import these private keys if available (the value indicates whether if the key is required for solvability)
     std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> key_origins;
 };
@@ -956,17 +957,22 @@ static std::string RecurseImportData(const CScript& script, ImportData& import_d
     }
     case TX_WITNESS_V0_SCRIPTHASH: {
         if (script_ctx == ScriptContext::WITNESS_V0) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Trying to nest P2WSH inside another P2WSH");
-        uint256 fullid(solverdata[0]);
-        CScriptID id;
-        CRIPEMD160().Write(fullid.begin(), fullid.size()).Finalize(id.begin());
-        auto subscript = std::move(import_data.witnessscript); // Remove redeemscript from import_data to check for superfluous script later.
-        if (!subscript) return "missing witnessscript";
-        if (CScriptID(*subscript) != id) return "witnessScript does not match the scriptPubKey or redeemScript";
+        WitnessV0ScriptHash longid(solverdata[0]);
+        auto witscript = std::move(import_data.witnessscript); // Remove redeemscript from import_data to check for superfluous script later.
+        if (!witscript) return "missing witnessscript";
+        if (witscript->GetScriptHash() != longid) return "witnessScript does not match the scriptPubKey or redeemScript";
         if (script_ctx == ScriptContext::TOP) {
             import_data.import_scripts.emplace(script); // Special rule for IsMine: native P2WSH requires the TOP script imported (see script/ismine.cpp)
         }
-        import_data.import_scripts.emplace(*subscript);
-        return RecurseImportData(*subscript, import_data, ScriptContext::WITNESS_V0);
+        import_data.import_witscripts.emplace(*witscript);
+        import_data.import_scripts.emplace(CScript() << OP_0 << ToByteVector(longid));
+        if (!witscript->m_script.empty() && witscript->m_script[0] == 0x00) {
+            CScript subscript(witscript->m_script.begin() + 1, witscript->m_script.end());
+            import_data.import_scripts.insert(subscript);
+            return RecurseImportData(subscript, import_data, ScriptContext::WITNESS_V0);
+        } else {
+            return "";
+        }
     }
     case TX_WITNESS_V0_KEYHASH: {
         if (script_ctx == ScriptContext::WITNESS_V0) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Trying to nest P2WPKH inside P2WSH");
@@ -1044,7 +1050,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid witness script \"" + witness_script_hex + "\": must be hex string");
         }
         auto parsed_witnessscript = ParseHex(witness_script_hex);
-        import_data.witnessscript = MakeUnique<CScript>(parsed_witnessscript.begin(), parsed_witnessscript.end());
+        import_data.witnessscript = MakeUnique<WitnessV0ScriptEntry>(parsed_witnessscript);
     }
     for (size_t i = 0; i < pubKeys.size(); ++i) {
         const auto& str = pubKeys[i].get_str();
@@ -1176,6 +1182,10 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
             import_data.import_scripts.emplace(x.second);
         }
 
+        for (const auto& x : out_keys.witscripts) {
+            import_data.import_witscripts.emplace(x.second);
+        }
+
         std::copy(out_keys.pubkeys.begin(), out_keys.pubkeys.end(), std::inserter(pubkey_map, pubkey_map.end()));
         import_data.key_origins.insert(out_keys.origins.begin(), out_keys.origins.end());
     }
@@ -1273,6 +1283,11 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
              }
          }
+        for (const auto& entry : import_data.import_witscripts) {
+            if (!pwallet->HaveWitnessV0Script(entry.GetScriptHash()) && !pwallet->AddWitnessV0Script(entry)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding witscript to wallet");
+            }
+        }
          for (const auto& entry : privkey_map) {
              const CKey& key = entry.second;
              CPubKey pubkey = key.GetPubKey();

@@ -132,6 +132,31 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
+bool CBasicKeyStore::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
+{
+    LOCK(cs_KeyStore);
+    mapWitnessV0Scripts[entry.GetScriptHash()] = entry;
+    return true;
+}
+
+bool CBasicKeyStore::HaveWitnessV0Script(const WitnessV0ScriptHash& witnessprogram) const
+{
+    LOCK(cs_KeyStore);
+    return mapWitnessV0Scripts.count(witnessprogram) > 0;
+}
+
+bool CBasicKeyStore::GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
+{
+    LOCK(cs_KeyStore);
+    auto mi = mapWitnessV0Scripts.find(witnessprogram);
+    if (mi != mapWitnessV0Scripts.end())
+    {
+        entryOut = (*mi).second;
+        return true;
+    }
+    return false;
+}
+
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 {
     //TODO: Use Solver to extract this?

@@ -452,6 +452,8 @@ public:
         if (m_script_arg) {
             for (const auto& subscript : subscripts) {
                 out.scripts.emplace(CScriptID(subscript), subscript);
+                WitnessV0ScriptEntry entry(0 /* version */, subscript);
+                out.witscripts.emplace(entry.GetScriptHash(), entry);
                 std::vector<CScript> addscripts = MakeScripts(pubkeys, &subscript, out);
                 for (auto& addscript : addscripts) {
                     output_scripts.push_back(std::move(addscript));
@@ -592,7 +594,7 @@ public:
 class WSHDescriptor final : public DescriptorImpl
 {
 protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(WitnessV0ScriptHash(*script))); }
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, *script))); }
 public:
     WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
 };
@@ -867,12 +869,14 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
     if (txntype == TX_WITNESS_V0_SCRIPTHASH && ctx != ParseScriptContext::P2WSH) {
-        CScriptID scriptid;
-        CRIPEMD160().Write(data[0].data(), data[0].size()).Finalize(scriptid.begin());
-        CScript subscript;
-        if (provider.GetCScript(scriptid, subscript)) {
-            auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
-            if (sub) return MakeUnique<WSHDescriptor>(std::move(sub));
+        WitnessV0ScriptHash scriptid(data[0]);
+        WitnessV0ScriptEntry entry;
+        if (provider.GetWitnessV0Script(scriptid, entry)) {
+            if (!entry.m_script.empty() && entry.m_script[0] == 0x00) {
+                CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+                auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
+                if (sub) return MakeUnique<WSHDescriptor>(std::move(sub));
+            }
         }
     }
 

@@ -697,7 +697,7 @@ static UniValue decodescript(const JSONRPCRequest& request)
             } else {
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
                 // Newer segwit program versions should be considered when then become available.
-                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
+                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, true);
             sr.pushKV("p2sh-segwit", EncodeDestination(CScriptID(segwitScr)));
@@ -904,14 +904,22 @@ UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, con
                     // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
                     // This is only for compatibility, it is encouraged to use the explicit witnessScript field instead.
                     keystore->AddCScript(GetScriptForWitness(redeemScript));
+                    WitnessV0ScriptEntry entry(0 /* version */, redeemScript);
+                    keystore->AddWitnessV0Script(entry);
                 }
                 UniValue ws = find_value(prevOut, "witnessScript");
                 if (!ws.isNull()) {
                     std::vector<unsigned char> wsData(ParseHexV(ws, "witnessScript"));
-                    CScript witnessScript(wsData.begin(), wsData.end());
-                    keystore->AddCScript(witnessScript);
-                    // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
-                    keystore->AddCScript(GetScriptForWitness(witnessScript));
+                    WitnessV0ScriptEntry entry(wsData);
+                    keystore->AddWitnessV0Script(entry);
+                    if (!wsData.empty() && wsData[0] == 0x00) {
+                        // Automatically also add the P2SH wrapped version of the script (to deal with P2SH-P2WSH).
+                        // This is only for compatibility, it is encouraged to use the explicit redeemScript field instead.
+                        CScript subscript(wsData.begin() + 1, wsData.end());
+                        keystore->AddCScript(subscript);
+                        keystore->AddCScript(GetScriptForWitness(subscript));
+                        keystore->AddCScript(GetScriptForDestination(entry.GetScriptHash()));
+                    }
                 }
                 if (rs.isNull() && ws.isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing redeemScript/witnessScript");
@@ -1261,6 +1269,7 @@ UniValue decodepst(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "        }\n"
+            "      \"script_version\" : \"version\"  (nubmber, optional) The inner script version\n"
             "      \"witness_script\" : {       (json object, optional)\n"
             "          \"asm\" : \"asm\",            (string) The asm\n"
             "          \"hex\" : \"hex\",            (string) The hex\n"
@@ -1292,6 +1301,7 @@ UniValue decodepst(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "        }\n"
+            "      \"script_version\" : \"version\"  (nubmber, optional) The inner script version\n"
             "      \"witness_script\" : {       (json object, optional)\n"
             "          \"asm\" : \"asm\",            (string) The asm\n"
             "          \"hex\" : \"hex\",            (string) The hex\n"
@@ -1395,9 +1405,15 @@ UniValue decodepst(const JSONRPCRequest& request)
             ScriptToUniv(input.redeem_script, r, false);
             in.pushKV("redeem_script", r);
         }
-        if (!input.witness_script.empty()) {
+        if (!input.witness_entry.m_script.empty()) {
+            in.pushKV("script_version", (int64_t)input.witness_entry.m_script[0]);
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.witness_script, r, false);
+            if (input.witness_entry.m_script[0] == 0x00) {
+                ScriptToUniv(CScript(input.witness_entry.m_script.begin() + 1, input.witness_entry.m_script.end()), r, false);
+            } else {
+                r.pushKV("hex", HexStr(input.witness_entry.m_script.begin() + 1, input.witness_entry.m_script.end()));
+                r.pushKV("type", "unknown");
+            }
             in.pushKV("witness_script", r);
         }
 
@@ -1455,9 +1471,15 @@ UniValue decodepst(const JSONRPCRequest& request)
             ScriptToUniv(output.redeem_script, r, false);
             out.pushKV("redeem_script", r);
         }
-        if (!output.witness_script.empty()) {
+        if (!output.witness_entry.m_script.empty()) {
+            out.pushKV("script_version", (int64_t)output.witness_entry.m_script[0]);
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.witness_script, r, false);
+            if (output.witness_entry.m_script[0] == 0x00) {
+                ScriptToUniv(CScript(output.witness_entry.m_script.begin() + 1, output.witness_entry.m_script.end()), r, false);
+            } else {
+                r.pushKV("hex", HexStr(output.witness_entry.m_script.begin() + 1, output.witness_entry.m_script.end()));
+                r.pushKV("type", "unknown");
+            }
             out.pushKV("witness_script", r);
         }
 

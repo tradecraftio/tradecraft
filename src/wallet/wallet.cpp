@@ -463,6 +463,21 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
+bool CWallet::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
+{
+    if (!CCryptoKeyStore::AddWitnessV0Script(entry))
+        return false;
+    WitnessV0ScriptHash longid = entry.GetScriptHash();
+    uint160 shortid;
+    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
+    return WalletBatch(*database).WriteWitnessV0Script(shortid, entry);
+}
+
+bool CWallet::LoadWitnessV0Script(const WitnessV0ScriptEntry& entry)
+{
+    return CCryptoKeyStore::AddWitnessV0Script(entry);
+}
+
 bool CWallet::AddWatchOnly(const CScript& dest)
 {
     if (!CCryptoKeyStore::AddWatchOnly(dest))

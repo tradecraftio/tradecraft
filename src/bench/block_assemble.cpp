@@ -75,12 +75,11 @@ static std::pair<CTxIn, uint32_t> MineBlock(const CScript& coinbase_scriptPubKey
 
 static void AssembleBlock(benchmark::State& state)
 {
-    const std::vector<unsigned char> op_true{OP_TRUE};
+    const WitnessV0ScriptEntry op_true(0 /* version */, CScript() << OP_TRUE);
     CScriptWitness witness;
-    witness.stack.push_back(op_true);
+    witness.stack.push_back(op_true.m_script);
 
-    uint256 witness_program;
-    CSHA256().Write(&op_true[0], op_true.size()).Finalize(witness_program.begin());
+    const WitnessV0ScriptHash witness_program = op_true.GetScriptHash();
 
     const CScript SCRIPT_PUB{CScript(OP_0) << std::vector<unsigned char>{witness_program.begin(), witness_program.end()}};
 

@@ -170,8 +170,8 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         self.sync_all()
         # Find the UTXO for the transaction node[1] should have received, check witnessScript matches
         unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address["address"]])[0]
-        assert_equal(unspent_output["witnessScript"], p2sh_p2wsh_address["redeemScript"])
-        p2sh_redeemScript = CScript([OP_0, sha256(hex_str_to_bytes(p2sh_p2wsh_address["redeemScript"]))])
+        assert_equal(unspent_output["witnessScript"], "00" + p2sh_p2wsh_address["redeemScript"])
+        p2sh_redeemScript = CScript([OP_0, sha256(hex_str_to_bytes("00" + p2sh_p2wsh_address["redeemScript"]))])
         assert_equal(unspent_output["redeemScript"], bytes_to_hex_str(p2sh_redeemScript))
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].getnewaddress(): Decimal("49.998")})

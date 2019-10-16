@@ -27,9 +27,22 @@ typedef std::vector<unsigned char> valtype;
 
 CScriptID::CScriptID(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
 
-WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
+WitnessV0ScriptHash::WitnessV0ScriptHash(unsigned char version, const CScript& innerscript)
 {
-    CSHA256().Write(in.data(), in.size()).Finalize(begin());
+    CSHA256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
+}
+
+WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript)
+{
+    m_script.push_back(version);
+    m_script.insert(m_script.end(), innerscript.begin(), innerscript.end());
+}
+
+WitnessV0ScriptHash WitnessV0ScriptEntry::GetScriptHash() const
+{
+    uint256 hash;
+    CSHA256().Write(&m_script[0], m_script.size()).Finalize(hash.begin());
+    return WitnessV0ScriptHash(hash);
 }
 
 const char* GetTxnOutputType(txnouttype t)
@@ -322,7 +335,7 @@ CScript GetScriptForWitness(const CScript& redeemscript)
     } else if (typ == TX_PUBKEYHASH) {
         return GetScriptForDestination(WitnessV0KeyHash(vSolutions[0]));
     }
-    return GetScriptForDestination(WitnessV0ScriptHash(redeemscript));
+    return GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, redeemscript));
 }
 
 bool IsValidDestination(const CTxDestination& dest) {

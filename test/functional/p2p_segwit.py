@@ -116,10 +116,15 @@ def get_p2pkh_script(pubkeyhash):
 
 def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     """Add signature for a P2PK witness program."""
-    tx_hash = SegwitVersion1SignatureHash(script, tx_to, in_idx, hashtype, value)
+    tx_hash = SegwitVersion1SignatureHash(script[1:], tx_to, in_idx, hashtype, value)
     signature = key.sign_ecdsa(tx_hash) + chr(hashtype).encode('latin-1')
     tx_to.wit.vtxinwit[in_idx].scriptWitness.stack = [signature, script]
     tx_to.rehash()
+
+def get_block_weight(witness_block):
+    base_size = len(witness_block.serialize())
+    total_size = len(witness_block.serialize(with_witness=True))
+    return 3*base_size + total_size
 
 def get_virtual_size(witness_block):
     """Calculate the virtual size of a witness block.
@@ -655,11 +660,12 @@ class SegWitTest(FreicoinTestFramework):
         V0 segwit outputs and inputs are always standard.
         V0 segwit inputs may only be mined after activation, but not before."""
 
-        witness_program = CScript([OP_TRUE])
+        script_true = CScript([OP_TRUE])
+        witness_program = bytes([0]) + script_true
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
-        p2sh_pubkey = hash160(witness_program)
+        p2sh_pubkey = hash160(script_true)
         p2sh_script_pubkey = CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])
 
         # First prepare a p2sh output (so that spending it will pass standardness)
@@ -676,7 +682,7 @@ class SegWitTest(FreicoinTestFramework):
         # Now test standardness of v0 P2WSH outputs.
         # Start by creating a transaction with two outputs.
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([witness_program]))]
+        tx.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([script_true]))]
         tx.vout = [CTxOut(p2sh_tx.vout[0].nValue - 10000, script_pubkey)]
         tx.vout.append(CTxOut(8000, script_pubkey))  # Might burn this later
         tx.rehash()
@@ -742,7 +748,7 @@ class SegWitTest(FreicoinTestFramework):
         """Test P2SH wrapped witness programs."""
 
         # Prepare the p2sh-wrapped witness output
-        witness_program = CScript([OP_DROP, OP_TRUE])
+        witness_program = CScript([0] + [OP_DROP, OP_TRUE])
         witness_hash = sha256(witness_program)
         p2wsh_pubkey = CScript([OP_0, witness_hash])
         p2sh_witness_hash = hash160(p2wsh_pubkey)
@@ -839,7 +845,7 @@ class SegWitTest(FreicoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
 
         # Let's construct a witness program
-        witness_program = CScript([OP_TRUE])
+        witness_program = CScript([0] + [OP_TRUE])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
         tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, script_pubkey))
@@ -945,7 +951,7 @@ class SegWitTest(FreicoinTestFramework):
         NUM_DROPS = 200  # 201 max ops per script!
         NUM_OUTPUTS = 50
 
-        witness_program = CScript([OP_2DROP] * NUM_DROPS + [OP_TRUE])
+        witness_program = CScript([OP_0] + [OP_2DROP] * NUM_DROPS + [OP_TRUE])
         witness_hash = uint256_from_str(sha256(witness_program))
         script_pubkey = CScript([OP_0, ser_uint256(witness_hash)])
 
@@ -971,12 +977,12 @@ class SegWitTest(FreicoinTestFramework):
         child_tx.rehash()
         self.update_witness_block_with_transactions(block, [parent_tx, child_tx])
 
-        vsize = get_virtual_size(block)
-        additional_bytes = (MAX_BLOCK_BASE_SIZE - vsize) * 4
+        weight = get_block_weight(block)
+        additional_bytes = MAX_BLOCK_BASE_SIZE * 4 - weight + 1
         i = 0
         while additional_bytes > 0:
             # Add some more bytes to each input until we hit MAX_BLOCK_BASE_SIZE+1
-            extra_bytes = min(additional_bytes + 1, 55)
+            extra_bytes = min(additional_bytes, 55)
             block.vtx[-2].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)] = b'a' * (195 + extra_bytes)
             additional_bytes -= extra_bytes
             i += 1
@@ -1046,7 +1052,7 @@ class SegWitTest(FreicoinTestFramework):
 
         block = self.build_next_block()
 
-        witness_program = CScript([OP_DROP, OP_TRUE])
+        witness_program = CScript([OP_0] + [OP_DROP, OP_TRUE])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
@@ -1121,7 +1127,7 @@ class SegWitTest(FreicoinTestFramework):
 
         block = self.build_next_block()
 
-        witness_program = CScript([OP_DROP, OP_TRUE])
+        witness_program = CScript([OP_0] + [OP_DROP, OP_TRUE])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
@@ -1158,8 +1164,8 @@ class SegWitTest(FreicoinTestFramework):
 
         MAX_PROGRAM_LENGTH = 10000
 
-        # This program is 19 max pushes (9937 bytes), then 64 more opcode-bytes.
-        long_witness_program = CScript([b'a' * 520] * 19 + [OP_DROP] * 63 + [OP_TRUE])
+        # This program is 19 max pushes (9937 bytes), then 63 more opcode-bytes.
+        long_witness_program = CScript([OP_0] + [b'a' * 520] * 19 + [OP_DROP] * 62 + [OP_TRUE])
         assert_equal(len(long_witness_program), MAX_PROGRAM_LENGTH + 1)
         long_witness_hash = sha256(long_witness_program)
         long_script_pubkey = CScript([OP_0, long_witness_hash])
@@ -1175,7 +1181,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 44 + [long_witness_program]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 43 + [long_witness_program]
         tx2.rehash()
 
         self.update_witness_block_with_transactions(block, [tx, tx2])
@@ -1186,7 +1192,7 @@ class SegWitTest(FreicoinTestFramework):
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
         # Try again with one less byte in the witness program
-        witness_program = CScript([b'a' * 520] * 19 + [OP_DROP] * 62 + [OP_TRUE])
+        witness_program = CScript([OP_0] + [b'a' * 520] * 19 + [OP_DROP] * 61 + [OP_TRUE])
         assert_equal(len(witness_program), MAX_PROGRAM_LENGTH)
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
@@ -1201,7 +1207,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 43 + [witness_program]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 42 + [witness_program]
         tx2.rehash()
 
         self.update_witness_block_with_transactions(block, [tx, tx2])
@@ -1214,7 +1220,7 @@ class SegWitTest(FreicoinTestFramework):
     def test_witness_input_length(self):
         """Test that vin length must match vtxinwit length."""
 
-        witness_program = CScript([OP_DROP, OP_TRUE])
+        witness_program = CScript([OP_0] + [OP_DROP, OP_TRUE])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
@@ -1324,7 +1330,7 @@ class SegWitTest(FreicoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
 
         # Now try to add extra witness data to a valid witness tx.
-        witness_program = CScript([OP_TRUE])
+        witness_program = CScript([OP_0] + [OP_TRUE])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
         tx2 = CTransaction()
@@ -1339,7 +1345,7 @@ class SegWitTest(FreicoinTestFramework):
         # Add too-large for IsStandard witness and check that it does not enter reject filter
         p2sh_program = CScript([OP_TRUE])
         p2sh_pubkey = hash160(p2sh_program)
-        witness_program2 = CScript([b'a' * 400000])
+        witness_program2 = CScript([0] + [b'a' * 400000])
         tx3.vout.append(CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])))
         tx3.wit.vtxinwit[0].scriptWitness.stack = [b''] * 32768 + [witness_program2]
         tx3.rehash()
@@ -1415,7 +1421,7 @@ class SegWitTest(FreicoinTestFramework):
         sync_blocks(self.nodes)
         temp_utxo = []
         tx = CTransaction()
-        witness_program = CScript([OP_TRUE])
+        witness_program = CScript([OP_0] + [OP_TRUE])
         witness_hash = sha256(witness_program)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
         for version in list(range(OP_1, OP_16 + 1)) + [OP_0]:
@@ -1477,7 +1483,7 @@ class SegWitTest(FreicoinTestFramework):
 
         block = self.build_next_block()
         # Change the output of the block to be a witness output.
-        witness_program = CScript([OP_TRUE])
+        witness_program = CScript([OP_0] + [OP_TRUE])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
         block.vtx[0].vout[0].scriptPubKey = script_pubkey
@@ -1488,7 +1494,7 @@ class SegWitTest(FreicoinTestFramework):
 
         spend_tx = CTransaction()
         spend_tx.vin = [CTxIn(COutPoint(block.vtx[0].sha256, 0), b"")]
-        spend_tx.vout = [CTxOut(block.vtx[0].vout[0].nValue, witness_program)]
+        spend_tx.vout = [CTxOut(block.vtx[0].vout[0].nValue, CScript([OP_TRUE]))]
         spend_tx.wit.vtxinwit.append(CTxInWitness())
         spend_tx.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
         spend_tx.rehash()
@@ -1539,7 +1545,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Now try to spend it. Send it to a P2WSH output, which we'll
         # use in the next test.
-        witness_program = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
+        witness_program = CScript([0] + [pubkey, CScriptOp(OP_CHECKSIG)])
         witness_hash = sha256(witness_program)
         script_wsh = CScript([OP_0, witness_hash])
 
@@ -1619,7 +1625,7 @@ class SegWitTest(FreicoinTestFramework):
         key.generate()
         pubkey = key.get_pubkey().get_bytes()
 
-        witness_program = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
+        witness_program = CScript([OP_0] + [pubkey, CScriptOp(OP_CHECKSIG)])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
@@ -1855,10 +1861,10 @@ class SegWitTest(FreicoinTestFramework):
 
         # Create scripts for tests
         scripts = []
-        scripts.append(CScript([OP_DROP] * 100))
-        scripts.append(CScript([OP_DROP] * 99))
-        scripts.append(CScript([pad * 59] * 59 + [OP_DROP] * 60))
-        scripts.append(CScript([pad * 59] * 59 + [OP_DROP] * 61))
+        scripts.append(bytes([0]) + CScript([OP_DROP] * 100))
+        scripts.append(bytes([0]) + CScript([OP_DROP] * 99))
+        scripts.append(bytes([0]) + CScript([pad * 59] * 59 + [OP_DROP] * 58 + [OP_2DROP]))
+        scripts.append(bytes([0]) + CScript([pad * 59] * 59 + [OP_DROP] * 59 + [OP_2DROP]))
 
         p2wsh_scripts = []
 
@@ -1978,7 +1984,7 @@ class SegWitTest(FreicoinTestFramework):
         """Test sigop counting is correct inside witnesses."""
 
         # Keep this under MAX_OPS_PER_SCRIPT (201)
-        witness_program = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKMULTISIG] * 5 + [OP_CHECKSIG] * 193 + [OP_ENDIF])
+        witness_program = CScript([0] + [OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKMULTISIG] * 5 + [OP_CHECKSIG] * 193 + [OP_ENDIF])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
@@ -1995,13 +2001,13 @@ class SegWitTest(FreicoinTestFramework):
         # This script, when spent with the first
         # N(=MAX_SIGOP_COST//sigops_per_script) outputs of our transaction,
         # would push us just over the block sigop limit.
-        witness_program_toomany = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available + 1) + [OP_ENDIF])
+        witness_program_toomany = CScript([0] + [OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available + 1) + [OP_ENDIF])
         witness_hash_toomany = sha256(witness_program_toomany)
         script_pubkey_toomany = CScript([OP_0, witness_hash_toomany])
 
         # If we spend this script instead, we would exactly reach our sigop
         # limit (for witness sigops).
-        witness_program_justright = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available) + [OP_ENDIF])
+        witness_program_justright = CScript([0] + [OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available) + [OP_ENDIF])
         witness_hash_justright = sha256(witness_program_justright)
         script_pubkey_justright = CScript([OP_0, witness_hash_justright])
 

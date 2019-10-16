@@ -17,6 +17,7 @@
 #ifndef FREICOIN_SCRIPT_STANDARD_H
 #define FREICOIN_SCRIPT_STANDARD_H
 
+#include <hash.h>
 #include <script/interpreter.h>
 #include <uint256.h>
 
@@ -71,7 +72,7 @@ struct WitnessV0ScriptHash : public uint256
 {
     WitnessV0ScriptHash() : uint256() {}
     explicit WitnessV0ScriptHash(const uint256& hash) : uint256(hash) {}
-    explicit WitnessV0ScriptHash(const CScript& script);
+    WitnessV0ScriptHash(unsigned char version, const CScript& innerscript);
     using uint256::uint256;
 };
 
@@ -103,6 +104,47 @@ struct WitnessUnknown
         return std::lexicographical_compare(w1.program, w1.program + w1.length, w2.program, w2.program + w2.length);
     }
 };
+
+/** Encapsulating class for information necessary to spend a witness
+    output: the witness redeem script and Merkle proof. */
+class WitnessV0ScriptEntry
+{
+public:
+    std::vector<unsigned char> m_script;
+
+    WitnessV0ScriptEntry() { }
+
+    explicit WitnessV0ScriptEntry(const std::vector<unsigned char>& scriptIn) : m_script(scriptIn) { }
+    explicit WitnessV0ScriptEntry(std::vector<unsigned char>&& scriptIn) : m_script(scriptIn) { }
+
+    WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript);
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(m_script);
+    }
+
+    inline void SetNull() {
+        m_script.clear();
+    }
+
+    inline bool IsNull() const {
+        return m_script.empty();
+    }
+
+    inline bool operator<(const WitnessV0ScriptEntry& rhs) const {
+        return m_script < rhs.m_script;
+    }
+
+    WitnessV0ScriptHash GetScriptHash() const;
+};
+
+inline void swap(WitnessV0ScriptEntry& lhs, WitnessV0ScriptEntry& rhs) noexcept {
+    using std::swap;
+    swap(lhs.m_script, rhs.m_script);
+}
 
 /**
  * A txout script template with a specific destination. It is either:

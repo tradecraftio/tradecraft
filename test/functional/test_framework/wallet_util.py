@@ -57,6 +57,7 @@ Multisig = namedtuple('Multisig', ['privkeys',
                                    'redeem_script',
                                    'p2wsh_script',
                                    'p2wsh_addr',
+                                   'witness_script',
                                    'p2sh_p2wsh_script',
                                    'p2sh_p2wsh_addr'])
 
@@ -88,7 +89,7 @@ def get_multisig(node):
         addrs.append(addr['address'])
         pubkeys.append(addr['pubkey'])
     script_code = CScript([OP_2] + [hex_str_to_bytes(pubkey) for pubkey in pubkeys] + [OP_3, OP_CHECKMULTISIG])
-    witness_script = CScript([OP_0, sha256(script_code)])
+    witness_script = CScript([OP_0, sha256(b'\x00' + script_code)])
     return Multisig(privkeys=[node.dumpprivkey(addr) for addr in addrs],
                     pubkeys=pubkeys,
                     p2sh_script=CScript([OP_HASH160, hash160(script_code), OP_EQUAL]).hex(),
@@ -96,6 +97,7 @@ def get_multisig(node):
                     redeem_script=script_code.hex(),
                     p2wsh_script=witness_script.hex(),
                     p2wsh_addr=script_to_p2wsh(script_code),
+                    witness_script="00" + script_code.hex(),
                     p2sh_p2wsh_script=CScript([OP_HASH160, witness_script, OP_EQUAL]).hex(),
                     p2sh_p2wsh_addr=script_to_p2sh_p2wsh(script_code))
 
