@@ -296,15 +296,16 @@ void TestSatisfy(const std::string& testcase, const NodeRef& node) {
             if (add >= 0) satisfier.supported.insert(challist[add]); // The first iteration does not add anything
 
             // Run malleable satisfaction algorithm.
-            const CScript script_pubkey = CScript() << OP_0 << WitnessV0ScriptHash(script);
+            WitnessV0ScriptEntry entry(0 /* version */, script);
+            const CScript script_pubkey = CScript() << OP_0 << entry.GetScriptHash();
             CScriptWitness witness_mal;
             const bool mal_success = node->Satisfy(satisfier, witness_mal.stack, false) == miniscript::Availability::YES;
-            witness_mal.stack.push_back(std::vector<unsigned char>(script.begin(), script.end()));
+            witness_mal.stack.push_back(std::vector<unsigned char>(entry.m_script.begin(), entry.m_script.end()));
 
             // Run non-malleable satisfaction algorithm.
             CScriptWitness witness_nonmal;
             const bool nonmal_success = node->Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
-            witness_nonmal.stack.push_back(std::vector<unsigned char>(script.begin(), script.end()));
+            witness_nonmal.stack.push_back(std::vector<unsigned char>(entry.m_script.begin(), entry.m_script.end()));
 
             if (nonmal_success) {
                 // Non-malleable satisfactions are bounded by GetStackSize().

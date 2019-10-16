@@ -489,6 +489,12 @@ static std::vector<RPCArg> FundTxDoc(bool solving_data = true)
                     }
                 },
                 {
+                    "witscripts", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Witness sccripts involved in this transaction.",
+                    {
+                        {"witscript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A hex-encoded witness script."},
+                    }
+                },
+                {
                     "descriptors", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Descriptors that provide solving data for this transaction.",
                     {
                         {"descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A descriptor"},
@@ -662,6 +668,21 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 std::vector<unsigned char> script_data(ParseHex(script_str));
                 const CScript script(script_data.begin(), script_data.end());
                 coinControl.m_external_provider.scripts.emplace(CScriptID(script), script);
+            }
+        }
+
+        if (solving_data.exists("witscripts")) {
+            for (const UniValue& witscript_univ : solving_data["witscripts"].get_array().getValues()) {
+                const std::string& witscript_str = witscript_univ.get_str();
+                if (!IsHex(witscript_str)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' is not hex", witscript_str));
+                }
+                std::vector<unsigned char> witscript_data(ParseHex(witscript_str));
+                if (witscript_data.empty()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "witscript cannot be empty");
+                }
+                WitnessV0ScriptEntry entry(witscript_data[0], CScript(witscript_data.begin() + 1, witscript_data.end()));
+                coinControl.m_external_provider.witscripts.emplace(entry.GetScriptHash(), entry);
             }
         }
 

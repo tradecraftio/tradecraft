@@ -708,19 +708,17 @@ RPCHelpMan listunspent()
                             CHECK_NONFATAL(extracted);
                             // Also return the witness script
                             const WitnessV0ScriptHash& whash = std::get<WitnessV0ScriptHash>(witness_destination);
-                            CScriptID id{RIPEMD160(whash)};
-                            CScript witnessScript;
-                            if (provider->GetCScript(id, witnessScript)) {
-                                entry.pushKV("witnessScript", HexStr(witnessScript));
+                            WitnessV0ScriptEntry witentry;
+                            if (provider->GetWitnessV0Script(whash, witentry)) {
+                                entry.pushKV("witnessScript", HexStr(witentry.m_script));
                             }
                         }
                     }
                 } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
                     const WitnessV0ScriptHash& whash = std::get<WitnessV0ScriptHash>(address);
-                    CScriptID id{RIPEMD160(whash)};
-                    CScript witnessScript;
-                    if (provider->GetCScript(id, witnessScript)) {
-                        entry.pushKV("witnessScript", HexStr(witnessScript));
+                    WitnessV0ScriptEntry witentry;
+                    if (provider->GetWitnessV0Script(whash, witentry)) {
+                        entry.pushKV("witnessScript", HexStr(witentry.m_script));
                     }
                 }
             }
