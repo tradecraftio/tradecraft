@@ -17,6 +17,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
+#include <script/standard.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>

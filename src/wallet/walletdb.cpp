@@ -70,6 +70,7 @@ const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
+const std::string WITNESS_V0{"witv0"};
 } // namespace DBKeys
 
 //
@@ -162,6 +163,11 @@ bool WalletBatch::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
 bool WalletBatch::WriteCScript(const uint160& hash, const CScript& redeemScript)
 {
     return WriteIC(std::make_pair(DBKeys::CSCRIPT, hash), redeemScript, false);
+}
+
+bool WalletBatch::WriteWitnessV0Script(const uint160& scriptid, const WitnessV0ScriptEntry& entry)
+{
+    return WriteIC(std::make_pair(DBKeys::WITNESS_V0, scriptid), entry, false);
 }
 
 bool WalletBatch::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMeta)
@@ -604,6 +610,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCScript(script))
             {
                 strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCScript failed";
+                return false;
+            }
+        } else if (strType == DBKeys::WITNESS_V0) {
+            uint160 shorthash;
+            ssKey >> shorthash;
+            WitnessV0ScriptEntry entry;
+            ssValue >> entry;
+            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadWitnessV0Script(entry))
+            {
+                strErr = "Error reading wallet database: LoadWitnessV0Script failed";
                 return false;
             }
         } else if (strType == DBKeys::ORDERPOSNEXT) {

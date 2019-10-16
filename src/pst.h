@@ -182,7 +182,7 @@ struct PSTInput
     CTxOut witness_utxo;
     uint32_t witness_refheight;
     CScript redeem_script;
-    CScript witness_script;
+    WitnessV0ScriptEntry witness_entry;
     CScript final_script_sig;
     CScriptWitness final_script_witness;
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
@@ -234,9 +234,9 @@ struct PSTInput
             }
 
             // Write the witness script
-            if (!witness_script.empty()) {
+            if (!witness_entry.IsNull()) {
                 SerializeToVector(s, CompactSizeWriter(PST_IN_WITNESSSCRIPT));
-                s << witness_script;
+                s << witness_entry;
             }
 
             // Write any hd keypaths
@@ -389,7 +389,7 @@ struct PSTInput
                     } else if (key.size() != 1) {
                         throw std::ios_base::failure("Input witnessScript key is more than one byte type");
                     }
-                    s >> witness_script;
+                    s >> witness_entry;
                     break;
                 }
                 case PST_IN_BIP32_DERIVATION:
@@ -543,7 +543,7 @@ struct PSTInput
 struct PSTOutput
 {
     CScript redeem_script;
-    CScript witness_script;
+    WitnessV0ScriptEntry witness_entry;
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSTProprietary> m_proprietary;
@@ -563,9 +563,9 @@ struct PSTOutput
         }
 
         // Write the witness script
-        if (!witness_script.empty()) {
+        if (!witness_entry.IsNull()) {
             SerializeToVector(s, CompactSizeWriter(PST_OUT_WITNESSSCRIPT));
-            s << witness_script;
+            s << witness_entry;
         }
 
         // Write any hd keypaths
@@ -629,7 +629,7 @@ struct PSTOutput
                     } else if (key.size() != 1) {
                         throw std::ios_base::failure("Output witnessScript key is more than one byte type");
                     }
-                    s >> witness_script;
+                    s >> witness_entry;
                     break;
                 }
                 case PST_OUT_BIP32_DERIVATION:
@@ -968,7 +968,7 @@ size_t CountPSTUnsignedInputs(const PartiallySignedTransaction& pst);
 
 /** Updates a PSTOutput with information from provider.
  *
- * This fills in the redeem_script, witness_script, and hd_keypaths where possible.
+ * This fills in the redeem_script, witness_entry, and hd_keypaths where possible.
  */
 void UpdatePSTOutput(const SigningProvider& provider, PartiallySignedTransaction& pst, int index);
 

@@ -676,7 +676,7 @@ static RPCHelpMan decodescript()
                 segwitScr = GetScriptForDestination(WitnessV0KeyHash(uint160{solutions_data[0]}));
             } else {
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
-                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
+                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, /* include_hex */ true);
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
@@ -1166,6 +1166,7 @@ static RPCHelpMan decodepst()
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                 }},
+                                {RPCResult::Type::NUM, "witness_version", /*optional=*/true, "The inner script version"},
                                 {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
@@ -1232,6 +1233,7 @@ static RPCHelpMan decodepst()
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                 }},
+                                {RPCResult::Type::NUM, "witness_version", /*optional=*/true, "The inner script version"},
                                 {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
@@ -1395,9 +1397,15 @@ static RPCHelpMan decodepst()
             ScriptToUniv(input.redeem_script, r);
             in.pushKV("redeem_script", r);
         }
-        if (!input.witness_script.empty()) {
+        if (!input.witness_entry.m_script.empty()) {
+            in.pushKV("script_version", (int64_t)input.witness_entry.m_script[0]);
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.witness_script, r);
+            if (input.witness_entry.m_script[0] == 0x00) {
+                ScriptToUniv(CScript(input.witness_entry.m_script.begin() + 1, input.witness_entry.m_script.end()), r);
+            } else {
+                r.pushKV("hex", HexStr({&input.witness_entry.m_script[1], input.witness_entry.m_script.size() - 1}));
+                r.pushKV("type", "unknown");
+            }
             in.pushKV("witness_script", r);
         }
 
@@ -1505,9 +1513,15 @@ static RPCHelpMan decodepst()
             ScriptToUniv(output.redeem_script, r);
             out.pushKV("redeem_script", r);
         }
-        if (!output.witness_script.empty()) {
+        if (!output.witness_entry.m_script.empty()) {
+            out.pushKV("script_version", (int64_t)output.witness_entry.m_script[0]);
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.witness_script, r);
+            if (output.witness_entry.m_script[0] == 0x00) {
+                ScriptToUniv(CScript(output.witness_entry.m_script.begin() + 1, output.witness_entry.m_script.end()), r);
+            } else {
+                r.pushKV("hex", HexStr({&output.witness_entry.m_script[1], output.witness_entry.m_script.size() - 1}));
+                r.pushKV("type", "unknown");
+            }
             out.pushKV("witness_script", r);
         }
 

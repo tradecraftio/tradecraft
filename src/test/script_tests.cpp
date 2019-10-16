@@ -271,7 +271,7 @@ private:
     //! The P2SH redeemscript
     CScript redeemscript;
     //! The Witness embedded script
-    CScript witscript;
+    std::vector<unsigned char> witscript;
     CScriptWitness scriptWitness;
     CTransactionRef creditTx;
     CMutableTransaction spendTx;
@@ -308,7 +308,9 @@ public:
             script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(hash) << OP_EQUALVERIFY << OP_CHECKSIG;
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
         } else if (wm == WitnessMode::SH) {
-            witscript = scriptPubKey;
+            witscript.clear();
+            witscript.push_back(0x00);
+            witscript.insert(witscript.end(), scriptPubKey.begin(), scriptPubKey.end());
             uint256 hash;
             CSHA256().Write(witscript.data(), witscript.size()).Finalize(hash.begin());
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
@@ -394,7 +396,7 @@ public:
 
     TestBuilder& PushWitRedeem()
     {
-        DoPush(std::vector<unsigned char>(witscript.begin(), witscript.end()));
+        DoPush(witscript);
         return AsWit();
     }
 
@@ -1034,9 +1036,11 @@ BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_SIZE)
     scriptSig = CScript() << ToByteVector(raw_script);
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH, "MAX_SCRIPT_SIZE for P2SH", SCRIPT_ERR_SCRIPT_SIZE, 0);
     // Neither P2WSH nor P2SH-P2WSH are limited by MAX_SCRIPT_SIZE
-    scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(raw_script));
+    scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, raw_script));
     scriptSig = CScript();
-    witness.stack.push_back(ToByteVector(raw_script));
+    std::vector<unsigned char> vch = { 0 /* version */ };
+    vch.insert(vch.end(), raw_script.begin(), raw_script.end());
+    witness.stack.push_back(vch);
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_SIZE for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
@@ -1057,9 +1061,11 @@ BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_ELEMENT_SIZE)
     scriptSig = CScript() << ToByteVector(raw_script);
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH, "MAX_SCRIPT_ELEMENT_SIZE for P2SH", SCRIPT_ERR_PUSH_SIZE, 0);
     // Neither P2WSH nor P2SH-P2WSH are limited by MAX_SCRIPT_ELEMENT_SIZE
-    scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(raw_script));
+    scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, raw_script));
     scriptSig = CScript();
-    witness.stack.push_back(ToByteVector(raw_script));
+    std::vector<unsigned char> vch = { 0 /* version */ };
+    vch.insert(vch.end(), raw_script.begin(), raw_script.end());
+    witness.stack.push_back(vch);
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_ELEMENT_SIZE for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
@@ -1083,9 +1089,11 @@ BOOST_AUTO_TEST_CASE(script_MAX_OPS_PER_SCRIPT)
     scriptSig = CScript() << ToByteVector(raw_script);
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH, "MAX_OPS_PER_SCRIPT for P2SH", SCRIPT_ERR_OP_COUNT, 0);
     // Neither P2WSH nor P2SH-P2WSH are limited by MAX_OPS_PER_SCRIPT
-    scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(raw_script));
+    scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, raw_script));
     scriptSig = CScript();
-    witness.stack.push_back(ToByteVector(raw_script));
+    std::vector<unsigned char> vch = { 0 /* version */ };
+    vch.insert(vch.end(), raw_script.begin(), raw_script.end());
+    witness.stack.push_back(vch);
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_OPS_PER_SCRIPT for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));

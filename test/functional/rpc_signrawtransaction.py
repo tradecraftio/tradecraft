@@ -217,8 +217,8 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         # Get the UTXO info from scantxoutset
         unspent_output = self.nodes[1].scantxoutset('start', [p2sh_p2wsh_address['descriptor']])['unspents'][0]
         spk = script_to_p2sh_p2wsh_script(p2sh_p2wsh_address['redeemScript']).hex()
-        unspent_output['witnessScript'] = p2sh_p2wsh_address['redeemScript']
-        unspent_output['redeemScript'] = script_to_p2wsh_script(unspent_output['witnessScript']).hex()
+        unspent_output['witnessScript'] = "00" + p2sh_p2wsh_address['redeemScript']
+        unspent_output['redeemScript'] = script_to_p2wsh_script(unspent_output['witnessScript'][2:]).hex()
         assert_equal(spk, unspent_output['scriptPubKey'])
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].get_wallet_rpc(self.default_wallet_name).getnewaddress(): Decimal("49.998")})
@@ -238,10 +238,10 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         embedded_privkey = bytes_to_wif(eckey.get_bytes())
         embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
         witness_script = {
-            'P2PKH': key_to_p2pkh_script(embedded_pubkey).hex(),
-            'P2PK': key_to_p2pk_script(embedded_pubkey).hex()
+            'P2PKH': '00' + key_to_p2pkh_script(embedded_pubkey).hex(),
+            'P2PK': '00' + key_to_p2pk_script(embedded_pubkey).hex()
         }.get(tx_type, "Invalid tx_type")
-        redeem_script = script_to_p2wsh_script(witness_script).hex()
+        redeem_script = script_to_p2wsh_script(witness_script[2:]).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
         # Fund that address
@@ -305,7 +305,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         # Set the witness script
         ctx = tx_from_hex(tx)
         ctx.wit.vtxinwit.append(CTxInWitness())
-        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), script]
+        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script]
         tx = ctx.serialize_with_witness().hex()
 
         # Sign and send the transaction
@@ -337,7 +337,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         # Set the witness script
         ctx = tx_from_hex(tx)
         ctx.wit.vtxinwit.append(CTxInWitness())
-        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), script]
+        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script]
         tx = ctx.serialize_with_witness().hex()
 
         # Sign and send the transaction

@@ -30,6 +30,7 @@ from test_framework.script import (
     CScript,
     OP_TRUE,
 )
+from test_framework.script_util import script_to_witness
 from test_framework.util import (
     assert_equal,
 )
@@ -193,7 +194,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         rawtx_b = node.createrawtransaction([{"txid": parent_txid, "vout": 1}], {self.address : child_value}, 0, parent_tx.lock_height)
         tx_child_b = tx_from_hex(rawtx_b)
         tx_child_b.wit.vtxinwit = [CTxInWitness()]
-        tx_child_b.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        tx_child_b.wit.vtxinwit[0].scriptWitness.stack = [script_to_witness(CScript([OP_TRUE]))]
         tx_child_b_hex = tx_child_b.serialize().hex()
         assert not node.testmempoolaccept([tx_child_b_hex])[0]["allowed"]
 

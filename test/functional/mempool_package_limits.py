@@ -173,7 +173,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         rawtx_b = node.createrawtransaction([{"txid": parent_txid, "vout": 1}], {self.address : value})
         tx_child_b = tx_from_hex(rawtx_b) # M2b
         tx_child_b.wit.vtxinwit = [CTxInWitness()]
-        tx_child_b.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        tx_child_b.wit.vtxinwit[0].scriptWitness.stack = [b'\x00' + CScript([OP_TRUE])]
         tx_child_b_hex = tx_child_b.serialize().hex()
         node.sendrawtransaction(tx_child_b_hex)
         spk = tx_child_b.vout[0].scriptPubKey.hex()
@@ -248,7 +248,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         rawtx_p1 = node.createrawtransaction([{"txid": parent_txid, "vout": 1}], [{self.address : value_p1}])
         tx_child_p1 = tx_from_hex(rawtx_p1)
         tx_child_p1.wit.vtxinwit = [CTxInWitness()]
-        tx_child_p1.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        tx_child_p1.wit.vtxinwit[0].scriptWitness.stack = [b'\x00' + CScript([OP_TRUE])]
         tx_child_p1_hex = tx_child_p1.serialize().hex()
         txid_child_p1 = tx_child_p1.rehash()
         package_hex.append(tx_child_p1_hex)
