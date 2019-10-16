@@ -45,8 +45,8 @@ from test_framework.segwit_addr import (
 
 ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
-# Coins sent to this address can be spent with a witness stack of just OP_TRUE
-ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qft5p2uhsdcdc3l2ua4ap5qqfg4pjaqlp250x7us7a8qqhrxrxfsqseac85'
+# Coins sent to this address can be spent with a version=0 witness stack of just OP_TRUE
+ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qadv29xzkvgm7tlzvtgxg0xaeu9fhqxfermqxj68ynq5slwpf8zmshjwsdt'
 
 
 class AddressType(enum.Enum):
@@ -146,9 +146,12 @@ def program_to_witness(version, program, main=False):
     assert 2 <= len(program) <= 75
     return encode_segwit_address("bc" if main else "bcrt", version, program)
 
+def script_to_witscript(script, main=False):
+    return b'\x00' + script
+
 def script_to_p2wsh(script, main=False):
     script = check_script(script)
-    return program_to_witness(0, sha256(script), main)
+    return program_to_witness(0, sha256(script_to_witscript(script)), main)
 
 def key_to_p2wpkh(key, main=False):
     key = check_key(key)
@@ -156,7 +159,7 @@ def key_to_p2wpkh(key, main=False):
 
 def script_to_p2sh_p2wsh(script, main=False):
     script = check_script(script)
-    p2shscript = CScript([OP_0, sha256(script)])
+    p2shscript = CScript([OP_0, sha256(script_to_witscript(script))])
     return script_to_p2sh(p2shscript, main)
 
 def output_key_to_p2tr(key, main=False):

@@ -1019,8 +1019,9 @@ class WSHDescriptor final : public DescriptorImpl
 protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, Span<const CScript> scripts, FlatSigningProvider& out) const override
     {
-        auto ret = Vector(GetScriptForDestination(WitnessV0ScriptHash(scripts[0])));
-        if (ret.size()) out.scripts.emplace(CScriptID(scripts[0]), scripts[0]);
+        WitnessV0ScriptEntry entry(0 /* version */, scripts[0]);
+        auto ret = Vector(GetScriptForDestination(entry.GetScriptHash()));
+        if (ret.size()) out.witscripts.emplace(entry.GetScriptHash(), entry);
         return ret;
     }
 public:
@@ -1033,7 +1034,7 @@ public:
     std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
         if (const auto sat_size = m_subdescriptor_args[0]->MaxSatSize(use_max_sig)) {
             if (const auto subscript_size = m_subdescriptor_args[0]->ScriptSize()) {
-                return GetSizeOfCompactSize(*subscript_size) + *subscript_size + *sat_size;
+                return GetSizeOfCompactSize(*subscript_size + 1) + 1 + *subscript_size + *sat_size;
             }
         }
         return {};
@@ -1920,11 +1921,15 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
     if (txntype == TxoutType::WITNESS_V0_SCRIPTHASH && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH)) {
-        CScriptID scriptid{RIPEMD160(data[0])};
-        CScript subscript;
-        if (provider.GetCScript(scriptid, subscript)) {
-            auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
-            if (sub) return std::make_unique<WSHDescriptor>(std::move(sub));
+        uint256 hash(data[0]);
+        WitnessV0ScriptHash scriptid(hash);
+        WitnessV0ScriptEntry entry;
+        if (provider.GetWitnessV0Script(scriptid, entry)) {
+            if (!entry.m_script.empty() && entry.m_script[0] == 0x00) {
+                CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+                auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
+                if (sub) return std::make_unique<WSHDescriptor>(std::move(sub));
+            }
         }
     }
     if (txntype == TxoutType::WITNESS_V1_TAPROOT && ctx == ParseScriptContext::TOP) {
