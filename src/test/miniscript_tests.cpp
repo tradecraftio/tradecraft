@@ -336,7 +336,7 @@ std::set<Challenge> FindChallenges(const NodeRef& ref) {
 //! The spk for this script under the given context. If it's a Taproot output also record the spend data.
 CScript ScriptPubKey(miniscript::MiniscriptContext ctx, const CScript& script, TaprootBuilder& builder)
 {
-    if (!miniscript::IsTapscript(ctx)) return CScript() << OP_0 << WitnessV0ScriptHash(script);
+    if (!miniscript::IsTapscript(ctx)) return CScript() << OP_0 << WitnessV0ScriptHash(/*version=*/0, script);
 
     // For Taproot outputs we always use a tree with a single script and a dummy internal key.
     builder.Add(0, script, TAPROOT_LEAF_TAPSCRIPT);
@@ -347,9 +347,13 @@ CScript ScriptPubKey(miniscript::MiniscriptContext ctx, const CScript& script, T
 //! Fill the witness with the data additional to the script satisfaction.
 void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& witness, const CScript& script, TaprootBuilder& builder) {
     // For P2WSH, it's only the witness script.
-    witness.stack.emplace_back(script.begin(), script.end());
-    if (!miniscript::IsTapscript(ctx)) return;
+    if (!miniscript::IsTapscript(ctx)) {
+        WitnessV0ScriptEntry entry(/*version=*/0, script);
+        witness.stack.push_back(entry.m_script);
+        return;
+    }
     // For Tapscript we also need the control block.
+    witness.stack.emplace_back(script.begin(), script.end());
     witness.stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
 }
 

@@ -99,8 +99,8 @@ class SignRawTransactionWithKeyTest(FreicoinTestFramework):
         # Get the UTXO info from scantxoutset
         unspent_output = self.nodes[1].scantxoutset('start', [p2sh_p2wsh_address['descriptor']])['unspents'][0]
         spk = script_to_p2sh_p2wsh_script(p2sh_p2wsh_address['redeemScript']).hex()
-        unspent_output['witnessScript'] = p2sh_p2wsh_address['redeemScript']
-        unspent_output['redeemScript'] = script_to_p2wsh_script(unspent_output['witnessScript']).hex()
+        unspent_output['witnessScript'] = '00' + p2sh_p2wsh_address['redeemScript']
+        unspent_output['redeemScript'] = script_to_p2wsh_script(p2sh_p2wsh_address['redeemScript']).hex()
         assert_equal(spk, unspent_output['scriptPubKey'])
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {getnewdestination()[2]: Decimal("49.998")})
@@ -114,11 +114,11 @@ class SignRawTransactionWithKeyTest(FreicoinTestFramework):
     def verify_txn_with_witness_script(self, tx_type):
         self.log.info("Test with a {} script as the witnessScript".format(tx_type))
         embedded_privkey, embedded_pubkey = generate_keypair(wif=True)
-        witness_script = {
+        witness_script = '00' + {
             'P2PKH': key_to_p2pkh_script(embedded_pubkey).hex(),
             'P2PK': key_to_p2pk_script(embedded_pubkey).hex()
         }.get(tx_type, "Invalid tx_type")
-        redeem_script = script_to_p2wsh_script(witness_script).hex()
+        redeem_script = script_to_p2wsh_script(witness_script[2:]).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = address_to_scriptpubkey(addr).hex()
         # Fund that address
