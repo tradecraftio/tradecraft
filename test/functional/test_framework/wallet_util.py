@@ -24,6 +24,7 @@ from test_framework.address import (
     script_to_p2sh,
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
+    script_to_witscript,
 )
 from test_framework.key import ECKey
 from test_framework.script_util import (
@@ -51,6 +52,7 @@ Multisig = namedtuple('Multisig', ['privkeys',
                                    'redeem_script',
                                    'p2wsh_script',
                                    'p2wsh_addr',
+                                   'witness_script',
                                    'p2sh_p2wsh_script',
                                    'p2sh_p2wsh_addr'])
 
@@ -107,6 +109,7 @@ def get_multisig(node):
                     redeem_script=script_code.hex(),
                     p2wsh_script=witness_script.hex(),
                     p2wsh_addr=script_to_p2wsh(script_code),
+                    witness_script=script_to_witscript(script_code).hex(),
                     p2sh_p2wsh_script=script_to_p2sh_script(witness_script).hex(),
                     p2sh_p2wsh_addr=script_to_p2sh_p2wsh(script_code))
 

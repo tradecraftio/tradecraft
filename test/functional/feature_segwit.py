@@ -415,9 +415,11 @@ class SegWitTest(FreicoinTestFramework):
                     # normal P2PKH and P2PK with compressed keys should always be spendable
                     spendable_anytime.extend([p2pkh, p2pk])
                     # P2SH_P2PK, P2SH_P2PKH with compressed keys are spendable after direct importaddress
-                    spendable_after_importaddress.extend([p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
+                    spendable_after_importaddress.extend([p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pkh])
                     # P2WPKH and P2SH_P2WPKH with compressed keys should always be spendable
                     spendable_anytime.extend([p2wpkh, p2sh_p2wpkh])
+                    # Non-standard scripts won't be recognized
+                    unseen_anytime.extend([p2wsh_p2pk, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
 
             for i in uncompressed_spendable_address:
                 v = self.nodes[0].getaddressinfo(i)
@@ -449,7 +451,9 @@ class SegWitTest(FreicoinTestFramework):
                     # normal P2PKH, P2PK, P2WPKH and P2SH_P2WPKH with compressed keys should always be seen
                     solvable_anytime.extend([p2pkh, p2pk, p2wpkh, p2sh_p2wpkh])
                     # P2SH_P2PK, P2SH_P2PKH with compressed keys are seen after direct importaddress
-                    solvable_after_importaddress.extend([p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
+                    solvable_after_importaddress.extend([p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pkh])
+                    # Non-standard scripts won't be recognized
+                    unseen_anytime.extend([p2wsh_p2pk, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
 
             for i in uncompressed_solvable_address:
                 v = self.nodes[0].getaddressinfo(i)
@@ -495,16 +499,12 @@ class SegWitTest(FreicoinTestFramework):
                 if v['isscript']:
                     bare = bytes.fromhex(v['hex'])
                     importlist.append(bare.hex())
-                    importlist.append(script_to_p2wsh_script(bare).hex())
                 else:
                     pubkey = bytes.fromhex(v['pubkey'])
                     p2pk = key_to_p2pk_script(pubkey)
                     p2pkh = key_to_p2pkh_script(pubkey)
                     importlist.append(p2pk.hex())
                     importlist.append(p2pkh.hex())
-                    importlist.append(key_to_p2wpkh_script(pubkey).hex())
-                    importlist.append(script_to_p2wsh_script(p2pk).hex())
-                    importlist.append(script_to_p2wsh_script(p2pkh).hex())
 
             importlist.append(unsolvablep2pkh.hex())
             importlist.append(unsolvablep2wshp2pkh.hex())
@@ -515,6 +515,10 @@ class SegWitTest(FreicoinTestFramework):
                 # import all generated addresses. The wallet already has the private keys for some of these, so catch JSON RPC
                 # exceptions and continue.
                 try_rpc(-4, "The wallet already contains the private key for this address or script", self.nodes[0].importaddress, i, "", False, True)
+            for i in compressed_spendable_address + compressed_solvable_address:
+                self.nodes[0].addwitnessaddress(i)
+            for i in uncompressed_spendable_address + uncompressed_solvable_address:
+                try_rpc(-4, "Public key or redeemscript not known to wallet, or the key is uncompressed", self.nodes[0].addwitnessaddress, i)
 
             self.nodes[0].importaddress(script_to_p2sh(op0))  # import OP_0 as address only
             self.nodes[0].importaddress(multisig_without_privkey_address)  # Test multisig_without_privkey

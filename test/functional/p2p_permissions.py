@@ -26,6 +26,7 @@ from test_framework.messages import (
 from test_framework.p2p import P2PDataStore
 from test_framework.script import (
     CScript,
+    OP_0,
     OP_TRUE,
 )
 from test_framework.test_node import ErrorMatch
@@ -127,7 +128,7 @@ class P2PPermissionsTests(FreicoinTestFramework):
                 }]),
         )
         tx.wit.vtxinwit = [CTxInWitness()]
-        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_0] + [OP_TRUE])]
         txid = tx.rehash()
 
         self.log.debug("Wait until tx is in node[1]'s mempool")

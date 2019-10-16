@@ -658,7 +658,7 @@ class PSTTest(FreicoinTestFramework):
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpst, [ext_utxo], {self.nodes[0].getnewaddress(): 15})
 
         # But funding should work when the solving data is provided
-        pst = wallet.walletcreatefundedpst([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, 0, {"add_inputs": True, "solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"], addr_info["embedded"]["embedded"]["scriptPubKey"]]}})
+        pst = wallet.walletcreatefundedpst([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, 0, {"add_inputs": True, "solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"]], "witscripts": [bytes([addr_info["embedded"]["witscript_version"]]).hex() + addr_info["embedded"]["embedded"]["scriptPubKey"]]}})
         signed = wallet.walletprocesspst(pst['pst'])
         assert not signed['complete']
         signed = self.nodes[0].walletprocesspst(signed['pst'])

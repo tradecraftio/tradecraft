@@ -309,7 +309,25 @@ RPCHelpMan addmultisigaddress()
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(dest));
+#if 0
+    // FIXME: We should be using this logic for Freicoin, since witnessScript
+    // and redeemScript are not the same thing.  However it breaks many of the
+    // RPC tests.
+    switch (output_type) {
+    case OutputType::LEGACY:
+        result.pushKV("redeemScript", HexStr(inner));
+        break;
+    case OutputType::P2SH_SEGWIT:
+        result.pushKV("redeemScript", HexStr(GetScriptForWitness(inner)));
+    case OutputType::BECH32:
+        result.pushKV("witnessScript", "00" + HexStr(inner));
+        break;
+    default:
+        break;
+    }
+#else
     result.pushKV("redeemScript", HexStr(inner));
+#endif
     result.pushKV("descriptor", descriptor->ToString());
 
     UniValue warnings(UniValue::VARR);
@@ -328,6 +346,7 @@ class Witnessifier : public boost::static_visitor<bool>
 {
 public:
     std::shared_ptr<CWallet> pwallet;
+    WitnessV0ScriptEntry entry;
     CTxDestination result;
     bool already_witness;
 
@@ -336,6 +355,13 @@ public:
     bool operator()(const PKHash &pkhash) {
         if (pwallet) {
             CScript script = GetScriptForDestination(pkhash);
+            WitnessV0ScriptEntry other(0 /* version */, script);
+            entry.m_script = std::move(other.m_script);
+            LegacyScriptPubKeyMan* spkm = pwallet->GetLegacyScriptPubKeyMan();
+            if (!spkm) {
+                return false;
+            }
+            spkm->AddWitnessV0Script(entry);
             CScript witscript = GetScriptForDestination(WitnessV0KeyHash(pkhash));
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(witscript);
             if (!provider || !IsSolvable(*provider, witscript)) {
@@ -367,8 +393,15 @@ public:
                 } else if (typ == TxoutType::PUBKEYHASH) {
                     witscript = GetScriptForDestination(WitnessV0KeyHash(uint160{vSolutions[0]}));
                 } else {
-                    witscript = GetScriptForDestination(WitnessV0ScriptHash(subscript));
+                    witscript = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, subscript));
                 }
+                WitnessV0ScriptEntry other(0 /* version */, subscript);
+                entry.m_script = std::move(other.m_script);
+                LegacyScriptPubKeyMan* spkm = pwallet->GetLegacyScriptPubKeyMan();
+                if (!spkm) {
+                    return false;
+                }
+                spkm->AddWitnessV0Script(entry);
                 if (!IsSolvable(*provider, witscript)) {
                     return false;
                 }
@@ -611,12 +644,15 @@ public:
     UniValue operator()(const WitnessV0ScriptHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
-        CScript subscript;
-        CRIPEMD160 hasher;
-        uint160 hash;
-        hasher.Write(id.begin(), 32).Finalize(hash.begin());
-        if (provider && provider->GetCScript(CScriptID(hash), subscript)) {
-            ProcessSubScript(subscript, obj);
+        WitnessV0ScriptEntry entry;
+        if (provider && provider->GetWitnessV0Script(id, entry)) {
+            if (!entry.m_script.empty()) {
+                obj.pushKV("witscript_version", (int64_t)entry.m_script[0]);
+                if (entry.m_script[0] == 0x00) {
+                    CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+                    ProcessSubScript(subscript, obj);
+                }
+            }
         }
         return obj;
     }

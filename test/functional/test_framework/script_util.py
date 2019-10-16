@@ -100,9 +100,13 @@ def program_to_witness_script(version, program):
     return CScript([version, program])
 
 
+def script_to_witness(script):
+    return b'\x00' + script
+
+
 def script_to_p2wsh_script(script):
     script = check_script(script)
-    return program_to_witness_script(0, sha256(script))
+    return program_to_witness_script(0, sha256(script_to_witness(script)))
 
 
 def key_to_p2wpkh_script(key):
@@ -112,7 +116,7 @@ def key_to_p2wpkh_script(key):
 
 def script_to_p2sh_p2wsh_script(script):
     script = check_script(script)
-    p2shscript = CScript([OP_0, sha256(script)])
+    p2shscript = CScript([OP_0, sha256(script_to_witness(script))])
     return script_to_p2sh_script(p2shscript)
 
 

@@ -26,6 +26,7 @@ from test_framework.address import (
     key_to_p2pkh,
     key_to_p2sh_p2wpkh,
     key_to_p2wpkh,
+    script_to_witscript,
 )
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
@@ -344,5 +345,5 @@ def bulk_transaction(tx, node, target_weight, privkeys, prevtxs=None):
         return tx_from_hex(signed["hex"])
     # OP_TRUE
     tx_heavy.wit.vtxinwit = [CTxInWitness()]
-    tx_heavy.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+    tx_heavy.wit.vtxinwit[0].scriptWitness.stack = [b'\x00' + CScript([OP_TRUE])]
     return tx_heavy
