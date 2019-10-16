@@ -881,8 +881,12 @@ class WSHDescriptor final : public DescriptorImpl
 protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, Span<const CScript> scripts, FlatSigningProvider& out) const override
     {
-        auto ret = Vector(GetScriptForDestination(WitnessV0ScriptHash(scripts[0])));
-        if (ret.size()) out.scripts.emplace(CScriptID(scripts[0]), scripts[0]);
+        WitnessV0ScriptEntry entry(0 /* version */, scripts[0]);
+        auto ret = Vector(GetScriptForDestination(entry.GetScriptHash()));
+        if (ret.size()) {
+            out.scripts.emplace(CScriptID(scripts[0]), scripts[0]);
+            out.witscripts.emplace(entry.GetScriptHash(), entry);
+        }
         return ret;
     }
 public:
@@ -1629,12 +1633,14 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
     if (txntype == TxoutType::WITNESS_V0_SCRIPTHASH && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH)) {
-        CScriptID scriptid;
-        CRIPEMD160().Write(data[0].data(), data[0].size()).Finalize(scriptid.begin());
-        CScript subscript;
-        if (provider.GetCScript(scriptid, subscript)) {
-            auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
-            if (sub) return std::make_unique<WSHDescriptor>(std::move(sub));
+        WitnessV0ScriptHash scriptid(uint256{data[0]});
+        WitnessV0ScriptEntry entry;
+        if (provider.GetWitnessV0Script(scriptid, entry)) {
+            if (!entry.m_script.empty() && entry.m_script[0] == 0x00) {
+                CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+                auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
+                if (sub) return std::make_unique<WSHDescriptor>(std::move(sub));
+            }
         }
     }
     if (txntype == TxoutType::WITNESS_V1_TAPROOT && ctx == ParseScriptContext::TOP) {

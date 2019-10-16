@@ -1681,6 +1681,16 @@ bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
     return spk_man->ImportScripts(scripts, timestamp);
 }
 
+bool CWallet::ImportWitnessV0Scripts(const std::set<WitnessV0ScriptEntry> witscripts, int64_t timestamp)
+{
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
+    }
+    LOCK(spk_man->cs_KeyStore);
+    return spk_man->ImportWitnessV0Scripts(witscripts, timestamp);
+}
+
 bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp)
 {
     auto spk_man = GetLegacyScriptPubKeyMan();

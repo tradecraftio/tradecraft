@@ -427,7 +427,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
             }
         }
         // Build a P2WSH with the multisig script
-        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(scriptPubKey));
+        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, scriptPubKey));
     }
     if (bScriptHash) {
         if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
@@ -502,7 +502,7 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
     }
 
     if (bSegWit) {
-        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(scriptPubKey));
+        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, scriptPubKey));
     }
     if (bScriptHash) {
         if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
@@ -672,6 +672,8 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 std::vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));
                 CScript redeemScript(rsData.begin(), rsData.end());
                 tempKeystore.AddCScript(redeemScript);
+                WitnessV0ScriptEntry entry(0 /* version */, redeemScript);
+                tempKeystore.AddWitnessV0Script(entry);
             }
         }
     }
