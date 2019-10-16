@@ -31,7 +31,7 @@
 
 #include <thread>
 
-static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
+static const std::vector<unsigned char> V_OP_TRUE{0x00, OP_TRUE};
 
 namespace validation_block_tests {
 struct MinerTestingSetup : public RegTestingSetup {

@@ -183,8 +183,8 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         self.sync_all()
         # Find the UTXO for the transaction node[1] should have received, check witnessScript matches
         unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address["address"]])[0]
-        assert_equal(unspent_output["witnessScript"], p2sh_p2wsh_address["redeemScript"])
-        p2sh_redeemScript = CScript([OP_0, sha256(hex_str_to_bytes(p2sh_p2wsh_address["redeemScript"]))])
+        assert_equal(unspent_output["witnessScript"], "00" + p2sh_p2wsh_address["redeemScript"])
+        p2sh_redeemScript = CScript([OP_0, sha256(hex_str_to_bytes("00" + p2sh_p2wsh_address["redeemScript"]))])
         assert_equal(unspent_output["redeemScript"], p2sh_redeemScript.hex())
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].getnewaddress(): Decimal("49.998")})
@@ -196,7 +196,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         self.log.info('Try with a P2PKH script as the witnessScript')
         embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
-        witness_script = embedded_addr_info['scriptPubKey']
+        witness_script = '00' + embedded_addr_info['scriptPubKey']
         redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
@@ -216,7 +216,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         self.log.info('Try with a P2PK script as the witnessScript')
         embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
-        witness_script = CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
+        witness_script = '00' + CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
         redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
