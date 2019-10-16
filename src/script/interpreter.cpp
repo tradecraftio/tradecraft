@@ -1687,12 +1687,19 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             if (witness.stack.size() == 0) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
             }
-            scriptPubKey = CScript(witness.stack.back().begin(), witness.stack.back().end());
-            stack = std::vector<std::vector<unsigned char> >(witness.stack.begin(), witness.stack.end() - 1);
             uint256 hashScriptPubKey;
-            CSHA256().Write(&scriptPubKey[0], scriptPubKey.size()).Finalize(hashScriptPubKey.begin());
+            CSHA256().Write(&witness.stack.back()[0], witness.stack.back().size()).Finalize(hashScriptPubKey.begin());
             if (memcmp(hashScriptPubKey.begin(), &program[0], 32)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+            }
+            if (!witness.stack.back().empty() && witness.stack.back()[0] == 0x00) {
+                scriptPubKey = CScript(witness.stack.back().begin()+1, witness.stack.back().end());
+                stack = std::vector<std::vector<unsigned char> >(witness.stack.begin(), witness.stack.end() - 1);
+            } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
+                return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
+            } else {
+                // Higher inner-version witness scripts return true for future soft-fork compatibility.
+                return set_success(serror);
             }
         } else if (program.size() == 20) {
             // Special case for pay-to-pubkeyhash; signature + pubkey in witness
@@ -1710,7 +1717,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
     } else {
-        // Higher version witness scripts return true for future softfork compatibility
+        // Higher outer-version witness scripts return true for future soft-fork compatibility
         return set_success(serror);
     }
 

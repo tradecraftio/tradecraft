@@ -1042,6 +1042,9 @@ public:
             typ = IsMine(*pwalletMain, basescript, SIGVERSION_WITNESS_V0);
             if (typ != ISMINE_SPENDABLE && typ != ISMINE_WATCH_SOLVABLE)
                 return false;
+            std::vector<unsigned char> innerscript(1, 0x00);
+            innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
+            pwalletMain->AddWitnessV0Script(innerscript);
             CScript witscript = GetScriptForWitness(basescript);
             pwalletMain->AddCScript(witscript);
             result = CScriptID(witscript);
@@ -1063,6 +1066,9 @@ public:
             typ = IsMine(*pwalletMain, subscript, SIGVERSION_WITNESS_V0);
             if (typ != ISMINE_SPENDABLE && typ != ISMINE_WATCH_SOLVABLE)
                 return false;
+            std::vector<unsigned char> innerscript(1, 0x00);
+            innerscript.insert(innerscript.end(), subscript.begin(), subscript.end());
+            pwalletMain->AddWitnessV0Script(innerscript);
             CScript witscript = GetScriptForWitness(subscript);
             pwalletMain->AddCScript(witscript);
             result = CScriptID(witscript);

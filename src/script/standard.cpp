@@ -308,13 +308,13 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
-CScript GetScriptForWitness(const CScript& redeemscript)
+CScript GetScriptForWitness(const CScript& witscript)
 {
     CScript ret;
 
     txnouttype typ;
     std::vector<std::vector<unsigned char> > vSolutions;
-    if (Solver(redeemscript, typ, vSolutions)) {
+    if (Solver(witscript, typ, vSolutions)) {
         if (typ == TX_PUBKEY) {
             unsigned char h160[20];
             CHash160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160);
@@ -326,7 +326,8 @@ CScript GetScriptForWitness(const CScript& redeemscript)
         }
     }
     uint256 hash;
-    CSHA256().Write(&redeemscript[0], redeemscript.size()).Finalize(hash.begin());
+    unsigned char prefix = 0x00;
+    CSHA256().Write(&prefix, 1).Write(&witscript[0], witscript.size()).Finalize(hash.begin());
     ret << OP_0 << ToByteVector(hash);
     return ret;
 }

@@ -124,14 +124,16 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     }
     case TX_WITNESS_V0_SCRIPTHASH:
     {
-        if (!keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+        uint256 withash(vSolutions[0]);
+        if (!keystore.HaveWitnessV0Script(withash)) {
             break;
         }
-        uint160 hash;
-        CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(hash.begin());
-        CScriptID scriptID = CScriptID(hash);
-        CScript subscript;
-        if (keystore.GetCScript(scriptID, subscript)) {
+        std::vector<unsigned char> innerscript;
+        if (keystore.GetWitnessV0Script(withash, innerscript)) {
+            if (innerscript.empty() || (innerscript[0] != 0x00)) {
+                break;
+            }
+            CScript subscript(innerscript.begin()+1, innerscript.end());
             isminetype ret = IsMine(keystore, subscript, isInvalid, SIGVERSION_WITNESS_V0);
             if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
                 return ret;
