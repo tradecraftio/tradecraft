@@ -41,7 +41,7 @@ def witness_script(version, pubkey):
         pkscript = "0014" + pubkeyhash
     elif (version == 1):
         # 1-of-1 multisig
-        scripthash = bytes_to_hex_str(sha256(hex_str_to_bytes("5121" + pubkey + "51ae")))
+        scripthash = bytes_to_hex_str(sha256(hex_str_to_bytes("005121" + pubkey + "51ae")))
         pkscript = "0020" + scripthash
     else:
         assert("Wrong version" == "0 or 1")
@@ -340,7 +340,9 @@ class SegWitTest(FreicoinTestFramework):
                 # normal P2PKH and P2PK with compressed keys should always be spendable
                 spendable_anytime.extend([p2pkh, p2pk])
                 # P2SH_P2PK, P2SH_P2PKH, and witness with compressed keys are spendable after direct importaddress
-                spendable_after_importaddress.extend([p2wpkh, p2sh_p2wpkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
+                spendable_after_importaddress.extend([p2wpkh, p2sh_p2wpkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pkh])
+                # Non-standard scripts won't be recognized
+                unseen_anytime.extend([p2wsh_p2pk, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
 
         for i in uncompressed_spendable_address:
             v = self.nodes[0].validateaddress(i)
@@ -370,7 +372,9 @@ class SegWitTest(FreicoinTestFramework):
                 # normal P2PKH and P2PK with compressed keys should always be seen
                 solvable_anytime.extend([p2pkh, p2pk])
                 # P2SH_P2PK, P2SH_P2PKH, and witness with compressed keys are seen after direct importaddress
-                solvable_after_importaddress.extend([p2wpkh, p2sh_p2wpkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
+                solvable_after_importaddress.extend([p2wpkh, p2sh_p2wpkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pkh])
+                # Non-standard scripts won't be recognized
+                unseen_anytime.extend([p2wsh_p2pk, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
 
         for i in uncompressed_solvable_address:
             v = self.nodes[0].validateaddress(i)
@@ -395,9 +399,9 @@ class SegWitTest(FreicoinTestFramework):
         unsolvable_address = ["mjoE3sSrb8ByYEvgnC3Aox86u1CHnfJA4V", "2N7MGY19ti4KDMSzRfPAssP6Pxyuxoi6jLe", script_to_p2sh(op1), script_to_p2sh(op0)]
         unsolvable_address_key = hex_str_to_bytes("02341AEC7587A51CDE5279E0630A531AEA2615A9F80B17E8D9376327BAEAA59E3D")
         unsolvablep2pkh = CScript([OP_DUP, OP_HASH160, hash160(unsolvable_address_key), OP_EQUALVERIFY, OP_CHECKSIG])
-        unsolvablep2wshp2pkh = CScript([OP_0, sha256(unsolvablep2pkh)])
+        unsolvablep2wshp2pkh = CScript([OP_0, sha256(bytes([0]) + unsolvablep2pkh)])
         p2shop0 = CScript([OP_HASH160, hash160(op0), OP_EQUAL])
-        p2wshop1 = CScript([OP_0, sha256(op1)])
+        p2wshop1 = CScript([OP_0, sha256(bytes([0]) + op1)])
         unsolvable_after_importaddress.append(unsolvablep2pkh)
         unsolvable_after_importaddress.append(unsolvablep2wshp2pkh)
         unsolvable_after_importaddress.append(op1) # OP_1 will be imported as script
@@ -417,16 +421,12 @@ class SegWitTest(FreicoinTestFramework):
             if (v['isscript']):
                 bare = hex_str_to_bytes(v['hex'])
                 importlist.append(bytes_to_hex_str(bare))
-                importlist.append(bytes_to_hex_str(CScript([OP_0, sha256(bare)])))
             else:
                 pubkey = hex_str_to_bytes(v['pubkey'])
                 p2pk = CScript([pubkey, OP_CHECKSIG])
                 p2pkh = CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])
                 importlist.append(bytes_to_hex_str(p2pk))
                 importlist.append(bytes_to_hex_str(p2pkh))
-                importlist.append(bytes_to_hex_str(CScript([OP_0, hash160(pubkey)])))
-                importlist.append(bytes_to_hex_str(CScript([OP_0, sha256(p2pk)])))
-                importlist.append(bytes_to_hex_str(CScript([OP_0, sha256(p2pkh)])))
 
         importlist.append(bytes_to_hex_str(unsolvablep2pkh))
         importlist.append(bytes_to_hex_str(unsolvablep2wshp2pkh))
@@ -438,6 +438,13 @@ class SegWitTest(FreicoinTestFramework):
                 self.nodes[0].importaddress(i,"",False,True)
             except JSONRPCException as exp:
                 assert_equal(exp.error["message"], "The wallet already contains the private key for this address or script")
+        for i in compressed_spendable_address + compressed_solvable_address:
+            self.nodes[0].addwitnessaddress(i)
+        for i in uncompressed_spendable_address + uncompressed_solvable_address:
+            try:
+                self.nodes[0].addwitnessaddress(i)
+            except JSONRPCException as exp:
+                assert_equal(exp.error["message"], "Public key or redeemscript not known to wallet, or the key is uncompressed")
 
         self.nodes[0].importaddress(script_to_p2sh(op0)) # import OP_0 as address only
         self.nodes[0].importaddress(multisig_without_privkey_address) # Test multisig_without_privkey
@@ -596,7 +603,7 @@ class SegWitTest(FreicoinTestFramework):
     def p2sh_address_to_script(self,v):
         bare = CScript(hex_str_to_bytes(v['hex']))
         p2sh = CScript(hex_str_to_bytes(v['scriptPubKey']))
-        p2wsh = CScript([OP_0, sha256(bare)])
+        p2wsh = CScript([OP_0, sha256(bytes([0]) + bare)])
         p2sh_p2wsh = CScript([OP_HASH160, hash160(p2wsh), OP_EQUAL])
         return([bare, p2sh, p2wsh, p2sh_p2wsh])
 
@@ -608,8 +615,8 @@ class SegWitTest(FreicoinTestFramework):
         p2pkh = CScript(hex_str_to_bytes(v['scriptPubKey']))
         p2sh_p2pk = CScript([OP_HASH160, hash160(p2pk), OP_EQUAL])
         p2sh_p2pkh = CScript([OP_HASH160, hash160(p2pkh), OP_EQUAL])
-        p2wsh_p2pk = CScript([OP_0, sha256(p2pk)])
-        p2wsh_p2pkh = CScript([OP_0, sha256(p2pkh)])
+        p2wsh_p2pk = CScript([OP_0, sha256(bytes([0]) + p2pk)])
+        p2wsh_p2pkh = CScript([OP_0, sha256(bytes([0]) + p2pkh)])
         p2sh_p2wsh_p2pk = CScript([OP_HASH160, hash160(p2wsh_p2pk), OP_EQUAL])
         p2sh_p2wsh_p2pkh = CScript([OP_HASH160, hash160(p2wsh_p2pkh), OP_EQUAL])
         return [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh]

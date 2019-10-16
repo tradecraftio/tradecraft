@@ -591,12 +591,18 @@ BOOST_AUTO_TEST_CASE(test_witness)
     keystore.AddCScript(scriptPubkey1L);
     keystore.AddCScript(scriptPubkey2L);
     keystore.AddCScript(scriptMulti);
+    keystore.AddWitnessV0Script(ToByteVector((CScript() << OP_FALSE) + scriptPubkey1));
+    keystore.AddWitnessV0Script(ToByteVector((CScript() << OP_FALSE) + scriptPubkey2));
+    keystore.AddWitnessV0Script(ToByteVector((CScript() << OP_FALSE) + scriptPubkey1L));
+    keystore.AddWitnessV0Script(ToByteVector((CScript() << OP_FALSE) + scriptPubkey2L));
+    keystore.AddWitnessV0Script(ToByteVector((CScript() << OP_FALSE) + scriptMulti));
     keystore.AddCScript(GetScriptForWitness(scriptPubkey1));
     keystore.AddCScript(GetScriptForWitness(scriptPubkey2));
     keystore.AddCScript(GetScriptForWitness(scriptPubkey1L));
     keystore.AddCScript(GetScriptForWitness(scriptPubkey2L));
     keystore.AddCScript(GetScriptForWitness(scriptMulti));
     keystore2.AddCScript(scriptMulti);
+    keystore2.AddWitnessV0Script(ToByteVector((CScript() << OP_FALSE) + scriptMulti));
     keystore2.AddCScript(GetScriptForWitness(scriptMulti));
     keystore2.AddKeyPubKey(key3, pubkey3);
 

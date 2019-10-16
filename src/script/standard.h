@@ -87,6 +87,6 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
 CScript GetScriptForDestination(const CTxDestination& dest);
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
-CScript GetScriptForWitness(const CScript& redeemscript);
+CScript GetScriptForWitness(const CScript& witscript);
 
 #endif // FREICOIN_SCRIPT_STANDARD_H

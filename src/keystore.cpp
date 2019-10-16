@@ -80,6 +80,33 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
+bool CBasicKeyStore::AddWitnessV0Script(const std::vector<unsigned char>& script)
+{
+    LOCK(cs_KeyStore);
+    uint256 witnessprogram;
+    CSHA256().Write(&script[0], script.size()).Finalize(witnessprogram.begin());
+    mapWitnessV0Scripts[witnessprogram] = script;
+    return true;
+}
+
+bool CBasicKeyStore::HaveWitnessV0Script(const uint256& witnessprogram) const
+{
+    LOCK(cs_KeyStore);
+    return mapWitnessV0Scripts.count(witnessprogram) > 0;
+}
+
+bool CBasicKeyStore::GetWitnessV0Script(const uint256& witnessprogram, std::vector<unsigned char>& scriptOut) const
+{
+    LOCK(cs_KeyStore);
+    auto mi = mapWitnessV0Scripts.find(witnessprogram);
+    if (mi != mapWitnessV0Scripts.end())
+    {
+        scriptOut = (*mi).second;
+        return true;
+    }
+    return false;
+}
+
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 {
     //TODO: Use Solver to extract this?
