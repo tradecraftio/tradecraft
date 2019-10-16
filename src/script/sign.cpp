@@ -59,6 +59,26 @@ static bool GetCScript(const SigningProvider& provider, const SignatureData& sig
     return false;
 }
 
+static bool GetWitnessV0Script(const SigningProvider& provider, const SignatureData& sigdata, const WitnessV0ScriptHash& id, std::vector<unsigned char>& script)
+{
+    if (provider.GetWitnessV0Script(id, script)) {
+        return true;
+    }
+    // Look for witscripts in SignatureData
+    if (WitnessV0ScriptHash((unsigned char)0, sigdata.redeem_script) == id) {
+        script.clear();
+        script.push_back(0x00);
+        script.insert(script.end(), sigdata.redeem_script.begin(), sigdata.redeem_script.end());
+        return true;
+    } else if (WitnessV0ScriptHash((unsigned char)0, sigdata.witness_script) == id) {
+        script.clear();
+        script.push_back(0x00);
+        script.insert(script.end(), sigdata.witness_script.begin(), sigdata.witness_script.end());
+        return true;
+    }
+    return false;
+}
+
 static bool GetPubKey(const SigningProvider& provider, SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
 {
     if (provider.GetPubKey(address, pubkey)) {
@@ -106,8 +126,6 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
 static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& scriptPubKey,
                      std::vector<valtype>& ret, txnouttype& whichTypeRet, SigVersion sigversion, SignatureData& sigdata)
 {
-    CScript scriptRet;
-    uint160 h160;
     ret.clear();
     std::vector<unsigned char> sig;
 
@@ -135,11 +153,14 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         return true;
     }
     case TX_SCRIPTHASH:
+    {
+        CScript scriptRet;
         if (GetCScript(provider, sigdata, uint160(vSolutions[0]), scriptRet)) {
             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
             return true;
         }
         return false;
+    }
 
     case TX_MULTISIG: {
         size_t required = vSolutions.front()[0];
@@ -165,12 +186,16 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         return true;
 
     case TX_WITNESS_V0_SCRIPTHASH:
-        CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160.begin());
-        if (GetCScript(provider, sigdata, h160, scriptRet)) {
-            ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
-            return true;
+    {
+        std::vector<unsigned char> witscript;
+        if (GetWitnessV0Script(provider, sigdata, WitnessV0ScriptHash(vSolutions[0]), witscript)) {
+            if (!witscript.empty() && (witscript[0] == 0x00)) {
+                ret.push_back(std::vector<unsigned char>(witscript.begin() + 1, witscript.end()));
+                return true;
+            }
         }
         return false;
+    }
 
     default:
         return false;
@@ -230,7 +255,8 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         sigdata.witness_script = witnessscript;
         txnouttype subType;
         solved = solved && SignStep(provider, creator, witnessscript, result, subType, SigVersion::WITNESS_V0, sigdata) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SCRIPTHASH && subType != TX_WITNESS_V0_KEYHASH;
-        result.push_back(std::vector<unsigned char>(witnessscript.begin(), witnessscript.end()));
+        result.emplace_back(1, 0x00);
+        result.back().insert(result.back().end(), witnessscript.begin(), witnessscript.end());
         sigdata.scriptWitness.stack = result;
         sigdata.witness = true;
         result.clear();
@@ -382,9 +408,9 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
         Solver(next_script, script_type, solutions);
         stack.script.pop_back();
     }
-    if (script_type == TX_WITNESS_V0_SCRIPTHASH && !stack.witness.empty() && !stack.witness.back().empty()) {
+    if (script_type == TX_WITNESS_V0_SCRIPTHASH && !stack.witness.empty() && !stack.witness.back().empty() && (stack.witness.back()[0] == 0x00)) {
         // Get the witnessScript
-        CScript witness_script(stack.witness.back().begin(), stack.witness.back().end());
+        CScript witness_script(stack.witness.back().begin() + 1, stack.witness.back().end());
         data.witness_script = witness_script;
         next_script = std::move(witness_script);
 
@@ -432,7 +458,8 @@ void SignatureData::MergeSignatureData(SignatureData sigdata)
         redeem_script = sigdata.redeem_script;
     }
     if (witness_script.empty() && !sigdata.witness_script.empty()) {
-        witness_script = sigdata.witness_script;
+        witness_script.push_back(0x00);
+        witness_script.insert(witness_script.end(), sigdata.witness_script.begin(), sigdata.witness_script.end());
     }
     signatures.insert(std::make_move_iterator(sigdata.signatures.begin()), std::make_move_iterator(sigdata.signatures.end()));
 }
@@ -582,7 +609,8 @@ void PSTInput::FillSignatureData(SignatureData& sigdata) const
         sigdata.redeem_script = redeem_script;
     }
     if (!witness_script.empty()) {
-        sigdata.witness_script = witness_script;
+        sigdata.witness_script.clear();
+        sigdata.witness_script.insert(sigdata.witness_script.end(), witness_script.begin() + 1, witness_script.end());
     }
     for (const auto& key_pair : hd_keypaths) {
         sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair.first);
@@ -611,7 +639,8 @@ void PSTInput::FromSignatureData(const SignatureData& sigdata)
         redeem_script = sigdata.redeem_script;
     }
     if (witness_script.empty() && !sigdata.witness_script.empty()) {
-        witness_script = sigdata.witness_script;
+        witness_script.push_back(0x00);
+        witness_script.insert(witness_script.end(), sigdata.witness_script.begin(), sigdata.witness_script.end());
     }
 }
 
@@ -652,7 +681,8 @@ void PSTOutput::FillSignatureData(SignatureData& sigdata) const
         sigdata.redeem_script = redeem_script;
     }
     if (!witness_script.empty()) {
-        sigdata.witness_script = witness_script;
+        sigdata.witness_script.clear();
+        sigdata.witness_script.insert(sigdata.witness_script.end(), witness_script.begin() + 1, witness_script.end());
     }
     for (const auto& key_pair : hd_keypaths) {
         sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair.first);
@@ -665,7 +695,8 @@ void PSTOutput::FromSignatureData(const SignatureData& sigdata)
         redeem_script = sigdata.redeem_script;
     }
     if (witness_script.empty() && !sigdata.witness_script.empty()) {
-        witness_script = sigdata.witness_script;
+        witness_script.push_back(0x00);
+        witness_script.insert(witness_script.end(), sigdata.witness_script.begin(), sigdata.witness_script.end());
     }
 }
 
@@ -688,12 +719,18 @@ bool PublicOnlySigningProvider::GetCScript(const CScriptID &scriptid, CScript& s
     return m_provider->GetCScript(scriptid, script);
 }
 
+bool PublicOnlySigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash &id, std::vector<unsigned char>& witscript) const
+{
+    return m_provider->GetWitnessV0Script(id, witscript);
+}
+
 bool PublicOnlySigningProvider::GetPubKey(const CKeyID &address, CPubKey& pubkey) const
 {
     return m_provider->GetPubKey(address, pubkey);
 }
 
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
+bool FlatSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash &id, std::vector<unsigned char>& witscript) const { return LookupHelper(witscripts, id, witscript); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
 bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
 
@@ -702,6 +739,8 @@ FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvide
     FlatSigningProvider ret;
     ret.scripts = a.scripts;
     ret.scripts.insert(b.scripts.begin(), b.scripts.end());
+    ret.witscripts = a.witscripts;
+    ret.witscripts.insert(b.witscripts.begin(), b.witscripts.end());
     ret.pubkeys = a.pubkeys;
     ret.pubkeys.insert(b.pubkeys.begin(), b.pubkeys.end());
     ret.keys = a.keys;

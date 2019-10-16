@@ -422,6 +422,22 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
+bool CWallet::AddWitnessV0Script(const std::vector<unsigned char>& script)
+{
+    if (!CCryptoKeyStore::AddWitnessV0Script(script))
+        return false;
+    WitnessV0ScriptHash longid;
+    CHash256().Write(script.data(), script.size()).Finalize(longid.begin());
+    uint160 shortid;
+    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
+    return WalletBatch(*database).WriteWitnessV0Script(shortid, script);
+}
+
+bool CWallet::LoadWitnessV0Script(const std::vector<unsigned char>& script)
+{
+    return CCryptoKeyStore::AddWitnessV0Script(script);
+}
+
 bool CWallet::AddWatchOnly(const CScript& dest)
 {
     if (!CCryptoKeyStore::AddWatchOnly(dest))

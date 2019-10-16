@@ -669,7 +669,7 @@ static UniValue decodescript(const JSONRPCRequest& request)
             } else {
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
                 // Newer segwit program versions should be considered when then become available.
-                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
+                segwitScr = GetScriptForDestination(WitnessV0ScriptHash((unsigned char)0, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, true);
             sr.pushKV("p2sh-segwit", EncodeDestination(CScriptID(segwitScr)));
@@ -876,6 +876,9 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
                     keystore->AddCScript(redeemScript);
                     // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
                     keystore->AddCScript(GetScriptForWitness(redeemScript));
+                    std::vector<unsigned char> witscript(1, 0x00);
+                    witscript.insert(witscript.end(), rsData.begin(), rsData.end());
+                    keystore->AddWitnessV0Script(witscript);
                 }
             }
         }
@@ -1355,6 +1358,7 @@ UniValue decodepst(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "        }\n"
+            "      \"script_version\" : \"version\"  (nubmber, optional) The inner script version\n"
             "      \"witness_script\" : {       (json object, optional)\n"
             "          \"asm\" : \"asm\",            (string) The asm\n"
             "          \"hex\" : \"hex\",            (string) The hex\n"
@@ -1386,6 +1390,7 @@ UniValue decodepst(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "        }\n"
+            "      \"script_version\" : \"version\"  (nubmber, optional) The inner script version\n"
             "      \"witness_script\" : {       (json object, optional)\n"
             "          \"asm\" : \"asm\",            (string) The asm\n"
             "          \"hex\" : \"hex\",            (string) The hex\n"
@@ -1489,8 +1494,14 @@ UniValue decodepst(const JSONRPCRequest& request)
             in.pushKV("redeem_script", r);
         }
         if (!input.witness_script.empty()) {
+            in.pushKV("script_version", (int64_t)input.witness_script[0]);
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.witness_script, r, false);
+            if (input.witness_script[0] == 0x00) {
+                ScriptToUniv(CScript(input.witness_script.begin() + 1, input.witness_script.end()), r, false);
+            } else {
+                r.pushKV("hex", HexStr(input.witness_script.begin() + 1, input.witness_script.end()));
+                r.pushKV("type", "unknown");
+            }
             in.pushKV("witness_script", r);
         }
 
@@ -1552,8 +1563,14 @@ UniValue decodepst(const JSONRPCRequest& request)
             out.pushKV("redeem_script", r);
         }
         if (!output.witness_script.empty()) {
+            out.pushKV("script_version", (int64_t)output.witness_script[0]);
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.witness_script, r, false);
+            if (output.witness_script[0] == 0x00) {
+                ScriptToUniv(CScript(output.witness_script.begin() + 1, output.witness_script.end()), r, false);
+            } else {
+                r.pushKV("hex", HexStr(output.witness_script.begin() + 1, output.witness_script.end()));
+                r.pushKV("type", "unknown");
+            }
             out.pushKV("witness_script", r);
         }
 

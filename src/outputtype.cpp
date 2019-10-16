@@ -94,8 +94,11 @@ CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript&
         return CScriptID(script);
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
-        CTxDestination witdest = WitnessV0ScriptHash(script);
+        CTxDestination witdest = WitnessV0ScriptHash((unsigned char)0, script);
         CScript witprog = GetScriptForDestination(witdest);
+        std::vector<unsigned char> witscript{0x00};
+        witscript.insert(witscript.end(), script.begin(), script.end());
+        keystore.AddWitnessV0Script(witscript);
         // Check if the resulting program is solvable (i.e. doesn't use an uncompressed key)
         if (!IsSolvable(keystore, witprog)) return CScriptID(script);
         // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.

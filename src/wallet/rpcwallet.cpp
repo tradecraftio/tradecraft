@@ -1378,6 +1378,9 @@ public:
     bool operator()(const CKeyID &keyID) {
         if (pwallet) {
             CScript basescript = GetScriptForDestination(keyID);
+            std::vector<unsigned char> innerscript(1, 0x00);
+            innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
+            pwallet->AddWitnessV0Script(innerscript);
             CScript witscript = GetScriptForWitness(basescript);
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
@@ -1397,6 +1400,9 @@ public:
                 already_witness = true;
                 return true;
             }
+            std::vector<unsigned char> innerscript(1, 0x00);
+            innerscript.insert(innerscript.end(), subscript.begin(), subscript.end());
+            pwallet->AddWitnessV0Script(innerscript);
             CScript witscript = GetScriptForWitness(subscript);
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
@@ -4062,12 +4068,15 @@ public:
     UniValue operator()(const WitnessV0ScriptHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
-        CScript subscript;
-        CRIPEMD160 hasher;
-        uint160 hash;
-        hasher.Write(id.begin(), 32).Finalize(hash.begin());
-        if (pwallet && pwallet->GetCScript(CScriptID(hash), subscript)) {
-            ProcessSubScript(subscript, obj);
+        std::vector<unsigned char> witscript;
+        if (pwallet && pwallet->GetWitnessV0Script(id, witscript)) {
+            if (!witscript.empty()) {
+                obj.pushKV("witscript_version", (int64_t)witscript[0]);
+                if (witscript[0] == 0x00) {
+                    CScript subscript(witscript.begin() + 1, witscript.end());
+                    ProcessSubScript(subscript, obj);
+                }
+            }
         }
         return obj;
     }

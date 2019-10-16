@@ -21,6 +21,7 @@
 #include <hash.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
+#include <script/standard.h>
 #include <streams.h>
 
 class CKey;
@@ -37,6 +38,7 @@ class SigningProvider
 public:
     virtual ~SigningProvider() {}
     virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
+    virtual bool GetWitnessV0Script(const WitnessV0ScriptHash &id, std::vector<unsigned char>& witscript) const { return false; }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
     virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
 };
@@ -51,16 +53,19 @@ private:
 public:
     PublicOnlySigningProvider(const SigningProvider* provider) : m_provider(provider) {}
     bool GetCScript(const CScriptID &scriptid, CScript& script) const;
+    bool GetWitnessV0Script(const WitnessV0ScriptHash &id, std::vector<unsigned char>& witscript) const;
     bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const;
 };
 
 struct FlatSigningProvider final : public SigningProvider
 {
     std::map<CScriptID, CScript> scripts;
+    std::map<WitnessV0ScriptHash, std::vector<unsigned char> > witscripts;
     std::map<CKeyID, CPubKey> pubkeys;
     std::map<CKeyID, CKey> keys;
 
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
+    bool GetWitnessV0Script(const WitnessV0ScriptHash &id, std::vector<unsigned char>& witscript) const;
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
 };
@@ -218,7 +223,7 @@ struct PSTInput
     CTxOut witness_utxo;
     uint32_t witness_refheight;
     CScript redeem_script;
-    CScript witness_script;
+    std::vector<unsigned char> witness_script;
     CScript final_script_sig;
     CScriptWitness final_script_witness;
     std::map<CPubKey, std::vector<uint32_t>> hd_keypaths;
@@ -441,7 +446,7 @@ struct PSTInput
 struct PSTOutput
 {
     CScript redeem_script;
-    CScript witness_script;
+    std::vector<unsigned char> witness_script;
     std::map<CPubKey, std::vector<uint32_t>> hd_keypaths;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
 

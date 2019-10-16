@@ -17,6 +17,7 @@
 #ifndef FREICOIN_SCRIPT_STANDARD_H
 #define FREICOIN_SCRIPT_STANDARD_H
 
+#include <hash.h>
 #include <script/interpreter.h>
 #include <uint256.h>
 
@@ -71,7 +72,7 @@ struct WitnessV0ScriptHash : public uint256
 {
     WitnessV0ScriptHash() : uint256() {}
     explicit WitnessV0ScriptHash(const uint256& hash) : uint256(hash) {}
-    explicit WitnessV0ScriptHash(const CScript& script);
+    explicit WitnessV0ScriptHash(unsigned char version, const CScript& innerscript);
     using uint256::uint256;
 };
 
@@ -171,13 +172,13 @@ CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 
 /**
- * Generate a pay-to-witness script for the given redeem script. If the redeem
+ * Generate a pay-to-witness script for the given witness script. If the witness
  * script is P2PK or P2PKH, this returns a P2WPKH script, otherwise it returns a
  * P2WSH script.
  *
  * TODO: replace calls to GetScriptForWitness with GetScriptForDestination using
  * the various witness-specific CTxDestination subtypes.
  */
-CScript GetScriptForWitness(const CScript& redeemscript);
+CScript GetScriptForWitness(const CScript& witscript);
 
 #endif // FREICOIN_SCRIPT_STANDARD_H

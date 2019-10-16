@@ -325,6 +325,9 @@ public:
         for (const auto& script : sub) {
             CScriptID id(script);
             out.scripts.emplace(CScriptID(script), script);
+            std::vector<unsigned char> witscript{0x00};
+            witscript.insert(witscript.end(), script.begin(), script.end());
+            out.witscripts.emplace(WitnessV0ScriptHash((unsigned char)0, script), witscript);
             output_scripts.push_back(m_convert_fn(script));
         }
         return true;
@@ -332,7 +335,7 @@ public:
 };
 
 CScript ConvertP2SH(const CScript& script) { return GetScriptForDestination(CScriptID(script)); }
-CScript ConvertP2WSH(const CScript& script) { return GetScriptForDestination(WitnessV0ScriptHash(script)); }
+CScript ConvertP2WSH(const CScript& script) { return GetScriptForDestination(WitnessV0ScriptHash((unsigned char)0, script)); }
 
 /** A parsed combo(P) descriptor. */
 class ComboDescriptor final : public Descriptor

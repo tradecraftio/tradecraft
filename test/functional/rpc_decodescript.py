@@ -92,7 +92,7 @@ class DecodeScriptTest(FreicoinTestFramework):
         rpc_result = self.nodes[0].decodescript(multisig_script)
         assert_equal('2 ' + public_key + ' ' + public_key + ' ' + public_key +  ' 3 OP_CHECKMULTISIG', rpc_result['asm'])
         # multisig in P2WSH
-        multisig_script_hash = bytes_to_hex_str(sha256(hex_str_to_bytes(multisig_script)))
+        multisig_script_hash = bytes_to_hex_str(sha256(hex_str_to_bytes('00' + multisig_script)))
         assert_equal('0 ' + multisig_script_hash, rpc_result['segwit']['asm'])
 
         # 4) P2SH scriptPubKey
@@ -130,7 +130,7 @@ class DecodeScriptTest(FreicoinTestFramework):
         rpc_result = self.nodes[0].decodescript(cltv_script)
         assert_equal('OP_IF ' + public_key + ' OP_CHECKSIGVERIFY OP_ELSE 500000 OP_CHECKLOCKTIMEVERIFY OP_DROP OP_ENDIF ' + public_key + ' OP_CHECKSIG', rpc_result['asm'])
         # CLTV script in P2WSH
-        cltv_script_hash = bytes_to_hex_str(sha256(hex_str_to_bytes(cltv_script)))
+        cltv_script_hash = bytes_to_hex_str(sha256(hex_str_to_bytes('00' + cltv_script)))
         assert_equal('0 ' + cltv_script_hash, rpc_result['segwit']['asm'])
 
         # 7) P2PK scriptPubKey

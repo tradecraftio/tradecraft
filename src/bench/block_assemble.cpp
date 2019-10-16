@@ -73,7 +73,7 @@ static std::pair<CTxIn, uint32_t> MineBlock(const CScript& coinbase_scriptPubKey
 
 static void AssembleBlock(benchmark::State& state)
 {
-    const std::vector<unsigned char> op_true{OP_TRUE};
+    const std::vector<unsigned char> op_true{0, OP_TRUE};
     CScriptWitness witness;
     witness.stack.push_back(op_true);
 

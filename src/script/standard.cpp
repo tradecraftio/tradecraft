@@ -27,9 +27,9 @@ typedef std::vector<unsigned char> valtype;
 
 CScriptID::CScriptID(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
 
-WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
+WitnessV0ScriptHash::WitnessV0ScriptHash(unsigned char version, const CScript& innerscript)
 {
-    CSHA256().Write(in.data(), in.size()).Finalize(begin());
+    CSHA256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
 }
 
 const char* GetTxnOutputType(txnouttype t)
@@ -326,18 +326,18 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
-CScript GetScriptForWitness(const CScript& redeemscript)
+CScript GetScriptForWitness(const CScript& witscript)
 {
     txnouttype typ;
     std::vector<std::vector<unsigned char> > vSolutions;
-    if (Solver(redeemscript, typ, vSolutions)) {
+    if (Solver(witscript, typ, vSolutions)) {
         if (typ == TX_PUBKEY) {
             return GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0].begin(), vSolutions[0].end())));
         } else if (typ == TX_PUBKEYHASH) {
             return GetScriptForDestination(WitnessV0KeyHash(vSolutions[0]));
         }
     }
-    return GetScriptForDestination(WitnessV0ScriptHash(redeemscript));
+    return GetScriptForDestination(WitnessV0ScriptHash((unsigned char)0, witscript));
 }
 
 bool IsValidDestination(const CTxDestination& dest) {

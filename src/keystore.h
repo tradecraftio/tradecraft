@@ -42,6 +42,11 @@ public:
     virtual bool HaveCScript(const CScriptID &hash) const =0;
     virtual std::set<CScriptID> GetCScripts() const =0;
 
+    //! Support for witness scripts
+    virtual bool AddWitnessV0Script(const std::vector<unsigned char>& script) =0;
+    virtual bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnesshash) const =0;
+    virtual bool GetWitnessV0Script(const WitnessV0ScriptHash& witnesshash, std::vector<unsigned char>& scriptOut) const =0;
+
     //! Support for Watch-only addresses
     virtual bool AddWatchOnly(const CScript &dest) =0;
     virtual bool RemoveWatchOnly(const CScript &dest) =0;
@@ -58,11 +63,13 @@ protected:
     using KeyMap = std::map<CKeyID, CKey>;
     using WatchKeyMap = std::map<CKeyID, CPubKey>;
     using ScriptMap = std::map<CScriptID, CScript>;
+    using WitnessV0ScriptMap = std::map<WitnessV0ScriptHash, std::vector<unsigned char> >;
     using WatchOnlySet = std::set<CScript>;
 
     KeyMap mapKeys GUARDED_BY(cs_KeyStore);
     WatchKeyMap mapWatchKeys GUARDED_BY(cs_KeyStore);
     ScriptMap mapScripts GUARDED_BY(cs_KeyStore);
+    WitnessV0ScriptMap mapWitnessV0Scripts GUARDED_BY(cs_KeyStore);
     WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
 
     void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
@@ -78,6 +85,10 @@ public:
     bool HaveCScript(const CScriptID &hash) const override;
     std::set<CScriptID> GetCScripts() const override;
     bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
+
+    bool AddWitnessV0Script(const std::vector<unsigned char>& script) override;
+    bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnessprogram) const override;
+    bool GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, std::vector<unsigned char>& scriptOut) const override;
 
     bool AddWatchOnly(const CScript &dest) override;
     bool RemoveWatchOnly(const CScript &dest) override;
