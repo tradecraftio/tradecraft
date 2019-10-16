@@ -605,6 +605,9 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 std::vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));
                 CScript redeemScript(rsData.begin(), rsData.end());
                 tempKeystore.AddCScript(redeemScript);
+                std::vector<unsigned char> witscript(1, 0x00);
+                witscript.insert(witscript.end(), rsData.begin(), rsData.end());
+                tempKeystore.AddWitnessV0Script(witscript);
             }
         }
     }

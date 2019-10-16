@@ -344,22 +344,21 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
-CScript GetScriptForWitness(const CScript& redeemscript)
+CScript GetScriptForWitness(const CScript& witscript)
 {
     CScript ret;
 
     txnouttype typ;
     std::vector<std::vector<unsigned char> > vSolutions;
-    if (Solver(redeemscript, typ, vSolutions)) {
+    if (Solver(witscript, typ, vSolutions)) {
         if (typ == TX_PUBKEY) {
             return GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0].begin(), vSolutions[0].end())));
         } else if (typ == TX_PUBKEYHASH) {
             return GetScriptForDestination(WitnessV0KeyHash(vSolutions[0]));
         }
     }
-    uint256 hash;
-    CSHA256().Write(&redeemscript[0], redeemscript.size()).Finalize(hash.begin());
-    return GetScriptForDestination(WitnessV0ScriptHash(hash));
+    WitnessV0ScriptHash scriptid((unsigned char)0, witscript);
+    return GetScriptForDestination(scriptid);
 }
 
 bool IsValidDestination(const CTxDestination& dest) {

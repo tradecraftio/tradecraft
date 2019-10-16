@@ -140,11 +140,12 @@ public:
         obj.push_back(Pair("iswitness", true));
         obj.push_back(Pair("witness_version", 0));
         obj.push_back(Pair("witness_program", HexStr(id.begin(), id.end())));
-        CRIPEMD160 hasher;
-        uint160 hash;
-        hasher.Write(id.begin(), 32).Finalize(hash.begin());
-        if (pwallet && pwallet->GetCScript(CScriptID(hash), subscript)) {
-            ProcessSubScript(subscript, obj);
+        std::vector<unsigned char> witscript;
+        if (pwallet && pwallet->GetWitnessV0Script(id, witscript)) {
+            if (!witscript.empty() && witscript[0] == 0x00) {
+                subscript.insert(subscript.end(), witscript.begin() + 1, witscript.end());
+                ProcessSubScript(subscript, obj);
+            }
         }
         return obj;
     }

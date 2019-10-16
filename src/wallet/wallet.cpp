@@ -353,6 +353,22 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
+bool CWallet::AddWitnessV0Script(const std::vector<unsigned char>& script)
+{
+    if (!CCryptoKeyStore::AddWitnessV0Script(script))
+        return false;
+    WitnessV0ScriptHash longid;
+    CHash256().Write(script.data(), script.size()).Finalize(longid.begin());
+    uint160 shortid;
+    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
+    return CWalletDB(*dbw).WriteWitnessV0Script(shortid, script);
+}
+
+bool CWallet::LoadWitnessV0Script(const std::vector<unsigned char>& script)
+{
+    return CCryptoKeyStore::AddWitnessV0Script(script);
+}
+
 bool CWallet::AddWatchOnly(const CScript& dest)
 {
     if (!CCryptoKeyStore::AddWatchOnly(dest))
@@ -4307,8 +4323,11 @@ CTxDestination CWallet::AddAndGetDestinationForScript(const CScript& script, Out
         return CScriptID(script);
     case OUTPUT_TYPE_P2SH_SEGWIT:
     case OUTPUT_TYPE_BECH32: {
+        std::vector<unsigned char> innerscript(1, 0x00);
+        innerscript.insert(innerscript.end(), script.begin(), script.end());
+        AddWitnessV0Script(innerscript);
         WitnessV0ScriptHash hash;
-        CSHA256().Write(script.data(), script.size()).Finalize(hash.begin());
+        CSHA256().Write(innerscript.data(), innerscript.size()).Finalize(hash.begin());
         CTxDestination witdest = hash;
         CScript witprog = GetScriptForDestination(witdest);
         // Check if the resulting program is solvable (i.e. doesn't use an uncompressed key)
