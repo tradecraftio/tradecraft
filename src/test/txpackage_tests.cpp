@@ -406,7 +406,8 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     // Transactions with a same-txid-different-witness transaction in the mempool should be ignored,
     // and the mempool entry's wtxid returned.
     CScript witnessScript = CScript() << OP_DROP << OP_TRUE;
-    CScript scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
+    WitnessV0ScriptEntry entry(/*version=*/ 0, witnessScript);
+    CScript scriptPubKey = GetScriptForDestination(entry.GetScriptHash());
     auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
                                                     /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
                                                     /*output_destination=*/scriptPubKey,
@@ -416,11 +417,11 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     // Make two children with the same txid but different witnesses.
     CScriptWitness witness1;
     witness1.stack.emplace_back(1);
-    witness1.stack.emplace_back(witnessScript.begin(), witnessScript.end());
+    witness1.stack.push_back(entry.m_script);
 
     CScriptWitness witness2(witness1);
     witness2.stack.emplace_back(2);
-    witness2.stack.emplace_back(witnessScript.begin(), witnessScript.end());
+    witness2.stack.push_back(entry.m_script);
 
     CKey child_key;
     child_key.MakeNewKey(true);
@@ -539,9 +540,10 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
 
     // Give all the parents anyone-can-spend scripts so we don't have to deal with signing the child.
     CScript acs_script = CScript() << OP_TRUE;
-    CScript acs_spk = GetScriptForDestination(WitnessV0ScriptHash(acs_script));
+    WitnessV0ScriptEntry acs_entry(/*version=*/ 0, acs_script);
+    CScript acs_spk = GetScriptForDestination(acs_entry.GetScriptHash());
     CScriptWitness acs_witness;
-    acs_witness.stack.emplace_back(acs_script.begin(), acs_script.end());
+    acs_witness.stack.push_back(acs_entry.m_script);
 
     // parent1 will already be in the mempool
     auto mtx_parent1 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[1], /*input_vout=*/0,
@@ -553,13 +555,14 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
 
     // parent2 will have a same-txid-different-witness tx already in the mempool
     CScript grandparent2_script = CScript() << OP_DROP << OP_TRUE;
-    CScript grandparent2_spk = GetScriptForDestination(WitnessV0ScriptHash(grandparent2_script));
+    WitnessV0ScriptEntry grandparent2_entry(/*version=*/ 0, grandparent2_script);
+    CScript grandparent2_spk = GetScriptForDestination(grandparent2_entry.GetScriptHash());
     CScriptWitness parent2_witness1;
     parent2_witness1.stack.emplace_back(1);
-    parent2_witness1.stack.emplace_back(grandparent2_script.begin(), grandparent2_script.end());
+    parent2_witness1.stack.push_back(grandparent2_entry.m_script);
     CScriptWitness parent2_witness2;
     parent2_witness2.stack.emplace_back(2);
-    parent2_witness2.stack.emplace_back(grandparent2_script.begin(), grandparent2_script.end());
+    parent2_witness2.stack.push_back(grandparent2_entry.m_script);
 
     // Create grandparent2 creating an output with multiple spending paths. Submit to mempool.
     auto mtx_grandparent2 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[2], /*input_vout=*/0,
