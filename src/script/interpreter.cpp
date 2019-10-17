@@ -441,7 +441,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     ConditionStack vfExec;
     std::vector<valtype> altstack;
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
-    if (!protocol_cleanup && (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0) && script.size() > MAX_SCRIPT_SIZE) {
+    if (!protocol_cleanup && sigversion == SigVersion::BASE && script.size() > MAX_SCRIPT_SIZE) {
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
     }
     int nOpCount = 0;
