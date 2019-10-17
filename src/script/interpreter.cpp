@@ -305,7 +305,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
             // instructions will be handled later.
             if (!script.GetOp(pc, opcode, vchPushValue))
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
-            if (!protocol_cleanup && (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE))
+            if (!protocol_cleanup && (sigversion == SIGVERSION_BASE) && (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE))
                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
 
             // Note how OP_RESERVED does not count towards the opcode limit.
