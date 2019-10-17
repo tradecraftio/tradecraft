@@ -281,8 +281,7 @@ class SegWitTest(FreicoinTestFramework):
         assert_equal(tmpl['weightlimit'], 4000000)
         assert_equal(tmpl['sigoplimit'], 80000)
         assert_equal(tmpl['transactions'][0]['txid'], txid)
-        expected_sigops = 9 if 'txinwitness' in raw_tx["vin"][0] else 8
-        assert_equal(tmpl['transactions'][0]['sigops'], expected_sigops)
+        assert_equal(tmpl['transactions'][0]['sigops'], 8)
         assert '!segwit' in tmpl['rules']
 
         self.generate(self.nodes[0], 1)  # Mine a block to clear the gbt cache
