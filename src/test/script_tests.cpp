@@ -1043,14 +1043,14 @@ BOOST_AUTO_TEST_CASE(script_MAX_OPS_PER_SCRIPT)
     scriptPubKey = GetScriptForDestination(ScriptHash(raw_script));
     scriptSig = CScript() << ToByteVector(raw_script);
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH, "MAX_OPS_PER_SCRIPT for P2SH", SCRIPT_ERR_OP_COUNT, 0);
-    // Both P2WSH and P2SH-P2WSH are limited by MAX_OPS_PER_SCRIPT
+    // Neither P2WSH nor P2SH-P2WSH are limited by MAX_OPS_PER_SCRIPT
     scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(raw_script));
     scriptSig = CScript();
     witness.stack.push_back(ToByteVector(raw_script));
-    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_OPS_PER_SCRIPT for P2WSH", SCRIPT_ERR_OP_COUNT, 0);
+    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_OPS_PER_SCRIPT for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
-    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_OPS_PER_SCRIPT for P2SH-P2WSH", SCRIPT_ERR_OP_COUNT, 0);
+    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_OPS_PER_SCRIPT for P2SH-P2WSH", SCRIPT_ERR_OK, 0);
 }
 
 BOOST_AUTO_TEST_CASE(script_PushData)
