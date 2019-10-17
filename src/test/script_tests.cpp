@@ -984,6 +984,35 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_SIZE)
+{
+    CScript raw_script;
+    raw_script.reserve(MAX_SCRIPT_SIZE + 4);
+    raw_script << OP_0;
+    raw_script << OP_IF;
+    for (int i = 0; i < MAX_SCRIPT_SIZE; ++i)
+        raw_script << OP_RESERVED; // Does not count towards opcode limit
+    raw_script << OP_ENDIF;
+    raw_script << OP_TRUE;
+    CScript scriptPubKey = raw_script;
+    CScript scriptSig;
+    CScriptWitness witness;
+    // MAX_SCRIPT_SIZE limits raw scriptPubKey
+    DoTest(scriptPubKey, scriptSig, witness, 0, "MAX_SCRIPT_SIZE for raw scriptPubKey", SCRIPT_ERR_SCRIPT_SIZE, 0);
+    // MAX_SCRIPT_SIZE limits P2SH
+    scriptPubKey = GetScriptForDestination(ScriptHash(raw_script));
+    scriptSig = CScript() << ToByteVector(raw_script);
+    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH, "MAX_SCRIPT_SIZE for P2SH", SCRIPT_ERR_SCRIPT_SIZE, 0);
+    // Both P2WSH and P2SH-P2WSH are limited by MAX_SCRIPT_SIZE
+    scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(raw_script));
+    scriptSig = CScript();
+    witness.stack.push_back(ToByteVector(raw_script));
+    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_SIZE for P2WSH", SCRIPT_ERR_SCRIPT_SIZE, 0);
+    scriptSig = CScript() << ToByteVector(scriptPubKey);
+    scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
+    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_SIZE for P2SH-P2WSH", SCRIPT_ERR_SCRIPT_SIZE, 0);
+}
+
 BOOST_AUTO_TEST_CASE(script_PushData)
 {
     // Check that PUSHDATA1, PUSHDATA2, and PUSHDATA4 create the same value on
