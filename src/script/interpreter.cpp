@@ -494,7 +494,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             if (!protocol_cleanup && (sigversion == SigVersion::BASE) && (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE))
                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
 
-            if (!protocol_cleanup && (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0)) {
+            if (!protocol_cleanup && sigversion == SigVersion::BASE) {
                 // Note how OP_RESERVED does not count towards the opcode limit.
                 if (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT) {
                     return set_error(serror, SCRIPT_ERR_OP_COUNT);
@@ -1174,7 +1174,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     if (nKeysCount < 0 || nKeysCount > MAX_PUBKEYS_PER_MULTISIG)
                         return set_error(serror, SCRIPT_ERR_PUBKEY_COUNT);
                     nOpCount += nKeysCount;
-                    if (!protocol_cleanup && (nOpCount > MAX_OPS_PER_SCRIPT))
+                    if (!protocol_cleanup && (sigversion == SigVersion::BASE) && (nOpCount > MAX_OPS_PER_SCRIPT))
                         return set_error(serror, SCRIPT_ERR_OP_COUNT);
                     int ikey = ++i;
                     // ikey2 is the position of last non-signature item in the stack. Top stack item = 1.
