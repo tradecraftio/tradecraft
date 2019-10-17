@@ -1003,6 +1003,29 @@ BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_SIZE)
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_SIZE for P2SH-P2WSH", SCRIPT_ERR_OK, 0);
 }
 
+BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_ELEMENT_SIZE)
+{
+    std::vector<unsigned char> push_value(MAX_SCRIPT_ELEMENT_SIZE+1, 'a');
+    CScript raw_script = CScript() << push_value;
+    CScript scriptPubKey = raw_script;
+    CScript scriptSig;
+    CScriptWitness witness;
+    // MAX_SCRIPT_ELEMENT_SIZE limits raw scriptPubKey
+    DoTest(scriptPubKey, scriptSig, witness, 0, "MAX_SCRIPT_ELEMENT_SIZE for raw scriptPubKey", SCRIPT_ERR_PUSH_SIZE, 0);
+    // MAX_SCRIPT_ELEMENT_SIZE limits P2SH
+    scriptPubKey = GetScriptForDestination(ScriptHash(raw_script));
+    scriptSig = CScript() << ToByteVector(raw_script);
+    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH, "MAX_SCRIPT_ELEMENT_SIZE for P2SH", SCRIPT_ERR_PUSH_SIZE, 0);
+    // Both P2WSH and P2SH-P2WSH are limited by MAX_SCRIPT_ELEMENT_SIZE
+    scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(raw_script));
+    scriptSig = CScript();
+    witness.stack.push_back(ToByteVector(raw_script));
+    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_ELEMENT_SIZE for P2WSH", SCRIPT_ERR_PUSH_SIZE, 0);
+    scriptSig = CScript() << ToByteVector(scriptPubKey);
+    scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
+    DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_ELEMENT_SIZE for P2SH-P2WSH", SCRIPT_ERR_PUSH_SIZE, 0);
+}
+
 BOOST_AUTO_TEST_CASE(script_PushData)
 {
     // Check that PUSHDATA1, PUSHDATA2, and PUSHDATA4 create the same value on
