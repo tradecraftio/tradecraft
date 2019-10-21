@@ -342,7 +342,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             if (!protocol_cleanup && (sigversion == SigVersion::BASE) && (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT))
                 return set_error(serror, SCRIPT_ERR_OP_COUNT);
 
-            if (!protocol_cleanup && (
+            if (!protocol_cleanup && (sigversion == SigVersion::BASE) && (
                 opcode == OP_CAT ||
                 opcode == OP_SUBSTR ||
                 opcode == OP_LEFT ||
