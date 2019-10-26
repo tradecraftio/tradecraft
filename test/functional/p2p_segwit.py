@@ -1320,7 +1320,11 @@ class SegWitTest(FreicoinTestFramework):
         tx3.rehash()
 
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, with_witness=True, accepted=True)
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False)
+        # Bitcoin doesn't allow extra witness push data on the stack, so it
+        # expects tx3 to fail validation.  We have no such restrictions.  We
+        # could verify that tx3 is accepted here, but that affects all the
+        # downstream tests.  Better to just skip this check.
+        #test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False)
 
         # Get rid of the extra witness, and verify acceptance.
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
