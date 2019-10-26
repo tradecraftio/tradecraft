@@ -1629,8 +1629,7 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
     // Run the script interpreter.
     if (!EvalScript(stack, scriptPubKey, flags, checker, sigversion, serror)) return false;
 
-    // Scripts inside witness implicitly require cleanstack behaviour
-    if (stack.size() != 1) return set_error(serror, SCRIPT_ERR_CLEANSTACK);
+    if (stack.empty()) return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     if (!CastToBool(stack.back())) return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     return true;
 }
