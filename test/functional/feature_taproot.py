@@ -623,6 +623,7 @@ ERR_CONTROLBLOCK_SIZE = {"err_msg": "Invalid Taproot control block size"}
 ERR_WITNESS_PROGRAM_MISMATCH = {"err_msg": "Witness program hash mismatch"}
 ERR_DISABLED_OPCODE = {"err_msg": "Attempted to use a disabled opcode"}
 ERR_TAPSCRIPT_CHECKMULTISIG = {"err_msg": "OP_CHECKMULTISIG(VERIFY) is not available in tapscript"}
+ERR_MINIMALDATA = {"err_msg": "Data push larger than necessary"}
 ERR_MINIMALIF = {"err_msg": "OP_IF/NOTIF argument must be minimal in tapscript"}
 ERR_UNKNOWN_PUBKEY = {"err_msg": "Public key is neither compressed or uncompressed"}
 ERR_PUSH_SIZE = {"err_msg": "Push value size limit exceeded"}
@@ -633,6 +634,7 @@ ERR_UNDECODABLE = {"err_msg": "Opcode missing or not understood"}
 ERR_NO_SUCCESS = {"err_msg": "Script evaluated without error but finished with a false/empty top stack element"}
 ERR_EMPTY_WITNESS = {"err_msg": "Witness program was passed an empty witness"}
 ERR_CHECKSIGVERIFY = {"err_msg": "Script failed an OP_CHECKSIGVERIFY operation"}
+ERR_UNKNOWN_ERROR = {"err_msg": "unknown error"}
 
 VALID_SIGHASHES_ECDSA = [
     SIGHASH_ALL,
@@ -1005,7 +1007,7 @@ def spenders_taproot_active():
     add_spender(spenders, "tapscript/emptypk/checksig", leaf="t1", **SINGLE_SIG, **common, failure={"leaf": "t7"}, **ERR_UNKNOWN_PUBKEY)
     add_spender(spenders, "tapscript/emptypk/checksigverify", leaf="t2", **SINGLE_SIG, **common, failure={"leaf": "t8"}, **ERR_UNKNOWN_PUBKEY)
     add_spender(spenders, "tapscript/emptypk/checksigadd", leaf="t9", **SINGLE_SIG, **common, failure={"leaf": "t10"}, **ERR_UNKNOWN_PUBKEY)
-    add_spender(spenders, "tapscript/emptypk/checksigadd", leaf="t35", standard=False, **SINGLE_SIG, **common, failure={"leaf": "t10"}, **ERR_UNKNOWN_PUBKEY)
+    add_spender(spenders, "tapscript/emptypk/checksigadd2", leaf="t9", **SINGLE_SIG, **common, failure={"leaf": "t35"}, **(ERR_UNKNOWN_ERROR if csa_low_val == 0 else ERR_MINIMALDATA))
     # Test that OP_CHECKSIGADD results are as expected
     add_spender(spenders, "tapscript/checksigaddresults", leaf="t28", **SINGLE_SIG, **common, failure={"leaf": "t27"}, err_msg="unknown error")
     add_spender(spenders, "tapscript/checksigaddoversize", leaf="t29", **SINGLE_SIG, **common, failure={"leaf": "t27"}, err_msg="unknown error")
