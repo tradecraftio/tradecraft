@@ -1051,8 +1051,25 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 //
                 // Crypto
                 //
-                case OP_RIPEMD160:
                 case OP_SHA1:
+                    // In 2019, SHA1 is utterly broken and no longer serves any
+                    // purpose.  We therefore return OP_SHA1 to the pool of
+                    // unallocated opcodes in future script versions.
+                    if (sigversion != SigVersion::BASE) {
+                        // Copy-paste of the unrecognized-opcode "default" handler below.
+                        if (discourage_op_success) {
+                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_OP_SUCCESS);
+                        }
+                        altstack.clear();
+                        stack.clear();
+                        stack.push_back(vchTrue);
+                        return set_success(serror);
+                    }
+
+                    // Otherwise we fall-though to the legacy handler with the
+                    // original SHA1 semantics:
+
+                case OP_RIPEMD160:
                 case OP_SHA256:
                 case OP_HASH160:
                 case OP_HASH256:
