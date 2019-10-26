@@ -1527,12 +1527,6 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         return set_success(serror);
     }
 
-    // Disallow stack item size > MAX_SCRIPT_ELEMENT_SIZE in witness stack
-    for (unsigned int i = 0; i < stack.size(); i++) {
-        if (stack.at(i).size() > MAX_SCRIPT_ELEMENT_SIZE)
-            return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-    }
-
     // Disallow more then MAX_STACK_SIZE elements in witness stack
     if (stack.size() > MAX_STACK_SIZE) { // > 32767
         return set_error(serror, SCRIPT_ERR_STACK_SIZE);
