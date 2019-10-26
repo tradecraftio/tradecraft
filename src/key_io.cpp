@@ -75,13 +75,13 @@ public:
 
     std::string operator()(const WitnessUnknown& id) const
     {
-        if (id.version < 1 || id.version > 16 || id.length < 2 || id.length > 40) {
+        if ((id.version == 0 && (id.length == 20 || id.length == 32)) || id.version > 16 || id.length < 2 || id.length > 40) {
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.version};
         data.reserve(1 + (id.length * 8 + 4) / 5);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.program, id.program + id.length);
-        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
+        return bech32::Encode(id.version ? bech32::Encoding::BECH32M : bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const CNoDestination& no) const { return {}; }
@@ -168,9 +168,6 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                         return scriptid;
                     }
                 }
-
-                error_str = "Invalid Bech32 v0 address data size";
-                return CNoDestination();
             }
 
             if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
