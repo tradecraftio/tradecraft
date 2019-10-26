@@ -281,7 +281,7 @@ class SegWitTest(FreicoinTestFramework):
         self.test_witness_block_size()
         self.test_submit_block()
         self.test_extra_witness_data()
-        self.test_max_witness_push_length()
+        self.test_max_witness_elements()
         self.test_max_witness_program_length()
         self.test_witness_input_length()
         self.test_block_relay()
@@ -1080,8 +1080,10 @@ class SegWitTest(FreicoinTestFramework):
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
     @subtest
-    def test_max_witness_push_length(self):
-        """Test that witness stack can only allow up to 520 byte pushes."""
+    def test_max_witness_elements(self):
+        """Should only allow up to 32,767 elements in the witness stack"""
+
+        MAX_WITNESS_ELEMENTS = (2 ** 15) - 1
 
         block = self.build_next_block()
 
@@ -1098,15 +1100,15 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
         tx2.wit.vtxinwit.append(CTxInWitness())
-        # First try a 521-byte stack element
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a' * (MAX_SCRIPT_ELEMENT_SIZE + 1), witness_program]
+        # First try with 32,768 stack elements
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * (MAX_WITNESS_ELEMENTS + 1) + [witness_program]
         tx2.rehash()
 
         self.update_witness_block_with_transactions(block, [tx, tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
 
-        # Now reduce the length of the stack element
-        tx2.wit.vtxinwit[0].scriptWitness.stack[0] = b'a' * (MAX_SCRIPT_ELEMENT_SIZE)
+        # Now reduce the number of stack elements
+        del tx2.wit.vtxinwit[0].scriptWitness.stack[-2]
 
         add_witness_commitment(block)
         block.solve()
@@ -1305,7 +1307,7 @@ class SegWitTest(FreicoinTestFramework):
         p2sh_pubkey = hash160(p2sh_program)
         witness_program2 = CScript([b'a' * 400000])
         tx3.vout.append(CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])))
-        tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program2]
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [b''] * 32768 + [witness_program2]
         tx3.rehash()
 
         # Node will not be blinded to the transaction
@@ -1316,7 +1318,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Remove witness stuffing, instead add extra witness push on stack
         tx3.vout[0] = CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))
-        tx3.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)]), witness_program]
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)])] * 32768 + [witness_program]
         tx3.rehash()
 
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, with_witness=True, accepted=True)
