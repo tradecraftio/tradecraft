@@ -36,6 +36,9 @@
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
 
+// Maximum number of elements of stack+altstack in post-segwit scripts
+static const std::size_t MAX_STACK_SIZE = 0x7fff;
+
 // Maximum number of non-push operations per script
 static const int MAX_OPS_PER_SCRIPT = 201;
 
