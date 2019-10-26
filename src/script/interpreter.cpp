@@ -1157,8 +1157,11 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             }
 
             // Size limits
-            if (!protocol_cleanup && (stack.size() + altstack.size() > MAX_STACK_SIZE))
+            if (!protocol_cleanup && (sigversion == SIGVERSION_BASE) && (stack.size() + altstack.size() > MAX_STACK_SIZE))
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
+            if ((stack.size() + altstack.size()) > MAX_WITNESS_STACK_SIZE) {
+                return set_error(serror, SCRIPT_ERR_STACK_SIZE);
+            }
         }
     }
     catch (...)
