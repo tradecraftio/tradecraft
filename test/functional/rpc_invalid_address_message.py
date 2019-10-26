@@ -64,8 +64,8 @@ class InvalidAddressErrorMessageTest(FreicoinTestFramework):
         assert_equal(info['error'], 'Version 0 witness address must use Bech32 checksum')
 
         info = node.validateaddress(BECH32_INVALID_V0_SIZE)
-        assert not info['isvalid']
-        assert_equal(info['error'], 'Invalid Bech32 v0 address data size')
+        assert info['isvalid']
+        assert 'error' not in info
 
         info = node.validateaddress(BECH32_VALID)
         assert info['isvalid']

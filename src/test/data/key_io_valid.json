@@ -606,5 +606,32 @@
             "chain": "signet",
             "isPrivkey": false
         }
+    ],
+    [
+        "tb1qjqnfsuatr54e957xzg9sqk7yqcry9lns",
+        "001090269873ab1d2b92d3c6120b005bc406",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tb1q425lmgvxdgtyl2m6xuu2pc354y4fvgg8",
+        "0010aaa9fda1866a164fab7a3738a0e234a9",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tb1qajuy2cdwqgmrzc7la85al5cwcq374tsp",
+        "0010ecb84561ae02363163dfe9e9dfd30ec0",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
     ]
 ]
