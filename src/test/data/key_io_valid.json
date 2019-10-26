@@ -606,5 +606,59 @@
             "chain": "signet",
             "isPrivkey": false
         }
+    ],
+    [
+        "tb1qjqnfsuatr54e957xzg9sqk7yqcry9lns",
+        "001090269873ab1d2b92d3c6120b005bc406",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tb1q425lmgvxdgtyl2m6xuu2pc354y4fvgg8",
+        "0010aaa9fda1866a164fab7a3738a0e234a9",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tb1qajuy2cdwqgmrzc7la85al5cwcq374tsp",
+        "0010ecb84561ae02363163dfe9e9dfd30ec0",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tb1qum6uh0pt4q253qaf520929737v63w5gf",
+        "0010e6f5cbbc2ba8154883a9a29e5517d1f3",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tb1qfdfm763vxvsunzhqlpwc0q8fg5ljx6zn",
+        "00104b53bf6a2c3321c98ae0f85d8780e945",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "tb1qzy7v0f2at3308yggngn66uljtcn3ry6f",
+        "0010113cc7a55d5c62f391089a27ad73f25e",
+        {
+            "chain": "test",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
     ]
 ]

@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     // TxoutType::WITNESS_UNKNOWN with incorrect program size
     s.clear();
     s << OP_0 << std::vector<unsigned char>(19, 0x01);
-    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
