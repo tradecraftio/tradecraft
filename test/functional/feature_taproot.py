@@ -623,7 +623,6 @@ ERR_MINIMALIF = {"err_msg": "OP_IF/NOTIF argument must be minimal in tapscript"}
 ERR_UNKNOWN_PUBKEY = {"err_msg": "Public key is neither compressed or uncompressed"}
 ERR_PUSH_SIZE = {"err_msg": "Push value size limit exceeded"}
 ERR_STACK_SIZE = {"err_msg": "Stack size limit exceeded"}
-ERR_CLEANSTACK = {"err_msg": "Stack size must be exactly one after execution"}
 ERR_STACK_EMPTY = {"err_msg": "Operation not valid with the current stack size"}
 ERR_SIGOPS_RATIO = {"err_msg": "Too much signature validation relative to witness weight"}
 ERR_UNDECODABLE = {"err_msg": "Opcode missing or not understood"}
@@ -1065,8 +1064,8 @@ def spenders_taproot_active():
     # Disabled as it trigger tx-size exceptions:
     # Test that (MAX_STACK_SIZE-1)-of-(MAX_STACK_SIZE-1) multisig works (but MAX_STACK_SIZE-of-MAX_STACK_SIZE triggers stack size limits)
     #add_spender(spenders, "tapscript/bigmulti", leaf="t33", **common, inputs=big_spend_inputs, num=MAX_STACK_SIZE - 1, failure={"leaf": "t34", "num": MAX_STACK_SIZE}, **ERR_STACK_SIZE)
-    # Test that the CLEANSTACK rule is consensus critical in tapscript
-    add_spender(spenders, "tapscript/cleanstack", leaf="t36", tap=tap, inputs=[b'\x01'], failure={"inputs": [b'\x01', b'\x01']}, **ERR_CLEANSTACK)
+    # Test that the CLEANSTACK rule is not consensus critical in tapscript
+    add_spender(spenders, "tapscript/cleanstack", leaf="t36", tap=tap, inputs=[b'\x01', b'\x01'])
 
     # == Test for sigops ratio limit ==
 
@@ -1147,7 +1146,7 @@ def spenders_taproot_active():
         ]
         random.shuffle(scripts)
         tap = taproot_construct(pubs[0], scripts)
-        add_spender(spenders, "unkver/bare", standard=False, tap=tap, leaf="bare_unkver", failure={"leaf": "bare_c0"}, **ERR_CLEANSTACK)
+        add_spender(spenders, "unkver/bare", standard=False, tap=tap, leaf="bare_unkver", failure={"leaf": "bare_c0"}, **ERR_NO_SUCCESS)
         add_spender(spenders, "unkver/return", standard=False, tap=tap, leaf="return_unkver", failure={"leaf": "return_c0"}, **ERR_OP_RETURN)
         add_spender(spenders, "unkver/undecodable", standard=False, tap=tap, leaf="undecodable_unkver", failure={"leaf": "undecodable_c0"}, **ERR_UNDECODABLE)
         add_spender(spenders, "unkver/bigpush", standard=False, tap=tap, leaf="bigpush_unkver")
@@ -1177,8 +1176,8 @@ def spenders_taproot_active():
         ]
         random.shuffle(scripts)
         tap = taproot_construct(pubs[0], scripts)
-        add_spender(spenders, "opsuccess/bare", standard=False, tap=tap, leaf="bare_success", failure={"leaf": "bare_nop"}, **ERR_CLEANSTACK)
-        add_spender(spenders, "opsuccess/unexecif", standard=False, tap=tap, leaf="unexecif_success", failure={"leaf": "unexecif_nop"}, **ERR_CLEANSTACK)
+        add_spender(spenders, "opsuccess/bare", standard=False, tap=tap, leaf="bare_success", failure={"leaf": "bare_nop"}, **ERR_NO_SUCCESS)
+        add_spender(spenders, "opsuccess/unexecif", standard=False, tap=tap, leaf="unexecif_success", failure={"leaf": "unexecif_nop"}, **ERR_NO_SUCCESS)
         add_spender(spenders, "opsuccess/return", standard=False, tap=tap, leaf="return_success", failure={"leaf": "return_nop"}, **ERR_OP_RETURN)
         add_spender(spenders, "opsuccess/undecodable", standard=False, tap=tap, leaf="undecodable_success", failure={"leaf": "undecodable_nop"}, **ERR_UNDECODABLE)
         add_spender(spenders, "opsuccess/undecodable_bypass", standard=False, tap=tap, leaf="undecodable_success", failure={"leaf": "undecodable_bypassed_success"}, **ERR_UNDECODABLE)
