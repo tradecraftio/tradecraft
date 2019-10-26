@@ -1621,11 +1621,6 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
 {
     std::vector<valtype> stack{stack_span.begin(), stack_span.end()};
 
-    // Disallow stack item size > MAX_SCRIPT_ELEMENT_SIZE in witness stack
-    for (const valtype& elem : stack) {
-        if (elem.size() > MAX_SCRIPT_ELEMENT_SIZE) return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-    }
-
     // Disallow more then MAX_WITNESS_STACK_SIZE elements in witness stack
     if (stack.size() > MAX_WITNESS_STACK_SIZE) return set_error(serror, SCRIPT_ERR_STACK_SIZE);
 
