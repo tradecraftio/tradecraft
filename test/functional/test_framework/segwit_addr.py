@@ -120,8 +120,6 @@ def decode_segwit_address(hrp, addr):
         return (None, None)
     if data[0] > 16:
         return (None, None)
-    if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
-        return (None, None)
     if (data[0] == 0 and encoding != Encoding.BECH32) or (data[0] != 0 and encoding != Encoding.BECH32M):
         return (None, None)
     return (data[0], decoded)
