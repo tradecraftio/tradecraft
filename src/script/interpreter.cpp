@@ -445,7 +445,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
     }
     int nOpCount = 0;
-    bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
+    bool fRequireMinimal = (sigversion != SigVersion::BASE) || ((flags & SCRIPT_VERIFY_MINIMALDATA) != 0);
     uint32_t opcode_pos = 0;
     execdata.m_codeseparator_pos = 0xFFFFFFFFUL;
     execdata.m_codeseparator_pos_init = true;
