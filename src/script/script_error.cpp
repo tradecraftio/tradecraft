@@ -90,8 +90,6 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Public key is neither compressed or uncompressed";
         case SCRIPT_ERR_CLEANSTACK:
             return "Extra items left on stack after execution";
-        case SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH:
-            return "Witness program has incorrect length";
         case SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY:
             return "Witness program was passed an empty witness";
         case SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH:
