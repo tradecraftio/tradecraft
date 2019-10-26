@@ -79,13 +79,13 @@ public:
     std::string operator()(const WitnessUnknown& id) const
     {
         const std::vector<unsigned char>& program = id.GetWitnessProgram();
-        if (id.GetWitnessVersion() < 1 || id.GetWitnessVersion() > 16 || program.size() < 2 || program.size() > 40) {
+        if ((id.GetWitnessVersion() == 0 && (program.size() == 20 || program.size() == 32)) || id.GetWitnessVersion() > 16 || program.size() < 2 || program.size() > 40) {
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.GetWitnessVersion()};
         data.reserve(1 + (program.size() * 8 + 4) / 5);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, program.begin(), program.end());
-        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
+        return bech32::Encode(id.GetWitnessVersion() ? bech32::Encoding::BECH32M : bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const CNoDestination& no) const { return {}; }
@@ -180,9 +180,6 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                         return scriptid;
                     }
                 }
-
-                error_str = strprintf("Invalid Bech32 v0 address program size (%d %s), per BIP141", data.size(), byte_str);
-                return CNoDestination();
             }
 
             if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
