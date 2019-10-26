@@ -43,11 +43,6 @@ INVALID_DATA = [
         [],
     ),
     (
-        "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid Bech32 v0 address program size (16 bytes), per BIP141",
-        [],
-    ),
-    (
         "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # tb1, Mixed case
         [],
@@ -116,11 +111,6 @@ INVALID_DATA = [
         [],
     ),
     (
-        "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid Bech32 v0 address program size (16 bytes), per BIP141",
-        [],
-    ),
-    (
         "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47Zagq",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # tb1, Mixed case
         [],
@@ -138,6 +128,10 @@ INVALID_DATA = [
     ("bc1gmk9yu", "Empty Bech32 data section", []),
 ]
 VALID_DATA = [
+    (
+        "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
+        "00101d1e76e8199196d454941c45d1b3a323",
+    ),
     # BIP 350
     (
         "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4",
