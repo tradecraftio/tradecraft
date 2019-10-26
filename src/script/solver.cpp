@@ -181,12 +181,9 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
         if (scriptPubKey.IsPayToAnchor()) {
             return TxoutType::ANCHOR;
         }
-        if (witnessversion != 0) {
-            vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
-            vSolutionsRet.push_back(std::move(witnessprogram));
-            return TxoutType::WITNESS_UNKNOWN;
-        }
-        return TxoutType::NONSTANDARD;
+        vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
+        vSolutionsRet.push_back(std::move(witnessprogram));
+        return TxoutType::WITNESS_UNKNOWN;
     }
 
     // Provably prunable, data-carrying output
