@@ -1104,13 +1104,44 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 }
                 break;
 
+                case OP_VERIF:
+                case OP_VERNOTIF:
+                {
+                    if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                        // Because OP_VERIF and OP_VERNOTIF fall between OP_IF
+                        // and OP_ENDIF, they are treated the same as the other
+                        // conditionals: they are always evaluated, even within
+                        // a non-executed IF/ELSE branch.
+
+                        // So in the original script, decoding a OP_VERIF always
+                        // resulted in SCRIPT_ERR_BAD_OPCODE, regardless of the
+                        // value of fExec, much like the disabled opcodes.
+
+                        // But post-cleanup or within a witness script, we want
+                        // OP_VERIF and OP_VERNOTIF to be like any of the other
+                        // as-yet undefined, "return true" opcodes, which DO NOT
+                        // abort execution if decoded but not executed.
+                        if (!fExec) {
+                            break;
+                        }
+                    }
+                }
+
+                // Otherwise we fall through to the default case. (Either we're
+                // in a live branch, or we're in a pre-segwit script; either
+                // way, we handle these opcodes the same as any other undefined
+                // opcode.)
+
                 default:
-                    if (!protocol_cleanup) {
+                    if (!protocol_cleanup && (sigversion == SIGVERSION_BASE)) {
                         return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
                     }
                     if (discourage_upgradable_nops) {
                         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
                     }
+                    altstack.clear();
+                    stack.clear();
+                    stack.push_back(vchTrue);
                     return set_success(serror);
             }
 
