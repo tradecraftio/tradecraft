@@ -378,8 +378,16 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
                         // not enabled; treat as a NOP2
+                        // in legacy scripts, same as NOP
                         if (discourage_upgradable_nops) {
                             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        }
+                        // in post-segwit scripts, return true
+                        if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                            altstack.clear();
+                            stack.clear();
+                            stack.push_back(vchTrue);
+                            return set_success(serror);
                         }
                         break;
                     }
@@ -422,8 +430,16 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
                         // not enabled; treat as a NOP3
+                        // in legacy scripts, same as NOP
                         if (discourage_upgradable_nops) {
                             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        }
+                        // in post-segwit scripts, return true
+                        if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                            altstack.clear();
+                            stack.clear();
+                            stack.push_back(vchTrue);
+                            return set_success(serror);
                         }
                         break;
                     }
@@ -460,8 +476,16 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 case OP_NOP1: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 {
+                    // in legacy scripts, same as NOP
                     if (discourage_upgradable_nops)
                         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                    // in post-segwit scripts, return true
+                    if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                        altstack.clear();
+                        stack.clear();
+                        stack.push_back(vchTrue);
+                        return set_success(serror);
+                    }
                 }
                 break;
 
