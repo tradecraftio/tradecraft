@@ -411,6 +411,13 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 case OP_CHECKLOCKTIMEVERIFY:
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
+                        // in post-segwit scripts, return true
+                        if (protocol_cleanup || (sigversion != SigVersion::BASE)) {
+                            altstack.clear();
+                            stack.clear();
+                            stack.push_back(vchTrue);
+                            return set_success(serror);
+                        }
                         // not enabled; treat as a NOP2.  We ought to return an
                         // error if DISCOURAGE_UPGRADABLE_NOPS is set, but
                         // unfortunately doing so would break the test framework
@@ -455,6 +462,13 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 case OP_CHECKSEQUENCEVERIFY:
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
+                        // in post-segwit scripts, return true
+                        if (protocol_cleanup || (sigversion != SigVersion::BASE)) {
+                            altstack.clear();
+                            stack.clear();
+                            stack.push_back(vchTrue);
+                            return set_success(serror);
+                        }
                         // not enabled; treat as a NOP3.  We ought to return an
                         // error if DISCOURAGE_UPGRADABLE_NOPS is set, but
                         // unfortunately doing so would break the test framework
@@ -494,8 +508,16 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 case OP_NOP1: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 {
+                    // in legacy scripts, same as NOP
                     if (discourage_upgradable_nops)
                         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                    // in post-segwit scripts, return true
+                    if (protocol_cleanup || (sigversion != SigVersion::BASE)) {
+                        altstack.clear();
+                        stack.clear();
+                        stack.push_back(vchTrue);
+                        return set_success(serror);
+                    }
                 }
                 break;
 
