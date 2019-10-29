@@ -96,7 +96,7 @@ def program_to_witness_script(version, program):
     if isinstance(program, str):
         program = bytes.fromhex(program)
     assert 0 <= version <= 16
-    assert 2 <= len(program) <= 40
+    assert 2 <= len(program) <= 75
     return CScript([version, program])
 
 
