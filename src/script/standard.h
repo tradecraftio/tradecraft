@@ -130,7 +130,7 @@ struct WitnessUnknown
 {
     unsigned int version;
     unsigned int length;
-    unsigned char program[40];
+    unsigned char program[75];
 
     friend bool operator==(const WitnessUnknown& w1, const WitnessUnknown& w2) {
         if (w1.version != w2.version) return false;

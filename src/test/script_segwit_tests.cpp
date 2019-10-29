@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(IsWitnessProgram_Valid)
     BOOST_CHECK(IsExpectedWitnessProgram(wit, 0, program));
 
     wit.clear();
-    // Witness programs have a maximum data push of 40 bytes.
-    program.resize(40);
+    // Witness programs have a maximum data push of 75 bytes.
+    program.resize(75);
     wit << OP_16 << program;
     BOOST_CHECK(IsExpectedWitnessProgram(wit, 16, program));
 
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(IsWitnessProgram_Invalid_Size)
     BOOST_CHECK(IsNoWitnessProgram(nowit));
 
     nowit.clear();
-    program.resize(41);
+    program.resize(76);
     nowit << OP_0 << program;
     BOOST_CHECK(IsNoWitnessProgram(nowit));
 }
