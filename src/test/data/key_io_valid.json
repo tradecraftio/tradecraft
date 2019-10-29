@@ -633,5 +633,32 @@
             "isPrivkey": false,
             "tryCaseFlip": true
         }
+    ],
+    [
+        "bc10rmfwl8nxdweeyc4sf89t0tn9fv9w6qpyzsnl2r4k48vjqh03qas9asdje0rlr0phru0wqw0p",
+        "5f291ed2ef9e666bb39262b049cab7ae654b0aed00241427f50eb6a9d9205df107605ec1b2cbc7f1bc371f",
+        {
+            "chain": "main",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "bc10qssq2mknjqf0glwe2f3587wc4jysvs3f8s6chysae6hcl6fxzdm4wxyyscrl5k9f5qmnf05a",
+        "5f290420056ed39012f47dd9526343f9d8ac890642293c358b921dceaf8fe92613775718848607fa58a9a0",
+        {
+            "chain": "main",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
+    ],
+    [
+        "bc10d3rmtg62h747en5j6fju5g5qyvsransrkty6ghh96pu647wumctejlsngh9pf26cysrys2x2",
+        "5f296c47b5a34abfabecce92d265ca228023203ece03b2c9a45ee5d079aaf9dcde17997e1345ca14ab5824",
+        {
+            "chain": "main",
+            "isPrivkey": false,
+            "tryCaseFlip": true
+        }
     ]
 ]
