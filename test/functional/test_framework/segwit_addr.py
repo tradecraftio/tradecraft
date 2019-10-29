@@ -116,7 +116,7 @@ def decode_segwit_address(hrp, addr):
     if hrpgot != hrp:
         return (None, None)
     decoded = convertbits(data[1:], 5, 8, False)
-    if decoded is None or len(decoded) < 2 or len(decoded) > 40:
+    if decoded is None or len(decoded) < 2 or len(decoded) > 75:
         return (None, None)
     if data[0] > 16:
         return (None, None)
