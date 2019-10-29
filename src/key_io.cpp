@@ -27,7 +27,7 @@
 #include <string.h>
 
 /// Maximum witness length for Bech32 addresses.
-static constexpr std::size_t BECH32_WITNESS_PROG_MAX_LEN = 40;
+static constexpr std::size_t BECH32_WITNESS_PROG_MAX_LEN = 75;
 
 namespace {
 class DestinationEncoder
@@ -79,7 +79,7 @@ public:
     std::string operator()(const WitnessUnknown& id) const
     {
         const std::vector<unsigned char>& program = id.GetWitnessProgram();
-        if ((id.GetWitnessVersion() == 0 && (program.size() == 20 || program.size() == 32)) || id.GetWitnessVersion() > 16 || program.size() < 2 || program.size() > 40) {
+        if ((id.GetWitnessVersion() == 0 && (program.size() == 20 || program.size() == 32)) || id.GetWitnessVersion() > 16 || program.size() < 2 || program.size() > 75) {
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.GetWitnessVersion()};
