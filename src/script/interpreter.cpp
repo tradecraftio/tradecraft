@@ -283,10 +283,10 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
     vector<bool> vfExec;
     vector<valtype> altstack;
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
-    if (!protocol_cleanup && (script.size() > MAX_SCRIPT_SIZE))
+    if (!protocol_cleanup && (sigversion == SIGVERSION_BASE) && (script.size() > MAX_SCRIPT_SIZE))
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
     int nOpCount = 0;
-    bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
+    bool fRequireMinimal = (sigversion != SIGVERSION_BASE) || ((flags & SCRIPT_VERIFY_MINIMALDATA) != 0);
 
     try
     {
@@ -305,14 +305,14 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
             // instructions will be handled later.
             if (!script.GetOp(pc, opcode, vchPushValue))
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
-            if (!protocol_cleanup && (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE))
+            if (!protocol_cleanup && (sigversion == SIGVERSION_BASE) && (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE))
                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
 
             // Note how OP_RESERVED does not count towards the opcode limit.
-            if (!protocol_cleanup && (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT))
+            if (!protocol_cleanup && (sigversion == SIGVERSION_BASE) && (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT))
                 return set_error(serror, SCRIPT_ERR_OP_COUNT);
 
-            if (!protocol_cleanup && (
+            if (!protocol_cleanup && (sigversion == SIGVERSION_BASE) && (
                 opcode == OP_CAT ||
                 opcode == OP_SUBSTR ||
                 opcode == OP_LEFT ||
@@ -378,8 +378,16 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
                         // not enabled; treat as a NOP2
+                        // in legacy scripts, same as NOP
                         if (discourage_upgradable_nops) {
                             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        }
+                        // in post-segwit scripts, return true
+                        if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                            altstack.clear();
+                            stack.clear();
+                            stack.push_back(vchTrue);
+                            return set_success(serror);
                         }
                         break;
                     }
@@ -422,8 +430,16 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
                         // not enabled; treat as a NOP3
+                        // in legacy scripts, same as NOP
                         if (discourage_upgradable_nops) {
                             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        }
+                        // in post-segwit scripts, return true
+                        if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                            altstack.clear();
+                            stack.clear();
+                            stack.push_back(vchTrue);
+                            return set_success(serror);
                         }
                         break;
                     }
@@ -460,8 +476,16 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 case OP_NOP1: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 {
+                    // in legacy scripts, same as NOP
                     if (discourage_upgradable_nops)
                         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                    // in post-segwit scripts, return true
+                    if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                        altstack.clear();
+                        stack.clear();
+                        stack.push_back(vchTrue);
+                        return set_success(serror);
+                    }
                 }
                 break;
 
@@ -875,8 +899,25 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 //
                 // Crypto
                 //
-                case OP_RIPEMD160:
                 case OP_SHA1:
+                    // In 2019, SHA1 is utterly broken and no longer serves any
+                    // purpose.  We therefore return OP_SHA1 to the pool of
+                    // unallocated opcodes in future script versions.
+                    if (sigversion != SIGVERSION_BASE) {
+                        // Copy-paste of the unrecognized-opcode "default" handler below.
+                        if (discourage_upgradable_nops) {
+                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        }
+                        altstack.clear();
+                        stack.clear();
+                        stack.push_back(vchTrue);
+                        return set_success(serror);
+                    }
+
+                    // Otherwise we fall-though to the legacy handler with the
+                    // original SHA1 semantics:
+
+                case OP_RIPEMD160:
                 case OP_SHA256:
                 case OP_HASH160:
                 case OP_HASH256:
@@ -961,7 +1002,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     if (nKeysCount < 0 || nKeysCount > MAX_PUBKEYS_PER_MULTISIG)
                         return set_error(serror, SCRIPT_ERR_PUBKEY_COUNT);
                     nOpCount += nKeysCount;
-                    if (!protocol_cleanup && (nOpCount > MAX_OPS_PER_SCRIPT))
+                    if (!protocol_cleanup && (sigversion == SIGVERSION_BASE) && (nOpCount > MAX_OPS_PER_SCRIPT))
                         return set_error(serror, SCRIPT_ERR_OP_COUNT);
                     int ikey = ++i;
                     // ikey2 is the position of last non-signature item in the stack. Top stack item = 1.
@@ -1104,19 +1145,53 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 }
                 break;
 
+                case OP_VERIF:
+                case OP_VERNOTIF:
+                {
+                    if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                        // Because OP_VERIF and OP_VERNOTIF fall between OP_IF
+                        // and OP_ENDIF, they are treated the same as the other
+                        // conditionals: they are always evaluated, even within
+                        // a non-executed IF/ELSE branch.
+
+                        // So in the original script, decoding a OP_VERIF always
+                        // resulted in SCRIPT_ERR_BAD_OPCODE, regardless of the
+                        // value of fExec, much like the disabled opcodes.
+
+                        // But post-cleanup or within a witness script, we want
+                        // OP_VERIF and OP_VERNOTIF to be like any of the other
+                        // as-yet undefined, "return true" opcodes, which DO NOT
+                        // abort execution if decoded but not executed.
+                        if (!fExec) {
+                            break;
+                        }
+                    }
+                }
+
+                // Otherwise we fall through to the default case. (Either we're
+                // in a live branch, or we're in a pre-segwit script; either
+                // way, we handle these opcodes the same as any other undefined
+                // opcode.)
+
                 default:
-                    if (!protocol_cleanup) {
+                    if (!protocol_cleanup && (sigversion == SIGVERSION_BASE)) {
                         return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
                     }
                     if (discourage_upgradable_nops) {
                         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
                     }
+                    altstack.clear();
+                    stack.clear();
+                    stack.push_back(vchTrue);
                     return set_success(serror);
             }
 
             // Size limits
-            if (!protocol_cleanup && (stack.size() + altstack.size() > 1000))
+            if (!protocol_cleanup && (sigversion == SIGVERSION_BASE) && (stack.size() + altstack.size() > 1000))
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
+            if ((stack.size() + altstack.size()) > 0x7fff) { // > 32767
+                return set_error(serror, SCRIPT_ERR_STACK_SIZE);
+            }
         }
     }
     catch (...)
@@ -1480,8 +1555,11 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             }
             scriptPubKey << OP_DUP << OP_HASH160 << program << OP_EQUALVERIFY << OP_CHECKSIG;
             stack = witness.stack;
+        } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
+            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
         } else {
-            return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH);
+            // Unrecognized payload lengths return true for future softfork compatibility
+            return set_success(serror);
         }
     } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
@@ -1490,18 +1568,16 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         return set_success(serror);
     }
 
-    // Disallow stack item size > MAX_SCRIPT_ELEMENT_SIZE in witness stack
-    for (unsigned int i = 0; i < stack.size(); i++) {
-        if (stack.at(i).size() > MAX_SCRIPT_ELEMENT_SIZE)
-            return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
+    // Disallow more then MAX_STACK_SIZE elements in witness stack
+    if (stack.size() > MAX_STACK_SIZE) { // > 32767
+        return set_error(serror, SCRIPT_ERR_STACK_SIZE);
     }
 
     if (!EvalScript(stack, scriptPubKey, flags, checker, SIGVERSION_WITNESS_V0, serror)) {
         return false;
     }
 
-    // Scripts inside witness implicitly require cleanstack behaviour
-    if (stack.size() != 1)
+    if (stack.empty())
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     if (!CastToBool(stack.back()))
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
