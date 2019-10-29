@@ -264,7 +264,7 @@ public:
 
     std::string operator()(const WitnessUnknown& id) const
     {
-        if (id.version < 1 || id.version > 16 || id.length < 2 || id.length > 40) {
+        if (id.version < 1 || id.version > 16 || id.length < 2 || id.length > 75) {
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.version};
@@ -320,7 +320,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 }
                 return CNoDestination();
             }
-            if (version > 16 || data.size() < 2 || data.size() > 40) {
+            if (version > 16 || data.size() < 2 || data.size() > 75) {
                 return CNoDestination();
             }
             WitnessUnknown unk;
