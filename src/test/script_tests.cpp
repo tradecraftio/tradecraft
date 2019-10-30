@@ -122,7 +122,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
 };
 
-static std::string FormatScriptError(ScriptError_t err)
+std::string FormatScriptError(ScriptError_t err)
 {
     for (const auto& se : script_errors)
         if (se.err == err)
