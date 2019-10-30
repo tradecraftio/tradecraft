@@ -47,6 +47,7 @@ typedef std::vector<unsigned char> valtype;
 
 // In script_tests.cpp
 extern UniValue read_json(const std::string& jsondata);
+extern const char *FormatScriptError(ScriptError_t err);
 
 static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE},
@@ -438,7 +439,7 @@ static void CheckWithFlag(const CTransactionRef& output, const CMutableTransacti
     ScriptError error;
     CTransaction inputi(input);
     bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue, output->lock_height), &error);
-    assert(ret == success);
+    BOOST_CHECK_MESSAGE(ret == success, FormatScriptError(error));
 }
 
 static CScript PushAll(const std::vector<valtype>& values)
