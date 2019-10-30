@@ -50,6 +50,7 @@ typedef std::vector<unsigned char> valtype;
 
 // In script_tests.cpp
 UniValue read_json(const std::string& jsondata);
+std::string FormatScriptError(ScriptError_t err);
 
 static CFeeRate g_dust{DUST_RELAY_TX_FEE};
 static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};
@@ -522,7 +523,7 @@ static void CheckWithFlag(const CTransactionRef& output, const CMutableTransacti
     ScriptError error;
     CTransaction inputi(input);
     bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue, output->lock_height, MissingDataBehavior::ASSERT_FAIL), &error);
-    assert(ret == success);
+    BOOST_CHECK_MESSAGE(ret == success, FormatScriptError(error));
 }
 
 static CScript PushAll(const std::vector<valtype>& values)
