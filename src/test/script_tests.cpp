@@ -117,7 +117,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
 };
 
-static const char *FormatScriptError(ScriptError_t err)
+const char *FormatScriptError(ScriptError_t err)
 {
     for (unsigned int i=0; i<ARRAYLEN(script_errors); ++i)
         if (script_errors[i].err == err)
