@@ -1615,16 +1615,14 @@ class SegWitTest(FreicoinTestFramework):
                 sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue + 1, tx.lock_height, key)
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                                   reason='non-mandatory-script-verify-flag (Script evaluated without error '
-                                          'but finished with a false/empty top stack element')
+                                   reason='non-mandatory-script-verify-flag (Signature must be zero for failed CHECK(MULTI)SIG operation)')
 
                 # Too-small input value
                 sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue - 1, tx.lock_height, key)
                 block.vtx.pop(-2)  # remove last tx
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                                   reason='non-mandatory-script-verify-flag (Script evaluated without error '
-                                          'but finished with a false/empty top stack element')
+                                   reason='non-mandatory-script-verify-flag (Signature must be zero for failed CHECK(MULTI)SIG operation)')
 
                 # Now try correct value
                 sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue, tx.lock_height, key)
