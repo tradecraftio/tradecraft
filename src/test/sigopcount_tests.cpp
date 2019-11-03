@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
         CScript scriptSig = CScript();
         CScriptWitness scriptWitness;
-        scriptWitness.stack.emplace_back(0);
+        scriptWitness.stack.emplace_back(1, 3); // MultiSigHint
         scriptWitness.stack.emplace_back(0);
         scriptWitness.stack.emplace_back(witnessScript.begin(), witnessScript.end());
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << ToByteVector(redeemScript);
         CScriptWitness scriptWitness;
-        scriptWitness.stack.emplace_back(0);
+        scriptWitness.stack.emplace_back(1, 3); // MultiSigHint
         scriptWitness.stack.emplace_back(0);
         scriptWitness.stack.emplace_back(witnessScript.begin(), witnessScript.end());
 
