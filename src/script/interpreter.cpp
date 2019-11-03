@@ -275,6 +275,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     const bool protocol_cleanup = (flags & SCRIPT_VERIFY_PROTOCOL_CLEANUP) != 0;
     const bool discourage_upgradable_nops = (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) != 0;
     const bool enforce_nullfail = (sigversion != SIGVERSION_BASE) || ((flags & SCRIPT_VERIFY_NULLFAIL) != 0);
+    const bool enforce_multisig_hint = (sigversion != SIGVERSION_BASE) || ((flags & SCRIPT_VERIFY_MULTISIG_HINT) != 0);
 
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
@@ -1047,7 +1048,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     // this hint we can avoid expensive signature validation checks that
                     // might fail.
                     MultiSigHint hint(nKeysCount); // defaults to no-skipped-keys
-                    if (flags & SCRIPT_VERIFY_MULTISIG_HINT) {
+                    if (enforce_multisig_hint) {
                         // There cannot be more than 20 keys, so our serialized
                         // hint cannot be more than 20 unsigned bits, which fits
                         // fine inside a 3-byte signed CScriptNum.
@@ -1095,7 +1096,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                         // Skipped keys MUST be reported in the hint if
                         // SCRIPT_VERIFY_MULTISIG_HINT is in effect.
-                        if (!fOk && (flags & SCRIPT_VERIFY_MULTISIG_HINT) && have_sig) {
+                        if (!fOk && enforce_multisig_hint && have_sig) {
                             return set_error(serror, SCRIPT_ERR_FAILED_SIGNATURE_CHECK);
                         }
 
