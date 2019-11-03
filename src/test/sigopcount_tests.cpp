@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptSig = CScript();
         CTxInWitness witness;
         CScriptWitness scriptWitness;
-        scriptWitness.stack.push_back(vector<unsigned char>(0));
+        scriptWitness.stack.push_back(vector<unsigned char>(1, 3)); // MultiSigHint
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         scriptWitness.stack.push_back(vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
         witness.scriptWitness = scriptWitness;
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptSig = CScript() << ToByteVector(redeemScript);
         CTxInWitness witness;
         CScriptWitness scriptWitness;
-        scriptWitness.stack.push_back(vector<unsigned char>(0));
+        scriptWitness.stack.push_back(vector<unsigned char>(1, 3)); // MultiSigHint
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         scriptWitness.stack.push_back(vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
         witness.scriptWitness = scriptWitness;
