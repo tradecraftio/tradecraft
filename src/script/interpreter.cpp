@@ -375,7 +375,8 @@ static bool EvalChecksigPreTapscript(const valtype& vchSig, const valtype& vchPu
     }
     fSuccess = checker.CheckECDSASignature(vchSig, vchPubKey, scriptCode, sigversion);
 
-    if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
+    const bool enforce_nullfail = (sigversion != SigVersion::BASE) || ((flags & SCRIPT_VERIFY_NULLFAIL) != 0);
+    if (!fSuccess && enforce_nullfail && vchSig.size())
         return set_error(serror, SCRIPT_ERR_NULLFAIL);
 
     return true;
@@ -454,6 +455,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     // Check for activation of rule changes
     const bool protocol_cleanup = (flags & SCRIPT_VERIFY_PROTOCOL_CLEANUP) != 0;
     const bool discourage_op_success = (flags & SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS) != 0;
+    const bool enforce_nullfail = (sigversion != SigVersion::BASE) || ((flags & SCRIPT_VERIFY_NULLFAIL) != 0);
 
     // sigversion cannot be TAPROOT here, as it admits no script execution.
     assert(sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0 || sigversion == SigVersion::TAPSCRIPT);
@@ -1348,7 +1350,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     // Clean up stack of actual arguments
                     while (i-- > 1) {
                         // If the operation failed, we require that all signatures must be empty vector
-                        if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && !ikey2 && stacktop(-1).size())
+                        if (!fSuccess && enforce_nullfail && !ikey2 && stacktop(-1).size())
                             return set_error(serror, SCRIPT_ERR_NULLFAIL);
                         if (ikey2 > 0)
                             ikey2--;
