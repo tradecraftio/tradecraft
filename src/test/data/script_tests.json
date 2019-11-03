@@ -2247,7 +2247,7 @@
     "",
     "0 0x20 0xac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
     "P2SH,WITNESS",
-    "EVAL_FALSE",
+    "NULLFAIL",
     "Basic P2WSH with the wrong key"
 ],
 [
@@ -2259,7 +2259,7 @@
     "",
     "0 0x14 0x7cf9c846cd4882efec4bf07e44ebdad495c94f4b",
     "P2SH,WITNESS",
-    "EVAL_FALSE",
+    "NULLFAIL",
     "Basic P2WPKH with the wrong key"
 ],
 [
@@ -2271,7 +2271,7 @@
     "0x22 0x0020ac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
     "HASH160 0x14 0x61039a003883787c0d6ebc66d97fdabe8e31449d EQUAL",
     "P2SH,WITNESS",
-    "EVAL_FALSE",
+    "NULLFAIL",
     "Basic P2SH(P2WSH) with the wrong key"
 ],
 [
@@ -2283,7 +2283,7 @@
     "0x16 0x00147cf9c846cd4882efec4bf07e44ebdad495c94f4b",
     "HASH160 0x14 0x4e0c2aed91315303fc6a1dc4c7bc21c88f75402e EQUAL",
     "P2SH,WITNESS",
-    "EVAL_FALSE",
+    "NULLFAIL",
     "Basic P2SH(P2WPKH) with the wrong key"
 ],
 [
@@ -2343,7 +2343,7 @@
     "",
     "0 0x20 0xb95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
     "P2SH,WITNESS",
-    "EVAL_FALSE",
+    "NULLFAIL",
     "Basic P2WSH with wrong value"
 ],
 [
@@ -2355,7 +2355,7 @@
     "",
     "0 0x14 0x91b24bf9f5288532960ac687abb035127b1d28a5",
     "P2SH,WITNESS",
-    "EVAL_FALSE",
+    "NULLFAIL",
     "Basic P2WPKH with wrong value"
 ],
 [
@@ -2367,7 +2367,7 @@
     "0x22 0x0020b95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
     "HASH160 0x14 0xf386c2ba255cc56d20cfa6ea8b062f8b59945518 EQUAL",
     "P2SH,WITNESS",
-    "EVAL_FALSE",
+    "NULLFAIL",
     "Basic P2SH(P2WSH) with wrong value"
 ],
 [
@@ -2379,7 +2379,7 @@
     "0x16 0x001491b24bf9f5288532960ac687abb035127b1d28a5",
     "HASH160 0x14 0x17743beb429c55c942d2ec703b98c4d57c2df5c6 EQUAL",
     "P2SH,WITNESS",
-    "EVAL_FALSE",
+    "NULLFAIL",
     "Basic P2SH(P2WPKH) with wrong value"
 ],
 [
