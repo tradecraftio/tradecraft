@@ -304,6 +304,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     // Check for activation of rule changes
     const bool protocol_cleanup = (flags & SCRIPT_VERIFY_PROTOCOL_CLEANUP) != 0;
     const bool discourage_upgradable_nops = (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) != 0;
+    const bool enforce_nullfail = (sigversion != SigVersion::BASE) || ((flags & SCRIPT_VERIFY_NULLFAIL) != 0);
 
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
@@ -1003,7 +1004,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     }
                     bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
 
-                    if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
+                    if (!fSuccess && enforce_nullfail && vchSig.size())
                         return set_error(serror, SCRIPT_ERR_NULLFAIL);
 
                     popstack(stack);
@@ -1145,7 +1146,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     // Clean up stack of actual arguments
                     while (i-- > 1) {
                         // If the operation failed, we require that all signatures must be empty vector
-                        if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && !ikey2 && stacktop(-1).size())
+                        if (!fSuccess && enforce_nullfail && !ikey2 && stacktop(-1).size())
                             return set_error(serror, SCRIPT_ERR_NULLFAIL);
                         if (ikey2 > 0)
                             ikey2--;
