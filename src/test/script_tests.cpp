@@ -90,7 +90,6 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_MINIMALDATA, "MINIMALDATA"},
     {SCRIPT_ERR_SIG_PUSHONLY, "SIG_PUSHONLY"},
     {SCRIPT_ERR_SIG_HIGH_S, "SIG_HIGH_S"},
-    {SCRIPT_ERR_SIG_NULLDUMMY, "SIG_NULLDUMMY"},
     {SCRIPT_ERR_PUBKEYTYPE, "PUBKEYTYPE"},
     {SCRIPT_ERR_CLEANSTACK, "CLEANSTACK"},
     {SCRIPT_ERR_MINIMALIF, "MINIMALIF"},
@@ -678,15 +677,9 @@ BOOST_AUTO_TEST_CASE(script_build)
     tests.push_back(TestBuilder(CScript() << OP_3 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
                                 "3-of-3 with nonzero dummy but no NULLDUMMY", 0
                                ).Num(1).PushSig(keys.key0).PushSig(keys.key1).PushSig(keys.key2));
-    tests.push_back(TestBuilder(CScript() << OP_3 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
-                                "3-of-3 with nonzero dummy", SCRIPT_VERIFY_NULLDUMMY
-                               ).Num(1).PushSig(keys.key0).PushSig(keys.key1).PushSig(keys.key2).ScriptError(SCRIPT_ERR_SIG_NULLDUMMY));
     tests.push_back(TestBuilder(CScript() << OP_3 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG << OP_NOT,
                                 "3-of-3 NOT with invalid sig and nonzero dummy but no NULLDUMMY", 0
                                ).Num(1).PushSig(keys.key0).PushSig(keys.key1).PushSig(keys.key2).DamagePush(10));
-    tests.push_back(TestBuilder(CScript() << OP_3 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG << OP_NOT,
-                                "3-of-3 NOT with invalid sig with nonzero dummy", SCRIPT_VERIFY_NULLDUMMY
-                               ).Num(1).PushSig(keys.key0).PushSig(keys.key1).PushSig(keys.key2).DamagePush(10).ScriptError(SCRIPT_ERR_SIG_NULLDUMMY));
 
     tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey1C) << ToByteVector(keys.pubkey1C) << OP_2 << OP_CHECKMULTISIG,
                                 "2-of-2 with two identical keys and sigs pushed using OP_DUP but no SIGPUSHONLY", 0
@@ -1661,15 +1654,14 @@ static std::vector<unsigned int> AllConsensusFlags()
 {
     std::vector<unsigned int> ret;
 
-    for (unsigned int i = 0; i < 128; ++i) {
+    for (unsigned int i = 0; i < 64; ++i) {
         unsigned int flag = 0;
         if (i & 1) flag |= SCRIPT_VERIFY_P2SH;
         if (i & 2) flag |= SCRIPT_VERIFY_DERSIG;
-        if (i & 4) flag |= SCRIPT_VERIFY_NULLDUMMY;
-        if (i & 8) flag |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-        if (i & 16) flag |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
-        if (i & 32) flag |= SCRIPT_VERIFY_WITNESS;
-        if (i & 64) flag |= SCRIPT_VERIFY_TAPROOT;
+        if (i & 4) flag |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+        if (i & 8) flag |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+        if (i & 16) flag |= SCRIPT_VERIFY_WITNESS;
+        if (i & 32) flag |= SCRIPT_VERIFY_TAPROOT;
 
         // SCRIPT_VERIFY_WITNESS requires SCRIPT_VERIFY_P2SH
         if (flag & SCRIPT_VERIFY_WITNESS && !(flag & SCRIPT_VERIFY_P2SH)) continue;
