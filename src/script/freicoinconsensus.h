@@ -62,11 +62,12 @@ typedef enum freicoinconsensus_error_t
 enum
 {
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_NONE                = 0,
-    freicoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH                = (1U << 0), // evaluate P2SH (BIP16) subscripts
-    freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG              = (1U << 2), // enforce strict DER (BIP66) compliance
-    freicoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY           = (1U << 4), // enforce NULLDUMMY (BIP147)
-    freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
-    freicoinconsensus_SCRIPT_FLAGS_VERIFY_MULTISIG_HINT       = (1U << 15), // require hint field in CHECKMULTISIG which indicates which keys to skip
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH                = (1U << 0), // evaluate P2SH subscripts
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG              = (1U << 2), // enforce strict DER compliance
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9), // enable CLTV opcode
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10), // enable CSV opcode
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_PROTOCOL_CLEANUP    = (1U << 29), // relax consensus rules
 };
 
 /// Returns 1 if the input nIn of the serialized transaction pointed to by
