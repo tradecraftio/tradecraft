@@ -1955,11 +1955,6 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         flags |= SCRIPT_VERIFY_TAPROOT;
     }
 
-    // Start enforcing BIP147 NULLDUMMY (activated simultaneously with segwit)
-    if (IsWitnessEnabled(pindex->pprev, consensusparams)) {
-        flags |= SCRIPT_VERIFY_NULLDUMMY;
-    }
-
     return flags;
 }
 
