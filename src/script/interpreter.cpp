@@ -1233,14 +1233,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                     // A bug causes CHECKMULTISIG to consume one extra argument
                     // whose contents were not checked in any way.
-                    //
-                    // Unfortunately this is a potential source of mutability,
-                    // so optionally verify it is exactly equal to zero prior
-                    // to removing it from the stack.
                     if (stack.size() < 1)
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
-                    if ((flags & SCRIPT_VERIFY_NULLDUMMY) && stacktop(-1).size())
-                        return set_error(serror, SCRIPT_ERR_SIG_NULLDUMMY);
                     popstack(stack);
 
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
