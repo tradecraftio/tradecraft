@@ -157,7 +157,6 @@ testScripts = [
     'importprunedfunds.py',
     'signmessages.py',
     'p2p-compactblocks.py --bitcoin-mode',
-#    'nulldummy.py --bitcoin-mode', #replaced by require-valid-sigs on Freicoin
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
