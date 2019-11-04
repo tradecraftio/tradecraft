@@ -52,7 +52,6 @@ sign_multisig(const CScript& scriptPubKey, const std::vector<CKey>& keys, int64_
 BOOST_AUTO_TEST_CASE(multisig_verify)
 {
     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
-    unsigned int nulldummy_flags = flags | SCRIPT_VERIFY_NULLDUMMY;
     unsigned int validsigs_flags = flags | SCRIPT_VERIFY_NULLFAIL | SCRIPT_VERIFY_MULTISIG_HINT;
 
     ScriptError err;
@@ -95,8 +94,6 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     s = sign_multisig(a_and_b, keys, 0, CTransaction(txTo[0]), 0);
     BOOST_CHECK(VerifyScript(s, a_and_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
-    BOOST_CHECK(VerifyScript(s, a_and_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err));
-    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
     BOOST_CHECK(VerifyScript(s, a_and_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
@@ -106,14 +103,10 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         s = sign_multisig(a_and_b, keys, 0, CTransaction(txTo[0]), 0);
         BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 1: %d", i));
         BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 1: %d", i));
-        BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
         BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 1: %d", i));
         BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
         s = sign_multisig(a_and_b, keys, 1, CTransaction(txTo[0]), 0);
         BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 3: %d", i));
-        BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 3: %d", i));
         BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
         BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 3: %d", i));
         BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
@@ -123,16 +116,12 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         s = sign_multisig(a_and_b, keys, 0, CTransaction(txTo[0]), 0);
         BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 2: %d", i));
         BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 2: %d", i));
-        BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
         BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 2: %d", i));
         BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_FAILED_SIGNATURE_CHECK, ScriptErrorString(err));
         for (int j = 1; j < 5; ++j) {
             s = sign_multisig(a_and_b, keys, j, CTransaction(txTo[0]), 0);
             BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 4: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 4: %d", i));
-            BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_NULLDUMMY, ScriptErrorString(err));
             BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount, txFrom.lock_height), &err), strprintf("a&b 4: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_MULTISIG_HINT, ScriptErrorString(err));
         }
@@ -147,16 +136,12 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         {
             BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
-            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 1: %d", i));
-            BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
             BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 1: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_MULTISIG_HINT, ScriptErrorString(err));
         }
         else
         {
             BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b: %d", i));
-            BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 2: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
             BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 2: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_MULTISIG_HINT, ScriptErrorString(err));
@@ -167,8 +152,6 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         {
             BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, NULL, flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 3: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 3: %d", i));
-            BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_NULLDUMMY, ScriptErrorString(err));
             BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 3: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
         }
@@ -176,8 +159,6 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         {
             BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, NULL, flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 4: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 4: %d", i));
-            BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_NULLDUMMY, ScriptErrorString(err));
             BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err), strprintf("a|b 4: %d", i));
             BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_FAILED_SIGNATURE_CHECK, ScriptErrorString(err));
         }
@@ -185,8 +166,6 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     s.clear();
     s << OP_0 << OP_1;
     BOOST_CHECK(!VerifyScript(s, a_or_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err));
-    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_DER, ScriptErrorString(err));
-    BOOST_CHECK(!VerifyScript(s, a_or_b, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_DER, ScriptErrorString(err));
     BOOST_CHECK(!VerifyScript(s, a_or_b, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount, txFrom.lock_height), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_MULTISIG_HINT, ScriptErrorString(err));
@@ -206,16 +185,12 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             {
                 BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, nullptr, flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 1: %d %d", i, j));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
-                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 1: %d %d", i, j));
-                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
                 BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 1: %d %d", i, j));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_MULTISIG_HINT, ScriptErrorString(err));
             }
             else
             {
                 BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, nullptr, flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 2: %d %d", i, j));
-                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 2: %d %d", i, j));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
                 BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 2: %d %d", i, j));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_MULTISIG_HINT, ScriptErrorString(err));
@@ -226,8 +201,6 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             {
                 BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, NULL, flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 3: %d %d", i, j));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 3: %d %d", i, j));
-                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_NULLDUMMY, ScriptErrorString(err));
                 BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 3: %d %d", i, j));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
             }
@@ -235,8 +208,6 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             {
                 BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, NULL, flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 4: %d %d", i, j));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, NULL, nulldummy_flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 4: %d %d", i, j));
-                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_NULLDUMMY, ScriptErrorString(err));
                 BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, NULL, validsigs_flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount, txFrom.lock_height), &err), strprintf("escrow 4: %d %d", i, j));
                 if ((i%3) == (j%3)) {
                     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_MULTISIG_HINT, ScriptErrorString(err));
