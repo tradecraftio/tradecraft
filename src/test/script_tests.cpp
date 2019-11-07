@@ -1022,7 +1022,11 @@ BOOST_AUTO_TEST_CASE(script_cltv_truncated)
 
     std::vector<std::vector<unsigned char>> stack_ignore;
     ScriptError err;
-    BOOST_CHECK(!EvalScript(stack_ignore, script_cltv_trunc, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, BaseSignatureChecker(), SigVersion::BASE, &err));
+    /* OP_NOP in pre-segwit scripts. */
+    BOOST_CHECK( EvalScript(stack_ignore, script_cltv_trunc, 0, BaseSignatureChecker(), SigVersion::BASE, &err));
+    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_OK);
+    /* Requires stack operand on segwit. */
+    BOOST_CHECK(!EvalScript(stack_ignore, script_cltv_trunc, 0, BaseSignatureChecker(), SigVersion::WITNESS_V0, &err));
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_INVALID_STACK_OPERATION);
 }
 
@@ -1676,14 +1680,13 @@ static std::vector<unsigned int> AllConsensusFlags()
 {
     std::vector<unsigned int> ret;
 
-    for (unsigned int i = 0; i < 64; ++i) {
+    for (unsigned int i = 0; i < 32; ++i) {
         unsigned int flag = 0;
         if (i & 1) flag |= SCRIPT_VERIFY_P2SH;
         if (i & 2) flag |= SCRIPT_VERIFY_DERSIG;
-        if (i & 4) flag |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-        if (i & 8) flag |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
-        if (i & 16) flag |= SCRIPT_VERIFY_WITNESS;
-        if (i & 32) flag |= SCRIPT_VERIFY_TAPROOT;
+        if (i & 4) flag |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+        if (i & 8) flag |= SCRIPT_VERIFY_WITNESS;
+        if (i & 16) flag |= SCRIPT_VERIFY_TAPROOT;
 
         // SCRIPT_VERIFY_WITNESS requires SCRIPT_VERIFY_P2SH
         if (flag & SCRIPT_VERIFY_WITNESS && !(flag & SCRIPT_VERIFY_P2SH)) continue;
