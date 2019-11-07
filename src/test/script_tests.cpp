@@ -1141,7 +1141,11 @@ BOOST_AUTO_TEST_CASE(script_cltv_truncated)
 
     std::vector<std::vector<unsigned char>> stack_ignore;
     ScriptError err;
-    BOOST_CHECK(!EvalScript(stack_ignore, script_cltv_trunc, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, BaseSignatureChecker(), SigVersion::BASE, &err));
+    /* OP_NOP in pre-segwit scripts. */
+    BOOST_CHECK( EvalScript(stack_ignore, script_cltv_trunc, 0, BaseSignatureChecker(), SigVersion::BASE, &err));
+    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_OK);
+    /* Requires stack operand on segwit. */
+    BOOST_CHECK(!EvalScript(stack_ignore, script_cltv_trunc, 0, BaseSignatureChecker(), SigVersion::WITNESS_V0, &err));
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_INVALID_STACK_OPERATION);
 }
 

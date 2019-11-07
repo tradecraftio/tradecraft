@@ -410,9 +410,9 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                 case OP_CHECKLOCKTIMEVERIFY:
                 {
-                    if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
-                        // in post-segwit scripts, return true
-                        if (protocol_cleanup || (sigversion != SigVersion::BASE)) {
+                    if (sigversion == SigVersion::BASE) {
+                        // in post-cleanup scripts, return true
+                        if (protocol_cleanup) {
                             altstack.clear();
                             stack.clear();
                             stack.push_back(vchTrue);
