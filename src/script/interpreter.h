@@ -145,11 +145,6 @@ enum : uint32_t {
     //       consensus rules. It is automatic there and does not need this flag.
     SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
 
-    // Verify CHECKLOCKTIMEVERIFY
-    //
-    // See BIP65 for details.
-    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
-
     // support CHECKSEQUENCEVERIFY opcode
     //
     // See BIP112 for details
