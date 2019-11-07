@@ -202,8 +202,9 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     verify_flags &= ~SCRIPT_VERIFY_LOCK_HEIGHT_NOT_UNDER_SIGNATURE;
                 }
                 const CScriptWitness *witness = &tx.vin[i].scriptWitness;
-                BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, refheight, txdata, txsigcheck_opts), &err),
+                bool valid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
+                                          witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, refheight, txdata, txsigcheck_opts), &err);
+                BOOST_CHECK_MESSAGE(valid,
                                     strTest + " error: " + ScriptErrorString(err));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK,
                                     strTest + " error: " + ScriptErrorString(err));
