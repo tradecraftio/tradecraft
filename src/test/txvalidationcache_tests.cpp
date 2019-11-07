@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     BOOST_CHECK(keystore.AddKey(coinbaseKey));
     BOOST_CHECK(keystore.AddCScript(p2pk_scriptPubKey));
 
-    // flags to test: SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, SCRIPT_VERIFY_CHECKSEQUENCE_VERIFY, uncompressed pubkey thing
+    // flags to test: SCRIPT_VERIFY_CHECKSEQUENCE_VERIFY, uncompressed pubkey thing
 
     // Create 2 outputs that match the three scripts above, spending the first
     // coinbase tx.
@@ -294,13 +294,13 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         vchSig.push_back((unsigned char)SIGHASH_ALL);
         invalid_with_cltv_tx.vin[0].scriptSig = CScript() << vchSig << 101;
 
-        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_cltv_tx), SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, true, m_node.chainman->ActiveChainstate().CoinsTip());
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_cltv_tx), 0, true, m_node.chainman->ActiveChainstate().CoinsTip());
 
         // Make it valid, and check again
         invalid_with_cltv_tx.vin[0].scriptSig = CScript() << vchSig << 100;
         TxValidationState state;
         PrecomputedTransactionData txdata;
-        BOOST_CHECK(CheckInputScripts(CTransaction(invalid_with_cltv_tx), state, m_node.chainman->ActiveChainstate().CoinsTip(), Params().GetConsensus(), 0, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, true, true, txdata, nullptr));
+        BOOST_CHECK(CheckInputScripts(CTransaction(invalid_with_cltv_tx), state, m_node.chainman->ActiveChainstate().CoinsTip(), Params().GetConsensus(), 0, 0, true, true, txdata, nullptr));
     }
 
     // TEST CHECKSEQUENCEVERIFY
