@@ -376,14 +376,14 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
 
                 case OP_CHECKLOCKTIMEVERIFY:
                 {
-                    if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
+                    if (sigversion == SIGVERSION_BASE) {
                         // not enabled; treat as a NOP2
                         // in legacy scripts, same as NOP
                         if (discourage_upgradable_nops) {
                             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
                         }
-                        // in post-segwit scripts, return true
-                        if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                        // in post-cleanup scripts, return true
+                        if (protocol_cleanup) {
                             altstack.clear();
                             stack.clear();
                             stack.push_back(vchTrue);
