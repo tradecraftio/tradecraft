@@ -1685,13 +1685,12 @@ static std::vector<unsigned int> AllConsensusFlags()
 {
     std::vector<unsigned int> ret;
 
-    for (unsigned int i = 0; i < 32; ++i) {
+    for (unsigned int i = 0; i < 16; ++i) {
         unsigned int flag = 0;
         if (i & 1) flag |= SCRIPT_VERIFY_P2SH;
         if (i & 2) flag |= SCRIPT_VERIFY_DERSIG;
-        if (i & 4) flag |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
-        if (i & 8) flag |= SCRIPT_VERIFY_WITNESS;
-        if (i & 16) flag |= SCRIPT_VERIFY_TAPROOT;
+        if (i & 4) flag |= SCRIPT_VERIFY_WITNESS;
+        if (i & 8) flag |= SCRIPT_VERIFY_TAPROOT;
 
         // SCRIPT_VERIFY_WITNESS requires SCRIPT_VERIFY_P2SH
         if (flag & SCRIPT_VERIFY_WITNESS && !(flag & SCRIPT_VERIFY_P2SH)) continue;
