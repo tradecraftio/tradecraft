@@ -1213,9 +1213,9 @@ def spenders_taproot_inactive():
     return spenders
 
 # Consensus validation flags to use in dumps for tests with "legacy/" or "inactive/" prefix.
-LEGACY_FLAGS = "P2SH,DERSIG,CHECKSEQUENCEVERIFY,WITNESS,NULLDUMMY"
+LEGACY_FLAGS = "P2SH,DERSIG,WITNESS,NULLDUMMY"
 # Consensus validation flags to use in dumps for all other tests.
-TAPROOT_FLAGS = "P2SH,DERSIG,CHECKSEQUENCEVERIFY,WITNESS,NULLDUMMY,TAPROOT"
+TAPROOT_FLAGS = "P2SH,DERSIG,WITNESS,NULLDUMMY,TAPROOT"
 
 def dump_json_test(tx, input_utxos, idx, success, failure):
     spender = input_utxos[idx].spender
