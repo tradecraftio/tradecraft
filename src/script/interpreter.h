@@ -145,11 +145,6 @@ enum : uint32_t {
     //       consensus rules. It is automatic there and does not need this flag.
     SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
 
-    // support CHECKSEQUENCEVERIFY opcode
-    //
-    // See BIP112 for details
-    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10),
-
     // Support segregated witness
     //
     SCRIPT_VERIFY_WITNESS = (1U << 11),
