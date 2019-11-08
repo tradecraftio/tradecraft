@@ -30,7 +30,6 @@ The interface is defined in the C header `freicoinconsensus.h` located in  `src/
 - `freicoinconsensus_SCRIPT_FLAGS_VERIFY_NONE`
 - `freicoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH` - Evaluate P2SH ([BIP16](https://github.com/freicoin/bips/blob/master/bip-0016.mediawiki)) subscripts
 - `freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG` - Enforce strict DER ([BIP66](https://github.com/freicoin/bips/blob/master/bip-0066.mediawiki)) compliance
-- `freicoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY` - Enable CHECKSEQUENCEVERIFY ([BIP112](https://github.com/freicoin/bips/blob/master/bip-0112.mediawiki))
 - `freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS` - Enable WITNESS ([BIP141](https://github.com/freicoin/bips/blob/master/bip-0141.mediawiki))
 - `freicoinconsensus_SCRIPT_FLAGS_VERIFY_PROTOCOL_CLEANUP` - Relax certain consensus rules
 
