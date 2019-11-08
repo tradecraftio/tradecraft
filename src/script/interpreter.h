@@ -105,11 +105,6 @@ enum
     // Note: CLEANSTACK should never be used without P2SH or WITNESS.
     SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
 
-    // support CHECKSEQUENCEVERIFY opcode
-    //
-    // See BIP112 for details
-    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10),
-
     // Support segregated witness
     //
     SCRIPT_VERIFY_WITNESS = (1U << 11),

@@ -428,14 +428,14 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
 
                 case OP_CHECKSEQUENCEVERIFY:
                 {
-                    if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
+                    if (sigversion == SIGVERSION_BASE) {
                         // not enabled; treat as a NOP3
                         // in legacy scripts, same as NOP
                         if (discourage_upgradable_nops) {
                             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
                         }
-                        // in post-segwit scripts, return true
-                        if (protocol_cleanup || (sigversion != SIGVERSION_BASE)) {
+                        // in post-cleanup scripts, return true
+                        if (protocol_cleanup) {
                             altstack.clear();
                             stack.clear();
                             stack.push_back(vchTrue);
@@ -452,21 +452,20 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     // 5-byte numeric operands.
                     const CScriptNum nSequence(stacktop(-1), true, 5);
 
-                    // In the rare event that the argument may be < 0 due to
-                    // some arithmetic being done first, you can always use
-                    // 0 MAX CHECKSEQUENCEVERIFY.
-                    if (nSequence < 0)
-                        return set_error(serror, SCRIPT_ERR_NEGATIVE_LOCKTIME);
-
                     // To provide for future soft-fork extensibility, if the
-                    // operand has the disabled lock-time flag set,
-                    // CHECKSEQUENCEVERIFY behaves as a NOP.
-                    if ((nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0)
-                        break;
+                    // operand has the disabled lock-time flag set, the current
+                    // set of CHECKSEQUENCEVERIFY checks are not performed.
+                    if ((stacktop(-1).size() <= 4) || ((stacktop(-1)[3] & 0x80) == 0)) {
+                        // In the rare event that the argument may be < 0 due to
+                        // some arithmetic being done first, you can always use
+                        // 0 MAX CHECKSEQUENCEVERIFY.
+                        if (nSequence < 0)
+                            return set_error(serror, SCRIPT_ERR_NEGATIVE_LOCKTIME);
 
-                    // Compare the specified sequence number with the input.
-                    if (!checker.CheckSequence(nSequence))
-                        return set_error(serror, SCRIPT_ERR_UNSATISFIED_LOCKTIME);
+                        // Compare the specified sequence number with the input.
+                        if (!checker.CheckSequence(nSequence))
+                            return set_error(serror, SCRIPT_ERR_UNSATISFIED_LOCKTIME);
+                    }
 
                     // Drop the argument from the stack.
                     popstack(stack);
