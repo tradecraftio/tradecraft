@@ -61,14 +61,11 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S)
     (string("SIGPUSHONLY"), (unsigned int)SCRIPT_VERIFY_SIGPUSHONLY)
     (string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA)
-    (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)
     (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
     (string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK)
     (string("MINIMALIF"), (unsigned int)SCRIPT_VERIFY_MINIMALIF)
     (string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL)
     (string("MULTISIG_HINT"), (unsigned int)SCRIPT_VERIFY_MULTISIG_HINT)
-    (string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
-    (string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
     (string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS)
     (string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)
     (string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE)
@@ -207,8 +204,9 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     verify_flags &= ~SCRIPT_VERIFY_LOCK_HEIGHT_NOT_UNDER_SIGNATURE;
                 }
                 const CScriptWitness *witness = (i < tx.wit.vtxinwit.size()) ? &tx.wit.vtxinwit[i].scriptWitness : NULL;
-                BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, refheight, txdata, txsigcheck_flags), &err),
+                bool valid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
+                                          witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, refheight, txdata, txsigcheck_flags), &err);
+                BOOST_CHECK_MESSAGE(valid,
                                     strTest + " error: " + ScriptErrorString(err));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK,
                                     strTest + " error: " + ScriptErrorString(err));

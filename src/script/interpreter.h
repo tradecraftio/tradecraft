@@ -68,9 +68,6 @@ enum
     // (softfork safe, BIP62 rule 5).
     SCRIPT_VERIFY_LOW_S     = (1U << 3),
 
-    // verify dummy stack item consumed by CHECKMULTISIG is of zero-length (softfork safe, BIP62 rule 7).
-    SCRIPT_VERIFY_NULLDUMMY = (1U << 4),
-
     // Using a non-push operator in the scriptSig causes script failure (softfork safe, BIP62 rule 2).
     SCRIPT_VERIFY_SIGPUSHONLY = (1U << 5),
 
@@ -108,16 +105,6 @@ enum
     // Note: CLEANSTACK should never be used without P2SH or WITNESS.
     SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
 
-    // Verify CHECKLOCKTIMEVERIFY
-    //
-    // See BIP65 for details.
-    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
-
-    // support CHECKSEQUENCEVERIFY opcode
-    //
-    // See BIP112 for details
-    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10),
-
     // Support segregated witness
     //
     SCRIPT_VERIFY_WITNESS = (1U << 11),
@@ -136,13 +123,12 @@ enum
 
     // Requires the presence of a bitfield specifying which keys are
     // skipped during signature validation of a CHECKMULTISIG, using the
-    // extra data push that opcode consumes (softfork safe, replaces BIP62
-    // rule 7, and is not compatible with NULLDUMMY). Originally coded as
-    // REQUIRE_VALID_SIGS in a softfork deployed on v12.1, the script
-    // verification codes for that soft fork have now been split into
-    // NULLFAIL which requires that failing signatures be empty, and
-    // MULTISIG_HINT which allows matching keys to signatures prior to
-    // signature verification.
+    // extra data push that opcode consumes (softfork safe, and replaces
+    // BIP62 rule 7). Originally coded as REQUIRE_VALID_SIGS in a
+    // softfork deployed on v12.1, the script verification codes for
+    // that soft fork have now been split into NULLFAIL which requires
+    // that failing signatures be empty, and MULTISIG_HINT which allows
+    // matching keys to signatures prior to signature verification.
     //
     // CHECKMULTISIG and CHECKMULTISIGVERIFY present a significant
     // challenge to preventing failed signature checks in that the
@@ -157,23 +143,21 @@ enum
     // pubkey if validation fails. It is not known in advance to the
     // validator which attempts will fail.
     //
-    // Thankfully, however, a bug in the original implementation causes an
-    // extra, unused item to be removed from stack after validation. Since
-    // this value is given no previous consensus meaning, we use it as a
-    // bitfield to indicate which pubkeys to skip. (Note that NULLDUMMY
-    // would require this field to be zero, which is incompatible with
-    // MULTISIG_HINT when any keys must be skipped. NULLDUMMY is retained
-    // only for the purpose of compatibility with unit tests inherited
-    // from the bitcoin code base.)
+    // Thankfully, however, a bug in the original implementation causes
+    // an extra, unused item to be removed from stack after
+    // validation. Since this value is given no previous consensus
+    // meaning, we use it as a bitfield to indicate which pubkeys to
+    // skip. (Note that bitcoin's NULLDUMMY would require this field to
+    // be zero, which is incompatible with MULTISIG_HINT when any keys
+    // must be skipped.)
     //
     // Enforcing MULTISIG_HINT and NULLFAIL are necessary precursor steps
     // to performing batch validation, since in a batch validation regime
     // individual pubkey-signature combinations would not be checked for
     // validity.
     //
-    // Like bitcoin's SCRIPT_VERIFY_NULLDUMMY, this also serves as a
-    // malleability fix since the bitmask value is provided by the
-    // witness.
+    // Like bitcoin's NULLDUMMY, this also serves as a malleability fix
+    // since the bitmask value is provided by the witness.
     SCRIPT_VERIFY_MULTISIG_HINT = (1U << 15),
 
     // Public keys in segregated witness scripts must be compressed
