@@ -113,9 +113,9 @@ enum
     //
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM = (1U << 12),
 
-    // Segwit script only: Require the argument of OP_IF/NOTIF to be exactly 0x01 or empty vector
+    // Public keys in segregated witness scripts must be compressed
     //
-    SCRIPT_VERIFY_MINIMALIF = (1U << 13),
+    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 13),
 
     // Signature(s) must be empty vector if an CHECK(MULTI)SIG operation failed
     //
@@ -159,10 +159,6 @@ enum
     // Like bitcoin's NULLDUMMY, this also serves as a malleability fix
     // since the bitmask value is provided by the witness.
     SCRIPT_VERIFY_MULTISIG_HINT = (1U << 15),
-
-    // Public keys in segregated witness scripts must be compressed
-    //
-    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 16),
 
     // Set if we are relaxing some of the overly restrictive protocol
     // rules as part of the "protocol cleanup" fork. See commet in

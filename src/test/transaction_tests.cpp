@@ -63,7 +63,6 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA)
     (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
     (string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK)
-    (string("MINIMALIF"), (unsigned int)SCRIPT_VERIFY_MINIMALIF)
     (string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL)
     (string("MULTISIG_HINT"), (unsigned int)SCRIPT_VERIFY_MULTISIG_HINT)
     (string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS)

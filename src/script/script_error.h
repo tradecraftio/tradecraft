@@ -61,7 +61,6 @@ typedef enum ScriptError_t
     SCRIPT_ERR_SIG_HIGH_S,
     SCRIPT_ERR_PUBKEYTYPE,
     SCRIPT_ERR_CLEANSTACK,
-    SCRIPT_ERR_MINIMALIF,
     SCRIPT_ERR_SIG_NULLFAIL,
 
     /* softfork safeness */
