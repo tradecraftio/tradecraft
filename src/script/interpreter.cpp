@@ -274,6 +274,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
     // Check for activation of rule changes
     const bool protocol_cleanup = (flags & SCRIPT_VERIFY_PROTOCOL_CLEANUP) != 0;
     const bool discourage_upgradable_nops = (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) != 0;
+    const bool enforce_nullfail = (sigversion != SIGVERSION_BASE) || ((flags & SCRIPT_VERIFY_NULLFAIL) != 0);
+    const bool enforce_multisig_hint = (sigversion != SIGVERSION_BASE) || ((flags & SCRIPT_VERIFY_MULTISIG_HINT) != 0);
 
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
@@ -966,8 +968,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     }
                     bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
 
-                    if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
-                        return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
+                    if (!fSuccess && enforce_nullfail && vchSig.size())
+                        return set_error(serror, SCRIPT_ERR_NULLFAIL);
 
                     popstack(stack);
                     popstack(stack);
@@ -1037,7 +1039,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     // this hint we can avoid expensive signature validation checks that
                     // might fail.
                     MultiSigHint hint(nKeysCount); // defaults to no-skipped-keys
-                    if (flags & SCRIPT_VERIFY_MULTISIG_HINT) {
+                    if (enforce_multisig_hint) {
                         // There cannot be more than 20 keys, so our serialized
                         // hint cannot be more than 20 unsigned bits, which fits
                         // fine inside a 3-byte signed CScriptNum.
@@ -1085,7 +1087,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
 
                         // Skipped keys MUST be reported in the hint if
                         // SCRIPT_VERIFY_MULTISIG_HINT is in effect.
-                        if (!fOk && (flags & SCRIPT_VERIFY_MULTISIG_HINT) && have_sig) {
+                        if (!fOk && enforce_multisig_hint && have_sig) {
                             return set_error(serror, SCRIPT_ERR_FAILED_SIGNATURE_CHECK);
                         }
 
@@ -1106,8 +1108,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     // Clean up stack of actual arguments
                     while (i-- > 1) {
                         // If the operation failed, we require that all signatures must be empty vector
-                        if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && !ikey2 && stacktop(-1).size())
-                            return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
+                        if (!fSuccess && enforce_nullfail && !ikey2 && stacktop(-1).size())
+                            return set_error(serror, SCRIPT_ERR_NULLFAIL);
                         if (ikey2 > 0)
                             ikey2--;
                         popstack(stack);
