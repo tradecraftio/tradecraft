@@ -289,6 +289,7 @@ libfreicoin_consensus_a_SOURCES = \
   script/script_error.cpp \
   script/script_error.h \
   serialize.h \
+  support/cleanse.cpp \
   tinyformat.h \
   uint256.cpp \
   uint256.h \

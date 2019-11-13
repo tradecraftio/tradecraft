@@ -15,8 +15,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_MERKLE_PROOF
-#define BITCOIN_MERKLE_PROOF
+#ifndef FREICOIN_CONSENSUS_MERKLE_PROOF
+#define FREICOIN_CONSENSUS_MERKLE_PROOF
 
 #include <array>
 
@@ -1410,6 +1410,6 @@ struct MerkleTree
 /* Defined outside the class for argument-dpendent lookup. */
 void swap(MerkleTree& lhs, MerkleTree& rhs);
 
-#endif // BITCOIN_MERKLE_PROOF
+#endif // FREICOIN_CONSENSUS_MERKLE_PROOF
 
 // End of File

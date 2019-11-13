@@ -180,13 +180,13 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
 
 uint256 ComputeMerkleRoot(const std::vector<uint256>& leaves, bool* mutated) {
     uint256 hash;
-    MerkleComputation(leaves, &hash, mutated, -1, NULL, MERKLE_COMPUTATION_MUTABLE);
+    MerkleComputation(leaves, &hash, mutated, -1, nullptr, MERKLE_COMPUTATION_MUTABLE);
     return hash;
 }
 
 std::vector<uint256> ComputeMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
     std::vector<uint256> ret;
-    MerkleComputation(leaves, NULL, NULL, position, &ret, MERKLE_COMPUTATION_MUTABLE);
+    MerkleComputation(leaves, nullptr, nullptr, position, &ret, MERKLE_COMPUTATION_MUTABLE);
     return ret;
 }
 
@@ -208,13 +208,13 @@ uint256 ComputeFastMerkleRoot(const std::vector<uint256>& leaves) {
         return CHashWriter(SER_GETHASH, PROTOCOL_VERSION).GetHash();
     }
     uint256 hash;
-    MerkleComputation(leaves, &hash, NULL, -1, NULL, MERKLE_COMPUTATION_FAST);
+    MerkleComputation(leaves, &hash, nullptr, -1, nullptr, MERKLE_COMPUTATION_FAST);
     return hash;
 }
 
 std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
     std::vector<uint256> branch;
-    MerkleComputation(leaves, NULL, NULL, position, &branch, MERKLE_COMPUTATION_FAST);
+    MerkleComputation(leaves, nullptr, nullptr, position, &branch, MERKLE_COMPUTATION_FAST);
     /* Calculate the largest possible size the branch vector can be.
      * This is one more than the zero-based index of the highest set
      * bit. */
