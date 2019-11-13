@@ -836,8 +836,21 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 }
                 break;
 
-                case OP_PICK:
                 case OP_ROLL:
+                {
+                    if (sigversion != SIGVERSION_BASE) {
+                        // not enabled; treat as SUCCESS122
+                        if (discourage_upgradable_nops) {
+                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        }
+                        altstack.clear();
+                        stack.clear();
+                        stack.push_back(vchTrue);
+                        return set_success(serror);
+                    }
+                    // in legacy scripts, fall through
+                }
+                case OP_PICK: // and OP_ROLL
                 {
                     // (xn ... x2 x1 x0 n - xn ... x2 x1 x0 xn)
                     // (xn ... x2 x1 x0 n - ... x2 x1 x0 xn)
