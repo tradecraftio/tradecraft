@@ -256,6 +256,22 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
+bool CWallet::AddWitnessV0Script(const std::vector<unsigned char>& script)
+{
+    if (!CCryptoKeyStore::AddWitnessV0Script(script))
+        return false;
+    if (!fFileBacked)
+        return true;
+    uint256 witnessprogram;
+    CSHA256().Write(&script[0], script.size()).Finalize(witnessprogram.begin());
+    return CWalletDB(strWalletFile).WriteWitnessV0Script(witnessprogram, script);
+}
+
+bool CWallet::LoadWitnessV0Script(const std::vector<unsigned char>& script)
+{
+    return CCryptoKeyStore::AddWitnessV0Script(script);
+}
+
 bool CWallet::AddWatchOnly(const CScript &dest)
 {
     if (!CCryptoKeyStore::AddWatchOnly(dest))

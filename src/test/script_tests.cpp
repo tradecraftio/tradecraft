@@ -291,7 +291,7 @@ private:
     //! The P2SH redeemscript
     CScript redeemscript;
     //! The Witness embedded script
-    CScript witscript;
+    std::vector<unsigned char> witscript;
     CScriptWitness scriptWitness;
     CTransaction creditTx;
     CMutableTransaction spendTx;
@@ -328,7 +328,9 @@ public:
             script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(hash) << OP_EQUALVERIFY << OP_CHECKSIG;
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
         } else if (wm == WITNESS_SH) {
-            witscript = scriptPubKey;
+            witscript.clear();
+            witscript.push_back(0x00);
+            witscript.insert(witscript.end(), scriptPubKey.begin(), scriptPubKey.end());
             uint256 hash;
             CSHA256().Write(&witscript[0], witscript.size()).Finalize(hash.begin());
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
@@ -413,7 +415,7 @@ public:
 
     TestBuilder& PushWitRedeem()
     {
-        DoPush(std::vector<unsigned char>(witscript.begin(), witscript.end()));
+        DoPush(witscript);
         return AsWit();
     }
 
@@ -1058,7 +1060,7 @@ BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_SIZE)
     // Neither P2WSH nor P2SH-P2WSH are limited by MAX_SCRIPT_SIZE
     scriptPubKey = GetScriptForWitness(raw_script);
     scriptSig = CScript();
-    witness.stack.push_back(ToByteVector(raw_script));
+    witness.stack.push_back(ToByteVector((CScript() << OP_FALSE) + raw_script));
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_SIZE for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(scriptPubKey);
@@ -1081,7 +1083,7 @@ BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_ELEMENT_SIZE)
     // Neither P2WSH nor P2SH-P2WSH are limited by MAX_SCRIPT_ELEMENT_SIZE
     scriptPubKey = GetScriptForWitness(raw_script);
     scriptSig = CScript();
-    witness.stack.push_back(ToByteVector(raw_script));
+    witness.stack.push_back(ToByteVector((CScript() << OP_FALSE) + raw_script));
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_ELEMENT_SIZE for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(scriptPubKey);
@@ -1107,7 +1109,7 @@ BOOST_AUTO_TEST_CASE(script_MAX_OPS_PER_SCRIPT)
     // Neither P2WSH nor P2SH-P2WSH are limited by MAX_OPS_PER_SCRIPT
     scriptPubKey = GetScriptForWitness(raw_script);
     scriptSig = CScript();
-    witness.stack.push_back(ToByteVector(raw_script));
+    witness.stack.push_back(ToByteVector((CScript() << OP_FALSE) + raw_script));
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_OPS_PER_SCRIPT for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(scriptPubKey);

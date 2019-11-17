@@ -53,6 +53,11 @@ public:
     virtual bool HaveCScript(const CScriptID &hash) const =0;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
 
+    //! Support for witness scripts
+    virtual bool AddWitnessV0Script(const std::vector<unsigned char>& script) =0;
+    virtual bool HaveWitnessV0Script(const uint256& witnesshash) const =0;
+    virtual bool GetWitnessV0Script(const uint256& witnesshash, std::vector<unsigned char>& scriptOut) const =0;
+
     //! Support for Watch-only addresses
     virtual bool AddWatchOnly(const CScript &dest) =0;
     virtual bool RemoveWatchOnly(const CScript &dest) =0;
@@ -63,6 +68,7 @@ public:
 typedef std::map<CKeyID, CKey> KeyMap;
 typedef std::map<CKeyID, CPubKey> WatchKeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
+typedef std::map<uint256, std::vector<unsigned char> > WitnessV0ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
 
 /** Basic key store, that keeps keys in an address->secret map */
@@ -72,6 +78,7 @@ protected:
     KeyMap mapKeys;
     WatchKeyMap mapWatchKeys;
     ScriptMap mapScripts;
+    WitnessV0ScriptMap mapWitnessV0Scripts;
     WatchOnlySet setWatchOnly;
 
 public:
@@ -115,6 +122,10 @@ public:
     virtual bool AddCScript(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;
+
+    virtual bool AddWitnessV0Script(const std::vector<unsigned char>& script);
+    virtual bool HaveWitnessV0Script(const uint256& witnessprogram) const;
+    virtual bool GetWitnessV0Script(const uint256& witnessprogram, std::vector<unsigned char>& scriptOut) const;
 
     virtual bool AddWatchOnly(const CScript &dest);
     virtual bool RemoveWatchOnly(const CScript &dest);
