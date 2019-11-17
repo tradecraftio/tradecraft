@@ -1161,7 +1161,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # This program is 19 max pushes (9937 bytes), then 64 more opcode-bytes.
         long_witness_program = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 63 + [OP_TRUE])
-        assert len(long_witness_program) == MAX_PROGRAM_LENGTH + 1
+        assert_equal(len(long_witness_program), MAX_PROGRAM_LENGTH + 1)
         long_script_pubkey = script_to_p2wsh_script(long_witness_program)
 
         block = self.build_next_block()
@@ -1187,7 +1187,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Try again with one less byte in the witness program
         witness_program = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 62 + [OP_TRUE])
-        assert len(witness_program) == MAX_PROGRAM_LENGTH
+        assert_equal(len(witness_program), MAX_PROGRAM_LENGTH)
         script_pubkey = script_to_p2wsh_script(witness_program)
 
         block = self.build_next_block()
