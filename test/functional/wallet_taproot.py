@@ -176,7 +176,7 @@ def pk(hex_key):
 def compute_taproot_address(pubkey, scripts):
     """Compute the address for a taproot output with given inner key and scripts."""
     tap = taproot_construct(pubkey, scripts)
-    assert tap.scriptPubKey[0] == 0x51
+    assert tap.scriptPubKey[0] == 0x4f
     assert tap.scriptPubKey[1] == 0x20
     return encode_segwit_address("bcrt", 1, tap.scriptPubKey[2:])
 
