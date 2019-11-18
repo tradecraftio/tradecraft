@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     BOOST_CHECK(ExtractDestination(s, address));
     WitnessUnknown unk;
     unk.length = 33;
-    unk.version = 1;
+    unk.version = 2;
     std::copy(pubkey.begin(), pubkey.end(), unk.program);
     BOOST_CHECK(boost::get<WitnessUnknown>(&address) && *boost::get<WitnessUnknown>(&address) == unk);
 }
