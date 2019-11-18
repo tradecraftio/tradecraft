@@ -226,7 +226,7 @@ bool CScript::IsPayToWitnessScriptHash() const
             (*this)[1] == 0x20);
 }
 
-// A witness program is any valid CScript that consists of a 1-byte push opcode
+// A witness program is any valid CScript that consists of a valid 1-byte opcode
 // followed by a data push between 2 and 75 bytes.
 bool CScript::IsWitnessProgram(int *version, std::vector<unsigned char> *program) const
 {
@@ -242,22 +242,43 @@ bool CScript::IsWitnessProgram(int *version, std::vector<unsigned char> *program
     if ((2 + (std::size_t)(*this)[1]) != this->size()) {
         return false;
     }
-    // We could use DecodeOP_N(), and indeed that is what bitcoin's version of
-    // this code does, but we've done it this way so the code can be extended to
-    // support other single-byte opcode prefixes.
+    // There are 31 single-byte opcodes which can start a script under the
+    // legacy, pre-cleanup rules.  Ordered by opcode, these constitute our 31
+    // outer version bytes which combined with the push length specify the
+    // method of hashing the inner witness script.
     if (version) {
         switch ((*this)[0]) {
             case OP_0:
                 *version = 0;
                 break;
+            case OP_1NEGATE:
+                *version = 1;
+                break;
             case OP_1:  case OP_2:  case OP_3:  case OP_4:
             case OP_5:  case OP_6:  case OP_7:  case OP_8:
             case OP_9:  case OP_10: case OP_11: case OP_12:
             case OP_13: case OP_14: case OP_15: case OP_16:
-                *version = 1 + (*this)[0] - OP_1;
+                *version = 2 + (*this)[0] - OP_1;
+                break;
+            case OP_NOP:
+                *version = 18;
+                break;
+            case OP_DEPTH:
+                *version = 19;
+                break;
+            case OP_CODESEPARATOR:
+                *version = 20;
+                break;
+            case OP_NOP1:
+            case OP_CHECKLOCKTIMEVERIFY:
+            case OP_CHECKSEQUENCEVERIFY:
+            case OP_MERKLEBRANCHVERIFY:
+            case OP_NOP5:  case OP_NOP6:  case OP_NOP7:  case OP_NOP8:
+            case OP_NOP9:  case OP_NOP10:
+                *version = 21 + (*this)[0] - OP_NOP1;
                 break;
             default:
-                // Not one of the 17 single-byte opcodes which can start a
+                // Not one of the 31 single-byte opcodes which can start a
                 // script under the legacy, pre-cleanup consensus rules.
                 return false;
         }
