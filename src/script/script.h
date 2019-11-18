@@ -393,7 +393,7 @@ class CScript;
 
 // A helper class for creating, reading, and writing the multisig hint
 // field placed in the extra stack position of a CHECKMULTISIG when
-// SCRIPT_VERIFY_REQUIRE_VALID_SIGNATURES is in effect.
+// SCRIPT_VERIFY_MULTISIG_HINT is in effect.
 class MultiSigHint
 {
 protected:
