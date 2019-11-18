@@ -23,7 +23,7 @@ from test_framework.util import assert_equal
 from test_framework.descriptors import descsum_create
 from test_framework.script import (
     CScript,
-    OP_1,
+    OP_1NEGATE,
     OP_CHECKSIG,
     taproot_construct,
 )
@@ -181,7 +181,7 @@ def pk(hex_key):
 def compute_taproot_address(pubkey, scripts):
     """Compute the address for a taproot output with given inner key and scripts."""
     tap = taproot_construct(pubkey, scripts)
-    assert tap.scriptPubKey[0] == OP_1
+    assert tap.scriptPubKey[0] == OP_1NEGATE
     assert tap.scriptPubKey[1] == 0x20
     return encode_segwit_address("bcrt", 1, tap.scriptPubKey[2:])
 

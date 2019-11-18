@@ -42,10 +42,13 @@ PRIVKEY_REGTEST = 239
 
 # script
 OP_0 = 0x00
+OP_1NEGATE = 0x4f
 OP_1 = 0x51
 OP_2 = 0x52
 OP_3 = 0x53
+OP_15 = 0x5f
 OP_16 = 0x60
+OP_NOP10 = 0xb9
 OP_DUP = 0x76
 OP_EQUAL = 0x87
 OP_EQUALVERIFY = 0x88
@@ -57,7 +60,7 @@ script_prefix = (OP_HASH160, 20)
 script_suffix = (OP_EQUAL,)
 p2wpkh_prefix = (OP_0, 20)
 p2wsh_prefix = (OP_0, 32)
-p2tr_prefix = (OP_1, 32)
+p2tr_prefix = (OP_1NEGATE, 32)
 
 metadata_keys = ['isPrivkey', 'chain', 'isCompressed', 'tryCaseFlip']
 # templates for valid sequences
@@ -87,29 +90,30 @@ bech32_templates = [
   ('bc',    0, 20, (False, 'main',    None, True), Encoding.BECH32,  p2wpkh_prefix),
   ('bc',    0, 32, (False, 'main',    None, True), Encoding.BECH32,  p2wsh_prefix),
   ('bc',    1, 32, (False, 'main',    None, True), Encoding.BECH32M, p2tr_prefix),
-  ('bc',    2,  2, (False, 'main',    None, True), Encoding.BECH32M, (OP_2, 2)),
+  ('bc',    2,  2, (False, 'main',    None, True), Encoding.BECH32M, (OP_1, 2)),
   ('tb',    0, 20, (False, 'test',    None, True), Encoding.BECH32,  p2wpkh_prefix),
   ('tb',    0, 32, (False, 'test',    None, True), Encoding.BECH32,  p2wsh_prefix),
   ('tb',    1, 32, (False, 'test',    None, True), Encoding.BECH32M, p2tr_prefix),
-  ('tb',    3, 16, (False, 'test',    None, True), Encoding.BECH32M, (OP_3, 16)),
+  ('tb',    3, 16, (False, 'test',    None, True), Encoding.BECH32M, (OP_2, 16)),
+  ('tb',   17, 32, (False, 'test',    None, True), Encoding.BECH32M, (OP_16, 32)),
   ('tb',    0, 20, (False, 'signet',  None, True), Encoding.BECH32,  p2wpkh_prefix),
   ('tb',    0, 32, (False, 'signet',  None, True), Encoding.BECH32,  p2wsh_prefix),
   ('tb',    1, 32, (False, 'signet',  None, True), Encoding.BECH32M, p2tr_prefix),
-  ('tb',    3, 32, (False, 'signet',  None, True), Encoding.BECH32M, (OP_3, 32)),
+  ('tb',    3, 32, (False, 'signet',  None, True), Encoding.BECH32M, (OP_2, 32)),
   ('bcrt',  0, 20, (False, 'regtest', None, True), Encoding.BECH32,  p2wpkh_prefix),
   ('bcrt',  0, 32, (False, 'regtest', None, True), Encoding.BECH32,  p2wsh_prefix),
   ('bcrt',  1, 32, (False, 'regtest', None, True), Encoding.BECH32M, p2tr_prefix),
-  ('bcrt', 16, 40, (False, 'regtest', None, True), Encoding.BECH32M, (OP_16, 40))
+  ('bcrt', 16, 40, (False, 'regtest', None, True), Encoding.BECH32M, (OP_15, 40)),
+  ('bcrt', 30, 40, (False, 'regtest', None, True), Encoding.BECH32M, (OP_NOP10, 40)),
 ]
 # templates for invalid bech32 sequences
 bech32_ng_templates = [
   # hrp, version, witprog_size, encoding, invalid_bech32, invalid_checksum, invalid_char
   ('tc',    0, 20, Encoding.BECH32,  False, False, False),
   ('bt',    1, 32, Encoding.BECH32M, False, False, False),
-  ('tb',   17, 32, Encoding.BECH32M, False, False, False),
   ('bcrt',  3,  1, Encoding.BECH32M, False, False, False),
   ('bc',   15, 41, Encoding.BECH32M, False, False, False),
-  ('tb',    0, 16, Encoding.BECH32,  False, False, False),
+  ('tb',    0, 16, Encoding.BECH32M, False, False, False),
   ('bcrt',  0, 32, Encoding.BECH32,  True,  False, False),
   ('bc',    0, 16, Encoding.BECH32,  True,  False, False),
   ('tb',    0, 32, Encoding.BECH32,  False, True,  False),
@@ -120,6 +124,7 @@ bech32_ng_templates = [
   ('bc',    1, 32, Encoding.BECH32,  False, False, False),
   ('tb',    2, 16, Encoding.BECH32,  False, False, False),
   ('bcrt', 16, 20, Encoding.BECH32,  False, False, False),
+  ('bcrt', 31, 20, Encoding.BECH32M, False, False, False),
 ]
 
 def is_valid(v):
