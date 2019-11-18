@@ -264,7 +264,7 @@ public:
 
     std::string operator()(const WitnessUnknown& id) const
     {
-        if (id.version < 1 || id.version > 16 || id.length < 2 || id.length > 75) {
+        if (id.version < 1 || id.version > 30 || id.length < 2 || id.length > 75) {
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.version};
@@ -300,7 +300,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     auto bech = bech32::Decode(str);
     if (bech.second.size() > 0 && bech.first == params.Bech32HRP()) {
         // Bech32 decoding
-        int version = bech.second[0]; // The first 5 bit symbol is the witness version (0-16)
+        int version = bech.second[0]; // The first 5 bit symbol is the witness version (0-30)
         // The rest of the symbols are converted witness program bytes.
         if (ConvertBits<5, 8, false>(data, bech.second.begin() + 1, bech.second.end())) {
             if (version == 0) {
@@ -320,7 +320,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 }
                 return CNoDestination();
             }
-            if (version > 16 || data.size() < 2 || data.size() > 75) {
+            if (version > 30 || data.size() < 2 || data.size() > 75) {
                 return CNoDestination();
             }
             WitnessUnknown unk;

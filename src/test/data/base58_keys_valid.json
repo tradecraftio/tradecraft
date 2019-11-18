@@ -486,7 +486,7 @@
         }
     ],
     [
-        "bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx",
+        "bc1zw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k0vt50h",
         "5128751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6",
         {
             "isPrivkey": false,
@@ -495,7 +495,7 @@
         }
     ],
     [
-        "bc1sw50qa3jx3s",
+        "bc13w50qes5q53",
         "6002751e",
         {
             "isPrivkey": false,
@@ -504,7 +504,7 @@
         }
     ],
     [
-        "bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj",
+        "bc1rw508d6qejxtdg4y5r3zarvaryv9la0cd",
         "5210751e76e8199196d454941c45d1b3a323",
         {
             "isPrivkey": false,
@@ -513,8 +513,17 @@
         }
     ],
     [
+        "bc13w508d6qejxtdg4y5r3zarvary0c5xw7kn40wf2",
+        "6014751e76e8199196d454941c45d1b3a323f1433bd6",
+        {
+            "isPrivkey": false,
+            "chain": "main",
+            "tryCaseFlip": true
+        }
+    ],
+    [
         "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
-        "5f29751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd675",
+        "5e29751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd675",
         {
             "isPrivkey": false,
             "chain": "main",
