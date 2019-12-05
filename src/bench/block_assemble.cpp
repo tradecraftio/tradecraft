@@ -78,6 +78,7 @@ static void AssembleBlock(benchmark::State& state)
     const WitnessV0ScriptEntry op_true(0 /* version */, CScript() << OP_TRUE);
     CScriptWitness witness;
     witness.stack.push_back(op_true.m_script);
+    witness.stack.emplace_back();
 
     const WitnessV0ScriptHash witness_program = op_true.GetScriptHash();
 

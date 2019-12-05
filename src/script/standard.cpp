@@ -16,6 +16,7 @@
 
 #include <script/standard.h>
 
+#include <consensus/merkle.h>
 #include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
@@ -29,10 +30,22 @@ CScriptID::CScriptID(const CScript& in) : uint160(Hash160(in.begin(), in.end()))
 
 WitnessV0ScriptHash::WitnessV0ScriptHash(unsigned char version, const CScript& innerscript)
 {
-    CSHA256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
+    CHash256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
 }
 
-WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript)
+WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript) : m_path(0)
+{
+    m_script.push_back(version);
+    m_script.insert(m_script.end(), innerscript.begin(), innerscript.end());
+}
+
+WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript, const std::vector<uint256>& branchIn, uint32_t pathIn) : m_branch(branchIn), m_path(pathIn)
+{
+    m_script.push_back(version);
+    m_script.insert(m_script.end(), innerscript.begin(), innerscript.end());
+}
+
+WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript, std::vector<uint256>&& branchIn, uint32_t pathIn) : m_branch(branchIn), m_path(pathIn)
 {
     m_script.push_back(version);
     m_script.insert(m_script.end(), innerscript.begin(), innerscript.end());
@@ -40,8 +53,13 @@ WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript&
 
 WitnessV0ScriptHash WitnessV0ScriptEntry::GetScriptHash() const
 {
-    uint256 hash;
-    CSHA256().Write(&m_script[0], m_script.size()).Finalize(hash.begin());
+    uint256 leaf;
+    CHash256().Write(&m_script[0], m_script.size()).Finalize(leaf.begin());
+    bool invalid = false;
+    uint256 hash = ComputeFastMerkleRootFromBranch(leaf, m_branch, m_path, &invalid);
+    if (invalid) {
+        std::runtime_error(strprintf("%s: invalid Merkle proof", __func__));
+    }
     return WitnessV0ScriptHash(hash);
 }
 
