@@ -181,7 +181,7 @@ class MiniWallet:
                 tx.vin[0].scriptSig = CScript([OP_NOP] * 35)  # pad to identical size
         else:
             tx.wit.vtxinwit = [CTxInWitness()]
-            tx.wit.vtxinwit[0].scriptWitness.stack = [script_to_witscript(CScript([OP_TRUE]))]
+            tx.wit.vtxinwit[0].scriptWitness.stack = [script_to_witscript(CScript([OP_TRUE])), b'']
         tx_hex = tx.serialize().hex()
 
         tx_info = from_node.testmempoolaccept([tx_hex])[0]

@@ -25,7 +25,7 @@ static const CScript P2WSH_OP_TRUE{
     << OP_0
     << ToByteVector([] {
            uint256 hash;
-           CSHA256().Write(WITNESS_STACK_ELEM_OP_TRUE.data(), WITNESS_STACK_ELEM_OP_TRUE.size()).Finalize(hash.begin());
+           CHash256().Write(WITNESS_STACK_ELEM_OP_TRUE).Finalize(hash);
            return hash;
        }())};
 
