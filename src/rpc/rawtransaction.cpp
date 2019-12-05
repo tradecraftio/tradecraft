@@ -878,7 +878,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
                     keystore->AddCScript(GetScriptForWitness(redeemScript));
                     std::vector<unsigned char> witscript(1, 0x00);
                     witscript.insert(witscript.end(), rsData.begin(), rsData.end());
-                    keystore->AddWitnessV0Script(witscript);
+                    keystore->AddWitnessV0Script(WitnessV0ScriptEntry(std::move(witscript)));
                 }
             }
         }
@@ -1364,6 +1364,8 @@ UniValue decodepst(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "        }\n"
+            "      \"witness_branch\" : [\"hash\", ...] (array of string) hex-encoded hashes of the Merkle branch proof\n"
+            "      \"witness_path\" :            (numeric) the left/right branching information for the Merkle branch proof\n"
             "      \"bip32_derivs\" : {          (json object, optional)\n"
             "        \"pubkey\" : {                     (json object, optional) The public key with the derivation path as the value.\n"
             "          \"master_fingerprint\" : \"fingerprint\"     (string) The fingerprint of the master key\n"
@@ -1396,6 +1398,8 @@ UniValue decodepst(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "      }\n"
+            "      \"witness_branch\" : [\"hash\", ...] (array of string) hex-encoded hashes of the Merkle branch proof\n"
+            "      \"witness_path\" :            (numeric) the left/right branching information for the Merkle branch proof\n"
             "      \"bip32_derivs\" : [          (array of json objects, optional)\n"
             "        {\n"
             "          \"pubkey\" : \"pubkey\",                     (string) The public key this path corresponds to\n"
@@ -1493,16 +1497,22 @@ UniValue decodepst(const JSONRPCRequest& request)
             ScriptToUniv(input.redeem_script, r, false);
             in.pushKV("redeem_script", r);
         }
-        if (!input.witness_script.empty()) {
-            in.pushKV("script_version", (int64_t)input.witness_script[0]);
+        if (!input.witness_entry.IsNull()) {
+            in.pushKV("script_version", (int64_t)input.witness_entry.m_script[0]);
             UniValue r(UniValue::VOBJ);
-            if (input.witness_script[0] == 0x00) {
-                ScriptToUniv(CScript(input.witness_script.begin() + 1, input.witness_script.end()), r, false);
+            if (input.witness_entry.m_script[0] == 0x00) {
+                ScriptToUniv(CScript(input.witness_entry.m_script.begin() + 1, input.witness_entry.m_script.end()), r, false);
             } else {
-                r.pushKV("hex", HexStr(input.witness_script.begin() + 1, input.witness_script.end()));
+                r.pushKV("hex", HexStr(input.witness_entry.m_script.begin() + 1, input.witness_entry.m_script.end()));
                 r.pushKV("type", "unknown");
             }
             in.pushKV("witness_script", r);
+            UniValue branch(UniValue::VARR);
+            for (const auto& hash : input.witness_entry.m_branch) {
+                branch.push_back(HexStr(hash.begin(), hash.end()));
+            }
+            in.pushKV("witness_branch", branch);
+            in.pushKV("witness_path", (int64_t)input.witness_entry.m_path);
         }
 
         // keypaths
@@ -1562,16 +1572,22 @@ UniValue decodepst(const JSONRPCRequest& request)
             ScriptToUniv(output.redeem_script, r, false);
             out.pushKV("redeem_script", r);
         }
-        if (!output.witness_script.empty()) {
-            out.pushKV("script_version", (int64_t)output.witness_script[0]);
+        if (!output.witness_entry.IsNull()) {
+            out.pushKV("script_version", (int64_t)output.witness_entry.m_script[0]);
             UniValue r(UniValue::VOBJ);
-            if (output.witness_script[0] == 0x00) {
-                ScriptToUniv(CScript(output.witness_script.begin() + 1, output.witness_script.end()), r, false);
+            if (output.witness_entry.m_script[0] == 0x00) {
+                ScriptToUniv(CScript(output.witness_entry.m_script.begin() + 1, output.witness_entry.m_script.end()), r, false);
             } else {
-                r.pushKV("hex", HexStr(output.witness_script.begin() + 1, output.witness_script.end()));
+                r.pushKV("hex", HexStr(output.witness_entry.m_script.begin() + 1, output.witness_entry.m_script.end()));
                 r.pushKV("type", "unknown");
             }
             out.pushKV("witness_script", r);
+            UniValue branch(UniValue::VARR);
+            for (const auto& hash : output.witness_entry.m_branch) {
+                branch.push_back(HexStr(hash.begin(), hash.end()));
+            }
+            out.pushKV("witness_branch", branch);
+            out.pushKV("witness_path", (int64_t)output.witness_entry.m_path);
         }
 
         // keypaths

@@ -137,14 +137,14 @@ IsMineResult IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey,
             return IsMineResult::INVALID;
         }
         WitnessV0ScriptHash withash(vSolutions[0]);
-        std::vector<unsigned char> innerscript;
-        if (!keystore.GetWitnessV0Script(withash, innerscript)) {
+        WitnessV0ScriptEntry entry;
+        if (!keystore.GetWitnessV0Script(withash, entry)) {
             break;
         }
-        if (innerscript.empty() || (innerscript[0] != 0x00)) {
+        if (entry.m_script.empty() || (entry.m_script[0] != 0x00)) {
             break;
         }
-        CScript subscript(innerscript.begin() + 1, innerscript.end());
+        CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
         ret = std::max(ret, IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0));
         break;
     }

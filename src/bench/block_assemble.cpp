@@ -76,9 +76,10 @@ static void AssembleBlock(benchmark::State& state)
     const std::vector<unsigned char> op_true{0, OP_TRUE};
     CScriptWitness witness;
     witness.stack.push_back(op_true);
+    witness.stack.emplace_back();
 
     uint256 witness_program;
-    CSHA256().Write(&op_true[0], op_true.size()).Finalize(witness_program.begin());
+    CHash256().Write(&op_true[0], op_true.size()).Finalize(witness_program.begin());
 
     const CScript SCRIPT_PUB{CScript(OP_0) << std::vector<unsigned char>{witness_program.begin(), witness_program.end()}};
 

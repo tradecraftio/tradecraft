@@ -16,6 +16,7 @@
 
 #include <script/standard.h>
 
+#include <consensus/merkle.h>
 #include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
@@ -29,7 +30,19 @@ CScriptID::CScriptID(const CScript& in) : uint160(Hash160(in.begin(), in.end()))
 
 WitnessV0ScriptHash::WitnessV0ScriptHash(unsigned char version, const CScript& innerscript)
 {
-    CSHA256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
+    CHash256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
+}
+
+WitnessV0ScriptHash WitnessV0ScriptEntry::GetScriptHash() const
+{
+    uint256 leaf;
+    CHash256().Write(&m_script[0], m_script.size()).Finalize(leaf.begin());
+    bool invalid = false;
+    uint256 hash = ComputeFastMerkleRootFromBranch(leaf, m_branch, m_path, &invalid);
+    if (invalid) {
+        std::runtime_error(strprintf("%s: invalid Merkle proof", __func__));
+    }
+    return WitnessV0ScriptHash(hash);
 }
 
 const char* GetTxnOutputType(txnouttype t)

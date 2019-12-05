@@ -132,12 +132,10 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
-bool CBasicKeyStore::AddWitnessV0Script(const std::vector<unsigned char>& script)
+bool CBasicKeyStore::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
 {
     LOCK(cs_KeyStore);
-    WitnessV0ScriptHash witnessprogram;
-    CSHA256().Write(script.data(), script.size()).Finalize(witnessprogram.begin());
-    mapWitnessV0Scripts[witnessprogram] = script;
+    mapWitnessV0Scripts[entry.GetScriptHash()] = entry;
     return true;
 }
 
@@ -157,13 +155,13 @@ std::set<WitnessV0ScriptHash> CBasicKeyStore::GetWitnessV0Scripts() const
     return ret;
 }
 
-bool CBasicKeyStore::GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, std::vector<unsigned char>& scriptOut) const
+bool CBasicKeyStore::GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
 {
     LOCK(cs_KeyStore);
     auto mi = mapWitnessV0Scripts.find(witnessprogram);
     if (mi != mapWitnessV0Scripts.end())
     {
-        scriptOut = (*mi).second;
+        entryOut = (*mi).second;
         return true;
     }
     return false;

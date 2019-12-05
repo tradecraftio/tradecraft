@@ -1380,7 +1380,7 @@ public:
             CScript basescript = GetScriptForDestination(keyID);
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
-            pwallet->AddWitnessV0Script(innerscript);
+            pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
             CScript witscript = GetScriptForWitness(basescript);
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
@@ -1402,7 +1402,7 @@ public:
             }
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), subscript.begin(), subscript.end());
-            pwallet->AddWitnessV0Script(innerscript);
+            pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
             CScript witscript = GetScriptForWitness(subscript);
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
@@ -4068,12 +4068,18 @@ public:
     UniValue operator()(const WitnessV0ScriptHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
-        std::vector<unsigned char> witscript;
-        if (pwallet && pwallet->GetWitnessV0Script(id, witscript)) {
-            if (!witscript.empty()) {
-                obj.pushKV("witscript_version", (int64_t)witscript[0]);
-                if (witscript[0] == 0x00) {
-                    CScript subscript(witscript.begin() + 1, witscript.end());
+        WitnessV0ScriptEntry entry;
+        if (pwallet && pwallet->GetWitnessV0Script(id, entry)) {
+            if (!entry.m_script.empty()) {
+                obj.pushKV("witscript_version", (int64_t)entry.m_script[0]);
+                if (entry.m_script[0] == 0x00) {
+                    UniValue branch(UniValue::VARR);
+                    for (const auto& hash : entry.m_branch) {
+                        branch.push_back(HexStr(hash.begin(), hash.end()));
+                    }
+                    obj.pushKV("witness_branch", branch);
+                    obj.pushKV("witness_path", (int64_t)entry.m_path);
+                    CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
                     ProcessSubScript(subscript, obj);
                 }
             }
