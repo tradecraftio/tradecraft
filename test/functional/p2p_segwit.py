@@ -31,6 +31,7 @@ from test_framework.messages import (
     CTxInWitness,
     CTxOut,
     CTxWitness,
+    hash256,
     MAX_BLOCK_BASE_SIZE,
     MSG_WITNESS_FLAG,
     NODE_NETWORK,
@@ -116,7 +117,7 @@ def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     """Add signature for a P2PK witness program."""
     tx_hash = SegwitVersion1SignatureHash(script[1:], tx_to, in_idx, hashtype, value)
     signature = key.sign_ecdsa(tx_hash) + chr(hashtype).encode('latin-1')
-    tx_to.wit.vtxinwit[in_idx].scriptWitness.stack = [signature, script]
+    tx_to.wit.vtxinwit[in_idx].scriptWitness.stack = [signature, script, b'']
     tx_to.rehash()
 
 def get_block_weight(witness_block):
@@ -499,7 +500,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Create two outputs, a p2wsh and p2sh-p2wsh
         witness_program = CScript([OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
         p2sh_pubkey = hash160(script_pubkey)
@@ -528,14 +529,14 @@ class SegWitTest(FreicoinTestFramework):
         p2wsh_tx.vin = [CTxIn(COutPoint(txid, 0), b'')]
         p2wsh_tx.vout = [CTxOut(value, CScript([OP_TRUE]))]
         p2wsh_tx.wit.vtxinwit.append(CTxInWitness())
-        p2wsh_tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        p2wsh_tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'']
         p2wsh_tx.rehash()
 
         p2sh_p2wsh_tx = CTransaction()
         p2sh_p2wsh_tx.vin = [CTxIn(COutPoint(txid, 1), CScript([script_pubkey]))]
         p2sh_p2wsh_tx.vout = [CTxOut(value, CScript([OP_TRUE]))]
         p2sh_p2wsh_tx.wit.vtxinwit.append(CTxInWitness())
-        p2sh_p2wsh_tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        p2sh_p2wsh_tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'']
         p2sh_p2wsh_tx.rehash()
 
         for tx in [p2wsh_tx, p2sh_p2wsh_tx]:
@@ -625,7 +626,7 @@ class SegWitTest(FreicoinTestFramework):
 
         script_true = CScript([OP_TRUE])
         witness_program = bytes([0]) + script_true
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
         p2sh_pubkey = hash160(script_true)
@@ -661,7 +662,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin = [CTxIn(COutPoint(tx.sha256, 1), b"")]
         tx2.vout = [CTxOut(7000, script_pubkey)]
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program, b'']
         tx2.rehash()
 
         test_transaction_acceptance(self.nodes[1], self.std_node, tx2, with_witness=True, accepted=True)
@@ -674,7 +675,7 @@ class SegWitTest(FreicoinTestFramework):
         tx3.vin = [CTxIn(COutPoint(tx.sha256, 0), b"")]
         tx3.vout = [CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))]
         tx3.wit.vtxinwit.append(CTxInWitness())
-        tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program, b'']
         tx3.rehash()
         if not self.segwit_active:
             # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
@@ -715,7 +716,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Prepare the p2sh-wrapped witness output
         witness_program = CScript([0] + [OP_DROP, OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         p2wsh_pubkey = CScript([OP_0, witness_hash])
         p2sh_witness_hash = hash160(p2wsh_pubkey)
         script_pubkey = CScript([OP_HASH160, p2sh_witness_hash, OP_EQUAL])
@@ -761,7 +762,7 @@ class SegWitTest(FreicoinTestFramework):
         spend_tx.vin[0].scriptSig = script_sig
         spend_tx.rehash()
         spend_tx.wit.vtxinwit.append(CTxInWitness())
-        spend_tx.wit.vtxinwit[0].scriptWitness.stack = [b'a', witness_program]
+        spend_tx.wit.vtxinwit[0].scriptWitness.stack = [b'a', witness_program, b'']
 
         # Verify mempool acceptance
         test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=True, accepted=True)
@@ -812,7 +813,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Let's construct a witness program
         witness_program = CScript([0] + [OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
         tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, script_pubkey))
         tx.rehash()
@@ -822,7 +823,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, witness_program))
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program, b'']
         tx2.rehash()
 
         block_3 = self.build_next_block()
@@ -918,7 +919,7 @@ class SegWitTest(FreicoinTestFramework):
         NUM_OUTPUTS = 50
 
         witness_program = CScript([OP_0] + [OP_2DROP] * NUM_DROPS + [OP_TRUE])
-        witness_hash = uint256_from_str(sha256(witness_program))
+        witness_hash = uint256_from_str(hash256(witness_program))
         script_pubkey = CScript([OP_0, ser_uint256(witness_hash)])
 
         prevout = COutPoint(self.utxo[0].sha256, self.utxo[0].n)
@@ -939,7 +940,7 @@ class SegWitTest(FreicoinTestFramework):
         child_tx.vout = [CTxOut(value - 100000, CScript([OP_TRUE]))]
         for i in range(NUM_OUTPUTS):
             child_tx.wit.vtxinwit.append(CTxInWitness())
-            child_tx.wit.vtxinwit[-1].scriptWitness.stack = [b'a' * 195] * (2 * NUM_DROPS) + [witness_program]
+            child_tx.wit.vtxinwit[-1].scriptWitness.stack = [b'a' * 195] * (2 * NUM_DROPS) + [witness_program, b'']
         child_tx.rehash()
         self.update_witness_block_with_transactions(block, [parent_tx, child_tx])
 
@@ -1019,7 +1020,7 @@ class SegWitTest(FreicoinTestFramework):
         block = self.build_next_block()
 
         witness_program = CScript([OP_0] + [OP_DROP, OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
         # First try extra witness data on a tx that doesn't require a witness
@@ -1051,8 +1052,8 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 1), b""))  # non-witness
         tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
         tx2.wit.vtxinwit.extend([CTxInWitness(), CTxInWitness()])
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)]), CScript([CScriptNum(1)]), witness_program]
-        tx2.wit.vtxinwit[1].scriptWitness.stack = [CScript([OP_TRUE])]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)]), CScript([CScriptNum(1)]), witness_program, b'']
+        tx2.wit.vtxinwit[1].scriptWitness.stack = [CScript([OP_TRUE]), b'']
 
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx2])
@@ -1094,7 +1095,7 @@ class SegWitTest(FreicoinTestFramework):
         block = self.build_next_block()
 
         witness_program = CScript([OP_0] + [OP_DROP, OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
         tx = CTransaction()
@@ -1107,14 +1108,14 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
         tx2.wit.vtxinwit.append(CTxInWitness())
         # First try with 32,768 stack elements
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * (MAX_WITNESS_ELEMENTS + 1) + [witness_program]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * (MAX_WITNESS_ELEMENTS + 1) + [witness_program, b'']
         tx2.rehash()
 
         self.update_witness_block_with_transactions(block, [tx, tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
 
         # Now reduce the number of stack elements
-        del tx2.wit.vtxinwit[0].scriptWitness.stack[-2]
+        del tx2.wit.vtxinwit[0].scriptWitness.stack[-3]
 
         add_witness_commitment(block)
         block.solve()
@@ -1133,7 +1134,7 @@ class SegWitTest(FreicoinTestFramework):
         # This program is 19 max pushes (9937 bytes), then 63 more opcode-bytes.
         long_witness_program = CScript([OP_0] + [b'a' * 520] * 19 + [OP_DROP] * 62 + [OP_TRUE])
         assert_equal(len(long_witness_program), MAX_PROGRAM_LENGTH + 1)
-        long_witness_hash = sha256(long_witness_program)
+        long_witness_hash = hash256(long_witness_program)
         long_script_pubkey = CScript([OP_0, long_witness_hash])
 
         block = self.build_next_block()
@@ -1147,7 +1148,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 43 + [long_witness_program]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 43 + [long_witness_program, b'']
         tx2.rehash()
 
         self.update_witness_block_with_transactions(block, [tx, tx2])
@@ -1160,7 +1161,7 @@ class SegWitTest(FreicoinTestFramework):
         # Try again with one less byte in the witness program
         witness_program = CScript([OP_0] + [b'a' * 520] * 19 + [OP_DROP] * 61 + [OP_TRUE])
         assert_equal(len(witness_program), MAX_PROGRAM_LENGTH)
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
         block = self.build_next_block()
@@ -1173,7 +1174,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 42 + [witness_program]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 42 + [witness_program, b'']
         tx2.rehash()
 
         self.update_witness_block_with_transactions(block, [tx, tx2])
@@ -1187,7 +1188,7 @@ class SegWitTest(FreicoinTestFramework):
         """Test that vin length must match vtxinwit length."""
 
         witness_program = CScript([OP_0] + [OP_DROP, OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
         # Create a transaction that splits our utxo into many outputs
@@ -1233,7 +1234,7 @@ class SegWitTest(FreicoinTestFramework):
         # First try using a too long vtxinwit
         for i in range(11):
             tx2.wit.vtxinwit.append(CTxInWitness())
-            tx2.wit.vtxinwit[i].scriptWitness.stack = [b'a', witness_program]
+            tx2.wit.vtxinwit[i].scriptWitness.stack = [b'a', witness_program, b'']
 
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx2])
@@ -1249,15 +1250,15 @@ class SegWitTest(FreicoinTestFramework):
 
         # Now make one of the intermediate witnesses be incorrect
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[-1].scriptWitness.stack = [b'a', witness_program]
-        tx2.wit.vtxinwit[5].scriptWitness.stack = [witness_program]
+        tx2.wit.vtxinwit[-1].scriptWitness.stack = [b'a', witness_program, b'']
+        tx2.wit.vtxinwit[5].scriptWitness.stack = [witness_program, b'']
 
         block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
 
         # Fix the broken witness and the block should be accepted.
-        tx2.wit.vtxinwit[5].scriptWitness.stack = [b'a', witness_program]
+        tx2.wit.vtxinwit[5].scriptWitness.stack = [b'a', witness_program, b'']
         block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -1297,7 +1298,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Now try to add extra witness data to a valid witness tx.
         witness_program = CScript([OP_0] + [OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx_hash, 0), b""))
@@ -1313,7 +1314,7 @@ class SegWitTest(FreicoinTestFramework):
         p2sh_pubkey = hash160(p2sh_program)
         witness_program2 = CScript([0] + [b'a' * 400000])
         tx3.vout.append(CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])))
-        tx3.wit.vtxinwit[0].scriptWitness.stack = [b''] * 32768 + [witness_program2]
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [b''] * 32768 + [witness_program2, b'']
         tx3.rehash()
 
         # Node will not be blinded to the transaction
@@ -1324,7 +1325,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Remove witness stuffing, instead add extra witness push on stack
         tx3.vout[0] = CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))
-        tx3.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)])] * 32768 + [witness_program]
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)])] * 32768 + [witness_program, b'']
         tx3.rehash()
 
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, with_witness=True, accepted=True)
@@ -1335,7 +1336,7 @@ class SegWitTest(FreicoinTestFramework):
         #test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False)
 
         # Get rid of the extra witness, and verify acceptance.
-        tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program, b'']
         # Also check that old_node gets a tx announcement, even though this is
         # a witness transaction.
         self.old_node.wait_for_inv([CInv(1, tx2.sha256)])  # wait until tx2 was inv'ed
@@ -1351,8 +1352,9 @@ class SegWitTest(FreicoinTestFramework):
         vsize = math.ceil(weight / 4)
         assert_equal(raw_tx["vsize"], vsize)
         assert_equal(raw_tx["weight"], weight)
-        assert_equal(len(raw_tx["vin"][0]["txinwitness"]), 1)
+        assert_equal(len(raw_tx["vin"][0]["txinwitness"]), 2)
         assert_equal(raw_tx["vin"][0]["txinwitness"][0], witness_program.hex())
+        assert_equal(raw_tx["vin"][0]["txinwitness"][1], '')
         assert vsize != raw_tx["size"]
 
         # Cleanup: mine the transactions and update utxo for next test
@@ -1389,7 +1391,7 @@ class SegWitTest(FreicoinTestFramework):
         temp_utxo = []
         tx = CTransaction()
         witness_program = CScript([OP_0] + [OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
         for version in list(range(OP_1, OP_16 + 1)) + [OP_0]:
             # First try to spend to a future version segwit script_pubkey.
@@ -1413,7 +1415,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vin = [CTxIn(COutPoint(tx.sha256, 0), b"")]
         tx2.vout = [CTxOut(tx.vout[0].nValue - 1000, script_pubkey)]
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program, b'']
         tx2.rehash()
         # Gets accepted to both policy-enforcing nodes and others.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, with_witness=True, accepted=True)
@@ -1428,7 +1430,7 @@ class SegWitTest(FreicoinTestFramework):
             tx3.vin.append(CTxIn(COutPoint(i.sha256, i.n), b""))
             tx3.wit.vtxinwit.append(CTxInWitness())
             total_value += i.nValue
-        tx3.wit.vtxinwit[-1].scriptWitness.stack = [witness_program]
+        tx3.wit.vtxinwit[-1].scriptWitness.stack = [witness_program, b'']
         tx3.vout.append(CTxOut(total_value - 1000, script_pubkey))
         tx3.rehash()
 
@@ -1458,7 +1460,7 @@ class SegWitTest(FreicoinTestFramework):
         block = self.build_next_block()
         # Change the output of the block to be a witness output.
         witness_program = CScript([OP_0] + [OP_TRUE])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
         block.vtx[0].vout[0].scriptPubKey = script_pubkey
         block.vtx[0].rehash()
@@ -1470,7 +1472,7 @@ class SegWitTest(FreicoinTestFramework):
         spend_tx.vin = [CTxIn(COutPoint(block.vtx[0].sha256, 0), b"")]
         spend_tx.vout = [CTxOut(block.vtx[0].vout[0].nValue, CScript([OP_TRUE]))]
         spend_tx.wit.vtxinwit.append(CTxInWitness())
-        spend_tx.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        spend_tx.wit.vtxinwit[0].scriptWitness.stack = [witness_program, b'']
         spend_tx.rehash()
 
         # Now test a premature spend.
@@ -1520,7 +1522,7 @@ class SegWitTest(FreicoinTestFramework):
         # Now try to spend it. Send it to a P2WSH output, which we'll
         # use in the next test.
         witness_program = CScript([0] + [pubkey, CScriptOp(OP_CHECKSIG)])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_wsh = CScript([OP_0, witness_hash])
 
         tx2 = CTransaction()
@@ -1600,7 +1602,7 @@ class SegWitTest(FreicoinTestFramework):
         pubkey = key.get_pubkey().get_bytes()
 
         witness_program = CScript([OP_0] + [pubkey, CScriptOp(OP_CHECKSIG)])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
         # First create a witness output for use in the tests.
@@ -1848,7 +1850,7 @@ class SegWitTest(FreicoinTestFramework):
         # For each script, generate a pair of P2WSH and P2SH-P2WSH output.
         outputvalue = (self.utxo[0].nValue - 1000) // (len(scripts) * 2)
         for i in scripts:
-            p2wsh = CScript([OP_0, sha256(i)])
+            p2wsh = CScript([OP_0, hash256(i)])
             p2sh = hash160(p2wsh)
             p2wsh_scripts.append(p2wsh)
             tx.vout.append(CTxOut(outputvalue, p2wsh))
@@ -1879,44 +1881,44 @@ class SegWitTest(FreicoinTestFramework):
 
         # Testing native P2WSH
         # Witness stack size, excluding witnessScript, over 100 is non-standard
-        p2wsh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
+        p2wsh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0], b'']
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[0], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[0], True, True)
 
         # Stack element size over 80 bytes is non-standard
-        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
+        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1], b'']
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[1], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[1], True, True)
         # Standard nodes should accept if element size is not over 80 bytes
-        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
+        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1], b'']
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[1], True, True)
 
         # witnessScript size at 3600 bytes is standard
-        p2wsh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2]]
+        p2wsh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2], b'']
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[2], True, True)
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[2], True, True)
 
         # witnessScript size at 3601 bytes is non-standard
-        p2wsh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
+        p2wsh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3], b'']
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[3], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[3], True, True)
 
         # Repeating the same tests with P2SH-P2WSH
-        p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
+        p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0], b'']
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[0], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[0], True, True)
-        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
+        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1], b'']
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[1], True, True)
-        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
+        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1], b'']
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, True)
-        p2sh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2]]
+        p2sh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2], b'']
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[2], True, True)
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[2], True, True)
-        p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
+        p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3], b'']
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[3], True, True)
 
@@ -1957,7 +1959,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # Keep this under MAX_OPS_PER_SCRIPT (201)
         witness_program = CScript([0] + [OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKMULTISIG] * 5 + [OP_CHECKSIG] * 193 + [OP_ENDIF])
-        witness_hash = sha256(witness_program)
+        witness_hash = hash256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
 
         sigops_per_script = 20 * 5 + 193 * 1
@@ -1974,13 +1976,13 @@ class SegWitTest(FreicoinTestFramework):
         # N(=MAX_SIGOP_COST//sigops_per_script) outputs of our transaction,
         # would push us just over the block sigop limit.
         witness_program_toomany = CScript([0] + [OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available + 1) + [OP_ENDIF])
-        witness_hash_toomany = sha256(witness_program_toomany)
+        witness_hash_toomany = hash256(witness_program_toomany)
         script_pubkey_toomany = CScript([OP_0, witness_hash_toomany])
 
         # If we spend this script instead, we would exactly reach our sigop
         # limit (for witness sigops).
         witness_program_justright = CScript([0] + [OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available) + [OP_ENDIF])
-        witness_hash_justright = sha256(witness_program_justright)
+        witness_hash_justright = hash256(witness_program_justright)
         script_pubkey_justright = CScript([OP_0, witness_hash_justright])
 
         # First split our available utxo into a bunch of outputs
@@ -2004,9 +2006,9 @@ class SegWitTest(FreicoinTestFramework):
         for i in range(outputs - 1):
             tx2.vin.append(CTxIn(COutPoint(tx.sha256, i), b""))
             tx2.wit.vtxinwit.append(CTxInWitness())
-            tx2.wit.vtxinwit[-1].scriptWitness.stack = [witness_program]
+            tx2.wit.vtxinwit[-1].scriptWitness.stack = [witness_program, b'']
             total_value += tx.vout[i].nValue
-        tx2.wit.vtxinwit[-1].scriptWitness.stack = [witness_program_toomany]
+        tx2.wit.vtxinwit[-1].scriptWitness.stack = [witness_program_toomany, b'']
         tx2.vout.append(CTxOut(total_value, CScript([OP_TRUE])))
         tx2.rehash()
 
@@ -2055,7 +2057,7 @@ class SegWitTest(FreicoinTestFramework):
         tx2.vout.pop()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, outputs - 1), b""))
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[-1].scriptWitness.stack = [witness_program_justright]
+        tx2.wit.vtxinwit[-1].scriptWitness.stack = [witness_program_justright, b'']
         tx2.rehash()
         self.update_witness_block_with_transactions(block_5, [tx2])
         test_witness_block(self.nodes[0], self.test_node, block_5, accepted=True)

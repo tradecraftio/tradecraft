@@ -3739,6 +3739,12 @@ public:
             if (!entry.m_script.empty()) {
                 obj.pushKV("witscript_version", (int64_t)entry.m_script[0]);
                 if (entry.m_script[0] == 0x00) {
+                    UniValue branch(UniValue::VARR);
+                    for (const auto& hash : entry.m_branch) {
+                        branch.push_back(HexStr(hash.begin(), hash.end()));
+                    }
+                    obj.pushKV("witness_branch", branch);
+                    obj.pushKV("witness_path", (int64_t)entry.m_path);
                     CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
                     ProcessSubScript(subscript, obj);
                 }

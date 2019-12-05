@@ -635,7 +635,33 @@ UniValue importwallet(const JSONRPCRequest& request)
                     CScript script = CScript(vData.begin(), vData.end());
                     scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
                 } else if (vstr[2] == "witver=0") {
-                    WitnessV0ScriptEntry entry(vData);
+                    int64_t path = std::stoll(vstr[3]);
+                    if (path < std::numeric_limits<uint32_t>::min() ||
+                        path > std::numeric_limits<uint32_t>::max())
+                    {
+                        pwallet->WalletLogPrintf("Error invalid or missing path for witscript %s\n", vstr[0]);
+                        continue;
+                    }
+                    std::vector<uint256> branch;
+                    if (vstr[4] != "[") {
+                        pwallet->WalletLogPrintf("Error invalid or missing branch for witscript %s\n", vstr[0]);
+                        continue;
+                    }
+                    auto pstr = vstr.begin() + 5;
+                    for (; pstr != vstr.end() && *pstr != "]"; ++pstr) {
+                        std::vector<unsigned char> vch = ParseHex(*pstr);
+                        if (vch.size() != 32) {
+                            pwallet->WalletLogPrintf("Invalid hash value within branch for witscript %s\n", vstr[0]);
+                            pstr = vstr.end();
+                            break;
+                        }
+                        branch.emplace_back(vch);
+                    }
+                    if (pstr == vstr.end()) {
+                        pwallet->WalletLogPrintf("Error invalid or missing branch for witscript %s\n", vstr[0]);
+                        continue;
+                    }
+                    WitnessV0ScriptEntry entry(vData, branch, path);
                     witscripts.push_back(entry);
                 }
             }
@@ -884,8 +910,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         std::string address = EncodeDestination(shortid);
         if(pwallet->GetWitnessV0Script(shortid, entry)) {
             // FIXME: find some way of getting birth times from metadata
-            file << strprintf("%s %s witver=0", HexStr(entry.m_script), create_time);
-            file << strprintf(" # addr=%s\n", address);
+            file << strprintf("%s %s witver=0 %d [", HexStr(entry.m_script), create_time, entry.m_path);
+            for (const uint256& hash : entry.m_branch) {
+                file << strprintf(" %s", HexStr(hash.begin(), hash.end()));
+            }
+            file << strprintf(" ] # addr=%s\n", address);
         }
     }
     file << "\n";
@@ -1049,6 +1078,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         if (!IsHex(witness_script_hex)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid witness script \"" + witness_script_hex + "\": must be hex string");
         }
+        // FIXME: Add branch and path parsing
         auto parsed_witnessscript = ParseHex(witness_script_hex);
         import_data.witnessscript = MakeUnique<WitnessV0ScriptEntry>(parsed_witnessscript);
     }

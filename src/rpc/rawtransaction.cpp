@@ -1004,6 +1004,8 @@ UniValue decodepst(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "        }\n"
+            "      \"witness_branch\" : [\"hash\", ...] (array of string) hex-encoded hashes of the Merkle branch proof\n"
+            "      \"witness_path\" :            (numeric) the left/right branching information for the Merkle branch proof\n"
             "      \"bip32_derivs\" : {          (json object, optional)\n"
             "        \"pubkey\" : {                     (json object, optional) The public key with the derivation path as the value.\n"
             "          \"master_fingerprint\" : \"fingerprint\"     (string) The fingerprint of the master key\n"
@@ -1036,6 +1038,8 @@ UniValue decodepst(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "      }\n"
+            "      \"witness_branch\" : [\"hash\", ...] (array of string) hex-encoded hashes of the Merkle branch proof\n"
+            "      \"witness_path\" :            (numeric) the left/right branching information for the Merkle branch proof\n"
             "      \"bip32_derivs\" : [          (array of json objects, optional)\n"
             "        {\n"
             "          \"pubkey\" : \"pubkey\",                     (string) The public key this path corresponds to\n"
@@ -1156,6 +1160,12 @@ UniValue decodepst(const JSONRPCRequest& request)
                 r.pushKV("type", "unknown");
             }
             in.pushKV("witness_script", r);
+            UniValue branch(UniValue::VARR);
+            for (const auto& hash : input.witness_entry.m_branch) {
+                branch.push_back(HexStr(hash.begin(), hash.end()));
+            }
+            in.pushKV("witness_branch", branch);
+            in.pushKV("witness_path", (int64_t)input.witness_entry.m_path);
         }
 
         // keypaths
@@ -1222,6 +1232,12 @@ UniValue decodepst(const JSONRPCRequest& request)
                 r.pushKV("type", "unknown");
             }
             out.pushKV("witness_script", r);
+            UniValue branch(UniValue::VARR);
+            for (const auto& hash : output.witness_entry.m_branch) {
+                branch.push_back(HexStr(hash.begin(), hash.end()));
+            }
+            out.pushKV("witness_branch", branch);
+            out.pushKV("witness_path", (int64_t)output.witness_entry.m_path);
         }
 
         // keypaths
