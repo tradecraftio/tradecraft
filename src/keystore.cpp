@@ -84,7 +84,7 @@ bool CBasicKeyStore::AddWitnessV0Script(const std::vector<unsigned char>& script
 {
     LOCK(cs_KeyStore);
     uint256 witnessprogram;
-    CSHA256().Write(&script[0], script.size()).Finalize(witnessprogram.begin());
+    CHash256().Write(&script[0], script.size()).Finalize(witnessprogram.begin());
     mapWitnessV0Scripts[witnessprogram] = script;
     return true;
 }

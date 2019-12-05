@@ -230,6 +230,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         scriptWitness.stack.push_back(vector<unsigned char>(1, 0x00));
         scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), witnessScript.begin(), witnessScript.end());
+        scriptWitness.stack.push_back(vector<unsigned char>(0));
         witness.scriptWitness = scriptWitness;
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
@@ -250,6 +251,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         scriptWitness.stack.push_back(vector<unsigned char>(1, 0x00));
         scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), witnessScript.begin(), witnessScript.end());
+        scriptWitness.stack.push_back(vector<unsigned char>(0));
         witness.scriptWitness = scriptWitness;
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
