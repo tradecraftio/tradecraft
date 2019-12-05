@@ -4327,7 +4327,7 @@ CTxDestination CWallet::AddAndGetDestinationForScript(const CScript& script, Out
         innerscript.insert(innerscript.end(), script.begin(), script.end());
         AddWitnessV0Script(innerscript);
         WitnessV0ScriptHash hash;
-        CSHA256().Write(innerscript.data(), innerscript.size()).Finalize(hash.begin());
+        CHash256().Write(innerscript.data(), innerscript.size()).Finalize(hash.begin());
         CTxDestination witdest = hash;
         CScript witprog = GetScriptForDestination(witdest);
         // Check if the resulting program is solvable (i.e. doesn't use an uncompressed key)

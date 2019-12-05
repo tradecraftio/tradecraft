@@ -603,7 +603,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                std::vector<unsigned char> vData(ParseHex(vstr[0]));
                CScript script = CScript(vData.begin(), vData.end());
                WitnessV0ScriptHash longid;
-               CSHA256().Write(vData.data(), vData.size()).Finalize(longid.begin());
+               CHash256().Write(vData.data(), vData.size()).Finalize(longid.begin());
                if (pwallet->HaveCScript(script) || pwallet->HaveWitnessV0Script(longid)) {
                    LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
                    continue;
@@ -816,7 +816,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         std::string address = EncodeDestination(shortid);
         if(pwallet->GetWitnessV0Script(shortid, witscript)) {
             // FIXME: find some way of getting birth times from metadata
-            file << strprintf("%s %s witver=0", HexStr(witscript.begin(), witscript.end()), create_time);
+            file << strprintf("%s %s witver=0 0 [ ]", HexStr(witscript.begin(), witscript.end()), create_time);
             file << strprintf(" # addr=%s\n", address);
         }
     }

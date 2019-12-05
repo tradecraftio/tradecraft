@@ -73,7 +73,7 @@ struct WitnessV0ScriptHash : public uint256
     WitnessV0ScriptHash() : uint256() {}
     explicit WitnessV0ScriptHash(const uint256& hash) : uint256(hash) {}
     explicit WitnessV0ScriptHash(unsigned char version, const CScript& innerscript) {
-        CSHA256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
+        CHash256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
     }
     using uint256::uint256;
 };
