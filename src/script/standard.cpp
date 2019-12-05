@@ -327,7 +327,7 @@ CScript GetScriptForWitness(const CScript& witscript)
     }
     uint256 hash;
     unsigned char prefix = 0x00;
-    CSHA256().Write(&prefix, 1).Write(&witscript[0], witscript.size()).Finalize(hash.begin());
+    CHash256().Write(&prefix, 1).Write(&witscript[0], witscript.size()).Finalize(hash.begin());
     ret << OP_0 << ToByteVector(hash);
     return ret;
 }

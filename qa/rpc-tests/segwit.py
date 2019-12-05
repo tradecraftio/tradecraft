@@ -25,7 +25,7 @@ from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import sha256, ripemd160, CTransaction, CTxIn, COutPoint, CTxOut
 from test_framework.address import script_to_p2sh, key_to_p2pkh
-from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG
+from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, hash256, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG
 from io import BytesIO
 from test_framework.mininode import FromHex
 
@@ -41,7 +41,7 @@ def witness_script(version, pubkey):
         pkscript = "0014" + pubkeyhash
     elif (version == 1):
         # 1-of-1 multisig
-        scripthash = bytes_to_hex_str(sha256(hex_str_to_bytes("005121" + pubkey + "51ae")))
+        scripthash = bytes_to_hex_str(hash256(hex_str_to_bytes("005121" + pubkey + "51ae")))
         pkscript = "0020" + scripthash
     else:
         assert("Wrong version" == "0 or 1")
@@ -396,9 +396,9 @@ class SegWitTest(FreicoinTestFramework):
         unsolvable_address = ["mjoE3sSrb8ByYEvgnC3Aox86u1CHnfJA4V", "2N7MGY19ti4KDMSzRfPAssP6Pxyuxoi6jLe", script_to_p2sh(op1), script_to_p2sh(op0)]
         unsolvable_address_key = hex_str_to_bytes("02341AEC7587A51CDE5279E0630A531AEA2615A9F80B17E8D9376327BAEAA59E3D")
         unsolvablep2pkh = CScript([OP_DUP, OP_HASH160, hash160(unsolvable_address_key), OP_EQUALVERIFY, OP_CHECKSIG])
-        unsolvablep2wshp2pkh = CScript([OP_0, sha256(bytes([0]) + unsolvablep2pkh)])
+        unsolvablep2wshp2pkh = CScript([OP_0, hash256(bytes([0]) + unsolvablep2pkh)])
         p2shop0 = CScript([OP_HASH160, hash160(op0), OP_EQUAL])
-        p2wshop1 = CScript([OP_0, sha256(bytes([0]) + op1)])
+        p2wshop1 = CScript([OP_0, hash256(bytes([0]) + op1)])
         unsolvable_after_importaddress.append(unsolvablep2pkh)
         unsolvable_after_importaddress.append(unsolvablep2wshp2pkh)
         unsolvable_after_importaddress.append(op1) # OP_1 will be imported as script
@@ -600,7 +600,7 @@ class SegWitTest(FreicoinTestFramework):
     def p2sh_address_to_script(self,v):
         bare = CScript(hex_str_to_bytes(v['hex']))
         p2sh = CScript(hex_str_to_bytes(v['scriptPubKey']))
-        p2wsh = CScript([OP_0, sha256(bytes([0]) + bare)])
+        p2wsh = CScript([OP_0, hash256(bytes([0]) + bare)])
         p2sh_p2wsh = CScript([OP_HASH160, hash160(p2wsh), OP_EQUAL])
         return([bare, p2sh, p2wsh, p2sh_p2wsh])
 
@@ -612,8 +612,8 @@ class SegWitTest(FreicoinTestFramework):
         p2pkh = CScript(hex_str_to_bytes(v['scriptPubKey']))
         p2sh_p2pk = CScript([OP_HASH160, hash160(p2pk), OP_EQUAL])
         p2sh_p2pkh = CScript([OP_HASH160, hash160(p2pkh), OP_EQUAL])
-        p2wsh_p2pk = CScript([OP_0, sha256(bytes([0]) + p2pk)])
-        p2wsh_p2pkh = CScript([OP_0, sha256(bytes([0]) + p2pkh)])
+        p2wsh_p2pk = CScript([OP_0, hash256(bytes([0]) + p2pk)])
+        p2wsh_p2pkh = CScript([OP_0, hash256(bytes([0]) + p2pkh)])
         p2sh_p2wsh_p2pk = CScript([OP_HASH160, hash160(p2wsh_p2pk), OP_EQUAL])
         p2sh_p2wsh_p2pkh = CScript([OP_HASH160, hash160(p2wsh_p2pkh), OP_EQUAL])
         return [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh]

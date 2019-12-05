@@ -203,6 +203,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         solved = solved && SignStep(creator, witnessscript, result, subType, SIGVERSION_WITNESS_V0) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SCRIPTHASH && subType != TX_WITNESS_V0_KEYHASH;
         result.emplace_back(1, 0x00);
         result.back().insert(result.back().end(), witnessscript.begin(), witnessscript.end());
+        result.emplace_back(0);
         sigdata.scriptWitness.stack = result;
         result.clear();
     }
@@ -347,6 +348,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
                                  const txnouttype txType, const vector<valtype>& vSolutions,
                                  Stacks sigs1, Stacks sigs2, SigVersion sigversion)
 {
+    using std::swap;
     switch (txType)
     {
     case TX_NONSTANDARD:
@@ -389,13 +391,16 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     case TX_MULTISIG:
         return Stacks(CombineMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
     case TX_WITNESS_V0_SCRIPTHASH:
-        if (sigs1.witness.empty() || (sigs1.witness.back().size() <= 1))
+        if ((sigs1.witness.size() <= 1) || ((sigs1.witness.end() - 2)->size() <= 1))
             return sigs2;
-        else if (sigs2.witness.empty() || (sigs2.witness.back().size() <= 1))
+        else if ((sigs2.witness.size() <= 1) || ((sigs2.witness.end() - 2)->size() <= 1))
             return sigs1;
         else
         {
             // Recur to combine:
+            std::vector<unsigned char> proof;
+            swap(proof, sigs1.witness.back());
+            sigs1.witness.pop_back();
             CScript pubKey2(sigs1.witness.back().begin()+1, sigs1.witness.back().end());
             txnouttype txType2;
             vector<valtype> vSolutions2;
@@ -404,6 +409,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             sigs1.script = sigs1.witness;
             sigs1.witness.clear();
             sigs2.witness.pop_back();
+            sigs2.witness.pop_back();
             sigs2.script = sigs2.witness;
             sigs2.witness.clear();
             Stacks result = CombineSignatures(pubKey2, checker, txType2, vSolutions2, sigs1, sigs2, SIGVERSION_WITNESS_V0);
@@ -411,6 +417,8 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             result.script.clear();
             result.witness.emplace_back(1, 0x00);
             result.witness.back().insert(result.witness.back().end(), pubKey2.begin(), pubKey2.end());
+            result.witness.emplace_back();
+            swap(proof, result.witness.back());
             return result;
         }
     default:
