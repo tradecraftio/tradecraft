@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Useful Script constants and utils."""
-from test_framework.script import CScript, hash160, sha256, OP_0, OP_DUP, OP_HASH160, OP_CHECKSIG, OP_EQUAL, OP_EQUALVERIFY
+from test_framework.script import CScript, hash160, hash256, OP_0, OP_DUP, OP_HASH160, OP_CHECKSIG, OP_EQUAL, OP_EQUALVERIFY
 from test_framework.util import hex_str_to_bytes
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
@@ -68,7 +68,7 @@ def program_to_witness_script(version, program, main = False):
 
 def script_to_p2wsh_script(script, main = False):
     script = check_script(script)
-    return program_to_witness_script(0, sha256(b'\x00' + script), main)
+    return program_to_witness_script(0, hash256(b'\x00' + script), main)
 
 def key_to_p2wpkh_script(key, main = False):
     key = check_key(key)
@@ -76,7 +76,7 @@ def key_to_p2wpkh_script(key, main = False):
 
 def script_to_p2sh_p2wsh_script(script, main = False):
     script = check_script(script)
-    p2shscript = CScript([OP_0, sha256(b'\x00' + script)])
+    p2shscript = CScript([OP_0, hash256(b'\x00' + script)])
     return script_to_p2sh_script(p2shscript, main)
 
 def check_key(key):

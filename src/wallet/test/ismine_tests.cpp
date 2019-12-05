@@ -309,8 +309,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
                              witnessScript_inner.end());
 
         uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
+        CHash256().Write(witnessScript).Finalize(scriptHash);
 
         scriptPubKey.clear();
         scriptPubKey << OP_0 << ToByteVector(scriptHash);
@@ -348,8 +347,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
                              witnessScript_inner.end());
 
         uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
+        CHash256().Write(witnessScript).Finalize(scriptHash);
 
         scriptPubKey.clear();
         scriptPubKey << OP_0 << ToByteVector(scriptHash);
@@ -385,8 +383,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
                              witnessScript_inner.end());
 
         uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
+        CHash256().Write(witnessScript).Finalize(scriptHash);
 
         CScript redeemScript;
         redeemScript << OP_0 << ToByteVector(scriptHash);

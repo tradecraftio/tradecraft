@@ -19,7 +19,7 @@ from test_framework.address import check_script, script_to_p2sh, script_to_p2wsh
 from test_framework.key import ECKey
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, get_refheight_for_tx, hex_str_to_bytes
-from test_framework.messages import sha256, CTransaction, CTxInWitness
+from test_framework.messages import hash256, CTransaction, CTxInWitness
 from test_framework.script import CScript, OP_0, OP_CHECKSIG, OP_CHECKSEQUENCEVERIFY, OP_CHECKLOCKTIMEVERIFY, OP_TRUE
 from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_p2wsh_script, script_to_p2wsh_script
 from test_framework.wallet_util import bytes_to_wif
@@ -216,7 +216,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
             'P2PKH': '00' + key_to_p2pkh_script(embedded_pubkey).hex(),
             'P2PK': '00' + CScript([hex_str_to_bytes(embedded_pubkey), OP_CHECKSIG]).hex()
         }.get(tx_type, "Invalid tx_type")
-        redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
+        redeem_script = CScript([OP_0, hash256(check_script(witness_script))]).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
         # Fund that address
@@ -281,7 +281,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         ctx = CTransaction()
         ctx.deserialize(BytesIO(hex_str_to_bytes(tx)))
         ctx.wit.vtxinwit.append(CTxInWitness())
-        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script]
+        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script, b'']
         tx = ctx.serialize_with_witness().hex()
 
         # Sign and send the transaction
@@ -318,7 +318,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         ctx = CTransaction()
         ctx.deserialize(BytesIO(hex_str_to_bytes(tx)))
         ctx.wit.vtxinwit.append(CTxInWitness())
-        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script]
+        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script, b'']
         tx = ctx.serialize_with_witness().hex()
 
         # Sign and send the transaction

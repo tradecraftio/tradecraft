@@ -111,7 +111,7 @@ from test_framework.util import assert_raises_rpc_error, assert_equal
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
 from test_framework.address import (
     hash160,
-    sha256,
+    hash256,
 )
 from collections import OrderedDict, namedtuple
 from io import BytesIO
@@ -315,7 +315,7 @@ def default_witness_witv0(ctx):
     if script is None:
         return inputs
     else:
-        return inputs + [b'\x00' + script]
+        return inputs + [b'\x00' + script, b'']
 
 def default_witness(ctx):
     """Default expression for "witness", delegating to "witness_taproot" or "witness_witv0" as needed."""
@@ -492,7 +492,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
             conf["inputs"] = [getter("sign"), pkh]
         elif script is not None:
             # P2WSH
-            spk = CScript([OP_0, sha256(b'\x00' + script)])
+            spk = CScript([OP_0, hash256(b'\x00' + script)])
             conf["scriptcode"] = script
             conf["script_witv0"] = script
         else:
