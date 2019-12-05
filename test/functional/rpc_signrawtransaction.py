@@ -18,7 +18,7 @@
 from test_framework.address import check_script, script_to_p2sh
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, get_refheight_for_tx, hex_str_to_bytes
-from test_framework.messages import sha256
+from test_framework.messages import hash256
 from test_framework.script import CScript, OP_0, OP_CHECKSIG
 
 from decimal import Decimal
@@ -184,7 +184,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         # Find the UTXO for the transaction node[1] should have received, check witnessScript matches
         unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address["address"]])[0]
         assert_equal(unspent_output["witnessScript"], "00" + p2sh_p2wsh_address["redeemScript"])
-        p2sh_redeemScript = CScript([OP_0, sha256(hex_str_to_bytes("00" + p2sh_p2wsh_address["redeemScript"]))])
+        p2sh_redeemScript = CScript([OP_0, hash256(hex_str_to_bytes("00" + p2sh_p2wsh_address["redeemScript"]))])
         assert_equal(unspent_output["redeemScript"], p2sh_redeemScript.hex())
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].getnewaddress(): Decimal("49.998")})
@@ -197,7 +197,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
         witness_script = '00' + embedded_addr_info['scriptPubKey']
-        redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
+        redeem_script = CScript([OP_0, hash256(check_script(witness_script))]).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
         # Fund that address
@@ -217,7 +217,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
         witness_script = '00' + CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
-        redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
+        redeem_script = CScript([OP_0, hash256(check_script(witness_script))]).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
         # Fund that address

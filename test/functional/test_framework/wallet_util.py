@@ -36,7 +36,7 @@ from test_framework.script import (
     OP_EQUALVERIFY,
     OP_HASH160,
     hash160,
-    sha256,
+    hash256,
 )
 from test_framework.util import hex_str_to_bytes
 
@@ -89,7 +89,7 @@ def get_multisig(node):
         addrs.append(addr['address'])
         pubkeys.append(addr['pubkey'])
     script_code = CScript([OP_2] + [hex_str_to_bytes(pubkey) for pubkey in pubkeys] + [OP_3, OP_CHECKMULTISIG])
-    witness_script = CScript([OP_0, sha256(b'\x00' + script_code)])
+    witness_script = CScript([OP_0, hash256(b'\x00' + script_code)])
     return Multisig(privkeys=[node.dumpprivkey(addr) for addr in addrs],
                     pubkeys=pubkeys,
                     p2sh_script=CScript([OP_HASH160, hash160(script_code), OP_EQUAL]).hex(),
