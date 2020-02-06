@@ -57,8 +57,8 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
     TX_UNSPENDABLE, //!< TX_NULL_DATA in bitcoin, but without data
-    TX_WITNESS_V0_SCRIPTHASH,
-    TX_WITNESS_V0_KEYHASH,
+    TX_WITNESS_V0_LONGHASH,
+    TX_WITNESS_V0_SHORTHASH,
     TX_WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
 };
 
@@ -68,20 +68,27 @@ public:
     friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
 };
 
-struct WitnessV0ScriptHash : public uint256
+struct WitnessV0LongHash : public uint256
 {
-    WitnessV0ScriptHash() : uint256() {}
-    explicit WitnessV0ScriptHash(const uint256& hash) : uint256(hash) {}
-    explicit WitnessV0ScriptHash(unsigned char version, const CScript& innerscript) {
+    WitnessV0LongHash() : uint256() {}
+    explicit WitnessV0LongHash(const uint256& hash) : uint256(hash) {}
+    explicit WitnessV0LongHash(unsigned char version, const CScript& innerscript) {
         CHash256().Write(&version, 1).Write(innerscript.data(), innerscript.size()).Finalize(begin());
     }
     using uint256::uint256;
 };
 
-struct WitnessV0KeyHash : public uint160
+struct WitnessV0ShortHash : public uint160
 {
-    WitnessV0KeyHash() : uint160() {}
-    explicit WitnessV0KeyHash(const uint160& hash) : uint160(hash) {}
+    WitnessV0ShortHash() : uint160() {}
+    explicit WitnessV0ShortHash(const uint160& hash) : uint160(hash) {}
+    explicit WitnessV0ShortHash(const WitnessV0LongHash& long_hash) {
+        CRIPEMD160().Write(long_hash.begin(), 32).Finalize(begin());
+    }
+    explicit WitnessV0ShortHash(unsigned char version, const CScript& innerscript) {
+        WitnessV0LongHash long_hash(version, innerscript);
+        CRIPEMD160().Write(long_hash.begin(), 32).Finalize(begin());
+    }
     using uint160::uint160;
 };
 
@@ -112,12 +119,12 @@ struct WitnessUnknown
  *  * CNoDestination: no destination set
  *  * CKeyID: TX_PUBKEYHASH destination (P2PKH)
  *  * CScriptID: TX_SCRIPTHASH destination (P2SH)
- *  * WitnessV0ScriptHash: TX_WITNESS_V0_SCRIPTHASH destination (P2WSH)
- *  * WitnessV0KeyHash: TX_WITNESS_V0_KEYHASH destination (P2WPKH)
+ *  * WitnessV0LongHash: TX_WITNESS_V0_LONGHASH destination (P2WSH)
+ *  * WitnessV0ShortHash: TX_WITNESS_V0_SHORTHASH destination (P2WPKH)
  *  * WitnessUnknown: TX_WITNESS_UNKNOWN destination (P2W???)
  *  A CTxDestination is the internal data type encoded in a freicoin address
  */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
+typedef boost::variant<CNoDestination, CKeyID, CScriptID, WitnessV0LongHash, WitnessV0ShortHash, WitnessUnknown> CTxDestination;
 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);

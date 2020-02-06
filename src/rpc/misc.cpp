@@ -118,21 +118,25 @@ public:
         return obj;
     }
 
-    UniValue operator()(const WitnessV0KeyHash& id) const
+    UniValue operator()(const WitnessV0ShortHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
-        CPubKey pubkey;
-        obj.push_back(Pair("isscript", false));
+        CScript subscript;
+        obj.push_back(Pair("isscript", true));
         obj.push_back(Pair("iswitness", true));
         obj.push_back(Pair("witness_version", 0));
         obj.push_back(Pair("witness_program", HexStr(id.begin(), id.end())));
-        if (pwallet && pwallet->GetPubKey(CKeyID(id), pubkey)) {
-            obj.push_back(Pair("pubkey", HexStr(pubkey)));
+        std::vector<unsigned char> witscript;
+        if (pwallet && pwallet->GetWitnessV0Script(id, witscript)) {
+            if (!witscript.empty() && witscript[0] == 0x00) {
+                subscript.insert(subscript.end(), witscript.begin() + 1, witscript.end());
+                ProcessSubScript(subscript, obj);
+            }
         }
         return obj;
     }
 
-    UniValue operator()(const WitnessV0ScriptHash& id) const
+    UniValue operator()(const WitnessV0LongHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
         CScript subscript;

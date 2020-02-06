@@ -15,7 +15,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Encode and decode BASE58, P2PKH and P2SH addresses."""
 
-from .script import hash256, hash160, CScript, OP_0
+from .messages import ripemd160
+from .script import hash256, hash160, CScript, CScriptOp, OP_0, OP_CHECKSIG
 from .util import bytes_to_hex_str, hex_str_to_bytes
 
 from . import segwit_addr
@@ -57,9 +58,9 @@ def script_to_p2sh(script, main = False):
     script = check_script(script)
     return scripthash_to_p2sh(hash160(script), main)
 
-def key_to_p2sh_p2wpkh(key, main = False):
+def key_to_p2sh_p2wpk(key, main = False):
     key = check_key(key)
-    p2shscript = CScript([OP_0, hash160(key)])
+    p2shscript = CScript([OP_0, ripemd160(hash256(bytes([0]) + CScript([key, CScriptOp(OP_CHECKSIG)])))])
     return script_to_p2sh(p2shscript, main)
 
 def program_to_witness(version, program, main = False):
@@ -74,9 +75,9 @@ def script_to_p2wsh(script, main = False):
     script = check_script(script)
     return program_to_witness(0, hash256(b'\x00' + script), main)
 
-def key_to_p2wpkh(key, main = False):
+def key_to_p2wpk(key, main = False):
     key = check_key(key)
-    return program_to_witness(0, hash160(key), main)
+    return program_to_witness(0, ripemd160(hash256(b'\x00' + CScript([key, CScriptOp(OP_CHECKSIG)]))), main)
 
 def script_to_p2sh_p2wsh(script, main = False):
     script = check_script(script)

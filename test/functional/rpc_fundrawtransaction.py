@@ -235,7 +235,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         assert_raises_rpc_error(-5, "Unknown change type", self.nodes[2].fundrawtransaction, rawtx, {'change_type': ''})
         rawtx = self.nodes[2].fundrawtransaction(rawtx, {'change_type': 'bech32'})
         tx  = self.nodes[2].decoderawtransaction(rawtx['hex'])
-        assert_equal('witness_v0_keyhash', tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
+        assert_equal('witness_v0_shorthash', tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
 
         #########################################################################
         # test a fundrawtransaction with a VIN smaller than the required amount #

@@ -21,6 +21,7 @@
 #include <consensus/validation.h>
 #include <fs.h>
 #include <protocol.h>
+#include <script/standard.h>
 #include <serialize.h>
 #include <sync.h>
 #include <util.h>
@@ -109,7 +110,7 @@ bool CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
     return WriteIC(std::make_pair(std::string("cscript"), hash), redeemScript, false);
 }
 
-bool CWalletDB::WriteWitnessV0Script(const uint160& scriptid, const std::vector<unsigned char>& script)
+bool CWalletDB::WriteWitnessV0Script(const WitnessV0ShortHash& scriptid, const std::vector<unsigned char>& script)
 {
     return WriteIC(std::make_pair(std::string("witv0"), scriptid), script, false);
 }
@@ -498,7 +499,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "witv0")
         {
-            uint160 shorthash;
+            WitnessV0ShortHash shorthash;
             ssKey >> shorthash;
             std::vector<unsigned char> script;
             ssValue >> script;

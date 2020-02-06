@@ -121,22 +121,24 @@ public:
             Process(script);
     }
 
-    void operator()(const WitnessV0ScriptHash& scriptID)
+    void operator()(const WitnessV0ShortHash& short_hash)
     {
-        CScriptID id;
-        CRIPEMD160().Write(scriptID.begin(), 32).Finalize(id.begin());
-        CScript script;
-        if (keystore.GetCScript(id, script)) {
-            Process(script);
+        std::vector<unsigned char> witscript;
+        if (keystore.GetWitnessV0Script(short_hash, witscript)) {
+            if (!witscript.empty() && witscript[0] == 0x00) {
+                CScript script(witscript.begin()+1, witscript.end());
+                Process(script);
+            }
         }
     }
 
-    void operator()(const WitnessV0KeyHash& keyid)
+    void operator()(const WitnessV0LongHash& long_hash)
     {
-        CKeyID id(keyid);
-        if (keystore.HaveKey(id)) {
-            vKeys.push_back(id);
-        }
+        WitnessV0ShortHash short_hash;
+        CRIPEMD160()
+            .Write(long_hash.begin(), 32)
+            .Finalize(short_hash.begin());
+        (*this)(short_hash);
     }
 
     template<typename X>
@@ -357,9 +359,9 @@ bool CWallet::AddWitnessV0Script(const std::vector<unsigned char>& script)
 {
     if (!CCryptoKeyStore::AddWitnessV0Script(script))
         return false;
-    WitnessV0ScriptHash longid;
+    WitnessV0LongHash longid;
     CHash256().Write(script.data(), script.size()).Finalize(longid.begin());
-    uint160 shortid;
+    WitnessV0ShortHash shortid;
     CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
     return CWalletDB(*dbw).WriteWitnessV0Script(shortid, script);
 }
@@ -3740,7 +3742,7 @@ void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
         return;
 
     script = rKey;
-    script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    script->reserveScript = GetScriptForRawPubKey(pubkey);
 }
 
 void CWallet::LockCoin(const COutPoint& output)
@@ -4267,11 +4269,19 @@ const std::string& FormatOutputType(OutputType type)
     }
 }
 
+#include <core_io.h>
 void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
     if (key.IsCompressed() && (type == OUTPUT_TYPE_P2SH_SEGWIT || type == OUTPUT_TYPE_BECH32)) {
-        CTxDestination witdest = WitnessV0KeyHash(key.GetID());
-        CScript witprog = GetScriptForDestination(witdest);
+        CScript script = GetScriptForRawPubKey(key);
+        std::vector<unsigned char> witscript(1, 0x00);
+        witscript.insert(witscript.end(), script.begin(), script.end());
+        AddWitnessV0Script(witscript);
+        WitnessV0LongHash long_hash;
+        CHash256().Write(witscript.data(), witscript.size()).Finalize(long_hash.begin());
+        WitnessV0ShortHash short_hash;
+        CRIPEMD160().Write(long_hash.begin(), 32).Finalize(short_hash.begin());
+        CScript witprog = GetScriptForDestination(short_hash);
         // Make sure the resulting program is solvable.
         assert(IsSolvable(*this, witprog));
         AddCScript(witprog);
@@ -4291,7 +4301,8 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
     case OUTPUT_TYPE_P2SH_SEGWIT:
     case OUTPUT_TYPE_BECH32: {
         if (!key.IsCompressed()) return key.GetID();
-        CTxDestination witdest = WitnessV0KeyHash(key.GetID());
+        CScript script = GetScriptForRawPubKey(key);
+        CTxDestination witdest = WitnessV0ShortHash((unsigned char)0, script);
         CScript witprog = GetScriptForDestination(witdest);
         if (type == OUTPUT_TYPE_P2SH_SEGWIT) {
             return CScriptID(witprog);
@@ -4307,7 +4318,7 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
 {
     CKeyID keyid = key.GetID();
     if (key.IsCompressed()) {
-        CTxDestination segwit = WitnessV0KeyHash(keyid);
+        CTxDestination segwit = GetDestinationForKey(key, OUTPUT_TYPE_BECH32);
         CTxDestination p2sh = CScriptID(GetScriptForDestination(segwit));
         return std::vector<CTxDestination>{std::move(keyid), std::move(p2sh), std::move(segwit)};
     } else {
@@ -4326,7 +4337,7 @@ CTxDestination CWallet::AddAndGetDestinationForScript(const CScript& script, Out
         std::vector<unsigned char> innerscript(1, 0x00);
         innerscript.insert(innerscript.end(), script.begin(), script.end());
         AddWitnessV0Script(innerscript);
-        WitnessV0ScriptHash hash;
+        WitnessV0LongHash hash;
         CHash256().Write(innerscript.data(), innerscript.size()).Finalize(hash.begin());
         CTxDestination witdest = hash;
         CScript witprog = GetScriptForDestination(witdest);

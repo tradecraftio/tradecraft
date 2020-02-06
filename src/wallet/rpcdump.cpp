@@ -602,7 +602,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             } else if(IsHex(vstr[0])) {
                std::vector<unsigned char> vData(ParseHex(vstr[0]));
                CScript script = CScript(vData.begin(), vData.end());
-               WitnessV0ScriptHash longid;
+               WitnessV0LongHash longid;
                CHash256().Write(vData.data(), vData.size()).Finalize(longid.begin());
                if (pwallet->HaveCScript(script) || pwallet->HaveWitnessV0Script(longid)) {
                    LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
@@ -738,7 +738,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     std::set<CScriptID> scripts = pwallet->GetCScripts();
     // TODO: include scripts in GetKeyBirthTimes() output instead of separate
-    std::set<WitnessV0ScriptHash> witscripts = pwallet->GetWitnessV0Scripts();
+    std::set<WitnessV0ShortHash> witscripts = pwallet->GetWitnessV0Scripts();
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
@@ -810,7 +810,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         }
     }
     file << "\n";
-    for (const WitnessV0ScriptHash& shortid : witscripts) {
+    for (const WitnessV0ShortHash& shortid : witscripts) {
         std::vector<unsigned char> witscript;
         std::string create_time = "0";
         std::string address = EncodeDestination(shortid);

@@ -1241,6 +1241,8 @@ class Witnessifier : public boost::static_visitor<bool>
 {
 public:
     CWallet * const pwallet;
+    WitnessV0LongHash longid;
+    WitnessV0ShortHash shortid;
     CTxDestination result;
     bool already_witness;
 
@@ -1249,6 +1251,10 @@ public:
     bool operator()(const CKeyID &keyID) {
         if (pwallet) {
             CScript basescript = GetScriptForDestination(keyID);
+            CPubKey pubkey;
+            if (!pwallet->GetPubKey(keyID, pubkey))
+                return false;
+            basescript = GetScriptForRawPubKey(pubkey);
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
             pwallet->AddWitnessV0Script(innerscript);
@@ -1256,6 +1262,8 @@ public:
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
             }
+            longid = WitnessV0LongHash((unsigned char)0, basescript);
+            shortid = WitnessV0ShortHash(longid);
             return ExtractDestination(witscript, result);
         }
         return false;
@@ -1278,19 +1286,21 @@ public:
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
             }
+            longid = WitnessV0LongHash((unsigned char)0, subscript);
+            shortid = WitnessV0ShortHash(longid);
             return ExtractDestination(witscript, result);
         }
         return false;
     }
 
-    bool operator()(const WitnessV0KeyHash& id)
+    bool operator()(const WitnessV0ShortHash& id)
     {
         already_witness = true;
         result = id;
         return true;
     }
 
-    bool operator()(const WitnessV0ScriptHash& id)
+    bool operator()(const WitnessV0LongHash& id)
     {
         already_witness = true;
         result = id;
@@ -1366,7 +1376,10 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_WALLET_ERROR, "Cannot convert between witness address types");
         }
     } else {
-        pwallet->AddCScript(witprogram); // Implicit for single-key now, but necessary for multisig and for compatibility with older software
+        // Implicit for single-key now, but necessary for multisig and for
+        // compatibility with older software.
+        pwallet->AddCScript(GetScriptForDestination(w.longid));
+        pwallet->AddCScript(GetScriptForDestination(w.shortid));
         pwallet->SetAddressBook(w.result, "", "receive");
     }
 
