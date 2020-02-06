@@ -262,9 +262,11 @@ bool CWallet::AddWitnessV0Script(const std::vector<unsigned char>& script)
         return false;
     if (!fFileBacked)
         return true;
-    uint256 witnessprogram;
-    CSHA256().Write(&script[0], script.size()).Finalize(witnessprogram.begin());
-    return CWalletDB(strWalletFile).WriteWitnessV0Script(witnessprogram, script);
+    uint256 longhash;
+    CHash256().Write(&script[0], script.size()).Finalize(longhash.begin());
+    uint160 shorthash;
+    CRIPEMD160().Write(longhash.begin(), 32).Finalize(shorthash.begin());
+    return CWalletDB(strWalletFile).WriteWitnessV0Script(shorthash, script);
 }
 
 bool CWallet::LoadWitnessV0Script(const std::vector<unsigned char>& script)
