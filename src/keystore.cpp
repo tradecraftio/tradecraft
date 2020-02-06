@@ -84,18 +84,27 @@ bool CBasicKeyStore::AddWitnessV0Script(const std::vector<unsigned char>& script
 {
     LOCK(cs_KeyStore);
     uint256 witnessprogram;
+    uint160 shorthash;
     CHash256().Write(&script[0], script.size()).Finalize(witnessprogram.begin());
-    mapWitnessV0Scripts[witnessprogram] = script;
+    CRIPEMD160().Write(witnessprogram.begin(), 32).Finalize(shorthash.begin());
+    mapWitnessV0Scripts[shorthash] = script;
     return true;
 }
 
-bool CBasicKeyStore::HaveWitnessV0Script(const uint256& witnessprogram) const
+bool CBasicKeyStore::HaveWitnessV0Script(const uint160& witnessprogram) const
 {
     LOCK(cs_KeyStore);
     return mapWitnessV0Scripts.count(witnessprogram) > 0;
 }
 
-bool CBasicKeyStore::GetWitnessV0Script(const uint256& witnessprogram, std::vector<unsigned char>& scriptOut) const
+bool CBasicKeyStore::HaveWitnessV0Script(const uint256& witnessprogram) const
+{
+    uint160 shorthash;
+    CRIPEMD160().Write(witnessprogram.begin(), 32).Finalize(shorthash.begin());
+    return HaveWitnessV0Script(shorthash);
+}
+
+bool CBasicKeyStore::GetWitnessV0Script(const uint160& witnessprogram, std::vector<unsigned char>& scriptOut) const
 {
     LOCK(cs_KeyStore);
     auto mi = mapWitnessV0Scripts.find(witnessprogram);
@@ -105,6 +114,13 @@ bool CBasicKeyStore::GetWitnessV0Script(const uint256& witnessprogram, std::vect
         return true;
     }
     return false;
+}
+
+bool CBasicKeyStore::GetWitnessV0Script(const uint256& witnessprogram, std::vector<unsigned char>& scriptOut) const
+{
+    uint160 shorthash;
+    CRIPEMD160().Write(witnessprogram.begin(), 32).Finalize(shorthash.begin());
+    return GetWitnessV0Script(shorthash, scriptOut);
 }
 
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)

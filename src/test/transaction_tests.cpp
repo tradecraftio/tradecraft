@@ -486,8 +486,11 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     key.MakeNewKey(true); // Need to use compressed keys in segwit or the signing will fail
     CBasicKeyStore keystore;
     keystore.AddKeyPubKey(key, key.GetPubKey());
-    CKeyID hash = key.GetPubKey().GetID();
-    CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
+    CScript witscript = CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG;
+    std::vector<unsigned char> innerscript(1, 0x00);
+    innerscript.insert(innerscript.end(), witscript.begin(), witscript.end());
+    keystore.AddWitnessV0Script(innerscript);
+    CScript scriptPubKey = GetScriptForWitness(witscript);
 
     vector<int> sigHashes;
     sigHashes.push_back(SIGHASH_NONE | SIGHASH_ANYONECANPAY);

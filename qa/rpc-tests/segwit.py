@@ -37,8 +37,8 @@ WIT_V1 = 1
 
 def witness_script(version, pubkey):
     if (version == 0):
-        pubkeyhash = bytes_to_hex_str(ripemd160(sha256(hex_str_to_bytes(pubkey))))
-        pkscript = "0014" + pubkeyhash
+        scripthash = bytes_to_hex_str(ripemd160(hash256(hex_str_to_bytes('0021' + pubkey + 'ac'))))
+        pkscript = "0014" + scripthash
     elif (version == 1):
         # 1-of-1 multisig
         scripthash = bytes_to_hex_str(hash256(hex_str_to_bytes("005121" + pubkey + "51ae")))
@@ -333,13 +333,13 @@ class SegWitTest(FreicoinTestFramework):
                 # P2WSH and P2SH(P2WSH) multisig with compressed keys are spendable after direct importaddress
                 spendable_after_importaddress.extend([p2wsh, p2sh_p2wsh])
             else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+                [bare, p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2pkh, p2sh_p2pkh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
                 # normal P2PKH and P2PK with compressed keys should always be spendable
-                spendable_anytime.extend([p2pkh, p2pk])
-                # P2SH_P2PK, P2SH_P2PKH, and witness with compressed keys are spendable after direct importaddress
-                spendable_after_importaddress.extend([p2wpkh, p2sh_p2wpkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pkh])
+                spendable_anytime.extend([bare, p2pkh])
+                # P2SH of bare, P2SH_P2PKH, and witness with compressed keys are spendable after direct importaddress
+                spendable_after_importaddress.extend([p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2pkh])
                 # Non-standard scripts won't be recognized
-                unseen_anytime.extend([p2wsh_p2pk, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
+                unseen_anytime.extend([p2sh_p2wsh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh])
 
         for i in uncompressed_spendable_address:
             v = self.nodes[0].validateaddress(i)
@@ -350,13 +350,13 @@ class SegWitTest(FreicoinTestFramework):
                 # P2WSH and P2SH(P2WSH) multisig with uncompressed keys are never seen
                 unseen_anytime.extend([p2wsh, p2sh_p2wsh])
             else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+                [bare, p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2pkh, p2sh_p2pkh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
                 # normal P2PKH and P2PK with uncompressed keys should always be spendable
-                spendable_anytime.extend([p2pkh, p2pk])
+                spendable_anytime.extend([bare, p2pkh])
                 # P2SH_P2PK and P2SH_P2PKH are spendable after direct importaddress
-                spendable_after_importaddress.extend([p2sh_p2pk, p2sh_p2pkh])
+                spendable_after_importaddress.extend([p2sh, p2sh_p2pkh])
                 # witness with uncompressed keys are never seen
-                unseen_anytime.extend([p2wpkh, p2sh_p2wpkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
+                unseen_anytime.extend([p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh])
 
         for i in compressed_solvable_address:
             v = self.nodes[0].validateaddress(i)
@@ -365,13 +365,13 @@ class SegWitTest(FreicoinTestFramework):
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 solvable_after_importaddress.extend([bare, p2sh, p2wsh, p2sh_p2wsh])
             else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+                [bare, p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2pkh, p2sh_p2pkh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
                 # normal P2PKH and P2PK with compressed keys should always be seen
-                solvable_anytime.extend([p2pkh, p2pk])
+                solvable_anytime.extend([bare, p2pkh])
                 # P2SH_P2PK, P2SH_P2PKH, and witness with compressed keys are seen after direct importaddress
-                solvable_after_importaddress.extend([p2wpkh, p2sh_p2wpkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pkh])
+                solvable_after_importaddress.extend([p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2pkh])
                 # Non-standard scripts won't be recognized
-                unseen_anytime.extend([p2wsh_p2pk, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
+                unseen_anytime.extend([p2sh_p2wsh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh])
 
         for i in uncompressed_solvable_address:
             v = self.nodes[0].validateaddress(i)
@@ -382,13 +382,13 @@ class SegWitTest(FreicoinTestFramework):
                 # P2WSH and P2SH(P2WSH) multisig with uncompressed keys are never seen
                 unseen_anytime.extend([p2wsh, p2sh_p2wsh])
             else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+                [bare, p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2pkh, p2sh_p2pkh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
                 # normal P2PKH and P2PK with uncompressed keys should always be seen
-                solvable_anytime.extend([p2pkh, p2pk])
+                solvable_anytime.extend([bare, p2pkh])
                 # P2SH_P2PK, P2SH_P2PKH with uncompressed keys are seen after direct importaddress
-                solvable_after_importaddress.extend([p2sh_p2pk, p2sh_p2pkh])
+                solvable_after_importaddress.extend([p2sh, p2sh_p2pkh])
                 # witness with uncompressed keys are never seen
-                unseen_anytime.extend([p2wpkh, p2sh_p2wpkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh])
+                unseen_anytime.extend([p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh])
 
         op1 = CScript([OP_1])
         op0 = CScript([OP_0])
@@ -505,10 +505,10 @@ class SegWitTest(FreicoinTestFramework):
                 spendable_after_addwitnessaddress.extend([p2wsh, p2sh_p2wsh])
                 premature_witaddress.append(script_to_p2sh(p2wsh))
             else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
-                # P2WPKH, P2SH_P2WPKH are spendable after addwitnessaddress
-                spendable_after_addwitnessaddress.extend([p2wpkh, p2sh_p2wpkh])
-                premature_witaddress.append(script_to_p2sh(p2wpkh))
+                [bare, p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2pkh, p2sh_p2pkh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+                # P2WPK, P2SH_P2WPK are spendable after addwitnessaddress
+                spendable_after_addwitnessaddress.extend([p2wpk, p2sh_p2wpk])
+                premature_witaddress.append(script_to_p2sh(p2wpk))
 
         for i in uncompressed_spendable_address + uncompressed_solvable_address:
             v = self.nodes[0].validateaddress(i)
@@ -517,9 +517,9 @@ class SegWitTest(FreicoinTestFramework):
                 # P2WSH and P2SH(P2WSH) multisig with uncompressed keys are never seen
                 unseen_anytime.extend([p2wsh, p2sh_p2wsh])
             else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
-                # P2WPKH, P2SH_P2WPKH with uncompressed keys are never seen
-                unseen_anytime.extend([p2wpkh, p2sh_p2wpkh])
+                [bare, p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2pkh, p2sh_p2pkh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+                # P2WPK, P2SH_P2WPK with uncompressed keys are never seen
+                unseen_anytime.extend([p2wpk, p2sh_p2wpk])
 
         for i in compressed_solvable_address:
             v = self.nodes[0].validateaddress(i)
@@ -529,10 +529,10 @@ class SegWitTest(FreicoinTestFramework):
                 solvable_after_addwitnessaddress.extend([p2wsh, p2sh_p2wsh])
                 premature_witaddress.append(script_to_p2sh(p2wsh))
             else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+                [bare, p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2pkh, p2sh_p2pkh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
                 # P2SH_P2PK, P2SH_P2PKH with compressed keys are seen after addwitnessaddress
-                solvable_after_addwitnessaddress.extend([p2wpkh, p2sh_p2wpkh])
-                premature_witaddress.append(script_to_p2sh(p2wpkh))
+                solvable_after_addwitnessaddress.extend([p2wpk, p2sh_p2wpk])
+                premature_witaddress.append(script_to_p2sh(p2wpk))
 
         self.mine_and_test_listunspent(spendable_after_addwitnessaddress + solvable_after_addwitnessaddress + unseen_anytime, 0)
 
@@ -606,17 +606,19 @@ class SegWitTest(FreicoinTestFramework):
 
     def p2pkh_address_to_script(self,v):
         pubkey = hex_str_to_bytes(v['pubkey'])
-        p2wpkh = CScript([OP_0, hash160(pubkey)])
-        p2sh_p2wpkh = CScript([OP_HASH160, hash160(p2wpkh), OP_EQUAL])
-        p2pk = CScript([pubkey, OP_CHECKSIG])
-        p2pkh = CScript(hex_str_to_bytes(v['scriptPubKey']))
-        p2sh_p2pk = CScript([OP_HASH160, hash160(p2pk), OP_EQUAL])
+        bare = CScript([pubkey, OP_CHECKSIG])
+        p2sh = CScript([OP_HASH160, hash160(bare), OP_EQUAL])
+        p2wpk = CScript([OP_0, ripemd160(hash256(bytes([0]) + bare))])
+        p2sh_p2wpk = CScript([OP_HASH160, hash160(p2wpk), OP_EQUAL])
+        p2wsh = CScript([OP_0, hash256(bytes([0]) + bare)])
+        p2sh_p2wsh = CScript([OP_HASH160, hash160(p2wsh), OP_EQUAL])
+        p2pkh = CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])
         p2sh_p2pkh = CScript([OP_HASH160, hash160(p2pkh), OP_EQUAL])
-        p2wsh_p2pk = CScript([OP_0, hash256(bytes([0]) + p2pk)])
+        p2wpk_p2pkh = CScript([OP_0, ripemd160(hash256(bytes([0]) + p2pkh))])
+        p2sh_p2wpk_p2pkh = CScript([OP_HASH160, hash160(p2wpk_p2pkh), OP_EQUAL])
         p2wsh_p2pkh = CScript([OP_0, hash256(bytes([0]) + p2pkh)])
-        p2sh_p2wsh_p2pk = CScript([OP_HASH160, hash160(p2wsh_p2pk), OP_EQUAL])
         p2sh_p2wsh_p2pkh = CScript([OP_HASH160, hash160(p2wsh_p2pkh), OP_EQUAL])
-        return [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh]
+        return [bare, p2sh, p2wpk, p2sh_p2wpk, p2wsh, p2sh_p2wsh, p2pkh, p2sh_p2pkh, p2wpk_p2pkh, p2sh_p2wpk_p2pkh, p2wsh_p2pkh, p2sh_p2wsh_p2pkh]
 
     def create_and_mine_tx_from_txids(self, txids, success = True):
         tx = CTransaction()

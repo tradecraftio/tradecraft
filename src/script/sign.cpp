@@ -130,14 +130,22 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         // The MultiSigHint value is added by SignN()
         return (SignN(vSolutions, creator, scriptPubKey, ret, sigversion));
 
-    case TX_WITNESS_V0_KEYHASH:
-        ret.push_back(vSolutions[0]);
-        return true;
-
-    case TX_WITNESS_V0_SCRIPTHASH:
+    case TX_WITNESS_V0_SHORTHASH:
+    case TX_WITNESS_V0_LONGHASH:
     {
         std::vector<unsigned char> witscript;
-        if (creator.KeyStore().GetWitnessV0Script(uint256(vSolutions[0]), witscript)) {
+        bool found = false;
+        switch (whichTypeRet)
+        {
+        case TX_WITNESS_V0_SHORTHASH:
+            found = creator.KeyStore().GetWitnessV0Script(uint160(vSolutions[0]), witscript);
+            break;
+
+        case TX_WITNESS_V0_LONGHASH:
+            found = creator.KeyStore().GetWitnessV0Script(uint256(vSolutions[0]), witscript);
+            break;
+        }
+        if (found) {
             if (!witscript.empty() && (witscript[0] == 0x00)) {
                 ret.push_back(std::vector<unsigned char>(witscript.begin()+1, witscript.end()));
                 return true;
@@ -187,20 +195,11 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         P2SH = true;
     }
 
-    if (solved && whichType == TX_WITNESS_V0_KEYHASH)
-    {
-        CScript witnessscript;
-        witnessscript << OP_DUP << OP_HASH160 << ToByteVector(result[0]) << OP_EQUALVERIFY << OP_CHECKSIG;
-        txnouttype subType;
-        solved = solved && SignStep(creator, witnessscript, result, subType, SIGVERSION_WITNESS_V0);
-        sigdata.scriptWitness.stack = result;
-        result.clear();
-    }
-    else if (solved && whichType == TX_WITNESS_V0_SCRIPTHASH)
+    if (solved && (whichType == TX_WITNESS_V0_SHORTHASH || whichType == TX_WITNESS_V0_LONGHASH))
     {
         CScript witnessscript(result[0].begin(), result[0].end());
         txnouttype subType;
-        solved = solved && SignStep(creator, witnessscript, result, subType, SIGVERSION_WITNESS_V0) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SCRIPTHASH && subType != TX_WITNESS_V0_KEYHASH;
+        solved = solved && SignStep(creator, witnessscript, result, subType, SIGVERSION_WITNESS_V0) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SHORTHASH && subType != TX_WITNESS_V0_LONGHASH;
         result.emplace_back(1, 0x00);
         result.back().insert(result.back().end(), witnessscript.begin(), witnessscript.end());
         result.emplace_back(0);
@@ -363,11 +362,6 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
         if (sigs1.script.empty() || sigs1.script[0].empty())
             return sigs2;
         return sigs1;
-    case TX_WITNESS_V0_KEYHASH:
-        // Signatures are bigger than placeholders or empty scripts:
-        if (sigs1.witness.empty() || sigs1.witness[0].empty())
-            return sigs2;
-        return sigs1;
     case TX_SCRIPTHASH:
         if (sigs1.script.empty() || sigs1.script.back().empty())
             return sigs2;
@@ -390,7 +384,8 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
         }
     case TX_MULTISIG:
         return Stacks(CombineMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
-    case TX_WITNESS_V0_SCRIPTHASH:
+    case TX_WITNESS_V0_SHORTHASH:
+    case TX_WITNESS_V0_LONGHASH:
         if ((sigs1.witness.size() <= 1) || ((sigs1.witness.end() - 2)->size() <= 1))
             return sigs2;
         else if ((sigs2.witness.size() <= 1) || ((sigs2.witness.end() - 2)->size() <= 1))
