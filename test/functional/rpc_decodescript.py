@@ -72,6 +72,7 @@ class DecodeScriptTest(FreicoinTestFramework):
         uncompressed_public_key = '04b0da749730dc9b4b1f4a14d6902877a92541f5368778853d9c4a0cb7802dcfb25e01fc8fde47c96c98a4f3a8123e33a38a50cf9025cc8c4494a518f991792bb7'
         push_uncompressed_public_key = '41' + uncompressed_public_key
         p2wsh_p2pk_script_hash = 'd8590cf8ea0674cf3d49fd7ca249b85ef7485dea62c138468bddeb20cd6519f7'
+        p2wpk_script_hash = '91659559d38e91cccab6f5685dc9df0814740bfc'
 
         # below are test cases for all of the standard transaction types
 
@@ -79,15 +80,15 @@ class DecodeScriptTest(FreicoinTestFramework):
         # <pubkey> OP_CHECKSIG
         rpc_result = self.nodes[0].decodescript(push_public_key + 'ac')
         assert_equal(public_key + ' OP_CHECKSIG', rpc_result['asm'])
-        # P2PK is translated to P2WPKH
-        assert_equal('0 ' + public_key_hash, rpc_result['segwit']['asm'])
+        # P2PK is translated to P2WPK
+        assert_equal('0 ' + p2wpk_script_hash, rpc_result['segwit']['asm'])
 
         # 2) P2PKH scriptPubKey
         # OP_DUP OP_HASH160 <PubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
         rpc_result = self.nodes[0].decodescript('76a9' + push_public_key_hash + '88ac')
         assert_equal('OP_DUP OP_HASH160 ' + public_key_hash + ' OP_EQUALVERIFY OP_CHECKSIG', rpc_result['asm'])
-        # P2PKH is translated to P2WPKH
-        assert_equal('0 ' + public_key_hash, rpc_result['segwit']['asm'])
+        # P2PKH can't be automatically mapped to a segwit address
+        assert('segwit' not in rpc_result)
 
         # 3) multisig scriptPubKey
         # <m> <A pubkey> <B pubkey> <C pubkey> <n> OP_CHECKMULTISIG
@@ -143,7 +144,7 @@ class DecodeScriptTest(FreicoinTestFramework):
         rpc_result = self.nodes[0].decodescript(push_uncompressed_public_key + 'ac')
         assert_equal(uncompressed_public_key + ' OP_CHECKSIG', rpc_result['asm'])
         # uncompressed pubkeys are invalid for checksigs in segwit scripts.
-        # decodescript should not return a P2WPKH equivalent.
+        # decodescript should not return a P2WPK equivalent.
         assert 'segwit' not in rpc_result
 
         # 8) multisig scriptPubKey with an uncompressed pubkey
@@ -154,10 +155,10 @@ class DecodeScriptTest(FreicoinTestFramework):
         rpc_result = self.nodes[0].decodescript('52' + push_public_key + push_uncompressed_public_key +'52ae')
         assert_equal('2 ' + public_key + ' ' + uncompressed_public_key + ' 2 OP_CHECKMULTISIG', rpc_result['asm'])
         # uncompressed pubkeys are invalid for checksigs in segwit scripts.
-        # decodescript should not return a P2WPKH equivalent.
+        # decodescript should not return a P2WPK equivalent.
         assert 'segwit' not in rpc_result
 
-        # 9) P2WPKH scriptpubkey
+        # 9) P2WPK scriptpubkey
         # 0 <PubKeyHash>
         rpc_result = self.nodes[0].decodescript('00' + push_public_key_hash)
         assert_equal('0 ' + public_key_hash, rpc_result['asm'])
@@ -167,7 +168,7 @@ class DecodeScriptTest(FreicoinTestFramework):
 
         # 10) P2WSH scriptpubkey
         # 0 <ScriptHash>
-        # even though this hash is of a P2PK script which is better used as bare P2WPKH, it should not matter
+        # even though this hash is of a P2PK script which is better used as bare P2WPK, it should not matter
         # for the purpose of this test.
         rpc_result = self.nodes[0].decodescript('0020' + p2wsh_p2pk_script_hash)
         assert_equal('0 ' + p2wsh_p2pk_script_hash, rpc_result['asm'])

@@ -867,13 +867,25 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
             LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
             assert(spk_man != nullptr);
             for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
-                WitnessV0KeyHash wpkh_dest(keyid);
-                if (IsAddressUsed(wpkh_dest)) {
-                    return true;
-                }
-                ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-                if (IsAddressUsed(sh_wpkh_dest)) {
-                    return true;
+                CPubKey pubkey;
+                if (spk_man->GetPubKey(keyid, pubkey)) {
+                    CScript p2pk = GetScriptForRawPubKey(pubkey);
+                    WitnessV0LongHash wsh_dest(0 /* version */, p2pk);
+                    if (IsAddressUsed(wsh_dest)) {
+                        return true;
+                    }
+                    ScriptHash sh_wsh_dest(GetScriptForDestination(wsh_dest));
+                    if (IsAddressUsed(sh_wsh_dest)) {
+                        return true;
+                    }
+                    WitnessV0ShortHash wpk_dest(0 /* version */, p2pk);
+                    if (IsAddressUsed(wpk_dest)) {
+                        return true;
+                    }
+                    ScriptHash sh_wpk_dest(GetScriptForDestination(wpk_dest));
+                    if (IsAddressUsed(sh_wpk_dest)) {
+                        return true;
+                    }
                 }
                 PKHash pkh_dest(keyid);
                 if (IsAddressUsed(pkh_dest)) {
@@ -1954,12 +1966,12 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     }
 
     // if m_default_address_type is legacy, use legacy address as change (even
-    // if some of the outputs are P2WPKH or P2WSH).
+    // if some of the outputs are P2WPK or P2WSH).
     if (m_default_address_type == OutputType::LEGACY) {
         return OutputType::LEGACY;
     }
 
-    // if any destination is P2WPKH or P2WSH, use P2WPKH for the change
+    // if any destination is P2WPK or P2WSH, use P2WPK for the change
     // output.
     for (const auto& recipient : vecSend) {
         // Check if any destination contains a witness program:

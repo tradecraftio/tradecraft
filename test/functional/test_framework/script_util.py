@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Useful Script constants and utils."""
-from test_framework.script import CScript, hash160, hash256, OP_0, OP_DUP, OP_HASH160, OP_CHECKSIG, OP_EQUAL, OP_EQUALVERIFY
+from test_framework.script import CScript, hash160, hash256, ripemd160, OP_0, OP_DUP, OP_HASH160, OP_CHECKSIG, OP_EQUAL, OP_EQUALVERIFY
 from test_framework.util import hex_str_to_bytes
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
@@ -28,14 +28,14 @@ from test_framework.util import hex_str_to_bytes
 # Output:      8 [Amount] + 1 [scriptPubKeyLen] = 9 bytes
 #
 # Hence, the scriptPubKey of the single output has to have a size of at
-# least 22 bytes, which corresponds to the size of a P2WPKH scriptPubKey.
+# least 22 bytes, which corresponds to the size of a P2WPK scriptPubKey.
 # The following script constant consists of a single push of 21 bytes of 'a':
 #   <PUSH_21> <21-bytes of 'a'>
 # resulting in a 22-byte size. It should be used whenever (small) fake
 # scriptPubKeys are needed, to guarantee that the minimum transaction size is
 # met.
-DUMMY_P2WPKH_SCRIPT = CScript([b'a' * 21])
-DUMMY_2_P2WPKH_SCRIPT = CScript([b'b' * 21])
+DUMMY_P2WPK_SCRIPT = CScript([b'a' * 21])
+DUMMY_2_P2WPK_SCRIPT = CScript([b'b' * 21])
 
 def keyhash_to_p2pkh_script(hash, main = False):
     assert len(hash) == 20
@@ -45,6 +45,10 @@ def scripthash_to_p2sh_script(hash, main = False):
     assert len(hash) == 20
     return CScript([OP_HASH160, hash, OP_EQUAL])
 
+def key_to_p2pk_script(key, main = False):
+    key = check_key(key)
+    return CScript([key, OP_CHECKSIG])
+
 def key_to_p2pkh_script(key, main = False):
     key = check_key(key)
     return keyhash_to_p2pkh_script(hash160(key), main)
@@ -53,7 +57,7 @@ def script_to_p2sh_script(script, main = False):
     script = check_script(script)
     return scripthash_to_p2sh_script(hash160(script), main)
 
-def key_to_p2sh_p2wpkh_script(key, main = False):
+def key_to_p2sh_p2wpk_script(key, main = False):
     key = check_key(key)
     p2shscript = CScript([OP_0, hash160(key)])
     return script_to_p2sh_script(p2shscript, main)
@@ -73,9 +77,13 @@ def script_to_p2wsh_script(script, main = False):
     script = check_script(script)
     return program_to_witness_script(0, hash256(script_to_witness(script)), main)
 
-def key_to_p2wpkh_script(key, main = False):
+def script_to_p2wpk_script(script, main = False):
+    script = check_script(script)
+    return program_to_witness_script(0, ripemd160(hash256(script_to_witness(script))), main)
+
+def key_to_p2wpk_script(key, main = False):
     key = check_key(key)
-    return program_to_witness_script(0, hash160(key), main)
+    return script_to_p2wpk_script(CScript([key, OP_CHECKSIG]), main)
 
 def script_to_p2sh_p2wsh_script(script, main = False):
     script = check_script(script)
