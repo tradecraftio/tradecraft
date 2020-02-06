@@ -18,8 +18,8 @@ from collections import namedtuple
 
 from test_framework.address import (
     key_to_p2pkh,
-    key_to_p2sh_p2wpkh,
-    key_to_p2wpkh,
+    key_to_p2sh_p2wpk,
+    key_to_p2wpk,
     script_to_p2sh,
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
@@ -37,6 +37,7 @@ from test_framework.script import (
     OP_HASH160,
     hash160,
     hash256,
+    ripemd160,
 )
 from test_framework.util import hex_str_to_bytes
 
@@ -44,11 +45,11 @@ Key = namedtuple('Key', ['privkey',
                          'pubkey',
                          'p2pkh_script',
                          'p2pkh_addr',
-                         'p2wpkh_script',
-                         'p2wpkh_addr',
-                         'p2sh_p2wpkh_script',
-                         'p2sh_p2wpkh_redeem_script',
-                         'p2sh_p2wpkh_addr'])
+                         'p2wpk_script',
+                         'p2wpk_addr',
+                         'p2sh_p2wpk_script',
+                         'p2sh_p2wpk_redeem_script',
+                         'p2sh_p2wpk_addr'])
 
 Multisig = namedtuple('Multisig', ['privkeys',
                                    'pubkeys',
@@ -68,15 +69,16 @@ def get_key(node):
     addr = node.getnewaddress()
     pubkey = node.getaddressinfo(addr)['pubkey']
     pkh = hash160(hex_str_to_bytes(pubkey))
+    p2pk = CScript([hex_str_to_bytes(pubkey), OP_CHECKSIG])
     return Key(privkey=node.dumpprivkey(addr),
                pubkey=pubkey,
                p2pkh_script=CScript([OP_DUP, OP_HASH160, pkh, OP_EQUALVERIFY, OP_CHECKSIG]).hex(),
                p2pkh_addr=key_to_p2pkh(pubkey),
-               p2wpkh_script=CScript([OP_0, pkh]).hex(),
-               p2wpkh_addr=key_to_p2wpkh(pubkey),
-               p2sh_p2wpkh_script=CScript([OP_HASH160, hash160(CScript([OP_0, pkh])), OP_EQUAL]).hex(),
-               p2sh_p2wpkh_redeem_script=CScript([OP_0, pkh]).hex(),
-               p2sh_p2wpkh_addr=key_to_p2sh_p2wpkh(pubkey))
+               p2wpk_script=CScript([OP_0, pkh]).hex(),
+               p2wpk_addr=key_to_p2wpk(pubkey),
+               p2sh_p2wpk_script=CScript([OP_HASH160, hash160(CScript([OP_0, ripemd160(b'\x00' + hash256(p2pk))])), OP_EQUAL]).hex(),
+               p2sh_p2wpk_redeem_script=CScript([OP_0, ripemd160(hash256(b'\x00' + p2pk))]).hex(),
+               p2sh_p2wpk_addr=key_to_p2sh_p2wpk(pubkey))
 
 def get_multisig(node):
     """Generate a fresh 2-of-3 multisig on node

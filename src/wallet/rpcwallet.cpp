@@ -1035,16 +1035,24 @@ public:
     bool operator()(const PKHash &pkhash) {
         if (pwallet) {
             CScript script = GetScriptForDestination(pkhash);
-            WitnessV0ScriptEntry other(0 /* version */, script);
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(script);
+            if (!provider) {
+                return false;
+            }
+            CPubKey pubkey;
+            CKeyID keyid(pkhash);
+            if (!provider->GetPubKey(keyid, pubkey))
+                return false;
+            CScript basescript = GetScriptForRawPubKey(pubkey);
+            WitnessV0ScriptEntry other(0 /* version */, basescript);
             entry.m_script = std::move(other.m_script);
             LegacyScriptPubKeyMan* spkm = pwallet->GetLegacyScriptPubKeyMan();
             if (!spkm) {
                 return false;
             }
             spkm->AddWitnessV0Script(entry);
-            CScript witscript = GetScriptForWitness(script);
-            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(witscript);
-            if (!provider || !IsSolvable(*provider, witscript)) {
+            CScript witscript = GetScriptForWitness(basescript);
+            if (!IsSolvable(*provider, witscript)) {
                 return false;
             }
             return ExtractDestination(witscript, result);
@@ -1072,7 +1080,15 @@ public:
                     return false;
                 }
                 spkm->AddWitnessV0Script(entry);
-                CScript witscript = GetScriptForWitness(subscript);
+                // CScript witscript = GetScriptForWitness(subscript);
+                std::vector<std::vector<unsigned char>> data;
+                auto subtype = Solver(subscript, data);
+                CScript witscript;
+                if (subtype == TX_PUBKEY || subtype == TX_PUBKEYHASH) {
+                    witscript = GetScriptForDestination(entry.GetShortHash());
+                } else {
+                    witscript = GetScriptForDestination(entry.GetLongHash());
+                }
                 if (!IsSolvable(*provider, witscript)) {
                     return false;
                 }
@@ -1082,14 +1098,14 @@ public:
         return false;
     }
 
-    bool operator()(const WitnessV0KeyHash& id)
+    bool operator()(const WitnessV0ShortHash& id)
     {
         already_witness = true;
         result = id;
         return true;
     }
 
-    bool operator()(const WitnessV0ScriptHash& id)
+    bool operator()(const WitnessV0LongHash& id)
     {
         already_witness = true;
         result = id;
@@ -1157,7 +1173,10 @@ static UniValue addwitnessaddress(const JSONRPCRequest& request)
         if (!spk_man) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet does not have a legacy script pubkey manager");
         }
-        spk_man->AddCScript(witprogram); // Implicit for single-key now, but necessary for multisig and for compatibility with older software
+        // Implicit for single-key now, but necessary for multisig and for
+        // compatibility with older software.
+        spk_man->AddCScript(GetScriptForDestination(w.entry.GetLongHash()));
+        spk_man->AddCScript(GetScriptForDestination(w.entry.GetShortHash()));
         pwallet->SetAddressBook(w.result, "", "receive");
     }
 
@@ -3143,18 +3162,32 @@ static UniValue listunspent(const JSONRPCRequest& request)
                             bool extracted = ExtractDestination(redeemScript, witness_destination);
                             CHECK_NONFATAL(extracted);
                             // Also return the witness script
-                            const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
                             WitnessV0ScriptEntry witentry;
-                            if (provider->GetWitnessV0Script(whash, witentry)) {
-                                entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                            if (redeemScript.size() == 2 + WITNESS_V0_LONGHASH_SIZE) {
+                                const WitnessV0LongHash& whash = boost::get<WitnessV0LongHash>(witness_destination);
+                                if (provider->GetWitnessV0Script(whash, witentry)) {
+                                    entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                                }
+                            } else if (redeemScript.size() == 2 + WITNESS_V0_SHORTHASH_SIZE) {
+                                const WitnessV0ShortHash& whash = boost::get<WitnessV0ShortHash>(witness_destination);
+                                if (provider->GetWitnessV0Script(whash, witentry)) {
+                                    entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                                }
                             }
                         }
                     }
                 } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
-                    const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
                     WitnessV0ScriptEntry witentry;
-                    if (provider->GetWitnessV0Script(whash, witentry)) {
-                        entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                    if (scriptPubKey.size() == 2 + WITNESS_V0_LONGHASH_SIZE) {
+                        const WitnessV0LongHash& whash = boost::get<WitnessV0LongHash>(address);
+                        if (provider->GetWitnessV0Script(whash, witentry)) {
+                            entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                        }
+                    } else if (scriptPubKey.size() == 2 + WITNESS_V0_SHORTHASH_SIZE) {
+                        const WitnessV0ShortHash& whash = boost::get<WitnessV0ShortHash>(address);
+                        if (provider->GetWitnessV0Script(whash, witentry)) {
+                            entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                        }
                     }
                 }
             }
@@ -3809,17 +3842,29 @@ public:
         return obj;
     }
 
-    UniValue operator()(const WitnessV0KeyHash& id) const
+    UniValue operator()(const WitnessV0ShortHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
-        CPubKey pubkey;
-        if (provider && provider->GetPubKey(CKeyID(id), pubkey)) {
-            obj.pushKV("pubkey", HexStr(pubkey));
+        WitnessV0ScriptEntry entry;
+        if (provider && provider->GetWitnessV0Script(id, entry)) {
+            if (!entry.m_script.empty()) {
+                obj.pushKV("witscript_version", (int64_t)entry.m_script[0]);
+                if (entry.m_script[0] == 0x00) {
+                    UniValue branch(UniValue::VARR);
+                    for (const auto& hash : entry.m_branch) {
+                        branch.push_back(HexStr(hash.begin(), hash.end()));
+                    }
+                    obj.pushKV("witness_branch", branch);
+                    obj.pushKV("witness_path", (int64_t)entry.m_path);
+                    CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+                    ProcessSubScript(subscript, obj);
+                }
+            }
         }
         return obj;
     }
 
-    UniValue operator()(const WitnessV0ScriptHash& id) const
+    UniValue operator()(const WitnessV0LongHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
         WitnessV0ScriptEntry entry;

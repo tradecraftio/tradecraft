@@ -1824,7 +1824,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     Span<const valtype> stack = MakeSpan(witness.stack);
 
     if (witversion == 0) {
-        if (program.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+        if ((program.size() == WITNESS_V0_SHORTHASH_SIZE) || (program.size() == WITNESS_V0_LONGHASH_SIZE)) {
             // Version 0 segregated witness program: Merkle root inside the program, Merkle proof + CScript + inputs in witness
             if (stack.size() <= 1) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
@@ -1868,7 +1868,10 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             if (invalid) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
             }
-            if (memcmp(hashScriptPubKey.begin(), program.data(), 32)) {
+            if (program.size() == WITNESS_V0_SHORTHASH_SIZE) {
+                CRIPEMD160().Write(hashScriptPubKey.begin(), 32).Finalize(hashScriptPubKey.begin());
+            }
+            if (memcmp(hashScriptPubKey.begin(), program.data(), program.size())) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
             if (!script_bytes.empty() && script_bytes[0] == 0x00) {
@@ -1880,13 +1883,6 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
                 // Unrecognized inner-version returns true for future softfork compatibility
                 return set_success(serror);
             }
-        } else if (program.size() == WITNESS_V0_KEYHASH_SIZE) {
-            // Special case for pay-to-pubkeyhash; signature + pubkey in witness
-            if (stack.size() != 2) {
-                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // 2 items in witness
-            }
-            scriptPubKey << OP_DUP << OP_HASH160 << program << OP_EQUALVERIFY << OP_CHECKSIG;
-            return ExecuteWitnessScript(stack, scriptPubKey, flags, SigVersion::WITNESS_V0, checker, serror);
         } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
         } else {

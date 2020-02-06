@@ -91,23 +91,36 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_UNSPENDABLE);
     BOOST_CHECK_EQUAL(solutions.size(), 0U);
 
-    // TX_WITNESS_V0_KEYHASH
-    s.clear();
-    s << OP_0 << ToByteVector(pubkeys[0].GetID());
-    BOOST_CHECK_EQUAL(Solver(s, solutions), TX_WITNESS_V0_KEYHASH);
-    BOOST_CHECK_EQUAL(solutions.size(), 1U);
-    BOOST_CHECK(solutions[0] == ToByteVector(pubkeys[0].GetID()));
+    // TX_WITNESS_V0_LONGHASH
+    CScript witnessScript_inner;
+    witnessScript_inner << ToByteVector(pubkeys[0]) << OP_CHECKSIG;
+    std::vector<unsigned char> witnessScript;
+    witnessScript.push_back(0x00);
+    witnessScript.insert(witnessScript.end(),
+                         witnessScript_inner.begin(),
+                         witnessScript_inner.end());
 
-    // TX_WITNESS_V0_SCRIPTHASH
-    uint256 scriptHash;
-    CSHA256().Write(&redeemScript[0], redeemScript.size())
-        .Finalize(scriptHash.begin());
-
+    WitnessV0LongHash long_hash;
+    CHash256()
+        .Write(&witnessScript[0],
+               witnessScript.size())
+        .Finalize(long_hash.begin());
     s.clear();
-    s << OP_0 << ToByteVector(scriptHash);
-    BOOST_CHECK_EQUAL(Solver(s, solutions), TX_WITNESS_V0_SCRIPTHASH);
+    s << OP_0 << ToByteVector(long_hash);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TX_WITNESS_V0_LONGHASH);
     BOOST_CHECK_EQUAL(solutions.size(), 1U);
-    BOOST_CHECK(solutions[0] == ToByteVector(scriptHash));
+    BOOST_CHECK(solutions[0] == ToByteVector(long_hash));
+
+    // TX_WITNESS_V0_SHORTHASH
+    WitnessV0ShortHash short_hash;
+    CRIPEMD160()
+        .Write(long_hash.begin(), 32)
+        .Finalize(short_hash.begin());
+    s.clear();
+    s << OP_0 << ToByteVector(short_hash);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TX_WITNESS_V0_SHORTHASH);
+    BOOST_CHECK_EQUAL(solutions.size(), 1U);
+    BOOST_CHECK(solutions[0] == ToByteVector(short_hash));
 
     // TX_NONSTANDARD
     s.clear();
@@ -213,22 +226,29 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s << OP_RETURN << std::vector<unsigned char>({75});
     BOOST_CHECK(!ExtractDestination(s, address));
 
-    // TX_WITNESS_V0_KEYHASH
-    s.clear();
-    s << OP_0 << ToByteVector(pubkey.GetID());
-    BOOST_CHECK(ExtractDestination(s, address));
-    WitnessV0KeyHash keyhash;
-    CHash160().Write(pubkey.begin(), pubkey.size()).Finalize(keyhash.begin());
-    BOOST_CHECK(boost::get<WitnessV0KeyHash>(&address) && *boost::get<WitnessV0KeyHash>(&address) == keyhash);
-
-    // TX_WITNESS_V0_SCRIPTHASH
-    s.clear();
-    WitnessV0ScriptHash scripthash;
+    // TX_WITNESS_V0_LONGHASH
     unsigned char prefix = 0x00;
-    CSHA256().Write(&prefix, 1).Write(redeemScript.data(), redeemScript.size()).Finalize(scripthash.begin());
-    s << OP_0 << ToByteVector(scripthash);
+    WitnessV0LongHash long_hash;
+    CHash256()
+        .Write(&prefix, 1)
+        .Write(redeemScript.data(),
+               redeemScript.size())
+        .Finalize(long_hash.begin());
+    s.clear();
+    s << OP_0 << ToByteVector(long_hash);
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(boost::get<WitnessV0ScriptHash>(&address) && *boost::get<WitnessV0ScriptHash>(&address) == scripthash);
+    BOOST_CHECK(boost::get<WitnessV0LongHash>(&address) && *boost::get<WitnessV0LongHash>(&address) == long_hash);
+
+    // TX_WITNESS_V0_SHORTHASH
+    WitnessV0ShortHash short_hash;
+    CRIPEMD160()
+        .Write(long_hash.begin(),
+               long_hash.size())
+        .Finalize(short_hash.begin());
+    s.clear();
+    s << OP_0 << ToByteVector(short_hash);
+    BOOST_CHECK(ExtractDestination(s, address));
+    BOOST_CHECK(boost::get<WitnessV0ShortHash>(&address) && *boost::get<WitnessV0ShortHash>(&address) == short_hash);
 
     // TX_WITNESS with unknown version
     s.clear();
@@ -356,28 +376,48 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
     CScript witnessScript;
 
     witnessScript << ToByteVector(pubkeys[0]) << OP_CHECKSIG;
+    WitnessV0LongHash long_hash;
+    unsigned char prefix = 0x00;
+    CHash256()
+        .Write(&prefix, 1)
+        .Write(&witnessScript[0], witnessScript.size())
+        .Finalize(long_hash.begin());
+    WitnessV0ShortHash short_hash;
+    CRIPEMD160()
+        .Write(long_hash.begin(), 32)
+        .Finalize(short_hash.begin());
     expected.clear();
-    expected << OP_0 << ToByteVector(pubkeys[0].GetID());
+    expected << OP_0 << ToByteVector(short_hash);
     result = GetScriptForWitness(witnessScript);
     BOOST_CHECK(result == expected);
 
     witnessScript.clear();
     witnessScript << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
+
+    const unsigned char zero = 0;
+    CHash256()
+        .Write(&zero, 1)
+        .Write(&witnessScript[0], witnessScript.size())
+        .Finalize(long_hash.begin());
+    CRIPEMD160()
+        .Write(long_hash.begin(), 32)
+        .Finalize(short_hash.begin());
+
+    expected.clear();
+    expected << OP_0 << ToByteVector(short_hash);
     result = GetScriptForWitness(witnessScript);
     BOOST_CHECK(result == expected);
 
     witnessScript.clear();
     witnessScript << OP_1 << ToByteVector(pubkeys[0]) << OP_1 << OP_CHECKMULTISIG;
 
-    uint256 scriptHash;
-    unsigned char zero = 0x00;
     CHash256()
         .Write(&zero, 1)
         .Write(witnessScript.data(), witnessScript.size())
-        .Finalize(scriptHash.begin());
+        .Finalize(long_hash.begin());
 
     expected.clear();
-    expected << OP_0 << ToByteVector(scriptHash);
+    expected << OP_0 << ToByteVector(long_hash);
     result = GetScriptForWitness(witnessScript);
     BOOST_CHECK(result == expected);
 }

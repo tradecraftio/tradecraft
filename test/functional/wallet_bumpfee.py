@@ -258,8 +258,8 @@ def test_dust_to_fee(self, rbf_node, dest_address):
     # The DER formatting used by Freicoin to serialize ECDSA signatures means that signatures can have a
     # variable size of 70-72 bytes (or possibly even less), with most being 71 or 72 bytes. The signature
     # in the witness is divided by 4 for the vsize, so this variance can take the weight across a 4-byte
-    # boundary. Thus expected transaction size (p2wpkh, 1 input, 2 outputs) is 140-141 vbytes, usually 141.
-    if not 144 <= fulltx["vsize"] <= 145:
+    # boundary. Thus expected transaction size (p2wpk, 1 input, 2 outputs) is 140-141 vbytes, usually 141.
+    if not 145 <= fulltx["vsize"] <= 146:
         raise AssertionError("Invalid tx vsize of {} (140-141 expected), full tx: {}".format(fulltx["vsize"], fulltx))
     # Bump with fee_rate of 0.00350250 FRC per 1000 vbytes to create dust.
     # Expected fee is 145 vbytes * fee_rate 0.00340550 FRC / 1000 vbytes = 0.00049380 FRC.
@@ -291,7 +291,7 @@ def test_settxfee(self, rbf_node, dest_address):
 
 def test_maxtxfee_fails(self, rbf_node, dest_address):
     self.log.info('Test that bumpfee fails when it hits -matxfee')
-    # size of bumped transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
+    # size of bumped transaction (p2wpk, 1 input, 2 outputs): 141 vbytes
     # expected bump fee of 141 vbytes * 0.00200000 FRC / 1000 vbytes = 0.00002820 FRC
     # which exceeds maxtxfee and is expected to raise
     self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
@@ -303,9 +303,9 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
 
 def test_watchonly_pst(self, peer_node, rbf_node, dest_address):
     self.log.info('Test that PST is returned for bumpfee in watchonly wallets')
-    priv_rec_desc = "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#rweraev0"
+    priv_rec_desc = "wpk([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#6n0zumr4"
     pub_rec_desc = rbf_node.getdescriptorinfo(priv_rec_desc)["descriptor"]
-    priv_change_desc = "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#j6uzqvuh"
+    priv_change_desc = "wpk([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#t82rpwnd"
     pub_change_desc = rbf_node.getdescriptorinfo(priv_change_desc)["descriptor"]
     # Create a wallet with private keys that can sign PSTs
     rbf_node.createwallet(wallet_name="signer", disable_private_keys=False, blank=True)
