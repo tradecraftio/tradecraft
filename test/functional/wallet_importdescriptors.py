@@ -130,18 +130,18 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         assert_equal(info["ismine"], True)
         assert_equal(info["ischange"], True)
 
-        # # Test importing of a P2SH-P2WPKH descriptor
+        # # Test importing of a P2SH-P2WPK descriptor
         key = get_generate_key()
-        self.log.info("Should not import a p2sh-p2wpkh descriptor without checksum")
-        self.test_importdesc({"desc": "sh(wpkh(" + key.pubkey + "))",
+        self.log.info("Should not import a p2sh-p2wpk descriptor without checksum")
+        self.test_importdesc({"desc": "sh(wpk(" + key.pubkey + "))",
                               "timestamp": "now"
                               },
                              success=False,
                              error_code=-5,
                              error_message="Missing checksum")
 
-        self.log.info("Should not import a p2sh-p2wpkh descriptor that has range specified")
-        self.test_importdesc({"desc": descsum_create("sh(wpkh(" + key.pubkey + "))"),
+        self.log.info("Should not import a p2sh-p2wpk descriptor that has range specified")
+        self.test_importdesc({"desc": descsum_create("sh(wpk(" + key.pubkey + "))"),
                                "timestamp": "now",
                                "range": 1,
                               },
@@ -149,8 +149,8 @@ class ImportDescriptorsTest(FreicoinTestFramework):
                               error_code=-8,
                               error_message="Range should not be specified for an un-ranged descriptor")
 
-        self.log.info("Should not import a p2sh-p2wpkh descriptor and have it set to active")
-        self.test_importdesc({"desc": descsum_create("sh(wpkh(" + key.pubkey + "))"),
+        self.log.info("Should not import a p2sh-p2wpk descriptor and have it set to active")
+        self.test_importdesc({"desc": descsum_create("sh(wpk(" + key.pubkey + "))"),
                                "timestamp": "now",
                                "active": True,
                               },
@@ -158,8 +158,8 @@ class ImportDescriptorsTest(FreicoinTestFramework):
                               error_code=-8,
                               error_message="Active descriptors must be ranged")
 
-        self.log.info("Should import a (non-active) p2sh-p2wpkh descriptor")
-        self.test_importdesc({"desc": descsum_create("sh(wpkh(" + key.pubkey + "))"),
+        self.log.info("Should import a (non-active) p2sh-p2wpk descriptor")
+        self.test_importdesc({"desc": descsum_create("sh(wpk(" + key.pubkey + "))"),
                                "timestamp": "now",
                                "active": False,
                               },
@@ -167,7 +167,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
 
         test_address(w1,
-                     key.p2sh_p2wpkh_addr,
+                     key.p2sh_p2wpk_addr,
                      ismine=True,
                      solvable=True)
 
@@ -175,7 +175,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         w1.unloadwallet()
         self.nodes[1].loadwallet('w1')
         test_address(w1,
-                     key.p2sh_p2wpkh_addr,
+                     key.p2sh_p2wpk_addr,
                      ismine=True,
                      solvable=True)
 
@@ -195,8 +195,8 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
         xpub = "tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H"
         addresses = ["2N7yv4p8G8yEaPddJxY41kPihnWvs39qCMf", "2MsHxyb2JS3pAySeNUsJ7mNnurtpeenDzLA"] # hdkeypath=m/0'/0'/0' and 1'
-        addresses += ["bcrt1qrd3n235cj2czsfmsuvqqpr3lu6lg0ju7scl8gn", "bcrt1qfqeppuvj0ww98r6qghmdkj70tv8qpchehegrg8"] # wpkh subscripts corresponding to the above addresses
-        desc = "sh(wpkh(" + xpub + "/0/0/*" + "))"
+        addresses += ["bcrt1qrd3n235cj2czsfmsuvqqpr3lu6lg0ju7scl8gn", "bcrt1qfqeppuvj0ww98r6qghmdkj70tv8qpchehegrg8"] # wpk subscripts corresponding to the above addresses
+        desc = "sh(wpk(" + xpub + "/0/0/*" + "))"
 
         self.log.info("Ranged descriptors cannot have labels")
         self.test_importdesc({"desc":descsum_create(desc),
@@ -225,7 +225,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
 
         # # Test importing of a ranged descriptor with xpriv
         self.log.info("Should not import a ranged descriptor that includes xpriv into a watch-only wallet")
-        desc = "sh(wpkh(" + xpriv + "/0'/0'/*'" + "))"
+        desc = "sh(wpk(" + xpriv + "/0'/0'/*'" + "))"
         self.test_importdesc({"desc": descsum_create(desc),
                               "timestamp": "now",
                               "range": 1},
@@ -234,7 +234,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
                              error_message='Cannot import private keys to a wallet with private keys disabled')
 
         self.log.info("Should not import a descriptor with hardened derivations when private keys are disabled")
-        self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/1h/*)"),
+        self.test_importdesc({"desc": descsum_create("wpk(" + xpub + "/1h/*)"),
                               "timestamp": "now",
                               "range": 1},
                              success=False,
@@ -274,13 +274,13 @@ class ImportDescriptorsTest(FreicoinTestFramework):
             'bcrt1qsg97266hrh6cpmutqen8s4s962aryy77jp0fg0', # m/0'/0'/4
         ]
 
-        self.test_importdesc({'desc': descsum_create('wpkh([80002067/0h/0h]' + xpub + '/*)'),
+        self.test_importdesc({'desc': descsum_create('wpk([80002067/0h/0h]' + xpub + '/*)'),
                               'active': True,
                               'range' : [0, 2],
                               'timestamp': 'now'
                              },
                              success=True)
-        self.test_importdesc({'desc': descsum_create('sh(wpkh([abcdef12/0h/0h]' + xpub + '/*))'),
+        self.test_importdesc({'desc': descsum_create('sh(wpk([abcdef12/0h/0h]' + xpub + '/*))'),
                               'active': True,
                               'range' : [0, 2],
                               'timestamp': 'now'
@@ -299,11 +299,11 @@ class ImportDescriptorsTest(FreicoinTestFramework):
             assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
             assert_equal(received_addr, expected_addr)
             bech32_addr_info = w1.getaddressinfo(received_addr)
-            assert_equal(bech32_addr_info['desc'][:23], 'wpkh([80002067/0\'/0\'/{}]'.format(i))
+            assert_equal(bech32_addr_info['desc'][:23], 'wpk([80002067/0\'/0\'/{}]'.format(i))
 
-            shwpkh_addr = w1.getnewaddress('', 'p2sh-segwit')
-            shwpkh_addr_info = w1.getaddressinfo(shwpkh_addr)
-            assert_equal(shwpkh_addr_info['desc'][:26], 'sh(wpkh([abcdef12/0\'/0\'/{}]'.format(i))
+            shwpk_addr = w1.getnewaddress('', 'p2sh-segwit')
+            shwpk_addr_info = w1.getaddressinfo(shwpk_addr)
+            assert_equal(shwpk_addr_info['desc'][:26], 'sh(wpk([abcdef12/0\'/0\'/{}]'.format(i))
 
             pkh_addr = w1.getnewaddress('', 'legacy')
             pkh_addr_info = w1.getaddressinfo(pkh_addr)
@@ -326,7 +326,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         # # Test importing a descriptor containing a WIF private key
         wif_priv = "cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh"
         address = "2MuhcG52uHPknxDgmGPsV18jSHFBnnRgjPg"
-        desc = "sh(wpkh(" + wif_priv + "))"
+        desc = "sh(wpk(" + wif_priv + "))"
         self.log.info("Should import a descriptor with a WIF private key as spendable")
         self.test_importdesc({"desc": descsum_create(desc),
                                "timestamp": "now"},

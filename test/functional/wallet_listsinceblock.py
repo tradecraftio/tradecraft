@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test the listsinceblock RPC."""
 
-from test_framework.address import key_to_p2wpkh
+from test_framework.address import key_to_p2wpk
 from test_framework.key import ECKey
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.messages import MAX_SEQUENCE_NUMBER
@@ -199,7 +199,7 @@ class ListSinceBlockTest(FreicoinTestFramework):
         eckey = ECKey()
         eckey.generate()
         privkey = bytes_to_wif(eckey.get_bytes())
-        address = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
+        address = key_to_p2wpk(eckey.get_pubkey().get_bytes())
         self.nodes[2].sendtoaddress(address, 10)
         self.nodes[2].generate(6)
         self.sync_all()

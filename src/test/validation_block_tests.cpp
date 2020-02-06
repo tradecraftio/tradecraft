@@ -87,7 +87,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash, int h
 
     pubKey.clear();
     {
-        WitnessV0ScriptHash witness_program;
+        WitnessV0LongHash witness_program;
         CHash256().Write(V_OP_TRUE).Finalize(witness_program);
         pubKey << OP_0 << ToByteVector(witness_program);
     }

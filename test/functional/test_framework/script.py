@@ -46,8 +46,11 @@ OPCODE_NAMES = {}  # type: Dict[CScriptOp, str]
 
 LEAF_VERSION_TAPSCRIPT = 0xc0
 
+def ripemd160(s):
+    return hashlib.new('ripemd160', s).digest()
+
 def hash160(s):
-    return hashlib.new('ripemd160', sha256(s)).digest()
+    return ripemd160(sha256(s))
 
 def bn2vch(v):
     """Convert number to freicoin-specific little endian format."""

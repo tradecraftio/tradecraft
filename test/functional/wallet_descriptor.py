@@ -61,12 +61,12 @@ class WalletDescriptorTest(FreicoinTestFramework):
 
         addr = self.nodes[0].getnewaddress("", "p2sh-segwit")
         addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('sh(wpkh(')
+        assert addr_info['desc'].startswith('sh(wpk(')
         assert_equal(addr_info['hdkeypath'], 'm/49\'/1\'/0\'/0/0')
 
         addr = self.nodes[0].getnewaddress("", "bech32")
         addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('wpkh(')
+        assert addr_info['desc'].startswith('wpk(')
         assert_equal(addr_info['hdkeypath'], 'm/84\'/1\'/0\'/0/0')
 
         # Check that getrawchangeaddress works
@@ -77,12 +77,12 @@ class WalletDescriptorTest(FreicoinTestFramework):
 
         addr = self.nodes[0].getrawchangeaddress("p2sh-segwit")
         addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('sh(wpkh(')
+        assert addr_info['desc'].startswith('sh(wpk(')
         assert_equal(addr_info['hdkeypath'], 'm/49\'/1\'/0\'/1/0')
 
         addr = self.nodes[0].getrawchangeaddress("bech32")
         addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('wpkh(')
+        assert addr_info['desc'].startswith('wpk(')
         assert_equal(addr_info['hdkeypath'], 'm/84\'/1\'/0\'/1/0')
 
         # Make a wallet to receive coins at
@@ -132,7 +132,7 @@ class WalletDescriptorTest(FreicoinTestFramework):
         self.log.info("Test that unlock is needed when deriving only hardened keys in an encrypted wallet")
         send_wrpc.walletpassphrase('pass', 10)
         send_wrpc.importdescriptors([{
-            "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
+            "desc": "wpk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
             "timestamp": "now",
             "range": [0,10],
             "active": True

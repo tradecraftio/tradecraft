@@ -25,9 +25,9 @@ def key_to_address(key, address_type):
     if address_type == 'legacy':
         return address.key_to_p2pkh(key)
     elif address_type == 'p2sh-segwit':
-        return address.key_to_p2sh_p2wpkh(key)
+        return address.key_to_p2sh_p2wpk(key)
     elif address_type == 'bech32':
-        return address.key_to_p2wpkh(key)
+        return address.key_to_p2wpk(key)
 
 def send_a_to_b(receive_node, send_node):
     keys = {}

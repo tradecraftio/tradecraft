@@ -834,13 +834,25 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
             LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
             assert(spk_man != nullptr);
             for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
-                WitnessV0KeyHash wpkh_dest(keyid);
-                if (GetDestData(wpkh_dest, "used", nullptr)) {
-                    return true;
-                }
-                ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-                if (GetDestData(sh_wpkh_dest, "used", nullptr)) {
-                    return true;
+                CPubKey pubkey;
+                if (spk_man->GetPubKey(keyid, pubkey)) {
+                    CScript p2pk = GetScriptForRawPubKey(pubkey);
+                    WitnessV0LongHash wsh_dest(0 /* version */, p2pk);
+                    if (GetDestData(wsh_dest, "used", nullptr)) {
+                        return true;
+                    }
+                    ScriptHash sh_wsh_dest(GetScriptForDestination(wsh_dest));
+                    if (GetDestData(sh_wsh_dest, "used", nullptr)) {
+                        return true;
+                    }
+                    WitnessV0ShortHash wpk_dest(0 /* version */, p2pk);
+                    if (GetDestData(wpk_dest, "used", nullptr)) {
+                        return true;
+                    }
+                    ScriptHash sh_wpk_dest(GetScriptForDestination(wpk_dest));
+                    if (GetDestData(sh_wpk_dest, "used", nullptr)) {
+                        return true;
+                    }
                 }
                 PKHash pkh_dest(keyid);
                 if (GetDestData(pkh_dest, "used", nullptr)) {
@@ -2779,12 +2791,12 @@ OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_typ
     }
 
     // if m_default_address_type is legacy, use legacy address as change (even
-    // if some of the outputs are P2WPKH or P2WSH).
+    // if some of the outputs are P2WPK or P2WSH).
     if (m_default_address_type == OutputType::LEGACY) {
         return OutputType::LEGACY;
     }
 
-    // if any destination is P2WPKH or P2WSH, use P2WPKH for the change
+    // if any destination is P2WPK or P2WSH, use P2WPK for the change
     // output.
     for (const auto& recipient : vecSend) {
         // Check if any destination contains a witness program:
@@ -2973,10 +2985,10 @@ bool CWallet::CreateTransactionInternal(
                     nValueIn = 0;
                     setCoins.clear();
                     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
-                    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
+                    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpk
                     // as lower-bound to allow BnB to do it's thing
                     if (change_spend_size == -1) {
-                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
+                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPK_INPUT_SIZE;
                     } else {
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
