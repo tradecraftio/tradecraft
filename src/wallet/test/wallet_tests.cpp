@@ -399,8 +399,9 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
     key.MakeNewKey(true);
     CPubKey pubkey = key.GetPubKey();
 
-    // Generate pubkey hash
-    uint160 key_hash(Hash160(pubkey.begin(), pubkey.end()));
+    // Generate pay-to-pubkey script
+    CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    WitnessV0ShortHash key_hash((unsigned char)0, p2pk);
 
     // Create inner-script to enter into keystore. Key hash can't be 0...
     CScript inner_script = CScript() << OP_0 << std::vector<unsigned char>(key_hash.begin(), key_hash.end());
@@ -412,6 +413,9 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
     // Add inner-script to key store and key to watchonly
     CBasicKeyStore keystore;
     keystore.AddCScript(inner_script);
+    std::vector<unsigned char> witscript{0x00};
+    witscript.insert(witscript.end(), p2pk.begin(), p2pk.end());
+    keystore.AddWitnessV0Script(witscript);
     keystore.AddKeyPubKey(key, pubkey);
 
     // Fill in dummy signatures for fee calculation.
@@ -429,8 +433,8 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
 
 BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
 {
-    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
-    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
+    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2WPK_INPUT_SIZE);
+    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPK_INPUT_SIZE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

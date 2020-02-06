@@ -660,16 +660,21 @@ static UniValue decodescript(const JSONRPCRequest& request)
                     }
                 }
             }
+            // If the script is P2PKH, we have no way of checking if the
+            // corresponding pubkey is compressed or not.  And even if we did,
+            // "P2WPKH" scripts aren't recognized by default.
+            if (which_type == TX_PUBKEYHASH) {
+                return r;
+            }
             UniValue sr(UniValue::VOBJ);
             CScript segwitScr;
             if (which_type == TX_PUBKEY) {
-                segwitScr = GetScriptForDestination(WitnessV0KeyHash(Hash160(solutions_data[0].begin(), solutions_data[0].end())));
-            } else if (which_type == TX_PUBKEYHASH) {
-                segwitScr = GetScriptForDestination(WitnessV0KeyHash(solutions_data[0]));
+                CScript p2pk = GetScriptForRawPubKey(CPubKey(solutions_data[0]));
+                segwitScr = GetScriptForDestination(WitnessV0ShortHash((unsigned char)0, p2pk));
             } else {
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
                 // Newer segwit program versions should be considered when then become available.
-                segwitScr = GetScriptForDestination(WitnessV0ScriptHash((unsigned char)0, script));
+                segwitScr = GetScriptForDestination(WitnessV0LongHash((unsigned char)0, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, true);
             sr.pushKV("p2sh-segwit", EncodeDestination(CScriptID(segwitScr)));

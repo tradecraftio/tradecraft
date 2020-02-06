@@ -136,7 +136,7 @@ class WalletDumpTest(FreicoinTestFramework):
         found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc, p2wsh_ret, p2sh_p2wsh_ret = \
             read_dump(wallet_unenc_dump, addrs, script_addrs, None)
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_script_addr, 2)  # all scripts must be in the dump
+        assert_equal(found_script_addr, 3)  # all scripts must be in the dump
         assert_equal(found_addr_chg, 0)  # 0 blocks where mined
         assert_equal(found_addr_rsv, 90 * 2)  # 90 keys plus 100% internal keys
         assert_equal(p2wsh_ret, p2wsh) # p2wsh address added to the first key
@@ -152,7 +152,7 @@ class WalletDumpTest(FreicoinTestFramework):
         found_addr, found_script_addr, found_addr_chg, found_addr_rsv, _, p2wsh_ret, p2sh_p2wsh_ret = \
             read_dump(wallet_enc_dump, addrs, script_addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
-        assert_equal(found_script_addr, 2)
+        assert_equal(found_script_addr, 3)
         assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
         assert_equal(found_addr_rsv, 90 * 2)
         assert_equal(p2wsh_ret, p2wsh)

@@ -210,7 +210,7 @@ public:
     }
 };
 
-/** A parsed pk(P), pkh(P), or wpkh(P) descriptor. */
+/** A parsed pk(P), pkh(P), or wpk(P) descriptor. */
 class SingleKeyDescriptor final : public Descriptor
 {
     const std::function<CScript(const CPubKey&)> m_script_fn;
@@ -235,13 +235,17 @@ public:
         if (!m_provider->GetPubKey(pos, arg, key)) return false;
         output_scripts = std::vector<CScript>{m_script_fn(key)};
         out.pubkeys.emplace(key.GetID(), std::move(key));
+        CScript p2pk = GetScriptForRawPubKey(key);
+        std::vector<unsigned char> witscript{0x00};
+        witscript.insert(witscript.end(), p2pk.begin(), p2pk.end());
+        out.witscripts.emplace(WitnessV0ShortHash((unsigned char)0, p2pk), witscript);
         return true;
     }
 };
 
 CScript P2PKHGetScript(const CPubKey& pubkey) { return GetScriptForDestination(pubkey.GetID()); }
 CScript P2PKGetScript(const CPubKey& pubkey) { return GetScriptForRawPubKey(pubkey); }
-CScript P2WPKHGetScript(const CPubKey& pubkey) { return GetScriptForDestination(WitnessV0KeyHash(pubkey.GetID())); }
+CScript P2WPKGetScript(const CPubKey& pubkey) { return GetScriptForDestination(WitnessV0ShortHash((unsigned char)0, GetScriptForRawPubKey(pubkey))); }
 
 /** A parsed multi(...) descriptor. */
 class MultisigDescriptor : public Descriptor
@@ -327,7 +331,7 @@ public:
             out.scripts.emplace(CScriptID(script), script);
             std::vector<unsigned char> witscript{0x00};
             witscript.insert(witscript.end(), script.begin(), script.end());
-            out.witscripts.emplace(WitnessV0ScriptHash((unsigned char)0, script), witscript);
+            out.witscripts.emplace(WitnessV0ShortHash((unsigned char)0, script), witscript);
             output_scripts.push_back(m_convert_fn(script));
         }
         return true;
@@ -335,7 +339,7 @@ public:
 };
 
 CScript ConvertP2SH(const CScript& script) { return GetScriptForDestination(CScriptID(script)); }
-CScript ConvertP2WSH(const CScript& script) { return GetScriptForDestination(WitnessV0ScriptHash((unsigned char)0, script)); }
+CScript ConvertP2WSH(const CScript& script) { return GetScriptForDestination(WitnessV0LongHash((unsigned char)0, script)); }
 
 /** A parsed combo(P) descriptor. */
 class ComboDescriptor final : public Descriptor
@@ -366,12 +370,17 @@ public:
             out.pubkeys.emplace(keyid, key);
         }
         if (key.IsCompressed()) {
-            CScript p2wpkh = GetScriptForDestination(WitnessV0KeyHash(keyid));
-            CScriptID p2wpkh_id(p2wpkh);
-            CScript p2sh_p2wpkh = GetScriptForDestination(p2wpkh_id);
-            out.scripts.emplace(p2wpkh_id, p2wpkh);
-            output_scripts.push_back(std::move(p2wpkh));
-            output_scripts.push_back(std::move(p2sh_p2wpkh));
+            CScript p2pk = GetScriptForRawPubKey(key);
+            WitnessV0ShortHash shortid((unsigned char)0, p2pk);
+            CScript p2wpk = GetScriptForDestination(shortid);
+            CScriptID p2wpk_id(p2wpk);
+            CScript p2sh_p2wpk = GetScriptForDestination(p2wpk_id);
+            out.scripts.emplace(p2wpk_id, p2wpk);
+            std::vector<unsigned char> witscript{0x00};
+            witscript.insert(witscript.end(), p2pk.begin(), p2pk.end());
+            out.witscripts.emplace(shortid, witscript);
+            output_scripts.push_back(std::move(p2wpk));
+            output_scripts.push_back(std::move(p2sh_p2wpk));
         }
         return true;
     }
@@ -540,10 +549,10 @@ std::unique_ptr<Descriptor> ParseScript(Span<const char>& sp, ParseScriptContext
         }
         return MakeUnique<MultisigDescriptor>(thres, std::move(providers));
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wpkh", expr)) {
+    if (ctx != ParseScriptContext::P2WSH && Func("wpk", expr)) {
         auto pubkey = ParsePubkey(expr, false, out);
         if (!pubkey) return nullptr;
-        return MakeUnique<SingleKeyDescriptor>(std::move(pubkey), P2WPKHGetScript, "wpkh");
+        return MakeUnique<SingleKeyDescriptor>(std::move(pubkey), P2WPKGetScript, "wpk");
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
         auto desc = ParseScript(expr, ParseScriptContext::P2SH, out);

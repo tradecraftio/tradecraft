@@ -38,7 +38,8 @@ class SigningProvider
 public:
     virtual ~SigningProvider() {}
     virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
-    virtual bool GetWitnessV0Script(const WitnessV0ScriptHash &id, WitnessV0ScriptEntry& entry) const { return false; }
+    virtual bool GetWitnessV0Script(const WitnessV0LongHash &id, WitnessV0ScriptEntry& entry) const { return false; }
+    virtual bool GetWitnessV0Script(const WitnessV0ShortHash &id, WitnessV0ScriptEntry& entry) const { return false; }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
     virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
 };
@@ -53,19 +54,25 @@ private:
 public:
     PublicOnlySigningProvider(const SigningProvider* provider) : m_provider(provider) {}
     bool GetCScript(const CScriptID &scriptid, CScript& script) const;
-    bool GetWitnessV0Script(const WitnessV0ScriptHash &id, WitnessV0ScriptEntry& entry) const;
+    bool GetWitnessV0Script(const WitnessV0LongHash &id, WitnessV0ScriptEntry& entry) const {
+        return GetWitnessV0Script(WitnessV0ShortHash(id), entry);
+    }
+    bool GetWitnessV0Script(const WitnessV0ShortHash &id, WitnessV0ScriptEntry& entry) const;
     bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const;
 };
 
 struct FlatSigningProvider final : public SigningProvider
 {
     std::map<CScriptID, CScript> scripts;
-    std::map<WitnessV0ScriptHash, std::vector<unsigned char> > witscripts;
+    std::map<WitnessV0ShortHash, std::vector<unsigned char> > witscripts;
     std::map<CKeyID, CPubKey> pubkeys;
     std::map<CKeyID, CKey> keys;
 
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetWitnessV0Script(const WitnessV0ScriptHash &id, WitnessV0ScriptEntry& entry) const;
+    bool GetWitnessV0Script(const WitnessV0LongHash &id, WitnessV0ScriptEntry& entry) const {
+        return GetWitnessV0Script(WitnessV0ShortHash(id), entry);
+    }
+    bool GetWitnessV0Script(const WitnessV0ShortHash &id, WitnessV0ScriptEntry& entry) const;
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
 };

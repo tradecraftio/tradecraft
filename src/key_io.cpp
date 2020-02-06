@@ -51,7 +51,7 @@ public:
         return EncodeBase58Check(data);
     }
 
-    std::string operator()(const WitnessV0KeyHash& id) const
+    std::string operator()(const WitnessV0ShortHash& id) const
     {
         std::vector<unsigned char> data = {0};
         data.reserve(33);
@@ -59,7 +59,7 @@ public:
         return bech32::Encode(m_params.Bech32HRP(), data);
     }
 
-    std::string operator()(const WitnessV0ScriptHash& id) const
+    std::string operator()(const WitnessV0LongHash& id) const
     {
         std::vector<unsigned char> data = {0};
         data.reserve(53);
@@ -112,17 +112,17 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, bech.second.begin() + 1, bech.second.end())) {
             if (version == 0) {
                 {
-                    WitnessV0KeyHash keyid;
-                    if (data.size() == keyid.size()) {
-                        std::copy(data.begin(), data.end(), keyid.begin());
-                        return keyid;
+                    WitnessV0ShortHash shortid;
+                    if (data.size() == shortid.size()) {
+                        std::copy(data.begin(), data.end(), shortid.begin());
+                        return shortid;
                     }
                 }
                 {
-                    WitnessV0ScriptHash scriptid;
-                    if (data.size() == scriptid.size()) {
-                        std::copy(data.begin(), data.end(), scriptid.begin());
-                        return scriptid;
+                    WitnessV0LongHash longid;
+                    if (data.size() == longid.size()) {
+                        std::copy(data.begin(), data.end(), longid.begin());
+                        return longid;
                     }
                 }
                 return CNoDestination();

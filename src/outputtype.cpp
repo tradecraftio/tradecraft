@@ -60,7 +60,8 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
         if (!key.IsCompressed()) return key.GetID();
-        CTxDestination witdest = WitnessV0KeyHash(key.GetID());
+        CScript p2pk = GetScriptForRawPubKey(key);
+        CTxDestination witdest = WitnessV0ShortHash((unsigned char)0, p2pk);
         CScript witprog = GetScriptForDestination(witdest);
         if (type == OutputType::P2SH_SEGWIT) {
             return CScriptID(witprog);
@@ -76,7 +77,8 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
 {
     CKeyID keyid = key.GetID();
     if (key.IsCompressed()) {
-        CTxDestination segwit = WitnessV0KeyHash(keyid);
+        CScript p2pk = GetScriptForRawPubKey(key);
+        CTxDestination segwit = WitnessV0ShortHash((unsigned char)0, p2pk);
         CTxDestination p2sh = CScriptID(GetScriptForDestination(segwit));
         return std::vector<CTxDestination>{std::move(keyid), std::move(p2sh), std::move(segwit)};
     } else {
@@ -94,7 +96,7 @@ CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript&
         return CScriptID(script);
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
-        CTxDestination witdest = WitnessV0ScriptHash((unsigned char)0, script);
+        CTxDestination witdest = WitnessV0LongHash((unsigned char)0, script);
         CScript witprog = GetScriptForDestination(witdest);
         std::vector<unsigned char> witscript{0x00};
         witscript.insert(witscript.end(), script.begin(), script.end());
