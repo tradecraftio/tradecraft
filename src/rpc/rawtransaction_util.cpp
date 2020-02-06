@@ -238,7 +238,8 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     script = CScript(wsData.begin() + 1, wsData.end());
                     keystore->AddCScript(script);
                     keystore->AddCScript(GetScriptForWitness(script));
-                    keystore->AddCScript(GetScriptForDestination(entry.GetScriptHash()));
+                    keystore->AddCScript(GetScriptForDestination(entry.GetLongHash()));
+                    keystore->AddCScript(GetScriptForDestination(entry.GetShortHash()));
                 } else if (!rs.isNull()) {
                     std::vector<unsigned char> rsData = ParseHexV(rs, "redeemScript");
                     script = CScript(rsData.begin(), rsData.end());
@@ -293,8 +294,9 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     // was specified by redeemScript rather than
                     // witnessScript (ie, ws.IsNull() == true), but
                     // accept it for backwards compat
-                    const CTxDestination p2wsh{WitnessV0ScriptHash(0 /* version */, script)};
-                    if (scriptPubKey != GetScriptForDestination(p2wsh)) {
+                    const CTxDestination p2wsh{WitnessV0LongHash(0 /* version */, script)};
+                    const CTxDestination p2wpk{WitnessV0ShortHash(0 /* version */, script)};
+                    if (scriptPubKey != GetScriptForDestination(p2wsh) && scriptPubKey != GetScriptForDestination(p2wpk)) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, "redeemScript/witnessScript does not match scriptPubKey");
                     }
                 }

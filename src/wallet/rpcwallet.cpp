@@ -1015,7 +1015,11 @@ public:
 
     bool operator()(const PKHash &pkhash) {
         if (pwallet) {
-            CScript basescript = GetScriptForDestination(pkhash);
+            CPubKey pubkey;
+            CKeyID keyid(pkhash);
+            if (!pwallet->GetPubKey(keyid, pubkey))
+                return false;
+            CScript basescript = GetScriptForRawPubKey(pubkey);
             WitnessV0ScriptEntry other(0 /* version */, basescript);
             entry.m_script = std::move(other.m_script);
             pwallet->AddWitnessV0Script(entry);
@@ -1041,7 +1045,14 @@ public:
             WitnessV0ScriptEntry other(0 /* version */, subscript);
             entry.m_script = std::move(other.m_script);
             pwallet->AddWitnessV0Script(entry);
-            CScript witscript = GetScriptForWitness(subscript);
+            std::vector<std::vector<unsigned char>> data;
+            auto subtype = Solver(subscript, data);
+            CScript witscript;
+            if (subtype == TX_PUBKEY || subtype == TX_PUBKEYHASH) {
+                witscript = GetScriptForDestination(entry.GetShortHash());
+            } else {
+                witscript = GetScriptForDestination(entry.GetLongHash());
+            }
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
             }
@@ -1050,14 +1061,14 @@ public:
         return false;
     }
 
-    bool operator()(const WitnessV0KeyHash& id)
+    bool operator()(const WitnessV0ShortHash& id)
     {
         already_witness = true;
         result = id;
         return true;
     }
 
-    bool operator()(const WitnessV0ScriptHash& id)
+    bool operator()(const WitnessV0LongHash& id)
     {
         already_witness = true;
         result = id;
@@ -1121,7 +1132,10 @@ static UniValue addwitnessaddress(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_WALLET_ERROR, "Cannot convert between witness address types");
         }
     } else {
-        pwallet->AddCScript(witprogram); // Implicit for single-key now, but necessary for multisig and for compatibility with older software
+        // Implicit for single-key now, but necessary for multisig and for
+        // compatibility with older software.
+        pwallet->AddCScript(GetScriptForDestination(w.entry.GetLongHash()));
+        pwallet->AddCScript(GetScriptForDestination(w.entry.GetShortHash()));
         pwallet->SetAddressBook(w.result, "", "receive");
     }
 
@@ -3069,18 +3083,32 @@ static UniValue listunspent(const JSONRPCRequest& request)
                         bool extracted = ExtractDestination(redeemScript, witness_destination);
                         assert(extracted);
                         // Also return the witness script
-                        const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
                         WitnessV0ScriptEntry witentry;
-                        if (pwallet->GetWitnessV0Script(whash, witentry)) {
-                            entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                        if (redeemScript.size() == 2 + WITNESS_V0_LONGHASH_SIZE) {
+                            const WitnessV0LongHash& whash = boost::get<WitnessV0LongHash>(witness_destination);
+                            if (pwallet->GetWitnessV0Script(whash, witentry)) {
+                                entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                            }
+                        } else if (redeemScript.size() == 2 + WITNESS_V0_SHORTHASH_SIZE) {
+                            const WitnessV0ShortHash& whash = boost::get<WitnessV0ShortHash>(witness_destination);
+                            if (pwallet->GetWitnessV0Script(whash, witentry)) {
+                                entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                            }
                         }
                     }
                 }
             } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
-                const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
                 WitnessV0ScriptEntry witentry;
-                if (pwallet->GetWitnessV0Script(whash, witentry)) {
-                    entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                if (scriptPubKey.size() == 2 + WITNESS_V0_LONGHASH_SIZE) {
+                    const WitnessV0LongHash& whash = boost::get<WitnessV0LongHash>(address);
+                    if (pwallet->GetWitnessV0Script(whash, witentry)) {
+                        entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                    }
+                } else if (scriptPubKey.size() == 2 + WITNESS_V0_SHORTHASH_SIZE) {
+                    const WitnessV0ShortHash& whash = boost::get<WitnessV0ShortHash>(address);
+                    if (pwallet->GetWitnessV0Script(whash, witentry)) {
+                        entry.pushKV("witnessScript", HexStr(witentry.m_script.begin(), witentry.m_script.end()));
+                    }
                 }
             }
         }
@@ -3721,17 +3749,29 @@ public:
         return obj;
     }
 
-    UniValue operator()(const WitnessV0KeyHash& id) const
+    UniValue operator()(const WitnessV0ShortHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
-        CPubKey pubkey;
-        if (pwallet && pwallet->GetPubKey(CKeyID(id), pubkey)) {
-            obj.pushKV("pubkey", HexStr(pubkey));
+        WitnessV0ScriptEntry entry;
+        if (pwallet && pwallet->GetWitnessV0Script(id, entry)) {
+            if (!entry.m_script.empty()) {
+                obj.pushKV("witscript_version", (int64_t)entry.m_script[0]);
+                if (entry.m_script[0] == 0x00) {
+                    UniValue branch(UniValue::VARR);
+                    for (const auto& hash : entry.m_branch) {
+                        branch.push_back(HexStr(hash.begin(), hash.end()));
+                    }
+                    obj.pushKV("witness_branch", branch);
+                    obj.pushKV("witness_path", (int64_t)entry.m_path);
+                    CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
+                    ProcessSubScript(subscript, obj);
+                }
+            }
         }
         return obj;
     }
 
-    UniValue operator()(const WitnessV0ScriptHash& id) const
+    UniValue operator()(const WitnessV0LongHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
         WitnessV0ScriptEntry entry;

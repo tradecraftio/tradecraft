@@ -89,21 +89,6 @@ IsMineResult IsMineInner(const CWallet& keystore, const CScript& scriptPubKey, I
             ret = std::max(ret, IsMineResult::SPENDABLE);
         }
         break;
-    case TX_WITNESS_V0_KEYHASH:
-    {
-        if (sigversion == IsMineSigVersion::WITNESS_V0) {
-            // P2WPKH inside P2WSH is invalid.
-            return IsMineResult::INVALID;
-        }
-        if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
-            // We do not support bare witness outputs unless the P2SH version of it would be
-            // acceptable as well. This protects against matching before segwit activates.
-            // This also applies to the P2WSH case.
-            break;
-        }
-        ret = std::max(ret, IsMineInner(keystore, GetScriptForDestination(PKHash(uint160(vSolutions[0]))), IsMineSigVersion::WITNESS_V0));
-        break;
-    }
     case TX_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
         if (!PermitsUncompressed(sigversion)) {
@@ -129,15 +114,22 @@ IsMineResult IsMineInner(const CWallet& keystore, const CScript& scriptPubKey, I
         }
         break;
     }
-    case TX_WITNESS_V0_SCRIPTHASH:
+    case TX_WITNESS_V0_SHORTHASH:
+    case TX_WITNESS_V0_LONGHASH:
     {
         if (sigversion == IsMineSigVersion::WITNESS_V0) {
             // P2WSH inside P2WSH is invalid.
             return IsMineResult::INVALID;
         }
-        WitnessV0ScriptHash withash(vSolutions[0]);
+        bool found = false;
         WitnessV0ScriptEntry entry;
-        if (!keystore.GetWitnessV0Script(withash, entry)) {
+        if (whichType == TX_WITNESS_V0_SHORTHASH) {
+            found = keystore.GetWitnessV0Script(WitnessV0ShortHash(vSolutions[0]), entry);
+        }
+        else if (whichType == TX_WITNESS_V0_LONGHASH) {
+            found = keystore.GetWitnessV0Script(WitnessV0LongHash(vSolutions[0]), entry);
+        }
+        if (!found) {
             break;
         }
         if (entry.m_script.empty() || (entry.m_script[0] != 0x00)) {

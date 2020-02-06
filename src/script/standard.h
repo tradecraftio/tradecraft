@@ -59,8 +59,8 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
     TX_UNSPENDABLE, //!< TX_NULL_DATA in bitcoin, but without data
-    TX_WITNESS_V0_SCRIPTHASH,
-    TX_WITNESS_V0_KEYHASH,
+    TX_WITNESS_V0_LONGHASH,
+    TX_WITNESS_V0_SHORTHASH,
     TX_WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
 };
 
@@ -78,31 +78,36 @@ struct PKHash : public uint160
     using uint160::uint160;
 };
 
-struct WitnessV0KeyHash;
 struct ScriptHash : public uint160
 {
     ScriptHash() : uint160() {}
     // These don't do what you'd expect.
     // Use ScriptHash(GetScriptForDestination(...)) instead.
-    explicit ScriptHash(const WitnessV0KeyHash& hash) = delete;
     explicit ScriptHash(const PKHash& hash) = delete;
     explicit ScriptHash(const uint160& hash) : uint160(hash) {}
     explicit ScriptHash(const CScript& script);
     using uint160::uint160;
 };
 
-struct WitnessV0ScriptHash : public uint256
+struct WitnessV0LongHash : public uint256
 {
-    WitnessV0ScriptHash() : uint256() {}
-    explicit WitnessV0ScriptHash(const uint256& hash) : uint256(hash) {}
-    WitnessV0ScriptHash(unsigned char version, const CScript& innerscript);
+    WitnessV0LongHash() : uint256() {}
+    explicit WitnessV0LongHash(const uint256& hash) : uint256(hash) {}
+    WitnessV0LongHash(unsigned char version, const CScript& innerscript);
     using uint256::uint256;
 };
 
-struct WitnessV0KeyHash : public uint160
+struct WitnessV0ShortHash : public uint160
 {
-    WitnessV0KeyHash() : uint160() {}
-    explicit WitnessV0KeyHash(const uint160& hash) : uint160(hash) {}
+    WitnessV0ShortHash() : uint160() {}
+    explicit WitnessV0ShortHash(const uint160& hash) : uint160(hash) {}
+    explicit WitnessV0ShortHash(const WitnessV0LongHash& long_hash) {
+        CRIPEMD160().Write(long_hash.begin(), 32).Finalize(begin());
+    }
+    explicit WitnessV0ShortHash(unsigned char version, const CScript& innerscript) {
+        WitnessV0LongHash long_hash(version, innerscript);
+        CRIPEMD160().Write(long_hash.begin(), 32).Finalize(begin());
+    }
     using uint160::uint160;
 };
 
@@ -172,7 +177,8 @@ public:
         return std::tie(m_script, m_branch, m_path) < std::tie(rhs.m_script, rhs.m_branch, rhs.m_path);
     }
 
-    WitnessV0ScriptHash GetScriptHash() const;
+    WitnessV0LongHash GetLongHash() const;
+    WitnessV0ShortHash GetShortHash() const;
 };
 
 inline void swap(WitnessV0ScriptEntry& lhs, WitnessV0ScriptEntry& rhs) noexcept {
@@ -187,12 +193,12 @@ inline void swap(WitnessV0ScriptEntry& lhs, WitnessV0ScriptEntry& rhs) noexcept 
  *  * CNoDestination: no destination set
  *  * PKHash: TX_PUBKEYHASH destination (P2PKH)
  *  * ScriptHash: TX_SCRIPTHASH destination (P2SH)
- *  * WitnessV0ScriptHash: TX_WITNESS_V0_SCRIPTHASH destination (P2WSH)
- *  * WitnessV0KeyHash: TX_WITNESS_V0_KEYHASH destination (P2WPKH)
+ *  * WitnessV0LongHash: TX_WITNESS_V0_LONGHASH destination (P2WSH)
+ *  * WitnessV0ShortHash: TX_WITNESS_V0_SHORTHASH destination (P2WPK)
  *  * WitnessUnknown: TX_WITNESS_UNKNOWN destination (P2W???)
  *  A CTxDestination is the internal data type encoded in a freicoin address
  */
-typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
+typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0LongHash, WitnessV0ShortHash, WitnessUnknown> CTxDestination;
 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);

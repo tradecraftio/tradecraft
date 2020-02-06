@@ -32,7 +32,7 @@ static void AssembleBlock(benchmark::State& state)
     witness.stack.push_back(op_true.m_script);
     witness.stack.emplace_back();
 
-    const WitnessV0ScriptHash witness_program = op_true.GetScriptHash();
+    const WitnessV0ShortHash witness_program = op_true.GetShortHash();
 
     const CScript SCRIPT_PUB{CScript(OP_0) << std::vector<unsigned char>{witness_program.begin(), witness_program.end()}};
 

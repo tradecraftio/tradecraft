@@ -180,6 +180,13 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     BOOST_CHECK(keystore.AddKey(coinbaseKey));
     BOOST_CHECK(keystore.AddCScript(p2pk_scriptPubKey));
 
+    std::vector<unsigned char> vch;
+    vch.push_back(0x00);
+    vch.insert(vch.end(),
+               p2pkh_scriptPubKey.begin(),
+               p2pkh_scriptPubKey.end());
+    keystore.AddWitnessV0Script(WitnessV0ScriptEntry(vch));
+
     // flags to test: SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, SCRIPT_VERIFY_CHECKSEQUENCE_VERIFY, SCRIPT_VERIFY_NULLDUMMY, uncompressed pubkey thing
 
     // Create 2 outputs that match the three scripts above, spending the first

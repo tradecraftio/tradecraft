@@ -544,10 +544,7 @@ bool CWallet::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
 {
     if (!FillableSigningProvider::AddWitnessV0Script(entry))
         return false;
-    WitnessV0ScriptHash longid = entry.GetScriptHash();
-    uint160 shortid;
-    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
-    return WalletBatch(*database).WriteWitnessV0Script(shortid, entry);
+    return WalletBatch(*database).WriteWitnessV0Script(entry.GetShortHash(), entry);
 }
 
 bool CWallet::LoadWitnessV0Script(const WitnessV0ScriptEntry& entry)
@@ -1110,13 +1107,25 @@ bool CWallet::IsUsedDestination(const uint256& hash, unsigned int n) const
         // When descriptor wallets arrive, these additional checks are
         // likely superfluous and can be optimized out
         for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *this)) {
-            WitnessV0KeyHash wpkh_dest(keyid);
-            if (GetDestData(wpkh_dest, "used", nullptr)) {
-                return true;
-            }
-            ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-            if (GetDestData(sh_wpkh_dest, "used", nullptr)) {
-                return true;
+            CPubKey pubkey;
+            if (GetPubKey(keyid, pubkey)) {
+                CScript p2pk = GetScriptForRawPubKey(pubkey);
+                WitnessV0LongHash wsh_dest(0 /* version */, p2pk);
+                if (GetDestData(wsh_dest, "used", nullptr)) {
+                    return true;
+                }
+                ScriptHash sh_wsh_dest(GetScriptForDestination(wsh_dest));
+                if (GetDestData(sh_wsh_dest, "used", nullptr)) {
+                    return true;
+                }
+                WitnessV0ShortHash wpk_dest(0 /* version */, p2pk);
+                if (GetDestData(wpk_dest, "used", nullptr)) {
+                    return true;
+                }
+                ScriptHash sh_wpk_dest(GetScriptForDestination(wpk_dest));
+                if (GetDestData(sh_wpk_dest, "used", nullptr)) {
+                    return true;
+                }
             }
             PKHash pkh_dest(keyid);
             if (GetDestData(pkh_dest, "used", nullptr)) {
@@ -1873,7 +1882,7 @@ bool CWallet::ImportWitnessV0Scripts(const std::set<WitnessV0ScriptEntry> witscr
 {
     WalletBatch batch(*database);
     for (const auto& entry : witscripts) {
-        if (HaveWitnessV0Script(entry.GetScriptHash())) {
+        if (HaveWitnessV0Script(entry.GetShortHash())) {
             WalletLogPrintf("Already have witscript %s, skipping\n", HexStr(entry.m_script));
             continue;
         }
@@ -3028,12 +3037,12 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     }
 
     // if m_default_address_type is legacy, use legacy address as change (even
-    // if some of the outputs are P2WPKH or P2WSH).
+    // if some of the outputs are P2WPK or P2WSH).
     if (m_default_address_type == OutputType::LEGACY) {
         return OutputType::LEGACY;
     }
 
-    // if any destination is P2WPKH or P2WSH, use P2WPKH for the change
+    // if any destination is P2WPK or P2WSH, use P2WPK for the change
     // output.
     for (const auto& recipient : vecSend) {
         // Check if any destination contains a witness program:
@@ -3202,7 +3211,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
                     // as lower-bound to allow BnB to do it's thing
                     if (change_spend_size == -1) {
-                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
+                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPK_INPUT_SIZE;
                     } else {
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
@@ -4823,7 +4832,12 @@ bool CWalletTx::IsImmatureCoinBase(interfaces::Chain::Lock& locked_chain) const
 void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
     if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
-        CTxDestination witdest = WitnessV0KeyHash(key.GetID());
+        CScript p2pk = GetScriptForRawPubKey(key);
+        WitnessV0ScriptEntry entry;
+        entry.m_script.push_back(0x00);
+        entry.m_script.insert(entry.m_script.end(), p2pk.begin(), p2pk.end());
+        AddWitnessV0Script(entry);
+        CTxDestination witdest = WitnessV0ShortHash(0 /* version */, p2pk);
         CScript witprog = GetScriptForDestination(witdest);
         // Make sure the resulting program is solvable.
         assert(IsSolvable(*this, witprog));

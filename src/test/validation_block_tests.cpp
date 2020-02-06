@@ -80,7 +80,7 @@ std::shared_ptr<CBlock> Block(const uint256& prev_hash, int height, BlockFinalTx
 
     pubKey.clear();
     {
-        WitnessV0ScriptHash witness_program;
+        WitnessV0LongHash witness_program;
         CHash256().Write(&V_OP_TRUE[0], V_OP_TRUE.size()).Finalize(witness_program.begin());
         pubKey << OP_0 << ToByteVector(witness_program);
     }
