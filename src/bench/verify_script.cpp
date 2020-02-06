@@ -20,6 +20,7 @@
 #endif
 #include "script/script.h"
 #include "script/sign.h"
+#include "script/standard.h"
 #include "streams.h"
 
 // FIXME: Dedup with BuildCreditingTransaction in test/script_tests.cpp.
@@ -64,27 +65,26 @@ static CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, co
 static void VerifyScriptBench(benchmark::State& state)
 {
     const int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
-    const int witnessversion = 0;
 
     // Keypair.
     CKey key;
     const unsigned char vchKey[32] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
     key.Set(vchKey, vchKey + 32, false);
     CPubKey pubkey = key.GetPubKey();
-    uint160 pubkeyHash;
-    CHash160().Write(pubkey.begin(), pubkey.size()).Finalize(pubkeyHash.begin());
 
     // Script.
-    CScript scriptPubKey = CScript() << witnessversion << ToByteVector(pubkeyHash);
+    CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    CScript scriptPubKey = GetScriptForWitness(p2pk);
     CScript scriptSig;
-    CScript witScriptPubkey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkeyHash) << OP_EQUALVERIFY << OP_CHECKSIG;
     CTransaction txCredit = BuildCreditingTransaction(scriptPubKey);
     CMutableTransaction txSpend = BuildSpendingTransaction(scriptSig, txCredit);
     CScriptWitness& witness = txSpend.vin[0].scriptWitness;
     witness.stack.emplace_back();
-    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].GetReferenceValue(), txCredit.lock_height, SIGVERSION_WITNESS_V0), witness.stack.back(), 0);
+    key.Sign(SignatureHash(p2pk, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].GetReferenceValue(), txCredit.lock_height, SIGVERSION_WITNESS_V0), witness.stack.back(), 0);
     witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
-    witness.stack.push_back(ToByteVector(pubkey));
+    witness.stack.emplace_back(1, 0x00);
+    witness.stack.back().insert(witness.stack.back().end(), p2pk.begin(), p2pk.end());
+    witness.stack.emplace_back();
 
     // Benchmark.
     while (state.KeepRunning()) {
