@@ -16,8 +16,8 @@
 """Utilities for manipulating blocks and transactions."""
 
 from .address import (
-    key_to_p2sh_p2wpkh,
-    key_to_p2wpkh,
+    key_to_p2sh_p2wpk,
+    key_to_p2wpk,
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
@@ -48,6 +48,7 @@ from .script import (
     OP_CHECKSIG,
     OP_TRUE,
     hash160,
+    ripemd160,
 )
 from .util import (
     assert_equal,
@@ -229,15 +230,17 @@ def get_legacy_sigopcount_tx(tx, accurate=True):
 def witness_script(use_p2wsh, pubkey):
     """Create a scriptPubKey for a pay-to-witness TxOut.
 
-    This is either a P2WPKH output for the given pubkey, or a P2WSH output of a
-    1-of-1 multisig for the given pubkey. Returns the hex encoding of the
-    scriptPubKey."""
+    This is either a short P2WSH output for the given pubkey, or a
+    long P2WSH output of a 1-of-1 multisig for the given pubkey.
+    Returns the hex encoding of the scriptPubKey.
+    """
     if not use_p2wsh:
-        # P2WPKH instead
-        pubkeyhash = hash160(hex_str_to_bytes(pubkey))
-        pkscript = CScript([OP_0, pubkeyhash])
+        # short P2WSH w/ P2PK
+        witness_program = b'\x00' + CScript([hex_str_to_bytes(pubkey), OP_CHECKSIG])
+        scripthash = ripemd160(hash256(witness_program))
+        pkscript = CScript([OP_0, scripthash])
     else:
-        # 1-of-1 multisig
+        # long P2WSH w/ 1-of-1 multisig
         witness_program = b'\x00' + CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
         scripthash = hash256(witness_program)
         pkscript = CScript([OP_0, scripthash])
@@ -251,7 +254,7 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
         program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
         addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
     else:
-        addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
+        addr = key_to_p2sh_p2wpk(pubkey) if encode_p2sh else key_to_p2wpk(pubkey)
     if not encode_p2sh:
         assert_equal(node.getaddressinfo(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
     return node.createrawtransaction([utxo], {addr: amount})

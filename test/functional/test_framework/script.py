@@ -30,8 +30,11 @@ MAX_SCRIPT_ELEMENT_SIZE = 520
 
 OPCODE_NAMES = {}
 
+def ripemd160(s):
+    return hashlib.new('ripemd160', s).digest()
+
 def hash160(s):
-    return hashlib.new('ripemd160', sha256(s)).digest()
+    return ripemd160(sha256(s))
 
 
 _opcode_instances = []

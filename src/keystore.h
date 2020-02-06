@@ -44,9 +44,11 @@ public:
 
     //! Support for witness scripts
     virtual bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry) =0;
-    virtual bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnesshash) const =0;
-    virtual std::set<WitnessV0ScriptHash> GetWitnessV0Scripts() const =0;
-    virtual bool GetWitnessV0Script(const WitnessV0ScriptHash& witnesshash, WitnessV0ScriptEntry& entryOut) const =0;
+    virtual bool HaveWitnessV0Script(const WitnessV0ShortHash& witnesshash) const =0;
+    virtual bool HaveWitnessV0Script(const WitnessV0LongHash& witnesshash) const =0;
+    virtual std::set<WitnessV0ShortHash> GetWitnessV0Scripts() const =0;
+    virtual bool GetWitnessV0Script(const WitnessV0ShortHash& witnesshash, WitnessV0ScriptEntry& entryOut) const =0;
+    virtual bool GetWitnessV0Script(const WitnessV0LongHash& witnesshash, WitnessV0ScriptEntry& entryOut) const =0;
 
     //! Support for Watch-only addresses
     virtual bool AddWatchOnly(const CScript &dest) =0;
@@ -64,7 +66,7 @@ protected:
     using KeyMap = std::map<CKeyID, CKey>;
     using WatchKeyMap = std::map<CKeyID, CPubKey>;
     using ScriptMap = std::map<CScriptID, CScript>;
-    using WitnessV0ScriptMap = std::map<WitnessV0ScriptHash, WitnessV0ScriptEntry>;
+    using WitnessV0ScriptMap = std::map<WitnessV0ShortHash, WitnessV0ScriptEntry>;
     using WatchOnlySet = std::set<CScript>;
 
     KeyMap mapKeys GUARDED_BY(cs_KeyStore);
@@ -88,9 +90,11 @@ public:
     bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
 
     bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry) override;
-    bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnessprogram) const override;
-    std::set<WitnessV0ScriptHash> GetWitnessV0Scripts() const override;
-    bool GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
+    bool HaveWitnessV0Script(const WitnessV0ShortHash& witnessprogram) const override;
+    bool HaveWitnessV0Script(const WitnessV0LongHash& witnessprogram) const override;
+    std::set<WitnessV0ShortHash> GetWitnessV0Scripts() const override;
+    bool GetWitnessV0Script(const WitnessV0ShortHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
+    bool GetWitnessV0Script(const WitnessV0LongHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
 
     bool AddWatchOnly(const CScript &dest) override;
     bool RemoveWatchOnly(const CScript &dest) override;

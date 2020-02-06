@@ -21,6 +21,7 @@
 #include <fs.h>
 #include <key_io.h>
 #include <protocol.h>
+#include <script/standard.h>
 #include <serialize.h>
 #include <sync.h>
 #include <util/system.h>
@@ -115,7 +116,7 @@ bool WalletBatch::WriteCScript(const uint160& hash, const CScript& redeemScript)
     return WriteIC(std::make_pair(std::string("cscript"), hash), redeemScript, false);
 }
 
-bool WalletBatch::WriteWitnessV0Script(const uint160& scriptid, const WitnessV0ScriptEntry& entry)
+bool WalletBatch::WriteWitnessV0Script(const WitnessV0ShortHash& scriptid, const WitnessV0ScriptEntry& entry)
 {
     return WriteIC(std::make_pair(std::string("witv0"), scriptid), entry, false);
 }
@@ -413,7 +414,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "witv0")
         {
-            uint160 shorthash;
+            WitnessV0ShortHash shorthash;
             ssKey >> shorthash;
             WitnessV0ScriptEntry entry;
             ssValue >> entry;

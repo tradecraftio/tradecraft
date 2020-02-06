@@ -103,7 +103,7 @@ static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
 //! Pre-calculated constants for input size estimation in *virtual size*
-static constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
+static constexpr size_t DUMMY_NESTED_P2WPK_INPUT_SIZE = 92;
 
 class CCoinControl;
 class COutput;

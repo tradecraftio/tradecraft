@@ -18,6 +18,7 @@
 
 from decimal import Decimal
 from test_framework.messages import MAX_SEQUENCE_NUMBER
+from test_framework.script import hash160
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, connect_nodes_bi, disconnect_nodes, find_output, sync_blocks
 
@@ -399,12 +400,12 @@ class PSTTest(FreicoinTestFramework):
         # After update with wallet, only needs signing
         updated = self.nodes[1].walletprocesspst(pst, False, 'ALL', True)['pst']
         analyzed = self.nodes[0].analyzepst(updated)
-        assert analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'signer' and analyzed['next'] == 'signer' and analyzed['inputs'][0]['missing']['signatures'][0] == addrinfo['embedded']['witness_program']
+        assert analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'signer' and analyzed['next'] == 'signer' and analyzed['inputs'][0]['missing']['signatures'][0] == hash160(bytes.fromhex(addrinfo['embedded']['pubkey'])).hex()
 
         # Check fee and size things
         assert_equal(analyzed['fee'], Decimal('0.001'))
-        assert_equal(analyzed['estimated_vsize'], 138)
-        assert_equal(analyzed['estimated_feerate'], Decimal('0.00724637'))
+        assert_equal(analyzed['estimated_vsize'], 139)
+        assert_equal(analyzed['estimated_feerate'], Decimal('0.00719424'))
 
         # After signing and finalizing, needs extracting
         signed = self.nodes[1].walletprocesspst(updated)['pst']

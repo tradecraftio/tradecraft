@@ -63,7 +63,8 @@ class SigningProvider
 public:
     virtual ~SigningProvider() {}
     virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
-    virtual bool GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const { return false; }
+    virtual bool GetWitnessV0Script(const WitnessV0ShortHash& id, WitnessV0ScriptEntry& entry) const { return false; }
+    virtual bool GetWitnessV0Script(const WitnessV0LongHash& id, WitnessV0ScriptEntry& entry) const { return false; }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
     virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
     virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
@@ -81,7 +82,8 @@ private:
 public:
     HidingSigningProvider(const SigningProvider* provider, bool hide_secret, bool hide_origin) : m_hide_secret(hide_secret), m_hide_origin(hide_origin), m_provider(provider) {}
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const override;
+    bool GetWitnessV0Script(const WitnessV0ShortHash& id, WitnessV0ScriptEntry& entry) const override;
+    bool GetWitnessV0Script(const WitnessV0LongHash& id, WitnessV0ScriptEntry& entry) const override { return GetWitnessV0Script(WitnessV0ShortHash(id), entry); }
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
@@ -90,13 +92,14 @@ public:
 struct FlatSigningProvider final : public SigningProvider
 {
     std::map<CScriptID, CScript> scripts;
-    std::map<WitnessV0ScriptHash, WitnessV0ScriptEntry> witscripts;
+    std::map<WitnessV0ShortHash, WitnessV0ScriptEntry> witscripts;
     std::map<CKeyID, CPubKey> pubkeys;
     std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> origins;
     std::map<CKeyID, CKey> keys;
 
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const override;
+    bool GetWitnessV0Script(const WitnessV0ShortHash& id, WitnessV0ScriptEntry& entry) const override;
+    bool GetWitnessV0Script(const WitnessV0LongHash& id, WitnessV0ScriptEntry& entry) const override { return GetWitnessV0Script(WitnessV0ShortHash(id), entry); }
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
@@ -151,7 +154,7 @@ struct SignatureData {
     std::vector<CKeyID> missing_pubkeys; ///< KeyIDs of pubkeys which could not be found
     std::vector<CKeyID> missing_sigs; ///< KeyIDs of pubkeys for signatures which could not be found
     uint160 missing_redeem_script; ///< ScriptID of the missing redeemScript (if any)
-    WitnessV0ScriptHash missing_witness_script; ///< Hash of the missing witnessScript (if any)
+    WitnessV0ShortHash missing_witness_script; ///< Hash of the missing witnessScript (if any)
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}

@@ -208,8 +208,8 @@ enum class SigVersion
 };
 
 /** Signature hash sizes */
-static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
-static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
+static constexpr size_t WITNESS_V0_LONGHASH_SIZE = 32;
+static constexpr size_t WITNESS_V0_SHORTHASH_SIZE = 20;
 
 template <class T>
 uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, int64_t refheight, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);

@@ -467,10 +467,7 @@ bool CWallet::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
 {
     if (!CCryptoKeyStore::AddWitnessV0Script(entry))
         return false;
-    WitnessV0ScriptHash longid = entry.GetScriptHash();
-    uint160 shortid;
-    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
-    return WalletBatch(*database).WriteWitnessV0Script(shortid, entry);
+    return WalletBatch(*database).WriteWitnessV0Script(entry.GetShortHash(), entry);
 }
 
 bool CWallet::LoadWitnessV0Script(const WitnessV0ScriptEntry& entry)
@@ -2827,12 +2824,12 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     }
 
     // if m_default_address_type is legacy, use legacy address as change (even
-    // if some of the outputs are P2WPKH or P2WSH).
+    // if some of the outputs are P2WPK or P2WSH).
     if (m_default_address_type == OutputType::LEGACY) {
         return OutputType::LEGACY;
     }
 
-    // if any destination is P2WPKH or P2WSH, use P2WPKH for the change
+    // if any destination is P2WPK or P2WSH, use P2WPK for the change
     // output.
     for (const auto& recipient : vecSend) {
         // Check if any destination contains a witness program:
@@ -2998,7 +2995,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
                     // as lower-bound to allow BnB to do it's thing
                     if (change_spend_size == -1) {
-                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
+                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPK_INPUT_SIZE;
                     } else {
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
@@ -3894,7 +3891,7 @@ void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
         return;
 
     script = rKey;
-    script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    script->reserveScript = GetScriptForRawPubKey(pubkey);
 }
 
 void CWallet::LockCoin(const COutPoint& output)
@@ -4580,7 +4577,12 @@ bool CWalletTx::AcceptToMemoryPool(interfaces::Chain::Lock& locked_chain, const 
 void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
     if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
-        CTxDestination witdest = WitnessV0KeyHash(key.GetID());
+        CScript p2pk = GetScriptForRawPubKey(key);
+        WitnessV0ScriptEntry entry;
+        entry.m_script.push_back(0x00);
+        entry.m_script.insert(entry.m_script.end(), p2pk.begin(), p2pk.end());
+        AddWitnessV0Script(entry);
+        CTxDestination witdest = WitnessV0ShortHash(0 /* version */, p2pk);
         CScript witprog = GetScriptForDestination(witdest);
         // Make sure the resulting program is solvable.
         assert(IsSolvable(*this, witprog));
