@@ -51,7 +51,9 @@ public:
 
     //! Support for witness scripts
     virtual bool AddWitnessV0Script(const std::vector<unsigned char>& script) =0;
+    virtual bool HaveWitnessV0Script(const uint160& witnesshash) const =0;
     virtual bool HaveWitnessV0Script(const uint256& witnesshash) const =0;
+    virtual bool GetWitnessV0Script(const uint160& witnesshash, std::vector<unsigned char>& scriptOut) const =0;
     virtual bool GetWitnessV0Script(const uint256& witnesshash, std::vector<unsigned char>& scriptOut) const =0;
 
     //! Support for Watch-only addresses
@@ -64,7 +66,7 @@ public:
 typedef std::map<CKeyID, CKey> KeyMap;
 typedef std::map<CKeyID, CPubKey> WatchKeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
-typedef std::map<uint256, std::vector<unsigned char> > WitnessV0ScriptMap;
+typedef std::map<uint160, std::vector<unsigned char> > WitnessV0ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
 
 /** Basic key store, that keeps keys in an address->secret map */
@@ -120,7 +122,9 @@ public:
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
 
     virtual bool AddWitnessV0Script(const std::vector<unsigned char>& script) override;
+    virtual bool HaveWitnessV0Script(const uint160& witnessprogram) const override;
     virtual bool HaveWitnessV0Script(const uint256& witnessprogram) const override;
+    virtual bool GetWitnessV0Script(const uint160& witnessprogram, std::vector<unsigned char>& scriptOut) const override;
     virtual bool GetWitnessV0Script(const uint256& witnessprogram, std::vector<unsigned char>& scriptOut) const override;
 
     virtual bool AddWatchOnly(const CScript &dest) override;

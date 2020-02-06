@@ -1118,6 +1118,10 @@ public:
     bool operator()(const CKeyID &keyID) {
         if (pwallet) {
             CScript basescript = GetScriptForDestination(keyID);
+            CPubKey pubkey;
+            if (!pwallet->GetPubKey(keyID, pubkey))
+                return false;
+            basescript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
             pwallet->AddWitnessV0Script(innerscript);

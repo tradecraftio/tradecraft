@@ -15,7 +15,7 @@
             "scriptPubKey": {
                 "asm": "0 f574731fc058784de806f80f0e6e0df313cfbadf60c1cadbfeaab9cb653f0ed7",
                 "hex": "0020f574731fc058784de806f80f0e6e0df313cfbadf60c1cadbfeaab9cb653f0ed7",
-                "type": "witness_v0_scripthash"
+                "type": "witness_v0_longhash"
             }
         }
     ],
