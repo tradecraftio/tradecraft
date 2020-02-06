@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BOOST_CHECK_EQUAL(VerifyWithFlag(creationTx, spendingTx, flags), SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
 
-    // P2WPKH witness program
+    // P2WPK witness program
     {
         CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
         CScript scriptPubKey = GetScriptForWitness(p2pk);
@@ -179,6 +179,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CTxInWitness witness;
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(vector<unsigned char>(0));
+        scriptWitness.stack.push_back(vector<unsigned char>(1, 0x00));
+        scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), p2pk.begin(), p2pk.end());
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         witness.scriptWitness = scriptWitness;
 
@@ -187,7 +189,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);
         // No signature operations if we don't verify the witness.
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS), 0);
-        BOOST_CHECK_EQUAL(VerifyWithFlag(creationTx, spendingTx, flags), SCRIPT_ERR_EQUALVERIFY);
+        BOOST_CHECK_EQUAL(VerifyWithFlag(creationTx, spendingTx, flags), SCRIPT_ERR_EVAL_FALSE);
 
         // The sig op cost for witness version != 0 is zero.
         BOOST_CHECK_EQUAL(scriptPubKey[0], 0x00);
@@ -202,7 +204,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);
     }
 
-    // P2WPKH nested in P2SH
+    // P2WPK nested in P2SH
     {
         CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
         CScript scriptSig = GetScriptForWitness(p2pk);
@@ -211,12 +213,14 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CTxInWitness witness;
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(vector<unsigned char>(0));
+        scriptWitness.stack.push_back(vector<unsigned char>(1, 0x00));
+        scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), p2pk.begin(), p2pk.end());
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         witness.scriptWitness = scriptWitness;
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);
-        BOOST_CHECK_EQUAL(VerifyWithFlag(creationTx, spendingTx, flags), SCRIPT_ERR_EQUALVERIFY);
+        BOOST_CHECK_EQUAL(VerifyWithFlag(creationTx, spendingTx, flags), SCRIPT_ERR_EVAL_FALSE);
     }
 
     // P2WSH witness program

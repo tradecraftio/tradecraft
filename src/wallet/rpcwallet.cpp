@@ -1042,6 +1042,10 @@ public:
             typ = IsMine(*pwalletMain, basescript, SIGVERSION_WITNESS_V0);
             if (typ != ISMINE_SPENDABLE && typ != ISMINE_WATCH_SOLVABLE)
                 return false;
+            CPubKey pubkey;
+            if (!pwalletMain->GetPubKey(keyID, pubkey))
+                return false;
+            basescript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
             pwalletMain->AddWitnessV0Script(innerscript);

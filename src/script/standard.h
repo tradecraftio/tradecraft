@@ -59,8 +59,8 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
     TX_UNSPENDABLE, // TX_NULL_DATA in bitcoin, but without data
-    TX_WITNESS_V0_SCRIPTHASH,
-    TX_WITNESS_V0_KEYHASH,
+    TX_WITNESS_V0_LONGHASH,
+    TX_WITNESS_V0_SHORTHASH,
 };
 
 class CNoDestination {

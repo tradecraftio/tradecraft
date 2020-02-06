@@ -62,7 +62,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             return false;
     }
 
-    else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH))
+    else if (!witnessEnabled && (whichType == TX_WITNESS_V0_SHORTHASH || whichType == TX_WITNESS_V0_LONGHASH))
         return false;
 
     return whichType != TX_NONSTANDARD;
