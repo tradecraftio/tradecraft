@@ -775,6 +775,10 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
                 if (prevOut.exists("amount")) {
                     coins->vout[nOut].SetReferenceValue(AmountFromValue(find_value(prevOut, "amount")));
                 }
+                coins->refheight = 0;
+                if (prevOut.exists("refheight")) {
+                    coins->refheight = find_value(prevOut, "amount").get_int();
+                }
             }
 
             // if redeemScript given and not using the local wallet (private keys
