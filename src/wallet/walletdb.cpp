@@ -603,6 +603,18 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         }
+        else if (strType == "witv0")
+        {
+            uint160 shorthash;
+            ssKey >> shorthash;
+            std::vector<unsigned char> script;
+            ssValue >> script;
+            if (!pwallet->LoadWitnessV0Script(script))
+            {
+                strErr = "Error reading wallet database: LoadWitnessV0Script failed";
+                return false;
+            }
+        }
         else if (strType == "orderposnext")
         {
             ssValue >> pwallet->nOrderPosNext;
