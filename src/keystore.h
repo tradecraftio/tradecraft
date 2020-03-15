@@ -29,6 +29,41 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/variant.hpp>
 
+/** Encapsulating class for information necessary to spend a witness
+    output: the witness redeem script and Merkle proof. */
+class WitnessV0ScriptEntry
+{
+public:
+    std::vector<unsigned char> m_script;
+    std::vector<uint256> m_branch;
+    uint32_t m_path;
+
+    WitnessV0ScriptEntry() : m_path(0) { }
+
+    WitnessV0ScriptEntry(const std::vector<unsigned char>& scriptIn) : m_script(scriptIn), m_path(0) { }
+    WitnessV0ScriptEntry(std::vector<unsigned char>&& scriptIn) : m_script(scriptIn), m_path(0) { }
+
+    WitnessV0ScriptEntry(const std::vector<unsigned char>& scriptIn, const std::vector<uint256>& branchIn, uint32_t pathIn) : m_script(scriptIn), m_branch(branchIn), m_path(pathIn) { }
+    WitnessV0ScriptEntry(std::vector<unsigned char>&& scriptIn, std::vector<uint256>&& branchIn, uint32_t pathIn) : m_script(scriptIn), m_branch(branchIn), m_path(pathIn) { }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(m_script);
+        READWRITE(VARINT(m_path));
+        READWRITE(m_branch);
+    }
+
+    void SetNull() {
+        m_script.clear();
+        m_branch.clear();
+        m_path = 0;
+    }
+
+    uint256 GetHash() const;
+};
+
 /** A virtual base class for key stores */
 class CKeyStore
 {
@@ -54,11 +89,11 @@ public:
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
 
     //! Support for witness scripts
-    virtual bool AddWitnessV0Script(const std::vector<unsigned char>& script) =0;
+    virtual bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry) =0;
     virtual bool HaveWitnessV0Script(const uint160& witnesshash) const =0;
     virtual bool HaveWitnessV0Script(const uint256& witnesshash) const =0;
-    virtual bool GetWitnessV0Script(const uint160& witnesshash, std::vector<unsigned char>& scriptOut) const =0;
-    virtual bool GetWitnessV0Script(const uint256& witnesshash, std::vector<unsigned char>& scriptOut) const =0;
+    virtual bool GetWitnessV0Script(const uint160& witnesshash, WitnessV0ScriptEntry& entryOut) const =0;
+    virtual bool GetWitnessV0Script(const uint256& witnesshash, WitnessV0ScriptEntry& entryOut) const =0;
 
     //! Support for Watch-only addresses
     virtual bool AddWatchOnly(const CScript &dest) =0;
@@ -70,7 +105,7 @@ public:
 typedef std::map<CKeyID, CKey> KeyMap;
 typedef std::map<CKeyID, CPubKey> WatchKeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
-typedef std::map<uint160, std::vector<unsigned char> > WitnessV0ScriptMap;
+typedef std::map<uint160, WitnessV0ScriptEntry> WitnessV0ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
 
 /** Basic key store, that keeps keys in an address->secret map */
@@ -125,11 +160,11 @@ public:
     virtual bool HaveCScript(const CScriptID &hash) const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;
 
-    virtual bool AddWitnessV0Script(const std::vector<unsigned char>& script);
+    virtual bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry);
     virtual bool HaveWitnessV0Script(const uint160& witnessprogram) const;
     virtual bool HaveWitnessV0Script(const uint256& witnessprogram) const;
-    virtual bool GetWitnessV0Script(const uint160& witnessprogram, std::vector<unsigned char>& scriptOut) const;
-    virtual bool GetWitnessV0Script(const uint256& witnessprogram, std::vector<unsigned char>& scriptOut) const;
+    virtual bool GetWitnessV0Script(const uint160& witnessprogram, WitnessV0ScriptEntry& entryOut) const;
+    virtual bool GetWitnessV0Script(const uint256& witnessprogram, WitnessV0ScriptEntry& entryOut) const;
 
     virtual bool AddWatchOnly(const CScript &dest);
     virtual bool RemoveWatchOnly(const CScript &dest);

@@ -133,21 +133,21 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     case TX_WITNESS_V0_SHORTHASH:
     case TX_WITNESS_V0_LONGHASH:
     {
-        std::vector<unsigned char> witscript;
+        WitnessV0ScriptEntry entry;
         bool found = false;
         switch (whichTypeRet)
         {
         case TX_WITNESS_V0_SHORTHASH:
-            found = creator.KeyStore().GetWitnessV0Script(uint160(vSolutions[0]), witscript);
+            found = creator.KeyStore().GetWitnessV0Script(uint160(vSolutions[0]), entry);
             break;
 
         case TX_WITNESS_V0_LONGHASH:
-            found = creator.KeyStore().GetWitnessV0Script(uint256(vSolutions[0]), witscript);
+            found = creator.KeyStore().GetWitnessV0Script(uint256(vSolutions[0]), entry);
             break;
         }
         if (found) {
-            if (!witscript.empty() && (witscript[0] == 0x00)) {
-                ret.push_back(std::vector<unsigned char>(witscript.begin()+1, witscript.end()));
+            if (!entry.m_script.empty() && (entry.m_script[0] == 0x00)) {
+                ret.push_back(std::vector<unsigned char>(entry.m_script.begin()+1, entry.m_script.end()));
                 return true;
             }
         }

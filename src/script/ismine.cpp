@@ -113,18 +113,18 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     case TX_WITNESS_V0_LONGHASH:
     {
         bool found = false;
-        std::vector<unsigned char> innerscript;
+        WitnessV0ScriptEntry entry;
         if (whichType == TX_WITNESS_V0_SHORTHASH) {
-            found = keystore.GetWitnessV0Script(uint160(vSolutions[0]), innerscript);
+            found = keystore.GetWitnessV0Script(uint160(vSolutions[0]), entry);
         }
         if (whichType == TX_WITNESS_V0_LONGHASH) {
-            found = keystore.GetWitnessV0Script(uint256(vSolutions[0]), innerscript);
+            found = keystore.GetWitnessV0Script(uint256(vSolutions[0]), entry);
         }
         if (found) {
-            if (innerscript.empty() || (innerscript[0] != 0x00)) {
+            if (entry.m_script.empty() || (entry.m_script[0] != 0x00)) {
                 break;
             }
-            CScript subscript(innerscript.begin()+1, innerscript.end());
+            CScript subscript(entry.m_script.begin()+1, entry.m_script.end());
             isminetype ret = IsMine(keystore, subscript, isInvalid, SIGVERSION_WITNESS_V0);
             if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
                 return ret;
