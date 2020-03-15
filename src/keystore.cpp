@@ -19,11 +19,24 @@
 
 #include "keystore.h"
 
+#include "consensus/merkle.h"
 #include "key.h"
 #include "pubkey.h"
 #include "util.h"
 
 #include <boost/foreach.hpp>
+
+uint256 WitnessV0ScriptEntry::GetHash() const
+{
+    uint256 leaf;
+    CHash256().Write(&m_script[0], m_script.size()).Finalize(leaf.begin());
+    bool invalid = false;
+    uint256 hash = ComputeFastMerkleRootFromBranch(leaf, m_branch, m_path, &invalid);
+    if (invalid) {
+        std::runtime_error(strprintf("%s: invalid Merkle proof", __func__));
+    }
+    return hash;
+}
 
 bool CKeyStore::AddKey(const CKey &key) {
     return AddKeyPubKey(key, key.GetPubKey());
@@ -80,14 +93,12 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
-bool CBasicKeyStore::AddWitnessV0Script(const std::vector<unsigned char>& script)
+bool CBasicKeyStore::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
 {
     LOCK(cs_KeyStore);
-    uint256 witnessprogram;
     uint160 shorthash;
-    CHash256().Write(&script[0], script.size()).Finalize(witnessprogram.begin());
-    CRIPEMD160().Write(witnessprogram.begin(), 32).Finalize(shorthash.begin());
-    mapWitnessV0Scripts[shorthash] = script;
+    CRIPEMD160().Write(entry.GetHash().begin(), 32).Finalize(shorthash.begin());
+    mapWitnessV0Scripts[shorthash] = entry;
     return true;
 }
 
@@ -104,23 +115,23 @@ bool CBasicKeyStore::HaveWitnessV0Script(const uint256& witnessprogram) const
     return HaveWitnessV0Script(shorthash);
 }
 
-bool CBasicKeyStore::GetWitnessV0Script(const uint160& witnessprogram, std::vector<unsigned char>& scriptOut) const
+bool CBasicKeyStore::GetWitnessV0Script(const uint160& witnessprogram, WitnessV0ScriptEntry& entryOut) const
 {
     LOCK(cs_KeyStore);
     auto mi = mapWitnessV0Scripts.find(witnessprogram);
     if (mi != mapWitnessV0Scripts.end())
     {
-        scriptOut = (*mi).second;
+        entryOut = (*mi).second;
         return true;
     }
     return false;
 }
 
-bool CBasicKeyStore::GetWitnessV0Script(const uint256& witnessprogram, std::vector<unsigned char>& scriptOut) const
+bool CBasicKeyStore::GetWitnessV0Script(const uint256& witnessprogram, WitnessV0ScriptEntry& entryOut) const
 {
     uint160 shorthash;
     CRIPEMD160().Write(witnessprogram.begin(), 32).Finalize(shorthash.begin());
-    return GetWitnessV0Script(shorthash, scriptOut);
+    return GetWitnessV0Script(shorthash, entryOut);
 }
 
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)

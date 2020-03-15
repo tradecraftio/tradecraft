@@ -24,6 +24,7 @@
 #include "primitives/transaction.h"
 #include "wallet/db.h"
 #include "key.h"
+#include "keystore.h"
 
 #include <list>
 #include <stdint.h>
@@ -150,7 +151,7 @@ public:
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
-    bool WriteWitnessV0Script(const uint160& shorthash, const std::vector<unsigned char>& script);
+    bool WriteWitnessV0Script(const uint160& shorthash, const WitnessV0ScriptEntry& entry);
 
     bool WriteWatchOnly(const CScript &script);
     bool EraseWatchOnly(const CScript &script);
