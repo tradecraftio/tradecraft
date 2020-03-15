@@ -1124,7 +1124,7 @@ public:
             basescript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
-            pwallet->AddWitnessV0Script(innerscript);
+            pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
             CScript witscript = GetScriptForWitness(basescript);
             SignatureData sigs;
             // This check is to make sure that the script we created can actually be solved for and signed by us
@@ -1152,7 +1152,7 @@ public:
             }
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), subscript.begin(), subscript.end());
-            pwallet->AddWitnessV0Script(innerscript);
+            pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
             CScript witscript = GetScriptForWitness(subscript);
             SignatureData sigs;
             // This check is to make sure that the script we created can actually be solved for and signed by us

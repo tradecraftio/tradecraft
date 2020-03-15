@@ -109,9 +109,9 @@ bool CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
     return WriteIC(std::make_pair(std::string("cscript"), hash), redeemScript, false);
 }
 
-bool CWalletDB::WriteWitnessV0Script(const uint160& shorthash, const std::vector<unsigned char>& script)
+bool CWalletDB::WriteWitnessV0Script(const uint160& shorthash, const WitnessV0ScriptEntry& entry)
 {
-    return WriteIC(std::make_pair(std::string("witv0"), shorthash), script, false);
+    return WriteIC(std::make_pair(std::string("witv0"), shorthash), entry, false);
 }
 
 bool CWalletDB::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMeta)
@@ -502,9 +502,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             uint160 shorthash;
             ssKey >> shorthash;
-            std::vector<unsigned char> script;
-            ssValue >> script;
-            if (!pwallet->LoadWitnessV0Script(script))
+            WitnessV0ScriptEntry entry;
+            ssValue >> entry;
+            if (!pwallet->LoadWitnessV0Script(entry))
             {
                 strErr = "Error reading wallet database: LoadWitnessV0Script failed";
                 return false;
