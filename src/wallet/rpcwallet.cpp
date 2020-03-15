@@ -1257,7 +1257,7 @@ public:
             basescript = GetScriptForRawPubKey(pubkey);
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
-            pwallet->AddWitnessV0Script(innerscript);
+            pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
             CScript witscript = GetScriptForWitness(basescript);
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
@@ -1281,7 +1281,7 @@ public:
             }
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), subscript.begin(), subscript.end());
-            pwallet->AddWitnessV0Script(innerscript);
+            pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
             CScript witscript = GetScriptForWitness(subscript);
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;

@@ -123,10 +123,10 @@ public:
 
     void operator()(const WitnessV0ShortHash& short_hash)
     {
-        std::vector<unsigned char> witscript;
-        if (keystore.GetWitnessV0Script(short_hash, witscript)) {
-            if (!witscript.empty() && witscript[0] == 0x00) {
-                CScript script(witscript.begin()+1, witscript.end());
+        WitnessV0ScriptEntry entry;
+        if (keystore.GetWitnessV0Script(short_hash, entry)) {
+            if (!entry.m_script.empty() && entry.m_script[0] == 0x00) {
+                CScript script(entry.m_script.begin()+1, entry.m_script.end());
                 Process(script);
             }
         }
@@ -355,20 +355,16 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
-bool CWallet::AddWitnessV0Script(const std::vector<unsigned char>& script)
+bool CWallet::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
 {
-    if (!CCryptoKeyStore::AddWitnessV0Script(script))
+    if (!CCryptoKeyStore::AddWitnessV0Script(entry))
         return false;
-    WitnessV0LongHash longid;
-    CHash256().Write(script.data(), script.size()).Finalize(longid.begin());
-    WitnessV0ShortHash shortid;
-    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
-    return CWalletDB(*dbw).WriteWitnessV0Script(shortid, script);
+    return CWalletDB(*dbw).WriteWitnessV0Script(entry.GetShortHash(), entry);
 }
 
-bool CWallet::LoadWitnessV0Script(const std::vector<unsigned char>& script)
+bool CWallet::LoadWitnessV0Script(const WitnessV0ScriptEntry& entry)
 {
-    return CCryptoKeyStore::AddWitnessV0Script(script);
+    return CCryptoKeyStore::AddWitnessV0Script(entry);
 }
 
 bool CWallet::AddWatchOnly(const CScript& dest)

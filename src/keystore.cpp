@@ -16,7 +16,25 @@
 
 #include <keystore.h>
 
+#include <consensus/merkle.h>
 #include <util.h>
+
+WitnessV0LongHash WitnessV0ScriptEntry::GetLongHash() const
+{
+    uint256 leaf;
+    CHash256().Write(&m_script[0], m_script.size()).Finalize(leaf.begin());
+    bool invalid = false;
+    uint256 hash = ComputeFastMerkleRootFromBranch(leaf, m_branch, m_path, &invalid);
+    if (invalid) {
+        std::runtime_error(strprintf("%s: invalid Merkle proof", __func__));
+    }
+    return WitnessV0LongHash(hash);
+}
+
+WitnessV0ShortHash WitnessV0ScriptEntry::GetShortHash() const
+{
+    return WitnessV0ShortHash(GetLongHash());
+}
 
 bool CKeyStore::AddKey(const CKey &key) {
     return AddKeyPubKey(key, key.GetPubKey());
@@ -150,14 +168,10 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
-bool CBasicKeyStore::AddWitnessV0Script(const std::vector<unsigned char>& script)
+bool CBasicKeyStore::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
 {
     LOCK(cs_KeyStore);
-    WitnessV0LongHash witnessprogram;
-    CHash256().Write(script.data(), script.size()).Finalize(witnessprogram.begin());
-    WitnessV0ShortHash shortid;
-    CRIPEMD160().Write(witnessprogram.begin(), 32).Finalize(shortid.begin());
-    mapWitnessV0Scripts[shortid] = script;
+    mapWitnessV0Scripts[entry.GetShortHash()] = entry;
     return true;
 }
 
@@ -182,21 +196,21 @@ std::set<WitnessV0ShortHash> CBasicKeyStore::GetWitnessV0Scripts() const
     return ret;
 }
 
-bool CBasicKeyStore::GetWitnessV0Script(const WitnessV0ShortHash& witnessprogram, std::vector<unsigned char>& scriptOut) const
+bool CBasicKeyStore::GetWitnessV0Script(const WitnessV0ShortHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
 {
     LOCK(cs_KeyStore);
     auto mi = mapWitnessV0Scripts.find(witnessprogram);
     if (mi != mapWitnessV0Scripts.end())
     {
-        scriptOut = (*mi).second;
+        entryOut = (*mi).second;
         return true;
     }
     return false;
 }
 
-bool CBasicKeyStore::GetWitnessV0Script(const WitnessV0LongHash& witnessprogram, std::vector<unsigned char>& scriptOut) const
+bool CBasicKeyStore::GetWitnessV0Script(const WitnessV0LongHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
 {
-    return GetWitnessV0Script(WitnessV0ShortHash(witnessprogram), scriptOut);
+    return GetWitnessV0Script(WitnessV0ShortHash(witnessprogram), entryOut);
 }
 
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
@@ -275,15 +289,15 @@ CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest)
         return *id;
     }
     if (auto short_hash = boost::get<WitnessV0ShortHash>(&dest)) {
-        std::vector<unsigned char> witscript;
-        if (store.GetWitnessV0Script(*short_hash, witscript)) {
-            return GetKeyForWitnessV0Script(store, witscript);
+        WitnessV0ScriptEntry entry;
+        if (store.GetWitnessV0Script(*short_hash, entry)) {
+            return GetKeyForWitnessV0Script(store, entry.m_script);
         }
     }
     if (auto long_hash = boost::get<WitnessV0LongHash>(&dest)) {
-        std::vector<unsigned char> witscript;
-        if (store.GetWitnessV0Script(*long_hash, witscript)) {
-            return GetKeyForWitnessV0Script(store, witscript);
+        WitnessV0ScriptEntry entry;
+        if (store.GetWitnessV0Script(*long_hash, entry)) {
+            return GetKeyForWitnessV0Script(store, entry.m_script);
         }
     }
     if (auto script_id = boost::get<CScriptID>(&dest)) {
@@ -291,15 +305,15 @@ CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest)
         CTxDestination inner_dest;
         if (store.GetCScript(*script_id, script) && ExtractDestination(script, inner_dest)) {
             if (auto short_hash = boost::get<WitnessV0ShortHash>(&inner_dest)) {
-                std::vector<unsigned char> witscript;
-                if (store.GetWitnessV0Script(*short_hash, witscript)) {
-                    return GetKeyForWitnessV0Script(store, witscript);
+                WitnessV0ScriptEntry entry;
+                if (store.GetWitnessV0Script(*short_hash, entry)) {
+                    return GetKeyForWitnessV0Script(store, entry.m_script);
                 }
             }
             if (auto long_hash = boost::get<WitnessV0LongHash>(&inner_dest)) {
-                std::vector<unsigned char> witscript;
-                if (store.GetWitnessV0Script(*long_hash, witscript)) {
-                    return GetKeyForWitnessV0Script(store, witscript);
+                WitnessV0ScriptEntry entry;
+                if (store.GetWitnessV0Script(*long_hash, entry)) {
+                    return GetKeyForWitnessV0Script(store, entry.m_script);
                 }
             }
         }

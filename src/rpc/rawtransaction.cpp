@@ -885,7 +885,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
                     tempKeystore.AddCScript(GetScriptForWitness(redeemScript));
                     std::vector<unsigned char> witscript(1, 0x00);
                     witscript.insert(witscript.end(), rsData.begin(), rsData.end());
-                    tempKeystore.AddWitnessV0Script(witscript);
+                    tempKeystore.AddWitnessV0Script(WitnessV0ScriptEntry(std::move(witscript)));
                 }
             }
         }

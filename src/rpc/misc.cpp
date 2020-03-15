@@ -126,10 +126,18 @@ public:
         obj.push_back(Pair("iswitness", true));
         obj.push_back(Pair("witness_version", 0));
         obj.push_back(Pair("witness_program", HexStr(id.begin(), id.end())));
-        std::vector<unsigned char> witscript;
-        if (pwallet && pwallet->GetWitnessV0Script(id, witscript)) {
-            if (!witscript.empty() && witscript[0] == 0x00) {
-                subscript.insert(subscript.end(), witscript.begin() + 1, witscript.end());
+        WitnessV0ScriptEntry entry;
+        if (pwallet && pwallet->GetWitnessV0Script(id, entry)) {
+            if (!entry.m_script.empty() && entry.m_script[0] == 0x00) {
+                UniValue branch(UniValue::VARR);
+                for (const auto& hash : entry.m_branch) {
+                    branch.push_back(HexStr(hash.begin(), hash.end()));
+                }
+                obj.push_back(Pair("witness_branch", branch));
+                obj.push_back(Pair("witness_path", (int64_t)entry.m_path));
+                subscript.insert(subscript.end(),
+                                 entry.m_script.begin() + 1,
+                                 entry.m_script.end());
                 ProcessSubScript(subscript, obj);
             }
         }
@@ -144,10 +152,18 @@ public:
         obj.push_back(Pair("iswitness", true));
         obj.push_back(Pair("witness_version", 0));
         obj.push_back(Pair("witness_program", HexStr(id.begin(), id.end())));
-        std::vector<unsigned char> witscript;
-        if (pwallet && pwallet->GetWitnessV0Script(id, witscript)) {
-            if (!witscript.empty() && witscript[0] == 0x00) {
-                subscript.insert(subscript.end(), witscript.begin() + 1, witscript.end());
+        WitnessV0ScriptEntry entry;
+        if (pwallet && pwallet->GetWitnessV0Script(id, entry)) {
+            if (!entry.m_script.empty() && entry.m_script[0] == 0x00) {
+                UniValue branch(UniValue::VARR);
+                for (const auto& hash : entry.m_branch) {
+                    branch.push_back(HexStr(hash.begin(), hash.end()));
+                }
+                obj.push_back(Pair("witness_branch", branch));
+                obj.push_back(Pair("witness_path", (int64_t)entry.m_path));
+                subscript.insert(subscript.end(),
+                                 entry.m_script.begin() + 1,
+                                 entry.m_script.end());
                 ProcessSubScript(subscript, obj);
             }
         }
