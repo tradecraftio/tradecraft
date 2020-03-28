@@ -459,8 +459,6 @@ libfreicoin_consensus_a_SOURCES = \
   arith_uint256.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
-  consensus/merkleproof.cpp \
-  consensus/merkleproof.h \
   consensus/params.h \
   consensus/tx_check.cpp \
   consensus/validation.h \
@@ -500,6 +498,8 @@ libfreicoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
+  consensus/merkleproof.cpp \
+  consensus/merkleproof.h \
   core_read.cpp \
   core_write.cpp \
   key.cpp \
