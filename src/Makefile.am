@@ -437,6 +437,7 @@ libfreicoin_node_a_SOURCES = \
   rpc/blockchain.cpp \
   rpc/fees.cpp \
   rpc/mempool.cpp \
+  rpc/merkleproof.cpp \
   rpc/mining.cpp \
   rpc/net.cpp \
   rpc/node.cpp \
@@ -625,8 +626,6 @@ libfreicoin_consensus_a_SOURCES = \
   consensus/amount.cpp \
   consensus/merkle.cpp \
   consensus/merkle.h \
-  consensus/merkleproof.cpp \
-  consensus/merkleproof.h \
   consensus/params.h \
   consensus/tx_check.cpp \
   consensus/validation.h \
@@ -669,6 +668,8 @@ libfreicoin_common_a_SOURCES = \
   common/interfaces.cpp \
   common/run_command.cpp \
   compressor.cpp \
+  consensus/merkleproof.cpp \
+  consensus/merkleproof.h \
   core_read.cpp \
   core_write.cpp \
   deploymentinfo.cpp \
