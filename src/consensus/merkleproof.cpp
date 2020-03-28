@@ -181,8 +181,33 @@ void swap(MerkleProof& lhs, MerkleProof& rhs)
     swap(lhs.m_skip, rhs.m_skip);
 }
 
+MerkleTree::MerkleTree(const uint256& hash, bool verify)
+{
+    /* A tree consisting of a single hash, whether VERIFY or SKIP, is
+     * represented with no nodes. */
+    if (verify) {
+        m_verify.emplace_back(hash);
+    } else {
+        m_proof.m_skip.emplace_back(hash);
+    }
+}
+
 MerkleTree::MerkleTree(const MerkleTree& left, const MerkleTree& right)
 {
+    /* Handle the special case of either the left or right being
+     * empty, which is idempotent. */
+    if (left == MerkleTree()) {
+        m_proof = right.m_proof;
+        m_verify = right.m_verify;
+        return;
+    }
+
+    else if (right == MerkleTree()) {
+        m_proof = left.m_proof;
+        m_verify = left.m_verify;
+        return;
+    }
+
     /* Handle the special case of both left and right being fully
      * pruned, which also results in a fully pruned super-tree. */
     if (left.m_proof.m_path.empty() && left.m_proof.m_skip.size()==1 && left.m_verify.empty() &&

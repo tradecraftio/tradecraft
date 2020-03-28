@@ -1333,6 +1333,10 @@ struct MerkleProof
 
     void clear() noexcept;
 
+    inline bool operator==(const MerkleProof& other) const
+      { return m_path == other.m_path
+            && m_skip == other.m_skip; }
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -1371,6 +1375,10 @@ struct MerkleTree
     typedef proof_type::skip_type verify_type;
     verify_type m_verify;
 
+    /* Builds a single-element MerkleTree with the specified hash
+     * value, as either a VERIFY or SKIP hash. */
+    explicit MerkleTree(const uint256& hash, bool verify = true);
+
     /* Builds a new Merkle tree with the specified left-branch and
      * right-branch, including properly handling the case of left or
      * right being a single hash. */
@@ -1384,6 +1392,10 @@ struct MerkleTree
     MerkleTree& operator=(MerkleTree&&) = default;
 
     void clear() noexcept;
+
+    inline bool operator==(const MerkleTree& other) const
+      { return m_proof == other.m_proof
+            && m_verify == other.m_verify; }
 
     /* Calculates the root hash of the MerkleTree, a process that
      * requires a depth first traverse of the full tree using linear
