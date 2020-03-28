@@ -412,6 +412,7 @@ libbitcoin_node_a_SOURCES = \
   rpc/blockchain.cpp \
   rpc/fees.cpp \
   rpc/mempool.cpp \
+  rpc/merkleproof.cpp \
   rpc/mining.cpp \
   rpc/net.cpp \
   rpc/node.cpp \
