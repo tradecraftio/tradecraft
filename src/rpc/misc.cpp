@@ -18,6 +18,7 @@
 #include "clientversion.h"
 #include "init.h"
 #include "validation.h"
+#include "consensus/merkleproof.h"
 #include "net.h"
 #include "netbase.h"
 #include "rpc/server.h"
@@ -438,6 +439,208 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
 
+struct MerkleElem
+{
+    typedef std::vector<unsigned char> data_type;
+    boost::optional<data_type> m_data;
+
+    typedef uint256 hash_type;
+    hash_type m_hash;
+
+    /* The default constructor uses an empty vector as a data value.
+     * An arbitrary, but reasonable choice. */
+    MerkleElem(): m_data(std::vector<unsigned char>()) { Rehash(); }
+
+    MerkleElem(const data_type& data) : m_data(data) { Rehash(); }
+    MerkleElem(data_type&& data) : m_data(data) { Rehash(); }
+
+    MerkleElem(const hash_type& hash) : m_data(boost::none), m_hash(hash) { }
+    MerkleElem(hash_type&& hash) : m_data(boost::none), m_hash(hash) { }
+
+    /* The default copy constructors and assignment operators are fine. */
+    MerkleElem(const MerkleElem&) = default;
+    MerkleElem(MerkleElem&&) = default;
+    MerkleElem& operator=(const MerkleElem&) = default;
+    MerkleElem& operator=(MerkleElem&&) = default;
+
+    inline void SetData(const data_type& data)
+        { m_data = data; Rehash(); }
+    void SetData(data_type&& data)
+        { m_data = data; Rehash(); }
+
+    MerkleElem& operator=(const data_type& data)
+        { SetData(data); return *this; }
+    MerkleElem& operator=(data_type&& data)
+        { SetData(data); return *this; }
+
+    inline void SetHash(const hash_type& hash)
+        { m_data = boost::none; m_hash = hash; }
+    inline void SetHash(hash_type&& hash)
+        { m_data = boost::none; m_hash = hash; }
+
+    MerkleElem& operator=(const hash_type& hash)
+        { SetHash(hash); return *this; }
+    MerkleElem& operator=(hash_type&& hash)
+        { SetHash(hash); return *this; }
+
+    inline const uint256& GetHash() const
+        { return m_hash; }
+
+protected:
+    void Rehash();
+};
+
+void MerkleElem::Rehash()
+{
+    assert(m_data != boost::none);
+    const std::vector<unsigned char>& data = m_data.get();
+    CHash256().Write(&data[0], data.size()).Finalize(m_hash.begin());
+}
+
+UniValue createmerkleproof(const JSONRPCRequest& request)
+{
+    using std::swap;
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+        throw runtime_error(
+            "createmerkleproof [\"data\",...] ( [pos,...] prehashed )\n"
+            "\nCreate a fast Merkle-tree from the provided data elements, and return the proof structure and data necessary for validation.\n"
+            "\nArguments:\n"
+            "1. data/hash\n"
+            "   [\n"
+            "     data/hash,  (string, hex) Either hex-encoded data,\n"
+            "     ...           or its hash value.\n"
+            "   ]\n"
+            "2. pos\n"
+            "   [\n"
+            "     pos,        (integer) The position of elements which\n"
+            "     ...           need to be verified by the proof.\n"
+            "   ]\n"
+            "3. prehashed     (bool, optional, default:false) If set,\n"
+            "                   the data elements specified are\n"
+            "                   hex-encoded 256-bit hash values.\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"root\":        (string, hex) The root hash of the Merkle tree.\n"
+            "  \"proof\":       (string, hex) The serialized proof structure.\n"
+            "  \"verify\": [    (list) The data necessary to verify the proof.\n"
+            "    {\n"
+            "      \"hash\":    (string, hex) The hash used in proof verification.\n"
+            "      \"data\":    (string, hex, optional) The original data, if available.\n"
+            "    },\n"
+            "    ...\n"
+            "  }\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("createmerkleproof", "")
+            + HelpExampleRpc("createmerkleproof", "")
+        );
+
+    bool prehashed = false;
+    if (request.params.size() > 2) {
+        prehashed = request.params[2].get_bool();
+    }
+
+    bool include_all = false;
+    std::set<std::size_t> pos;
+    if (request.params.size() > 1 && !request.params[1].isNull()) {
+        UniValue v = request.params[1].get_array();
+        for (std::size_t idx = 0; idx < v.size(); ++idx) {
+            auto loc = v[idx].get_int();
+            if (loc < 0) {
+                auto str = strprintf("Invalid tree position: %d", loc);
+                throw JSONRPCError(RPC_INVALID_PARAMETER, str);
+            }
+            if (pos.count(loc)) {
+                auto str = strprintf("Tree position specified twice: %d", loc);
+                throw JSONRPCError(RPC_INVALID_PARAMETER, str);
+            }
+            pos.insert(loc);
+        }
+    } else {
+        include_all = true;
+    }
+
+    std::vector<MerkleElem> data;
+    std::vector<MerkleTree> tree;
+    if (request.params.size() > 0 && !request.params[0].isNull()) {
+        UniValue v = request.params[0].get_array();
+        std::size_t idx = 0;
+        for (; idx < v.size(); ++idx) {
+            if (prehashed) {
+                MerkleElem::hash_type h256;
+                h256.SetHex(v[idx].get_str());
+                data.emplace_back(std::move(h256));
+            } else {
+                MerkleElem::data_type vch = ParseHex(v[idx].get_str());
+                data.emplace_back(std::move(vch));
+            }
+            tree.emplace_back(data.back().GetHash(), include_all || pos.count(idx));
+        }
+        // Now that we know the number of elements in the tree, we can
+        // check whether any of the tree position locators given in
+        // request.params[1] are out of range.
+        std::set<std::size_t> invalid_pos;
+        for (auto loc : pos) {
+            if (loc >= idx) {
+                invalid_pos.insert(loc);
+            }
+        }
+        if (!invalid_pos.empty()) {
+            std::string str("These tree positions are out of range: ");
+            for (auto loc : invalid_pos) {
+                str += strprintf("%d, ", loc);
+            }
+            str.erase(str.size()-2, 2); // ", "
+            throw JSONRPCError(RPC_INVALID_PARAMETER, str);
+        }
+    }
+
+    // If called with no parameters, we return the "empty" proof.
+    if (tree.empty()) {
+        tree.resize(1);
+    }
+
+    while (tree.size() > 1) {
+        std::vector<MerkleTree> next;
+        for (std::size_t idx = 0; idx < tree.size(); idx += 2) {
+            std::size_t idx2 = idx + 1;
+            if (idx2 < tree.size()) {
+                next.emplace_back(tree[idx], tree[idx2]);
+            } else {
+                next.emplace_back(tree[idx]);
+            }
+        }
+        swap(tree, next);
+    }
+
+    assert(tree.size() == 1);
+    CDataStream ssProof(SER_NETWORK, PROTOCOL_VERSION);
+    ssProof << tree[0].m_proof;
+
+    UniValue verify(UniValue::VARR);
+    for (auto hash : tree[0].m_verify) {
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("hash", hash.GetHex()));
+        for (auto elem : data) {
+            if (hash == elem.GetHash() && elem.m_data != boost::none) {
+                obj.push_back(Pair("data", HexStr(elem.m_data.get())));
+                break;
+            }
+        }
+        verify.push_back(obj);
+    }
+
+    UniValue res(UniValue::VOBJ);
+    res.push_back(Pair("root", tree[0].GetHash().GetHex()));
+    res.push_back(Pair("tree", HexStr(ssProof.begin(), ssProof.end())));
+    res.push_back(Pair("verify", verify));
+
+    return res;
+}
+
 UniValue setmocktime(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -529,6 +732,7 @@ static const CRPCCommand commands[] =
     { "util",               "createmultisig",         &createmultisig,         true,  {"nrequired","keys"} },
     { "util",               "verifymessage",          &verifymessage,          true,  {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true,  {"privkey","message"} },
+    { "util",               "createmerkleproof",      &createmerkleproof,      true,  {"data/hash","pos","prehashed"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            true,  {"timestamp"}},
