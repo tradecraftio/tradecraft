@@ -2418,6 +2418,16 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         }
     }
 
+    if (flags & SCRIPT_VERIFY_WITNESS) {
+        // We can't check for correct unexpected witness data if P2SH was off, so require
+        // that WITNESS implies P2SH. Otherwise, going from WITNESS->P2SH+WITNESS would be
+        // possible, which is not a softfork.
+        assert((flags & SCRIPT_VERIFY_P2SH) != 0);
+        if (!hadWitness && !witness->IsNull()) {
+            return set_error(serror, SCRIPT_ERR_WITNESS_UNEXPECTED);
+        }
+    }
+
     // The CLEANSTACK check is only performed after potential P2SH evaluation,
     // as the non-P2SH evaluation of a P2SH script will obviously not result in
     // a clean stack (the P2SH inputs remain). The same holds for witness evaluation.
@@ -2428,16 +2438,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         assert((flags & SCRIPT_VERIFY_WITNESS) != 0);
         if (stack.size() != 1) {
             return set_error(serror, SCRIPT_ERR_CLEANSTACK);
-        }
-    }
-
-    if (flags & SCRIPT_VERIFY_WITNESS) {
-        // We can't check for correct unexpected witness data if P2SH was off, so require
-        // that WITNESS implies P2SH. Otherwise, going from WITNESS->P2SH+WITNESS would be
-        // possible, which is not a softfork.
-        assert((flags & SCRIPT_VERIFY_P2SH) != 0);
-        if (!hadWitness && !witness->IsNull()) {
-            return set_error(serror, SCRIPT_ERR_WITNESS_UNEXPECTED);
         }
     }
 
