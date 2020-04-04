@@ -19,10 +19,8 @@ from collections import namedtuple
 from test_framework.address import (
     byte_to_base58,
     key_to_p2pkh,
-    key_to_p2sh_p2wpk,
     key_to_p2wpk,
     script_to_p2sh,
-    script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
 from test_framework.key import ECKey
@@ -48,10 +46,7 @@ Key = namedtuple('Key', ['privkey',
                          'p2pkh_script',
                          'p2pkh_addr',
                          'p2wpk_script',
-                         'p2wpk_addr',
-                         'p2sh_p2wpk_script',
-                         'p2sh_p2wpk_redeem_script',
-                         'p2sh_p2wpk_addr'])
+                         'p2wpk_addr'])
 
 Multisig = namedtuple('Multisig', ['privkeys',
                                    'pubkeys',
@@ -60,9 +55,7 @@ Multisig = namedtuple('Multisig', ['privkeys',
                                    'redeem_script',
                                    'p2wsh_script',
                                    'p2wsh_addr',
-                                   'witness_script',
-                                   'p2sh_p2wsh_script',
-                                   'p2sh_p2wsh_addr'])
+                                   'witness_script'])
 
 def get_key(node):
     """Generate a fresh key on node
@@ -77,10 +70,7 @@ def get_key(node):
                p2pkh_script=CScript([OP_DUP, OP_HASH160, pkh, OP_EQUALVERIFY, OP_CHECKSIG]).hex(),
                p2pkh_addr=key_to_p2pkh(pubkey),
                p2wpk_script=CScript([OP_0, pkh]).hex(),
-               p2wpk_addr=key_to_p2wpk(pubkey),
-               p2sh_p2wpk_script=CScript([OP_HASH160, hash160(CScript([OP_0, ripemd160(b'\x00' + hash256(p2pk))])), OP_EQUAL]).hex(),
-               p2sh_p2wpk_redeem_script=CScript([OP_0, ripemd160(hash256(b'\x00' + p2pk))]).hex(),
-               p2sh_p2wpk_addr=key_to_p2sh_p2wpk(pubkey))
+               p2wpk_addr=key_to_p2wpk(pubkey))
 
 def get_generate_key():
     """Generate a fresh key
@@ -120,9 +110,7 @@ def get_multisig(node):
                     redeem_script=script_code.hex(),
                     p2wsh_script=witness_script.hex(),
                     p2wsh_addr=script_to_p2wsh(script_code),
-                    witness_script="00" + script_code.hex(),
-                    p2sh_p2wsh_script=CScript([OP_HASH160, witness_script, OP_EQUAL]).hex(),
-                    p2sh_p2wsh_addr=script_to_p2sh_p2wsh(script_code))
+                    witness_script="00" + script_code.hex())
 
 def test_address(node, address, **kwargs):
     """Get address info for `address` and test whether the returned values are as expected."""

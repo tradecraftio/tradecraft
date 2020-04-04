@@ -98,9 +98,9 @@ void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pu
 {
     AssertLockHeld(cs_KeyStore);
     CKeyID key_id = pubkey.GetID();
-    // This adds the redeemscripts necessary to detect P2WPK and P2SH-P2WPK
+    // This adds the redeemscripts necessary to detect P2WPK
     // outputs. Technically P2WPK outputs don't have a redeemscript to be
-    // spent. However, our current IsMine logic requires the corresponding
+    // spent. However, our current IsMine logic requires the invlalid
     // P2SH-P2WPK redeemscript to be present in the wallet in order to accept
     // payment even to P2WPK outputs.
     // Also note that having superfluous scripts in the keystore never hurts.
@@ -112,17 +112,6 @@ void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pu
     if (pubkey.IsCompressed()) {
         CScript script = GetScriptForRawPubKey(pubkey);
         WitnessV0ScriptEntry entry(0 /* version */, script);
-        // This does not use AddCScript, as it may be overridden.
-        {
-            CScript script = GetScriptForDestination(entry.GetLongHash());
-            CScriptID id(script);
-            mapScripts[id] = std::move(script);
-        }
-        {
-            CScript script = GetScriptForDestination(entry.GetShortHash());
-            CScriptID id(script);
-            mapScripts[id] = std::move(script);
-        }
         // This does not use AddWitnessV0Script, as it may be overridden.
         mapWitnessV0Scripts[entry.GetShortHash()] = std::move(entry);
     }
@@ -274,7 +263,7 @@ static CKeyID GetKeyForWitnessV0Script(const SigningProvider& store, WitnessV0Sc
 CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest)
 {
     // Only supports destinations which map to single public keys, i.e. P2PKH,
-    // P2WPK, and P2SH-P2WPK.
+    // P2WPK.
     if (auto id = boost::get<PKHash>(&dest)) {
         return ToKeyID(*id);
     }
@@ -295,17 +284,8 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
         CScriptID script_id(*script_hash);
         CTxDestination inner_dest;
         if (store.GetCScript(script_id, script) && ExtractDestination(script, inner_dest)) {
-            if (auto shortid = boost::get<WitnessV0ShortHash>(&inner_dest)) {
-                WitnessV0ScriptEntry entry;
-                if (store.GetWitnessV0Script(*shortid, entry)) {
-                    return GetKeyForWitnessV0Script(store, entry);
-                }
-            }
-            if (auto longid = boost::get<WitnessV0LongHash>(&inner_dest)) {
-                WitnessV0ScriptEntry entry;
-                if (store.GetWitnessV0Script(*longid, entry)) {
-                    return GetKeyForWitnessV0Script(store, entry);
-                }
+            if (auto id = boost::get<PKHash>(&dest)) {
+                return ToKeyID(*id);
             }
         }
     }

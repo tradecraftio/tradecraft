@@ -110,8 +110,6 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Witness program hash mismatch";
         case SCRIPT_ERR_WITNESS_MALLEATED:
             return "Witness requires empty scriptSig";
-        case SCRIPT_ERR_WITNESS_MALLEATED_P2SH:
-            return "Witness requires only-redeemscript scriptSig";
         case SCRIPT_ERR_WITNESS_UNEXPECTED:
             return "Witness provided for non-witness script";
         case SCRIPT_ERR_WITNESS_PUBKEYTYPE:

@@ -682,7 +682,6 @@ protected:
             CScript p2wpk = GetScriptForDestination(entry.GetShortHash());
             out.scripts.emplace(CScriptID(p2wpk), p2wpk);
             ret.emplace_back(p2wpk);
-            ret.emplace_back(GetScriptForDestination(ScriptHash(p2wpk))); // P2SH-P2WPK
         }
         return ret;
     }
@@ -722,7 +721,6 @@ public:
     Optional<OutputType> GetOutputType() const override
     {
         assert(m_subdescriptor_arg);
-        if (m_subdescriptor_arg->GetOutputType() == OutputType::BECH32) return OutputType::P2SH_SEGWIT;
         return OutputType::LEGACY;
     }
     bool IsSingleType() const final { return true; }
@@ -940,7 +938,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
         }
         return MakeUnique<MultisigDescriptor>(thres, std::move(providers), sorted_multi);
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wpk", expr)) {
+    if (ctx == ParseScriptContext::TOP && Func("wpk", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, false, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<WPKDescriptor>(std::move(pubkey));
@@ -956,7 +954,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
         error = "Cannot have sh in non-top level";
         return nullptr;
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
+    if (ctx == ParseScriptContext::TOP && Func("wsh", expr)) {
         auto desc = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<WSHDescriptor>(std::move(desc));
