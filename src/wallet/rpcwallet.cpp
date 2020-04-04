@@ -237,7 +237,7 @@ static RPCHelpMan getnewaddress()
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\" and \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The new freicoin address"
@@ -289,7 +289,7 @@ static RPCHelpMan getrawchangeaddress()
                 "\nReturns a new Freicoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\" and \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The address"
@@ -951,7 +951,7 @@ static RPCHelpMan addmultisigaddress()
                         },
                         },
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the addresses to."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\" and \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1021,8 +1021,6 @@ static RPCHelpMan addmultisigaddress()
     case OutputType::LEGACY:
         result.pushKV("redeemScript", HexStr(inner));
         break;
-    case OutputType::P2SH_SEGWIT:
-        result.pushKV("redeemScript", HexStr(GetScriptForWitness(inner)));
     case OutputType::BECH32:
         result.pushKV("witnessScript", "00" + HexStr(inner));
         break;
@@ -1082,11 +1080,6 @@ public:
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(script);
             CScript subscript;
             if (provider && provider->GetCScript(CScriptID(scripthash), subscript)) {
-                if (subscript.IsWitnessProgram()) {
-                    ExtractDestination(subscript, result);
-                    already_witness = true;
-                    return true;
-                }
                 std::vector<std::vector<unsigned char>> vSolutions;
                 TxoutType typ = Solver(subscript, vSolutions);
                 bool allow_short = false;
@@ -1150,10 +1143,9 @@ static RPCHelpMan addwitnessaddress()
                       "Requires a new wallet backup.  It returns the witness script.\n",
                       {
                           {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "A freicoin address known to the wallet."},
-                          {"p2sh", RPCArg::Type::BOOL, RPCArg::Default{true}, "Embed inside P2SH."},
                       },
                       RPCResult{
-                          RPCResult::Type::STR, "witnessaddress", "The new witness address (P2SH or BIP173)."
+                          RPCResult::Type::STR, "witnessaddress", "The new witness address (BIP173)."
                       },
                       RPCExamples{
                           HelpExampleCli("addwitnessaddress", "1Q5GLnvfuTSppvWrxNJ81wc9dB8WXgYP6Y")
@@ -1169,11 +1161,6 @@ static RPCHelpMan addwitnessaddress()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Freicoin address");
     }
 
-    bool p2sh = true;
-    if (request.params.size() > 1 && !request.params[1].isNull()) {
-        p2sh = request.params[1].get_bool();
-    }
-
     Witnessifier w(pwallet);
     bool ret = std::visit(w, dest);
     if (!ret) {
@@ -1181,10 +1168,6 @@ static RPCHelpMan addwitnessaddress()
     }
 
     CScript witprogram = GetScriptForDestination(w.result);
-
-    if (p2sh) {
-        w.result = ScriptHash(witprogram);
-    }
 
     if (w.already_witness) {
         if (!(dest == w.result)) {
@@ -1195,10 +1178,6 @@ static RPCHelpMan addwitnessaddress()
         if (!spk_man) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet does not have a legacy script pubkey manager");
         }
-        // Implicit for single-key now, but necessary for multisig and for
-        // compatibility with older software.
-        spk_man->AddCScript(GetScriptForDestination(w.entry.GetLongHash()));
-        spk_man->AddCScript(GetScriptForDestination(w.entry.GetShortHash()));
         pwallet->SetAddressBook(w.result, "", "receive");
     }
 
@@ -3063,7 +3042,7 @@ static RPCHelpMan listunspent()
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
-                            {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
+                            {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH"},
                             {RPCResult::Type::BOOL, "spendable", "Whether we have the private keys to spend this output"},
                             {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
                             {RPCResult::Type::BOOL, "reused", "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
@@ -3422,7 +3401,7 @@ static RPCHelpMan fundrawtransaction()
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
                             {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"pool address"}, "The freicoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
-                            {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                            {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\" and \"bech32\"."},
                             {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
                                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                                           "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
@@ -3517,7 +3496,7 @@ RPCHelpMan signrawtransactionwithwallet()
                                     {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
-                                    {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
+                                    {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH) witness script"},
                                     {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
                                     {"refheight", RPCArg::Type::NUM, RPCArg::Optional::NO, "The lockheight of the transaction output being spent"},
                                 },
@@ -4270,7 +4249,7 @@ static RPCHelpMan send()
                     {"add_to_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "When false, returns a serialized transaction which will not be added to the wallet or broadcast"},
                     {"change_address", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The freicoin address to receive the change"},
                     {"change_position", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
-                    {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if change_address is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if change_address is not specified. Options are \"legacy\" and \"bech32\"."},
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
@@ -4628,7 +4607,7 @@ static RPCHelpMan walletcreatefundedpst()
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
                             {"changeAddress", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The freicoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
-                            {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                            {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\" and \"bech32\"."},
                             {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only"},
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},

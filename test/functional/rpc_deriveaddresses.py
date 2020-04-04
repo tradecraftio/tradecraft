@@ -53,7 +53,7 @@ class DeriveaddressesTest(FreicoinTestFramework):
         assert_raises_rpc_error(-8, "Range should be greater or equal than 0", self.nodes[0].deriveaddresses, descsum_create("wpk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/*)"), [-1, 0])
 
         combo_descriptor = descsum_create("combo(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/0)")
-        assert_equal(self.nodes[0].deriveaddresses(combo_descriptor), ["mtfUoUax9L4tzXARpw1oTGxWyoogp52KhJ", "mtfUoUax9L4tzXARpw1oTGxWyoogp52KhJ", address, "2NCU3EECmXKJu5f5VacT5vjwGPdZUSKCXTH"])
+        assert_equal(self.nodes[0].deriveaddresses(combo_descriptor), ["mtfUoUax9L4tzXARpw1oTGxWyoogp52KhJ", "mtfUoUax9L4tzXARpw1oTGxWyoogp52KhJ", address])
 
         # Before #26275, freicoind would crash when deriveaddresses was
         # called with derivation index 2147483647, which is the maximum

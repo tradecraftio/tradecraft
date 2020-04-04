@@ -34,7 +34,7 @@ const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        error = _("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types").translated;
+        error = _("Error: Legacy wallets only support the \"legacy\" and \"bech32\" address types").translated;
         return false;
     }
     assert(type != OutputType::BECH32M);
@@ -301,7 +301,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
 bool LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, std::string& error)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        error = _("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types").translated;
+        error = _("Error: Legacy wallets only support the \"legacy\" and \"bech32\" address types").translated;
         return false;
     }
     assert(type != OutputType::BECH32M);
@@ -1420,7 +1420,7 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
 void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
     assert(type != OutputType::BECH32M);
-    if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
+    if (key.IsCompressed() && type == OutputType::BECH32) {
         CScript p2pk = GetScriptForRawPubKey(key);
         WitnessV0ScriptEntry entry(0 /* version */, p2pk);
         AddWitnessV0Script(entry);
@@ -1428,14 +1428,13 @@ void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType t
         CScript witprog = GetScriptForDestination(witdest);
         // Make sure the resulting program is solvable.
         assert(IsSolvable(*this, witprog));
-        AddCScript(witprog);
     }
 }
 
 void LegacyScriptPubKeyMan::LearnAllRelatedScripts(const CPubKey& key)
 {
-    // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
-    LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    // OutputType::BECH32 always adds all necessary scripts for all types.
+    LearnRelatedScripts(key, OutputType::BECH32);
 }
 
 void LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
@@ -1949,11 +1948,6 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     switch (addr_type) {
     case OutputType::LEGACY: {
         desc_prefix = "pkh(" + xpub + "/44'";
-        break;
-    }
-    case OutputType::P2SH_SEGWIT: {
-        desc_prefix = "sh(wpk(" + xpub + "/49'";
-        desc_suffix += ")";
         break;
     }
     case OutputType::BECH32: {
