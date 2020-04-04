@@ -1109,7 +1109,8 @@ class Witnessifier : public boost::static_visitor<bool>
 {
 public:
     CWallet * const pwallet;
-    CScriptID result;
+    CScript witscript_v0_longhash;
+    CScript witscript_v0_shorthash;
 
     Witnessifier(CWallet *_pwallet) : pwallet(_pwallet) {}
 
@@ -1125,17 +1126,24 @@ public:
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
             pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
-            CScript witscript = GetScriptForWitness(basescript);
+            uint256 long_hash;
+            CHash256().Write(&innerscript[0], innerscript.size()).Finalize(long_hash.begin());
+            witscript_v0_longhash = CScript() << OP_0 << ToByteVector(long_hash);
+            uint160 short_hash;
+            CRIPEMD160().Write(long_hash.begin(), 32).Finalize(short_hash.begin());
+            witscript_v0_shorthash = CScript() << OP_0 << ToByteVector(short_hash);
             SignatureData sigs;
             // This check is to make sure that the script we created can actually be solved for and signed by us
             // if we were to have the private keys. This is just to make sure that the script is valid and that,
             // if found in a transaction, we would still accept and relay that transcation.
-            if (!ProduceSignature(DummySignatureCreator(pwallet), witscript, sigs) ||
-                !VerifyScript(sigs.scriptSig, witscript, &sigs.scriptWitness, MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, DummySignatureCreator(pwallet).Checker())) {
+            if (!ProduceSignature(DummySignatureCreator(pwallet), witscript_v0_longhash, sigs) ||
+                !VerifyScript(sigs.scriptSig, witscript_v0_longhash, &sigs.scriptWitness, MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, DummySignatureCreator(pwallet).Checker())) {
                 return false;
             }
-            pwallet->AddCScript(witscript);
-            result = CScriptID(witscript);
+            if (!ProduceSignature(DummySignatureCreator(pwallet), witscript_v0_longhash, sigs) ||
+                !VerifyScript(sigs.scriptSig, witscript_v0_shorthash, &sigs.scriptWitness, MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, DummySignatureCreator(pwallet).Checker())) {
+                return false;
+            }
             return true;
         }
         return false;
@@ -1147,23 +1155,33 @@ public:
             int witnessversion;
             std::vector<unsigned char> witprog;
             if (subscript.IsWitnessProgram(witnessversion, witprog)) {
-                result = scriptID;
-                return true;
+                /* As a safety measure, the reference wallet does not
+                 * allow adding a witness program as a witness script.
+                 * This would almost certainly be a user error, and a
+                 * money-losing one. */
+                return false;
             }
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), subscript.begin(), subscript.end());
             pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
-            CScript witscript = GetScriptForWitness(subscript);
+            uint256 long_hash;
+            CHash256().Write(&innerscript[0], innerscript.size()).Finalize(long_hash.begin());
+            witscript_v0_longhash = CScript() << OP_0 << ToByteVector(long_hash);
+            uint160 short_hash;
+            CRIPEMD160().Write(long_hash.begin(), 32).Finalize(short_hash.begin());
+            witscript_v0_shorthash = CScript() << OP_0 << ToByteVector(short_hash);
             SignatureData sigs;
             // This check is to make sure that the script we created can actually be solved for and signed by us
             // if we were to have the private keys. This is just to make sure that the script is valid and that,
             // if found in a transaction, we would still accept and relay that transcation.
-            if (!ProduceSignature(DummySignatureCreator(pwallet), witscript, sigs) ||
-                !VerifyScript(sigs.scriptSig, witscript, &sigs.scriptWitness, MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, DummySignatureCreator(pwallet).Checker())) {
+            if (!ProduceSignature(DummySignatureCreator(pwallet), witscript_v0_longhash, sigs) ||
+                !VerifyScript(sigs.scriptSig, witscript_v0_longhash, &sigs.scriptWitness, MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, DummySignatureCreator(pwallet).Checker())) {
                 return false;
             }
-            pwallet->AddCScript(witscript);
-            result = CScriptID(witscript);
+            if (!ProduceSignature(DummySignatureCreator(pwallet), witscript_v0_shorthash, sigs) ||
+                !VerifyScript(sigs.scriptSig, witscript_v0_shorthash, &sigs.scriptWitness, MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, DummySignatureCreator(pwallet).Checker())) {
+                return false;
+            }
             return true;
         }
         return false;
@@ -1211,9 +1229,16 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Public key or redeemscript not known to wallet, or the key is uncompressed");
     }
 
-    pwallet->SetAddressBook(w.result, "", "receive");
+    // FIXME: The address book is only really configured to handle
+    // "destinations", which witness scripts are not (since we don't
+    // allow P2SH-wrapped witness scripts).
+    // pwallet->SetAddressBook(w.result, "", "receive");
 
-    return CFreicoinAddress(w.result).ToString();
+    UniValue res(UniValue::VOBJ);
+    res.push_back(Pair("shorthash", HexStr(w.witscript_v0_shorthash.begin(), w.witscript_v0_shorthash.end())));
+    res.push_back(Pair("longhash", HexStr(w.witscript_v0_longhash.begin(), w.witscript_v0_longhash.end())));
+
+    return res;
 }
 
 struct tallyitem
