@@ -568,7 +568,6 @@ protected:
             CScript p2wpk = GetScriptForDestination(entry.GetShortHash());
             out.scripts.emplace(CScriptID(p2wpk), p2wpk);
             ret.emplace_back(p2wpk); // P2WPK
-            ret.emplace_back(GetScriptForDestination(CScriptID(p2wpk))); // P2SH-P2WPK
         }
         return ret;
     }
@@ -791,7 +790,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         }
         return MakeUnique<MultisigDescriptor>(thres, std::move(providers));
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wpk", expr)) {
+    if (ctx == ParseScriptContext::TOP && Func("wpk", expr)) {
         auto pubkey = ParsePubkey(expr, false, out);
         if (!pubkey) return nullptr;
         return MakeUnique<WPKDescriptor>(std::move(pubkey));
@@ -801,7 +800,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<SHDescriptor>(std::move(desc));
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
+    if (ctx == ParseScriptContext::TOP && Func("wsh", expr)) {
         auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<WSHDescriptor>(std::move(desc));

@@ -52,8 +52,8 @@ class PSTTest(FreicoinTestFramework):
         disconnect_nodes(mining_node, 0)
 
         # Mine a transaction that credits the offline address
-        offline_addr = offline_node.getnewaddress(address_type="p2sh-segwit")
-        online_addr = online_node.getnewaddress(address_type="p2sh-segwit")
+        offline_addr = offline_node.getnewaddress(address_type="bech32")
+        online_addr = online_node.getnewaddress(address_type="bech32")
         online_node.importaddress(offline_addr, "", False)
         mining_node.sendtoaddress(address=offline_addr, amount=1.0)
         mining_node.generate(nblocks=1)
@@ -98,13 +98,11 @@ class PSTTest(FreicoinTestFramework):
         pubkey2 = self.nodes[2].getaddressinfo(self.nodes[2].getnewaddress())['pubkey']
         p2sh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "legacy")['address']
         p2wsh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "bech32")['address']
-        p2sh_p2wsh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "p2sh-segwit")['address']
         p2wpkh = self.nodes[1].getnewaddress("", "bech32")
         p2pkh = self.nodes[1].getnewaddress("", "legacy")
-        p2sh_p2wpkh = self.nodes[1].getnewaddress("", "p2sh-segwit")
 
         # fund those addresses
-        rawtx = self.nodes[0].createrawtransaction([], {p2sh:10, p2wsh:10, p2wpkh:10, p2sh_p2wsh:10, p2sh_p2wpkh:10, p2pkh:10})
+        rawtx = self.nodes[0].createrawtransaction([], {p2sh:10, p2wsh:10, p2wpkh:10, p2pkh:10})
         rawtx = self.nodes[0].fundrawtransaction(rawtx, {"changePosition":3})
         signed_tx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])['hex']
         txid = self.nodes[0].sendrawtransaction(signed_tx)
@@ -116,8 +114,6 @@ class PSTTest(FreicoinTestFramework):
         p2wsh_pos = -1
         p2wpkh_pos = -1
         p2pkh_pos = -1
-        p2sh_p2wsh_pos = -1
-        p2sh_p2wpkh_pos = -1
         decoded = self.nodes[0].decoderawtransaction(signed_tx)
         for out in decoded['vout']:
             if out['scriptPubKey']['addresses'][0] == p2sh:
@@ -126,30 +122,26 @@ class PSTTest(FreicoinTestFramework):
                 p2wsh_pos = out['n']
             elif out['scriptPubKey']['addresses'][0] == p2wpkh:
                 p2wpkh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2sh_p2wsh:
-                p2sh_p2wsh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2sh_p2wpkh:
-                p2sh_p2wpkh_pos = out['n']
             elif out['scriptPubKey']['addresses'][0] == p2pkh:
                 p2pkh_pos = out['n']
 
         # spend single key from node 1
-        rawtx = self.nodes[1].walletcreatefundedpst([{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99})['pst']
+        rawtx = self.nodes[1].walletcreatefundedpst([{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99})['pst']
         walletprocesspst_out = self.nodes[1].walletprocesspst(rawtx)
         assert_equal(walletprocesspst_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepst(walletprocesspst_out['pst'])['hex'])
 
-        # feeRate of 0.1 FRC / KB produces a total fee slightly below -maxtxfee (~0.05280000):
-        res = self.nodes[1].walletcreatefundedpst([{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, -1, {"feeRate": 0.095})
-        assert_greater_than(res["fee"], 0.05)
-        assert_greater_than(0.06, res["fee"])
+        # feeRate of 0.1 FRC / KB produces a total fee slightly below -maxtxfee (~0.04180000):
+        res = self.nodes[1].walletcreatefundedpst([{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, -1, {"feeRate": 0.095})
+        assert_greater_than(res["fee"], 0.04)
+        assert_greater_than(0.05, res["fee"])
 
         # feeRate of 10 FRC / KB produces a total fee well above -maxtxfee
         # previously this was silently capped at -maxtxfee
-        assert_raises_rpc_error(-4, "Fee exceeds maximum configured by -maxtxfee", self.nodes[1].walletcreatefundedpst, [{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, -1, {"feeRate": 10})
+        assert_raises_rpc_error(-4, "Fee exceeds maximum configured by -maxtxfee", self.nodes[1].walletcreatefundedpst, [{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, -1, {"feeRate": 10})
 
         # partially sign multisig things with node 1
-        pstx = self.nodes[1].walletcreatefundedpst([{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2sh_p2wsh_pos}], {self.nodes[1].getnewaddress():29.99})['pst']
+        pstx = self.nodes[1].walletcreatefundedpst([{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos}], {self.nodes[1].getnewaddress():29.99})['pst']
         walletprocesspst_out = self.nodes[1].walletprocesspst(pstx)
         pstx = walletprocesspst_out['pst']
         assert_equal(walletprocesspst_out['complete'], False)
@@ -340,30 +332,25 @@ class PSTTest(FreicoinTestFramework):
         addr2 = self.nodes[1].getnewaddress("", "legacy")
         txid2 = self.nodes[0].sendtoaddress(addr2, 11)
         vout2 = find_output(self.nodes[0], txid2, 11)
-        addr3 = self.nodes[1].getnewaddress("", "p2sh-segwit")
-        txid3 = self.nodes[0].sendtoaddress(addr3, 11)
-        vout3 = find_output(self.nodes[0], txid3, 11)
         self.sync_all()
 
         # Update a PST with UTXOs from the node
         # Bech32 inputs should be filled with witness UTXO. Other inputs should not be filled because they are non-witness
-        pst = self.nodes[1].createpst([{"txid":txid1, "vout":vout1},{"txid":txid2, "vout":vout2},{"txid":txid3, "vout":vout3}], {self.nodes[0].getnewaddress():32.999})
+        pst = self.nodes[1].createpst([{"txid":txid1, "vout":vout1},{"txid":txid2, "vout":vout2}], {self.nodes[0].getnewaddress():21.999})
         decoded = self.nodes[1].decodepst(pst)
         assert "witness_utxo" not in decoded['inputs'][0] and "non_witness_utxo" not in decoded['inputs'][0]
         assert "witness_utxo" not in decoded['inputs'][1] and "non_witness_utxo" not in decoded['inputs'][1]
-        assert "witness_utxo" not in decoded['inputs'][2] and "non_witness_utxo" not in decoded['inputs'][2]
         updated = self.nodes[1].utxoupdatepst(pst)
         decoded = self.nodes[1].decodepst(updated)
         assert "witness_utxo" in decoded['inputs'][0] and "non_witness_utxo" not in decoded['inputs'][0]
         assert "witness_utxo" not in decoded['inputs'][1] and "non_witness_utxo" not in decoded['inputs'][1]
-        assert "witness_utxo" not in decoded['inputs'][2] and "non_witness_utxo" not in decoded['inputs'][2]
 
         # Two PSTs with a common input should not be joinable
         pst1 = self.nodes[1].createpst([{"txid":txid1, "vout":vout1}], {self.nodes[0].getnewaddress():Decimal('10.999')})
         assert_raises_rpc_error(-8, "exists in multiple PSTs", self.nodes[1].joinpsts, [pst1, updated])
 
         # Join two distinct PSTs
-        addr4 = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        addr4 = self.nodes[1].getnewaddress("", "bech32")
         txid4 = self.nodes[0].sendtoaddress(addr4, 5)
         vout4 = find_output(self.nodes[0], txid4, 5)
         self.nodes[0].generate(6)
@@ -371,10 +358,10 @@ class PSTTest(FreicoinTestFramework):
         pst2 = self.nodes[1].createpst([{"txid":txid4, "vout":vout4}], {self.nodes[0].getnewaddress():Decimal('4.999')})
         pst2 = self.nodes[1].walletprocesspst(pst2)['pst']
         pst2_decoded = self.nodes[0].decodepst(pst2)
-        assert "final_scriptwitness" in pst2_decoded['inputs'][0] and "final_scriptSig" in pst2_decoded['inputs'][0]
+        assert "final_scriptwitness" in pst2_decoded['inputs'][0] and "final_scriptSig" not in pst2_decoded['inputs'][0]
         joined = self.nodes[0].joinpsts([pst, pst2])
         joined_decoded = self.nodes[0].decodepst(joined)
-        assert len(joined_decoded['inputs']) == 4 and len(joined_decoded['outputs']) == 2 and "final_scriptwitness" not in joined_decoded['inputs'][3] and "final_scriptSig" not in joined_decoded['inputs'][3]
+        assert len(joined_decoded['inputs']) == 3 and len(joined_decoded['outputs']) == 2 and "final_scriptwitness" not in joined_decoded['inputs'][2] and "final_scriptSig" not in joined_decoded['inputs'][2]
 
         # Check that joining shuffles the inputs and outputs
         # 10 attempts should be enough to get a shuffled join
@@ -387,13 +374,13 @@ class PSTTest(FreicoinTestFramework):
         assert shuffled
 
         # Newly created PST needs UTXOs and updating
-        addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        addr = self.nodes[1].getnewaddress("", "bech32")
         txid = self.nodes[0].sendtoaddress(addr, 7)
         addrinfo = self.nodes[1].getaddressinfo(addr)
         blockhash = self.nodes[0].generate(6)[0]
         self.sync_all()
         vout = find_output(self.nodes[0], txid, 7, blockhash=blockhash)
-        pst = self.nodes[1].createpst([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress("", "p2sh-segwit"):Decimal('6.999')})
+        pst = self.nodes[1].createpst([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress("", "bech32"):Decimal('6.999')})
         analyzed = self.nodes[0].analyzepst(pst)
         assert not analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'updater' and analyzed['next'] == 'updater'
 
@@ -404,8 +391,8 @@ class PSTTest(FreicoinTestFramework):
 
         # Check fee and size things
         assert_equal(analyzed['fee'], Decimal('0.001'))
-        assert_equal(analyzed['estimated_vsize'], 139)
-        assert_equal(analyzed['estimated_feerate'], Decimal('0.00719424'))
+        assert_equal(analyzed['estimated_vsize'], 115)
+        assert_equal(analyzed['estimated_feerate'], Decimal('0.00869565'))
 
         # After signing and finalizing, needs extracting
         signed = self.nodes[1].walletprocesspst(updated)['pst']

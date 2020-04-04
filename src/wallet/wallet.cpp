@@ -2821,7 +2821,7 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     // If -changetype is specified, always use that change type.
     if (change_type != OutputType::CHANGE_AUTO) {
         if (change_type == OutputType::BECH32 && !is_witness_enabled) {
-            return OutputType::P2SH_SEGWIT;
+            return OutputType::LEGACY;
         }
         return change_type;
     }
@@ -2845,7 +2845,7 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
 
     // else use m_default_address_type for change
     if (m_default_address_type == OutputType::BECH32 && !is_witness_enabled) {
-        return OutputType::P2SH_SEGWIT;
+        return OutputType::LEGACY;
     }
     return m_default_address_type;
 }
@@ -3003,10 +3003,10 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     nValueIn = 0;
                     setCoins.clear();
                     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
-                    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
+                    // If the wallet doesn't know how to sign change output, assume p2wpk
                     // as lower-bound to allow BnB to do it's thing
                     if (change_spend_size == -1) {
-                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPK_INPUT_SIZE;
+                        coin_selection_params.change_spend_size = DUMMY_P2WPK_INPUT_SIZE;
                     } else {
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
@@ -4587,7 +4587,7 @@ bool CWalletTx::AcceptToMemoryPool(interfaces::Chain::Lock& locked_chain, const 
 
 void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
-    if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
+    if (key.IsCompressed() && type == OutputType::BECH32) {
         CScript p2pk = GetScriptForRawPubKey(key);
         WitnessV0ScriptEntry entry;
         entry.m_script.push_back(0x00);
@@ -4597,14 +4597,13 @@ void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
         CScript witprog = GetScriptForDestination(witdest);
         // Make sure the resulting program is solvable.
         assert(IsSolvable(*this, witprog));
-        AddCScript(witprog);
     }
 }
 
 void CWallet::LearnAllRelatedScripts(const CPubKey& key)
 {
-    // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
-    LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    // OutputType::BECH32 always adds all necessary scripts for all types.
+    LearnRelatedScripts(key, OutputType::BECH32);
 }
 
 std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const {

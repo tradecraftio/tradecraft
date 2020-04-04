@@ -28,6 +28,11 @@ from test_framework.script import CScript, OP_TRUE, OP_DROP
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, get_bip9_status, kria_round, sync_blocks, wait_until, unhexlify
 
+def addlength(script):
+    scriptlen = format(len(script)//2, 'x')
+    assert(len(scriptlen) == 2)
+    return scriptlen + script
+
 # TestP2PConn: A peer we use to send messages to freicoind, and store responses.
 class TestP2PConn(P2PInterface):
     def __init__(self):
@@ -279,7 +284,19 @@ class CompactBlocksTest(FreicoinTestFramework):
             # a witness address.
             address = node.getnewaddress(address_type='bech32')
             value_to_send = node.getbalance()
-            node.sendtoaddress(address, kria_round(value_to_send - Decimal(0.1)))
+            witaddress = node.addwitnessaddress(address)
+            script = self.nodes[0].validateaddress(witaddress)['scriptPubKey']
+            value_to_send = node.getbalance()
+            inputs = []
+            outputs = {}
+            DUMMY_P2SH = "2MySexEGVzZpRgNQ1JdjdP5bRETznm3roQ2" # P2SH of "OP_1 OP_DROP"
+            outputs[DUMMY_P2SH] = kria_round(value_to_send - Decimal(0.1))
+            rawtx = node.createrawtransaction(inputs,outputs)
+            rawtx = rawtx[:28] + addlength(script) + rawtx[76:]
+            rawtx = node.fundrawtransaction(rawtx)['hex']
+            res = node.signrawtransactionwithwallet(rawtx)
+            assert_equal(res['complete'], True)
+            node.sendrawtransaction(res['hex'])
             node.generate(1)
 
         segwit_tx_generated = False

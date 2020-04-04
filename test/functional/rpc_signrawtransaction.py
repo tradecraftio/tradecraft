@@ -158,21 +158,19 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         assert not rawTxSigned['errors'][0]['witness']
 
     def witness_script_test(self):
-        # Now test signing transaction to P2SH-P2WSH addresses without wallet
-        # Create a new P2SH-P2WSH 1-of-1 multisig address:
+        # Now test signing transaction to P2WSH addresses without wallet
+        # Create a new P2WSH 1-of-1 multisig address:
         embedded_address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_address["address"])
-        p2sh_p2wsh_address = self.nodes[1].addmultisigaddress(1, [embedded_address["pubkey"]], "", "p2sh-segwit")
+        p2wsh_address = self.nodes[1].addmultisigaddress(1, [embedded_address["pubkey"]], "", "bech32")
         # send transaction to P2SH-P2WSH 1-of-1 multisig address
         self.nodes[0].generate(101)
-        self.nodes[0].sendtoaddress(p2sh_p2wsh_address["address"], 49.999)
+        self.nodes[0].sendtoaddress(p2wsh_address["address"], 49.999)
         self.nodes[0].generate(1)
         self.sync_all()
         # Find the UTXO for the transaction node[1] should have received, check witnessScript matches
-        unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address["address"]])[0]
-        assert_equal(unspent_output["witnessScript"], "00" + p2sh_p2wsh_address["redeemScript"])
-        p2sh_redeemScript = CScript([OP_0, hash256(hex_str_to_bytes("00" + p2sh_p2wsh_address["redeemScript"]))])
-        assert_equal(unspent_output["redeemScript"], bytes_to_hex_str(p2sh_redeemScript))
+        unspent_output = self.nodes[1].listunspent(0, 999999, [p2wsh_address["address"]])[0]
+        assert_equal(unspent_output["witnessScript"], "00" + p2wsh_address["redeemScript"])
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].getnewaddress(): Decimal("49.998")})
         spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [unspent_output])

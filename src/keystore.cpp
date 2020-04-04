@@ -38,17 +38,6 @@ void CBasicKeyStore::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
     if (pubkey.IsCompressed()) {
         CScript script = GetScriptForRawPubKey(pubkey);
         WitnessV0ScriptEntry entry(0 /* version */, script);
-        // This does not use AddCScript, as it may be overridden.
-        {
-            CScript script = GetScriptForDestination(entry.GetLongHash());
-            CScriptID id(script);
-            mapScripts[id] = std::move(script);
-        }
-        {
-            CScript script = GetScriptForDestination(entry.GetShortHash());
-            CScriptID id(script);
-            mapScripts[id] = std::move(script);
-        }
         // This does not use AddWitnessV0Script, as it may be overridden.
         mapWitnessV0Scripts[entry.GetShortHash()] = std::move(entry);
     }

@@ -705,7 +705,6 @@ static UniValue decodescript(const JSONRPCRequest& request)
                 segwitScr = GetScriptForDestination(WitnessV0LongHash(0 /* version */, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, true);
-            sr.pushKV("p2sh-segwit", EncodeDestination(CScriptID(segwitScr)));
             r.pushKV("segwit", sr);
         }
     }
