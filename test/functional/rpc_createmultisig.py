@@ -43,7 +43,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         self.moved = 0
         for self.nkeys in [3,5]:
             for self.nsigs in [2,3]:
-                for self.output_type in ["bech32", "p2sh-segwit", "legacy"]:
+                for self.output_type in ["bech32", "legacy"]:
                     self.get_keys()
                     self.do_multisig()
 

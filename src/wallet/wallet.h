@@ -81,7 +81,7 @@ static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
 //! Pre-calculated constants for input size estimation in *virtual size*
-static constexpr size_t DUMMY_NESTED_P2WPK_INPUT_SIZE = 92;
+static constexpr size_t DUMMY_P2WPK_INPUT_SIZE = 69;
 
 class CBlockIndex;
 class CCoinControl;
@@ -114,7 +114,7 @@ enum WalletFeature
 };
 
 //! Default for -addresstype
-constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
+constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
 
 //! Default for -changetype
 constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};

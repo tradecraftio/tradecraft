@@ -373,14 +373,10 @@ public:
             CScript p2pk = GetScriptForRawPubKey(key);
             WitnessV0ShortHash shortid((unsigned char)0, p2pk);
             CScript p2wpk = GetScriptForDestination(shortid);
-            CScriptID p2wpk_id(p2wpk);
-            CScript p2sh_p2wpk = GetScriptForDestination(p2wpk_id);
-            out.scripts.emplace(p2wpk_id, p2wpk);
             std::vector<unsigned char> witscript{0x00};
             witscript.insert(witscript.end(), p2pk.begin(), p2pk.end());
             out.witscripts.emplace(shortid, witscript);
             output_scripts.push_back(std::move(p2wpk));
-            output_scripts.push_back(std::move(p2sh_p2wpk));
         }
         return true;
     }
@@ -549,7 +545,7 @@ std::unique_ptr<Descriptor> ParseScript(Span<const char>& sp, ParseScriptContext
         }
         return MakeUnique<MultisigDescriptor>(thres, std::move(providers));
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wpk", expr)) {
+    if (ctx == ParseScriptContext::TOP && Func("wpk", expr)) {
         auto pubkey = ParsePubkey(expr, false, out);
         if (!pubkey) return nullptr;
         return MakeUnique<SingleKeyDescriptor>(std::move(pubkey), P2WPKGetScript, "wpk");
@@ -559,7 +555,7 @@ std::unique_ptr<Descriptor> ParseScript(Span<const char>& sp, ParseScriptContext
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<ConvertorDescriptor>(std::move(desc), ConvertP2SH, "sh");
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
+    if (ctx == ParseScriptContext::TOP && Func("wsh", expr)) {
         auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<ConvertorDescriptor>(std::move(desc), ConvertP2WSH, "wsh");

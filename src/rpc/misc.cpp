@@ -116,7 +116,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
             "       \"key\"                    (string) The hex-encoded public key\n"
             "       ,...\n"
             "     ]\n"
-            "3. \"address_type\"               (string, optional) The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is legacy.\n"
+            "3. \"address_type\"               (string, optional) The address type to use. Options are \"legacy\" and \"bech32\". Default is legacy.\n"
 
             "\nResult:\n"
             "{\n"
