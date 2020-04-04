@@ -145,13 +145,12 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
     # which spends it, and make sure bumpfee can be called on it.
 
     segwit_in = next(u for u in rbf_node.listunspent() if u["value"] == Decimal("0.001"))
-    segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress(address_type='p2sh-segwit'))
+    segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress(address_type='bech32'))
     segwitid = send_to_witness(
         use_p2wsh=False,
         node=rbf_node,
         utxo=segwit_in,
         pubkey=segwit_out["pubkey"],
-        encode_p2sh=False,
         amount=Decimal("0.0009"),
         sign=True)
 
@@ -248,10 +247,7 @@ def test_dust_to_fee(rbf_node, dest_address):
     # the bumped tx sets fee=49,900, but it converts to 50,000
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    # (32-byte p2sh-pwpkh output size + 148 p2pkh spend estimate) * 10k(discard_rate) / 1000 = 1800
-    # P2SH outputs are slightly "over-discarding" due to the IsDust calculation assuming it will
-    # be spent as a P2PKH.
-    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000 - 1800})
+    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
@@ -274,7 +270,7 @@ def test_settxfee(rbf_node, dest_address):
 
 
 def test_maxtxfee_fails(test, rbf_node, dest_address):
-    test.restart_node(1, ['-maxtxfee=0.00003'] + test.extra_args[1])
+    test.restart_node(1, ['-maxtxfee=0.00002'] + test.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
     assert_raises_rpc_error(-4, "Unable to create transaction: Fee exceeds maximum configured by -maxtxfee", rbf_node.bumpfee, rbfid)

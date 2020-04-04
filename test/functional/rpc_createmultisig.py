@@ -53,7 +53,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         self.moved = 0
         for self.nkeys in [3, 5]:
             for self.nsigs in [2, 3]:
-                for self.output_type in ["bech32", "p2sh-segwit", "legacy"]:
+                for self.output_type in ["bech32", "legacy"]:
                     self.get_keys()
                     self.do_multisig()
 
@@ -79,9 +79,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
 
             # Generate addresses with the segwit types. These should all make legacy addresses
             assert_equal(legacy_addr, node0.createmultisig(2, keys, 'bech32')['address'])
-            assert_equal(legacy_addr, node0.createmultisig(2, keys, 'p2sh-segwit')['address'])
             assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'bech32')['address'])
-            assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'p2sh-segwit')['address'])
 
     def check_addmultisigaddress_errors(self):
         self.log.info('Check that addmultisigaddress fails when the private keys are missing')

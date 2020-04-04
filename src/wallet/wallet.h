@@ -102,7 +102,7 @@ constexpr CAmount HIGH_TX_FEE_PER_KB{COIN / 100};
 constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
 
 //! Pre-calculated constants for input size estimation in *virtual size*
-static constexpr size_t DUMMY_NESTED_P2WPK_INPUT_SIZE = 92;
+static constexpr size_t DUMMY_P2WPK_INPUT_SIZE = 69;
 
 class CCoinControl;
 class COutput;
@@ -132,7 +132,7 @@ enum WalletFeature
 };
 
 //! Default for -addresstype
-constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
+constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
 
 //! Default for -changetype
 constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};

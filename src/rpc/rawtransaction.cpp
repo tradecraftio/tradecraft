@@ -538,7 +538,6 @@ static UniValue decodescript(const JSONRPCRequest& request)
             "      \"address\"         (string) segwit address\n"
             "       ,...\n"
             "    ],\n"
-            "    \"p2sh-segwit\":\"str\" (string) address of the P2SH script wrapping this witness redeem script.\n"
             "}\n"
                 },
                 RPCExamples{
@@ -597,7 +596,6 @@ static UniValue decodescript(const JSONRPCRequest& request)
                 segwitScr = GetScriptForDestination(WitnessV0LongHash(0 /* version */, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, /* fIncludeHex */ true);
-            sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }
     }
