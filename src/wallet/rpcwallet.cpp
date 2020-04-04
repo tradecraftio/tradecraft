@@ -1041,7 +1041,8 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
 class Witnessifier : public boost::static_visitor<bool>
 {
 public:
-    CScriptID result;
+    CScript witscript_v0_longhash;
+    CScript witscript_v0_shorthash;
 
     bool operator()(const CNoDestination &dest) const { return false; }
 
@@ -1060,9 +1061,12 @@ public:
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
             pwalletMain->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
-            CScript witscript = GetScriptForWitness(basescript);
-            pwalletMain->AddCScript(witscript);
-            result = CScriptID(witscript);
+            uint256 h256;
+            CHash256().Write(&innerscript[0], innerscript.size()).Finalize(h256.begin());
+            witscript_v0_longhash = CScript() << OP_0 << ToByteVector(h256);
+            uint160 h160;
+            CRIPEMD160().Write(h256.begin(), 32).Finalize(h160.begin());
+            witscript_v0_shorthash = CScript() << OP_0 << ToByteVector(h160);
             return true;
         }
         return false;
@@ -1074,8 +1078,11 @@ public:
             int witnessversion;
             std::vector<unsigned char> witprog;
             if (subscript.IsWitnessProgram(witnessversion, witprog)) {
-                result = scriptID;
-                return true;
+                /* As a safety measure, the reference wallet does not
+                 * allow adding a witness program as a witness script.
+                 * This would almost certainly be a user error, and a
+                 * money-losing one. */
+                return false;
             }
             isminetype typ;
             typ = IsMine(*pwalletMain, subscript, SIGVERSION_WITNESS_V0);
@@ -1084,9 +1091,12 @@ public:
             std::vector<unsigned char> innerscript(1, 0x00);
             innerscript.insert(innerscript.end(), subscript.begin(), subscript.end());
             pwalletMain->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
-            CScript witscript = GetScriptForWitness(subscript);
-            pwalletMain->AddCScript(witscript);
-            result = CScriptID(witscript);
+            uint256 h256;
+            CHash256().Write(&innerscript[0], innerscript.size()).Finalize(h256.begin());
+            witscript_v0_longhash = CScript() << OP_0 << ToByteVector(h256);
+            uint160 h160;
+            CRIPEMD160().Write(h256.begin(), 32).Finalize(h160.begin());
+            witscript_v0_shorthash = CScript() << OP_0 << ToByteVector(h160);
             return true;
         }
         return false;
@@ -1132,9 +1142,16 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Public key or redeemscript not known to wallet, or the key is uncompressed");
     }
 
-    pwalletMain->SetAddressBook(w.result, "", "receive");
+    // FIXME: The address book is only really configured to handle
+    // "destinations", which witness scripts are not (since we don't
+    // allow P2SH-wrapped witness scripts).
+    // pwalletMain->SetAddressBook(w.result, "", "receive");
 
-    return CFreicoinAddress(w.result).ToString();
+    UniValue res(UniValue::VOBJ);
+    res.push_back(Pair("shorthash", HexStr(w.witscript_v0_shorthash.begin(), w.witscript_v0_shorthash.end())));
+    res.push_back(Pair("longhash", HexStr(w.witscript_v0_longhash.begin(), w.witscript_v0_longhash.end())));
+
+    return res;
 }
 
 struct tallyitem
