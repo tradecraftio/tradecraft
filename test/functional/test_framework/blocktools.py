@@ -189,25 +189,22 @@ def witness_script(use_p2wsh, pubkey):
         pkscript = CScript([OP_0, scripthash])
     return bytes_to_hex_str(pkscript)
 
-# Return a transaction (in hex) that spends the given utxo to a segwit output,
-# optionally wrapping the segwit output using P2SH.
-def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
+# Return a transaction (in hex) that spends the given utxo to a segwit output
+def create_witness_tx(node, use_p2wsh, utxo, pubkey, amount):
     if use_p2wsh:
         program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
-        addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
+        addr = script_to_p2wsh(program)
     else:
-        addr = key_to_p2sh_p2wpk(pubkey) if encode_p2sh else key_to_p2wpk(pubkey)
-    if not encode_p2sh:
-        assert_equal(node.validateaddress(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
+        addr = key_to_p2wpk(pubkey)
+    assert_equal(node.validateaddress(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
     return node.createrawtransaction([utxo], {addr: amount})
 
 # Create a transaction spending a given utxo to a segwit output corresponding
-# to the given pubkey: use_p2wsh determines whether to use P2WPKH or P2WSH;
-# encode_p2sh determines whether to wrap in P2SH.
+# to the given pubkey: use_p2wsh determines whether to use P2WPKH or P2WSH.
 # sign=True will have the given node sign the transaction.
 # insert_redeem_script will be added to the scriptSig, if given.
-def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
-    tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
+def send_to_witness(use_p2wsh, node, utxo, pubkey, amount, sign=True, insert_redeem_script=""):
+    tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, amount)
     if (sign):
         signed = node.signrawtransaction(tx_to_witness)
         assert("errors" not in signed or len(["errors"]) == 0)

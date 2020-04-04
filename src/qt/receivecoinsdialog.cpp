@@ -156,10 +156,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     if (ui->useBech32->isChecked()) {
         address_type = OUTPUT_TYPE_BECH32;
     } else {
-        address_type = model->getDefaultAddressType();
-        if (address_type == OUTPUT_TYPE_BECH32) {
-            address_type = OUTPUT_TYPE_P2SH_SEGWIT;
-        }
+        address_type = OUTPUT_TYPE_LEGACY;
     }
     address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", address_type);
     SendCoinsRecipient info(address, label,

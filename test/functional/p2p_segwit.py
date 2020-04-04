@@ -1518,7 +1518,7 @@ class SegWitTest(FreicoinTestFramework):
         spend_tx.wit.vtxinwit[0].scriptWitness.stack = [ b'a', witness_program, b'' ]
 
         # Verify mempool acceptance
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, spend_tx, with_witness=True, accepted=segwit_activated)
+        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, spend_tx, with_witness=True, accepted=False)
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [spend_tx])
 
@@ -1526,6 +1526,10 @@ class SegWitTest(FreicoinTestFramework):
         # should be valid.  If we're after activation, then sending this with
         # witnesses should be valid.
         if segwit_activated:
+            test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=False)
+            spend_tx.wit.vtxinwit.pop()
+            block = self.build_next_block()
+            self.update_witness_block_with_transactions(block, [spend_tx])
             test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
         else:
             test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True, with_witness=False)
@@ -1796,7 +1800,11 @@ class SegWitTest(FreicoinTestFramework):
         sign_P2PK_witness_input(witness_program, tx4, 0, SIGHASH_ALL, tx3.vout[0].nValue, key)
 
         # Should fail policy test.
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx4, True, False, b'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
+        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, tx4, True, False, b'non-mandatory-script-verify-flag (Witness provided for non-witness script)')
+        block = self.build_next_block()
+        self.update_witness_block_with_transactions(block, [tx4])
+        test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=False)
+        tx4.wit.vtxinwit.pop()
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx4])
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
@@ -1892,22 +1900,6 @@ class SegWitTest(FreicoinTestFramework):
         test_transaction_acceptance(self.nodes[1].rpc, self.std_node, p2wsh_txs[3], True, False, b'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0].rpc, self.test_node, p2wsh_txs[3], True, True)
-
-        # Repeating the same tests with P2SH-P2WSH
-        p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0], b'']
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, p2sh_txs[0], True, False, b'bad-witness-nonstandard')
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, p2sh_txs[0], True, True)
-        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1], b'']
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, p2sh_txs[1], True, False, b'bad-witness-nonstandard')
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, p2sh_txs[1], True, True)
-        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1], b'']
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, p2sh_txs[1], True, True)
-        p2sh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2], b'']
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, p2sh_txs[2], True, True)
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, p2sh_txs[2], True, True)
-        p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3], b'']
-        test_transaction_acceptance(self.nodes[1].rpc, self.std_node, p2sh_txs[3], True, False, b'bad-witness-nonstandard')
-        test_transaction_acceptance(self.nodes[0].rpc, self.test_node, p2sh_txs[3], True, True)
 
         self.nodes[0].generate(1)  # Mine and clean up the mempool of non-standard node
         # Valid but non-standard transactions in a block should be accepted by standard node

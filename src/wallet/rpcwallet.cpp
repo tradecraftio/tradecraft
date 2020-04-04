@@ -143,7 +143,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
-            "2. \"address_type\"   (string, optional) The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is set by -addresstype.\n"
+            "2. \"address_type\"   (string, optional) The address type to use. Options are \"legacy\" and \"bech32\". Default is set by -addresstype.\n"
             "\nResult:\n"
             "\"address\"    (string) The new freicoin address\n"
             "\nExamples:\n"
@@ -165,7 +165,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
         }
     } else if (output_type == OUTPUT_TYPE_BECH32 && !IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus())) {
-        output_type = OUTPUT_TYPE_P2SH_SEGWIT;
+        output_type = OUTPUT_TYPE_LEGACY;
     }
 
     if (!pwallet->IsLocked()) {
@@ -243,7 +243,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
             "\nReturns a new Freicoin address, for receiving change.\n"
             "This is for use with raw transactions, NOT normal use.\n"
             "\nArguments:\n"
-            "1. \"address_type\"           (string, optional) The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is set by -changetype.\n"
+            "1. \"address_type\"           (string, optional) The address type to use. Options are \"legacy\" and \"bech32\". Default is set by -changetype.\n"
             "\nResult:\n"
             "\"address\"    (string) The address\n"
             "\nExamples:\n"
@@ -264,7 +264,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[0].get_str()));
         }
     } else if (output_type == OUTPUT_TYPE_BECH32 && !IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus())) {
-        output_type = OUTPUT_TYPE_P2SH_SEGWIT;
+        output_type = OUTPUT_TYPE_LEGACY;
     }
 
     CReserveKey reservekey(pwallet);
@@ -1177,7 +1177,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "       ...,\n"
             "     ]\n"
             "3. \"account\"                      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
-            "4. \"address_type\"                 (string, optional) The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is set by -addresstype.\n"
+            "4. \"address_type\"                 (string, optional) The address type to use. Options are \"legacy\" and \"bech32\". Default is set by -addresstype.\n"
 
             "\nResult:\n"
             "{\n"
@@ -1245,8 +1245,6 @@ class Witnessifier : public boost::static_visitor<bool>
 {
 public:
     CWallet * const pwallet;
-    WitnessV0LongHash longid;
-    WitnessV0ShortHash shortid;
     CTxDestination result;
     bool already_witness;
 
@@ -1266,8 +1264,6 @@ public:
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
             }
-            longid = WitnessV0LongHash((unsigned char)0, basescript);
-            shortid = WitnessV0ShortHash(longid);
             return ExtractDestination(witscript, result);
         }
         return false;
@@ -1290,8 +1286,6 @@ public:
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
             }
-            longid = WitnessV0LongHash((unsigned char)0, subscript);
-            shortid = WitnessV0ShortHash(longid);
             return ExtractDestination(witscript, result);
         }
         return false;
@@ -1322,19 +1316,18 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() != 1)
     {
-        std::string msg = "addwitnessaddress \"address\" ( p2sh )\n"
-            "\nDEPRECATED: set the address_type argument of getnewaddress, or option -addresstype=[bech32|p2sh-segwit] instead.\n"
+        std::string msg = "addwitnessaddress \"address\"\n"
+            "\nDEPRECATED: set the address_type argument of getnewaddress, or option -addresstype=bech32 instead.\n"
             "Add a witness address for a script (with pubkey or redeemscript known). Requires a new wallet backup.\n"
             "It returns the witness script.\n"
 
             "\nArguments:\n"
             "1. \"address\"       (string, required) An address known to the wallet\n"
-            "2. p2sh            (bool, optional, default=true) Embed inside P2SH\n"
 
             "\nResult:\n"
-            "\"witnessaddress\",  (string) The value of the new address (P2SH or BIP173).\n"
+            "\"witnessaddress\",  (string) The value of the new address (BIP173).\n"
             "}\n"
         ;
         throw std::runtime_error(msg);
@@ -1343,7 +1336,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
     if (!IsDeprecatedRPCEnabled("addwitnessaddress")) {
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "addwitnessaddress is deprecated and will be fully removed in v17. "
             "To use addwitnessaddress in v16, restart freicoind with -deprecatedrpc=addwitnessaddress.\n"
-            "Projects should transition to using the address_type argument of getnewaddress, or option -addresstype=[bech32|p2sh-segwit] instead.\n");
+            "Projects should transition to using the address_type argument of getnewaddress, or option -addresstype=bech32 instead.\n");
     }
 
     {
@@ -1358,11 +1351,6 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Freicoin address");
     }
 
-    bool p2sh = true;
-    if (!request.params[1].isNull()) {
-        p2sh = request.params[1].get_bool();
-    }
-
     Witnessifier w(pwallet);
     bool ret = boost::apply_visitor(w, dest);
     if (!ret) {
@@ -1371,19 +1359,11 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
 
     CScript witprogram = GetScriptForDestination(w.result);
 
-    if (p2sh) {
-        w.result = CScriptID(witprogram);
-    }
-
     if (w.already_witness) {
         if (!(dest == w.result)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Cannot convert between witness address types");
         }
     } else {
-        // Implicit for single-key now, but necessary for multisig and for
-        // compatibility with older software.
-        pwallet->AddCScript(GetScriptForDestination(w.longid));
-        pwallet->AddCScript(GetScriptForDestination(w.shortid));
         pwallet->SetAddressBook(w.result, "", "receive");
     }
 
@@ -3080,7 +3060,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "   {\n"
                             "     \"changeAddress\"          (string, optional, default pool address) The freicoin address to receive the change\n"
                             "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
-                            "     \"change_type\"            (string, optional) The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is set by -changetype.\n"
+                            "     \"change_type\"            (string, optional) The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\" and \"bech32\". Default is set by -changetype.\n"
                             "     \"includeWatching\"        (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"           (boolean, optional, default false) Lock selected unspent outputs\n"
                             "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific fee rate in " + CURRENCY_UNIT + "/kB\n"
@@ -3537,7 +3517,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "abandontransaction",       &abandontransaction,       {"txid"} },
     { "wallet",             "abortrescan",              &abortrescan,              {} },
     { "wallet",             "addmultisigaddress",       &addmultisigaddress,       {"nrequired","keys","account","address_type"} },
-    { "hidden",             "addwitnessaddress",        &addwitnessaddress,        {"address","p2sh"} },
+    { "hidden",             "addwitnessaddress",        &addwitnessaddress,        {"address"} },
     { "wallet",             "backupwallet",             &backupwallet,             {"destination"} },
     { "wallet",             "bumpfee",                  &bumpfee,                  {"txid", "options"} },
     { "wallet",             "dumpprivkey",              &dumpprivkey,              {"address"}  },

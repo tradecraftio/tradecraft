@@ -106,7 +106,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, locktime out of range", self.nodes[0].createrawtransaction, [], {}, -1)
         assert_raises_rpc_error(-8, "Invalid parameter, locktime out of range", self.nodes[0].createrawtransaction, [], {}, 4294967296)
 
-        for type in ["bech32", "p2sh-segwit", "legacy"]:
+        for type in ["bech32", "legacy"]:
             addr = self.nodes[0].getnewaddress("", type)
             addrinfo = self.nodes[0].validateaddress(addr)
             pubkey = addrinfo["scriptPubKey"]

@@ -89,7 +89,7 @@ BASE_SCRIPTS= [
     'wallet_abandonconflict.py --bitcoin-mode',
     'feature_csv_activation.py --bitcoin-mode',
     'rpc_rawtransaction.py --bitcoin-mode',
-    'wallet_address_types.py --bitcoin-mode',
+    #'wallet_address_types.py --bitcoin-mode', # Disabled by removal of p2sh-legacy
     'feature_reindex.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py --bitcoin-mode',
@@ -507,6 +507,7 @@ def check_script_list(src_dir):
     not being run by pull-tester.py."""
     script_dir = src_dir + '/test/functional/'
     python_files = set([t for t in os.listdir(script_dir) if t[-3:] == ".py"])
+    python_files.remove("wallet_address_types.py")
     missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
