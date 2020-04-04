@@ -560,7 +560,6 @@ static UniValue decodescript(const JSONRPCRequest& request)
                             {
                                 {RPCResult::Type::STR, "address", "segwit address"},
                             }},
-                            {RPCResult::Type::STR, "p2sh-segwit", "address of the P2SH script wrapping this witness redeem script"},
                         }},
                     }
                 },
@@ -588,7 +587,9 @@ static UniValue decodescript(const JSONRPCRequest& request)
     if (type.isStr() && type.get_str() != "scripthash") {
         // P2SH cannot be wrapped in a P2SH. If this script is already a P2SH,
         // don't return the address for a P2SH of the P2SH.
-        r.pushKV("p2sh", EncodeDestination(ScriptHash(script)));
+        if (type.get_str() != "witness_v0_shorthash" && type.get_str() != "witness_v0_longhash") {
+            r.pushKV("p2sh", EncodeDestination(ScriptHash(script)));
+        }
         // P2SH and witness programs cannot be wrapped in P2WSH, if this script
         // is a witness program, don't return addresses for a segwit programs.
         if (type.get_str() == "pubkey" || type.get_str() == "pubkeyhash" || type.get_str() == "multisig" || type.get_str() == "nonstandard") {
@@ -620,7 +621,6 @@ static UniValue decodescript(const JSONRPCRequest& request)
                 segwitScr = GetScriptForDestination(WitnessV0LongHash(0 /* version */, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, /* fIncludeHex */ true);
-            sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }
     }

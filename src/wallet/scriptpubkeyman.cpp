@@ -1300,7 +1300,7 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
 
 void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
-    if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
+    if (key.IsCompressed() && type == OutputType::BECH32) {
         CScript p2pk = GetScriptForRawPubKey(key);
         WitnessV0ScriptEntry entry(0 /* version */, p2pk);
         AddWitnessV0Script(entry);
@@ -1308,14 +1308,13 @@ void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType t
         CScript witprog = GetScriptForDestination(witdest);
         // Make sure the resulting program is solvable.
         assert(IsSolvable(*this, witprog));
-        AddCScript(witprog);
     }
 }
 
 void LegacyScriptPubKeyMan::LearnAllRelatedScripts(const CPubKey& key)
 {
-    // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
-    LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    // OutputType::BECH32 always adds all necessary scripts for all types.
+    LearnRelatedScripts(key, OutputType::BECH32);
 }
 
 void LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)

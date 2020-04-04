@@ -2960,10 +2960,10 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     nValueIn = 0;
                     setCoins.clear();
                     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
-                    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
+                    // If the wallet doesn't know how to sign change output, assume p2wpk
                     // as lower-bound to allow BnB to do it's thing
                     if (change_spend_size == -1) {
-                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPK_INPUT_SIZE;
+                        coin_selection_params.change_spend_size = DUMMY_P2WPK_INPUT_SIZE;
                     } else {
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }

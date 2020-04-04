@@ -196,7 +196,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, /* default */ "\"\"", "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, /* default */ "set by -addresstype", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, /* default */ "set by -addresstype", "The address type to use. Options are \"legacy\" and \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The new freicoin address"
@@ -247,7 +247,7 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
                 "\nReturns a new Freicoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
-                    {"address_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The address type to use. Options are \"legacy\" and \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The address"
@@ -942,7 +942,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
                         },
                         },
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the addresses to."},
-                    {"address_type", RPCArg::Type::STR, /* default */ "set by -addresstype", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, /* default */ "set by -addresstype", "The address type to use. Options are \"legacy\" and \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1066,13 +1066,6 @@ public:
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(script);
             CScript subscript;
             if (provider && provider->GetCScript(scripthash, subscript)) {
-                int witnessversion;
-                std::vector<unsigned char> witprog;
-                if (subscript.IsWitnessProgram(witnessversion, witprog)) {
-                    ExtractDestination(subscript, result);
-                    already_witness = true;
-                    return true;
-                }
                 WitnessV0ScriptEntry other(0 /* version */, subscript);
                 entry.m_script = std::move(other.m_script);
                 LegacyScriptPubKeyMan* spkm = pwallet->GetLegacyScriptPubKeyMan();
@@ -1125,18 +1118,17 @@ static UniValue addwitnessaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() != 1)
     {
-        std::string msg = "addwitnessaddress \"address\" ( p2sh )\n"
+        std::string msg = "addwitnessaddress \"address\"\n"
             "Add a witness address for a script (with pubkey or redeemscript known). Requires a new wallet backup.\n"
             "It returns the witness script.\n"
 
             "\nArguments:\n"
             "1. \"address\"       (string, required) An address known to the wallet\n"
-            "2. p2sh            (bool, optional, default=true) Embed inside P2SH\n"
 
             "\nResult:\n"
-            "\"witnessaddress\",  (string) The value of the new address (P2SH or BIP173).\n"
+            "\"witnessaddress\",  (string) The value of the new address (BIP173).\n"
             "}\n"
         ;
         throw std::runtime_error(msg);
@@ -1147,11 +1139,6 @@ static UniValue addwitnessaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Freicoin address");
     }
 
-    bool p2sh = true;
-    if (!request.params[1].isNull()) {
-        p2sh = request.params[1].get_bool();
-    }
-
     Witnessifier w(pwallet);
     bool ret = boost::apply_visitor(w, dest);
     if (!ret) {
@@ -1159,10 +1146,6 @@ static UniValue addwitnessaddress(const JSONRPCRequest& request)
     }
 
     CScript witprogram = GetScriptForDestination(w.result);
-
-    if (p2sh) {
-        w.result = ScriptHash(witprogram);
-    }
 
     if (w.already_witness) {
         if (!(dest == w.result)) {
@@ -1173,10 +1156,6 @@ static UniValue addwitnessaddress(const JSONRPCRequest& request)
         if (!spk_man) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet does not have a legacy script pubkey manager");
         }
-        // Implicit for single-key now, but necessary for multisig and for
-        // compatibility with older software.
-        spk_man->AddCScript(GetScriptForDestination(w.entry.GetLongHash()));
-        spk_man->AddCScript(GetScriptForDestination(w.entry.GetShortHash()));
         pwallet->SetAddressBook(w.result, "", "receive");
     }
 
@@ -3356,7 +3335,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
                         {
                             {"changeAddress", RPCArg::Type::STR, /* default */ "pool address", "The freicoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
-                            {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                            {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\" and \"bech32\"."},
                             {"includeWatching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only.\n"
                                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                                           "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
@@ -4365,7 +4344,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
                         {
                             {"changeAddress", RPCArg::Type::STR_HEX, /* default */ "pool address", "The freicoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
-                            {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                            {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\" and \"bech32\"."},
                             {"includeWatching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only"},
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                             {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},

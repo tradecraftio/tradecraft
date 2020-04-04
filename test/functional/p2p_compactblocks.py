@@ -27,6 +27,11 @@ from test_framework.script import CScript, OP_TRUE, OP_DROP
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, wait_until, softfork_active, unhexlify
 
+def addlength(script):
+    scriptlen = format(len(script)//2, 'x')
+    assert(len(scriptlen) == 2)
+    return scriptlen + script
+
 # TestP2PConn: A peer we use to send messages to freicoind, and store responses.
 class TestP2PConn(P2PInterface):
     def __init__(self, cmpct_version):
