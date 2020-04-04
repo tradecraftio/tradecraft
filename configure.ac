@@ -555,6 +555,11 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 fi
 
 CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
+## Instruct boost not to use auto_ptr, which is depreciated in C++11:
+CPPFLAGS="$CPPFLAGS -DBOOST_NO_AUTO_PTR"
+## Suppress warnings about boost's use of depreciated auto_ptr, since
+## the above hint doesn't seem to fix all warnings:
+AX_CHECK_COMPILE_FLAG([-Wdeprecated-declarations],[CXXFLAGS="$CXXFLAGS -Wno-deprecated-declarations"],,[[$CXXFLAG_WERROR]])
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
