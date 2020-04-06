@@ -147,7 +147,33 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         }
         if (found) {
             if (!entry.m_script.empty() && (entry.m_script[0] == 0x00)) {
-                ret.push_back(std::vector<unsigned char>(entry.m_script.begin()+1, entry.m_script.end()));
+                // The second item on the stack (first to be pushed)
+                // is the witness script, which is contained in the
+                // WitnessV0ScriptEntry passed back to us.
+                ret.emplace_back(entry.m_script.begin(), entry.m_script.end());
+                // The first item on the stack (last to be pushed) is
+                // the Merkle proof.  We construct the proof from the
+                // branch and path fields of the WitnessV0ScriptEntry
+                // structure.
+                ret.emplace_back();
+                // The path is specified in zero to four bytes in
+                // little endian order.  The exact number of bytes is
+                // implicit since the size of the field which follows
+                // is known to be a multiple of 32.  So we add all the
+                // bytes of path, and then remove any ending zero
+                // bytes, which are to be understood implicitly.
+                ret.back().push_back( entry.m_path     &0xff);
+                ret.back().push_back((entry.m_path>> 8)&0xff);
+                ret.back().push_back((entry.m_path>>16)&0xff);
+                ret.back().push_back((entry.m_path>>24)&0xff);
+                while (!ret.back().empty() && (ret.back().back() == 0)) {
+                    ret.back().pop_back();
+                }
+                // The branch hashes are serialized in order, without
+                // a length specifier or padding bytes.
+                for (auto hash : entry.m_branch) {
+                    ret.back().insert(ret.back().end(), hash.begin(), hash.end());
+                }
                 return true;
             }
         }
@@ -191,19 +217,18 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         // the final scriptSig is the signatures from that
         // and then the serialized subscript:
         script = subscript = CScript(result[0].begin(), result[0].end());
-        solved = solved && SignStep(creator, script, result, whichType, SIGVERSION_BASE) && whichType != TX_SCRIPTHASH;
+        solved = solved && SignStep(creator, script, result, whichType, SIGVERSION_BASE) && whichType != TX_SCRIPTHASH && whichType != TX_WITNESS_V0_LONGHASH && whichType != TX_WITNESS_V0_SHORTHASH;
         P2SH = true;
     }
 
     if (solved && (whichType == TX_WITNESS_V0_SHORTHASH || whichType == TX_WITNESS_V0_LONGHASH))
     {
-        CScript witnessscript(result[0].begin(), result[0].end());
+        CScript witnessscript(result[0].begin()+1, result[0].end());
         txnouttype subType;
-        solved = solved && SignStep(creator, witnessscript, result, subType, SIGVERSION_WITNESS_V0) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SHORTHASH && subType != TX_WITNESS_V0_LONGHASH;
-        result.emplace_back(1, 0x00);
-        result.back().insert(result.back().end(), witnessscript.begin(), witnessscript.end());
-        result.emplace_back(0);
-        sigdata.scriptWitness.stack = result;
+        std::vector<valtype> subresult;
+        solved = solved && SignStep(creator, witnessscript, subresult, subType, SIGVERSION_WITNESS_V0) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SHORTHASH && subType != TX_WITNESS_V0_LONGHASH;
+        subresult.insert(subresult.end(), result.begin(), result.end());
+        sigdata.scriptWitness.stack = subresult;
         result.clear();
     }
 
