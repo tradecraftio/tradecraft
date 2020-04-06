@@ -1111,6 +1111,10 @@ public:
     CWallet * const pwallet;
     CScript witscript_v0_longhash;
     CScript witscript_v0_shorthash;
+    WitnessV0ScriptEntry entry;
+
+    Witnessifier(CWallet *_pwallet, const std::vector<uint256>& branchIn, uint32_t pathIn) : pwallet(_pwallet), entry(std::vector<unsigned char>(), branchIn, pathIn) { }
+    Witnessifier(CWallet *_pwallet, std::vector<uint256>&& branchIn, uint32_t pathIn) : pwallet(_pwallet), entry(std::vector<unsigned char>(), branchIn, pathIn) { }
 
     Witnessifier(CWallet *_pwallet) : pwallet(_pwallet) {}
 
@@ -1123,14 +1127,14 @@ public:
             if (!pwallet->GetPubKey(keyID, pubkey))
                 return false;
             basescript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
-            std::vector<unsigned char> innerscript(1, 0x00);
-            innerscript.insert(innerscript.end(), basescript.begin(), basescript.end());
-            pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
-            uint256 long_hash;
-            CHash256().Write(&innerscript[0], innerscript.size()).Finalize(long_hash.begin());
-            witscript_v0_longhash = CScript() << OP_0 << ToByteVector(long_hash);
+            entry.m_script.clear();
+            entry.m_script.push_back(0x00);
+            entry.m_script.insert(entry.m_script.end(), basescript.begin(), basescript.end());
+            uint256 long_hash = entry.GetHash();
             uint160 short_hash;
             CRIPEMD160().Write(long_hash.begin(), 32).Finalize(short_hash.begin());
+            pwallet->AddWitnessV0Script(entry);
+            witscript_v0_longhash = CScript() << OP_0 << ToByteVector(long_hash);
             witscript_v0_shorthash = CScript() << OP_0 << ToByteVector(short_hash);
             SignatureData sigs;
             // This check is to make sure that the script we created can actually be solved for and signed by us
@@ -1161,14 +1165,14 @@ public:
                  * money-losing one. */
                 return false;
             }
-            std::vector<unsigned char> innerscript(1, 0x00);
-            innerscript.insert(innerscript.end(), subscript.begin(), subscript.end());
-            pwallet->AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
-            uint256 long_hash;
-            CHash256().Write(&innerscript[0], innerscript.size()).Finalize(long_hash.begin());
-            witscript_v0_longhash = CScript() << OP_0 << ToByteVector(long_hash);
+            entry.m_script.clear();
+            entry.m_script.push_back(0x00);
+            entry.m_script.insert(entry.m_script.end(), subscript.begin(), subscript.end());
+            uint256 long_hash = entry.GetHash();
             uint160 short_hash;
             CRIPEMD160().Write(long_hash.begin(), 32).Finalize(short_hash.begin());
+            pwallet->AddWitnessV0Script(entry);
+            witscript_v0_longhash = CScript() << OP_0 << ToByteVector(long_hash);
             witscript_v0_shorthash = CScript() << OP_0 << ToByteVector(short_hash);
             SignatureData sigs;
             // This check is to make sure that the script we created can actually be solved for and signed by us
@@ -1195,7 +1199,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
     {
         std::string msg = "addwitnessaddress \"address\"\n"
             "\nAdd a witness address for a script (with pubkey or redeemscript known). Requires a new wallet backup.\n"
@@ -1203,6 +1207,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
 
             "\nArguments:\n"
             "1. \"address\"       (string, required) An address known to the wallet\n"
+            "2. \"proof\"         (string, optional) A hexadecimal representation of the Merkle proof structure\n"
 
             "\nResult:\n"
             "\"witnessaddress\",  (string) The value of the new address (P2SH of witness script).\n"
@@ -1222,7 +1227,18 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Freicoin address");
 
-    Witnessifier w(pwallet);
+    WitnessV0ScriptEntry entry;
+    if (request.params.size() > 1) {
+        std::vector<unsigned char> proof = ParseHexV(request.params[1].get_str(), "proof");
+        proof.insert(proof.begin(), 0x00);
+        CDataStream ds(proof, SER_DISK, CLIENT_VERSION);
+        ds >> entry;
+        if (!ds.empty()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "unrecognized extra data in proof: \"" + HexStr(ds.str()) + "\"");
+        }
+    }
+
+    Witnessifier w(pwallet, std::move(entry.m_branch), entry.m_path);
     CTxDestination dest = address.Get();
     bool ret = boost::apply_visitor(w, dest);
     if (!ret) {
@@ -3161,7 +3177,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "abandontransaction",       &abandontransaction,       false,  {"txid"} },
     { "wallet",             "abortrescan",              &abortrescan,              false,  {} },
     { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account"} },
-    { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address"} },
+    { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address","proof"} },
     { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination"} },
     { "wallet",             "bumpfee",                  &bumpfee,                  true,   {"txid", "options"} },
     { "wallet",             "dumpprivkey",              &dumpprivkey,              true,   {"address"}  },
