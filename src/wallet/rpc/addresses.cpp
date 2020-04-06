@@ -345,6 +345,9 @@ public:
     CTxDestination result;
     bool already_witness;
 
+    Witnessifier(std::shared_ptr<CWallet> &_pwallet, const std::vector<uint256>& branchIn, uint32_t pathIn) : pwallet(_pwallet), entry(std::vector<unsigned char>(), branchIn, pathIn), already_witness(false) { }
+    Witnessifier(std::shared_ptr<CWallet> &_pwallet, std::vector<uint256>&& branchIn, uint32_t pathIn) : pwallet(_pwallet), entry(std::vector<unsigned char>(), branchIn, pathIn), already_witness(false) { }
+
     explicit Witnessifier(std::shared_ptr<CWallet> &_pwallet) : pwallet(_pwallet), already_witness(false) {}
 
     bool operator()(const PKHash &pkhash) {
@@ -367,7 +370,7 @@ public:
                 return false;
             }
             spkm->AddWitnessV0Script(entry);
-            CScript witscript = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, basescript));
+            CScript witscript = GetScriptForDestination(entry.m_branch.empty() ? CTxDestination(entry.GetShortHash()) : CTxDestination(entry.GetLongHash()));
             if (!InferDescriptor(witscript, *provider)->IsSolvable()) {
                 return false;
             }
@@ -446,6 +449,7 @@ RPCHelpMan addwitnessaddress()
                       {
                           {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "A freicoin address known to the wallet."},
                           {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The label to assign to the address."},
+                          {"proof", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A hexadecimal representation of the Merkle proof structure."},
                       },
                       RPCResult{
                           RPCResult::Type::STR, "witnessaddress", "The new witness address (BIP173)."
@@ -469,7 +473,18 @@ RPCHelpMan addwitnessaddress()
         label = LabelFromValue(request.params[2]);
     }
 
-    Witnessifier w(pwallet);
+    WitnessV0ScriptEntry entry;
+    if (request.params.size() > 1) {
+        std::vector<unsigned char> proof = ParseHexV(request.params[1].get_str(), "proof");
+        proof.insert(proof.begin(), 0x00);
+        CDataStream ds(proof, SER_DISK, CLIENT_VERSION);
+        ds >> entry;
+        if (!ds.empty()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "unrecognized extra data in proof: \"" + HexStr(ds.str()) + "\"");
+        }
+    }
+
+    Witnessifier w(pwallet, std::move(entry.m_branch), entry.m_path);
     bool ret = std::visit(w, dest);
     if (!ret) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Public key or redeemscript not known to wallet, or the key is uncompressed");

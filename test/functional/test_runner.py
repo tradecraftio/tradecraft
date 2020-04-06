@@ -293,7 +293,7 @@ BASE_SCRIPTS = [
     'p2p_net_deadlock.py --v2transport',
     'wallet_signmessagewithaddress.py',
     'rpc_signmessagewithprivkey.py',
-    'rpc_generate.py',
+    'rpc_generate.py --bitcoin-mode',
     'wallet_balance.py --legacy-wallet --bitcoin-mode',
     'wallet_balance.py --descriptors --bitcoin-mode',
     'p2p_initial_headers_sync.py',
