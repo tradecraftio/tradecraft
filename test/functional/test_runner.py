@@ -236,7 +236,7 @@ BASE_SCRIPTS = [
     'p2p_leak_tx.py',
     'p2p_eviction.py',
     'rpc_signmessage.py',
-    'rpc_generateblock.py',
+    'rpc_generateblock.py --bitcoin-mode',
     'rpc_generate.py',
     'wallet_balance.py --legacy-wallet --bitcoin-mode',
     'wallet_balance.py --descriptors --bitcoin-mode',
