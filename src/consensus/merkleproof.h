@@ -1217,8 +1217,8 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion,
  * Iter last
  *
  *   One past the last node to possibly be processed.  Traversal will
- *   end earlier if it reaches the end of the subtree, or if
- *   TraversalPredicate returns true.
+ *   end earlier if it reaches the end of the subtree rooted in the
+ *   first node, or if TraversalPredicate returns true.
  *
  * TraversalPredicate pred
  *
@@ -1387,7 +1387,7 @@ struct MerkleTree
 
     /* Calculates the root hash of the MerkleTree, a process that
      * requires a depth first traverse of the full tree using linear
-     * time and logarithmic (depth) space.. */
+     * time and logarithmic (depth) space. */
     uint256 GetHash(bool* invalid = nullptr) const;
 
     ADD_SERIALIZE_METHODS;
