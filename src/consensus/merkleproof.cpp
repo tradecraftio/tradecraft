@@ -253,12 +253,12 @@ void swap(MerkleTree& lhs, MerkleTree& rhs)
 uint256 MerkleTree::GetHash(bool* invalid) const
 {
     std::vector<std::pair<bool, uint256> > stack(2);
-    auto verify_pos = m_verify.begin();
+    auto verify_itr = m_verify.begin();
     auto verify_last = m_verify.end();
-    auto skip_pos = m_proof.m_skip.begin();
+    auto skip_itr = m_proof.m_skip.begin();
     auto skip_last = m_proof.m_skip.end();
 
-    auto visitor = [&stack, &verify_pos, &verify_last, &skip_pos, &skip_last](std::size_t depth, MerkleLink value, bool right) -> bool
+    auto visitor = [&stack, &verify_itr, verify_last, &skip_itr, skip_last](std::size_t depth, MerkleLink value, bool right) -> bool
     {
         const uint256* new_hash = nullptr;
         switch (value) {
@@ -267,15 +267,15 @@ uint256 MerkleTree::GetHash(bool* invalid) const
                 return false;
 
             case MerkleLink::VERIFY:
-                if (verify_pos == verify_last) // detect read past end of verify hashes list
+                if (verify_itr == verify_last) // detect read past end of verify hashes list
                     return true;
-                new_hash = &(verify_pos++)[0];
+                new_hash = &(verify_itr++)[0];
                 break;
 
             case MerkleLink::SKIP:
-                if (skip_pos == skip_last) // detect read past end of skip hashes list
+                if (skip_itr == skip_last) // detect read past end of skip hashes list
                     return true;
-                new_hash = &(skip_pos++)[0];
+                new_hash = &(skip_itr++)[0];
                 break;
         }
 
@@ -338,8 +338,8 @@ uint256 MerkleTree::GetHash(bool* invalid) const
     }
 
     if (invalid) {
-        *invalid = (verify_pos != verify_last // did not use all verify hashes
-                   || skip_pos != skip_last); // did not use all skip hashes
+        *invalid = (verify_itr != verify_last // did not use all verify hashes
+                   || skip_itr != skip_last); // did not use all skip hashes
     }
 
     return stack.back().second;
