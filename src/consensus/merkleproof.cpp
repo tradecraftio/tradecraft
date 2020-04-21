@@ -252,45 +252,6 @@ void swap(MerkleTree& lhs, MerkleTree& rhs)
 
 uint256 MerkleTree::GetHash(bool* invalid) const
 {
-    std::vector<std::pair<bool, uint256> > stack(2);
-    auto verify_itr = m_verify.begin();
-    auto verify_last = m_verify.end();
-    auto skip_itr = m_proof.m_skip.begin();
-    auto skip_last = m_proof.m_skip.end();
-
-    auto visitor = [&stack, &verify_itr, verify_last, &skip_itr, skip_last](std::size_t depth, MerkleLink value, bool right) -> bool
-    {
-        const uint256* new_hash = nullptr;
-        switch (value) {
-            case MerkleLink::DESCEND:
-                stack.emplace_back();
-                return false;
-
-            case MerkleLink::VERIFY:
-                if (verify_itr == verify_last) // detect read past end of verify hashes list
-                    return true;
-                new_hash = &(verify_itr++)[0];
-                break;
-
-            case MerkleLink::SKIP:
-                if (skip_itr == skip_last) // detect read past end of skip hashes list
-                    return true;
-                new_hash = &(skip_itr++)[0];
-                break;
-        }
-
-        uint256 tmp;
-        while (stack.back().first) {
-            MerkleHash_Sha256Midstate(tmp, stack.back().second, *new_hash);
-            new_hash = &tmp;
-            stack.pop_back();
-        }
-
-        stack.back().first = true;
-        stack.back().second = *new_hash;
-        return false;
-    };
-
     /* As a special case, an empty proof with no verify hashes results
      * in the unsalted hash of empty string.  Although this requires
      * extra work in this implementation to support, it provides
@@ -325,6 +286,43 @@ uint256 MerkleTree::GetHash(bool* invalid) const
                                 : m_verify[0];
     }
 
+    std::vector<std::pair<bool, uint256> > stack(2);
+    std::size_t verify_pos = 0;
+    std::size_t skip_pos = 0;
+
+    auto visitor = [this, &stack, &verify_pos, &skip_pos](std::size_t depth, MerkleLink value, bool side) -> bool
+    {
+        const uint256* new_hash = nullptr;
+        switch (value) {
+            case MerkleLink::DESCEND:
+                stack.emplace_back();
+                return false;
+
+            case MerkleLink::VERIFY:
+                if (verify_pos == m_verify.size()) // detect read past end of verify hashes list
+                    return true;
+                new_hash = &m_verify[verify_pos++];
+                break;
+
+            case MerkleLink::SKIP:
+                if (skip_pos == m_proof.m_skip.size()) // detect read past end of skip hashes list
+                    return true;
+                new_hash = &m_proof.m_skip[skip_pos++];
+                break;
+        }
+
+        uint256 tmp;
+        while (stack.back().first) {
+            MerkleHash_Sha256Midstate(tmp, stack.back().second, *new_hash);
+            new_hash = &tmp;
+            stack.pop_back();
+        }
+
+        stack.back().first = true;
+        stack.back().second = *new_hash;
+        return false;
+    };
+
     auto res = depth_first_traverse(m_proof.m_path.begin(), m_proof.m_path.end(), visitor);
 
     if (res.first != m_proof.m_path.end() // m_proof.m_path has "extra" Nodes (after end of tree)
@@ -332,14 +330,15 @@ uint256 MerkleTree::GetHash(bool* invalid) const
         || stack.size() != 1              // expected one root hash...
         || !stack.back().first)           // ...and an actual hash, not a placeholder
     {
-        if (invalid)
+        if (invalid) {
             *invalid = true;
+        }
         return uint256();
     }
 
     if (invalid) {
-        *invalid = (verify_itr != verify_last // did not use all verify hashes
-                   || skip_itr != skip_last); // did not use all skip hashes
+        *invalid = (verify_pos != m_verify.size() // did not use all verify hashes
+                   || skip_pos != m_proof.m_skip.size()); // did not use all skip hashes
     }
 
     return stack.back().second;
