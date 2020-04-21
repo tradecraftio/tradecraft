@@ -144,6 +144,83 @@ MerkleNodeIteratorBase::difference_type MerkleNodeIteratorBase::operator-(const 
     return 8 * (m_ref.m_base - other.m_ref.m_base) / 3 + m_ref.m_offset - other.m_ref.m_offset;
 }
 
+void MerkleBranch::clear() noexcept {
+    m_branch.clear();
+    m_vpath.clear();
+}
+
+void swap(MerkleBranch& lhs, MerkleBranch& rhs) {
+    using std::swap; // enable ADL
+    swap(lhs.m_branch, rhs.m_branch);
+    swap(lhs.m_vpath, rhs.m_vpath);
+}
+
+uint32_t MerkleBranch::GetPath() const {
+    uint32_t ret = 0;
+    uint32_t mask = 1;
+    int pos = 0;
+    for (; pos < m_vpath.size() && pos < 32; ++pos) {
+        ret |= static_cast<uint32_t>(m_vpath[pos]) << pos;
+    }
+    // We only throw an error if we are required to set a bit
+    // which is too high to be contained in type uint32_t.  Note
+    // that this means a path which is more than 32 bits in length
+    // could be accepted, so long as the high-order bits are zero.
+    for (; pos < m_vpath.size(); ++pos) {
+        if (m_vpath[pos]) {
+            throw std::runtime_error("MerkleBranch::GetPath : vpath does not fit within standard integer");
+        }
+    }
+    return ret;
+}
+
+std::vector<unsigned char> MerkleBranch::getvch() const {
+    std::vector<unsigned char> ret((m_vpath.size() + 7) / 8, 0);
+    for (std::size_t pos = 0; pos < m_vpath.size(); ++pos) {
+        ret[pos/8] |= static_cast<unsigned char>(m_vpath[pos]) << (pos % 8);
+    }
+    while (!ret.empty() && ret.back() == 0) {
+        ret.pop_back();
+    }
+    for (auto skip : m_branch) {
+        ret.insert(ret.end(), skip.begin(), skip.end());
+    }
+    return ret;
+}
+
+MerkleBranch& MerkleBranch::setvch(const std::vector<unsigned char>& data) {
+    using std::swap; // enable ADL
+    if (data.size() > 1028) { // 1028 = 32*32 + (32/8)
+        throw std::runtime_error("MerkleBranch::setvch : byte vector is too large to contain branch of 32 hashes or less");
+    }
+    const int bytes_in_path = data.size() % 32;
+    const int max_bytes_in_path = ((data.size() / 32) + 7) / 8;
+    if (bytes_in_path > max_bytes_in_path) {
+        throw std::runtime_error("MerkleBranch::setvch : residual bytes for path is greater than 4 (> 32 bits)");
+    }
+    if (bytes_in_path && (data[bytes_in_path-1] == 0)) {
+        throw std::runtime_error("MerkleBranch::setvch : path is not minimally encoded");
+    }
+    m_vpath.clear();
+    m_vpath.resize(data.size() / 32, false);
+    for (int i = 0; i < bytes_in_path; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            bool bit = data[i] & (static_cast<unsigned char>(1) << j);
+            if ((i*8 + j) < m_vpath.size()) {
+                m_vpath[i*8+j] = bit;
+            } else if (bit) {
+                throw std::runtime_error("MerkleBranch::setvch : dirty bit set in path");
+            }
+        }
+    }
+    m_branch.clear();
+    m_branch.reserve(data.size() / 32);
+    for (auto ptr = data.begin() + bytes_in_path; ptr != data.end(); ptr += 32) {
+        m_branch.emplace_back(std::vector<unsigned char>(ptr, ptr + 32));
+    }
+    return *this;
+}
+
 void MerkleProof::clear() noexcept {
     m_path.clear();
     m_skip.clear();
