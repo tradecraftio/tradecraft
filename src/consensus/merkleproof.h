@@ -1314,6 +1314,53 @@ std::pair<Iter, bool> depth_first_traverse(Iter first, Iter last, TraversalPredi
 }
 
 /*
+ * A MerkleBranch contains the verification proof for a single hash
+ * contained within a MerkleTree structure, in a format that can be
+ * verified by ComputeFastMerkleRootFromBranch.
+ */
+struct MerkleBranch
+{
+    typedef std::vector<uint256> branch_type;
+    branch_type m_branch;
+
+    typedef std::vector<bool> vpath_type;
+    vpath_type m_vpath;
+
+    MerkleBranch(branch_type&& branch, vpath_type&& vpath) : m_branch(branch), m_vpath(vpath) { }
+    MerkleBranch(const std::vector<unsigned char>& data) { setvch(data); }
+
+    /* Default constructors and assignment operators are fine */
+    MerkleBranch() = default;
+    MerkleBranch(const MerkleBranch&) = default;
+    MerkleBranch(MerkleBranch&&) = default;
+    MerkleBranch& operator=(const MerkleBranch&) = default;
+    MerkleBranch& operator=(MerkleBranch&&) = default;
+
+    void clear() noexcept;
+
+    inline bool operator==(const MerkleBranch& other) const
+      { return m_branch == other.m_branch
+            && m_vpath == other.m_vpath; }
+
+    /* Converts m_vpath into an integer, suitable for use as the third
+     * parameter to ComputeFastMerkleRootFromBranch. */
+    typedef uint32_t path_type;
+    path_type GetPath() const;
+
+    /* Serialize / deserialize the branch as a compactly serialized
+     * byte vector, suitable for use as a segwit script locator or in
+     * the various RPC's.  We expose a custom API instead of the
+     * standard serialization interface because the resulting data
+     * format is NOT self-synchronizing.  The length of the byte
+     * vector is a critical part of its deserialization. */
+    std::vector<unsigned char> getvch() const;
+    MerkleBranch& setvch(const std::vector<unsigned char>& data);
+};
+
+/* Defined outside the class for argument-dpendent lookup. */
+void swap(MerkleBranch& lhs, MerkleBranch& rhs);
+
+/*
  * A MerkleProof is a transportable structure that contains the
  * information necessary to verify the root of a Merkle tree given N
  * accompanying "verify" hashes.  The proof consists of those portions
