@@ -627,7 +627,7 @@ UniValue createmerkleproof(const UniValue& params, bool fHelp)
 
     UniValue res(UniValue::VOBJ);
     res.push_back(Pair("root", tree[0].GetHash().GetHex()));
-    res.push_back(Pair("proof", HexStr(ssProof.begin(), ssProof.end())));
+    res.push_back(Pair("tree", HexStr(ssProof.begin(), ssProof.end())));
     res.push_back(Pair("verify", verify));
 
     return res;
