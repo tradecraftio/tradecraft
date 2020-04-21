@@ -594,8 +594,20 @@ static RPCHelpMan createmerkleproof()
     CDataStream ssProof(SER_NETWORK, PROTOCOL_VERSION);
     ssProof << tree[0].m_proof;
 
+    bool invalid = true;
+    std::vector<MerkleBranch> proofs;
+    uint256 root = tree[0].GetHash(&invalid, &proofs);
+    if (invalid) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal error: invalid proof generated.");
+    }
+    if (proofs.size() != tree[0].m_verify.size()) {
+        auto str = strprintf("Internal error: wrong number of proofs returned (expected %d, got %d)", tree[0].m_verify.size(), proofs.size());
+        throw JSONRPCError(RPC_INVALID_PARAMETER, str);
+    }
+
     UniValue verify(UniValue::VARR);
-    for (auto hash : tree[0].m_verify) {
+    for (std::size_t i = 0; i < tree[0].m_verify.size(); ++i) {
+        const uint256& hash = tree[0].m_verify[i];
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("hash", hash.GetHex());
         for (auto elem : data) {
@@ -604,11 +616,12 @@ static RPCHelpMan createmerkleproof()
                 break;
             }
         }
+        obj.pushKV("proof", HexStr(proofs[i].getvch()));
         verify.push_back(obj);
     }
 
     UniValue res(UniValue::VOBJ);
-    res.pushKV("root", tree[0].GetHash().GetHex());
+    res.pushKV("root", root.GetHex());
     res.pushKV("tree", HexStr(ssProof));
     res.pushKV("verify", verify);
 
