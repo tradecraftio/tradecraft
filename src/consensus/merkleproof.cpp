@@ -174,6 +174,13 @@ void MerkleBranch::clear() noexcept
     m_vpath.clear();
 }
 
+void swap(MerkleBranch& lhs, MerkleBranch& rhs)
+{
+    using std::swap;
+    swap(lhs.m_branch, rhs.m_branch);
+    swap(lhs.m_vpath, rhs.m_vpath);
+}
+
 uint32_t MerkleBranch::GetPath() const
 {
     uint32_t ret = 0;
@@ -241,13 +248,6 @@ MerkleBranch& MerkleBranch::setvch(const std::vector<unsigned char>& data)
         m_branch.emplace_back(std::vector<unsigned char>(ptr, ptr + 32));
     }
     return *this;
-}
-
-void swap(MerkleBranch& lhs, MerkleBranch& rhs)
-{
-    using std::swap;
-    swap(lhs.m_branch, rhs.m_branch);
-    swap(lhs.m_vpath, rhs.m_vpath);
 }
 
 void MerkleProof::clear() noexcept
