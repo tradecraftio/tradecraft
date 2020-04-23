@@ -3882,8 +3882,9 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
             for (int pos = 0; pos < witnessdepth; ++pos) {
                 ds >> branch[pos];
             }
-            hashWitness = ComputeFastMerkleRootFromBranch(hashWitness, branch, witnesspath ^ (1 << witnessdepth));
-            if (hashWitness != commithash) {
+            bool invalid = true;
+            hashWitness = ComputeFastMerkleRootFromBranch(hashWitness, branch, witnesspath ^ (1 << witnessdepth), &invalid);
+            if (invalid || hashWitness != commithash) {
                 return state.DoS(100, error("%s : witness merkle commitment mismatch", __func__), REJECT_INVALID, "bad-witness-merkle-match", true);
             }
             fHaveWitness = true;
