@@ -1376,6 +1376,10 @@ struct MerkleTree
      * value, as either a VERIFY or SKIP hash. */
     explicit MerkleTree(const uint256& hash, bool verify = true);
 
+    /* Builds a single-element MerkleTree from a leaf hash and proof
+     * structure verifying its position in the tree. */
+    MerkleTree(const uint256& leaf, const MerkleBranch &branch);
+
     /* Builds a new Merkle tree with the specified left-branch and
      * right-branch, including properly handling the case of left or
      * right being a single hash. */

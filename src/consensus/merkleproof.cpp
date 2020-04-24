@@ -243,6 +243,76 @@ MerkleTree::MerkleTree(const uint256& hash, bool verify) {
     }
 }
 
+MerkleTree::MerkleTree(const uint256& leaf, const MerkleBranch& branch)
+    : m_verify(1, leaf)
+{
+    assert(branch.m_vpath.size() == branch.m_branch.size());
+
+    /* If the branch proof is empty, then we're talking about a single
+     * VERIFY hash.  The hash has already been placed in m_verify. */
+    if (branch.m_vpath.empty())
+        return;
+
+    /* There is going to be one internal node for each SKIP hash, and
+     * the branch proof consists entirely of SKIP hashes. */
+    m_proof.m_path.reserve(branch.m_vpath.size());
+    m_proof.m_skip.reserve(branch.m_branch.size());
+
+    /* The branch proof consists of SKIP hashes in order of decreasing
+     * depth, from the leaf's level to the root node of the tree.  The
+     * MerkleProof on the other hand stores the hashes in order of
+     * left-to-right, in-order traversal.
+     *
+     * This means that all "left" SKIP hashes will come before all of
+     * the "right" SKIP hashes, and the "left" hashes are stored in
+     * increasing order of depth while the "right" hashes are in
+     * decreasing depth order.
+     *
+     * To reorder the hashes, we scan the branch proof twice, in
+     * different directions.  While we're at it we also build the node
+     * representation of the tree. */
+
+    /* Scan from the top of the tree to the leaf, adding "left"-side
+     * SKIP hashes in the opposite order of the branch proof, and
+     * building the node representation. */
+    {
+        auto side = branch.m_vpath.rbegin();
+        auto hash = branch.m_branch.rbegin();
+        for (; side != branch.m_vpath.rend(); ++side, ++hash) {
+            if (*side == false) {
+                m_proof.m_path.emplace_back(
+                    MerkleLink::DESCEND,
+                    MerkleLink::SKIP);
+            } else {
+                m_proof.m_path.emplace_back(
+                    MerkleLink::SKIP,
+                    MerkleLink::DESCEND);
+                m_proof.m_skip.push_back(*hash);
+            }
+        }
+    }
+
+    /* Scan from the bottom to the top, adding "right"-side SKIP
+     * hashes in the same order as the branch proof. */
+    {
+        auto side = branch.m_vpath.begin();
+        auto hash = branch.m_branch.begin();
+        for (; side != branch.m_vpath.end(); ++side, ++hash) {
+            if (*side == false) {
+                m_proof.m_skip.push_back(*hash);
+            }
+        }
+    }
+
+    /* The DESCEND branch of the final node needs to get changed to a
+     * VERIFY hash, the leaf. */
+    if (branch.m_vpath.front()) {
+        m_proof.m_path.back().SetRight(MerkleLink::VERIFY);
+    } else {
+        m_proof.m_path.back().SetLeft(MerkleLink::VERIFY);
+    }
+}
+
 MerkleTree::MerkleTree(const MerkleTree& left, const MerkleTree& right) {
     /* Handle the special case of either the left or right being
      * empty, which is idempotent. */
