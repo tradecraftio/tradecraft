@@ -1408,6 +1408,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
     BOOST_CHECK(branches.size() == 1);
     BOOST_CHECK(branches[0].m_branch.empty());
     BOOST_CHECK(branches[0].m_vpath.empty());
+    BOOST_CHECK(MerkleTree(hashA, branches[0]) == verify);
     invalid = true;
     BOOST_CHECK(ComputeFastMerkleRootFromBranch(verify.m_verify[0], branches[0].m_branch, branches[0].GetPath(), &invalid) == hashA);
     BOOST_CHECK(!invalid);
@@ -1482,6 +1483,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB[1]);
+        BOOST_CHECK(MerkleTree(hashB, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -1505,6 +1507,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB[0]);
+        BOOST_CHECK(MerkleTree(hashA, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -1646,6 +1649,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C[2]);
+        BOOST_CHECK(MerkleTree(hashC, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -1705,6 +1709,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C[1]);
+        BOOST_CHECK(MerkleTree(hashB, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -1734,6 +1739,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C[0]);
+        BOOST_CHECK(MerkleTree(hashA, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -1884,6 +1890,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesD_EF[2]);
+        BOOST_CHECK(MerkleTree(hashF, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -1943,6 +1950,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesD_EF[1]);
+        BOOST_CHECK(MerkleTree(hashE, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -1968,6 +1976,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesD_EF[0]);
+        BOOST_CHECK(MerkleTree(hashD, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -2280,6 +2289,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(MerkleTree(hashD, branches[0]) == res);
         BOOST_CHECK(branches[0] == branchesAB_CD[3]);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
@@ -2421,6 +2431,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_CD[2]);
+        BOOST_CHECK(MerkleTree(hashC, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -2484,6 +2495,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_CD[1]);
+        BOOST_CHECK(MerkleTree(hashB, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -2515,6 +2527,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_CD[0]);
+        BOOST_CHECK(MerkleTree(hashA, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -3208,6 +3221,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(hashF, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -3388,6 +3402,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(MerkleTree(hashE, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -3469,6 +3484,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(MerkleTree(hashD, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -3625,6 +3641,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(MerkleTree(hashC, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -3704,6 +3721,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(MerkleTree(hashB, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -3743,6 +3761,7 @@ BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
         BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(branches.size(), 1);
         BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(MerkleTree(hashA, branches[0]) == res);
         BOOST_CHECK(MerkleTree(zero, res) == res);
         BOOST_CHECK(MerkleTree(res, zero) == res);
     }
@@ -3853,6 +3872,9 @@ BOOST_AUTO_TEST_CASE(fast_merkle_branch)
             BOOST_CHECK(branches.size() == 1);
             BOOST_CHECK(branches[0].m_branch == branch.first);
             BOOST_CHECK(branches[0].GetPath() == branch.second);
+            // Re-create the single-element tree from the branch.  It
+            // should be the same.
+            BOOST_CHECK(MerkleTree(subtrees[0].m_verify[0], branches[0]) == subtrees[0]);
         }
     }
 }
