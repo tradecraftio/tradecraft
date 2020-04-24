@@ -258,7 +258,7 @@ std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vec
     return {branch, path};
 }
 
-uint256 ComputeFastMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path) {
+uint256 ComputeFastMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path, bool* invalid) {
     uint256 hash = leaf;
     for (const uint256& h : branch) {
         if (path & 1) {
@@ -268,6 +268,8 @@ uint256 ComputeFastMerkleRootFromBranch(const uint256& leaf, const std::vector<u
         }
         path >>= 1;
     }
+    if (invalid)
+        *invalid = (path != 0);
     return hash;
 }
 

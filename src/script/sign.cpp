@@ -130,16 +130,50 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         // The MultiSigHint value is added by SignN()
         return (SignN(vSolutions, creator, scriptPubKey, ret, sigversion));
 
-    case TX_WITNESS_V0_KEYHASH:
-        ret.push_back(vSolutions[0]);
-        return true;
-
-    case TX_WITNESS_V0_SCRIPTHASH:
+    case TX_WITNESS_V0_SHORTHASH:
+    case TX_WITNESS_V0_LONGHASH:
     {
-        std::vector<unsigned char> witscript;
-        if (creator.KeyStore().GetWitnessV0Script(uint256(vSolutions[0]), witscript)) {
-            if (!witscript.empty() && (witscript[0] == 0x00)) {
-                ret.push_back(std::vector<unsigned char>(witscript.begin()+1, witscript.end()));
+        WitnessV0ScriptEntry entry;
+        bool found = false;
+        switch (whichTypeRet)
+        {
+        case TX_WITNESS_V0_SHORTHASH:
+            found = creator.KeyStore().GetWitnessV0Script(uint160(vSolutions[0]), entry);
+            break;
+
+        case TX_WITNESS_V0_LONGHASH:
+            found = creator.KeyStore().GetWitnessV0Script(uint256(vSolutions[0]), entry);
+            break;
+        }
+        if (found) {
+            if (!entry.m_script.empty() && (entry.m_script[0] == 0x00)) {
+                // The second item on the stack (first to be pushed)
+                // is the witness script, which is contained in the
+                // WitnessV0ScriptEntry passed back to us.
+                ret.emplace_back(entry.m_script.begin(), entry.m_script.end());
+                // The first item on the stack (last to be pushed) is
+                // the Merkle proof.  We construct the proof from the
+                // branch and path fields of the WitnessV0ScriptEntry
+                // structure.
+                ret.emplace_back();
+                // The path is specified in zero to four bytes in
+                // little endian order.  The exact number of bytes is
+                // implicit since the size of the field which follows
+                // is known to be a multiple of 32.  So we add all the
+                // bytes of path, and then remove any ending zero
+                // bytes, which are to be understood implicitly.
+                ret.back().push_back( entry.m_path     &0xff);
+                ret.back().push_back((entry.m_path>> 8)&0xff);
+                ret.back().push_back((entry.m_path>>16)&0xff);
+                ret.back().push_back((entry.m_path>>24)&0xff);
+                while (!ret.back().empty() && (ret.back().back() == 0)) {
+                    ret.back().pop_back();
+                }
+                // The branch hashes are serialized in order, without
+                // a length specifier or padding bytes.
+                for (auto hash : entry.m_branch) {
+                    ret.back().insert(ret.back().end(), hash.begin(), hash.end());
+                }
                 return true;
             }
         }
@@ -183,27 +217,18 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         // the final scriptSig is the signatures from that
         // and then the serialized subscript:
         script = subscript = CScript(result[0].begin(), result[0].end());
-        solved = solved && SignStep(creator, script, result, whichType, SIGVERSION_BASE) && whichType != TX_SCRIPTHASH;
+        solved = solved && SignStep(creator, script, result, whichType, SIGVERSION_BASE) && whichType != TX_SCRIPTHASH && whichType != TX_WITNESS_V0_LONGHASH && whichType != TX_WITNESS_V0_SHORTHASH;
         P2SH = true;
     }
 
-    if (solved && whichType == TX_WITNESS_V0_KEYHASH)
+    if (solved && (whichType == TX_WITNESS_V0_SHORTHASH || whichType == TX_WITNESS_V0_LONGHASH))
     {
-        CScript witnessscript;
-        witnessscript << OP_DUP << OP_HASH160 << ToByteVector(result[0]) << OP_EQUALVERIFY << OP_CHECKSIG;
+        CScript witnessscript(result[0].begin()+1, result[0].end());
         txnouttype subType;
-        solved = solved && SignStep(creator, witnessscript, result, subType, SIGVERSION_WITNESS_V0);
-        sigdata.scriptWitness.stack = result;
-        result.clear();
-    }
-    else if (solved && whichType == TX_WITNESS_V0_SCRIPTHASH)
-    {
-        CScript witnessscript(result[0].begin(), result[0].end());
-        txnouttype subType;
-        solved = solved && SignStep(creator, witnessscript, result, subType, SIGVERSION_WITNESS_V0) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SCRIPTHASH && subType != TX_WITNESS_V0_KEYHASH;
-        result.emplace_back(1, 0x00);
-        result.back().insert(result.back().end(), witnessscript.begin(), witnessscript.end());
-        sigdata.scriptWitness.stack = result;
+        std::vector<valtype> subresult;
+        solved = solved && SignStep(creator, witnessscript, subresult, subType, SIGVERSION_WITNESS_V0) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SHORTHASH && subType != TX_WITNESS_V0_LONGHASH;
+        subresult.insert(subresult.end(), result.begin(), result.end());
+        sigdata.scriptWitness.stack = subresult;
         result.clear();
     }
 
@@ -347,6 +372,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
                                  const txnouttype txType, const vector<valtype>& vSolutions,
                                  Stacks sigs1, Stacks sigs2, SigVersion sigversion)
 {
+    using std::swap;
     switch (txType)
     {
     case TX_NONSTANDARD:
@@ -359,11 +385,6 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     case TX_PUBKEYHASH:
         // Signatures are bigger than placeholders or empty scripts:
         if (sigs1.script.empty() || sigs1.script[0].empty())
-            return sigs2;
-        return sigs1;
-    case TX_WITNESS_V0_KEYHASH:
-        // Signatures are bigger than placeholders or empty scripts:
-        if (sigs1.witness.empty() || sigs1.witness[0].empty())
             return sigs2;
         return sigs1;
     case TX_SCRIPTHASH:
@@ -388,14 +409,18 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
         }
     case TX_MULTISIG:
         return Stacks(CombineMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
-    case TX_WITNESS_V0_SCRIPTHASH:
-        if (sigs1.witness.empty() || (sigs1.witness.back().size() <= 1))
+    case TX_WITNESS_V0_SHORTHASH:
+    case TX_WITNESS_V0_LONGHASH:
+        if ((sigs1.witness.size() <= 1) || ((sigs1.witness.end() - 2)->size() <= 1))
             return sigs2;
-        else if (sigs2.witness.empty() || (sigs2.witness.back().size() <= 1))
+        else if ((sigs2.witness.size() <= 1) || ((sigs2.witness.end() - 2)->size() <= 1))
             return sigs1;
         else
         {
             // Recur to combine:
+            std::vector<unsigned char> proof;
+            swap(proof, sigs1.witness.back());
+            sigs1.witness.pop_back();
             CScript pubKey2(sigs1.witness.back().begin()+1, sigs1.witness.back().end());
             txnouttype txType2;
             vector<valtype> vSolutions2;
@@ -404,6 +429,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             sigs1.script = sigs1.witness;
             sigs1.witness.clear();
             sigs2.witness.pop_back();
+            sigs2.witness.pop_back();
             sigs2.script = sigs2.witness;
             sigs2.witness.clear();
             Stacks result = CombineSignatures(pubKey2, checker, txType2, vSolutions2, sigs1, sigs2, SIGVERSION_WITNESS_V0);
@@ -411,6 +437,8 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             result.script.clear();
             result.witness.emplace_back(1, 0x00);
             result.witness.back().insert(result.witness.back().end(), pubKey2.begin(), pubKey2.end());
+            result.witness.emplace_back();
+            swap(proof, result.witness.back());
             return result;
         }
     default:

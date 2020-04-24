@@ -24,6 +24,8 @@ from test_framework.blocktools import create_block, create_coinbase, add_witness
 from test_framework.siphash import siphash256
 from test_framework.script import CScript, OP_TRUE
 
+from segwit import addlength
+
 '''
 CompactBlocksTest -- test compact blocks (BIP 152)
 
@@ -317,9 +319,18 @@ class CompactBlocksTest(FreicoinTestFramework):
         if use_witness_address:
             # Want at least one segwit spend, so move all funds to
             # a witness address.
-            address = node.addwitnessaddress(address)
+            script = node.addwitnessaddress(address)['longhash']
             value_to_send = node.getbalance()
-            node.sendtoaddress(address, kria_round(value_to_send-Decimal(0.1)))
+            inputs = []
+            outputs = {}
+            DUMMY_P2SH = "2MySexEGVzZpRgNQ1JdjdP5bRETznm3roQ2" # P2SH of "OP_1 OP_DROP"
+            outputs[DUMMY_P2SH] = kria_round(value_to_send-Decimal(0.1))
+            rawtx = node.createrawtransaction(inputs,outputs)
+            rawtx = rawtx[:28] + addlength(script) + rawtx[76:]
+            rawtx = node.fundrawtransaction(rawtx)['hex']
+            res = node.signrawtransaction(rawtx)
+            assert_equal(res['complete'], True)
+            node.sendrawtransaction(res['hex'])
             node.generate(1)
 
         segwit_tx_generated = False

@@ -20,6 +20,7 @@
 #include "interpreter.h"
 
 #include "primitives/transaction.h"
+#include "consensus/merkle.h"
 #include "consensus/merkleproof.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
@@ -1682,32 +1683,66 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     CScript scriptPubKey;
 
     if (witversion == 0) {
-        if (program.size() == 32) {
-            // Version 0 segregated witness program: SHA256(CScript) inside the program, CScript + inputs in witness
-            if (witness.stack.size() == 0) {
+        if ((program.size() == 20) || (program.size() == 32)) {
+            // Version 0 segregated witness program: Merkle root inside the
+            // program, Merkle proof + CScript + inputs in witness
+            if (witness.stack.size() <= 1) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
             }
+            // The Merkle proof is a minimally-serialized Merkle branch
+            // consisting of a bitfield N bits long (the path) and 32*N hashes.
+            // The maximum supported depth of the tree is 33 layers, including
+            // the root.
+            const std::vector<unsigned char>& proof_field = witness.stack.back();
+            if (proof_field.size() > 1028) { // 1028 = 32*32 + (32/8)
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            const int bytes_in_path = proof_field.size() % 32;
+            const int max_bytes_in_path = ((proof_field.size() / 32) + 7) / 8;
+            if (bytes_in_path > max_bytes_in_path) {
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            if (bytes_in_path && (proof_field[bytes_in_path-1] == 0)) {
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            uint32_t path = 0;
+            switch (bytes_in_path) {
+                case 4: path |= (static_cast<uint32_t>(proof_field[3]) << 24);
+                case 3: path |= (static_cast<uint32_t>(proof_field[2]) << 16);
+                case 2: path |= (static_cast<uint32_t>(proof_field[1]) <<  8);
+                case 1: path |=  static_cast<uint32_t>(proof_field[0]);
+                case 0: break;
+                default:
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            std::vector<uint256> branch;
+            branch.reserve(proof_field.size() / 32);
+            for (auto ptr = proof_field.begin() + bytes_in_path; ptr != proof_field.end(); ptr += 32) {
+                branch.emplace_back(std::vector<unsigned char>(ptr, ptr + 32));
+            }
+            const std::vector<unsigned char>& script_field = *(witness.stack.end() - 2);
             uint256 hashScriptPubKey;
-            CSHA256().Write(&witness.stack.back()[0], witness.stack.back().size()).Finalize(hashScriptPubKey.begin());
-            if (memcmp(hashScriptPubKey.begin(), &program[0], 32)) {
+            CHash256().Write(&script_field[0], script_field.size()).Finalize(hashScriptPubKey.begin());
+            bool invalid = false;
+            hashScriptPubKey = ComputeFastMerkleRootFromBranch(hashScriptPubKey, branch, path, &invalid);
+            if (invalid) {
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            if (program.size() == 20) {
+                CRIPEMD160().Write(hashScriptPubKey.begin(), 32).Finalize(hashScriptPubKey.begin());
+            }
+            if (memcmp(hashScriptPubKey.begin(), &program[0], program.size())) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
-            if (!witness.stack.back().empty() && witness.stack.back()[0] == 0x00) {
-                scriptPubKey = CScript(witness.stack.back().begin()+1, witness.stack.back().end());
-                stack = std::vector<std::vector<unsigned char> >(witness.stack.begin(), witness.stack.end() - 1);
+            if (!script_field.empty() && script_field[0] == 0x00) {
+                scriptPubKey = CScript(script_field.begin()+1, script_field.end());
+                stack = std::vector<std::vector<unsigned char> >(witness.stack.begin(), witness.stack.end() - 2);
             } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
                 return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
             } else {
                 // Higher inner-version witness scripts return true for future soft-fork compatibility.
                 return set_success(serror);
             }
-        } else if (program.size() == 20) {
-            // Special case for pay-to-pubkeyhash; signature + pubkey in witness
-            if (witness.stack.size() != 2) {
-                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // 2 items in witness
-            }
-            scriptPubKey << OP_DUP << OP_HASH160 << program << OP_EQUALVERIFY << OP_CHECKSIG;
-            stack = witness.stack;
         } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
         } else {
@@ -1810,23 +1845,15 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
             return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
         if (!CastToBool(stack.back()))
             return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
+    }
 
-        // P2SH witness program
-        if (flags & SCRIPT_VERIFY_WITNESS) {
-            if (pubKey2.IsWitnessProgram(witnessversion, witnessprogram)) {
-                hadWitness = true;
-                if (scriptSig != CScript() << std::vector<unsigned char>(pubKey2.begin(), pubKey2.end())) {
-                    // The scriptSig must be _exactly_ a single push of the redeemScript. Otherwise we
-                    // reintroduce malleability.
-                    return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED_P2SH);
-                }
-                if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror)) {
-                    return false;
-                }
-                // Bypass the cleanstack check at the end. The actual stack is obviously not clean
-                // for witness programs.
-                stack.resize(1);
-            }
+    if (flags & SCRIPT_VERIFY_WITNESS) {
+        // We can't check for correct unexpected witness data if P2SH was off, so require
+        // that WITNESS implies P2SH. Otherwise, going from WITNESS->P2SH+WITNESS would be
+        // possible, which is not a softfork.
+        assert((flags & SCRIPT_VERIFY_P2SH) != 0);
+        if (!hadWitness && !witness->IsNull()) {
+            return set_error(serror, SCRIPT_ERR_WITNESS_UNEXPECTED);
         }
     }
 
@@ -1840,16 +1867,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         assert((flags & SCRIPT_VERIFY_WITNESS) != 0);
         if (stack.size() != 1) {
             return set_error(serror, SCRIPT_ERR_CLEANSTACK);
-        }
-    }
-
-    if (flags & SCRIPT_VERIFY_WITNESS) {
-        // We can't check for correct unexpected witness data if P2SH was off, so require
-        // that WITNESS implies P2SH. Otherwise, going from WITNESS->P2SH+WITNESS would be
-        // possible, which is not a softfork.
-        assert((flags & SCRIPT_VERIFY_P2SH) != 0);
-        if (!hadWitness && !witness->IsNull()) {
-            return set_error(serror, SCRIPT_ERR_WITNESS_UNEXPECTED);
         }
     }
 

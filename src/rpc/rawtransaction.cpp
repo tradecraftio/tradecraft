@@ -775,6 +775,10 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
                 if (prevOut.exists("amount")) {
                     coins->vout[nOut].SetReferenceValue(AmountFromValue(find_value(prevOut, "amount")));
                 }
+                coins->refheight = 0;
+                if (prevOut.exists("refheight")) {
+                    coins->refheight = find_value(prevOut, "amount").get_int();
+                }
             }
 
             // if redeemScript given and not using the local wallet (private keys
@@ -794,7 +798,7 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
                     tempKeystore.AddCScript(redeemScript);
                     vector<unsigned char> witscript(1, 0x00);
                     witscript.insert(witscript.end(), rsData.begin(), rsData.end());
-                    tempKeystore.AddWitnessV0Script(witscript);
+                    tempKeystore.AddWitnessV0Script(WitnessV0ScriptEntry(std::move(witscript)));
                 }
             }
         }

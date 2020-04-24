@@ -1173,6 +1173,2446 @@ BOOST_AUTO_TEST_CASE(merkle_node_vector_serialize)
     }
 }
 
+BOOST_AUTO_TEST_CASE(merkle_tree_constructor)
+{
+    uint256 hashZero;
+    CHash256().Finalize(hashZero.begin());
+    BOOST_CHECK(hashZero == uint256S("56944c5d3f98413ef45cf54545538103cc9f298e0575820ad3591376e2e0f65d"));
+
+    uint256 hashA;
+    CHash256().Write((const unsigned char*)"A", 1).Finalize(hashA.begin());
+    BOOST_CHECK(hashA == uint256S("425ea523fee4a4451246a49a08174424ee3fdc03d40926ad46ffe0e671efd61c"));
+
+    uint256 hashB;
+    CHash256().Write((const unsigned char*)"B", 1).Finalize(hashB.begin());
+    BOOST_CHECK(hashB == uint256S("01517aea572935ff9eb1455bc1147f98fb60957f4f9f868f06824ede3bb0550b"));
+
+    uint256 hashC;
+    CHash256().Write((const unsigned char*)"C", 1).Finalize(hashC.begin());
+    BOOST_CHECK(hashC == uint256S("ea3f6455fc84430d6f2db40d708a046caab99ad8207d14e43b2f1ffd68894fca"));
+
+    uint256 hashD;
+    CHash256().Write((const unsigned char*)"D", 1).Finalize(hashD.begin());
+    BOOST_CHECK(hashD == uint256S("2e52efc7b8cab2e0ca3f688ae090febff94be0eaa3ce666301985b287fc6e178"));
+
+    uint256 hashE;
+    CHash256().Write((const unsigned char*)"E", 1).Finalize(hashE.begin());
+    BOOST_CHECK(hashE == uint256S("a9c6b81b74f77d73def7397879bd23301159ce9554b2be00b09a2bab0c033c2d"));
+
+    uint256 hashF;
+    CHash256().Write((const unsigned char*)"F", 1).Finalize(hashF.begin());
+    BOOST_CHECK(hashF == uint256S("1c4a32d1d781dd8633c2c21af8b24c6219278f5ea89adf2ee053c276b55a1f42"));
+
+    bool invalid = true;
+    std::vector<MerkleBranch> branches;
+
+    MerkleTree zero;
+    BOOST_CHECK(zero.m_proof.m_path.empty());
+    BOOST_CHECK(zero.m_proof.m_skip.empty());
+    BOOST_CHECK(zero.m_verify.empty());
+    invalid = true;
+    branches.clear();
+    BOOST_CHECK(zero.GetHash(&invalid, &branches) == hashZero);
+    BOOST_CHECK(!invalid);
+    BOOST_CHECK(branches.empty());
+
+    MerkleTree verify(hashA);
+    BOOST_CHECK(verify.m_proof.m_path.empty());
+    BOOST_CHECK(verify.m_proof.m_skip.empty());
+    BOOST_CHECK(verify.m_verify.size() == 1);
+    BOOST_CHECK(verify.m_verify[0] == hashA);
+    invalid = true;
+    branches.clear();
+    BOOST_CHECK(verify.GetHash(&invalid, &branches) == hashA);
+    BOOST_CHECK(!invalid);
+    BOOST_CHECK(branches.size() == 1);
+    BOOST_CHECK(branches[0].m_branch.empty());
+    BOOST_CHECK(branches[0].m_vpath.empty());
+    BOOST_CHECK(MerkleTree(hashA, branches[0]) == verify);
+    invalid = true;
+    BOOST_CHECK(ComputeFastMerkleRootFromBranch(verify.m_verify[0], branches[0].m_branch, branches[0].GetPath(), &invalid) == hashA);
+    BOOST_CHECK(!invalid);
+
+    MerkleTree skip(hashB, false);
+    BOOST_CHECK(skip.m_proof.m_path.empty());
+    BOOST_CHECK(skip.m_proof.m_skip.size() == 1);
+    BOOST_CHECK(skip.m_proof.m_skip[0] == hashB);
+    BOOST_CHECK(skip.m_verify.empty());
+    invalid = true;
+    branches.clear();
+    BOOST_CHECK(skip.GetHash(&invalid, &branches) == hashB);
+    BOOST_CHECK(!invalid);
+    BOOST_CHECK(branches.empty());
+
+    /* Constructing with an empty tree is idempotent. */
+    BOOST_CHECK(MerkleTree(zero, zero) == zero);
+    BOOST_CHECK(MerkleTree(zero, verify) == verify);
+    BOOST_CHECK(MerkleTree(verify, zero) == verify);
+    BOOST_CHECK(MerkleTree(zero, skip) == skip);
+    BOOST_CHECK(MerkleTree(skip, zero) == skip);
+
+    /* Two items: [A B].
+     * We'll enumerate the possible combination of VERIFY and SKIP
+     * hashes. */
+    uint256 hashAB;
+    MerkleHash_Sha256Midstate(hashAB, hashA, hashB);
+
+    std::vector<MerkleBranch> branchesAB = {
+        { {hashB}, {false} },
+        { {hashA}, {true} },
+    };
+
+    {
+        /* 0 */
+        auto res = MerkleTree(
+            MerkleTree(hashA),
+            MerkleTree(hashB));
+        BOOST_CHECK(res.m_proof.m_path.size() == 1);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.empty());
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches == branchesAB);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 1 */
+        auto res = MerkleTree(
+            MerkleTree(hashA, false),
+            MerkleTree(hashB));
+        BOOST_CHECK(res.m_proof.m_path.size() == 1);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB[1]);
+        BOOST_CHECK(MerkleTree(hashB, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 2 */
+        auto res = MerkleTree(
+            MerkleTree(hashA),
+            MerkleTree(hashB, false));
+        BOOST_CHECK(res.m_proof.m_path.size() == 1);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB[0]);
+        BOOST_CHECK(MerkleTree(hashA, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 3 */
+        auto res = MerkleTree(
+            MerkleTree(hashA, false),
+            MerkleTree(hashB, false));
+        BOOST_CHECK(res.m_proof.m_path.empty());
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB);
+        BOOST_CHECK(res.m_verify.empty());
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches.empty());
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    /* Three items: [[A B] C]. */
+    uint256 hashAB_C;
+    MerkleHash_Sha256Midstate(hashAB_C, hashAB, hashC);
+
+    std::vector<MerkleBranch> branchesAB_C = {
+        { {hashB, hashC}, {false, false} },
+        { {hashA, hashC}, {true,  false} },
+        { {hashAB},       {true}         },
+    };
+
+    {
+        /* 0 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB)),
+            MerkleTree(hashC));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.empty());
+        BOOST_CHECK(res.m_verify.size() == 3);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches == branchesAB_C);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 1 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB)),
+            MerkleTree(hashC));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C[1]);
+        BOOST_CHECK(branches[1] == branchesAB_C[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 2 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB, false)),
+            MerkleTree(hashC));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 3 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB, false)),
+            MerkleTree(hashC));
+        BOOST_CHECK(res.m_proof.m_path.size() == 1);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C[2]);
+        BOOST_CHECK(MerkleTree(hashC, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 4 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB)),
+            MerkleTree(hashC, false));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C[1]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 5 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB)),
+            MerkleTree(hashC, false));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C[1]);
+        BOOST_CHECK(MerkleTree(hashB, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 6 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB, false)),
+            MerkleTree(hashC, false));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C[0]);
+        BOOST_CHECK(MerkleTree(hashA, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 7 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB, false)),
+            MerkleTree(hashC, false)
+        );
+        BOOST_CHECK(res.m_proof.m_path.empty());
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C);
+        BOOST_CHECK(res.m_verify.empty());
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches.empty());
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    /* Three items: [D [E F]]. */
+    uint256 hashEF;
+    MerkleHash_Sha256Midstate(hashEF, hashE, hashF);
+    uint256 hashD_EF;
+    MerkleHash_Sha256Midstate(hashD_EF, hashD, hashEF);
+
+    std::vector<MerkleBranch> branchesD_EF = {
+        { {hashEF},       {false}       },
+        { {hashF, hashD}, {false, true} },
+        { {hashE, hashD}, {true,  true} },
+    };
+
+    {
+        /* 0 */
+        auto res = MerkleTree(
+            MerkleTree(hashD),
+            MerkleTree(
+                MerkleTree(hashE),
+                MerkleTree(hashF)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.empty());
+        BOOST_CHECK(res.m_verify.size() == 3);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        BOOST_CHECK(res.m_verify[1] == hashE);
+        BOOST_CHECK(res.m_verify[2] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashD_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches == branchesD_EF);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 1 */
+        auto res = MerkleTree(
+            MerkleTree(hashD, false),
+            MerkleTree(
+                MerkleTree(hashE),
+                MerkleTree(hashF)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashE);
+        BOOST_CHECK(res.m_verify[1] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashD_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesD_EF[1]);
+        BOOST_CHECK(branches[1] == branchesD_EF[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 2 */
+        auto res = MerkleTree(
+            MerkleTree(hashD),
+            MerkleTree(
+                MerkleTree(hashE, false),
+                MerkleTree(hashF)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashE);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        BOOST_CHECK(res.m_verify[1] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashD_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesD_EF[0]);
+        BOOST_CHECK(branches[1] == branchesD_EF[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 3 */
+        auto res = MerkleTree(
+            MerkleTree(hashD, false),
+            MerkleTree(
+                MerkleTree(hashE, false),
+                MerkleTree(hashF)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashE);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashD_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesD_EF[2]);
+        BOOST_CHECK(MerkleTree(hashF, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 4 */
+        auto res = MerkleTree(
+            MerkleTree(hashD),
+            MerkleTree(
+                MerkleTree(hashE),
+                MerkleTree(hashF, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashF);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        BOOST_CHECK(res.m_verify[1] == hashE);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashD_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesD_EF[0]);
+        BOOST_CHECK(branches[1] == branchesD_EF[1]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 5 */
+        auto res = MerkleTree(
+            MerkleTree(hashD, false),
+            MerkleTree(
+                MerkleTree(hashE),
+                MerkleTree(hashF, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashF);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashE);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashD_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesD_EF[1]);
+        BOOST_CHECK(MerkleTree(hashE, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 6 */
+        auto res = MerkleTree(
+            MerkleTree(hashD),
+            MerkleTree(
+                MerkleTree(hashE, false),
+                MerkleTree(hashF, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 1);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashEF);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashD_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesD_EF[0]);
+        BOOST_CHECK(MerkleTree(hashD, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 7 */
+        auto res = MerkleTree(
+            MerkleTree(hashD, false),
+            MerkleTree(
+                MerkleTree(hashE, false),
+                MerkleTree(hashF, false)));
+        BOOST_CHECK(res.m_proof.m_path.empty());
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD_EF);
+        BOOST_CHECK(res.m_verify.empty());
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashD_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches.empty());
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    /* Four items: [[A B] [C D]]. */
+    uint256 hashCD;
+    MerkleHash_Sha256Midstate(hashCD, hashC, hashD);
+    uint256 hashAB_CD;
+    MerkleHash_Sha256Midstate(hashAB_CD, hashAB, hashCD);
+
+    std::vector<MerkleBranch> branchesAB_CD = {
+        { {hashB, hashCD}, {false, false} },
+        { {hashA, hashCD}, {true,  false} },
+        { {hashD, hashAB}, {false, true}  },
+        { {hashC, hashAB}, {true,  true}  },
+    };
+
+    {
+        /* 0 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB)),
+            MerkleTree(
+                MerkleTree(hashC),
+                MerkleTree(hashD)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.empty());
+        BOOST_CHECK(res.m_verify.size() == 4);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        BOOST_CHECK(res.m_verify[3] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches == branchesAB_CD);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 1 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB)),
+            MerkleTree(
+                MerkleTree(hashC),
+                MerkleTree(hashD)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_verify.size() == 3);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        BOOST_CHECK(res.m_verify[2] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 3);
+        BOOST_CHECK(branches[0] == branchesAB_CD[1]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[2]);
+        BOOST_CHECK(branches[2] == branchesAB_CD[3]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 2 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB, false)),
+            MerkleTree(
+                MerkleTree(hashC),
+                MerkleTree(hashD)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_verify.size() == 3);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        BOOST_CHECK(res.m_verify[2] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 3);
+        BOOST_CHECK(branches[0] == branchesAB_CD[0]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[2]);
+        BOOST_CHECK(branches[2] == branchesAB_CD[3]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 3 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB, false)),
+            MerkleTree(
+                MerkleTree(hashC),
+                MerkleTree(hashD)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashC);
+        BOOST_CHECK(res.m_verify[1] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_CD[2]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[3]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 4 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB)),
+            MerkleTree(
+                MerkleTree(hashC, false),
+                MerkleTree(hashD)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 3);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 3);
+        BOOST_CHECK(branches[0] == branchesAB_CD[0]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[1]);
+        BOOST_CHECK(branches[2] == branchesAB_CD[3]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 5 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB)),
+            MerkleTree(
+                MerkleTree(hashC, false),
+                MerkleTree(hashD)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        BOOST_CHECK(res.m_verify[1] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_CD[1]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[3]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 6 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB, false)),
+            MerkleTree(
+                MerkleTree(hashC, false),
+                MerkleTree(hashD)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_CD[0]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[3]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 7 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB, false)),
+            MerkleTree(
+                MerkleTree(hashC, false),
+                MerkleTree(hashD)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(MerkleTree(hashD, branches[0]) == res);
+        BOOST_CHECK(branches[0] == branchesAB_CD[3]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 8 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB)),
+            MerkleTree(
+                MerkleTree(hashC),
+                MerkleTree(hashD, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD);
+        BOOST_CHECK(res.m_verify.size() == 3);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 3);
+        BOOST_CHECK(branches[0] == branchesAB_CD[0]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[1]);
+        BOOST_CHECK(branches[2] == branchesAB_CD[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 9 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB)),
+            MerkleTree(
+                MerkleTree(hashC),
+                MerkleTree(hashD, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_CD[1]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 10 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB, false)),
+            MerkleTree(
+                MerkleTree(hashC),
+                MerkleTree(hashD, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_CD[0]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 11 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB, false)),
+            MerkleTree(
+                MerkleTree(hashC),
+                MerkleTree(hashD, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_CD[2]);
+        BOOST_CHECK(MerkleTree(hashC, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 12 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB)),
+            MerkleTree(
+                MerkleTree(hashC, false),
+                MerkleTree(hashD, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashCD);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_CD[0]);
+        BOOST_CHECK(branches[1] == branchesAB_CD[1]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 13 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB)),
+            MerkleTree(
+                MerkleTree(hashC, false),
+                MerkleTree(hashD, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashCD);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_CD[1]);
+        BOOST_CHECK(MerkleTree(hashB, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 14 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA),
+                MerkleTree(hashB, false)),
+            MerkleTree(
+                MerkleTree(hashC, false),
+                MerkleTree(hashD, false)));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashCD);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_CD[0]);
+        BOOST_CHECK(MerkleTree(hashA, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 15 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(hashA, false),
+                MerkleTree(hashB, false)),
+            MerkleTree(
+                MerkleTree(hashC, false),
+                MerkleTree(hashD, false)));
+        BOOST_CHECK(res.m_proof.m_path.empty());
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_CD);
+        BOOST_CHECK(res.m_verify.empty());
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_CD);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches.empty());
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    /* Finally, a particular combination of six items:
+     * [[[A B] C] [D [E F]]]. */
+    uint256 hashAB_C__D_EF;
+    MerkleHash_Sha256Midstate(hashAB_C__D_EF, hashAB_C, hashD_EF);
+
+    std::vector<MerkleBranch> branchesAB_C__D_EF = {
+        { {hashB,  hashC, hashD_EF}, {false, false, false} },
+        { {hashA,  hashC, hashD_EF}, {true,  false, false} },
+        { {hashAB, hashD_EF},        {true,  false}        },
+        { {hashEF, hashAB_C},        {false, true}         },
+        { {hashF,  hashD, hashAB_C}, {false, true,  true}  },
+        { {hashE,  hashD, hashAB_C}, {true,  true,  true}  },
+    };
+
+    {
+        /* 0 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.empty());
+        BOOST_CHECK(res.m_verify.size() == 6);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        BOOST_CHECK(res.m_verify[3] == hashD);
+        BOOST_CHECK(res.m_verify[4] == hashE);
+        BOOST_CHECK(res.m_verify[5] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches == branchesAB_C__D_EF);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 1 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_verify.size() == 5);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        BOOST_CHECK(res.m_verify[2] == hashD);
+        BOOST_CHECK(res.m_verify[3] == hashE);
+        BOOST_CHECK(res.m_verify[4] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 5);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[4] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 2 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_verify.size() == 5);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        BOOST_CHECK(res.m_verify[2] == hashD);
+        BOOST_CHECK(res.m_verify[3] == hashE);
+        BOOST_CHECK(res.m_verify[4] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 5);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[4] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 3 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 4);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB);
+        BOOST_CHECK(res.m_verify.size() == 4);
+        BOOST_CHECK(res.m_verify[0] == hashC);
+        BOOST_CHECK(res.m_verify[1] == hashD);
+        BOOST_CHECK(res.m_verify[2] == hashE);
+        BOOST_CHECK(res.m_verify[3] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 4);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 4 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 5);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashD);
+        BOOST_CHECK(res.m_verify[3] == hashE);
+        BOOST_CHECK(res.m_verify[4] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 5);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[4] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 5 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 4);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        BOOST_CHECK(res.m_verify[1] == hashD);
+        BOOST_CHECK(res.m_verify[2] == hashE);
+        BOOST_CHECK(res.m_verify[3] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 4);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 6 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_verify.size() == 4);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashD);
+        BOOST_CHECK(res.m_verify[2] == hashE);
+        BOOST_CHECK(res.m_verify[3] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 4);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 7 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C);
+        BOOST_CHECK(res.m_verify.size() == 3);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        BOOST_CHECK(res.m_verify[1] == hashE);
+        BOOST_CHECK(res.m_verify[2] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 3);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 8 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD);
+        BOOST_CHECK(res.m_verify.size() == 5);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        BOOST_CHECK(res.m_verify[3] == hashE);
+        BOOST_CHECK(res.m_verify[4] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 5);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[4] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 15 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashE);
+        BOOST_CHECK(res.m_verify[1] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 16 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashE);
+        BOOST_CHECK(res.m_verify.size() == 5);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        BOOST_CHECK(res.m_verify[3] == hashD);
+        BOOST_CHECK(res.m_verify[4] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 5);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[4] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 23 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashE);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        BOOST_CHECK(res.m_verify[1] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 24 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashE);
+        BOOST_CHECK(res.m_verify.size() == 4);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        BOOST_CHECK(res.m_verify[3] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 4);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 31 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 3);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD);
+        BOOST_CHECK(res.m_proof.m_skip[2] == hashE);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashF);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[5]);
+        BOOST_CHECK(MerkleTree(hashF, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 32 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashF);
+        BOOST_CHECK(res.m_verify.size() == 5);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        BOOST_CHECK(res.m_verify[3] == hashD);
+        BOOST_CHECK(res.m_verify[4] == hashE);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 5);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[4] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 39 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashF);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        BOOST_CHECK(res.m_verify[1] == hashE);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 40 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 5);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[4] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashF);
+        BOOST_CHECK(res.m_verify.size() == 4);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        BOOST_CHECK(res.m_verify[3] == hashE);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 4);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 47 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 3);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD);
+        BOOST_CHECK(res.m_proof.m_skip[2] == hashF);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashE);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[4]);
+        BOOST_CHECK(MerkleTree(hashE, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 48 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 4);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[3] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashEF);
+        BOOST_CHECK(res.m_verify.size() == 4);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        BOOST_CHECK(res.m_verify[3] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 4);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(branches[3] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 55 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::DESCEND));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashEF);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashD);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[3]);
+        BOOST_CHECK(MerkleTree(hashD, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 56 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashD_EF);
+        BOOST_CHECK(res.m_verify.size() == 3);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        BOOST_CHECK(res.m_verify[2] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 3);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[2] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 57 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD_EF);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 58 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD_EF);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 59 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 2);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD_EF);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashC);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[2]);
+        BOOST_CHECK(MerkleTree(hashC, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 60 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 2);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashC);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashD_EF);
+        BOOST_CHECK(res.m_verify.size() == 2);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        BOOST_CHECK(res.m_verify[1] == hashB);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 2);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(branches[1] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 61 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::SKIP,
+                        MerkleLink::VERIFY));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 3);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashA);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_proof.m_skip[2] == hashD_EF);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashB);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[1]);
+        BOOST_CHECK(MerkleTree(hashB, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 62 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.size() == 3);
+        BOOST_CHECK(res.m_proof.m_path[0] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[1] == MerkleNode(
+                        MerkleLink::DESCEND,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_path[2] == MerkleNode(
+                        MerkleLink::VERIFY,
+                        MerkleLink::SKIP));
+        BOOST_CHECK(res.m_proof.m_skip.size() == 3);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashB);
+        BOOST_CHECK(res.m_proof.m_skip[1] == hashC);
+        BOOST_CHECK(res.m_proof.m_skip[2] == hashD_EF);
+        BOOST_CHECK(res.m_verify.size() == 1);
+        BOOST_CHECK(res.m_verify[0] == hashA);
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK_EQUAL(branches.size(), 1);
+        BOOST_CHECK(branches[0] == branchesAB_C__D_EF[0]);
+        BOOST_CHECK(MerkleTree(hashA, branches[0]) == res);
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+
+    {
+        /* 63 */
+        auto res = MerkleTree(
+            MerkleTree(
+                MerkleTree(
+                    MerkleTree(hashA, false),
+                    MerkleTree(hashB, false)),
+                MerkleTree(hashC, false)),
+            MerkleTree(
+                MerkleTree(hashD, false),
+                MerkleTree(
+                    MerkleTree(hashE, false),
+                    MerkleTree(hashF, false))));
+        BOOST_CHECK(res.m_proof.m_path.empty());
+        BOOST_CHECK(res.m_proof.m_skip.size() == 1);
+        BOOST_CHECK(res.m_proof.m_skip[0] == hashAB_C__D_EF);
+        BOOST_CHECK(res.m_verify.empty());
+        invalid = true;
+        branches.clear();
+        BOOST_CHECK(res.GetHash(&invalid, &branches) == hashAB_C__D_EF);
+        BOOST_CHECK(!invalid);
+        BOOST_CHECK(branches.empty());
+        BOOST_CHECK(MerkleTree(zero, res) == res);
+        BOOST_CHECK(MerkleTree(res, zero) == res);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(fast_merkle_branch)
 {
     using std::swap;
@@ -1246,8 +3686,15 @@ BOOST_AUTO_TEST_CASE(fast_merkle_branch)
             }
             BOOST_CHECK(subtrees[0].m_verify.size() == 1);
             bool invalid = false;
-            BOOST_CHECK(subtrees[0].GetHash(&invalid) == root);
+            std::vector<MerkleBranch> branches;
+            BOOST_CHECK(subtrees[0].GetHash(&invalid, &branches) == root);
             BOOST_CHECK(!invalid);
+            BOOST_CHECK(branches.size() == 1);
+            BOOST_CHECK(branches[0].m_branch == branch.first);
+            BOOST_CHECK(branches[0].GetPath() == branch.second);
+            // Re-create the single-element tree from the branch.  It
+            // should be the same.
+            BOOST_CHECK(MerkleTree(subtrees[0].m_verify[0], branches[0]) == subtrees[0]);
         }
     }
 }
