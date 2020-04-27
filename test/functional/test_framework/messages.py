@@ -834,11 +834,20 @@ class CBlock(CBlockHeader):
         return self.get_merkle_root(hashes)
 
     def calc_witness_merkle_root(self):
-        # For witness root purposes, the hash of the coinbase does not include
-        # the coinbase witness, which is the witness nonce
-        if getattr(self.vtx[0], 'sha256', None) is None:
-            self.vtx[0].calc_sha256(False)
-        hashes = [ser_uint256(self.vtx[0].sha256)]
+        # For witness root purposes, the hash of the coinbase does not
+        # include the coinbase witness, which is the witness nonce,
+        # and it has both the coinbase string (scriptSig) and
+        # nSequence fields of the coinbase input zero'd out.
+        cb = self.vtx[0].serialize_without_witness()
+        pos = (4  # nVersion
+            +  1  # len(vin)
+            + 32  # vin[0].prevout.hash
+            +  4) # vin[0].prevout.n
+        if len(cb) >= (pos + 1):
+            pos2 = pos + 1 + cb[pos]
+            if len(cb) >= (pos2 + 4):
+                cb = cb[:pos] + b'\x00' + (4 * b'\x00') + cb[pos2+4:]
+        hashes = [hash256(cb)]
 
         for tx in self.vtx[1:-1]:
             # Calculate the hashes with witness data
