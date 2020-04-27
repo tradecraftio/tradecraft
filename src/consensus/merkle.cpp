@@ -414,9 +414,27 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block)
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
 
-    // The coinbase's witness contains the witness nonce, which cannot be
-    // included under the witness Merkle root.
-    leaves.front() = block.vtx.front()->GetHash();
+    // For compatibility with the existing mining infrastructure,
+    // which expects that updating the coinbase's extranonce field has
+    // no impact on witness commitment in the block-final transaction,
+    // we zero out both the scriptSig and nSequence fields of the
+    // coinbase input.  As a result, either the 4-byte nSequence field
+    // (which has no consensus meaning) or the coinbase string can be
+    // updated by the hasher without having to recompute the witness
+    // commitment.  Using nSequence only would be preferred, since
+    // using the coinbase string adds space, but unfortunately the
+    // coinbase-mtp soft-fork has the side effect of forcing the
+    // coinbase's nSequence value to be set to SEQUENCE_FINAL, at
+    // least until the protocol cleanup hard-fork activates.  In the
+    // meantime, the scriptSig can be used.
+    CMutableTransaction cb(*block.vtx.front());
+    if (!cb.vin.empty()) {
+        cb.vin[0].scriptSig = CScript();
+        cb.vin[0].nSequence = 0;
+    }
+    // The coinbase's witness contains the witness nonce, which cannot
+    // be included under the witness Merkle root.
+    leaves.front() = cb.GetHash();
 
     // The witness Merkle root is placed in the block-final
     // transaction, but it is a Merkle tree of all transactions,
