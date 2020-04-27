@@ -774,6 +774,20 @@ class SegWitTest(FreicoinTestFramework):
         # Test the test -- witness serialization should be different
         assert msg_block(block).serialize() != msg_no_witness_block(block).serialize()
 
+        # Tweak the extranonce (Coinbase's scriptSig).  This should
+        # not change the witness commitment, so the block remains
+        # valid.
+        old_scriptsig = block.vtx[0].vin[0].scriptSig
+        old_hash = block.vtx[0].sha256
+        old_commitment = block.vtx[-1].vout[-1].scriptPubKey
+        block.vtx[0].vin[0].scriptSig = CScript.fromhex(block.vtx[0].vin[0].scriptSig.hex() + '04' + (4 * '00'))
+        assert(block.vtx[0].vin[0].scriptSig != old_scriptsig)
+        block.vtx[0].rehash()
+        assert(block.vtx[0].sha256 != old_hash)
+        add_witness_commitment(block)
+        assert(block.vtx[-1].vout[-1].scriptPubKey == old_commitment)
+        block.solve()
+
         # This empty block should be valid.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
@@ -784,6 +798,20 @@ class SegWitTest(FreicoinTestFramework):
 
         # The commitment should have changed!
         assert block_2.vtx[-1].vout[-1] != block.vtx[-1].vout[-1]
+
+        # Tweak the extranonce (Coinbase's nSequence).  This should
+        # not change the witness commitment, so the block remains
+        # valid (as this is before the coinbase-mtp soft-fork).
+        old_sequence = block_2.vtx[0].vin[0].nSequence
+        old_hash = block_2.vtx[0].sha256
+        old_commitment = block_2.vtx[-1].vout[-1].scriptPubKey
+        block_2.vtx[0].vin[0].nSequence ^= 0xffffffff
+        assert(block_2.vtx[0].vin[0].nSequence != old_sequence)
+        block_2.vtx[0].rehash()
+        assert(block_2.vtx[0].sha256 != old_hash)
+        add_witness_commitment(block_2, nonce=28)
+        assert(block_2.vtx[-1].vout[-1].scriptPubKey == old_commitment)
+        block_2.solve()
 
         # This should also be valid.
         test_witness_block(self.nodes[0], self.test_node, block_2, accepted=True)
