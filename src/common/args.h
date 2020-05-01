@@ -60,6 +60,7 @@ enum class OptionsCategory {
     NODE_RELAY,
     BLOCK_CREATION,
     RPC,
+    STRATUM,
     GUI,
     COMMANDS,
     REGISTER_COMMANDS,
