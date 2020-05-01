@@ -152,11 +152,11 @@ std::optional<std::string> GetQueryParameterFromUri(const char* uri, const std::
 
 /** Event handler closure.
  */
-class HTTPClosure
+class NetEventClosure
 {
 public:
     virtual void operator()() = 0;
-    virtual ~HTTPClosure() = default;
+    virtual ~NetEventClosure() = default;
 };
 
 /** Event class. This can be used either as a cross-thread trigger or as a timer.
