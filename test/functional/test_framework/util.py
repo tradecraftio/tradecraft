@@ -268,6 +268,9 @@ def p2p_port(n):
 def rpc_port(n):
     return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
+def stratum_port(n):
+    return PORT_MIN + (2 * PORT_RANGE) + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+
 def rpc_url(datadir, i, rpchost=None):
     rpc_u, rpc_p = get_auth_cookie(datadir)
     host = '127.0.0.1'
@@ -291,6 +294,7 @@ def initialize_datadir(dirname, n):
         f.write("regtest=1\n")
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
+        f.write("stratumport=" + str(stratum_port(n)) + "\n")
         f.write("listenonion=0\n")
     return datadir
 
