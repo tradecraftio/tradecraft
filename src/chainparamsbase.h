@@ -28,6 +28,7 @@ public:
     const std::string& DataDir() const { return strDataDir; }
     uint16_t RPCPort() const { return m_rpc_port; }
     uint16_t OnionServiceTargetPort() const { return m_onion_service_target_port; }
+    uint16_t StratumPort() const { return (RPCPort() + 1000); }
 
     CBaseChainParams() = delete;
     CBaseChainParams(const std::string& data_dir, uint16_t rpc_port, uint16_t onion_service_target_port)
