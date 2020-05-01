@@ -46,6 +46,7 @@
 #include <script/sigcache.h>
 #include <script/standard.h>
 #include <shutdown.h>
+#include <stratum.h>
 #include <sync.h>
 #include <timedata.h>
 #include <torcontrol.h>
@@ -89,6 +90,7 @@ static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
+static const bool DEFAULT_STRATUM_ENABLE = false;
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -161,6 +163,7 @@ static boost::thread_group threadGroup;
 
 void Interrupt(NodeContext& node)
 {
+    InterruptStratumServer();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -193,6 +196,7 @@ void Shutdown(NodeContext& node)
     StopHTTPRPC();
     StopREST();
     StopRPC();
+    StopStratumServer();
     StopHTTPServer();
     for (const auto& client : node.chain_clients) {
         client->flush();
@@ -581,7 +585,10 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
+    argsman.AddArg("-stratum", "Enable stratum server (default: off)", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
+    argsman.AddArg("-stratumbind=<addr>", "Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::STRATUM);
     argsman.AddArg("-stratumport=<port>", strprintf("Listen for Stratum work requests on <port> (default: %u or testnet: %u)", defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::STRATUM);
+    argsman.AddArg("-stratumallowip=<ip>", "Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
 
 #if HAVE_DECL_DAEMON
     argsman.AddArg("-daemon", "Run in the background as a daemon and accept commands", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -790,6 +797,8 @@ static bool AppInitServers(const util::Ref& context, NodeContext& node)
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
+        return false;
+    if (args.GetBoolArg("-stratum", DEFAULT_STRATUM_ENABLE) && !InitStratumServer(node))
         return false;
     StartRPC();
     node.rpc_interruption_point = RpcInterruptionPoint;
