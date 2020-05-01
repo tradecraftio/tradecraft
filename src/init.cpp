@@ -476,6 +476,9 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
 
+    strUsage += HelpMessageGroup(_("Stratum server options:"));
+    strUsage += HelpMessageOpt("-stratumport=<port>", strprintf(_("Listen for Stratum work requests on <port> (default: %u or testnet: %u)"), BaseParams(CBaseChainParams::MAIN).StratumPort(), BaseParams(CBaseChainParams::TESTNET).StratumPort()));
+
     return strUsage;
 }
 

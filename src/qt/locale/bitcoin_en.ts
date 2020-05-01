@@ -4179,6 +4179,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Listen for Stratum work requests on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Loading banlist...</source>
         <translation type="unfinished"></translation>
@@ -4256,6 +4261,11 @@
     <message>
         <location line="+3"/>
         <source>Starting network threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Stratum server options:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
