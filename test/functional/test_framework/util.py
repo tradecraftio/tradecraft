@@ -280,6 +280,9 @@ def rpc_url(datadir, i, rpchost=None):
             host = rpchost
     return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
 
+def stratum_port(n):
+    return PORT_MIN + (2 * PORT_RANGE) + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+
 # Node functions
 ################
 
@@ -291,6 +294,7 @@ def initialize_datadir(dirname, n):
         f.write("regtest=1\n")
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
+        f.write("stratumport=" + str(stratum_port(n)) + "\n")
         f.write("listenonion=0\n")
     return datadir
 
