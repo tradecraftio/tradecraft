@@ -37,7 +37,7 @@
 static const size_t MAX_HEADERS_SIZE = 8192;
 
 /** HTTP request work item */
-class HTTPWorkItem final : public HTTPClosure
+class HTTPWorkItem final : public NetEventClosure
 {
 public:
     HTTPWorkItem(std::unique_ptr<HTTPRequest> _req, const std::string &_path, const HTTPRequestHandler& _func):
@@ -136,7 +136,7 @@ static struct evhttp* eventHTTP = nullptr;
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
-static std::unique_ptr<WorkQueue<HTTPClosure>> g_work_queue{nullptr};
+static std::unique_ptr<WorkQueue<NetEventClosure>> g_work_queue{nullptr};
 //! Handlers for (sub)paths
 static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
@@ -329,7 +329,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
 }
 
 /** Simple wrapper to set thread name and run work queue */
-static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
+static void HTTPWorkQueueRun(WorkQueue<NetEventClosure>* queue, int worker_num)
 {
     util::ThreadRename(strprintf("httpworker.%i", worker_num));
     queue->Run();
@@ -392,7 +392,7 @@ bool InitHTTPServer()
     int workQueueDepth = std::max((long)gArgs.GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
     LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
 
-    g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth);
+    g_work_queue = std::make_unique<WorkQueue<NetEventClosure>>(workQueueDepth);
     // transfer ownership to eventBase/HTTP via .release()
     eventBase = base_ctr.release();
     eventHTTP = http_ctr.release();
