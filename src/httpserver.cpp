@@ -177,42 +177,39 @@ std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
 std::vector<evhttp_bound_socket *> boundSockets;
 
-/** Check if a network address is allowed to access the HTTP server */
-static bool ClientAllowed(const CNetAddr& netaddr)
+/** Check if a network address is allowed to access the server */
+bool ClientAllowed(const std::vector<CSubNet>& allowed_subnets, const CNetAddr& netaddr)
 {
     if (!netaddr.IsValid())
         return false;
-    for(const CSubNet& subnet : rpc_allow_subnets)
+    for(const CSubNet& subnet : allowed_subnets)
         if (subnet.Match(netaddr))
             return true;
     return false;
 }
 
 /** Initialize ACL list for HTTP server */
-static bool InitHTTPAllowList()
+bool InitSubnetAllowList(const std::string which, std::vector<CSubNet>& allowed_subnets)
 {
-    rpc_allow_subnets.clear();
+    allowed_subnets.clear();
     CNetAddr localv4;
     CNetAddr localv6;
     LookupHost("127.0.0.1", localv4, false);
     LookupHost("::1", localv6, false);
-    rpc_allow_subnets.push_back(CSubNet(localv4, 8));      // always allow IPv4 local subnet
-    rpc_allow_subnets.push_back(CSubNet(localv6));         // always allow IPv6 localhost
-    for (const std::string& strAllow : gArgs.GetArgs("-rpcallowip")) {
+    allowed_subnets.push_back(CSubNet(localv4, 8));      // always allow IPv4 local subnet
+    allowed_subnets.push_back(CSubNet(localv6));         // always allow IPv6 localhost
+    const std::string opt_allowip = "-" + which + "allowip";
+    for (const std::string& strAllow : gArgs.GetArgs(opt_allowip)) {
         CSubNet subnet;
         LookupSubNet(strAllow.c_str(), subnet);
         if (!subnet.IsValid()) {
             uiInterface.ThreadSafeMessageBox(
-                strprintf("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", strAllow),
+                strprintf("Invalid %s subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", opt_allowip, strAllow),
                 "", CClientUIInterface::MSG_ERROR);
             return false;
         }
-        rpc_allow_subnets.push_back(subnet);
+        allowed_subnets.push_back(subnet);
     }
-    std::string strAllowed;
-    for (const CSubNet& subnet : rpc_allow_subnets)
-        strAllowed += subnet.ToString() + " ";
-    LogPrint(BCLog::HTTP, "Allowing HTTP connections from: %s\n", strAllowed);
     return true;
 }
 
@@ -256,7 +253,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
              RequestMethodString(hreq->GetRequestMethod()), hreq->GetURI(), hreq->GetPeer().ToString());
 
     // Early address-based allow check
-    if (!ClientAllowed(hreq->GetPeer())) {
+    if (!ClientAllowed(rpc_allow_subnets, hreq->GetPeer())) {
         hreq->WriteReply(HTTP_FORBIDDEN);
         return;
     }
@@ -317,21 +314,22 @@ static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
     return event_base_got_break(base) == 0;
 }
 
-/** Bind HTTP server to specified addresses */
-static bool HTTPBindAddresses(struct evhttp* http)
+/** Determine what addresses to bind to */
+bool InitEndpointList(const std::string& which, int defaultPort, std::vector<std::pair<std::string, uint16_t> >& endpoints)
 {
-    int defaultPort = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-    std::vector<std::pair<std::string, uint16_t> > endpoints;
+    endpoints.clear();
 
     // Determine what addresses to bind to
-    if (!gArgs.IsArgSet("-rpcallowip")) { // Default to loopback if not allowing external IPs
+    const std::string opt_allowip = "-" + which + "allowip";
+    const std::string opt_bind = "-" + which + "bind";
+    if (!gArgs.IsArgSet(opt_allowip)) { // Default to loopback if not allowing external IPs
         endpoints.push_back(std::make_pair("::1", defaultPort));
         endpoints.push_back(std::make_pair("127.0.0.1", defaultPort));
-        if (gArgs.IsArgSet("-rpcbind")) {
-            LogPrintf("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
+        if (gArgs.IsArgSet(opt_bind)) {
+            LogPrintf("WARNING: option %s was ignored because %s was not specified, refusing to allow everyone to connect\n", opt_bind, opt_allowip);
         }
-    } else if (gArgs.IsArgSet("-rpcbind")) { // Specific bind address
-        for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
+    } else if (gArgs.IsArgSet(opt_bind)) { // Specific bind address
+        for (const std::string& strRPCBind : gArgs.GetArgs(opt_bind)) {
             int port = defaultPort;
             std::string host;
             SplitHostPort(strRPCBind, port, host);
@@ -341,6 +339,19 @@ static bool HTTPBindAddresses(struct evhttp* http)
         endpoints.push_back(std::make_pair("::", defaultPort));
         endpoints.push_back(std::make_pair("0.0.0.0", defaultPort));
     }
+
+    return !endpoints.empty();
+}
+
+/** Bind HTTP server to specified addresses */
+static bool HTTPBindAddresses(struct evhttp* http)
+{
+    int defaultPort = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
+    std::vector<std::pair<std::string, uint16_t> > endpoints;
+
+    // Determine what addresses to bind to
+    if (!InitEndpointList("rpc", defaultPort, endpoints))
+        return false;
 
     // Bind addresses
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
@@ -377,8 +388,13 @@ static void libevent_log_cb(int severity, const char *msg)
 
 bool InitHTTPServer()
 {
-    if (!InitHTTPAllowList())
+    if (!InitSubnetAllowList("rpc", rpc_allow_subnets))
         return false;
+
+    std::string strAllowed;
+    for (const CSubNet& subnet : rpc_allow_subnets)
+        strAllowed += subnet.ToString() + " ";
+    LogPrint(BCLog::HTTP, "Allowing HTTP connections from: %s\n", strAllowed);
 
     if (gArgs.GetBoolArg("-rpcssl", false)) {
         uiInterface.ThreadSafeMessageBox(
