@@ -23,6 +23,7 @@ public:
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
+    int StratumPort() const { return (RPCPort() + 1000); }
 
     CBaseChainParams() = delete;
     CBaseChainParams(const std::string& data_dir, int rpc_port) : nRPCPort(rpc_port), strDataDir(data_dir) {}

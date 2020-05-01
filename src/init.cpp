@@ -521,6 +521,8 @@ void SetupServerArgs()
     hidden_args.emplace_back("-daemon");
 #endif
 
+    gArgs.AddArg("-stratumport=<port>", strprintf(_("Listen for Stratum work requests on <port> (default: %u or testnet: %u)"), defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()), false, OptionsCategory::STRATUM);
+
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
 }
