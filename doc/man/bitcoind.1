@@ -582,9 +582,10 @@ is optional). If <category> is not supplied or if <category> = 1,
 output all debug and trace logging. <category> can be: addrman,
 bench, blockstorage, cmpctblock, coindb, estimatefee, http, i2p,
 ipc, leveldb, libevent, mempool, mempoolrej, net, proxy, prune,
-qt, rand, reindex, rpc, scan, selectcoins, tor, txpackages,
-txreconciliation, util, validation, walletdb, zmq. This option
-can be specified multiple times to output multiple categories.
+qt, rand, reindex, rpc, scan, selectcoins, stratum, tor,
+txpackages, txreconciliation, util, validation, walletdb, zmq.
+This option can be specified multiple times to output multiple
+categories.
 .HP
 \fB\-debugexclude=\fR<category>
 .IP
@@ -795,6 +796,23 @@ subject to empty whitelists.
 Accept command line and JSON\-RPC commands
 .PP
 Stratum server:
+.HP
+\fB\-stratum\fR
+.IP
+Enable stratum server (default: off)
+.HP
+\fB\-stratumallowip=\fR<ip>
+.IP
+Allow Stratum work requests from specified source. Valid for <ip> are a
+single IP (e.g. 1.2.3.4), a network/netmask (e.g.
+1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This
+option can be specified multiple times
+.HP
+\fB\-stratumbind=\fR<addr>
+.IP
+Bind to given address to listen for Stratum work requests. Use
+[host]:port notation for IPv6. This option can be specified
+multiple times (default: bind to all interfaces)
 .HP
 \fB\-stratumport=\fR<port>
 .IP
