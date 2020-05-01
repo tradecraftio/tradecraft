@@ -11,6 +11,8 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/function.hpp>
 
+#include "netbase.h"
+
 static const int DEFAULT_HTTP_THREADS=4;
 static const int DEFAULT_HTTP_WORKQUEUE=16;
 static const int DEFAULT_HTTP_SERVER_TIMEOUT=30;
@@ -19,6 +21,15 @@ struct evhttp_request;
 struct event_base;
 class CService;
 class HTTPRequest;
+
+/** Check if a network address is allowed to access the server */
+bool ClientAllowed(const std::vector<CSubNet>& allowed_subnets, const CNetAddr& netaddr);
+
+/** Initialize ACL list for HTTP server */
+bool InitSubnetAllowList(const std::string which, std::vector<CSubNet>& allowed_subnets);
+
+/** Determine what addresses to bind to. */
+bool InitEndpointList(const std::string& which, int defaultPort, std::vector<std::pair<std::string, uint16_t> >& endpoints);
 
 /** Initialize HTTP server.
  * Call this before RegisterHTTPHandler or EventBase().
