@@ -774,6 +774,9 @@ std::string ArgsManager::GetHelpMessage() const
             case OptionsCategory::CHAINPARAMS:
                 usage += HelpMessageGroup("Chain selection options:");
                 break;
+            case OptionsCategory::STRATUM:
+                usage += HelpMessageGroup("Stratum server:");
+                break;
             case OptionsCategory::GUI:
                 usage += HelpMessageGroup("UI Options:");
                 break;
