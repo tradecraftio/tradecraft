@@ -116,11 +116,11 @@ public:
 
 /** Event handler closure.
  */
-class HTTPClosure
+class NetEventClosure
 {
 public:
     virtual void operator()() = 0;
-    virtual ~HTTPClosure() {}
+    virtual ~NetEventClosure() {}
 };
 
 /** Event class. This can be used either as an cross-thread trigger or as a timer.
