@@ -36,6 +36,7 @@
 #include <script/sigcache.h>
 #include <scheduler.h>
 #include <shutdown.h>
+#include <stratum.h>
 #include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -70,6 +71,7 @@ bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
+static const bool DEFAULT_STRATUM_ENABLE = false;
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
@@ -170,6 +172,7 @@ static CScheduler scheduler;
 
 void Interrupt()
 {
+    InterruptStratumServer();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -201,6 +204,7 @@ void Shutdown()
     StopHTTPRPC();
     StopREST();
     StopRPC();
+    StopStratumServer();
     StopHTTPServer();
     g_wallet_init_interface.Flush();
     StopMapPort();
@@ -521,7 +525,10 @@ void SetupServerArgs()
     hidden_args.emplace_back("-daemon");
 #endif
 
+    gArgs.AddArg("-stratum", _("Enable stratum server (default: off)"), false, OptionsCategory::STRATUM);
+    gArgs.AddArg("-stratumbind=<addr>", _("Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)"), false, OptionsCategory::STRATUM);
     gArgs.AddArg("-stratumport=<port>", strprintf(_("Listen for Stratum work requests on <port> (default: %u or testnet: %u)"), defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()), false, OptionsCategory::STRATUM);
+    gArgs.AddArg("-stratumallowip=<ip>", _("Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times"), false, OptionsCategory::STRATUM);
 
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
@@ -734,6 +741,8 @@ static bool AppInitServers()
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
+        return false;
+    if (gArgs.GetBoolArg("-stratum", DEFAULT_STRATUM_ENABLE) && !InitStratumServer())
         return false;
     StartRPC();
     if (!StartHTTPRPC())
