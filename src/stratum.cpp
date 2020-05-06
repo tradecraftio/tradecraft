@@ -10,8 +10,12 @@
 #include <logging.h>
 #include <netbase.h>
 #include <node/context.h>
+#include <rpc/protocol.h>
+#include <rpc/server.h>
 #include <util/check.h>
 #include <util/system.h>
+
+#include <univalue.h>
 
 #include <string>
 #include <vector>
@@ -56,6 +60,9 @@ static std::map<evconnlistener*, CService> bound_listeners;
 //! Active miners connected to us
 static std::map<bufferevent*, StratumClient> subscriptions;
 
+//! Mapping of stratum method names -> handlers
+static std::map<std::string, std::function<UniValue(StratumClient&, const UniValue&)> > stratum_method_dispatch;
+
 /** Callback to read from a stratum connection. */
 static void stratum_read_cb(bufferevent *bev, void *ctx)
 {
@@ -66,7 +73,58 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
         return;
     }
     StratumClient& client = subscriptions[bev];
-    LogPrint(BCLog::STRATUM, "Received data from stratum connection %s\n", client.GetPeer().ToString());
+    // Get links to the input and output buffers
+    evbuffer *input = bufferevent_get_input(bev);
+    evbuffer *output = bufferevent_get_output(bev);
+    // Process each line of input that we have received
+    char *cstr = 0;
+    size_t len = 0;
+    while ((cstr = evbuffer_readln(input, &len, EVBUFFER_EOL_CRLF))) {
+        std::string line(cstr, len);
+        free(cstr);
+        LogPrint(BCLog::STRATUM, "Received stratum request from %s : %s\n", client.GetPeer().ToString(), line);
+
+        JSONRPCRequest jreq;
+        std::string reply;
+        try {
+            // Parse request
+            UniValue valRequest;
+            if (!valRequest.read(line)) {
+                // Not JSON; is this even a stratum miner?
+                throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
+            }
+            if (!valRequest.isObject()) {
+                // Not a JSON object; don't know what to do.
+                throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
+            }
+            if (valRequest.exists("result")) {
+                // JSON-RPC reply.  Ignore.
+                LogPrint(BCLog::STRATUM, "Ignoring JSON-RPC response\n");
+                continue;
+            }
+            jreq.parse(valRequest);
+
+            // Dispatch to method handler
+            UniValue result = NullUniValue;
+            if (stratum_method_dispatch.count(jreq.strMethod)) {
+                result = stratum_method_dispatch[jreq.strMethod](client, jreq.params);
+            } else {
+                throw JSONRPCError(RPC_METHOD_NOT_FOUND, strprintf("Method '%s' not found", jreq.strMethod));
+            }
+
+            // Compose reply
+            reply = JSONRPCReply(result, NullUniValue, jreq.id);
+        } catch (const UniValue& objError) {
+            reply = JSONRPCReply(NullUniValue, objError, jreq.id);
+        } catch (const std::exception& e) {
+            reply = JSONRPCReply(NullUniValue, JSONRPCError(RPC_INTERNAL_ERROR, e.what()), jreq.id);
+        }
+
+        LogPrint(BCLog::STRATUM, "Sending stratum response to %s : %s", client.GetPeer().ToString(), reply);
+        if (evbuffer_add(output, reply.data(), reply.size())) {
+            LogPrint(BCLog::STRATUM, "Sending stratum response failed. (Reason: %d, '%s')\n", errno, evutil_socket_error_to_string(errno));
+        }
+    }
 }
 
 /** Callback to handle unrecoverable errors in a stratum link. */
