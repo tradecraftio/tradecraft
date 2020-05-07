@@ -36,6 +36,7 @@
 
 #include <univalue.h>
 
+#include <bitset>
 #include <optional>
 #include <string>
 #include <thread>
@@ -125,14 +126,17 @@ struct StratumClient {
     //! The minimum difficulty the client is willing to work on.
     double m_mindiff;
 
+    //! The bits reserved for the client's use in AsicBoost.
+    uint32_t m_version_rolling_mask;
+
     //! The last block index the client was notified of.
     CBlockIndex* m_last_tip;
     //! Set to true during the handling of a message (e.g. "mining.submit") if
     //! new work needs to be generated for the client.
     bool m_send_work;
 
-    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_last_tip(0), m_send_work(false) { GenSecret(); }
-    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_last_tip(0), m_send_work(false) { GenSecret(); }
+    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false) { GenSecret(); }
+    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false) { GenSecret(); }
 
     //! Generate a new random secret for this client.
     void GenSecret();
@@ -478,7 +482,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
          + mining_notify.write()  + "\n";
 }
 
-bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     if (current_work.GetBlock().vtx.empty()) {
         const std::string msg("SubmitBlock: no transactions in block template; unable to submit work");
@@ -532,6 +536,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
     }
 
     CBlockHeader blkhdr(current_work.GetBlock());
+    blkhdr.nVersion = nVersion;
     blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0);
     blkhdr.nTime = nTime;
     blkhdr.nNonce = nNonce;
@@ -541,6 +546,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
     if (CheckProofOfWork(hash, blkhdr.nBits, Params().GetConsensus())) {
         LogPrintf("GOT BLOCK!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
         CBlock block(current_work.GetBlock());
+        block.nVersion = nVersion;
         block.vtx.front() = MakeTransactionRef(std::move(cb));
         if (current_work.m_is_witness_enabled) {
             block.vtx.back() = MakeTransactionRef(std::move(bf));
@@ -656,6 +662,39 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
     return true;
 }
 
+UniValue stratum_mining_configure(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+{
+    const std::string method("mining.configure");
+    BoundParams(method, params, 2, 2);
+
+    UniValue res(UniValue::VOBJ);
+
+    UniValue extensions = params[0].get_array();
+    UniValue config = params[1].get_obj();
+    for (size_t i = 0; i < extensions.size(); ++i) {
+        std::string name = extensions[i].get_str();
+
+        if ("version-rolling" == name) {
+            uint32_t mask = ParseHexInt4(find_value(config, "version-rolling.mask"), "version-rolling.mask");
+            size_t min_bit_count = find_value(config, "version-rolling.min-bit-count").getInt<size_t>();
+            client.m_version_rolling_mask = mask & 0x1fffe000;
+            size_t bit_count = std::bitset<32>(client.m_version_rolling_mask).count();
+            if (bit_count < min_bit_count) {
+                LogPrint(BCLog::STRATUM, "WARNING: version-rolling.min-bit-count (%d) sent by %s is greater than the number of bits availble to the miner (%d), after combining version-rolling masks (%08x); performance will be degraded\n", min_bit_count, client.GetPeer().ToStringAddrPort(), bit_count, client.m_version_rolling_mask);
+            }
+            res.pushKV("version-rolling", true);
+            res.pushKV("version-rolling.mask", HexInt4(client.m_version_rolling_mask));
+            LogPrint(BCLog::STRATUM, "Received version rolling request from %s\n", client.GetPeer().ToStringAddrPort());
+        }
+
+        else {
+            LogPrint(BCLog::STRATUM, "Unrecognized stratum extension '%s' sent by %s\n", name, client.GetPeer().ToStringAddrPort());
+        }
+    }
+
+    return res;
+}
+
 UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     // m_last_recv_time was set to the current time when we started processing
@@ -664,7 +703,7 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     client.m_last_submit_time = client.m_last_recv_time;
 
     const std::string method("mining.submit");
-    BoundParams(method, params, 5, 5);
+    BoundParams(method, params, 5, 6);
     // First parameter is the client username, which is ignored.
 
     JobId job_id(ParseUInt256(params[1], "job_id"));
@@ -680,8 +719,14 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     }
     uint32_t nTime = ParseHexInt4(params[3], "nTime");
     uint32_t nNonce = ParseHexInt4(params[4], "nNonce");
+    uint32_t nVersion = current_work.GetBlock().nVersion;
+    if (params.size() > 5) {
+        uint32_t bits = ParseHexInt4(params[5], "nVersion");
+        nVersion = (nVersion & ~client.m_version_rolling_mask)
+                 | (bits & client.m_version_rolling_mask);
+    }
 
-    SubmitBlock(client, job_id, current_work, extranonce2, nTime, nNonce);
+    SubmitBlock(client, job_id, current_work, extranonce2, nTime, nNonce, nVersion);
 
     return true;
 }
@@ -995,6 +1040,7 @@ bool InitStratumServer(node::NodeContext& node)
 
     stratum_method_dispatch["mining.subscribe"] = stratum_mining_subscribe;
     stratum_method_dispatch["mining.authorize"] = stratum_mining_authorize;
+    stratum_method_dispatch["mining.configure"] = stratum_mining_configure;
     stratum_method_dispatch["mining.submit"] = stratum_mining_submit;
 
     // Start thread to wait for block notifications and send updated
