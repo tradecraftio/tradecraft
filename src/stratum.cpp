@@ -18,6 +18,7 @@
 #include "rpc/server.h"
 #include "serialize.h"
 #include "streams.h"
+#include "sync.h"
 #include "txmempool.h"
 #include "uint256.h"
 #include "util.h"
@@ -33,6 +34,7 @@
 #include <boost/algorithm/string.hpp> // for boost::trim
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
+#include <boost/thread.hpp>
 
 #include <event2/event.h>
 #include <event2/listener.h>
@@ -130,6 +132,9 @@ void UpdateSegwitCommitment(const StratumWork& current_work, CMutableTransaction
     cb_branch = BlockMerkleBranch(block2, 0);
 }
 
+//! Critical seciton guarding access to any of the stratum global state
+static CCriticalSection cs_stratum;
+
 //! List of subnets to allow stratum connections from
 static std::vector<CSubNet> stratum_allow_subnets;
 
@@ -144,6 +149,9 @@ static std::map<std::string, boost::function<UniValue(StratumClient&, const UniV
 
 //! A mapping of job_id -> work templates
 static std::map<uint256, StratumWork> work_templates;
+
+//! A thread to watch for new blocks and send mining notifications
+static boost::thread block_watcher_thread;
 
 std::string HexInt4(uint32_t val)
 {
@@ -548,6 +556,7 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
 static void stratum_read_cb(bufferevent *bev, void *ctx)
 {
     evconnlistener *listener = (evconnlistener*)ctx;
+    LOCK(cs_stratum);
     // Lookup the client record for this connection
     if (!subscriptions.count(bev)) {
         LogPrint(BCLog::STRATUM, "Received read notification for unknown stratum connection 0x%x\n", (size_t)bev);
@@ -631,6 +640,7 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
 static void stratum_event_cb(bufferevent *bev, short what, void *ctx)
 {
     evconnlistener *listener = (evconnlistener*)ctx;
+    LOCK(cs_stratum);
     // Fetch the return address for this connection, for the debug log.
     std::string from("UNKNOWN");
     if (!subscriptions.count(bev)) {
@@ -661,6 +671,7 @@ static void stratum_event_cb(bufferevent *bev, short what, void *ctx)
 /** Callback to accept a stratum connection. */
 static void stratum_accept_conn_cb(evconnlistener *listener, evutil_socket_t fd, sockaddr *address, int socklen, void *ctx)
 {
+    LOCK(cs_stratum);
     // Parse the return address
     CService from;
     from.SetSockAddr(address);
@@ -727,9 +738,74 @@ static bool StratumBindAddresses(event_base* base)
     return !bound_listeners.empty();
 }
 
+/** Watches for new blocks and send updated work to miners. */
+static bool g_shutdown = false;
+void BlockWatcher()
+{
+    boost::unique_lock<boost::mutex> lock(csBestBlock);
+    boost::system_time checktxtime = boost::get_system_time();
+    unsigned int txns_updated_last = 0;
+    while (true) {
+        checktxtime += boost::posix_time::seconds(15);
+        if (!cvBlockChange.timed_wait(lock, checktxtime)) {
+            // Timeout: Check to see if mempool was updated.
+            unsigned int txns_updated_next = mempool.GetTransactionsUpdated();
+            if (txns_updated_last == txns_updated_next)
+                continue;
+            txns_updated_last = txns_updated_next;
+        }
+
+        LOCK(cs_stratum);
+
+        if (g_shutdown) {
+            break;
+        }
+
+        // Either new block, or updated transactions.  Either way,
+        // send updated work to miners.
+        for (auto& subscription : subscriptions) {
+            bufferevent* bev = subscription.first;
+            evbuffer *output = bufferevent_get_output(bev);
+            StratumClient& client = subscription.second;
+            // Ignore clients that aren't authorized yet.
+            if (!client.m_authorized) {
+                continue;
+            }
+            // Ignore clients that are already working on the new block.
+            // Typically this is just the miner that found the block, who was
+            // immediately sent a work update.  This check avoids sending that
+            // work notification again, moments later.  Due to race conditions
+            // there could be more than one miner that have already received an
+            // update, however.
+            if (client.m_last_tip == chainActive.Tip()) {
+                continue;
+            }
+            // Get new work
+            std::string data;
+            try {
+                data = GetWorkUnit(client);
+            } catch (const UniValue& objError) {
+                data = JSONRPCReply(NullUniValue, objError, NullUniValue);
+            } catch (const std::exception& e) {
+                // Some sort of error.  Ignore.
+                std::string msg = strprintf("Error generating updated work for stratum client: %s", e.what());
+                LogPrint(BCLog::STRATUM, "%s\n", msg);
+                data = JSONRPCReply(NullUniValue, JSONRPCError(RPC_INTERNAL_ERROR, msg), NullUniValue);
+            }
+            // Send the new work to the client
+            LogPrint(BCLog::STRATUM, "Sending updated stratum work unit to %s : %s", client.GetPeer().ToString(), data);
+            if (evbuffer_add(output, data.data(), data.size())) {
+                LogPrint(BCLog::STRATUM, "Sending stratum work unit failed. (Reason: %d, '%s')\n", errno, evutil_socket_error_to_string(errno));
+            }
+        }
+    }
+}
+
 /** Configure the stratum server */
 bool InitStratumServer()
 {
+    LOCK(cs_stratum);
+
     if (!InitSubnetAllowList("stratum", stratum_allow_subnets)) {
         LogPrint(BCLog::STRATUM, "Unable to bind stratum server to an endpoint.\n");
         return false;
@@ -757,22 +833,30 @@ bool InitStratumServer()
     stratum_method_dispatch["mining.authorize"] = stratum_mining_authorize;
     stratum_method_dispatch["mining.submit"]    = stratum_mining_submit;
 
+    // Start thread to wait for block notifications and send updated
+    // work to miners.
+    block_watcher_thread = boost::thread(BlockWatcher);
+
     return true;
 }
 
 /** Interrupt the stratum server connections */
 void InterruptStratumServer()
 {
+    LOCK(cs_stratum);
     // Stop listening for connections on stratum sockets
     for (const auto& binding : bound_listeners) {
         LogPrint(BCLog::STRATUM, "Interrupting stratum service on %s\n", binding.second.ToString());
         evconnlistener_disable(binding.first);
     }
+    // Tell the block watching thread to stop
+    g_shutdown = true;
 }
 
 /** Cleanup stratum server network connections and free resources. */
 void StopStratumServer()
 {
+    LOCK(cs_stratum);
     /* Tear-down active connections. */
     for (const auto& subscription : subscriptions) {
         LogPrint(BCLog::STRATUM, "Closing stratum server connection to %s due to process termination\n", subscription.second.GetPeer().ToString());
