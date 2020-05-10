@@ -111,7 +111,7 @@ public:
 
          /**
          * The protocol cleanup rule change is scheduled for
-         * activation on 2 April 2021 at midnight UTC. This is 4PM
+         * activation on 2 June 2022 at midnight UTC. This is 4PM
          * PDT, 7PM EDT, and 9AM JST.  Since the activation time is
          * median-time-past, it'll actually trigger about an hour
          * after this wall-clock time.
@@ -128,7 +128,7 @@ public:
          * releases, and becomes the earliest time at which the hard-fork
          * rules can activate.
          */
-        consensus.protocol_cleanup_activation_time = 1617321600;
+        consensus.protocol_cleanup_activation_time = 1654128000;
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
@@ -263,8 +263,8 @@ public:
         consensus.verify_coinbase_lock_time_timeout = 1554163200;
 
         // Nine months prior to main net
-        // 2 July 2020 00:00:00 UTC
-        consensus.protocol_cleanup_activation_time = 1593648000;
+        // 2 September 2021 00:00:00 UTC
+        consensus.protocol_cleanup_activation_time = 1630540800;
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
