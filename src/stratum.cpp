@@ -52,9 +52,13 @@
 #include <event2/buffer.h>
 
 #include <errno.h>
+#ifdef WIN32
+#include <winsock2.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
+#endif
 
 struct StratumClient
 {
@@ -661,7 +665,7 @@ static void stratum_accept_conn_cb(evconnlistener *listener, evutil_socket_t fd,
     // Disable Nagle's algorithm, so that TCP packets are sent
     // immediately, even if it results in a small packet.
     int one = 1;
-    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char*)&one, sizeof(one));
     // Setup the read and event callbacks to handle receiving requests
     // from the miner and error handling.  A write callback isn't
     // needed because we're not sending enough data to fill buffers.
