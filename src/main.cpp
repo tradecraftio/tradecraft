@@ -3574,8 +3574,16 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
                               ? pindexPrev->GetMedianTimePast()
                               : block.GetBlockTime();
 
-    // Check that all transactions are finalized
-    BOOST_FOREACH(const CTransaction& tx, block.vtx) {
+    // Check that the coinbase is finalized
+    if (!protocol_cleanup) {
+        if (!block.vtx.empty() && !IsFinalTx(block.vtx[0], nHeight, nLockTimeCutoff)) {
+            return state.DoS(10, error("%s: coinbase nSequence is non-final", __func__), REJECT_INVALID, "bad-txns-nonfinal");
+        }
+    }
+
+    // Check that other transactions are finalized
+    for (size_t i = 1; i < block.vtx.size(); ++i) {
+        const CTransaction& tx = block.vtx[i];
         if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
             return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
         }

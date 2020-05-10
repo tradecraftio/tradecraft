@@ -47,6 +47,7 @@ public:
     CBaseMainParams()
     {
         nRPCPort = 8638;
+        nStratumPort = 9638;
     }
 };
 static CBaseMainParams mainParams;
@@ -60,6 +61,7 @@ public:
     CBaseTestNetParams()
     {
         nRPCPort = 18638;
+        nStratumPort = 19638;
         strDataDir = "testnet";
     }
 };
@@ -74,6 +76,7 @@ public:
     CBaseRegTestParams()
     {
         nRPCPort = 28638;
+        nStratumPort = 29638;
         strDataDir = "regtest";
     }
 };
