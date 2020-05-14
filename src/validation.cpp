@@ -3726,14 +3726,14 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
 
     // Validation for witness commitments.
     // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
-    //   coinbase (where 0x0000....0000 is used instead).
+    //   coinbase (where the non-witness hash is used instead, and the scriptSig and nSequence fields are truncated / zero'd)
+    //   and the block-final transaction (where the 33-byte witness commitment is zero'd out).
     // * The coinbase scriptWitness is a stack of a serialized vector of N*32-byte length, where N is the number of hashes in the
     //   (unconstrained) Merkle path from the commitment to the witness tree (0 <= N <= 7).
     // * We build a merkle tree with all those witness hashes as leaves (similar to the hashMerkleRoot in the block header).
-    // * There must be at least one output whose scriptPubKey is a single >=37-byte push, the first 4 bytes of which are
-    //   {0xaa, 0x21, 0xa9, 0xed}, followed by between 0 and 38 unconstrained bytes, then a single byte encoding of the
-    //   path from the commitment root to the witness root, and the final 32 bytes are the commitment root. In case there
-    //   are multiple, the last one is used.
+    // * The block-final transaction, when serialized, ends with a single byte encoding of the path from the commitment root
+    //   to the witness root, the 32-byte commitment root, the 4 bytes {0x49, 0x4a, 0x4b, 0x4c}, and the 8 bytes which of
+    //   the block-final transaction's nLockTime and lock_height fields.
     bool fHaveWitness = false;
     if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT)) {
         uint8_t witnesspath = 0; // Defensively chosen default value to
