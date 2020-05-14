@@ -141,6 +141,7 @@ FREICOIN_CORE_H = \
   script/sign.h \
   script/standard.h \
   script/ismine.h \
+  stratum.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -206,6 +207,7 @@ libfreicoin_server_a_SOURCES = \
   rpc/server.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
+  stratum.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \

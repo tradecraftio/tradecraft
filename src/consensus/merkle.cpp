@@ -310,10 +310,10 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block)
     // be included under the witness Merkle root.
     leaves.front() = cb.GetHash();
 
-    // The witness Merkle root is placed in the block-final transaction, but it
-    // is a Merkle tree of all transactions, including itself.  To avoid this
-    // impossibility, when computing the witness Merkle root the commitment is
-    // set to zero.
+    // The witness Merkle root is placed in the block-final
+    // transaction, but it is a Merkle tree of all transactions,
+    // including itself.  To avoid this impossibility, when computing
+    // the witness Merkle root the commitment is set to zero.
     CDataStream tx(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
     tx << block.vtx.back();
 
@@ -324,11 +324,13 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block)
         && tx[tx.size()-8-2] == 0x49  //    4 bytes for nLockTime
         && tx[tx.size()-8-1] == 0x48) //    4 bytes for lock_height
     {                                 //      (end of transaction)
-        // The witness commitment is set to 0.
+        // Set the witness commitment bytes to 0.
         std::fill_n(tx.end()-8-4-32-1, 33, 0);
     }
-    // The block-final transaction contains no witness data.
-    CHash256().Write((unsigned char*)&tx[0], tx.size()).Finalize(leaves.back().begin());
+    // The block-final transaction never contains any witness data.
+    CHash256()
+        .Write((unsigned char*)&tx[0], tx.size())
+        .Finalize(leaves.back().begin());
 
     for (size_t s = 1; s < block.vtx.size()-1; s++) {
         leaves[s] = block.vtx[s].GetWitnessHash();
