@@ -516,7 +516,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         // minimally encoded.
                         auto param = CScriptNum(vchCount, true, 2).getint();
                         prehashed = (param < 0);
-                        count = std::abs(param);
+                        count = abs(param);
                     } catch (scriptnum_error e) {
                         // param is more than 2 bytes or not minimally encoded
                         return set_error(serror, SCRIPT_ERR_MINIMALDATA);
