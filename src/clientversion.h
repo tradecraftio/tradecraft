@@ -32,7 +32,7 @@
 #define CLIENT_VERSION_MINOR 2
 #define CLIENT_VERSION_REVISION 0
 #define CLIENT_VERSION_PATCH 0
-#define CLIENT_VERSION_BUILD 0
+#define CLIENT_VERSION_BUILD 11780
 
 //! Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE true
@@ -41,7 +41,7 @@
  * Copyright year (2009-this)
  * Todo: update this when changing our copyright comments in the source
  */
-#define COPYRIGHT_YEAR 2019
+#define COPYRIGHT_YEAR 2020
 
 #endif //HAVE_CONFIG_H
 
