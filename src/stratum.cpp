@@ -71,6 +71,8 @@ struct StratumClient
     CBlockIndex* m_last_tip;
     bool m_send_work;
 
+    std::string m_extranonce_req;
+
     StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false) { GenSecret(); }
     StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_nextid(0), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false) { GenSecret(); }
 
@@ -361,7 +363,8 @@ std::string GetWorkUnit(StratumClient& client)
     mining_notify.push_back(Pair("id", client.m_nextid++));
     mining_notify.push_back(Pair("method", "mining.notify"));
 
-    return set_difficulty.write() + "\n"
+    return client.m_extranonce_req
+         + set_difficulty.write() + "\n"
          + mining_notify.write()  + "\n";
 }
 
@@ -594,6 +597,27 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
     }
 
     SubmitBlock(client, job_id, current_work, extranonce2, nTime, nNonce, nVersion);
+
+    return true;
+}
+
+UniValue stratum_mining_extranonce_subscribe(StratumClient& client, const UniValue& params)
+{
+    const std::string k_extranonce_req = std::string()
+        + "{"
+        +     "\"id\":4," // by random dice roll
+        +     "\"method\":\"mining.set_extranonce\","
+        +     "\"params\":["
+        +         "\"\"," // extranonce1
+        +         "4"     // extranonce2.size()
+        +     "]"
+        + "}"
+        + "\n";
+
+    const std::string method("mining.extranonce.subscribe");
+    BoundParams(method, params, 0, 0);
+
+    client.m_extranonce_req = k_extranonce_req;
 
     return true;
 }
@@ -877,6 +901,8 @@ bool InitStratumServer()
     stratum_method_dispatch["mining.authorize"] = stratum_mining_authorize;
     stratum_method_dispatch["mining.configure"] = stratum_mining_configure;
     stratum_method_dispatch["mining.submit"]    = stratum_mining_submit;
+    stratum_method_dispatch["mining.extranonce.subscribe"] =
+        stratum_mining_extranonce_subscribe;
 
     // Start thread to wait for block notifications and send updated
     // work to miners.
