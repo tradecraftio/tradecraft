@@ -2240,7 +2240,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         for (int i = 0; i < 100 && pindex != nullptr; i++)
         {
             int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
-            if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
+            if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && ((pindex->nVersion & ~nExpectedVersion) & 0xe0001fff) != 0)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
