@@ -157,7 +157,9 @@ testScripts = [
     'prioritise_transaction.py',
     'invalidblockrequest.py',
     'invalidtxrequest.py',
-    'p2p-versionbits-warning.py',
+    # Disabled as the alertnotify logic has been removed until it is updated
+    # to handle overt ASICBoost version-rolling:
+#    'p2p-versionbits-warning.py',
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
@@ -194,7 +196,9 @@ testScriptsExt = [
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
-    'forknotify.py',
+    # Disabled as the alertnotify logic has been removed until it is updated
+    # to handle overt ASICBoost version-rolling:
+#    'forknotify.py',
     'invalidateblock.py',
     'maxblocksinflight.py',
     'p2p-acceptblock.py',
