@@ -2554,11 +2554,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             // This state of affairs can potentially happen when performing an
             // upgrade from a prior node version to one which supports
             // validation of block-final transaction rules, but *after* rule
-            // activation. Normal tip validation in init.cpp will halt on this
-            // error and notify that the user that their block database is
-            // corrupted, which is fixed by starting with -reindex=1.
-            return state.DoS(100, error("%s: prior block-final tx hash %s not found; corruption likely!", __func__, view.GetFinalTx().GetHex()),
-                             REJECT_INVALID, "corrupt-db-no-blockfinal-hash", true);
+            // activation.  Normal tip validation in init.cpp will halt on
+            // this error and notify that the user that their block database
+            // is corrupted, which is fixed by starting with -reindex=1.
+            state.SetCorruptionPossible();
+            return AbortNode(state, strprintf("%s: prior block-final tx hash %s not found; corruption likely!", __func__, view.GetFinalTx().GetHex()), _("Database corruption likely.  Try restarting with `-reindex=1`."));
         }
 
         // The output spent by the very first block-final transaction is
