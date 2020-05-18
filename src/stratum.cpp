@@ -567,7 +567,7 @@ UniValue stratum_mining_extranonce_subscribe(StratumClient& client, const UniVal
         + "}"
         + "\n";
 
-    const std::string method("mining.submit");
+    const std::string method("mining.extranonce.subscribe");
     BoundParams(method, params, 0, 0);
 
     client.m_extranonce_req = k_extranonce_req;
