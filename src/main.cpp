@@ -2557,7 +2557,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             // activation. Normal tip validation in init.cpp will halt on this
             // error and notify that the user that their block database is
             // corrupted, which is fixed by starting with -reindex=1.
-            return state.DoS(100, error("%s: prior block-final tx hash not found; corruption likely!", __func__),
+            return state.DoS(100, error("%s: prior block-final tx hash %s not found; corruption likely!", __func__, view.GetFinalTx().GetHex()),
                              REJECT_INVALID, "corrupt-db-no-blockfinal-hash", true);
         }
 
