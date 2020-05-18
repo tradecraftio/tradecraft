@@ -2499,11 +2499,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     // Coordinate enforcement of block-final transaction using versionbits
     // logic.
-    bool enforce_block_final = pindex->pprev && VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BLOCKFINAL, versionbitscache) == THRESHOLD_ACTIVE;
+    bool enforce_block_final = pindex->pprev && IsBlockFinalEnforced(pindex->pprev, chainparams.GetConsensus());
 
     // The very first block after activation has to provide an anyone-can-spend
     // output of a particular form in its coinbase transaction.
-    const bool initial_block_final = enforce_block_final && pindex->pprev->pprev && (VersionBitsState(pindex->pprev->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BLOCKFINAL, versionbitscache) != THRESHOLD_ACTIVE);
+    const bool initial_block_final = enforce_block_final && pindex->pprev->pprev && !IsBlockFinalEnforced(pindex->pprev->pprev, chainparams.GetConsensus());
 
     // Start enforcing WITNESS rules using versionbits logic.
     if (IsWitnessEnabled(pindex->pprev, chainparams.GetConsensus())) {
@@ -3684,6 +3684,12 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
     return true;
 }
 
+bool IsBlockFinalEnforced(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    LOCK(cs_main);
+    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_BLOCKFINAL, versionbitscache) == THRESHOLD_ACTIVE);
+}
+
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     LOCK(cs_main);
@@ -4484,6 +4490,9 @@ bool RewindBlockIndex(const CChainParams& params)
 
     int nHeight = 1;
     while (nHeight <= chainActive.Height()) {
+        if (IsBlockFinalEnforced(chainActive[nHeight - 1], params.GetConsensus()) && pcoinsTip->GetFinalTx().IsNull()) {
+            break;
+        }
         if (IsWitnessEnabled(chainActive[nHeight - 1], params.GetConsensus()) && !(chainActive[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
             break;
         }
