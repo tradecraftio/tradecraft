@@ -62,8 +62,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
         CCoinsMap::iterator itOld = it++;
         mapCoins.erase(itOld);
     }
-    if (!hashBlock.IsNull())
-        batch.Write(DB_BEST_BLOCK, hashBlock);
+    batch.Write(DB_BEST_BLOCK, hashBlock);
 
     LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
     return db.WriteBatch(batch);
