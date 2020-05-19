@@ -173,9 +173,10 @@ bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
 }
 
 uint256 CCoinsViewCache::GetBestBlock() const {
-    if (hashBlock.IsNull())
+    if (!hashBlock) {
         hashBlock = base->GetBestBlock();
-    return hashBlock;
+    }
+    return *hashBlock;
 }
 
 void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
@@ -253,7 +254,7 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
 
 bool CCoinsViewCache::Flush() {
     auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/true)};
-    bool fOk = base->BatchWrite(cursor, hashBlock);
+    bool fOk = base->BatchWrite(cursor, GetBestBlock());
     if (fOk) {
         cacheCoins.clear();
         ReallocateCache();
@@ -265,7 +266,7 @@ bool CCoinsViewCache::Flush() {
 bool CCoinsViewCache::Sync()
 {
     auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/false)};
-    bool fOk = base->BatchWrite(cursor, hashBlock);
+    bool fOk = base->BatchWrite(cursor, GetBestBlock());
     if (fOk) {
         if (m_sentinel.second.Next() != &m_sentinel) {
             /* BatchWrite must clear flags of all entries */
