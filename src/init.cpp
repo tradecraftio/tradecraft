@@ -81,6 +81,7 @@ using namespace std;
 bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
+static const bool DEFAULT_STRATUM_ENABLE = false;
 static const bool DEFAULT_DISABLE_SAFEMODE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 
@@ -492,6 +493,7 @@ std::string HelpMessage(HelpMessageMode mode)
     }
 
     strUsage += HelpMessageGroup(_("Stratum server options:"));
+    strUsage += HelpMessageOpt("-stratum", _("Enable stratum server (default: off)"));
     strUsage += HelpMessageOpt("-stratumbind=<addr>", _("Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)"));
     strUsage += HelpMessageOpt("-stratumport=<port>", strprintf(_("Listen for Stratum work requests on <port> (default: %u or testnet: %u)"), BaseParams(CBaseChainParams::MAIN).StratumPort(), BaseParams(CBaseChainParams::TESTNET).StratumPort()));
     strUsage += HelpMessageOpt("-stratumallowip=<ip>", _("Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times"));
@@ -690,7 +692,7 @@ bool AppInitServers(boost::thread_group& threadGroup)
     RPCServer::OnPreCommand(&OnRPCPreCommand);
     if (!InitHTTPServer())
         return false;
-    if (!InitStratumServer())
+    if (GetBoolArg("-stratum", DEFAULT_STRATUM_ENABLE) && !InitStratumServer())
         return false;
     if (!StartRPC())
         return false;
