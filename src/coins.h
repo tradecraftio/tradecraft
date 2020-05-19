@@ -20,6 +20,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include <boost/optional.hpp>
+
 /**
  * A UTXO entry.
  *
@@ -240,7 +242,7 @@ protected:
      * Make mutable so that we can "fill the cache" even from Get-methods
      * declared as "const".
      */
-    mutable uint256 hashBlock;
+    mutable boost::optional<uint256> hashBlock;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
