@@ -172,10 +172,10 @@ bool CCoinsViewCache::HaveCoinsInCache(const uint256 &txid) const {
 }
 
 uint256 CCoinsViewCache::GetBestBlock() const {
-    if (hashBlock.IsNull()) {
+    if (!hashBlock) {
         hashBlock = base->GetBestBlock();
     }
-    return hashBlock;
+    return *hashBlock;
 }
 
 void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
@@ -183,10 +183,10 @@ void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
 }
 
 uint256 CCoinsViewCache::GetFinalTx() const {
-    if (hashFinalTx.IsNull()) {
+    if (!hashFinalTx) {
         hashFinalTx = base->GetFinalTx();
     }
-    return hashFinalTx;
+    return *hashFinalTx;
 }
 
 void CCoinsViewCache::SetFinalTx(const uint256 &hashFinalTxIn) {
@@ -240,7 +240,7 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
 }
 
 bool CCoinsViewCache::Flush() {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock, hashFinalTx);
+    bool fOk = base->BatchWrite(cacheCoins, GetBestBlock(), GetFinalTx());
     cacheCoins.clear();
     cachedCoinsUsage = 0;
     return fOk;
