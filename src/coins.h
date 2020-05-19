@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include <functional>
+#include <optional>
 #include <unordered_map>
 
 /**
@@ -235,7 +236,7 @@ protected:
      * Make mutable so that we can "fill the cache" even from Get-methods
      * declared as "const".
      */
-    mutable uint256 hashBlock;
+    mutable std::optional<uint256> hashBlock;
     mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
     mutable CCoinsMap cacheCoins;
 
