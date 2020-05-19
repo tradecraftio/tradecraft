@@ -31,6 +31,7 @@
 #include <stdint.h>
 
 #include <boost/foreach.hpp>
+#include <boost/optional.hpp>
 #include <boost/unordered_map.hpp>
 
 /** 
@@ -436,8 +437,8 @@ protected:
      * Make mutable so that we can "fill the cache" even from Get-methods
      * declared as "const".  
      */
-    mutable uint256 hashBlock;
-    mutable uint256 hashFinalTx;
+    mutable boost::optional<uint256> hashBlock;
+    mutable boost::optional<uint256> hashFinalTx;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner CCoins objects. */
