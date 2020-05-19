@@ -151,7 +151,9 @@ testScripts = [
     'invalidblockrequest.py',
     'invalidtxrequest.py',
     'abandonconflict.py --bitcoin-mode',
-    'p2p-versionbits-warning.py',
+    # Disabled as the alertnotify logic has been removed until it is updated
+    # to handle overt ASICBoost version-rolling:
+#    'p2p-versionbits-warning.py',
     'p2p-segwit.py --bitcoin-mode',
     'segwit.py --bitcoin-mode',
     'importprunedfunds.py',
@@ -173,7 +175,9 @@ testScriptsExt = [
     'getblocktemplate_proposals.py',
     'txn_doublespend.py --bitcoin-mode',
     'txn_clone.py --mineblock --bitcoin-mode',
-    'forknotify.py',
+    # Disabled as the alertnotify logic has been removed until it is updated
+    # to handle overt ASICBoost version-rolling:
+#    'forknotify.py',
     'invalidateblock.py',
     'rpcbind_test.py',
     'smartfees.py --bitcoin-mode',
