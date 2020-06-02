@@ -793,6 +793,15 @@ void BlockWatcher()
             if (!client.m_authorized) {
                 continue;
             }
+            // Ignore clients that are already working on the new block.
+            // Typically this is just the miner that found the block, who was
+            // immediately sent a work update.  This check avoids sending that
+            // work notification again, moments later.  Due to race conditions
+            // there could be more than one miner that have already received an
+            // update, however.
+            if (client.m_last_tip == chainActive.Tip()) {
+                continue;
+            }
             // Get new work
             std::string data;
             try {
