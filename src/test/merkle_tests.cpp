@@ -232,6 +232,82 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
     BOOST_CHECK_EQUAL(merkleRootofHashes, blockWitness);
 }
 
+BOOST_AUTO_TEST_CASE(merkle_stable_branch)
+{
+    using std::swap;
+
+    std::string alphabet("abcdefghijklmnopqrstuv");
+    BOOST_CHECK_EQUAL(alphabet.length(), 22); // last index == 0b10101
+
+    uint256 hashZ;
+    CHash256().Write({(const unsigned char*)"z", 1}).Finalize(hashZ);
+    BOOST_CHECK(hashZ == uint256S("ca23f71f669346e53eb7679749b368c9ec09109b798ba542487224b79cd47cc2"));
+
+    std::vector<uint256> leaves;
+    for (auto c : alphabet) {
+        uint256 hash;
+        CHash256().Write({(unsigned char*)&c, 1}).Finalize(hash);
+        leaves.push_back(hash);
+    }
+    BOOST_CHECK_EQUAL(leaves.size(), 22);
+    BOOST_CHECK(leaves[0] == uint256S("d8f244c159278ea8cfffcbe1c463edef33d92d11d36ac3c62efd3eb7ff3a5dbf")); // just check the first hash, of 'a'
+
+    for (uint32_t i = 0; i < leaves.size(); ++i) {
+        std::vector<uint256> old_branch = ComputeMerkleBranch(leaves, i);
+        auto res = ComputeStableMerkleBranch(leaves, i);
+        std::vector<uint256>& new_branch = res.first;
+        BOOST_CHECK_EQUAL(res.second.first, ComputeMerklePathAndMask(new_branch.size(), i).first);
+        BOOST_CHECK_EQUAL(res.second.second, ComputeMerklePathAndMask(new_branch.size(), i).second);
+
+        // Both branches should generate the same Merkle root.
+        auto root = ComputeMerkleRoot(leaves, nullptr);
+        BOOST_CHECK(root == ComputeMerkleRootFromBranch(leaves[i], old_branch, i));
+        auto pathmask = ComputeMerklePathAndMask(new_branch.size(), i);
+        BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, pathmask.first, pathmask.second, nullptr));
+
+        if (i < 16) {
+            // The first 16 branches are <0b100000, and therefore go down the
+            // left-hand side of the tree and have no duplicated hashes.  The
+            // results should therefore be identical with the old API.
+            BOOST_CHECK(old_branch == new_branch);
+
+            // Try replacing the leaf with hashZ
+            swap(leaves[i], hashZ);
+            root = ComputeMerkleRoot(leaves, nullptr);
+            BOOST_CHECK(root == ComputeMerkleRootFromBranch(leaves[i], old_branch, i));
+            auto pathmask = ComputeMerklePathAndMask(new_branch.size(), i);
+            BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, pathmask.first, pathmask.second, nullptr));
+            swap(hashZ, leaves[i]); // revert
+        } else {
+            // All of the remaining branches have at least one duplicated
+            // hash.  The new-style branch is shorter than the old-style
+            // branch because it does not include that hash.
+            BOOST_CHECK_EQUAL(old_branch.size(), 5);
+            switch (i) {
+                case 16: // 0b10000
+                case 17: // 0b10001
+                case 18: // 0b10010
+                case 19: // 0b10011
+                    BOOST_CHECK_EQUAL(new_branch.size(), 4);
+                    break;
+                case 20: // 0b10100
+                case 21: // 0b10101
+                    BOOST_CHECK_EQUAL(new_branch.size(), 3);
+                    break;
+            }
+
+            // And if we swap leaf values, only the new-style branch generates
+            // correct root hashes.
+            swap(leaves[i], hashZ);
+            root = ComputeMerkleRoot(leaves, nullptr);
+            BOOST_CHECK(root != ComputeMerkleRootFromBranch(leaves[i], old_branch, i));
+            auto pathmask = ComputeMerklePathAndMask(new_branch.size(), i);
+            BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, pathmask.first, pathmask.second, nullptr));
+            swap(hashZ, leaves[i]); // revert
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(fast_merkle_branch)
 {
     const std::vector<uint256> leaves = {
