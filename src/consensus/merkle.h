@@ -18,6 +18,28 @@ std::vector<uint256> ComputeMerkleBranch(const std::vector<uint256>& leaves, uin
 uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t position);
 
 /*
+ * Produces or validates a branch proof of a Merkle tree which does NOT
+ * include redundant hashes in the branch proof vector.  The Satoshi Merkle
+ * tree design will duplicate hash values along the right-most branch of the
+ * tree if it is not a power of 2 in size.  In the above APIs, these hashes
+ * are included in the branch proof.  This not only wastes space, but is
+ * problematic because these duplicated hashes are dependent on the leaf value
+ * being proven, so the proof can't be used to recalculate a new root if the
+ * leaf value changes.
+ *
+ * The following API for generating Merkle tree branch proofs does not include
+ * duplicated hashes, so the result is both shorter (if it is along the right-
+ * hand side of an unbalanced tree) and can be safely used to recalculate root
+ * hash values.
+ *
+ * Note that the size of the original tree must be known at validation time.
+ */
+
+std::pair<uint32_t, uint32_t> ComputeMerklePathAndMask(uint32_t branchlen, uint32_t position);
+std::pair<std::vector<uint256>, std::pair<uint32_t, uint32_t> > ComputeStableMerkleBranch(const std::vector<uint256>& leaves, uint32_t position);
+uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path, uint32_t mask, bool* mutated);
+
+/*
  * Has similar API semantics, but produces Merkle roots and validates
  * branches 2.32x as fast as the Satoshi Merkle tree, and without the
  * mutation vulnerability.  ComputeFastMerkleBranch returns a pair
