@@ -44,6 +44,7 @@
 typedef unsigned merklecomputationopts;
 static const merklecomputationopts MERKLE_COMPUTATION_MUTABLE = 0x1;
 static const merklecomputationopts MERKLE_COMPUTATION_FAST    = 0x2;
+static const merklecomputationopts MERKLE_COMPUTATION_STABLE  = 0x4;
 
 uint256 MerkleHash_Hash256(const uint256& left, const uint256& right) {
     return Hash(left, right);
@@ -81,6 +82,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         return;
     }
     bool is_mutable = (flags & MERKLE_COMPUTATION_MUTABLE) != 0;
+    bool is_stable = (flags & MERKLE_COMPUTATION_STABLE) != 0;
     auto MerkleHash = MerkleHash_Hash256;
     if (flags & MERKLE_COMPUTATION_FAST) {
         MerkleHash = MerkleHash_Sha256Midstate;
@@ -138,7 +140,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // If we reach this point, h is an inner value that is not the top.
         // We combine it with itself (Bitcoin's special rule for odd levels in
         // the tree) to produce a higher level one.
-        if (is_mutable && pbranch && matchh) {
+        if (is_mutable && !is_stable && pbranch && matchh) {
             pbranch->push_back(h);
         }
         if (is_mutable) {
@@ -205,6 +207,48 @@ uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint2
     return hash;
 }
 
+std::pair<std::vector<uint256>, std::pair<uint32_t, uint32_t> > ComputeStableMerkleBranch(const std::vector<uint256>& leaves, uint32_t pos) {
+    std::vector<uint256> ret;
+    MerkleComputation(leaves, nullptr, nullptr, pos, &ret, MERKLE_COMPUTATION_MUTABLE|MERKLE_COMPUTATION_STABLE);
+    return {ret, ComputeMerklePathAndMask(ret.size(), pos)};
+}
+
+uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path, uint32_t mask, bool *mutated) {
+    if (mutated) {
+        *mutated = false;
+    }
+    uint256 hash = leaf;
+    for (std::vector<uint256>::const_iterator it = branch.begin(); it != branch.end(); ) {
+        if (mask & 1) {
+            hash = Hash(hash, hash);
+        } else {
+            if (path & 1) {
+                hash = Hash(*it, hash);
+            } else {
+                hash = Hash(hash, *it);
+            }
+            ++it;
+            path >>= 1;
+        }
+        mask >>= 1;
+    }
+    /* Perform any repeated hashes between the last given branch hash and the
+     * next (missing) hash.  The particular use case for this is computing the
+     * root of a subtree, such as the recomputing the block-final transaction
+     * branch of the Merkle tree when the segwit commitment is updated.  In all
+     * practical situations you want these final repeated hashes to be done,
+     * since the result is the hash value which actually shows up in other
+     * branches. */
+    while (mask & 1) {
+        hash = Hash(hash, hash);
+        mask >>= 1;
+    }
+    if (mutated && (path || mask)) {
+        *mutated = true;
+    }
+    return hash;
+}
+
 uint256 ComputeFastMerkleRoot(const std::vector<uint256>& leaves) {
     if (leaves.empty()) {
         return CHashWriter(SER_GETHASH, PROTOCOL_VERSION).GetHash();
@@ -214,9 +258,8 @@ uint256 ComputeFastMerkleRoot(const std::vector<uint256>& leaves) {
     return hash;
 }
 
-std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
-    std::vector<uint256> branch;
-    MerkleComputation(leaves, nullptr, nullptr, position, &branch, MERKLE_COMPUTATION_FAST);
+std::pair<uint32_t, uint32_t> ComputeMerklePathAndMask(uint32_t branchlen, uint32_t position)
+{
     /* Calculate the largest possible size the branch vector can be.
      * This is one more than the zero-based index of the highest set
      * bit. */
@@ -232,8 +275,9 @@ std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vec
      * We calculate the path by dropping the necessary number of
      * most-significant zero bits from the binary representation of
      * position. */
+    uint32_t mask = 0;
     uint32_t path = position;
-    while (max > branch.size()) {
+    while (max > branchlen) {
         /* Find the first clear/zero bit *below* the most significant
          * set bit.  We do this by starting with what we know to be
          * the most-significant set bit, and then working backwards
@@ -249,6 +293,8 @@ std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vec
          * and return. */
         if (i < 0) // Should never happen
             return {};
+        /* Set the i'th bit of the mask. */
+        mask |= ((uint32_t)1) << i;
         /* Bit-fiddle to build two masks: one covering all the bits
          * above the i'th position, and one covering all bits below.
          * Apply both to path and shift the top bits down by one
@@ -257,7 +303,13 @@ std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vec
              |  (path &  ((((uint32_t)1)<< i   )-1));    //      0b00000000000000000000000001111111
         --max;                                           //                                |
     }                                                    //                        i = 7 --^
-    return {branch, path};
+    return {path, mask};
+}
+
+std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
+    std::vector<uint256> branch;
+    MerkleComputation(leaves, nullptr, nullptr, position, &branch, MERKLE_COMPUTATION_FAST);
+    return {branch, ComputeMerklePathAndMask(branch.size(), position).first};
 }
 
 uint256 ComputeFastMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path, bool* invalid) {
