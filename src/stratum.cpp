@@ -134,8 +134,6 @@ std::vector<unsigned char> StratumClient::ExtraNonce1(const BaseHash<uint256>& j
 }
 
 struct StratumWork {
-    //! The block index of the block this work builds on.
-    const CBlockIndex *m_prev_block_index;
     //! The destination of the coinbase transaction's output which claims the
     //! block reward.  Usually this is replaced by the miner's address when
     //! the work is customized, but it is kept when the default credentials
@@ -143,13 +141,20 @@ struct StratumWork {
     CTxDestination m_coinbase_dest;
     //! The block template used to generate this work.
     node::CBlockTemplate m_block_template;
-    //! The merkle branch to the coinbase transaction of the block.
+    // First we generate the segwit commitment for the miner's coinbase with
+    // ComputeFastMerkleBranch.
+    std::vector<uint256> m_cb_wit_branch;
+    // Then we compute the initial right-branch for the block-tx Merkle tree
+    // using ComputeStableMerkleBranch...
+    std::vector<uint256> m_bf_branch;
+    // ...which is appended to the end of m_cb_branch so we can compute the
+    // block's hashMerkleRoot with ComputeMerkleBranch.
     std::vector<uint256> m_cb_branch;
     //! Whether the block template uses segwit.
     bool m_is_witness_enabled;
 
-    StratumWork() : m_prev_block_index(0), m_is_witness_enabled(false) {};
-    StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template);
+    StratumWork() : m_is_witness_enabled(false) {};
+    StratumWork(const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template, bool is_witness_enabled);
 
     //! A more ergonomic way to access the block template.
     CBlock& GetBlock()
@@ -158,32 +163,68 @@ struct StratumWork {
       { return m_block_template.block; }
 };
 
-StratumWork::StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template)
-    : m_prev_block_index(prev_block_index)
-    , m_coinbase_dest(coinbase_dest)
+StratumWork::StratumWork(const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template, bool is_witness_enabled)
+    : m_coinbase_dest(coinbase_dest)
     , m_block_template(block_template)
+    , m_is_witness_enabled(is_witness_enabled)
 {
-    m_is_witness_enabled = DeploymentActiveAt(*prev_block_index, chainman, Consensus::DEPLOYMENT_SEGWIT);
-    if (!m_is_witness_enabled) {
-        m_cb_branch = BlockMerkleBranch(m_block_template.block, 0);
+    // How we use the various branch fields depends on whether segregated
+    // witness is active.  If segwit is not active, m_cb_branch contains the
+    // Merkle proof for the coinbase.  If segwit is active, we also use this
+    // field in a different way, so we compute it in both branches.
+    std::vector<uint256> leaves;
+    for (const auto& tx : m_block_template.block.vtx) {
+        leaves.push_back(tx->GetHash());
+    }
+    m_cb_branch = ComputeMerkleBranch(leaves, 0);
+    // If segwit is not active, we're done.  Otherwise...
+    if (m_is_witness_enabled) {
+        // The final hash in m_cb_branch is the right-hand branch from
+        // the root, which contains the block-final transaction (and
+        // therefore the segwit commitment).
+        m_cb_branch.pop_back();
+        // To calculate the initial right-side hash, we need the path
+        // to the root from the coinbase's position.  Again, the final
+        // hash won't be known ahead of time because it depends on the
+        // contents of the coinbase (which depends on both the miner's
+        // payout address and the specific extranonce2 used).
+        m_bf_branch = ComputeStableMerkleBranch(leaves, leaves.size()-1).first;
+        m_bf_branch.pop_back();
+        // To calculate the segwit commitment for the block-final tx,
+        // we use a proof from the coinbase's position of the witness
+        // Merkle tree.
+        for (int i = 1; i < m_block_template.block.vtx.size()-1; ++i) {
+            leaves[i] = m_block_template.block.vtx[i]->GetWitnessHash();
+        }
+        CMutableTransaction bf(*m_block_template.block.vtx.back());
+        CScript& scriptPubKey = bf.vout.back().scriptPubKey;
+        if (scriptPubKey.size() < 37) {
+            throw std::runtime_error("Expected last output of block-final transaction to have enough room for segwit commitment, but alas.");
+        }
+        std::fill_n(&scriptPubKey[scriptPubKey.size()-37], 33, 0x00);
+        leaves.back() = bf.GetHash();
+        m_cb_wit_branch = ComputeFastMerkleBranch(leaves, 0).first;
     }
 };
 
 void UpdateSegwitCommitment(const ChainstateManager& chainman, const StratumWork& current_work, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch)
 {
-    CBlock block2(current_work.GetBlock());
-    block2.vtx.front() = MakeTransactionRef(std::move(cb));
-    // If the block has only the coinbase transaction, we don't want to
-    // overwrite it.
-    if (block2.vtx.size() > 1) {
-        block2.vtx.back() = MakeTransactionRef(std::move(bf));
-    }
-    // Generate new commitment:
-    chainman.GenerateCoinbaseCommitment(block2, current_work.m_prev_block_index);
-    // Save results from temporary block structure:
-    cb = CMutableTransaction(*block2.vtx.front());
-    bf = CMutableTransaction(*block2.vtx.back());
-    cb_branch = BlockMerkleBranch(block2, 0);
+    // Calculate witnessroot
+    CMutableTransaction cb2(cb);
+    cb2.vin[0].scriptSig = CScript();
+    cb2.vin[0].nSequence = 0;
+    auto witnessroot = ComputeFastMerkleRootFromBranch(cb2.GetHash(), current_work.m_cb_wit_branch, 0, nullptr);
+
+    // Build block-final tx
+    CScript& scriptPubKey = bf.vout.back().scriptPubKey;
+    scriptPubKey[scriptPubKey.size()-37] = 0x01;
+    std::copy(witnessroot.begin(),
+              witnessroot.end(),
+              &scriptPubKey[scriptPubKey.size()-36]);
+
+    // Calculate right-branch
+    auto pathmask = ComputeMerklePathAndMask(current_work.m_bf_branch.size() + 1, current_work.GetBlock().vtx.size() - 1);
+    cb_branch.push_back(ComputeStableMerkleRootFromBranch(bf.GetHash(), current_work.m_bf_branch, pathmask.first, pathmask.second, nullptr));
 }
 
 //! The default address to use for mining rewards if no address is provided.
@@ -405,7 +446,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
         new_work->block.hashMerkleRoot = BlockMerkleRoot(new_work->block);
 
         job_id = JobId(new_work->block.GetHash());
-        work_templates[job_id] = StratumWork(*g_context->chainman, tip_new, coinbase_dest, *new_work);
+        work_templates[job_id] = StratumWork(coinbase_dest, *new_work, new_work->block.vtx[0]->HasWitness());
         tip = tip_new;
 
         LogPrint(BCLog::STRATUM, "New stratum block template (%d total): %s\n", work_templates.size(), HexStr(job_id));
