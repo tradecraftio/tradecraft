@@ -560,6 +560,16 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
 
     UniValue msg(UniValue::VARR);
 
+    // Some mining proxies (e.g. Nicehash) reject connections that don't send
+    // a reasonable difficulty on first connection.  The actual value will be
+    // overridden when the miner is authorized and work is delivered.  Oh, and
+    // for reasons unknown it is sent in serialized float format rather than
+    // as a numeric value...
+    UniValue set_difficulty(UniValue::VARR);
+    set_difficulty.push_back("mining.set_difficulty");
+    set_difficulty.push_back("1e+06"); // Will be overriden by later
+    msg.push_back(set_difficulty);     // work delivery messages.
+
     UniValue notify(UniValue::VARR);
     notify.push_back("mining.notify");
     notify.push_back("ae6812eb4cd7735a302a8a9dd95cf71f");
