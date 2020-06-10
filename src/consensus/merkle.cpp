@@ -57,10 +57,10 @@
        root.
 */
 
-typedef enum {
-    MERKLE_COMPUTATION_MUTABLE = 0x1,
-    MERKLE_COMPUTATION_FAST    = 0x2
-} merklecomputationopts;
+typedef unsigned merklecomputationopts;
+static merklecomputationopts MERKLE_COMPUTATION_MUTABLE = 0x1;
+static merklecomputationopts MERKLE_COMPUTATION_FAST    = 0x2;
+static merklecomputationopts MERKLE_COMPUTATION_STABLE  = 0x4;
 
 void MerkleHash_Hash256(uint256& parent, const uint256& left, const uint256& right) {
     CHash256().Write(left.begin(), 32).Write(right.begin(), 32).Finalize(parent.begin());
@@ -92,6 +92,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         return;
     }
     bool is_mutable = flags & MERKLE_COMPUTATION_MUTABLE;
+    bool is_stable = flags & MERKLE_COMPUTATION_STABLE;
     auto MerkleHash = MerkleHash_Hash256;
     if (flags & MERKLE_COMPUTATION_FAST) {
         MerkleHash = MerkleHash_Sha256Midstate;
@@ -149,7 +150,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // If we reach this point, h is an inner value that is not the top.
         // We combine it with itself (Freicoin's special rule for odd levels in
         // the tree) to produce a higher level one.
-        if (is_mutable && pbranch && matchh) {
+        if (is_mutable && !is_stable && pbranch && matchh) {
             pbranch->push_back(h);
         }
         if (is_mutable) {
@@ -199,6 +200,32 @@ uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint2
             hash = Hash(BEGIN(hash), END(hash), BEGIN(*it), END(*it));
         }
         nIndex >>= 1;
+    }
+    return hash;
+}
+
+std::vector<uint256> ComputeStableMerkleBranch(const std::vector<uint256>& leaves, uint32_t pos) {
+    std::vector<uint256> ret;
+    MerkleComputation(leaves, nullptr, nullptr, pos, &ret, MERKLE_COMPUTATION_MUTABLE|MERKLE_COMPUTATION_STABLE);
+    return ret;
+}
+
+uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t pos, uint32_t size) {
+    --size;
+    uint256 hash = leaf;
+    for (std::vector<uint256>::const_iterator it = branch.begin(); it != branch.end(); ) {
+        if (size && (pos == size) && !(pos & 1)) {
+            hash = Hash(BEGIN(hash), END(hash), BEGIN(hash), END(hash));
+        } else {
+            if (pos & 1) {
+                hash = Hash(BEGIN(*it), END(*it), BEGIN(hash), END(hash));
+            } else {
+                hash = Hash(BEGIN(hash), END(hash), BEGIN(*it), END(*it));
+            }
+            ++it;
+        }
+        pos >>= 1;
+        size >>= 1;
     }
     return hash;
 }
