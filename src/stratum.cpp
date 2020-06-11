@@ -509,13 +509,15 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
     // params[1] is the subscription ID for reconnect, which we
     // currently do not support.
 
-    UniValue ret(UniValue::VARR);
+    UniValue msg(UniValue::VARR);
 
     UniValue notify(UniValue::VARR);
     notify.push_back("mining.notify");
     notify.push_back("ae6812eb4cd7735a302a8a9dd95cf71f");
-    ret.push_back(notify);
+    msg.push_back(notify);
 
+    UniValue ret(UniValue::VARR);
+    ret.push_back(msg);
     ret.push_back("");          //        extranonce1
     ret.push_back(UniValue(4)); // sizeof(extranonce2)
 
