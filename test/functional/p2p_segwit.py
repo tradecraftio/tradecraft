@@ -251,7 +251,7 @@ class SegWitTest(FreicoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            final_tx = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            final_tx = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})['finaltx']['prevout']
             add_final_tx(final_tx, block)
         except KeyError:
             pass
@@ -682,7 +682,7 @@ class SegWitTest(FreicoinTestFramework):
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
         assert softfork_active(self.nodes[0], 'finaltx')
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
+        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx","auxpow"]})
         assert('finaltx' in gbt)
         assert('prevout' in gbt['finaltx'])
         assert not softfork_active(self.nodes[0], 'segwit')
