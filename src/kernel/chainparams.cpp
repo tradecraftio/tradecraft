@@ -108,6 +108,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1587038400; // April 16, 2020
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
+        // Deployment of merge mining
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = 1591056000; // June 2nd, 2020.
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 1622592000; // June 2nd, 2021.
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].min_activation_height = 0; // No activation delay
+
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000003cda5268b682c9ebd2b");
         consensus.defaultAssumeValid = uint256S("0x000000000092ed109a133fc773421f83796aff1f6a5521256c425f39c660b60e"); // 383040
 
@@ -295,6 +301,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 1562068800; // July 2, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1622592000; // June 2nd, 2021.
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
+
+        // Deployment of merge mining
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = 1591056000; // June 2nd, 2020.
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 1622592000; // June 2nd, 2021.
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000b5f8d7a875bd74");
         consensus.defaultAssumeValid = uint256S("0x00000000000017c5d079dfbe901cb7d0fae2a8eafd91be4e98f23481c73921d5"); // 2016
@@ -485,6 +497,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1719878400; // July 2, 2024
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
+        // Deployment of merge mining
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = 1662145200; // September 2, 2022
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 1783018800; // July 2, 2026
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].min_activation_height = 0; // No activation delay
+
         // message start is defined as the first 4 bytes of the sha256d of the block script
         HashWriter h{};
         h << consensus.signet_challenge;
@@ -561,6 +579,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
+
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
