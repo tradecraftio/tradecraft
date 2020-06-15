@@ -24,6 +24,7 @@
  * ValidDeployment check */
 
 static_assert(ValidDeployment(Consensus::DEPLOYMENT_FINALTX), "sanity check of DeploymentPos failed (FINALTX not valid)");
+static_assert(ValidDeployment(Consensus::DEPLOYMENT_AUXPOW), "sanity check of DeploymentPos failed (AUXPOW not valid)");
 static_assert(ValidDeployment(Consensus::DEPLOYMENT_TESTDUMMY), "sanity check of DeploymentPos failed (TESTDUMMY not valid)");
 static_assert(!ValidDeployment(Consensus::MAX_VERSION_BITS_DEPLOYMENTS), "sanity check of DeploymentPos failed (MAX value considered valid)");
 static_assert(!ValidDeployment(static_cast<Consensus::BuriedDeployment>(Consensus::DEPLOYMENT_TESTDUMMY)), "sanity check of BuriedDeployment failed (overlaps with DeploymentPos)");
