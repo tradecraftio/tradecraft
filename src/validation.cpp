@@ -3422,6 +3422,12 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
     return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == ThresholdState::ACTIVE);
 }
 
+bool IsMergeMiningEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    LOCK(cs_main);
+    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_AUXPOW, versionbitscache) == ThresholdState::ACTIVE);
+}
+
 bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* hash)
 {
     // The witness commitment is in the block-final transaction, so there must

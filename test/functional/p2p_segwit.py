@@ -230,7 +230,7 @@ class SegWitTest(FreicoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            final_tx = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit']})['finaltx']['prevout']
+            final_tx = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})['finaltx']['prevout']
             add_final_tx(final_tx, block)
         except KeyError:
             pass
