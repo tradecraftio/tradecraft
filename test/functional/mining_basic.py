@@ -193,7 +193,7 @@ class MiningTest(FreicoinTestFramework):
         assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {
             'data': bad_block_sn.hex(),
             'mode': 'proposal',
-            'rules': ['segwit'],
+            'rules': ['segwit', 'auxpow'],
         })
 
         self.log.info("getblocktemplate: Test bad bits")
