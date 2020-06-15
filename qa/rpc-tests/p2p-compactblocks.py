@@ -146,7 +146,7 @@ class CompactBlocksTest(FreicoinTestFramework):
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
         block.nVersion = 4
         try:
-            finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx','auxpow']})['finaltx']['prevout']
         except:
             finaltx_prevout = []
         if finaltx_prevout:
