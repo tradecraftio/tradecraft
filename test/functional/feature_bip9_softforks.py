@@ -108,7 +108,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
         assert_equal(self.get_bip9_status(bipName)['since'], 0)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})
         assert(bipName not in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
@@ -123,7 +123,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         assert_equal(self.get_bip9_status(bipName)['since'], 144)
         assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
         assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
         assert_equal(tmpl['vbrequired'], 0)
@@ -171,7 +171,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         assert_equal(self.get_bip9_status(bipName)['since'], 144)
         assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
         assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
         assert_equal(tmpl['vbrequired'], 0)
@@ -198,7 +198,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
         assert_equal(self.get_bip9_status(bipName)['since'], 576)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})
         assert(bipName not in tmpl['rules'])
 
         # Test 4
@@ -208,7 +208,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
         assert_equal(self.get_bip9_status(bipName)['since'], 576)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})
         assert(bipName not in tmpl['rules'])
 
         # Test 5
@@ -235,7 +235,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'active')
         assert_equal(self.get_bip9_status(bipName)['since'], 720)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})
         assert(bipName in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)

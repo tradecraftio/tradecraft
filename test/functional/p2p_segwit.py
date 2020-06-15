@@ -151,7 +151,7 @@ class SegWitTest(FreicoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            final_tx = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit']})['finaltx']['prevout']
+            final_tx = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})['finaltx']['prevout']
             add_final_tx(final_tx, block)
         except KeyError:
             pass
@@ -1715,7 +1715,7 @@ class SegWitTest(FreicoinTestFramework):
         self.log.info("Testing getblocktemplate setting of segwit versionbit (before lockin)")
         # Node0 is segwit aware, node2 is not.
         for node in [self.nodes[0], self.nodes[2]]:
-            gbt_results = node.getblocktemplate()
+            gbt_results = node.getblocktemplate({'rules':['auxpow']})
             block_version = gbt_results['version']
             # If we're not indicating segwit support, we should not be signalling
             # for segwit activation.
@@ -1731,7 +1731,7 @@ class SegWitTest(FreicoinTestFramework):
         self.nodes[2].setmocktime(int(time.time())+10)
 
         for node in [self.nodes[0], self.nodes[2]]:
-            gbt_results = node.getblocktemplate({"rules" : ["finaltx","segwit"]})
+            gbt_results = node.getblocktemplate({"rules" : ["finaltx","segwit","auxpow"]})
             block_version = gbt_results['version']
             if node == self.nodes[2]:
                 # If this is a non-segwit node, we should still not get a
