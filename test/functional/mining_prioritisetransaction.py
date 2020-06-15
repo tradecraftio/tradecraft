@@ -305,14 +305,14 @@ class PrioritiseTransactionTest(FreicoinTestFramework):
         # getblocktemplate to (eventually) return a new block.
         mock_time = int(time.time())
         self.nodes[0].setmocktime(mock_time)
-        template = self.nodes[0].getblocktemplate({'rules': ['segwit','finaltx']})
+        template = self.nodes[0].getblocktemplate({'rules': ['segwit','finaltx','auxpow']})
         self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=-int(self.relayfee*COIN))
 
         # Calling prioritisetransaction with the inverse amount should delete its prioritisation entry
         assert tx_id not in self.nodes[0].getprioritisedtransactions()
 
         self.nodes[0].setmocktime(mock_time+10)
-        new_template = self.nodes[0].getblocktemplate({'rules': ['segwit','finaltx']})
+        new_template = self.nodes[0].getblocktemplate({'rules': ['segwit','finaltx','auxpow']})
 
         assert template != new_template
 
