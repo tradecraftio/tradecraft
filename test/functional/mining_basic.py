@@ -60,7 +60,7 @@ class MiningTest(FreicoinTestFramework):
 
         # Mine a block to leave initial block download
         node.generate(1)
-        tmpl = node.getblocktemplate({'rules':['segwit']})
+        tmpl = node.getblocktemplate({'rules':['segwit','auxpow']})
         self.log.info("getblocktemplate: Test capability advertised")
         assert 'proposal' in tmpl['capabilities']
         assert 'coinbasetxn' not in tmpl
@@ -124,7 +124,7 @@ class MiningTest(FreicoinTestFramework):
         bad_block_sn = bytearray(block.serialize())
         assert_equal(bad_block_sn[TX_COUNT_OFFSET], 2)
         bad_block_sn[TX_COUNT_OFFSET] += 1
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'rules': ['segwit'], 'data': b2x(bad_block_sn), 'mode': 'proposal'})
+        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'rules': ['segwit','auxpow'], 'data': b2x(bad_block_sn), 'mode': 'proposal'})
 
         self.log.info("getblocktemplate: Test bad bits")
         bad_block = copy.deepcopy(block)

@@ -127,7 +127,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         self.log.info("\'%s\' begins in DEFINED state" % bipName)
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
         assert_equal(self.get_bip9_status(bipName)['since'], 0)
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert(bipName not in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])
         assert('finaltx' not in tmpl)
@@ -141,7 +141,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         assert_equal(self.get_bip9_status(bipName)['since'], 144)
         assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
         assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
         assert_equal(tmpl['vbrequired'], 0)
@@ -186,7 +186,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         assert_equal(self.get_bip9_status(bipName)['since'], 144)
         assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
         assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
         assert_equal(tmpl['vbrequired'], 0)
@@ -209,7 +209,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
         assert_equal(self.get_bip9_status(bipName)['since'], 576)
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert(bipName not in tmpl['rules'])
 
         self.log.info("Test 8: 143 more version 536870913 blocks (waiting period-1)")
@@ -217,7 +217,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
         assert_equal(self.get_bip9_status(bipName)['since'], 576)
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert(bipName not in tmpl['rules'])
         assert(bipName in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
@@ -236,7 +236,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         self.tip = test_blocks[-1][0].sha256 # Hash has changed
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'active')
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert('finaltx' in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
@@ -264,13 +264,13 @@ class BlockFinalTxTest(FreicoinTestFramework):
         self.log.info("Test 12: Generate 98 blocks (maturity period - 2)")
         self.generate_blocks(98, 4)
 
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert('finaltx' not in tmpl)
 
         self.log.info("Test 13: Generate one more block to allow non_protected_output to mature, which causes the block-final transaction to be required in the next block.")
         self.generate_blocks(1, 4)
 
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert('finaltx' in tmpl)
         assert_equal(len(tmpl['finaltx']['prevout']), 1)
         assert_equal(tmpl['finaltx']['prevout'][0]['txid'], encode(ser_uint256(non_protected_output.hash)[::-1], 'hex_codec').decode('ascii'))
@@ -310,7 +310,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
         self.tip = block.sha256
         self.height += 1
 
-        tmpl = node.getblocktemplate({'rules':['segwit',bipName]})
+        tmpl = node.getblocktemplate({'rules':['segwit',bipName,'auxpow']})
         assert('finaltx' in tmpl)
         assert_equal(len(tmpl['finaltx']['prevout']), 1)
         assert_equal(tmpl['finaltx']['prevout'][0]['txid'], encode(ser_uint256(tx_final.sha256)[::-1], 'hex_codec').decode('ascii'))

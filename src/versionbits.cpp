@@ -38,6 +38,11 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.dependencies =*/ {
             Consensus::DEPLOYMENT_FINALTX
         },
+    },
+    {
+        /*.name =*/ "auxpow",
+        /*.gbt_force =*/ false,
+        /*.dependencies =*/ {},
     }
 };
 
