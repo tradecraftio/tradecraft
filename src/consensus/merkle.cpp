@@ -210,7 +210,13 @@ std::vector<uint256> ComputeStableMerkleBranch(const std::vector<uint256>& leave
     return ret;
 }
 
-uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t pos, uint32_t size) {
+uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t pos, uint32_t size, bool *mutated) {
+    if (mutated) {
+        *mutated = false;
+    }
+    if (mutated && pos >= size) {
+        *mutated = true;
+    }
     --size;
     uint256 hash = leaf;
     for (std::vector<uint256>::const_iterator it = branch.begin(); it != branch.end(); ) {
@@ -238,6 +244,9 @@ uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector
         hash = Hash(BEGIN(hash), END(hash), BEGIN(hash), END(hash));
         pos >>= 1;
         size >>= 1;
+    }
+    if (mutated && (pos || size)) {
+        *mutated = true;
     }
     return hash;
 }

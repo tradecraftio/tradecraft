@@ -187,7 +187,7 @@ void UpdateSegwitCommitment(const StratumWork& current_work, CMutableTransaction
 
     // Calculate right-branch
     uint32_t size = current_work.GetBlock().vtx.size();
-    cb_branch.push_back(ComputeStableMerkleRootFromBranch(bf.GetHash(), current_work.m_bf_branch, size - 1, size));
+    cb_branch.push_back(ComputeStableMerkleRootFromBranch(bf.GetHash(), current_work.m_bf_branch, size - 1, size, nullptr));
 }
 
 //! Critical seciton guarding access to any of the stratum global state

@@ -52,7 +52,7 @@ uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint2
  */
 
 std::vector<uint256> ComputeStableMerkleBranch(const std::vector<uint256>& leaves, uint32_t position);
-uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t position, uint32_t size);
+uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t position, uint32_t size, bool* mutated);
 
 /*
  * Has similar API semantics, but produces Merkle roots and validates
