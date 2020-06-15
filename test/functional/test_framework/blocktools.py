@@ -68,7 +68,7 @@ TIME_GENESIS_BLOCK = 1356123600
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\x4b\x4a\x49\x48"
 
-NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
+NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit","auxpow"]}
 
 
 def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None):
@@ -97,7 +97,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
 
 def get_final_tx_info(node):
     try:
-        finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+        finaltx_prevout = node.getblocktemplate({'rules':['finaltx','segwit','auxpow']})['finaltx']['prevout']
     except KeyError:
         finaltx_prevout = []
     return finaltx_prevout

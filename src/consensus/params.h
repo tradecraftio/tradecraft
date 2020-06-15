@@ -32,6 +32,7 @@ enum DeploymentPos
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
     DEPLOYMENT_FINALTX, // Deployment of block-final miner commitment transaction.
+    DEPLOYMENT_AUXPOW, // Deployment of merge mining.
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
