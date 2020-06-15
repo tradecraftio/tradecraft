@@ -118,7 +118,7 @@ class SegWitTest(FreicoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit','auxpow']})
         assert tmpl['sizelimit'] == 1000000
         assert 'weightlimit' not in tmpl
         assert tmpl['sigoplimit'] == 20000
@@ -203,7 +203,7 @@ class SegWitTest(FreicoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit','auxpow']})
         assert tmpl['sizelimit'] >= 3999577  # actual maximum size is lower due to minimum mandatory non-witness data
         assert tmpl['weightlimit'] == 4000000
         assert tmpl['sigoplimit'] == 80000
@@ -260,7 +260,7 @@ class SegWitTest(FreicoinTestFramework):
         assert txid3 in self.nodes[0].getrawmempool()
 
         # Check that getblocktemplate includes all transactions.
-        template = self.nodes[0].getblocktemplate({"rules": ["segwit"]})
+        template = self.nodes[0].getblocktemplate({"rules": ["segwit","auxpow"]})
         template_txids = [t['txid'] for t in template['transactions']]
         assert txid1 in template_txids
         assert txid2 in template_txids
