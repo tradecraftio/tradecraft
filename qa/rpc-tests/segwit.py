@@ -106,14 +106,14 @@ class SegWitTest(FreicoinTestFramework):
 
     def success_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], Decimal("49.998"), sign, redeem_script)
-        has_block_final = "blockfinal" in node.getblocktemplate({'rules':['segwit']})
+        has_block_final = "blockfinal" in node.getblocktemplate({'rules':['segwit','auxpow']})
         block = node.generate(1)
         assert_equal(len(node.getblock(block[0])["tx"]), 2 + has_block_final)
         sync_blocks(self.nodes)
 
     def skip_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], Decimal("49.998"), sign, redeem_script)
-        has_block_final = "blockfinal" in node.getblocktemplate({'rules':['segwit']})
+        has_block_final = "blockfinal" in node.getblocktemplate({'rules':['segwit','auxpow']})
         block = node.generate(1)
         assert_equal(len(node.getblock(block[0])["tx"]), 1 + has_block_final)
         sync_blocks(self.nodes)
@@ -238,7 +238,7 @@ class SegWitTest(FreicoinTestFramework):
 
         print("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})
         assert(tmpl['sigoplimit'] == 80000)
         assert(tmpl['transactions'][0]['txid'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 8)
