@@ -19,7 +19,7 @@ from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import sha256, ripemd160, fastHash256, CTransaction, CTxIn, COutPoint, CTxOut, COIN, ToHex, FromHex
 from test_framework.address import script_to_p2sh, key_to_p2pkh
-from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, hash256, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG
+from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, hash256, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE
 from io import BytesIO
 
 NODE_0 = 0
@@ -96,14 +96,14 @@ class SegWitTest(FreicoinTestFramework):
 
     def success_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], Decimal("49.998"), sign, redeem_script)
-        has_block_final = "finaltx" in node.getblocktemplate({'rules':['finaltx','segwit']})
+        has_block_final = "finaltx" in node.getblocktemplate({'rules':['finaltx','segwit','auxpow']})
         block = node.generate(1)
         assert_equal(len(node.getblock(block[0])["tx"]), 2 + has_block_final)
         sync_blocks(self.nodes)
 
     def skip_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], Decimal("49.998"), sign, redeem_script)
-        has_block_final = "finaltx" in node.getblocktemplate({'rules':['finaltx','segwit']})
+        has_block_final = "finaltx" in node.getblocktemplate({'rules':['finaltx','segwit','auxpow']})
         block = node.generate(1)
         assert_equal(len(node.getblock(block[0])["tx"]), 1 + has_block_final)
         sync_blocks(self.nodes)
@@ -121,13 +121,13 @@ class SegWitTest(FreicoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx','auxpow']})
         assert(tmpl['sizelimit'] == 1000000)
         assert('weightlimit' not in tmpl)
         assert(tmpl['sigoplimit'] == 20000)
         assert(tmpl['transactions'][0]['hash'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 2)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})
         assert(tmpl['sizelimit'] == 1000000)
         assert('weightlimit' not in tmpl)
         assert(tmpl['sigoplimit'] == 20000)
@@ -218,7 +218,7 @@ class SegWitTest(FreicoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})
         assert(tmpl['sizelimit'] >= 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
         assert(tmpl['weightlimit'] == 4000000)
         assert(tmpl['sigoplimit'] == 80000)
@@ -228,7 +228,7 @@ class SegWitTest(FreicoinTestFramework):
         print("Verify non-segwit miners get a valid GBT response after the fork")
         send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], Decimal("49.998"))
         try:
-            tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+            tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx','auxpow']})
             assert(len(tmpl['transactions']) == 1)  # Doesn't include witness tx
             assert(tmpl['sizelimit'] == 1000000)
             assert('weightlimit' not in tmpl)
