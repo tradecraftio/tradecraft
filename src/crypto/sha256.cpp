@@ -20,6 +20,7 @@
 
 #include "crypto/common.h"
 
+#include <assert.h>
 #include <string.h>
 
 // Internal implementation code.
@@ -164,6 +165,16 @@ CSHA256::CSHA256(const unsigned char iv[OUTPUT_SIZE]) : bytes(0)
     s[7] = ReadBE32(iv + 28);
 }
 
+CSHA256::CSHA256(const unsigned char hash[OUTPUT_SIZE], const unsigned char* buffer, uint64_t length) : CSHA256(hash)
+{
+    assert(length % 8 == 0);
+    bytes = length >> 3;
+    if (bytes % 64) {
+        assert(buffer);
+        memcpy(buf, buffer, bytes % 64);
+    }
+}
+
 CSHA256& CSHA256::Write(const unsigned char* data, size_t len)
 {
     const unsigned char* end = data + len;
@@ -200,7 +211,7 @@ void CSHA256::Finalize(unsigned char hash[OUTPUT_SIZE])
     Midstate(hash, NULL, NULL);
 }
 
-void CSHA256::Midstate(unsigned char hash[OUTPUT_SIZE], unsigned char* buffer, size_t* length)
+void CSHA256::Midstate(unsigned char hash[OUTPUT_SIZE], unsigned char* buffer, uint64_t* length)
 {
     WriteBE32(hash, s[0]);
     WriteBE32(hash + 4, s[1]);
