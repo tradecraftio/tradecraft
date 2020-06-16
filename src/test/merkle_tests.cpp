@@ -170,12 +170,16 @@ BOOST_AUTO_TEST_CASE(merkle_stable_branch)
 
     for (uint32_t i = 0; i < leaves.size(); ++i) {
         std::vector<uint256> old_branch = ComputeMerkleBranch(leaves, i);
-        std::vector<uint256> new_branch = ComputeStableMerkleBranch(leaves, i);
+        auto res = ComputeStableMerkleBranch(leaves, i);
+        std::vector<uint256>& new_branch = res.first;
+        BOOST_CHECK_EQUAL(res.second.first, ComputeMerklePathAndMask(new_branch.size(), i).first);
+        BOOST_CHECK_EQUAL(res.second.second, ComputeMerklePathAndMask(new_branch.size(), i).second);
 
         // Both branches should generate the same Merkle root.
         auto root = ComputeMerkleRoot(leaves, nullptr);
         BOOST_CHECK(root == ComputeMerkleRootFromBranch(leaves[i], old_branch, i));
-        BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, i, leaves.size(), nullptr));
+        auto pathmask = ComputeMerklePathAndMask(new_branch.size(), i);
+        BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, pathmask.first, pathmask.second, nullptr));
 
         if (i < 16) {
             // The first 16 branches are <0b100000, and therefore go down the
@@ -187,7 +191,8 @@ BOOST_AUTO_TEST_CASE(merkle_stable_branch)
             swap(leaves[i], hashZ);
             root = ComputeMerkleRoot(leaves, nullptr);
             BOOST_CHECK(root == ComputeMerkleRootFromBranch(leaves[i], old_branch, i));
-            BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, i, leaves.size(), nullptr));
+            auto pathmask = ComputeMerklePathAndMask(new_branch.size(), i);
+            BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, pathmask.first, pathmask.second, nullptr));
             swap(hashZ, leaves[i]); // revert
         } else {
             // All of the remaining branches have at least one duplicated
@@ -212,7 +217,8 @@ BOOST_AUTO_TEST_CASE(merkle_stable_branch)
             swap(leaves[i], hashZ);
             root = ComputeMerkleRoot(leaves, nullptr);
             BOOST_CHECK(root != ComputeMerkleRootFromBranch(leaves[i], old_branch, i));
-            BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, i, leaves.size(), nullptr));
+            auto pathmask = ComputeMerklePathAndMask(new_branch.size(), i);
+            BOOST_CHECK(root == ComputeStableMerkleRootFromBranch(leaves[i], new_branch, pathmask.first, pathmask.second, nullptr));
             swap(hashZ, leaves[i]); // revert
         }
     }

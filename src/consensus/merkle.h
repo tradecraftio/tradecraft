@@ -51,8 +51,9 @@ uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint2
  * Note that the size of the original tree must be known at validation time.
  */
 
-std::vector<uint256> ComputeStableMerkleBranch(const std::vector<uint256>& leaves, uint32_t position);
-uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t position, uint32_t size, bool* mutated);
+std::pair<uint32_t, uint32_t> ComputeMerklePathAndMask(uint32_t branchlen, uint32_t position);
+std::pair<std::vector<uint256>, std::pair<uint32_t, uint32_t> > ComputeStableMerkleBranch(const std::vector<uint256>& leaves, uint32_t position);
+uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path, uint32_t mask, bool* mutated);
 
 /*
  * Has similar API semantics, but produces Merkle roots and validates

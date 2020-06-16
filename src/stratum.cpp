@@ -153,7 +153,7 @@ StratumWork::StratumWork(const CBlockTemplate& block_template, bool is_witness_e
         // hash won't be known ahead of time because it depends on the
         // contents of the coinbase (which depends on both the miner's
         // payout address and the specific extranonce2 used).
-        m_bf_branch = ComputeStableMerkleBranch(leaves, leaves.size()-1);
+        m_bf_branch = ComputeStableMerkleBranch(leaves, leaves.size()-1).first;
         m_bf_branch.pop_back();
         // To calculate the segwit commitment for the block-final tx,
         // we use a proof from the coinbase's position of the witness
@@ -186,8 +186,8 @@ void UpdateSegwitCommitment(const StratumWork& current_work, CMutableTransaction
               &scriptPubKey[scriptPubKey.size()-36]);
 
     // Calculate right-branch
-    uint32_t size = current_work.GetBlock().vtx.size();
-    cb_branch.push_back(ComputeStableMerkleRootFromBranch(bf.GetHash(), current_work.m_bf_branch, size - 1, size, nullptr));
+    auto pathmask = ComputeMerklePathAndMask(current_work.m_bf_branch.size() + 1, current_work.GetBlock().vtx.size() - 1);
+    cb_branch.push_back(ComputeStableMerkleRootFromBranch(bf.GetHash(), current_work.m_bf_branch, pathmask.first, pathmask.second, nullptr));
 }
 
 //! Critical seciton guarding access to any of the stratum global state
