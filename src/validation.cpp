@@ -3371,7 +3371,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Size limits
     const std::size_t max_block_weight = (rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT;
-    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > max_block_weight || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > max_block_weight)
+    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > max_block_weight || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS | SERIALIZE_BLOCK_NO_AUX_POW) * WITNESS_SCALE_FACTOR > max_block_weight)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be

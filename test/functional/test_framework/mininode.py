@@ -30,10 +30,16 @@ from io import BytesIO
 import logging
 import struct
 import sys
+import time
 import threading
 
 from test_framework.messages import CBlockHeader, MIN_VERSION_SUPPORTED, msg_addr, msg_block, MSG_BLOCK, msg_blocktxn, msg_cmpctblock, msg_feefilter, msg_getaddr, msg_getblocks, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_mempool, msg_ping, msg_pong, msg_reject, msg_sendcmpct, msg_sendheaders, msg_tx, MSG_TX, MSG_TYPE_MASK, msg_verack, msg_version, NODE_NETWORK, NODE_WITNESS, sha256
 from test_framework.util import wait_until
+
+BIP0031_VERSION = 60000
+MY_VERSION = 70016  # include auxiliary proof-of-work
+MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
+MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 logger = logging.getLogger("TestFramework.mininode")
 
