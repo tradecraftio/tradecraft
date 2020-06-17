@@ -41,7 +41,7 @@ class PeerNoVerack(P2PInterface):
         # When calling add_p2p_connection, wait_for_verack=False must be set (see
         # comment in add_p2p_connection).
         self.send_version()
-        if message.nVersion >= 70016 and self.wtxidrelay:
+        if message.nVersion >= 70017 and self.wtxidrelay:
             self.send_message(msg_wtxidrelay())
 
 class SendTxrcnclReceiver(P2PInterface):
@@ -99,7 +99,7 @@ class SendTxRcnclTest(FreicoinTestFramework):
         self.log.info('SENDTXRCNCL on pre-WTXID version should not be sent')
         peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=False, wait_for_verack=False)
         pre_wtxid_version_msg = msg_version()
-        pre_wtxid_version_msg.nVersion = 70015
+        pre_wtxid_version_msg.nVersion = 70016
         pre_wtxid_version_msg.strSubVer = P2P_SUBVERSION
         pre_wtxid_version_msg.nServices = P2P_SERVICES
         pre_wtxid_version_msg.relay = 1
@@ -211,7 +211,7 @@ class SendTxRcnclTest(FreicoinTestFramework):
         self.log.info('unexpected SENDTXRCNCL is ignored')
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=False, wait_for_verack=False)
         old_version_msg = msg_version()
-        old_version_msg.nVersion = 70015
+        old_version_msg.nVersion = 70016
         old_version_msg.strSubVer = P2P_SUBVERSION
         old_version_msg.nServices = P2P_SERVICES
         old_version_msg.relay = 1
