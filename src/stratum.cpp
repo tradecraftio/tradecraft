@@ -493,7 +493,7 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
 
     bool res = false;
     uint256 hash = blkhdr.GetHash();
-    if (CheckProofOfWork(hash, blkhdr.nBits, 0, Params().GetConsensus())) {
+    if (CheckProofOfWork(blkhdr, Params().GetConsensus())) {
         LogPrintf("GOT BLOCK!!! by %s: %s\n", client.m_addr.ToString(), hash.ToString());
         CBlock block(current_work.GetBlock());
         block.vtx.front() = CTransaction(cb);
