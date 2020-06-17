@@ -30,6 +30,7 @@ from io import BytesIO
 import logging
 import struct
 import sys
+import time
 import threading
 
 from test_framework.messages import (
@@ -65,6 +66,11 @@ from test_framework.messages import (
     sha256,
 )
 from test_framework.util import wait_until
+
+BIP0031_VERSION = 60000
+MY_VERSION = 70016  # include auxiliary proof-of-work
+MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
+MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 logger = logging.getLogger("TestFramework.mininode")
 

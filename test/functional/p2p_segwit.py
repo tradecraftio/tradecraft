@@ -128,16 +128,18 @@ def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     tx_to.rehash()
 
 def get_block_weight(witness_block):
-    base_size = len(witness_block.serialize())
-    total_size = len(witness_block.serialize(with_witness=True))
+    offset = len(CBlockHeader(witness_block).serialize()) - 80
+    base_size = len(witness_block.serialize()) - offset
+    total_size = len(witness_block.serialize(with_witness=True)) - offset
     return 3*base_size + total_size
 
 def get_virtual_size(witness_block):
     """Calculate the virtual size of a witness block.
 
     Virtual size is base + witness/4."""
-    base_size = len(witness_block.serialize(with_witness=False))
-    total_size = len(witness_block.serialize(with_witness=True))
+    offset = len(CBlockHeader(witness_block).serialize()) - 80
+    base_size = len(witness_block.serialize(with_witness=False)) - offset
+    total_size = len(witness_block.serialize(with_witness=True)) - offset
     # the "+3" is so we round up
     vsize = int((3 * base_size + total_size + 3) / 4)
     return vsize
@@ -890,6 +892,8 @@ class SegWitTest(FreicoinTestFramework):
         block_3.vtx[-1].vout[-1].scriptPubKey = CScript([b'\x00' + ser_uint256(2) + WITNESS_COMMITMENT_HEADER])
         block_3.vtx[-1].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
+        if block_3.aux_pow:
+            block_3.aux_pow.commit_hash_merkle_root = block_3.calc_commit_merkle_root()
         block_3.rehash()
         block_3.solve()
 
@@ -910,6 +914,8 @@ class SegWitTest(FreicoinTestFramework):
         tx3.rehash()
         block_4.vtx.insert(-1, tx3)
         block_4.hashMerkleRoot = block_4.calc_merkle_root()
+        if block_4.aux_pow:
+            block_4.aux_pow.commit_hash_merkle_root = block_4.calc_commit_merkle_root()
         block_4.solve()
         test_witness_block(self.nodes[0], self.test_node, block_4, with_witness=False, accepted=True)
 

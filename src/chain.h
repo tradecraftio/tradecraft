@@ -231,6 +231,7 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    AuxProofOfWork m_aux_pow;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
@@ -259,6 +260,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        m_aux_pow.SetNull();
     }
 
     CBlockIndex()
@@ -275,6 +277,7 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        m_aux_pow      = block.m_aux_pow;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -305,6 +308,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.m_aux_pow      = m_aux_pow;
         return block;
     }
 
@@ -427,12 +431,20 @@ public:
             READWRITE(VARINT(nUndoPos));
 
         // block header
-        READWRITE(this->nVersion);
-        READWRITE(hashPrev);
-        READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
+        CBlockHeader blkhdr;
+        if (!ser_action.ForRead()) {
+            blkhdr = GetBlockHeader();
+        }
+        READWRITE(blkhdr);
+        if (ser_action.ForRead()) {
+            this->nVersion = blkhdr.nVersion;
+            hashPrev       = blkhdr.hashPrevBlock;
+            hashMerkleRoot = blkhdr.hashMerkleRoot;
+            nTime          = blkhdr.nTime;
+            nBits          = blkhdr.nBits;
+            nNonce         = blkhdr.nNonce;
+            m_aux_pow      = blkhdr.m_aux_pow;
+        }
     }
 
     uint256 GetBlockHash() const
