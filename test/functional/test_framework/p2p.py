@@ -37,6 +37,7 @@ from io import BytesIO
 import logging
 import struct
 import sys
+import time
 import threading
 
 from test_framework.messages import (
@@ -405,7 +406,7 @@ class P2PInterface(P2PConnection):
 
     def on_version(self, message):
         assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
-        if message.nVersion >= 70016:
+        if message.nVersion >= 70017:
             self.send_message(msg_wtxidrelay())
         if self.support_addrv2:
             self.send_message(msg_sendaddrv2())
