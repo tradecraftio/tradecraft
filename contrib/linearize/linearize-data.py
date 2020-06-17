@@ -58,6 +58,10 @@ def wordreverse(in_buf):
     return b''.join(out_words)
 
 def calc_hdr_hash(blk_hdr):
+    blk_hdr = bytearray(blk_hdr)
+    blk_hdr[74] = blk_hdr[74] & 0x7f # Ignore aux-pow serialization bit
+    blk_hdr = bytes(blk_hdr)
+
     hash1 = hashlib.sha256()
     hash1.update(blk_hdr)
     hash1_o = hash1.digest()

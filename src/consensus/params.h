@@ -98,6 +98,7 @@ struct BIP9Deployment {
  */
 struct Params {
     uint256 hashGenesisBlock;
+    uint256 aux_pow_path;
     /** Bitcoin unit test compatibility mode */
     bool bitcoin_mode;
     int nSubsidyHalvingInterval;
