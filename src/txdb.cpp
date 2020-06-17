@@ -24,6 +24,7 @@
 #include <uint256.h>
 #include <util/system.h>
 #include <ui_interface.h>
+#include <validation.h>
 
 #include <stdint.h>
 
@@ -298,7 +299,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, 0, consensusParams))
+                if (!CheckAuxiliaryProofOfWork(pindexNew->GetBlockHeader(), Params().GetConsensus()) || (!IsProtocolCleanupActive(Params().GetConsensus(), pindexNew->pprev) && !CheckProofOfWork(pindexNew->GetBlockHeader(), Params().GetConsensus())))
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
 
                 pcursor->Next();
