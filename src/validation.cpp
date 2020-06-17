@@ -3095,6 +3095,9 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
     if (DeploymentActiveAt(*pindexNew, m_params.GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
     }
+    if (DeploymentActiveAt(*pindexNew, m_params.GetConsensus(), Consensus::DEPLOYMENT_AUXPOW)) {
+        pindexNew->nStatus |= BLOCK_OPT_MERGE_MINING;
+    }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -4342,6 +4345,15 @@ bool CChainState::NeedsRedownload() const
     while (block != nullptr && DeploymentActiveAt(*block, m_params.GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
         if (!(block->nStatus & BLOCK_OPT_WITNESS)) {
             // block is insufficiently validated for a segwit client
+            return true;
+        }
+        block = block->pprev;
+    }
+
+    block = m_chain.Tip();
+    while (block != nullptr && DeploymentActiveAt(*block, m_params.GetConsensus(), Consensus::DEPLOYMENT_AUXPOW)) {
+        if (!(block->nStatus & BLOCK_OPT_MERGE_MINING)) {
+            // block is insufficiently validated for merge mining
             return true;
         }
         block = block->pprev;
