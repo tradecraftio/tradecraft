@@ -26,7 +26,8 @@
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
 /** The maximum allowed weight for a block, see BIP 141 (network rule) */
 static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
-/** The maximum allowed size for a block excluding witness data, in bytes (network rule) */
+/** The maximum allowed size for a block excluding witness and auxiliary
+ ** proof-of-work data, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_BASE_SIZE = 1000000;
 /** The maximum size of a blk?????.dat file (since v10)
  ** (post-cleanup network rule) */

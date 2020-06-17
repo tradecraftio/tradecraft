@@ -40,15 +40,17 @@ SegWit p2p test.
 '''
 
 def get_block_weight(witness_block):
-    base_size = len(witness_block.serialize())
-    total_size = len(witness_block.serialize(with_witness=True))
+    offset = len(CBlockHeader(witness_block).serialize()) - 80
+    base_size = len(witness_block.serialize()) - offset
+    total_size = len(witness_block.serialize(with_witness=True)) - offset
     return 3*base_size + total_size
 
 # Calculate the virtual size of a witness block:
 # (base + witness/4)
 def get_virtual_size(witness_block):
-    base_size = len(witness_block.serialize())
-    total_size = len(witness_block.serialize(with_witness=True))
+    offset = len(CBlockHeader(witness_block).serialize()) - 80
+    base_size = len(witness_block.serialize()) - offset
+    total_size = len(witness_block.serialize(with_witness=True)) - offset
     # the "+3" is so we round up
     vsize = int((3*base_size + total_size + 3)/4)
     return vsize
@@ -509,6 +511,8 @@ class SegWitTest(FreicoinTestFramework):
         block_3.vtx[-1].vout[-1].scriptPubKey = CScript([b'\x00' + ser_uint256(2) + WITNESS_COMMITMENT_HEADER])
         block_3.vtx[-1].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
+        if block_3.aux_pow:
+            block_3.aux_pow.commit_hash_merkle_root = block_3.calc_commit_merkle_root()
         block_3.rehash()
         block_3.solve()
 
@@ -529,6 +533,8 @@ class SegWitTest(FreicoinTestFramework):
         tx3.rehash()
         block_4.vtx.insert(-1, tx3)
         block_4.hashMerkleRoot = block_4.calc_merkle_root()
+        if block_4.aux_pow:
+            block_4.aux_pow.commit_hash_merkle_root = block_4.calc_commit_merkle_root()
         block_4.solve()
         self.test_node.test_witness_block(block_4, with_witness=False, accepted=True)
 
@@ -1166,8 +1172,7 @@ class SegWitTest(FreicoinTestFramework):
             rpc_details = self.nodes[0].getblock(block.hash, True)
             assert_equal(rpc_details["size"], len(block.serialize(True)))
             assert_equal(rpc_details["strippedsize"], len(block.serialize(False)))
-            weight = 3*len(block.serialize(False)) + len(block.serialize(True))
-            assert_equal(rpc_details["weight"], weight)
+            assert_equal(rpc_details["weight"], get_block_weight(block))
 
             # Upgraded node should not ask for blocks from unupgraded
             block4 = self.build_next_block(nVersion=4)

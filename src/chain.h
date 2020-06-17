@@ -212,6 +212,7 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+    AuxProofOfWork m_aux_pow;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
@@ -236,6 +237,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        m_aux_pow.SetNull();
     }
 
     CBlockIndex()
@@ -252,6 +254,7 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        m_aux_pow      = block.m_aux_pow;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -282,6 +285,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.m_aux_pow      = m_aux_pow;
         return block;
     }
 
