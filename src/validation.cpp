@@ -3475,6 +3475,37 @@ void Chainstate::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pin
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
+    // Check that the variable-length auxiliary proof-of-work data are
+    // within acceptable ranges.
+    if (!block.m_aux_pow.IsNull()) {
+        const AuxProofOfWork& aux_pow = block.m_aux_pow;
+
+        if (aux_pow.m_midstate_buffer.size() >= 64) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "auxpow-midstate-buffer", "auxiliary proof-of-work midstate buffer is too large");
+        }
+
+        if (aux_pow.m_midstate_buffer.size() != aux_pow.m_midstate_length % 64) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "auxpow-midstate-length", "auxiliary proof-of-work midstate buffer doesn't match anticipated length");
+        }
+
+        if (aux_pow.m_aux_branch.size() > MAX_AUX_POW_BRANCH_LENGTH) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "auxpow-merkle-branch", "auxiliary proof-of-work Merkle branch is too long");
+        }
+
+        if (aux_pow.m_commit_branch.size() > MAX_AUX_POW_COMMIT_BRANCH_LENGTH) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "auxpow-commit-branch", "auxiliary proof-of-work Merkle map path is too long");
+        }
+
+        size_t nbits = 0;
+        for (size_t idx = 0; idx < aux_pow.m_commit_branch.size(); ++idx) {
+            ++nbits;
+            nbits += aux_pow.m_commit_branch[idx].first;
+        }
+        if (nbits >= 256) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "auxpow-commit-branch-bits", "auxiliary proof-of-work Merkle map path is greater than 256 bits");
+        }
+    }
+
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckAuxiliaryProofOfWork(block, consensusParams)) {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "aux-pow-invalid", "auxiliary proof of work failed");
@@ -3516,6 +3547,29 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         // while still invalidating it.
         if (mutated)
             return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-txns-duplicate", "duplicate transaction");
+
+        // Merge mining checks.
+        if (!block.m_aux_pow.IsNull()) {
+            // Check that auxiliary proof-of-work data have canonical encoding.
+            auto aux_hash = block.GetAuxiliaryHash(consensusParams, &mutated);
+            if (mutated) {
+                return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-auxpow-mutated", "auxiliary proof-of-work header is non-canonical (mutated)");
+            }
+
+            // The auxiliary proof-of-work is committed to in the coinbase string.
+            if (block.vtx.empty() || block.vtx[0]->vin.empty() || (block.vtx[0]->vin[0].scriptSig.size() < 32) || memcmp(aux_hash.second.begin(), &(block.vtx[0]->vin[0].scriptSig.end()-32)[0], 32)) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-auxpow-commit", "incorrect commitment to auxiliary proof-of-work in coinbase string");
+            }
+
+            // Check that AuxProofOfWork::m_commit_hash_merkle_root is correct.
+            CMutableTransaction cb(*block.vtx[0]);
+            cb.vin[0].scriptSig = CScript(); // not in commitment as miner may
+            cb.vin[0].nSequence = 0;         // alter these values later.
+            auto cb_branch = BlockMerkleBranch(block, 0);
+            if (ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0) != block.m_aux_pow.m_commit_hash_merkle_root) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-commit-txnmrklroot", "block template hashMerkleRoot mismatch");
+            }
+        }
     }
 
     // Check if the consensus rules have changed
