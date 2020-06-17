@@ -51,7 +51,7 @@ static std::pair<CTxIn, uint32_t> MineBlock(const CScript& coinbase_scriptPubKey
 {
     auto block = PrepareBlock(coinbase_scriptPubKey);
 
-    while (!CheckProofOfWork(block->GetHash(), block->nBits, 0, Params().GetConsensus())) {
+    while (!CheckProofOfWork(*block, Params().GetConsensus())) {
         assert(++block->nNonce);
     }
 
