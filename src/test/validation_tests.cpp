@@ -187,10 +187,11 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
 
 BOOST_AUTO_TEST_CASE(block_malleation)
 {
+    const auto params = CreateChainParams(*m_node.args, ChainType::REGTEST);
     // Test utilities that calls `IsBlockMutated` and then clears the validity
     // cache flags on `CBlock`.
-    auto is_mutated = [](CBlock& block, bool check_witness_root) {
-        bool mutated{IsBlockMutated(block, check_witness_root)};
+    auto is_mutated = [&params](CBlock& block, bool check_witness_root) {
+        bool mutated{IsBlockMutated(block, params->GetConsensus(), check_witness_root)};
         block.fChecked = false;
         block.m_checked_witness_commitment = false;
         block.m_checked_merkle_root = false;
