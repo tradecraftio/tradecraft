@@ -3824,10 +3824,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // Signal ADDRv2 support (BIP155).
-        if (greatest_common_version >= 70016) {
+        if (greatest_common_version >= 70017) {
             // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
             // implementations reject messages they don't know. As a courtesy, don't send
-            // it to nodes with a version before 70016, as no software is known to support
+            // it to nodes with a version before 70017, as no software is known to support
             // BIP155 that doesn't announce at least that protocol version number.
             MakeAndPushMessage(pfrom, NetMsgType::SENDADDRV2);
         }
@@ -5055,6 +5055,23 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
         const CBlockIndex* prev_block{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
+
+        const CBlockIndex* pindex{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->GetHash()))};
+        if (pindex) {
+            // If the block has no auxpow, but the index does, copy it over
+            if (pblock->m_aux_pow.IsNull() && !pindex->m_aux_pow.IsNull()) {
+                // Some older clients saved blocks without auxpow.  This doesn't affect them so long
+                // as their database is not corrupted, as upon reading the auxpow is fetched from
+                // the block index.  But when they serve peers, they read straight from the disk.
+                // When reindexing, the blocks are seen as invalid and the node has to redownload
+                // from a peer.
+                //
+                // To fix this issue, we check our block index to see if we already have an
+                // auxiliary proof of work for this block.  We should, if one exists, as it would
+                // have been checked when the block header was validated.
+                pblock->m_aux_pow = pindex->m_aux_pow;
+            }
+        }
 
         // Check for possible mutation if it connects to something we know so we can check for DEPLOYMENT_SEGWIT being active
         if (prev_block && IsBlockMutated(/*block=*/*pblock,
