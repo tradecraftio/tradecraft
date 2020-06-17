@@ -139,6 +139,8 @@ enum BlockStatus : uint32_t {
 
     BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client
 
+    BLOCK_OPT_MERGE_MINING   =   256, //!< block data in blk*.dat was received with a merge-mining-enforcing client
+
     BLOCK_STATUS_RESERVED    =   256, //!< Unused flag that was previously set on assumeutxo snapshot blocks and their
                                       //!< ancestors before they were validated, and unset when they were validated.
 };
