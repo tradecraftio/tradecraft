@@ -3476,8 +3476,13 @@ void Chainstate::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pin
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, 0, consensusParams))
+    if (fCheckPOW && !CheckAuxiliaryProofOfWork(block, consensusParams)) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "aux-pow-invalid", "auxiliary proof of work failed");
+    }
+
+    if (fCheckPOW && !IsProtocolCleanupActive(consensusParams, std::chrono::seconds{block.nTime}) && !CheckProofOfWork(block, consensusParams)) {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
+    }
 
     return true;
 }
@@ -3603,7 +3608,7 @@ void ChainstateManager::GenerateCoinbaseCommitment(CBlock& block, const CBlockIn
 bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams)
 {
     return std::all_of(headers.cbegin(), headers.cend(),
-            [&](const auto& header) { return CheckProofOfWork(header.GetHash(), header.nBits, 0, consensusParams);});
+            [&](const auto& header) { return CheckProofOfWork(header, consensusParams);});
 }
 
 arith_uint256 CalculateHeadersWork(const std::vector<CBlockHeader>& headers)
@@ -3636,8 +3641,13 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     const Consensus::RuleSet rules = pindexPrev ? GetActiveRules(consensusParams, *pindexPrev) : Consensus::NONE;
 
     // Check proof of work
-    if ((rules & Consensus::PROTOCOL_CLEANUP) ? !CheckNextWorkRequired(pindexPrev, block, consensusParams, rules) : (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, rules)))
+    if (!(rules & Consensus::PROTOCOL_CLEANUP) && block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)) {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
+    }
+
+    if (!block.m_aux_pow.IsNull() && ((rules & Consensus::SIZE_EXPANSION) ? !CheckNextWorkRequiredAux(pindexPrev, block, consensusParams) : (block.m_aux_pow.m_commit_bits != GetNextWorkRequiredAux(pindexPrev, block, consensusParams)))) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-aux-diffbits", "incorrect auxiliary proof of work target");
+    }
 
     // Check against checkpoints
     if (fCheckpointsEnabled) {
