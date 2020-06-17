@@ -38,6 +38,7 @@ import logging
 import platform
 import struct
 import sys
+import time
 import threading
 
 from test_framework.messages import (
@@ -103,8 +104,8 @@ logger = logging.getLogger("TestFramework.p2p")
 # The minimum P2P version that this test framework supports
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
-# Version 70016 supports wtxid relay
-P2P_VERSION = 70016
+# Version 70017 supports wtxid relay
+P2P_VERSION = 70017
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
 # The P2P user agent string that this test framework sends in its `version` message
@@ -576,7 +577,7 @@ class P2PInterface(P2PConnection):
         if not self.p2p_connected_to_node:
             self.send_version()
             self.reconnect = False
-        if message.nVersion >= 70016 and self.wtxidrelay:
+        if message.nVersion >= 70017 and self.wtxidrelay:
             self.send_message(msg_wtxidrelay())
         if self.support_addrv2:
             self.send_message(msg_sendaddrv2())
