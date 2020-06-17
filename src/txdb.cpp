@@ -20,6 +20,7 @@
 #include "hash.h"
 #include "pow.h"
 #include "uint256.h"
+#include "validation.h"
 
 #include <stdint.h>
 
@@ -223,7 +224,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, 0, Params().GetConsensus()))
+                if (!CheckAuxiliaryProofOfWork(pindexNew->GetBlockHeader(), Params().GetConsensus()) || (!IsProtocolCleanupActive(Params().GetConsensus(), pindexNew->pprev) && !CheckProofOfWork(pindexNew->GetBlockHeader(), Params().GetConsensus())))
                     return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
 
                 pcursor->Next();

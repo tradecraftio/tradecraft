@@ -1128,7 +1128,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, 0, consensusParams))
+    if (!CheckAuxiliaryProofOfWork(block, consensusParams) || (!IsProtocolCleanupActive(consensusParams, block) && !CheckProofOfWork(block, consensusParams)))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -3032,7 +3032,11 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, 0, consensusParams))
+    if (fCheckPOW && !CheckAuxiliaryProofOfWork(block, consensusParams)) {
+        return state.DoS(50, false, REJECT_INVALID, "aux-pow-invalid", false, "auxiliary proof of work failed");
+    }
+
+    if (fCheckPOW && !IsProtocolCleanupActive(consensusParams, block.nTime) && !CheckProofOfWork(block, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
@@ -3216,15 +3220,28 @@ void GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, co
     UpdateUncommittedBlockStructures(block, pindexPrev, consensusParams);
 }
 
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime, bool fCheckPOW)
 {
     // Check for activation of rule changes
     const bool protocol_cleanup = IsProtocolCleanupActive(consensusParams, pindexPrev);
 
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
     // Check proof of work
-    if (protocol_cleanup ? !CheckNextWorkRequired(pindexPrev, block, consensusParams) : (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)))
-        return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+    if (!protocol_cleanup) {
+        if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)) {
+            return state.DoS(50, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+        }
+
+        if (fCheckPOW && !CheckProofOfWork(block, consensusParams)) {
+            return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+        }
+    }
+
+    if (!block.m_aux_pow.IsNull()) {
+        if (protocol_cleanup ? !CheckNextWorkRequiredAux(pindexPrev, block, consensusParams) : (block.m_aux_pow.m_commit_bits != GetNextWorkRequiredAux(pindexPrev, block, consensusParams))) {
+            return state.DoS(50, false, REJECT_INVALID, "bad-aux-diffbits", false, "incorrect auxiliary proof of work target");
+        }
+    }
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -3399,7 +3416,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
             return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
 
-        if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
+        if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime(), true))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
     }
     if (pindex == NULL)
@@ -3557,7 +3574,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
+    if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime(), fCheckPOW))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
