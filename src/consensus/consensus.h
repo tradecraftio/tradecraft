@@ -20,6 +20,14 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+/** The maximum number of hashes allowed in the path from the auxiliary block
+ ** header to auxiliary block-final transaction.  Sufficient to support 2GB
+ ** blocks on the auxiliary block chain. */
+static const unsigned int MAX_AUX_POW_BRANCH_LENGTH = 25;
+/** The maximum number of hashes allowed in the Merkle map proof within the
+ ** auxiliary chain commitment.  A somewhat arbitrary number, chosen such that
+ ** the maximum length path when serialized is about 1kB. */
+static const unsigned int MAX_AUX_POW_COMMIT_BRANCH_LENGTH = 32;
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
 /** The maximum allowed weight for a block (network rule) */
