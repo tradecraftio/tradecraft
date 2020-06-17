@@ -39,7 +39,7 @@ struct HeadersGeneratorSetup : public RegTestingSetup {
 
 void HeadersGeneratorSetup::FindProofOfWork(CBlockHeader& starting_header)
 {
-    while (!CheckProofOfWork(starting_header.GetHash(), starting_header.nBits, 0, Params().GetConsensus())) {
+    while (!CheckProofOfWork(starting_header, Params().GetConsensus())) {
         ++(starting_header.nNonce);
     }
 }
