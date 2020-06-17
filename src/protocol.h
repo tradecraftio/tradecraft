@@ -266,7 +266,7 @@ inline constexpr const char* CFCHECKPT{"cfcheckpt"};
 /**
  * Indicates that a node prefers to relay transactions via wtxid, rather than
  * txid.
- * @since protocol version 70016 as described by BIP 339.
+ * @since protocol version 70017 as described by BIP 339.
  */
 inline constexpr const char* WTXIDRELAY{"wtxidrelay"};
 /**
