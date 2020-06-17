@@ -145,13 +145,15 @@ enum BlockStatus : uint32_t {
 
     BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client
 
+    BLOCK_OPT_MERGE_MINING   =   256, //!< block data in blk*.dat was received with a merge-mining-enforcing client
+
     /**
      * If set, this indicates that the block index entry is assumed-valid.
      * Certain diagnostics will be skipped in e.g. CheckBlockIndex().
      * It almost certainly means that the block's full validation is pending
      * on a background chainstate. See `doc/assumeutxo.md`.
      */
-    BLOCK_ASSUMED_VALID      =   256,
+    BLOCK_ASSUMED_VALID      =   512,
 };
 
 /** The block chain is a tree shaped structure starting with the
