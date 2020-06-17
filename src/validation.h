@@ -167,6 +167,9 @@ class SignalInterrupt;
  **/
 inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBlock& block)
 {
+    if (block.m_aux_pow.IsNull()) {
+        return false;
+    }
     return ((!block.vtx.empty() ? block.vtx[0]->nLockTime : 0) >= params.protocol_cleanup_activation_time);
 }
 inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBlockIndex& index)
@@ -240,6 +243,9 @@ inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBloc
  **/
 inline bool IsSizeExpansionActive(const Consensus::Params& params, const CBlock& block)
 {
+    if (block.m_aux_pow.IsNull()) {
+        return false;
+    }
     return ((!block.vtx.empty() ? block.vtx[0]->nLockTime : 0) >= params.size_expansion_activation_time);
 }
 inline bool IsSizeExpansionActive(const Consensus::Params& params, const CBlockIndex& index)
