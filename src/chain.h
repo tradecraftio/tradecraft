@@ -130,6 +130,8 @@ enum BlockStatus : uint32_t {
 
     BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client
 
+    BLOCK_OPT_MERGE_MINING   =   256, //!< block data in blk*.dat was received with a merge-mining-enforcing client
+
     /**
      * If ASSUMED_VALID is set, it means that this block has not been validated
      * and has validity status less than VALID_SCRIPTS. Also that it may have
@@ -144,7 +146,7 @@ enum BlockStatus : uint32_t {
      * This flag is only used to implement checks in CheckBlockIndex() and
      * should not be used elsewhere.
      */
-    BLOCK_ASSUMED_VALID      =   256,
+    BLOCK_ASSUMED_VALID      =   512,
 };
 
 /** The block chain is a tree shaped structure starting with the
