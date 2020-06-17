@@ -3300,6 +3300,9 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
     if (IsWitnessEnabled(pindexNew->pprev, consensusParams)) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
     }
+    if (IsMergeMiningEnabled(pindexNew->pprev, consensusParams)) {
+        pindexNew->nStatus |= BLOCK_OPT_MERGE_MINING;
+    }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -4733,7 +4736,9 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
     {
         LOCK(cs_main);
         for (const auto& entry : m_blockman.m_block_index) {
-            if (IsWitnessEnabled(entry.second->pprev, params.GetConsensus()) && !(entry.second->nStatus & BLOCK_OPT_WITNESS) && !m_chain.Contains(entry.second)) {
+            if ((IsWitnessEnabled(entry.second->pprev, params.GetConsensus()) && !(entry.second->nStatus & BLOCK_OPT_WITNESS) && !m_chain.Contains(entry.second))
+             || (IsMergeMiningEnabled(entry.second->pprev, params.GetConsensus()) && !(entry.second->nStatus & BLOCK_OPT_MERGE_MINING)))
+            {
                 EraseBlockData(entry.second);
             }
         }
@@ -4754,6 +4759,10 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             // Also check if we have blocks from after activation of block-final
             // tx rules, but without a BlockFinalTxEntry in the UTXO database.
             if (IsFinalTxEnforced(m_chain[nHeight - 1], params.GetConsensus()) && CoinsTip().GetFinalTx().IsNull()) {
+                break;
+            }
+            // Or after activation of merge-mining.
+            if (IsMergeMiningEnabled(m_chain[nHeight - 1], params.GetConsensus()) && !(m_chain[nHeight]->nStatus & BLOCK_OPT_MERGE_MINING)) {
                 break;
             }
             nHeight++;
