@@ -257,7 +257,7 @@ static bool rest_headers(const std::any& context,
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        DataStream ssHeader{};
+        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
             ssHeader << pindex->GetBlockHeader();
         }
@@ -269,7 +269,7 @@ static bool rest_headers(const std::any& context,
     }
 
     case RESTResponseFormat::HEX: {
-        DataStream ssHeader{};
+        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
             ssHeader << pindex->GetBlockHeader();
         }

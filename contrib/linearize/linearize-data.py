@@ -32,6 +32,9 @@ from collections import namedtuple
 settings = {}
 
 def calc_hash_str(blk_hdr):
+    blk_hdr = bytearray(blk_hdr)
+    blk_hdr[74] = blk_hdr[74] & 0x7f # Ignore aux-pow serialization bit
+    blk_hdr = bytes(blk_hdr)
     blk_hdr_hash = hashlib.sha256(hashlib.sha256(blk_hdr).digest()).digest()
     return blk_hdr_hash[::-1].hex()
 
