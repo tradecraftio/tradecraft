@@ -2011,7 +2011,7 @@ static RPCHelpMan getchaintxstats()
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     const CBlockIndex* pindex;
-    int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
+    int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().aux_pow_target_spacing; // By default: 1 month
 
     if (request.params[1].isNull()) {
         LOCK(cs_main);
