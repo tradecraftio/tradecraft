@@ -41,7 +41,7 @@
  * Make sure that this does not collide with any of the values in `version.h`
  * or with `SERIALIZE_TRANSACTION_NO_WITNESS`.
  */
-static constexpr int ADDRV2_FORMAT = 0x20000000;
+static constexpr int ADDRV2_FORMAT = 0x10000000;
 
 /**
  * A network type.
