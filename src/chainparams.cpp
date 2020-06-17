@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <chainparams.h>
+#include <hash.h>
 
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
@@ -163,6 +164,15 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000005b1e3d23ecfd2dd4a6e1a35238aa0392c0a8528c40df52376d7efe2c"));
         assert(genesis.hashMerkleRoot == uint256S("0xf53b1baa971ea40be88cf51288aabd700dfec96c486bf7155a53a4919af4c8bd"));
+
+        uint256 tag;
+        CSHA256().Write(reinterpret_cast<const unsigned char*>("auxpow"), 6).Finalize(tag.begin());
+        CHashWriter hw(SER_GETHASH, PROTOCOL_VERSION);
+        hw << tag;
+        hw << tag;
+        hw << genesis;
+        consensus.aux_pow_path = hw.GetHash();
+        assert(consensus.aux_pow_path == uint256S("0x632938ec752e63b7f63cdd9a16b336c6c5cefbaad66278e402ce59d706f57ff6"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
@@ -350,6 +360,15 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000003b5183593282fd30d3d7e79243eb883d6c2d8670f69811c6b9a76585"));
         assert(genesis.hashMerkleRoot == uint256S("0xda41f94f1a4a7d4a5cd54245bf4ad423da65a292a4de6d86d7746c4ad41e7ee7"));
+
+        uint256 tag;
+        CSHA256().Write(reinterpret_cast<const unsigned char*>("auxpow"), 6).Finalize(tag.begin());
+        CHashWriter hw(SER_GETHASH, PROTOCOL_VERSION);
+        hw << tag;
+        hw << tag;
+        hw << genesis;
+        consensus.aux_pow_path = hw.GetHash();
+        assert(consensus.aux_pow_path == uint256S("0xe99fc44bfacee2f7e28d135845ff8a385d6d31353928d5b499700f1a2ad1b18b"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -614,6 +633,15 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x67756db06265141574ff8e7c3f97ebd57c443791e0ca27ee8b03758d6056edb8"));
         assert(genesis.hashMerkleRoot == uint256S("0xf53b1baa971ea40be88cf51288aabd700dfec96c486bf7155a53a4919af4c8bd"));
+
+        uint256 tag;
+        CSHA256().Write(reinterpret_cast<const unsigned char*>("auxpow"), 6).Finalize(tag.begin());
+        CHashWriter hw(SER_GETHASH, PROTOCOL_VERSION);
+        hw << tag;
+        hw << tag;
+        hw << genesis;
+        consensus.aux_pow_path = hw.GetHash();
+        assert(consensus.aux_pow_path == uint256S("0xd799d41af01c1ac77e6a7793ba046a7432bb6ec250b84e2f5c6f225e05f0fc74"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();
