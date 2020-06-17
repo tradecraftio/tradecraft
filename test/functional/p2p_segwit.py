@@ -847,6 +847,8 @@ class SegWitTest(FreicoinTestFramework):
         block_3.vtx[-1].vout[-1].scriptPubKey = CScript([b'\x00' + ser_uint256(2) + WITNESS_COMMITMENT_HEADER])
         block_3.vtx[-1].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
+        if block_3.aux_pow:
+            block_3.aux_pow.commit_hash_merkle_root = block_3.calc_commit_merkle_root()
         block_3.solve()
 
         test_witness_block(self.nodes[0], self.test_node, block_3, accepted=False, reason='bad-witness-path')
@@ -866,6 +868,8 @@ class SegWitTest(FreicoinTestFramework):
         tx3.rehash()
         block_4.vtx.insert(-1, tx3)
         block_4.hashMerkleRoot = block_4.calc_merkle_root()
+        if block_4.aux_pow:
+            block_4.aux_pow.commit_hash_merkle_root = block_4.calc_commit_merkle_root()
         block_4.solve()
         test_witness_block(self.nodes[0], self.test_node, block_4, with_witness=False, accepted=True)
 
