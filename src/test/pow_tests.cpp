@@ -98,6 +98,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 }
 #endif
 
+#if 0
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
 {
     const auto consensus = CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->GetConsensus();
@@ -151,6 +152,7 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
     hash = ArithToUint256(hash_arith);
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, 0, consensus));
 }
+#endif // 0
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {
