@@ -3916,6 +3916,19 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     if (((pindexPrev->nHeight + 1) >= consensusParams.verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_timeout) && ((block.nVersion >> 28) != 3))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion), "rejected non-coinbase-mtp block before activation timeout");
 
+    // Reject merge-mining blocks prior to activation:
+    if (!DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_AUXPOW) && !block.m_aux_pow.IsNull()) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "merge-mined-pre", "rejected merge-mined block before activation");
+    }
+
+    // Reject non-merge-mining blocks after activation:
+    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_AUXPOW) && block.m_aux_pow.IsNull()) {
+        // Note: we do not ban nodes which relay a native-mined header
+        // after activation, because it might be an old node.  Just
+        // ignore and move on...
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "native-mined-post", "rejected non-merge-mined block after activation");
+    }
+
     return true;
 }
 
