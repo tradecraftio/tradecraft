@@ -53,7 +53,7 @@ import copy
 from test_framework.siphash import siphash256
 
 BIP0031_VERSION = 60000
-MY_VERSION = 70014  # past bip-31 for ping/pong
+MY_VERSION = 70016  # include auxiliary proof-of-work
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 
 MAX_INV_SZ = 50000
@@ -579,6 +579,105 @@ class CTransaction(object):
             % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime, self.lock_height)
 
 
+class AuxProofOfWork(object):
+    def __init__(self, aux_pow=None):
+        if aux_pow is None:
+            self.set_null()
+        else:
+            self.commit_version = aux_pow.commit_version
+            self.commit_hash_merkle_root = aux_pow.commit_hash_merkle_root
+            self.commit_time = aux_pow.commit_time
+            self.commit_bits = aux_pow.commit_bits
+            self.commit_nonce = aux_pow.commit_nonce
+            self.secret_lo = aux_pow.secret_lo
+            self.secret_hi = aux_pow.secret_hi
+            self.midstate_hash = aux_pow.midstate_hash
+            self.midstate_buffer = aux_pow.midstate_buffer
+            self.midstate_length = aux_pow.midstate_length
+            self.aux_lock_time = aux_pow.aux_lock_time
+            self.aux_branch = aux_pow.aux_branch
+            self.aux_num_txns = aux_pow.aux_num_txns
+            self.aux_version = aux_pow.aux_version
+            self.aux_hash_prev_block = aux_pow.aux_hash_prev_block
+            self.aux_bits = aux_pow.aux_bits
+            self.aux_nonce = aux_pow.aux_nonce
+
+    def set_null(self):
+        self.commit_version = 0
+        self.commit_hash_merkle_root = 0
+        self.commit_time = 0
+        self.commit_bits = 0
+        self.commit_nonce = 0
+        self.secret_lo = 0
+        self.secret_hi = 0
+        self.midstate_hash = 0
+        self.midstate_buffer = b''
+        self.midstate_length = 0
+        self.aux_lock_time = 0
+        self.aux_branch = []
+        self.aux_num_txns = 0
+        self.aux_version = 0
+        self.aux_hash_prev_block = 0
+        self.aux_bits = 0
+        self.aux_nonce = 0
+
+    def __bool__(self):
+        return bool(self.aux_num_txns)
+    __nonzero__ = __bool__
+
+    def deserialize(self, f):
+        self.commit_version = struct.unpack("<I", f.read(4))[0]
+        self.commit_hash_merkle_root = deser_uint256(f)
+        self.commit_time = struct.unpack("<I", f.read(4))[0]
+        self.commit_bits = struct.unpack("<I", f.read(4))[0]
+        self.commit_nonce = struct.unpack("<I", f.read(4))[0]
+        self.secret_lo = struct.unpack("<Q", f.read(8))[0]
+        self.secret_hi = struct.unpack("<Q", f.read(8))[0]
+        self.midstate_hash = deser_uint256(f)
+        self.midstate_buffer = deser_string(f)
+        self.midstate_length = deser_varint(f)
+        self.aux_lock_time = struct.unpack("<I", f.read(4))[0]
+        self.aux_branch = deser_uint256_vector(f)
+        self.aux_num_txns = deser_varint(f) + 1
+        self.aux_version = struct.unpack("<I", f.read(4))[0]
+        self.aux_hash_prev_block = deser_uint256(f)
+        self.aux_bits = struct.unpack("<I", f.read(4))[0]
+        self.aux_nonce = struct.unpack("<I", f.read(4))[0]
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<I", self.commit_version)
+        r += ser_uint256(self.commit_hash_merkle_root)
+        r += struct.pack("<I", self.commit_time)
+        r += struct.pack("<I", self.commit_bits)
+        r += struct.pack("<I", self.commit_nonce)
+        r += struct.pack("<Q", self.secret_lo)
+        r += struct.pack("<Q", self.secret_hi)
+        r += ser_uint256(self.midstate_hash)
+        r += ser_string(self.midstate_buffer)
+        r += ser_varint(self.midstate_length)
+        r += struct.pack("<I", self.aux_lock_time)
+        r += ser_uint256_vector(self.aux_branch)
+        assert(self.aux_num_txns > 0)
+        r += ser_varint(self.aux_num_txns - 1)
+        r += struct.pack("<I", self.aux_version)
+        r += ser_uint256(self.aux_hash_prev_block)
+        r += struct.pack("<I", self.aux_bits)
+        r += struct.pack("<I", self.aux_nonce)
+        return r
+
+    def __repr__(self):
+        return "AuxProofOfWork(commit_version=%d commit_hash_merkle_root=%064x commit_time=%s commit_bits=%08x commit_nonce=%08x secret=%08x%08x midstate_hash=%064x midstate_buffer=%s midstate_length=%d aux_lock_time=%08x aux_branch=%s aux_num_txns=%d aux_version=%d aux_hash_prev_block=%064x aux_bits=%08x aux_nonce=%08x)" \
+            % (self.commit_version, self.commit_hash_merkle_root,
+               time.ctime(self.commit_time), self.commit_bits,
+               self.commit_nonce, self.secret_hi, self.secret_lo,
+               self.midstate_hash,
+               "".join(["%02x"%c for c in self.midstate_buffer]),
+               self.midstate_length, self.aux_lock_time,
+               repr(self.aux_branch), self.aux_num_txns,
+               self.aux_version, self.aux_hash_prev_block,
+               self.aux_bits, self.aux_nonce)
+
 class CBlockHeader(object):
     def __init__(self, header=None):
         if header is None:
@@ -590,6 +689,10 @@ class CBlockHeader(object):
             self.nTime = header.nTime
             self.nBits = header.nBits
             self.nNonce = header.nNonce
+            self.aux_pow = header.aux_pow
+            self.aux_hash1 = header.aux_hash1
+            self.aux_hash2 = header.aux_hash2
+            self.calc_auxiliary_hash()
             self.sha256 = header.sha256
             self.hash = header.hash
             self.calc_sha256()
@@ -601,6 +704,9 @@ class CBlockHeader(object):
         self.nTime = 0
         self.nBits = 0
         self.nNonce = 0
+        self.aux_pow = False
+        self.aux_hash1 = None
+        self.aux_hash2 = None
         self.sha256 = None
         self.hash = None
 
@@ -610,7 +716,21 @@ class CBlockHeader(object):
         self.hashMerkleRoot = deser_uint256(f)
         self.nTime = struct.unpack("<I", f.read(4))[0]
         self.nBits = struct.unpack("<I", f.read(4))[0]
+        extended = False
+        if self.nBits & 0x00800000:
+            self.nBits = self.nBits ^ 0x00800000
+            extended = True
         self.nNonce = struct.unpack("<I", f.read(4))[0]
+        self.aux_pow = False
+        if extended:
+            dummy = struct.unpack("B", f.read(1))[0]
+            assert(dummy == 0xff)
+            flags = struct.unpack("B", f.read(1))[0]
+            if flags & 1:
+                flags = flags ^ 1
+                self.aux_pow = AuxProofOfWork()
+                self.aux_pow.deserialize(f)
+            assert(flags == 0x00)
         self.sha256 = None
         self.hash = None
 
@@ -620,9 +740,88 @@ class CBlockHeader(object):
         r += ser_uint256(self.hashPrevBlock)
         r += ser_uint256(self.hashMerkleRoot)
         r += struct.pack("<I", self.nTime)
-        r += struct.pack("<I", self.nBits)
+        bits = self.nBits
+        if self.aux_pow:
+            bits = bits | 0x00800000
+        r += struct.pack("<I", bits)
         r += struct.pack("<I", self.nNonce)
+        if self.aux_pow:
+            r += struct.pack("BB", 0xff, 0x01)
+            r += self.aux_pow.serialize()
         return r
+
+    def calc_auxiliary_hash(self):
+        if not self.aux_pow:
+            # Nothing to do
+            self.aux_hash1 = None
+            self.aux_hash2 = None
+            return
+
+        blkhdr = CBlockHeader()
+        blkhdr.nVersion       = self.aux_pow.commit_version;
+        blkhdr.hashPrevBlock  = self.hashPrevBlock;
+        blkhdr.hashMerkleRoot = self.aux_pow.commit_hash_merkle_root;
+        blkhdr.nTime          = self.aux_pow.commit_time;
+        blkhdr.nBits          = self.aux_pow.commit_bits;
+        blkhdr.nNonce         = self.aux_pow.commit_nonce;
+
+        if self.aux_hash1 is None:
+            # Calculate the hash of the block template.
+            blkhdr.sha256 = None
+            blkhdr.calc_sha256()
+            h = ser_uint256(blkhdr.sha256)
+
+            # Combine with the hash of the block-witholding secret.
+            secret = b""
+            secret += struct.pack("<Q", self.aux_pow.secret_lo)
+            secret += struct.pack("<Q", self.aux_pow.secret_hi)
+            h = fastHash256(h, hash256(secret))
+
+            # Resume the hash writer state for the coinbase.
+            midstate = SHA256()
+            midstate.state = SHA256.State(*struct.unpack(">LLLLLLLL", ser_uint256(self.aux_pow.midstate_hash)))
+            midstate.length = self.aux_pow.midstate_length * 8
+            midstate.buffer = self.aux_pow.midstate_buffer
+            midstate.round_offset = (midstate.length // 512) * 64
+
+            # Add the block template commitment and tx.nLockTime
+            midstate.update(h)
+            midstate.update(bytes([0x4b, 0x4a, 0x49, 0x48]))
+            midstate.update(struct.pack("<I", self.aux_pow.aux_lock_time))
+            h = sha256(midstate.digest())
+
+            # Calculate the auxiliary hashMerkleRoot
+            n = self.aux_pow.aux_num_txns - 1
+            for h2 in self.aux_pow.aux_branch:
+                while n and not (n & 1):
+                    h = fastHash256(h, h)
+                    n = n >> 1
+                h = fastHash256(h2, h)
+
+            # Complete the auxiliary block header
+            blkhdraux = CBlockHeader()
+            blkhdraux.nVersion       = self.aux_pow.aux_version
+            blkhdraux.hashPrevBlock  = self.aux_pow.aux_hash_prev_block
+            blkhdraux.hashMerkleRoot = uint256_from_str(h)
+            blkhdraux.nTime          = self.nTime
+            blkhdraux.nBits          = self.aux_pow.aux_bits
+            blkhdraux.nNonce         = self.aux_pow.aux_nonce
+
+            blkhdraux.sha256 = None
+            blkhdraux.calc_sha256()
+            self.aux_hash1 = blkhdraux.sha256
+
+        if self.aux_hash2 is None:
+            # The 2nd stage hash is H(secret || blkhdr || aux_hash1)
+            r = b""
+            r += struct.pack("<Q", self.aux_pow.secret_lo)
+            r += struct.pack("<Q", self.aux_pow.secret_hi)
+            r += blkhdr.serialize()
+            r += ser_uint256(self.aux_hash1)
+            assert(len(r) == 128)
+
+            # The 2nd stage hash is raw sha256--no padding!
+            self.aux_hash2 = uint256_from_str(SHA256(r).midstate()[0])
 
     def calc_sha256(self):
         if self.sha256 is None:
@@ -637,14 +836,20 @@ class CBlockHeader(object):
             self.hash = encode(hash256(r)[::-1], 'hex_codec').decode('ascii')
 
     def rehash(self):
+        self.aux_hash1 = None
+        self.aux_hash2 = None
+        self.calc_auxiliary_hash()
         self.sha256 = None
         self.calc_sha256()
         return self.sha256
 
     def __repr__(self):
-        return "CBlockHeader(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x)" \
+        aux_pow = ""
+        if self.aux_pow:
+            aux_pow = " aux_pow=%s" % repr(self.aux_pow)
+        return "CBlockHeader(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x%s)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
-               time.ctime(self.nTime), self.nBits, self.nNonce)
+               time.ctime(self.nTime), self.nBits, self.nNonce, aux_pow)
 
 
 class CBlock(CBlockHeader):
@@ -664,6 +869,13 @@ class CBlock(CBlockHeader):
         else:
             r += ser_vector(self.vtx)
         return r
+
+    def get_bias(self):
+        return 0 if not self.aux_pow else (self.aux_pow.commit_nonce & 0xff)
+
+    def set_bias(self, bias):
+        if self.aux_pow:
+            self.aux_pow.commit_nonce = (self.aux_pow.commit_nonce & 0xffffff00) | (bias & 0xff)
 
     # Calculate the merkle root given a vector of transaction hashes
     def get_merkle_root(self, hashes):
@@ -693,6 +905,18 @@ class CBlock(CBlockHeader):
         for tx in self.vtx:
             tx.calc_sha256()
             hashes.append(ser_uint256(tx.sha256))
+        return self.get_merkle_root(hashes)
+
+    def calc_commit_merkle_root(self):
+        hashes = []
+        for tx in self.vtx:
+            tx.calc_sha256()
+            hashes.append(ser_uint256(tx.sha256))
+        cb = CTransaction(self.vtx[0])
+        cb.vin[0].scriptSig = b""
+        cb.vin[0].nSequence = 0
+        cb.rehash()
+        hashes[0] = ser_uint256(cb.sha256)
         return self.get_merkle_root(hashes)
 
     def calc_witness_merkle_root(self):
@@ -745,9 +969,13 @@ class CBlock(CBlockHeader):
             self.rehash()
 
     def __repr__(self):
-        return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s)" \
+        aux_pow_str = ""
+        if self.aux_pow:
+            aux_pow_str = " aux_pow=%s" % repr(self.aux_pow)
+        return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x%s vtx=%s)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
-               time.ctime(self.nTime), self.nBits, self.nNonce, repr(self.vtx))
+               time.ctime(self.nTime), self.nBits, self.nNonce, aux_pow_str,
+               repr(self.vtx))
 
 
 class CUnsignedAlert(object):
