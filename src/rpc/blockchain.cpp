@@ -576,7 +576,7 @@ static RPCHelpMan getblockheader()
 
     if (!fVerbose)
     {
-        DataStream ssBlock{};
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
         ssBlock << pblockindex->GetBlockHeader();
         std::string strHex = HexStr(ssBlock);
         return strHex;
