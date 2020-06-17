@@ -261,7 +261,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
         return false;
     }
 
-    ss << TX_WITH_WITNESS(block);
+    ss << BLK_WITH_AUXPOW_AND_WITNESS(block);
 
     return SendZmqMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }

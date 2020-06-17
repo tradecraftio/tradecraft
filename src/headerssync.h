@@ -37,6 +37,9 @@ struct CompressedHeader {
     uint32_t nBits{0};
     uint32_t nNonce{0};
 
+    // Auxiliary proof-of-work header:
+    AuxProofOfWork m_aux_pow;
+
     CompressedHeader()
     {
         hashMerkleRoot.SetNull();
@@ -49,6 +52,7 @@ struct CompressedHeader {
         nTime = header.nTime;
         nBits = header.nBits;
         nNonce = header.nNonce;
+        m_aux_pow = header.m_aux_pow;
     }
 
     CBlockHeader GetFullHeader(const uint256& hash_prev_block) {
@@ -59,6 +63,7 @@ struct CompressedHeader {
         ret.nTime = nTime;
         ret.nBits = nBits;
         ret.nNonce = nNonce;
+        ret.m_aux_pow = m_aux_pow;
         return ret;
     };
 };

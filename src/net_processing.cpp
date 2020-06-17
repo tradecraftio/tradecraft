@@ -2053,8 +2053,10 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
     if (!DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) return;
 
     uint256 hashBlock(pblock->GetHash());
-    const std::shared_future<CSerializedNetMsg> lazy_ser{
-        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
+    const std::shared_future<CSerializedNetMsg> lazy_ser_with_auxpow{
+        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, BLKHDR_WITH_AUXPOW(*pcmpctblock)); })};
+    const std::shared_future<CSerializedNetMsg> lazy_ser_no_auxpow{
+        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, BLKHDR_NO_AUXPOW(*pcmpctblock)); })};
 
     {
         auto most_recent_block_txs = std::make_unique<std::map<uint256, CTransactionRef>>();
@@ -2070,7 +2072,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         m_most_recent_block_txs = std::move(most_recent_block_txs);
     }
 
-    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    m_connman.ForEachNode([this, pindex, &lazy_ser_with_auxpow, &lazy_ser_no_auxpow, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
 
         if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
@@ -2084,8 +2086,13 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
             LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", "PeerManager::NewPoWValidBlock",
                     hashBlock.ToString(), pnode->GetId());
 
-            const CSerializedNetMsg& ser_cmpctblock{lazy_ser.get()};
-            PushMessage(*pnode, ser_cmpctblock.Copy());
+            const CSerializedNetMsg* ser_cmpctblock = nullptr;
+            if (pnode->nVersion < AUX_POW_VERSION) {
+                ser_cmpctblock = &lazy_ser_no_auxpow.get();
+            } else {
+                ser_cmpctblock = &lazy_ser_with_auxpow.get();
+            }
+            PushMessage(*pnode, ser_cmpctblock->Copy());
             state.pindexBestHeaderSent = pindex;
         }
     });
@@ -2363,9 +2370,9 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     }
     if (pblock) {
         if (inv.IsMsgBlk()) {
-            MakeAndPushMessage(pfrom, NetMsgType::BLOCK, TX_NO_WITNESS(*pblock));
+            MakeAndPushMessage(pfrom, NetMsgType::BLOCK, BlockSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), TX_NO_WITNESS, *pblock));
         } else if (inv.IsMsgWitnessBlk()) {
-            MakeAndPushMessage(pfrom, NetMsgType::BLOCK, TX_WITH_WITNESS(*pblock));
+            MakeAndPushMessage(pfrom, NetMsgType::BLOCK, BlockSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), TX_WITH_WITNESS, *pblock));
         } else if (inv.IsMsgFilteredBlk()) {
             bool sendMerkleBlock = false;
             CMerkleBlock merkleBlock;
@@ -2377,7 +2384,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                 }
             }
             if (sendMerkleBlock) {
-                MakeAndPushMessage(pfrom, NetMsgType::MERKLEBLOCK, merkleBlock);
+                MakeAndPushMessage(pfrom, NetMsgType::MERKLEBLOCK, BlockHeaderSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), merkleBlock));
                 // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                 // This avoids hurting performance by pointlessly requiring a round-trip
                 // Note that there is currently no way for a node to request any single transactions we didn't send here -
@@ -2397,13 +2404,13 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // instead we respond with the full, non-compact block.
             if (CanDirectFetch() && pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_CMPCTBLOCK_DEPTH) {
                 if (a_recent_compact_block && a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
-                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, *a_recent_compact_block);
+                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, BlockHeaderSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), *a_recent_compact_block));
                 } else {
                     CBlockHeaderAndShortTxIDs cmpctblock{*pblock};
-                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, cmpctblock);
+                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, BlockHeaderSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), cmpctblock));
                 }
             } else {
-                MakeAndPushMessage(pfrom, NetMsgType::BLOCK, TX_WITH_WITNESS(*pblock));
+                MakeAndPushMessage(pfrom, NetMsgType::BLOCK, BlockSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), TX_WITH_WITNESS, *pblock));
             }
         }
     }
@@ -3491,10 +3498,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // Signal ADDRv2 support (BIP155).
-        if (greatest_common_version >= 70016) {
+        if (greatest_common_version >= 70017) {
             // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
             // implementations reject messages they don't know. As a courtesy, don't send
-            // it to nodes with a version before 70016, as no software is known to support
+            // it to nodes with a version before 70017, as no software is known to support
             // BIP155 that doesn't announce at least that protocol version number.
             MakeAndPushMessage(pfrom, NetMsgType::SENDADDRV2);
         }
@@ -4159,7 +4166,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             LogPrint(BCLog::NET, "Ignoring getheaders from peer=%d because active chain has too little work; sending empty response\n", pfrom.GetId());
             // Just respond with an empty headers message, to tell the peer to
             // go away but not treat us as unresponsive.
-            MakeAndPushMessage(pfrom, NetMsgType::HEADERS, std::vector<CBlockHeader>());
+            std::vector<CBlockHeader> vHeaders;
+            MakeAndPushMessage(pfrom, NetMsgType::HEADERS, BlockHeaderSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), vHeaders));
             return;
         }
 
@@ -4209,7 +4217,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // will re-announce the new block via headers (or compact blocks again)
         // in the SendMessages logic.
         nodestate->pindexBestHeaderSent = pindex ? pindex : m_chainman.ActiveChain().Tip();
-        MakeAndPushMessage(pfrom, NetMsgType::HEADERS, TX_WITH_WITNESS(vHeaders));
+        MakeAndPushMessage(pfrom, NetMsgType::HEADERS, BlockSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), TX_WITH_WITNESS, vHeaders));
         return;
     }
 
@@ -4421,7 +4429,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         CBlockHeaderAndShortTxIDs cmpctblock;
-        vRecv >> cmpctblock;
+        vRecv >> BlockHeaderSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), cmpctblock);
 
         bool received_new_header = false;
         const auto blockhash = cmpctblock.header.GetHash();
@@ -4695,7 +4703,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++) {
-            vRecv >> headers[n];
+            vRecv >> BlockHeaderSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), headers[n]);
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
@@ -4727,7 +4735,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-        vRecv >> TX_WITH_WITNESS(*pblock);
+        vRecv >> BlockSerParams::ForPeerVersion(pfrom.nVersion.load(std::memory_order_relaxed), TX_WITH_WITNESS, *pblock);
 
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
@@ -5718,7 +5726,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     {
                         LOCK(m_most_recent_block_mutex);
                         if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
+                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, BlockHeaderSerParams::ForPeerVersion(pto->nVersion.load(std::memory_order_relaxed), *m_most_recent_compact_block));
                         }
                     }
                     if (cached_cmpctblock_msg.has_value()) {
@@ -5728,7 +5736,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         const bool ret{m_chainman.m_blockman.ReadBlockFromDisk(block, *pBestIndex)};
                         assert(ret);
                         CBlockHeaderAndShortTxIDs cmpctblock{block};
-                        MakeAndPushMessage(*pto, NetMsgType::CMPCTBLOCK, cmpctblock);
+                        MakeAndPushMessage(*pto, NetMsgType::CMPCTBLOCK, BlockHeaderSerParams::ForPeerVersion(pto->nVersion.load(std::memory_order_relaxed), cmpctblock));
                     }
                     state.pindexBestHeaderSent = pBestIndex;
                 } else if (peer->m_prefers_headers) {
@@ -5741,7 +5749,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         LogPrint(BCLog::NET, "%s: sending header %s to peer=%d\n", __func__,
                                 vHeaders.front().GetHash().ToString(), pto->GetId());
                     }
-                    MakeAndPushMessage(*pto, NetMsgType::HEADERS, TX_WITH_WITNESS(vHeaders));
+                    MakeAndPushMessage(*pto, NetMsgType::HEADERS, BlockSerParams::ForPeerVersion(pto->nVersion.load(std::memory_order_relaxed), TX_WITH_WITNESS, vHeaders));
                     state.pindexBestHeaderSent = pBestIndex;
                 } else
                     fRevertToInv = true;

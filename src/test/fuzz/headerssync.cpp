@@ -78,7 +78,7 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
         // Consume headers from fuzzer or maybe replay headers if we got to the
         // redownload phase.
         if (presync || fuzzed_data_provider.ConsumeBool()) {
-            auto deser_headers = ConsumeDeserializable<std::vector<CBlockHeader>>(fuzzed_data_provider);
+            auto deser_headers = ConsumeDeserializable<std::vector<CBlockHeader>>(fuzzed_data_provider, BLKHDR_WITH_AUXPOW);
             if (!deser_headers || deser_headers->empty()) return;
 
             if (fuzzed_data_provider.ConsumeBool()) {

@@ -94,7 +94,7 @@ bool BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFi
     }
     batch.Write(DB_LAST_BLOCK, nLastFile);
     for (const CBlockIndex* bi : blockinfo) {
-        batch.Write(std::make_pair(DB_BLOCK_INDEX, bi->GetBlockHash()), CDiskBlockIndex{bi});
+        batch.Write(std::make_pair(DB_BLOCK_INDEX, bi->GetBlockHash()), BLKHDR_WITH_AUXPOW(CDiskBlockIndex{bi}));
     }
     return WriteBatch(batch, true);
 }
@@ -126,7 +126,7 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
         std::pair<uint8_t, uint256> key;
         if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
             CDiskBlockIndex diskindex;
-            if (pcursor->GetValue(diskindex)) {
+            if (pcursor->GetValue(diskindex, BLKHDR_WITH_AUXPOW)) {
                 // Construct block index object
                 CBlockIndex* pindexNew = insertBlockIndex(diskindex.ConstructBlockHash());
                 pindexNew->pprev          = insertBlockIndex(diskindex.hashPrev);
@@ -139,6 +139,7 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nTime          = diskindex.nTime;
                 pindexNew->nBits          = diskindex.nBits;
                 pindexNew->nNonce         = diskindex.nNonce;
+                pindexNew->m_aux_pow      = diskindex.m_aux_pow;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
@@ -983,7 +984,7 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
     }
 
     // Write index header
-    unsigned int nSize = GetSerializeSize(TX_WITH_WITNESS(block));
+    unsigned int nSize = GetSerializeSize(BLK_WITH_AUXPOW_AND_WITNESS(block));
     fileout << GetParams().MessageStart() << nSize;
 
     // Write block
@@ -992,7 +993,7 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
         return error("WriteBlockToDisk: ftell failed");
     }
     pos.nPos = (unsigned int)fileOutPos;
-    fileout << TX_WITH_WITNESS(block);
+    fileout << BLK_WITH_AUXPOW_AND_WITNESS(block);
 
     return true;
 }
@@ -1050,7 +1051,7 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) cons
 
     // Read block
     try {
-        filein >> TX_WITH_WITNESS(block);
+        filein >> BLK_WITH_AUXPOW_AND_WITNESS(block);
     } catch (const std::exception& e) {
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
@@ -1119,7 +1120,7 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
 
 FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp)
 {
-    unsigned int nBlockSize = ::GetSerializeSize(TX_WITH_WITNESS(block));
+    unsigned int nBlockSize = ::GetSerializeSize(BLK_WITH_AUXPOW_AND_WITNESS(block));
     FlatFilePos blockPos;
     const auto position_known {dbp != nullptr};
     if (position_known) {

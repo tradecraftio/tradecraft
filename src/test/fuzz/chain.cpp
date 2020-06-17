@@ -25,7 +25,7 @@
 FUZZ_TARGET(chain)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    std::optional<CDiskBlockIndex> disk_block_index = ConsumeDeserializable<CDiskBlockIndex>(fuzzed_data_provider);
+    std::optional<CDiskBlockIndex> disk_block_index = ConsumeDeserializable<CDiskBlockIndex>(fuzzed_data_provider, BLKHDR_WITH_AUXPOW);
     if (!disk_block_index) {
         return;
     }

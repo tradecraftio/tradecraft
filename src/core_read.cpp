@@ -219,7 +219,7 @@ bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
     const std::vector<unsigned char> header_data{ParseHex(hex_header)};
     DataStream ser_header{header_data};
     try {
-        ser_header >> header;
+        ser_header >> BLKHDR_WITH_AUXPOW(header);
     } catch (const std::exception&) {
         return false;
     }
@@ -234,7 +234,7 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
     DataStream ssBlock(blockData);
     try {
-        ssBlock >> TX_WITH_WITNESS(block);
+        ssBlock >> BLK_WITH_AUXPOW_AND_WITNESS(block);
     }
     catch (const std::exception&) {
         return false;

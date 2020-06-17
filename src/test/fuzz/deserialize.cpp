@@ -156,7 +156,7 @@ FUZZ_TARGET_DESERIALIZE(block_file_info_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(block_header_and_short_txids_deserialize, {
     CBlockHeaderAndShortTxIDs block_header_and_short_txids;
-    DeserializeFromFuzzingInput(buffer, block_header_and_short_txids);
+    DeserializeFromFuzzingInput(buffer, block_header_and_short_txids, BLKHDR_WITH_AUXPOW);
 })
 FUZZ_TARGET_DESERIALIZE(fee_rate_deserialize, {
     CFeeRate fee_rate;
@@ -165,7 +165,7 @@ FUZZ_TARGET_DESERIALIZE(fee_rate_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(merkle_block_deserialize, {
     CMerkleBlock merkle_block;
-    DeserializeFromFuzzingInput(buffer, merkle_block);
+    DeserializeFromFuzzingInput(buffer, BLKHDR_WITH_AUXPOW(merkle_block));
 })
 FUZZ_TARGET_DESERIALIZE(out_point_deserialize, {
     COutPoint out_point;
@@ -218,7 +218,7 @@ FUZZ_TARGET_DESERIALIZE(pst_output_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(block_deserialize, {
     CBlock block;
-    DeserializeFromFuzzingInput(buffer, TX_WITH_WITNESS(block));
+    DeserializeFromFuzzingInput(buffer, BLK_WITH_AUXPOW_AND_WITNESS(block));
 })
 FUZZ_TARGET_DESERIALIZE(blocklocator_deserialize, {
     CBlockLocator bl;
@@ -226,13 +226,13 @@ FUZZ_TARGET_DESERIALIZE(blocklocator_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(blockmerkleroot, {
     CBlock block;
-    DeserializeFromFuzzingInput(buffer, TX_WITH_WITNESS(block));
+    DeserializeFromFuzzingInput(buffer, BLK_WITH_AUXPOW_AND_WITNESS(block));
     bool mutated;
     BlockMerkleRoot(block, &mutated);
 })
 FUZZ_TARGET_DESERIALIZE(blockheader_deserialize, {
     CBlockHeader bh;
-    DeserializeFromFuzzingInput(buffer, bh);
+    DeserializeFromFuzzingInput(buffer, BLKHDR_WITH_AUXPOW(bh));
 })
 FUZZ_TARGET_DESERIALIZE(txundo_deserialize, {
     CTxUndo tu;
@@ -312,7 +312,7 @@ FUZZ_TARGET_DESERIALIZE(bloomfilter_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(diskblockindex_deserialize, {
     CDiskBlockIndex dbi;
-    DeserializeFromFuzzingInput(buffer, dbi);
+    DeserializeFromFuzzingInput(buffer, BLKHDR_WITH_AUXPOW(dbi));
 })
 FUZZ_TARGET_DESERIALIZE(txoutcompressor_deserialize, {
     CTxOut to;

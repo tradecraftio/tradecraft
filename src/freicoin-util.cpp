@@ -154,7 +154,7 @@ static int Grind(const std::vector<std::string>& args, std::string& strPrint)
     }
 
     DataStream ss{};
-    ss << header;
+    ss << BLKHDR_WITH_AUXPOW(header);
     strPrint = HexStr(ss);
     return EXIT_SUCCESS;
 }

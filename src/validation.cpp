@@ -3971,7 +3971,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
     // Size limits
     const std::size_t max_block_weight = (rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT;
-    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > max_block_weight || ::GetSerializeSize(TX_NO_WITNESS(block)) * WITNESS_SCALE_FACTOR > max_block_weight)
+    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > max_block_weight || ::GetSerializeSize(BLK_NO_AUXPOW_NOR_WITNESS(block)) * WITNESS_SCALE_FACTOR > max_block_weight)
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
@@ -5030,7 +5030,7 @@ void ChainstateManager::LoadExternalBlockFile(
                     dbp->nPos = nBlockPos;
                 blkdat.SetLimit(nBlockPos + nSize);
                 CBlockHeader header;
-                blkdat >> header;
+                blkdat >> BLKHDR_WITH_AUXPOW(header);
                 const uint256 hash{header.GetHash()};
                 // Skip the rest of this block (this may read from disk into memory); position to the marker before the
                 // next block, but it's still possible to rewind to the start of the current block (without a disk read).
@@ -5057,7 +5057,7 @@ void ChainstateManager::LoadExternalBlockFile(
                         // This block can be processed immediately; rewind to its start, read and deserialize it.
                         blkdat.SetPos(nBlockPos);
                         pblock = std::make_shared<CBlock>();
-                        blkdat >> TX_WITH_WITNESS(*pblock);
+                        blkdat >> BLK_WITH_AUXPOW_AND_WITNESS(*pblock);
                         nRewind = blkdat.GetPos();
 
                         BlockValidationState state;

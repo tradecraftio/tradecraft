@@ -28,7 +28,7 @@
 FUZZ_TARGET(block_header)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const std::optional<CBlockHeader> block_header = ConsumeDeserializable<CBlockHeader>(fuzzed_data_provider);
+    const std::optional<CBlockHeader> block_header = ConsumeDeserializable<CBlockHeader>(fuzzed_data_provider, BLKHDR_WITH_AUXPOW);
     if (!block_header) {
         return;
     }

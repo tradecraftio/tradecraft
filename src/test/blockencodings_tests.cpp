@@ -80,10 +80,10 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         CBlockHeaderAndShortTxIDs shortIDs{block};
 
         DataStream stream{};
-        stream << shortIDs;
+        stream << BLKHDR_WITH_AUXPOW(shortIDs);
 
         CBlockHeaderAndShortTxIDs shortIDs2;
-        stream >> shortIDs2;
+        stream >> BLKHDR_WITH_AUXPOW(shortIDs2);
 
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);
@@ -131,17 +131,17 @@ public:
 
     explicit TestHeaderAndShortIDs(const CBlockHeaderAndShortTxIDs& orig) {
         DataStream stream{};
-        stream << orig;
-        stream >> *this;
+        stream << BLKHDR_WITH_AUXPOW(orig);
+        stream >> BLKHDR_WITH_AUXPOW(*this);
     }
     explicit TestHeaderAndShortIDs(const CBlock& block) :
         TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs{block}) {}
 
     uint64_t GetShortID(const uint256& txhash) const {
         DataStream stream{};
-        stream << *this;
+        stream << BLKHDR_WITH_AUXPOW(*this);
         CBlockHeaderAndShortTxIDs base;
-        stream >> base;
+        stream >> BLKHDR_WITH_AUXPOW(base);
         return base.GetShortID(txhash);
     }
 
@@ -170,10 +170,10 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         shortIDs.shorttxids[1] = shortIDs.GetShortID(block.vtx[2]->GetHash());
 
         DataStream stream{};
-        stream << shortIDs;
+        stream << BLKHDR_WITH_AUXPOW(shortIDs);
 
         CBlockHeaderAndShortTxIDs shortIDs2;
-        stream >> shortIDs2;
+        stream >> BLKHDR_WITH_AUXPOW(shortIDs2);
 
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);
@@ -240,10 +240,10 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         shortIDs.shorttxids[0] = shortIDs.GetShortID(block.vtx[1]->GetHash());
 
         DataStream stream{};
-        stream << shortIDs;
+        stream << BLKHDR_WITH_AUXPOW(shortIDs);
 
         CBlockHeaderAndShortTxIDs shortIDs2;
-        stream >> shortIDs2;
+        stream >> BLKHDR_WITH_AUXPOW(shortIDs2);
 
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);
@@ -295,10 +295,10 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
         CBlockHeaderAndShortTxIDs shortIDs{block};
 
         DataStream stream{};
-        stream << shortIDs;
+        stream << BLKHDR_WITH_AUXPOW(shortIDs);
 
         CBlockHeaderAndShortTxIDs shortIDs2;
-        stream >> shortIDs2;
+        stream >> BLKHDR_WITH_AUXPOW(shortIDs2);
 
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);

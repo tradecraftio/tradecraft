@@ -124,7 +124,7 @@ static RPCHelpMan gettxoutproof()
 
             DataStream ssMB{};
             CMerkleBlock mb(block, setTxids);
-            ssMB << mb;
+            ssMB << BLKHDR_WITH_AUXPOW(mb);
             std::string strHex = HexStr(ssMB);
             return strHex;
         },
@@ -150,7 +150,7 @@ static RPCHelpMan verifytxoutproof()
         {
             DataStream ssMB{ParseHexV(request.params[0], "proof")};
             CMerkleBlock merkleBlock;
-            ssMB >> merkleBlock;
+            ssMB >> BLKHDR_WITH_AUXPOW(merkleBlock);
 
             UniValue res(UniValue::VARR);
 

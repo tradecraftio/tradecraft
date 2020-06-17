@@ -262,24 +262,24 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
         },
         [&] {
             // hex encoded block
-            std::optional<CBlock> opt_block = ConsumeDeserializable<CBlock>(fuzzed_data_provider, TX_WITH_WITNESS);
+            std::optional<CBlock> opt_block = ConsumeDeserializable<CBlock>(fuzzed_data_provider, BLK_WITH_AUXPOW_AND_WITNESS);
             if (!opt_block) {
                 good_data = false;
                 return;
             }
             DataStream data_stream{};
-            data_stream << TX_WITH_WITNESS(*opt_block);
+            data_stream << BLK_WITH_AUXPOW_AND_WITNESS(*opt_block);
             r = HexStr(data_stream);
         },
         [&] {
             // hex encoded block header
-            std::optional<CBlockHeader> opt_block_header = ConsumeDeserializable<CBlockHeader>(fuzzed_data_provider);
+            std::optional<CBlockHeader> opt_block_header = ConsumeDeserializable<CBlockHeader>(fuzzed_data_provider, BLKHDR_WITH_AUXPOW);
             if (!opt_block_header) {
                 good_data = false;
                 return;
             }
             DataStream data_stream{};
-            data_stream << *opt_block_header;
+            data_stream << BLKHDR_WITH_AUXPOW(*opt_block_header);
             r = HexStr(data_stream);
         },
         [&] {

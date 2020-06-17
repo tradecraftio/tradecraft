@@ -354,7 +354,7 @@ RPCHelpMan importprunedfunds()
 
     DataStream ssMB{ParseHexV(request.params[1], "proof")};
     CMerkleBlock merkleBlock;
-    ssMB >> merkleBlock;
+    ssMB >> BLKHDR_WITH_AUXPOW(merkleBlock);
 
     //Search partial merkle tree in proof for our transaction and index in valid block
     std::vector<uint256> vMatch;

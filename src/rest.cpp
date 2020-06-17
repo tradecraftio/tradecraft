@@ -262,7 +262,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::BINARY: {
         DataStream ssHeader{};
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader();
+            ssHeader << BLKHDR_WITH_AUXPOW(pindex->GetBlockHeader());
         }
 
         std::string binaryHeader = ssHeader.str();
@@ -274,7 +274,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::HEX: {
         DataStream ssHeader{};
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader();
+            ssHeader << BLKHDR_WITH_AUXPOW(pindex->GetBlockHeader());
         }
 
         std::string strHex = HexStr(ssHeader) + "\n";
@@ -337,7 +337,7 @@ static bool rest_block(const std::any& context,
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         DataStream ssBlock;
-        ssBlock << TX_WITH_WITNESS(block);
+        ssBlock << BLK_WITH_AUXPOW_AND_WITNESS(block);
         std::string binaryBlock = ssBlock.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryBlock);
@@ -346,7 +346,7 @@ static bool rest_block(const std::any& context,
 
     case RESTResponseFormat::HEX: {
         DataStream ssBlock;
-        ssBlock << TX_WITH_WITNESS(block);
+        ssBlock << BLK_WITH_AUXPOW_AND_WITNESS(block);
         std::string strHex = HexStr(ssBlock) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);

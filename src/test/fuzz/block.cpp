@@ -38,7 +38,7 @@ FUZZ_TARGET(block, .init = initialize_block)
     DataStream ds{buffer};
     CBlock block;
     try {
-        ds >> TX_WITH_WITNESS(block);
+        ds >> BLK_WITH_AUXPOW_AND_WITNESS(block);
     } catch (const std::ios_base::failure&) {
         return;
     }
