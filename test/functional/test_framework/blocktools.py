@@ -154,6 +154,8 @@ def add_witness_commitment(block, nonce=0):
     block.vtx[-1].vout[-1].scriptPubKey = get_witness_script(witness_root, nonce)
     block.vtx[-1].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
+    if block.aux_pow:
+        block.aux_pow.commit_hash_merkle_root = block.calc_commit_merkle_root()
     block.rehash()
 
     return [

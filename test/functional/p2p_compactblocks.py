@@ -203,6 +203,8 @@ class CompactBlocksTest(FreicoinTestFramework):
         block2 = self.build_block_on_tip(self.nodes[0])
         block2.vtx.insert(-1, tx)
         block2.hashMerkleRoot = block2.calc_merkle_root()
+        if block2.aux_pow:
+            block2.aux_pow.commit_hash_merkle_root = block2.calc_commit_merkle_root()
         block2.solve()
         self.segwit_node.send_and_ping(msg_no_witness_block(block2))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block2.sha256)
@@ -499,6 +501,8 @@ class CompactBlocksTest(FreicoinTestFramework):
             block.vtx.append(finaltx)
 
         block.hashMerkleRoot = block.calc_merkle_root()
+        if block.aux_pow:
+            block.aux_pow.commit_hash_merkle_root = block.calc_commit_merkle_root()
         block.solve()
         return block
 
@@ -779,6 +783,8 @@ class CompactBlocksTest(FreicoinTestFramework):
         block = self.build_block_with_transactions(node, utxo, 5)
         del block.vtx[3]
         block.hashMerkleRoot = block.calc_merkle_root()
+        if block.aux_pow:
+            block.aux_pow.commit_hash_merkle_root = block.calc_commit_merkle_root()
         if use_segwit:
             # If we're testing with segwit, also drop the coinbase witness,
             # but include the witness commitment.
