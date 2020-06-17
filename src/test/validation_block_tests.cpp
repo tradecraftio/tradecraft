@@ -135,7 +135,7 @@ std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock, BlockFinal
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
-    while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, 0, Params().GetConsensus())) {
+    while (!CheckProofOfWork(*pblock, Params().GetConsensus())) {
         ++(pblock->nNonce);
     }
 
