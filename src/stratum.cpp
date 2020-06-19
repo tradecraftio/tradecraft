@@ -81,17 +81,30 @@ struct StratumClient
     CBlockIndex* m_last_tip;
     bool m_send_work;
 
-    std::string m_extranonce_req;
+    bool m_supports_extranonce;
 
-    StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false) { GenSecret(); }
-    StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_nextid(0), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false) { GenSecret(); }
+    StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_nextid(0), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
 
     void GenSecret();
+    std::vector<unsigned char> ExtraNonce1(uint256 job_id) const;
 };
 
 void StratumClient::GenSecret()
 {
     GetRandBytes(m_secret.begin(), 32);
+}
+
+std::vector<unsigned char> StratumClient::ExtraNonce1(uint256 job_id) const
+{
+    CSHA256 nonce_hasher;
+    nonce_hasher.Write(m_secret.begin(), 32);
+    if (m_supports_extranonce) {
+        nonce_hasher.Write(job_id.begin(), 32);
+    }
+    uint256 job_nonce;
+    nonce_hasher.Finalize(job_nonce.begin());
+    return {job_nonce.begin(), job_nonce.begin()+8};
 }
 
 struct StratumWork {
@@ -215,6 +228,34 @@ static double ClampDifficulty(const StratumClient& client, double diff)
     return diff;
 }
 
+static std::string GetExtraNonceRequest(StratumClient& client, const uint256& job_id) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+{
+    std::string ret;
+    if (client.m_supports_extranonce) {
+        const std::string k_extranonce_req = std::string()
+            + "{"
+            +     "\"id\":";
+        const std::string k_extranonce_req2 = std::string()
+            +     ","
+            +     "\"method\":\"mining.set_extranonce\","
+            +     "\"params\":["
+            +         "\"";
+        const std::string k_extranonce_req3 = std::string()
+            +            "\"," // extranonce1
+            +         "4"      // extranonce2.size()
+            +     "]"
+            + "}"
+            + "\n";
+
+        ret = k_extranonce_req
+            + strprintf("%d", client.m_nextid++)
+            + k_extranonce_req2
+            + HexStr(client.ExtraNonce1(job_id))
+            + k_extranonce_req3;
+    }
+    return ret;
+}
+
 std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     if (!g_context) {
@@ -320,14 +361,8 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     set_difficulty.pushKV("params", set_difficulty_params);
 
     CMutableTransaction cb(*current_work.GetBlock().vtx[0]);
-    uint256 job_nonce;
-    CSHA256()
-        .Write(client.m_secret.begin(), 32)
-        .Write(job_id.begin(), 32)
-        .Finalize(job_nonce.begin());
-    std::vector<unsigned char> nonce(job_nonce.begin(),
-                                     job_nonce.begin()+8);
-    nonce.resize(nonce.size()+4, 0x00);
+    auto nonce = client.ExtraNonce1(job_id);
+    nonce.resize(nonce.size()+4, 0x00); // extranonce2
     cb.vin.front().scriptSig =
            CScript()
         << current_work.m_height
@@ -346,7 +381,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     if (ds.size() < pos) {
         throw std::runtime_error("Customized coinbase transaction does not contain extranonce field at expected location.");
     }
-    std::string cb1 = HexStr({&ds[0], pos-4});
+    std::string cb1 = HexStr({&ds[0], pos-4-8});
     std::string cb2 = HexStr({&ds[pos], ds.size()-pos});
 
     UniValue params(UniValue::VARR);
@@ -389,7 +424,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     mining_notify.pushKV("id", client.m_nextid++);
     mining_notify.pushKV("method", "mining.notify");
 
-    return client.m_extranonce_req
+    return GetExtraNonceRequest(client, job_id)
          + set_difficulty.write() + "\n"
          + mining_notify.write()  + "\n";
 }
@@ -407,13 +442,7 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
         LogPrint(BCLog::STRATUM, "%s\n", msg);
         throw std::runtime_error(msg);
     }
-    uint256 job_nonce;
-    CSHA256()
-        .Write(client.m_secret.begin(), 32)
-        .Write(job_id.begin(), 32)
-        .Finalize(job_nonce.begin());
-    std::vector<unsigned char> nonce(job_nonce.begin(),
-                                     job_nonce.begin()+8);
+    auto nonce = client.ExtraNonce1(job_id);
     if ((nonce.size() + extranonce2.size()) != 12) {
         const std::string msg = strprintf("SubmitBlock: unexpected combined nonce length: extranonce1(%d) + extranonce2(%d) != 12; unable to submit work", nonce.size(), extranonce2.size());
         LogPrint(BCLog::STRATUM, "%s\n", msg);
@@ -528,7 +557,8 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
 
     UniValue ret(UniValue::VARR);
     ret.push_back(msg);
-    ret.push_back("");          //        extranonce1
+    // client.m_supports_extranonce is false, so the job_id isn't used.
+    ret.push_back(HexStr(client.ExtraNonce1(uint256())));
     ret.push_back(UniValue(4)); // sizeof(extranonce2)
 
     return ret;
@@ -637,21 +667,10 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
 
 UniValue stratum_mining_extranonce_subscribe(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
-    const std::string k_extranonce_req = std::string()
-        + "{"
-        +     "\"id\":4," // by random dice roll
-        +     "\"method\":\"mining.set_extranonce\","
-        +     "\"params\":["
-        +         "\"\"," // extranonce1
-        +         "4"     // extranonce2.size()
-        +     "]"
-        + "}"
-        + "\n";
-
     const std::string method("mining.extranonce.subscribe");
     BoundParams(method, params, 0, 0);
 
-    client.m_extranonce_req = k_extranonce_req;
+    client.m_supports_extranonce = true;
 
     return true;
 }
