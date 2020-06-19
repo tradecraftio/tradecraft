@@ -81,17 +81,30 @@ struct StratumClient
     CBlockIndex* m_last_tip;
     bool m_send_work;
 
-    std::string m_extranonce_req;
+    bool m_supports_extranonce;
 
-    StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false) { GenSecret(); }
-    StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false) { GenSecret(); }
+    StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
 
     void GenSecret();
+    std::vector<unsigned char> ExtraNonce1(uint256 job_id) const;
 };
 
 void StratumClient::GenSecret()
 {
     GetRandBytes(m_secret.begin(), 32);
+}
+
+std::vector<unsigned char> StratumClient::ExtraNonce1(uint256 job_id) const
+{
+    CSHA256 nonce_hasher;
+    nonce_hasher.Write(m_secret.begin(), 32);
+    if (m_supports_extranonce) {
+        nonce_hasher.Write(job_id.begin(), 32);
+    }
+    uint256 job_nonce;
+    nonce_hasher.Finalize(job_nonce.begin());
+    return {job_nonce.begin(), job_nonce.begin()+8};
 }
 
 struct StratumWork {
@@ -320,14 +333,8 @@ std::string GetWorkUnit(StratumClient& client)
     set_difficulty.push_back(Pair("params", set_difficulty_params));
 
     CMutableTransaction cb(current_work.GetBlock().vtx[0]);
-    uint256 job_nonce;
-    CSHA256()
-        .Write(client.m_secret.begin(), 32)
-        .Write(job_id.begin(), 32)
-        .Finalize(job_nonce.begin());
-    std::vector<unsigned char> nonce(job_nonce.begin(),
-                                     job_nonce.begin()+8);
-    nonce.resize(nonce.size()+4, 0x00);
+    auto nonce = client.ExtraNonce1(job_id);
+    nonce.resize(nonce.size()+4, 0x00); // extranonce2
     cb.vin.front().scriptSig =
            CScript()
         << cb.lock_height
@@ -337,11 +344,11 @@ std::string GetWorkUnit(StratumClient& client)
     CDataStream ds(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
     ds << CTransaction(cb);
     assert(ds.size() >= (4 + 1 + 32 + 4 + 1));
-    size_t pos = 4 + 1 + 32 + 4 + 1 + ds[4+1+32+4] - 4;
-    assert(ds.size() >= (pos + 4));
+    size_t pos = 4 + 1 + 32 + 4 + 1 + ds[4+1+32+4] - 4 - 8;
+    assert(ds.size() >= (pos + 8 + 4));
 
     std::string cb1 = HexStr(&ds[0], &ds[pos]);
-    std::string cb2 = HexStr(&ds[pos+4], &ds[ds.size()]);
+    std::string cb2 = HexStr(&ds[pos+8+4], &ds[ds.size()]);
 
     UniValue params(UniValue::VARR);
     params.push_back(job_id.GetHex());
@@ -392,7 +399,27 @@ std::string GetWorkUnit(StratumClient& client)
     mining_notify.push_back(Pair("id", NullUniValue));
     mining_notify.push_back(Pair("method", "mining.notify"));
 
-    return client.m_extranonce_req
+    std::string extranonce_req;
+    if (client.m_supports_extranonce) {
+        const std::string k_extranonce_req = std::string()
+            + "{"
+            +     "\"id\":4," // by random dice roll
+            +     "\"method\":\"mining.set_extranonce\","
+            +     "\"params\":["
+            +         "\"";
+        const std::string k_extranonce_req2 = std::string()
+            +            "\"," // extranonce1
+            +         "4"      // extranonce2.size()
+            +     "]"
+            + "}"
+            + "\n";
+
+        extranonce_req = k_extranonce_req
+                       + HexStr(client.ExtraNonce1(job_id))
+                       + k_extranonce_req2;
+    }
+
+    return extranonce_req
          + set_difficulty.write() + "\n"
          + mining_notify.write()  + "\n";
 }
@@ -402,13 +429,7 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
     assert(current_work.GetBlock().vtx.size() >= 1);
     CMutableTransaction cb(current_work.GetBlock().vtx.front());
     assert(cb.vin.size() == 1);
-    uint256 job_nonce;
-    CSHA256()
-        .Write(client.m_secret.begin(), 32)
-        .Write(job_id.begin(), 32)
-        .Finalize(job_nonce.begin());
-    std::vector<unsigned char> nonce(job_nonce.begin(),
-                                     job_nonce.begin()+8);
+    auto nonce = client.ExtraNonce1(job_id);
     assert(extranonce2.size() == 4);
     nonce.insert(nonce.end(), extranonce2.begin(),
                               extranonce2.end());
@@ -498,8 +519,9 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
 
     UniValue ret(UniValue::VARR);
     ret.push_back(msg);
-    ret.push_back(""); //        extranonce1
-    ret.push_back(4);  // sizeof(extranonce2)
+    // client.m_supports_extranonce is false, so the job_id isn't used.
+    ret.push_back(HexStr(client.ExtraNonce1(uint256())));
+    ret.push_back(4); // sizeof(extranonce2)
 
     //ScheduleSendWork(client);
     return ret;
@@ -616,21 +638,10 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
 
 UniValue stratum_mining_extranonce_subscribe(StratumClient& client, const UniValue& params)
 {
-    const std::string k_extranonce_req = std::string()
-        + "{"
-        +     "\"id\":4," // by random dice roll
-        +     "\"method\":\"mining.set_extranonce\","
-        +     "\"params\":["
-        +         "\"\"," // extranonce1
-        +         "4"     // extranonce2.size()
-        +     "]"
-        + "}"
-        + "\n";
-
     const std::string method("mining.extranonce.subscribe");
     BoundParams(method, params, 0, 0);
 
-    client.m_extranonce_req = k_extranonce_req;
+    client.m_supports_extranonce = true;
 
     return true;
 }
