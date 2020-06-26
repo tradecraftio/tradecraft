@@ -123,6 +123,25 @@ def deser_compact_size(f):
         nit = struct.unpack("<Q", f.read(8))[0]
     return nit
 
+def ser_varint(n):
+    r = b""
+    while True:
+        r += struct.pack("B", (n & 0x7F) | (0x80 if len(r) > 0 else 0x00))
+        if n <= 0x7f:
+            break
+        n = (n >> 7) - 1
+    return r[::-1]
+
+def deser_varint(f):
+    n = 0
+    while True:
+        c = struct.unpack("B", f.read(1))[0]
+        n = (n << 7) | (c & 0x7F)
+        if c & 0x80:
+            n += 1
+        else:
+            return n
+
 def deser_string(f):
     nit = deser_compact_size(f)
     return f.read(nit)
