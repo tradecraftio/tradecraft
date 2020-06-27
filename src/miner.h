@@ -27,6 +27,8 @@
 #include <memory>
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/ordered_index.hpp"
+#include "boost/none.hpp"
+#include "boost/optional.hpp"
 
 class CBlockIndex;
 class CChainParams;
@@ -233,7 +235,8 @@ private:
 };
 
 /** Modify the extranonce in a block */
-void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
+void IncrementExtraNonceAux(CBlock* pblock, std::vector<unsigned char>& extranonce);
+void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce, boost::optional<uint256> aux_hash2 = boost::none);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 #endif // FREICOIN_MINER_H

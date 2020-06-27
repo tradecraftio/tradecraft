@@ -205,13 +205,13 @@ class SegWitTest(FreicoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-logtimemicros=1", "-whitelist=127.0.0.1"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-logtimemicros=1", "-whitelist=127.0.0.1", "-bip9params=auxpow:0:0"]))
         # Start a node for testing IsStandard rules.
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-logtimemicros=1", "-whitelist=127.0.0.1", "-acceptnonstdtxn=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-logtimemicros=1", "-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-bip9params=auxpow:0:0"]))
         connect_nodes(self.nodes[0], 1)
 
         # Disable segwit's bip9 parameter to simulate upgrading after activation.
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-bip9params=segwit:0:0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-bip9params=segwit:0:0", "-bip9params=auxpow:0:0"]))
         connect_nodes(self.nodes[0], 2)
 
     ''' Helpers '''
@@ -221,8 +221,9 @@ class SegWitTest(FreicoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
+        blocktemplate = {} if height < 2 else self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})
         try:
-            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['segwit','auxpow']})['finaltx']['prevout']
+            finaltx_prevout = blocktemplate['finaltx']['prevout']
         except:
             finaltx_prevout = []
         if finaltx_prevout:
@@ -237,6 +238,8 @@ class SegWitTest(FreicoinTestFramework):
             block.vtx.append(finaltx)
             block.hashMerkleRoot = block.calc_merkle_root()
         block.nVersion = nVersion
+        if 'rules' in blocktemplate and '!auxpow' in blocktemplate['rules']:
+            block.setup_default_aux_pow()
         block.rehash()
         return block
 

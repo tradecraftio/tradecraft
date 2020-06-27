@@ -127,6 +127,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
         block.vtx.push_back(tx);
     // IncrementExtraNonce creates a valid coinbase and merkleRoot
     unsigned int extraNonce = 0;
+    // Merge mining isn't active so the auxiliary hash isn't needed.
     IncrementExtraNonce(&block, chainparams.GetConsensus(), chainActive.Tip(), extraNonce);
 
     while (!CheckProofOfWork(block, chainparams.GetConsensus())) ++block.nNonce;
