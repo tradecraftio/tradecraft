@@ -136,8 +136,8 @@ class CompactBlocksTest(FreicoinTestFramework):
 
         # Start up node0 to be a version 1, pre-segwit node.
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, 
-                [["-debug", "-logtimemicros=1", "-bip9params=segwit:0:0"], 
-                 ["-debug", "-logtimemicros", "-txindex"]])
+                [["-debug", "-logtimemicros=1", "-bip9params=segwit:0:0", "-bip9params=auxpow:0:0"],
+                 ["-debug", "-logtimemicros", "-txindex", "-bip9params=auxpow:0:0"]])
         connect_nodes(self.nodes[0], 1)
 
     def build_block_on_tip(self, node, segwit=False):
@@ -146,8 +146,9 @@ class CompactBlocksTest(FreicoinTestFramework):
         mtp = node.getblockheader(tip)['mediantime']
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
         block.nVersion = 4
+        blocktemplate = {} if height < 2 else node.getblocktemplate({'rules':['finaltx','segwit','auxpow']})
         try:
-            finaltx_prevout = node.getblocktemplate({'rules':['finaltx','segwit','auxpow']})['finaltx']['prevout']
+            finaltx_prevout = blocktemplate['finaltx']['prevout']
         except KeyError:
             finaltx_prevout = []
         if finaltx_prevout:
@@ -165,6 +166,8 @@ class CompactBlocksTest(FreicoinTestFramework):
             block.rehash()
         if segwit:
             add_witness_commitment(block)
+        if 'rules' in blocktemplate and '!auxpow' in blocktemplate['rules']:
+            block.setup_default_aux_pow()
         block.solve()
         return block
 
