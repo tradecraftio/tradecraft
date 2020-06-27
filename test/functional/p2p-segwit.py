@@ -130,7 +130,7 @@ class SegWitTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-whitelist=127.0.0.1"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]
+        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=auxpow:0:0"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=auxpow:0:0"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0", "-vbparams=auxpow:0:0"]]
 
     def setup_network(self):
         self.setup_nodes()
@@ -145,8 +145,9 @@ class SegWitTest(FreicoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
+        blocktemplate = {} if height < 2 else self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})
         try:
-            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})['finaltx']['prevout']
+            finaltx_prevout = blocktemplate['finaltx']['prevout']
         except KeyError:
             finaltx_prevout = []
         if finaltx_prevout:
@@ -161,6 +162,8 @@ class SegWitTest(FreicoinTestFramework):
             block.vtx.append(finaltx)
             block.hashMerkleRoot = block.calc_merkle_root()
         block.nVersion = nVersion
+        if 'rules' in blocktemplate and '!auxpow' in blocktemplate['rules']:
+            block.setup_default_aux_pow()
         block.rehash()
         return block
 
