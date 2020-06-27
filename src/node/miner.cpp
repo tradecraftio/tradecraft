@@ -228,6 +228,28 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
+    // Use of auxiliary proof-of-work is required after merge mining has
+    // activated.  Since interfacing with the auxiliary chain is outside of
+    // scope for this code, we generate a minimal auxiliary header.
+    if (DeploymentActiveAfter(pindexPrev, m_chainstate.m_chainman, Consensus::DEPLOYMENT_AUXPOW)) {
+        // Setup the block header commitment.
+        pblock->m_aux_pow.m_commit_version = pblock->nVersion;
+        pblock->m_aux_pow.m_commit_hash_merkle_root = BlockTemplateMerkleRoot(*pblock, nullptr);
+
+        // Setup a fake auxiliary block with a single "transaction" (not an
+        // actual transaction as no valid data precedes the midstate).
+        CSHA256().Midstate(pblock->m_aux_pow.m_midstate_hash.begin(), nullptr, nullptr);
+        pblock->m_aux_pow.m_aux_num_txns = 1;
+
+        // Set difficulty for the auxiliary proof-of-work.
+        pblock->SetFilteredTime(GetFilteredTimeAux(pindexPrev, chainparams.GetConsensus()));
+        pblock->m_aux_pow.m_commit_bits = CalculateNextWorkRequiredAux(pindexPrev, chainparams.GetConsensus());;
+
+        // Setup the auxiliary header fields to have reasonable values.
+        pblock->m_aux_pow.m_aux_version = VERSIONBITS_TOP_BITS;
+        pblock->m_aux_pow.m_aux_bits = pblock->m_aux_pow.m_commit_bits;
+    }
+
     BlockValidationState state;
     if (m_options.test_block_validity && !TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev,
                                                   GetAdjustedTime, /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false)) {
