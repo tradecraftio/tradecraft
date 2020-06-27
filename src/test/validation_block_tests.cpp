@@ -88,6 +88,19 @@ std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock)
 {
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
+    if (!pblock->m_aux_pow.IsNull()) {
+        std::vector<unsigned char> extranonce;
+        IncrementExtraNonceAux(*pblock, extranonce);
+        while (!CheckAuxiliaryProofOfWork(*pblock, Params().GetConsensus())) {
+            ++(pblock->m_aux_pow.m_aux_nonce);
+        }
+        const auto aux_hash2 = pblock->GetAuxiliaryHash(Params().GetConsensus()).second;
+        CMutableTransaction txCoinbase(*pblock->vtx[0]);
+        txCoinbase.vin[0].scriptSig.insert(txCoinbase.vin[0].scriptSig.end(), aux_hash2.begin(), aux_hash2.end());
+        assert(txCoinbase.vin[0].scriptSig.size() <= 100);
+        pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+    }
+
     while (!CheckProofOfWork(*pblock, Params().GetConsensus())) {
         ++(pblock->nNonce);
     }
