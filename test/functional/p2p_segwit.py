@@ -137,7 +137,7 @@ class SegWitTest(FreicoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
-        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:0"]]
+        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:999999999999", "-vbparams=auxpow:0:0"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:999999999999", "-vbparams=auxpow:0:0"], ["-whitelist=127.0.0.1", "-vbparams=finaltx:0:999999999999", "-vbparams=segwit:0:0", "-vbparams=auxpow:0:0"]]
 
     def setup_network(self):
         self.setup_nodes()
@@ -151,13 +151,13 @@ class SegWitTest(FreicoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
+        blocktemplate = {} if height < 2 else self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
-        try:
-            final_tx = self.nodes[0].getblocktemplate({'rules':['finaltx','segwit','auxpow']})['finaltx']['prevout']
-            add_final_tx(final_tx, block)
-        except KeyError:
-            pass
+        if 'finaltx' in blocktemplate:
+            add_final_tx(blocktemplate['finaltx']['prevout'], block)
         block.nVersion = nVersion
+        if 'rules' in blocktemplate and '!auxpow' in blocktemplate['rules']:
+            block.setup_default_aux_pow()
         block.rehash()
         return block
 

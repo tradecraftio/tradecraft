@@ -165,7 +165,16 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     unsigned int extraNonce = 0;
     {
         LOCK(cs_main);
-        IncrementExtraNonce(&block, chainparams.GetConsensus(), chainActive.Tip(), extraNonce);
+        boost::optional<uint256> aux_hash2 = boost::none;
+        if (!block.m_aux_pow.IsNull()) {
+            std::vector<unsigned char> extranonce;
+            IncrementExtraNonceAux(block, extranonce);
+            while (!CheckAuxiliaryProofOfWork(block, chainparams.GetConsensus())) {
+                ++block.m_aux_pow.m_aux_nonce;
+            }
+            aux_hash2 = block.GetAuxiliaryHash(chainparams.GetConsensus()).second;
+        }
+        IncrementExtraNonce(&block, chainparams.GetConsensus(), chainActive.Tip(), extraNonce, aux_hash2);
     }
 
     while (!CheckProofOfWork(block, chainparams.GetConsensus())) ++block.nNonce;
