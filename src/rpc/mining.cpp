@@ -105,6 +105,7 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
         nHeight = nHeightStart;
         nHeightEnd = nHeightStart+nGenerate;
     }
+    std::vector<unsigned char> extranonce;
     unsigned int nExtraNonce = 0;
     UniValue blockHashes(UniValue::VARR);
     while (nHeight < nHeightEnd)
@@ -113,9 +114,29 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
+        if (!pblock->m_aux_pow.IsNull()) {
+            {
+                LOCK(cs_main);
+                IncrementExtraNonceAux(pblock, extranonce);
+            }
+            while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckAuxiliaryProofOfWork(*pblock, params.GetConsensus())) {
+                ++pblock->m_aux_pow.m_aux_nonce;
+                --nMaxTries;
+            }
+            if (nMaxTries == 0) {
+                break;
+            }
+            if (pblock->m_aux_pow.m_aux_nonce == nInnerLoopCount) {
+                continue;
+            }
+        }
         {
             LOCK(cs_main);
-            IncrementExtraNonce(pblock, Params().GetConsensus(), chainActive.Tip(), nExtraNonce);
+            boost::optional<uint256> aux_hash2 = boost::none;
+            if (!pblock->m_aux_pow.IsNull()) {
+                aux_hash2 = pblock->GetAuxiliaryHash(params.GetConsensus()).second;
+            }
+            IncrementExtraNonce(pblock, Params().GetConsensus(), chainActive.Tip(), nExtraNonce, aux_hash2);
         }
         while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(*pblock, Params().GetConsensus())) {
             ++pblock->nNonce;
