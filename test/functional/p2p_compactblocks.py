@@ -114,7 +114,7 @@ class CompactBlocksTest(FreicoinTestFramework):
         self.num_nodes = 2
         # This test was written assuming SegWit is activated using BIP9 at height 432 (3x confirmation window).
         # TODO: Rewrite this test to support SegWit being always active.
-        self.extra_args = [["-vbparams=segwit:0:0"], ["-vbparams=segwit:0:999999999999", "-txindex"]]
+        self.extra_args = [["-vbparams=segwit:0:0", "-vbparams=auxpow:0:0"], ["-vbparams=segwit:0:999999999999", "-vbparams=auxpow:0:0", "-txindex"]]
         self.utxos = []
 
     def skip_test_if_missing_module(self):
@@ -124,12 +124,15 @@ class CompactBlocksTest(FreicoinTestFramework):
         height = node.getblockcount()
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
+        blocktemplate = {} if height < 2 else node.getblocktemplate({'rules':['finaltx','segwit','auxpow']})
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
         block.nVersion = 4
         if height > 100:
             add_final_tx(get_final_tx_info(node), block)
         if segwit:
             add_witness_commitment(block)
+        if 'rules' in blocktemplate and '!auxpow' in blocktemplate['rules']:
+            block.setup_default_aux_pow()
         block.solve()
         return block
 
