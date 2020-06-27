@@ -1122,7 +1122,37 @@ class CBlock(CBlockHeader):
             return False
         return True
 
+    def setup_default_aux_pow(self):
+        self.aux_pow = AuxProofOfWork()
+        self.aux_pow.commit_version = self.nVersion
+        self.aux_pow.commit_hash_merkle_root = self.calc_commit_merkle_root()
+        self.aux_pow.commit_bits = 0x207fffff # No difficulty adjustment on regtest
+        self.aux_pow.midstate_hash = uint256_from_str(SHA256().midstate()[0])
+        self.aux_pow.aux_num_txns = 1
+        self.aux_pow.aux_version = 0x20000000
+        self.aux_pow.aux_bits = self.aux_pow.commit_bits
+
     def solve(self):
+        if self.aux_pow:
+            self.rehash()
+            aux_target1 = uint256_from_compact(self.aux_pow.commit_bits)
+            aux_target2 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+            bias = self.get_bias()
+            aux_target1 = aux_target1 << bias
+            assert (aux_target1 <= aux_target2)
+            aux_target2 = aux_target2 >> bias
+            while (self.aux_hash1 > aux_target1) or (self.aux_hash2 > aux_target2):
+                self.aux_pow.aux_nonce += 1
+                self.rehash()
+            # First remove the existing commitment, if there is one.  There
+            # isn't a way to identify the commitment, so we presume that one is
+            # present if the coinbase miner string is large enough to contain
+            # it.
+            if len(self.vtx[0].vin[0].scriptSig) >= 32:
+                self.vtx[0].vin[0].scriptSig = self.vtx[0].vin[0].scriptSig[:-32]
+            self.vtx[0].vin[0].scriptSig = bytes.fromhex(self.vtx[0].vin[0].scriptSig.hex()) + ser_uint256(self.aux_hash2)
+            self.vtx[0].rehash()
+            self.hashMerkleRoot = self.calc_merkle_root()
         self.rehash()
         target = uint256_from_compact(self.nBits)
         while self.sha256 > target:
