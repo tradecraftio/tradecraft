@@ -113,6 +113,25 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
     block_out.reset();
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
+    if (!block.m_aux_pow.IsNull()) {
+        while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckAuxiliaryProofOfWork(block, chainman.GetConsensus()) && !ShutdownRequested()) {
+            ++block.m_aux_pow.m_aux_nonce;
+            --max_tries;
+        }
+        if (max_tries == 0 || ShutdownRequested()) {
+            return false;
+        }
+        if (block.m_aux_pow.m_aux_nonce == std::numeric_limits<uint32_t>::max()) {
+            return true;
+        }
+        uint256 aux_hash2 = block.GetAuxiliaryHash(chainman.GetConsensus()).second;
+        CMutableTransaction cb{*block.vtx[0]};
+        cb.vin[0].scriptSig = CScript() << cb.lock_height;
+        cb.vin[0].scriptSig.insert(cb.vin[0].scriptSig.end(), aux_hash2.begin(), aux_hash2.end());
+        block.vtx[0] = MakeTransactionRef(cb);
+        block.hashMerkleRoot = BlockMerkleRoot(block);
+    }
+
     while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block, chainman.GetConsensus()) && !ShutdownRequested()) {
         ++block.nNonce;
         --max_tries;

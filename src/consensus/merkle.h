@@ -172,6 +172,13 @@ uint256 ComputeMerkleMapRootFromBranch(const uint256& value, const std::vector<s
 uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
 
 /*
+ * Compute the Merkle root of the transactions in a block,
+ * but with the miner-mutable fields of the coinbase masked out.
+ * *mutated is set to true if a duplicated subtree was found.
+ */
+uint256 BlockTemplateMerkleRoot(const CBlock& block, bool* mutated = NULL);
+
+/*
  * Compute the Merkle root of the witness transactions in a block.
  * *mutated is set to true if a duplicated subtree was found.
  */
