@@ -226,7 +226,8 @@ private:
 };
 
 /** Modify the extranonce in a block */
-void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
+void IncrementExtraNonceAux(CBlock& block, std::vector<unsigned char>& extranonce);
+void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce, std::optional<uint256> aux_hash2 = std::nullopt);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
