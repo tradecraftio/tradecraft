@@ -583,8 +583,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
         consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
-        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 0; // disabled
         consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256{};

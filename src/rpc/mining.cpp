@@ -104,9 +104,30 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 
     CChainParams chainparams(Params());
 
+    if (!block.m_aux_pow.IsNull()) {
+        {
+            LOCK(cs_main);
+            std::vector<unsigned char> extranonceaux;
+            IncrementExtraNonceAux(block, extranonceaux);
+        }
+        while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckAuxiliaryProofOfWork(block, Params().GetConsensus())) {
+            ++block.m_aux_pow.m_aux_nonce;
+            --max_tries;
+        }
+        if (max_tries == 0 || ShutdownRequested()) {
+            return false;
+        }
+        if (block.m_aux_pow.m_aux_nonce == std::numeric_limits<uint32_t>::max()) {
+            return true;
+        }
+    }
     {
         LOCK(cs_main);
-        IncrementExtraNonce(&block, chainparams.GetConsensus(), ::ChainActive().Tip(), extra_nonce);
+        boost::optional<uint256> aux_hash2 = boost::none;
+        if (!block.m_aux_pow.IsNull()) {
+            aux_hash2 = block.GetAuxiliaryHash(Params().GetConsensus()).second;
+        }
+        IncrementExtraNonce(&block, chainparams.GetConsensus(), ::ChainActive().Tip(), extra_nonce, aux_hash2);
     }
 
     while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block, chainparams.GetConsensus()) && !ShutdownRequested()) {

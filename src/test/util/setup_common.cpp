@@ -240,6 +240,22 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     }
     RegenerateCommitments(block);
 
+    // IncrementExtraNonce creates a valid coinbase and merkleRoot
+    {
+        LOCK(cs_main);
+        unsigned int extraNonce = 0;
+        boost::optional<uint256> aux_hash2 = boost::none;
+        if (!block.m_aux_pow.IsNull()) {
+            std::vector<unsigned char> extranonce;
+            IncrementExtraNonceAux(block, extranonce);
+            while (!CheckAuxiliaryProofOfWork(block, chainparams.GetConsensus())) {
+                ++block.m_aux_pow.m_aux_nonce;
+            }
+            aux_hash2 = block.GetAuxiliaryHash(chainparams.GetConsensus()).second;
+        }
+        IncrementExtraNonce(&block, chainparams.GetConsensus(), ::ChainActive().Tip(), extraNonce, aux_hash2);
+    }
+
     while (!CheckProofOfWork(block, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
