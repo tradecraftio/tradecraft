@@ -82,6 +82,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     CBlock& block = pblocktemplate->block;
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;
+    block.SetFilteredTime(GetFilteredTimeAux(prev, chainparams.GetConsensus()));
 
     CMutableTransaction cb(*block.vtx[0]);
     cb.lock_height = (uint32_t)prev->nHeight + 1;
@@ -106,12 +107,25 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         // Add it to the block
         block.vtx.push_back(MakeTransactionRef(std::move(final_tx)));
     }
-    // IncrementExtraNonce creates a valid coinbase and merkleRoot
-    unsigned int extraNonce = 0;
-    IncrementExtraNonce(&block, chainparams.GetConsensus(), prev, extraNonce);
 
     // Regenerate the segwit commitment
     node::RegenerateCommitments(block, *m_node.chainman);
+
+    // IncrementExtraNonce creates a valid coinbase and merkleRoot
+    {
+        LOCK(cs_main);
+        unsigned int extranonce = 0;
+        std::optional<uint256> aux_hash2 = std::nullopt;
+        if (!block.m_aux_pow.IsNull()) {
+            std::vector<unsigned char> extranonceaux;
+            node::IncrementExtraNonceAux(block, extranonceaux);
+            while (!CheckAuxiliaryProofOfWork(block, chainparams.GetConsensus())) {
+                ++block.m_aux_pow.m_aux_nonce;
+            }
+            aux_hash2 = block.GetAuxiliaryHash(chainparams.GetConsensus()).second;
+        }
+        IncrementExtraNonce(&block, chainparams.GetConsensus(), prev, extranonce, aux_hash2);
+    }
 
     if (!entry.IsNull()) {
         // Store block-final info for next block

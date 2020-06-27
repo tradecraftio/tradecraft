@@ -593,8 +593,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
         consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
-        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 0; // disabled
         consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256{};
@@ -662,7 +662,7 @@ public:
         m_assumeutxo_data = MapAssumeutxo{
             {
                 110,
-                {AssumeutxoHash{uint256S("0x718c87d37f9840a3e5ec845bb243e5ecb923ee80a504109894857452ff233138")}, 110},
+                {AssumeutxoHash{uint256S("0x5259b29721b606dbfe11a1fc57af9963468a41ce691e1ec4cee978a010659f4a")}, 110},
             },
             {
                 200,

@@ -135,6 +135,18 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
+    unsigned int extranonce = 0;
+    std::optional<uint256> aux_hash2 = std::nullopt;
+    if (!pblock->m_aux_pow.IsNull()) {
+        std::vector<unsigned char> extranonceaux;
+        node::IncrementExtraNonceAux(*pblock, extranonceaux);
+        while (!CheckAuxiliaryProofOfWork(*pblock, Params().GetConsensus())) {
+            ++(pblock->m_aux_pow.m_aux_nonce);
+        }
+        const auto aux_hash2 = pblock->GetAuxiliaryHash(Params().GetConsensus()).second;
+    }
+    node::IncrementExtraNonce(pblock.get(), Params().GetConsensus(), prev_block, extranonce, aux_hash2);
+
     while (!CheckProofOfWork(*pblock, Params().GetConsensus())) {
         ++(pblock->nNonce);
     }

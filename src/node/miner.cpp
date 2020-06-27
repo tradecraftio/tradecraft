@@ -249,6 +249,28 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
+    // Use of auxiliary proof-of-work is required after merge mining has
+    // activated.  Since interfacing with the auxiliary chain is outside of
+    // scope for this code, we generate a minimal auxiliary header.
+    if (g_versionbitscache.State(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_AUXPOW) == ThresholdState::ACTIVE) {
+        // Setup the block header commitment.
+        pblock->m_aux_pow.m_commit_version = pblock->nVersion;
+        pblock->m_aux_pow.m_commit_hash_merkle_root = BlockTemplateMerkleRoot(*pblock, nullptr);
+
+        // Setup a fake auxiliary block with a single "transaction" (not an
+        // actual transaction as no valid data precedes the midstate).
+        CSHA256().Midstate(pblock->m_aux_pow.m_midstate_hash.begin(), nullptr, nullptr);
+        pblock->m_aux_pow.m_aux_num_txns = 1;
+
+        // Set difficulty for the auxiliary proof-of-work.
+        pblock->SetFilteredTime(GetFilteredTimeAux(pindexPrev, chainparams.GetConsensus()));
+        pblock->m_aux_pow.m_commit_bits = CalculateNextWorkRequiredAux(pindexPrev, chainparams.GetConsensus());;
+
+        // Setup the auxiliary header fields to have reasonable values.
+        pblock->m_aux_pow.m_aux_version = VERSIONBITS_TOP_BITS;
+        pblock->m_aux_pow.m_aux_bits = pblock->m_aux_pow.m_commit_bits;
+    }
+
     BlockValidationState state;
     if (!TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
@@ -589,7 +611,32 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
     }
 }
 
-void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+void IncrementExtraNonceAux(CBlock& block, std::vector<unsigned char>& extranonce)
+{
+    // Update extranonce
+    static uint256 hashPrevBlock;
+    if (hashPrevBlock != block.hashPrevBlock) {
+        extranonce.clear();
+        hashPrevBlock = block.hashPrevBlock;
+    } else {
+        bool carry = true;
+        for (int i = 0; i < extranonce.size(); ++i) {
+            ++extranonce[i];
+            if (extranonce[i]) {
+                carry = false;
+                break;
+            }
+        }
+        if (carry) {
+            extranonce.push_back(0);
+        }
+    }
+
+    block.m_aux_pow.m_midstate_buffer = extranonce;
+    block.m_aux_pow.m_midstate_length = extranonce.size();
+}
+
+void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce, std::optional<uint256> aux_hash2)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -601,6 +648,9 @@ void IncrementExtraNonce(CBlock* pblock, const Consensus::Params& consensusParam
     unsigned int nHeight = pindexPrev->nHeight + 1; // Height first in coinbase required for block.version=2
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
     txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce));
+    if (aux_hash2) {
+        txCoinbase.vin[0].scriptSig.insert(txCoinbase.vin[0].scriptSig.end(), aux_hash2->begin(), aux_hash2->end());
+    }
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));

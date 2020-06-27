@@ -267,7 +267,7 @@ TestChain100Setup::TestChain100Setup(const std::vector<const char*>& extra_args)
         LOCK(::cs_main);
         assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "7efceb6595ed5fcd45e1454b4421f840c1f65498d62bc93cf84223314e7f2695");
+            "775e603160101448e5c97c13576c3f36451f4aae0218970430f80379bdedea45");
     }
 }
 
@@ -304,6 +304,22 @@ CBlock TestChain100Setup::CreateBlock(
         block.vtx.push_back(final_tx);
     }
     RegenerateCommitments(block, *Assert(m_node.chainman));
+
+    // IncrementExtraNonce creates a valid coinbase and merkleRoot
+    {
+        LOCK(cs_main);
+        unsigned int extraNonce = 0;
+        std::optional<uint256> aux_hash2 = std::nullopt;
+        if (!block.m_aux_pow.IsNull()) {
+            std::vector<unsigned char> extranonce;
+            node::IncrementExtraNonceAux(block, extranonce);
+            while (!CheckAuxiliaryProofOfWork(block, chainparams.GetConsensus())) {
+                ++block.m_aux_pow.m_aux_nonce;
+            }
+            aux_hash2 = block.GetAuxiliaryHash(chainparams.GetConsensus()).second;
+        }
+        node::IncrementExtraNonce(&block, chainparams.GetConsensus(), chainstate.m_chain.Tip(), extraNonce, aux_hash2);
+    }
 
     while (!CheckProofOfWork(block, chainparams.GetConsensus())) ++block.nNonce;
 
