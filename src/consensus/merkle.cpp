@@ -505,6 +505,20 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
 
+uint256 BlockTemplateMerkleRoot(const CBlock& block, bool* mutated)
+{
+    CMutableTransaction cb(*block.vtx[0]);
+    cb.vin[0].scriptSig = CScript();
+    cb.vin[0].nSequence = 0;
+    std::vector<uint256> leaves;
+    leaves.resize(block.vtx.size());
+    leaves[0] = cb.GetHash();
+    for (size_t s = 1; s < block.vtx.size(); s++) {
+        leaves[s] = block.vtx[s]->GetHash();
+    }
+    return ComputeMerkleRoot(leaves, mutated);
+}
+
 uint256 BlockWitnessMerkleRoot(const CBlock& block)
 {
     std::vector<uint256> leaves;
