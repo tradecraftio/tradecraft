@@ -282,6 +282,54 @@ static std::string GetExtraNonceRequest(StratumClient& client, const uint256& jo
     return ret;
 }
 
+void CustomizeWork(const StratumClient& client, const uint256& job_id, const StratumWork& current_work, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch)
+{
+    if (current_work.GetBlock().vtx.empty()) {
+        const std::string msg = strprintf("%s: no transactions in block template; unable to submit work", __func__);
+        LogPrint(BCLog::STRATUM, "%s\n", msg);
+        throw std::runtime_error(msg);
+    }
+    cb = CMutableTransaction(*current_work.GetBlock().vtx[0]);
+    if (cb.vin.size() != 1) {
+        const std::string msg = strprintf("%s: unexpected number of inputs; is this even a coinbase transaction?", __func__);
+        LogPrint(BCLog::STRATUM, "%s\n", msg);
+        throw std::runtime_error(msg);
+    }
+    auto nonce = client.ExtraNonce1(job_id);
+    if ((nonce.size() + extranonce2.size()) != 12) {
+        const std::string msg = strprintf("%s: unexpected combined nonce length: extranonce1(%d) + extranonce2(%d) != 12; unable to submit work", __func__, nonce.size(), extranonce2.size());
+        LogPrint(BCLog::STRATUM, "%s\n", msg);
+        throw std::runtime_error(msg);
+    }
+    nonce.insert(nonce.end(), extranonce2.begin(),
+                              extranonce2.end());
+    if (cb.vin.empty()) {
+        const std::string msg = strprintf("%s: first transaction is missing coinbase input; unable to customize work to miner", __func__);
+        LogPrint(BCLog::STRATUM, "%s\n", msg);
+        throw std::runtime_error(msg);
+    }
+    cb.vin[0].scriptSig =
+           CScript()
+        << cb.lock_height
+        << nonce;
+    if (cb.vout.empty()) {
+        const std::string msg = strprintf("%s: coinbase transaction is missing outputs; unable to customize work to miner", __func__);
+        LogPrint(BCLog::STRATUM, "%s\n", msg);
+        throw std::runtime_error(msg);
+    }
+    if (cb.vout[0].scriptPubKey == (CScript() << OP_FALSE)) {
+        cb.vout[0].scriptPubKey =
+            GetScriptForDestination(client.m_addr);
+    }
+
+    cb_branch = current_work.m_cb_branch;
+    if (current_work.m_is_witness_enabled) {
+        bf = CMutableTransaction(*current_work.GetBlock().vtx.back());
+        UpdateSegwitCommitment(current_work, cb, bf, cb_branch);
+        LogPrint(BCLog::STRATUM, "Updated segwit commitment in coinbase.\n");
+    }
+}
+
 std::string GetWorkUnit(StratumClient& client)
 {
     LOCK(cs_main);
@@ -374,16 +422,11 @@ std::string GetWorkUnit(StratumClient& client)
     set_difficulty_params.push_back(UniValue(diff));
     set_difficulty.push_back(Pair("params", set_difficulty_params));
 
-    CMutableTransaction cb(*current_work.GetBlock().vtx[0]);
-    auto nonce = client.ExtraNonce1(job_id);
-    nonce.resize(nonce.size()+4, 0x00); // extranonce2
-    cb.vin.front().scriptSig =
-           CScript()
-        << cb.lock_height
-        << nonce;
-    if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
-        cb.vout.front().scriptPubKey =
-            GetScriptForDestination(client.m_addr);
+    CMutableTransaction cb, bf;
+    std::vector<uint256> cb_branch;
+    {
+        static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
+        CustomizeWork(client, job_id, current_work, dummy, cb, bf, cb_branch);
     }
 
     CDataStream ds(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
@@ -410,12 +453,6 @@ std::string GetWorkUnit(StratumClient& client)
     params.push_back(HexStr(hashPrevBlock.begin(), hashPrevBlock.end()));
     params.push_back(cb1);
     params.push_back(cb2);
-
-    std::vector<uint256> cb_branch = current_work.m_cb_branch;
-    if (current_work.m_is_witness_enabled) {
-        CMutableTransaction bf(*current_work.GetBlock().vtx.back());
-        UpdateSegwitCommitment(current_work, cb, bf, cb_branch);
-    }
 
     UniValue branch(UniValue::VARR);
     for (const auto& hash : cb_branch) {
@@ -445,50 +482,15 @@ std::string GetWorkUnit(StratumClient& client)
 
 bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion)
 {
-    if (current_work.GetBlock().vtx.empty()) {
-        const std::string msg("SubmitBlock: no transactions in block template; unable to submit work");
+    if (extranonce2.size() != 4) {
+        std::string msg = strprintf("%s: extranonce2 is wrong length (received %d bytes; expected %d bytes", __func__, extranonce2.size(), 4);
         LogPrint(BCLog::STRATUM, "%s\n", msg);
-        throw std::runtime_error(msg);
-    }
-    CMutableTransaction cb(*current_work.GetBlock().vtx.front());
-    if (cb.vin.size() != 1) {
-        const std::string msg("SubmitBlock: unexpected number of inputs; is this even a coinbase transaction?");
-        LogPrint(BCLog::STRATUM, "%s\n", msg);
-        throw std::runtime_error(msg);
-    }
-    auto nonce = client.ExtraNonce1(job_id);
-    if ((nonce.size() + extranonce2.size()) != 12) {
-        const std::string msg = strprintf("SubmitBlock: unexpected combined nonce length: extranonce1(%d) + extranonce2(%d) != 12; unable to submit work", nonce.size(), extranonce2.size());
-        LogPrint(BCLog::STRATUM, "%s\n", msg);
-        throw std::runtime_error(msg);
-    }
-    nonce.insert(nonce.end(), extranonce2.begin(),
-                              extranonce2.end());
-    if (cb.vin.empty()) {
-        const std::string msg("SubmitBlock: first transaction is missing coinbase input; unable to customize work to miner");
-        LogPrint(BCLog::STRATUM, "%s\n", msg);
-        throw std::runtime_error(msg);
-    }
-    cb.vin.front().scriptSig =
-           CScript()
-        << cb.lock_height
-        << nonce;
-    if (cb.vout.empty()) {
-        const std::string msg("SubmitBlock: coinbase transaction is missing outputs; unable to customize work to miner");
-        LogPrint(BCLog::STRATUM, "%s\n", msg);
-        throw std::runtime_error(msg);
-    }
-    if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
-        cb.vout.front().scriptPubKey =
-            GetScriptForDestination(client.m_addr);
+        throw JSONRPCError(RPC_INVALID_PARAMETER, msg);
     }
 
-    CMutableTransaction bf(*current_work.GetBlock().vtx.back());
-    std::vector<uint256> cb_branch = current_work.m_cb_branch;
-    if (current_work.m_is_witness_enabled) {
-        UpdateSegwitCommitment(current_work, cb, bf, cb_branch);
-        LogPrint(BCLog::STRATUM, "Updated segwit commitment in coinbase.\n");
-    }
+    CMutableTransaction cb, bf;
+    std::vector<uint256> cb_branch;
+    CustomizeWork(client, job_id, current_work, extranonce2, cb, bf, cb_branch);
 
     CBlockHeader blkhdr(current_work.GetBlock());
     blkhdr.nVersion = nVersion;
