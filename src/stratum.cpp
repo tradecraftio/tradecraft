@@ -341,26 +341,26 @@ static std::string GetExtraNonceRequest(StratumClient& client, const JobId& job_
 
 void CustomizeWork(const ChainstateManager& chainman, const StratumClient& client, const JobId& job_id, const StratumWork& current_work, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch) {
     if (current_work.GetBlock().vtx.empty()) {
-        const std::string msg("SubmitBlock: no transactions in block template; unable to submit work");
+        const std::string msg = strprintf("%s: no transactions in block template; unable to submit work", __func__);
         LogPrint(BCLog::STRATUM, "%s\n", msg);
         throw std::runtime_error(msg);
     }
     cb = CMutableTransaction(*current_work.GetBlock().vtx.front());
     if (cb.vin.size() != 1) {
-        const std::string msg("SubmitBlock: unexpected number of inputs; is this even a coinbase transaction?");
+        const std::string msg = strprintf("%s: unexpected number of inputs; is this even a coinbase transaction?", __func__);
         LogPrint(BCLog::STRATUM, "%s\n", msg);
         throw std::runtime_error(msg);
     }
     auto nonce = client.ExtraNonce1(job_id);
     if ((nonce.size() + extranonce2.size()) != 12) {
-        const std::string msg = strprintf("SubmitBlock: unexpected combined nonce length: extranonce1(%d) + extranonce2(%d) != 12; unable to submit work", nonce.size(), extranonce2.size());
+        const std::string msg = strprintf("%s: unexpected combined nonce length: extranonce1(%d) + extranonce2(%d) != 12; unable to submit work", __func__, nonce.size(), extranonce2.size());
         LogPrint(BCLog::STRATUM, "%s\n", msg);
         throw std::runtime_error(msg);
     }
     nonce.insert(nonce.end(), extranonce2.begin(),
                               extranonce2.end());
     if (cb.vin.empty()) {
-        const std::string msg("SubmitBlock: first transaction is missing coinbase input; unable to customize work to miner");
+        const std::string msg = strprintf("%s: first transaction is missing coinbase input; unable to customize work to miner", __func__);
         LogPrint(BCLog::STRATUM, "%s\n", msg);
         throw std::runtime_error(msg);
     }
@@ -369,7 +369,7 @@ void CustomizeWork(const ChainstateManager& chainman, const StratumClient& clien
         << cb.lock_height
         << nonce;
     if (cb.vout.empty()) {
-        const std::string msg("SubmitBlock: coinbase transaction is missing outputs; unable to customize work to miner");
+        const std::string msg = strprintf("%s: coinbase transaction is missing outputs; unable to customize work to miner", __func__);
         LogPrint(BCLog::STRATUM, "%s\n", msg);
         throw std::runtime_error(msg);
     }
@@ -378,10 +378,10 @@ void CustomizeWork(const ChainstateManager& chainman, const StratumClient& clien
             GetScriptForDestination(IsValidDestination(client.m_addr) ? client.m_addr : current_work.m_coinbase_dest);
     }
 
-    bf = CMutableTransaction(*current_work.GetBlock().vtx.back());
     cb_branch = current_work.m_cb_branch;
     if (current_work.m_is_witness_enabled) {
-        UpdateSegwitCommitment(*g_context->chainman, current_work, cb, bf, cb_branch);
+        bf = CMutableTransaction(*current_work.GetBlock().vtx.back());
+        UpdateSegwitCommitment(chainman, current_work, cb, bf, cb_branch);
         LogPrint(BCLog::STRATUM, "Updated segwit commitment in coinbase.\n");
     }
 }
