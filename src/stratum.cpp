@@ -79,12 +79,13 @@ struct StratumClient
     uint32_t m_version_rolling_mask;
 
     CBlockIndex* m_last_tip;
+    bool m_second_stage;
     bool m_send_work;
 
     bool m_supports_extranonce;
 
-    StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
-    StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_nextid(0), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_nextid(0), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
 
     void GenSecret();
     std::vector<unsigned char> ExtraNonce1(uint256 job_id) const;
@@ -120,6 +121,10 @@ struct StratumWork {
     std::vector<uint256> m_cb_branch;
     bool m_is_witness_enabled;
 
+    // The cached 2nd-stage auxiliary hash value, if an auxiliary proof-of-work
+    // solution has been found.
+    std::optional<uint256> m_aux_hash2;
+
     StratumWork() : m_is_witness_enabled(false) { };
     StratumWork(const node::CBlockTemplate& block_template, bool is_witness_enabled);
 
@@ -133,6 +138,11 @@ StratumWork::StratumWork(const node::CBlockTemplate& block_template, bool is_wit
     : m_block_template(block_template)
     , m_is_witness_enabled(is_witness_enabled)
 {
+    // Generate the block-witholding secret for the work unit.
+    if (!m_block_template.block.m_aux_pow.IsNull()) {
+        GetRandBytes((unsigned char*)&m_block_template.block.m_aux_pow.m_secret_lo, 8);
+        GetRandBytes((unsigned char*)&m_block_template.block.m_aux_pow.m_secret_hi, 8);
+    }
     // How we use the various branch fields depends on whether segregated
     // witness is active.  If segwit is not active, m_cb_branch contains the
     // Merkle proof for the coinbase.  If segwit is active, we also use this
@@ -212,6 +222,10 @@ static std::map<std::string, std::function<UniValue(StratumClient&, const UniVal
 
 //! A mapping of job_id -> work templates
 static std::map<uint256, StratumWork> work_templates;
+
+//! The job_id of the first work unit to have its auxiliary proof-of-work solved
+//! for the current block, or std::nullopt if no solution has been returned yet.
+static std::optional<uint256> half_solved_work;
 
 //! A thread to watch for new blocks and send mining notifications
 static std::thread block_watcher_thread;
@@ -321,18 +335,24 @@ void CustomizeWork(const StratumClient& client, const uint256& job_id, const Str
            CScript()
         << cb.lock_height
         << nonce;
-    if (cb.vout.empty()) {
-        const std::string msg = strprintf("%s: coinbase transaction is missing outputs; unable to customize work to miner", __func__);
-        LogPrint(BCLog::STRATUM, "%s\n", msg);
-        throw std::runtime_error(msg);
-    }
-    if (cb.vout[0].scriptPubKey == (CScript() << OP_FALSE)) {
-        cb.vout[0].scriptPubKey =
-            GetScriptForDestination(client.m_addr);
+    if (current_work.m_aux_hash2) {
+        cb.vin[0].scriptSig.insert(cb.vin[0].scriptSig.end(),
+                                   current_work.m_aux_hash2->begin(),
+                                   current_work.m_aux_hash2->end());
+    } else {
+        if (cb.vout.empty()) {
+            const std::string msg = strprintf("%s: coinbase transaction is missing outputs; unable to customize work to miner", __func__);
+            LogPrint(BCLog::STRATUM, "%s\n", msg);
+            throw std::runtime_error(msg);
+        }
+        if (cb.vout[0].scriptPubKey == (CScript() << OP_FALSE)) {
+            cb.vout[0].scriptPubKey =
+                GetScriptForDestination(client.m_addr);
+        }
     }
 
     cb_branch = current_work.m_cb_branch;
-    if (current_work.m_is_witness_enabled) {
+    if (!current_work.m_aux_hash2 && current_work.m_is_witness_enabled) {
         bf = CMutableTransaction(*current_work.GetBlock().vtx.back());
         UpdateSegwitCommitment(current_work, cb, bf, cb_branch);
         LogPrint(BCLog::STRATUM, "Updated segwit commitment in coinbase.\n");
@@ -375,6 +395,18 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     static int64_t last_update_time = 0;
     const CTxMemPool& mempool = *g_context->mempool;
 
+    // When merge-mining is active, finding a block is a two-stage process.
+    // First the auxiliary proof-of-work is solved, which requires constructing
+    // a fake bitcoin block which commits to our Freicoin block.  Then the
+    // coinbase is updated to commit to the auxiliary proof-of-work solution and
+    // the native proof-of-work is solved.
+    if (half_solved_work && (tip != g_context->chainman->ActiveChain().Tip() || !work_templates.count(*half_solved_work))) {
+        half_solved_work = std::nullopt;
+    }
+
+    if (half_solved_work) {
+        job_id = *half_solved_work;
+    } else
     if (tip != g_context->chainman->ActiveChain().Tip() || (mempool.GetTransactionsUpdated() != transactions_updated_last && (GetTime() - last_update_time) > 5) || !work_templates.count(job_id))
     {
         CBlockIndex* tip_new = g_context->chainman->ActiveChain().Tip();
@@ -433,7 +465,13 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     StratumWork& current_work = work_templates[job_id];
 
     CBlockIndex tmp_index;
-    tmp_index.nBits = current_work.GetBlock().nBits;
+    if (!current_work.GetBlock().m_aux_pow.IsNull() && !current_work.m_aux_hash2) {
+        // Auxiliary proof-of-work difficulty
+        tmp_index.nBits = current_work.GetBlock().m_aux_pow.m_commit_bits;
+    } else {
+        // Native proof-of-work difficulty
+        tmp_index.nBits = current_work.GetBlock().nBits;
+    }
     double diff = ClampDifficulty(client, GetDifficulty(&tmp_index));
 
     UniValue set_difficulty(UniValue::VOBJ);
@@ -450,12 +488,75 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
         CustomizeWork(client, job_id, current_work, dummy, cb, bf, cb_branch);
     }
 
+    CBlockHeader blkhdr;
+    if (!current_work.GetBlock().m_aux_pow.IsNull() && !current_work.m_aux_hash2) {
+        // Setup auxiliary proof-of-work
+        const AuxProofOfWork& aux_pow = current_work.GetBlock().m_aux_pow;
+
+        CMutableTransaction cb2(cb);
+        cb2.vin[0].scriptSig = CScript();
+        cb2.vin[0].nSequence = 0;
+
+        blkhdr.nVersion = aux_pow.m_commit_version;
+        blkhdr.hashPrevBlock = current_work.GetBlock().hashPrevBlock;
+        blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb2.GetHash(), cb_branch, 0);
+        blkhdr.nTime = aux_pow.m_commit_time;
+        blkhdr.nBits = aux_pow.m_commit_bits;
+        blkhdr.nNonce = aux_pow.m_commit_nonce;
+        uint256 hash = blkhdr.GetHash();
+
+        {
+            CHashWriter secret(SER_GETHASH, PROTOCOL_VERSION);
+            secret << aux_pow.m_secret_lo;
+            secret << aux_pow.m_secret_hi;
+            MerkleHash_Sha256Midstate(hash, hash, secret.GetHash());
+        }
+
+        hash = ComputeMerkleMapRootFromBranch(hash, aux_pow.m_commit_branch, Params().GetConsensus().aux_pow_path);
+
+        {
+            CSHA256 midstate(aux_pow.m_midstate_hash.begin(),
+                             &aux_pow.m_midstate_buffer[0],
+                             aux_pow.m_midstate_length << 3);
+            // Write the commitment root hash.
+            midstate.Write(hash.begin(), 32);
+            // Write the commitment identifier.
+            static const std::array<unsigned char, 4> id
+                = { 0x4b, 0x4a, 0x49, 0x48 };
+            midstate.Write(id.begin(), 4);
+            // Write the transaction's nLockTime field.
+            CDataStream lock_time(SER_GETHASH, PROTOCOL_VERSION);
+            lock_time << aux_pow.m_aux_lock_time;
+            midstate.Write((const unsigned char*)&lock_time[0], lock_time.size());
+            // Double SHA-256.
+            midstate.Finalize(hash.begin());
+            CSHA256()
+                .Write(hash.begin(), 32)
+                .Finalize(hash.begin());
+        }
+
+        cb_branch.resize(1);
+        cb_branch[0] = hash;
+        blkhdr.nVersion = aux_pow.m_aux_version;
+        blkhdr.hashPrevBlock = aux_pow.m_aux_hash_prev_block;
+        blkhdr.nTime = current_work.GetBlock().nTime;
+        blkhdr.nBits = aux_pow.m_aux_bits;
+    }
+
+    else {
+        // Setup native proof-of-work
+        blkhdr.nVersion = current_work.GetBlock().nVersion;
+        blkhdr.hashPrevBlock = current_work.GetBlock().hashPrevBlock;
+        blkhdr.nTime = current_work.GetBlock().nTime;
+        blkhdr.nBits = current_work.GetBlock().nBits;
+    }
+
     CDataStream ds(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
     ds << CTransaction(cb);
     if (ds.size() < (4 + 1 + 32 + 4 + 1)) {
         throw std::runtime_error("Serialized transaction is too small to be parsed.  Is this even a coinbase?");
     }
-    size_t pos = 4 + 1 + 32 + 4 + 1 + static_cast<size_t>(ds[4+1+32+4]);
+    size_t pos = 4 + 1 + 32 + 4 + 1 + static_cast<size_t>(ds[4+1+32+4]) - (current_work.m_aux_hash2? 32: 0);
     if (ds.size() < pos) {
         throw std::runtime_error("Customized coinbase transaction does not contain extranonce field at expected location.");
     }
@@ -466,7 +567,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     params.push_back(HexStr(job_id));
     // For reasons of who-the-heck-knows-why, stratum byte-swaps each
     // 32-bit chunk of the hashPrevBlock.
-    uint256 hashPrevBlock(current_work.GetBlock().hashPrevBlock);
+    uint256 hashPrevBlock(blkhdr.hashPrevBlock);
     for (int i = 0; i < 256/32; ++i) {
         ((uint32_t*)hashPrevBlock.begin())[i] = bswap_32(
         ((uint32_t*)hashPrevBlock.begin())[i]);
@@ -481,15 +582,18 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     }
     params.push_back(branch);
 
-    CBlockHeader blkhdr(current_work.GetBlock());
-    int64_t delta = node::UpdateTime(&blkhdr, Params().GetConsensus(), tip);
-    LogPrint(BCLog::STRATUM, "Updated the timestamp of block template by %d seconds\n", delta);
+    if (!current_work.m_aux_hash2) {
+        int64_t delta = node::UpdateTime(&blkhdr, Params().GetConsensus(), tip);
+        LogPrint(BCLog::STRATUM, "Updated the timestamp of block template by %d seconds\n", delta);
+    }
 
     params.push_back(HexInt4(blkhdr.nVersion));
     params.push_back(HexInt4(blkhdr.nBits));
     params.push_back(HexInt4(blkhdr.nTime));
-    params.push_back(UniValue(client.m_last_tip != tip));
+    params.push_back(UniValue((client.m_last_tip != tip)
+                           || (client.m_second_stage != bool(current_work.m_aux_hash2))));
     client.m_last_tip = tip;
+    client.m_second_stage = bool(current_work.m_aux_hash2);
 
     UniValue mining_notify(UniValue::VOBJ);
     mining_notify.pushKV("params", params);
@@ -513,41 +617,108 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
     std::vector<uint256> cb_branch;
     CustomizeWork(client, job_id, current_work, extranonce2, cb, bf, cb_branch);
 
-    uint32_t version = current_work.GetBlock().nVersion;
-    if (nVersion) {
-        version = (version & ~client.m_version_rolling_mask)
-                | (*nVersion & client.m_version_rolling_mask);
+    bool res = false;
+    if (!current_work.GetBlock().m_aux_pow.IsNull() && !current_work.m_aux_hash2) {
+        // Check auxiliary proof-of-work
+        uint32_t version = current_work.GetBlock().m_aux_pow.m_aux_version;
+        if (nVersion && client.m_version_rolling_mask) {
+            version = (version & ~client.m_version_rolling_mask)
+                    | (*nVersion & client.m_version_rolling_mask);
+        } else if (nVersion) {
+            version = *nVersion;
+        }
+
+        CMutableTransaction cb2(cb);
+        cb2.vin[0].scriptSig = CScript();
+        cb2.vin[0].nSequence = 0;
+
+        CBlockHeader blkhdr(current_work.GetBlock());
+        blkhdr.m_aux_pow.m_commit_hash_merkle_root = ComputeMerkleRootFromBranch(cb2.GetHash(), cb_branch, 0);
+        blkhdr.m_aux_pow.m_aux_branch.resize(1);
+        blkhdr.m_aux_pow.m_aux_branch[0] = cb.GetHash();
+        blkhdr.m_aux_pow.m_aux_num_txns = 2;
+        blkhdr.nTime = nTime;
+        blkhdr.m_aux_pow.m_aux_nonce = nNonce;
+        blkhdr.m_aux_pow.m_aux_version = version;
+
+        const Consensus::Params& params = Params().GetConsensus();
+        res = CheckAuxiliaryProofOfWork(blkhdr, params);
+        auto aux_hash = blkhdr.GetAuxiliaryHash(params);
+        if (res) {
+            LogPrintf("GOT AUXILIARY BLOCK!!! by %s: %s, %s\n", EncodeDestination(client.m_addr), aux_hash.first.ToString(), aux_hash.second.ToString());
+            blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0);
+            uint256 new_job_id = blkhdr.GetHash();
+            work_templates[new_job_id] = current_work;
+            StratumWork& new_work = work_templates[new_job_id];
+            new_work.GetBlock().vtx[0] = MakeTransactionRef(std::move(cb));
+            if (new_work.m_is_witness_enabled) {
+                new_work.GetBlock().vtx.back() = MakeTransactionRef(std::move(bf));
+            }
+            new_work.GetBlock().hashMerkleRoot = BlockMerkleRoot(new_work.GetBlock(), nullptr);
+            new_work.m_cb_branch = cb_branch;
+            new_work.GetBlock().m_aux_pow.m_commit_hash_merkle_root = blkhdr.m_aux_pow.m_commit_hash_merkle_root;
+            new_work.GetBlock().m_aux_pow.m_aux_branch = blkhdr.m_aux_pow.m_aux_branch;
+            new_work.GetBlock().m_aux_pow.m_aux_num_txns = blkhdr.m_aux_pow.m_aux_num_txns;
+            new_work.GetBlock().nTime = nTime;
+            new_work.GetBlock().m_aux_pow.m_aux_nonce = nNonce;
+            new_work.GetBlock().m_aux_pow.m_aux_version = version;
+            new_work.m_aux_hash2 = aux_hash.second;
+            if (new_job_id != new_work.GetBlock().GetHash()) {
+                throw std::runtime_error("First-stage hash does not match expected value.");
+            }
+            half_solved_work = new_job_id;
+        } else {
+            LogPrintf("NEW AUXILIARY SHARE!!! by %s: %s, %s\n", EncodeDestination(client.m_addr), aux_hash.first.ToString(), aux_hash.second.ToString());
+        }
     }
 
-    CBlockHeader blkhdr(current_work.GetBlock());
-    blkhdr.nVersion = version;
-    blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0);
-    blkhdr.nTime = nTime;
-    blkhdr.nNonce = nNonce;
+    else {
+        // Check native proof-of-work
+        uint32_t version = current_work.GetBlock().nVersion;
+        if (nVersion && client.m_version_rolling_mask) {
+            version = (version & ~client.m_version_rolling_mask)
+                    | (*nVersion & client.m_version_rolling_mask);
+        } else if (nVersion) {
+            version = *nVersion;
+        }
 
-    bool res = false;
-    uint256 hash = blkhdr.GetHash();
-    if (CheckProofOfWork(blkhdr, Params().GetConsensus())) {
-        LogPrintf("GOT BLOCK!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
-        CBlock block(current_work.GetBlock());
-        block.nVersion = version;
-        block.vtx.front() = MakeTransactionRef(std::move(cb));
-        if (current_work.m_is_witness_enabled) {
-            block.vtx.back() = MakeTransactionRef(std::move(bf));
+        if (!current_work.GetBlock().m_aux_pow.IsNull() && nTime != current_work.GetBlock().nTime) {
+            LogPrintf("Error: miner %s returned altered nTime value for native proof-of-work; nTime-rolling is not supported\n", EncodeDestination(client.m_addr));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "nTime-rolling is not supported");
         }
-        block.hashMerkleRoot = BlockMerkleRoot(block);
-        block.nTime = nTime;
-        block.nNonce = nNonce;
-        std::shared_ptr<const CBlock> pblock = std::make_shared<const CBlock>(block);
-        if (!g_context) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Node context not found when submitting block");
+
+        CBlockHeader blkhdr;
+        blkhdr.nVersion = version;
+        blkhdr.hashPrevBlock = current_work.GetBlock().hashPrevBlock;
+        blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0);
+        blkhdr.nTime = nTime;
+        blkhdr.nBits = current_work.GetBlock().nBits;
+        blkhdr.nNonce = nNonce;
+
+        res = CheckProofOfWork(blkhdr, Params().GetConsensus());
+        uint256 hash = blkhdr.GetHash();
+        if (res) {
+            LogPrintf("GOT BLOCK!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
+            CBlock block(current_work.GetBlock());
+            block.vtx[0] = MakeTransactionRef(std::move(cb));
+            if (!current_work.m_aux_hash2 && current_work.m_is_witness_enabled) {
+                block.vtx.back() = MakeTransactionRef(std::move(bf));
+            }
+            block.nVersion = version;
+            block.hashMerkleRoot = BlockMerkleRoot(block);
+            block.nTime = nTime;
+            block.nNonce = nNonce;
+            std::shared_ptr<const CBlock> pblock = std::make_shared<const CBlock>(block);
+            if (!g_context) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Node context not found when submitting block");
+            }
+            if (!g_context->chainman) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Node chainman not found when submitting block");
+            }
+            res = g_context->chainman->ProcessNewBlock(Params(), pblock, true, NULL);
+        } else {
+            LogPrintf("NEW SHARE!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
         }
-        if (!g_context->chainman) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Node chainman not found when submitting block");
-        }
-        res = g_context->chainman->ProcessNewBlock(Params(), pblock, true, NULL);
-    } else {
-        LogPrintf("NEW SHARE!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
     }
 
     if (res) {
