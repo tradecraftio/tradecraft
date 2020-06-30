@@ -235,6 +235,29 @@ uint32_t ParseHexInt4(UniValue hex, std::string name)
     return ret;
 }
 
+void CustomizeWork(const StratumClient& client, const uint256& job_id, const StratumWork& current_work, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch)
+{
+    cb = CMutableTransaction(current_work.GetBlock().vtx[0]);
+    auto nonce = client.ExtraNonce1(job_id);
+    assert(extranonce2.size() == 4);
+    nonce.insert(nonce.end(), extranonce2.begin(),
+                              extranonce2.end());
+    cb.vin[0].scriptSig =
+           CScript()
+        << cb.lock_height
+        << nonce;
+    if (cb.vout[0].scriptPubKey == (CScript() << OP_FALSE)) {
+        cb.vout[0].scriptPubKey =
+            GetScriptForDestination(client.m_addr.Get());
+    }
+
+    cb_branch = current_work.m_cb_branch;
+    if (current_work.m_is_witness_enabled) {
+        bf = CMutableTransaction(current_work.GetBlock().vtx.back());
+        UpdateSegwitCommitment(current_work, cb, bf, cb_branch);
+    }
+}
+
 std::string GetWorkUnit(StratumClient& client)
 {
     using std::swap;
@@ -332,17 +355,13 @@ std::string GetWorkUnit(StratumClient& client)
     set_difficulty_params.push_back(diff);
     set_difficulty.push_back(Pair("params", set_difficulty_params));
 
-    CMutableTransaction cb(current_work.GetBlock().vtx[0]);
-    auto nonce = client.ExtraNonce1(job_id);
-    nonce.resize(nonce.size()+4, 0x00); // extranonce2
-    cb.vin.front().scriptSig =
-           CScript()
-        << cb.lock_height
-        << nonce;
-    if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
-        cb.vout.front().scriptPubKey =
-            GetScriptForDestination(client.m_addr.Get());
+    CMutableTransaction cb, bf;
+    std::vector<uint256> cb_branch;
+    {
+        static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
+        CustomizeWork(client, job_id, current_work, dummy, cb, bf, cb_branch);
     }
+
     CDataStream ds(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
     ds << CTransaction(cb);
     assert(ds.size() >= (4 + 1 + 32 + 4 + 1));
@@ -367,12 +386,6 @@ std::string GetWorkUnit(StratumClient& client)
     params.push_back(hashPrevBlock.GetHex());
     params.push_back(cb1);
     params.push_back(cb2);
-
-    std::vector<uint256> cb_branch = current_work.m_cb_branch;
-    if (current_work.m_is_witness_enabled) {
-        CMutableTransaction bf(current_work.GetBlock().vtx.back());
-        UpdateSegwitCommitment(current_work, cb, bf, cb_branch);
-    }
 
     // Reverse the order of the hashes, because that's what stratum does.
     for (int j = 0; j < cb_branch.size(); ++j) {
@@ -428,28 +441,15 @@ std::string GetWorkUnit(StratumClient& client)
 
 bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion)
 {
-    assert(current_work.GetBlock().vtx.size() >= 1);
-    CMutableTransaction cb(current_work.GetBlock().vtx.front());
-    assert(cb.vin.size() == 1);
-    auto nonce = client.ExtraNonce1(job_id);
-    assert(extranonce2.size() == 4);
-    nonce.insert(nonce.end(), extranonce2.begin(),
-                              extranonce2.end());
-    cb.vin.front().scriptSig =
-           CScript()
-        << cb.lock_height
-        << nonce;
-    assert(cb.vout.size() >= 1);
-    if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
-        cb.vout.front().scriptPubKey =
-            GetScriptForDestination(client.m_addr.Get());
+    if (extranonce2.size() != 4) {
+        std::string msg = strprintf("extranonce2 is wrong length (received %d bytes; expected %d bytes", extranonce2.size(), 4);
+        LogPrint("stratum", msg.data());
+        throw JSONRPCError(RPC_INVALID_PARAMETER, msg);
     }
 
-    CMutableTransaction bf(current_work.GetBlock().vtx.back());
-    std::vector<uint256> cb_branch = current_work.m_cb_branch;
-    if (current_work.m_is_witness_enabled) {
-        UpdateSegwitCommitment(current_work, cb, bf, cb_branch);
-    }
+    CMutableTransaction cb, bf;
+    std::vector<uint256> cb_branch;
+    CustomizeWork(client, job_id, current_work, extranonce2, cb, bf, cb_branch);
 
     CBlockHeader blkhdr(current_work.GetBlock());
     blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0);
