@@ -439,7 +439,7 @@ std::string GetWorkUnit(StratumClient& client)
          + mining_notify.write()  + "\n";
 }
 
-bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion)
+bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, boost::optional<uint32_t> nVersion)
 {
     if (extranonce2.size() != 4) {
         std::string msg = strprintf("extranonce2 is wrong length (received %d bytes; expected %d bytes", extranonce2.size(), 4);
@@ -451,11 +451,17 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
     std::vector<uint256> cb_branch;
     CustomizeWork(client, job_id, current_work, extranonce2, cb, bf, cb_branch);
 
+    uint32_t version = current_work.GetBlock().nVersion;
+    if (nVersion) {
+        version = (version & ~client.m_version_rolling_mask)
+                | (*nVersion & client.m_version_rolling_mask);
+    }
+
     CBlockHeader blkhdr(current_work.GetBlock());
     blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0);
     blkhdr.nTime = nTime;
     blkhdr.nNonce = nNonce;
-    blkhdr.nVersion = nVersion;
+    blkhdr.nVersion = version;
 
     bool res = false;
     if (CheckProofOfWork(blkhdr, Params().GetConsensus())) {
@@ -468,7 +474,7 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
         block.hashMerkleRoot = BlockMerkleRoot(block);
         block.nTime = nTime;
         block.nNonce = nNonce;
-        block.nVersion = nVersion;
+        block.nVersion = version;
         CValidationState state;
         res = ProcessNewBlock(state, Params(), NULL, &block, true, NULL, false);
     } else {
@@ -628,11 +634,9 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
     assert(extranonce2.size() == 4);
     uint32_t nTime = ParseHexInt4(params[3], "nTime");
     uint32_t nNonce = ParseHexInt4(params[4], "nNonce");
-    uint32_t nVersion = current_work.GetBlock().nVersion;
+    boost::optional<uint32_t> nVersion;
     if (params.size() > 5) {
-        uint32_t bits = ParseHexInt4(params[5], "nVersion");
-        nVersion = (nVersion & ~client.m_version_rolling_mask)
-                 | (bits & client.m_version_rolling_mask);
+        nVersion = ParseHexInt4(params[5], "nVersion");
     }
 
     SubmitBlock(client, job_id, current_work, extranonce2, nTime, nNonce, nVersion);
