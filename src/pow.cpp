@@ -21,6 +21,8 @@
 #include <primitives/block.h>
 #include <uint256.h>
 
+static const uint256 k_min_pow_limit = uint256S("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
 int64_t GetActualTimespan(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
     // This fixes an issue where a 51% attack can change difficulty at will.
@@ -121,7 +123,7 @@ std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pinde
     return std::make_pair(numerator, denominator);
 }
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, bool protocol_cleanup)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
@@ -131,6 +133,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // We adjust back to the difficulty prior to the last adjustment.
     if (pindexLast->GetBlockHash() == uint256S("0x0000000000003bd73ea13954fbbf1cf50b5384f961d142a75a3dfe106f793a20"))
         return 0x1b01c13a;
+
+    // If we are past the protocol-cleanup fork, then the minimum proof-of-work
+    // becomes something easily calculable.
+    if (protocol_cleanup) {
+        nProofOfWorkLimit = 0x207fffff;
+    }
 
     const bool use_filter = (pindexLast->nHeight >= (params.diff_adjust_threshold - 1));
     const int64_t interval = use_filter ? params.filtered_adjust_interval : params.original_adjust_interval;
@@ -157,10 +165,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    return CalculateNextWorkRequired(pindexLast, params);
+    return CalculateNextWorkRequired(pindexLast, params, protocol_cleanup);
 }
 
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params, bool protocol_cleanup)
 {
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
@@ -179,7 +187,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
     assert(adjustment_factor.second > 0);
 
     // Retarget
-    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    arith_uint256 bnPowLimit = UintToArith256(protocol_cleanup ? k_min_pow_limit : params.powLimit);
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     arith_uint320 bnTmp(bnNew);
@@ -204,7 +212,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
 // quarter, 10.5 times present difficulty to reduce by more than an
 // eigth, etc. To reduce to arbitrary levels requires 12 blocks worth
 // of work at the difficulty of the last valid block.
-bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params)
+bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params, bool protocol_cleanup)
 {
     // Special case for the genesis block
     if (!pindexLast) {
@@ -217,6 +225,12 @@ bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& bl
     // through the past 12 blocks.
     arith_uint256 min = UintToArith256(params.powLimit);
     arith_uint256 max = arith_uint256(1);
+
+    // If we are past the protocol-cleanup fork, then the minimum
+    // proof-of-work becomes something easily calculable.
+    if (protocol_cleanup) {
+        min.SetCompact(0x207fffff);
+    }
 
     // After this loop, min will be half the largest work target of
     // the past 12 blocks, and max will be twice the smallest.
