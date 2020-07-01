@@ -72,9 +72,9 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
         }
         {
             (void)GetBlockProof(current_block);
-            (void)CalculateNextWorkRequired(&current_block, consensus_params);
+            (void)CalculateNextWorkRequired(&current_block, consensus_params, false);
             if (current_block.nHeight != std::numeric_limits<int>::max() && current_block.nHeight - (consensus_params.original_adjust_interval - 1) >= 0) {
-                (void)GetNextWorkRequired(&current_block, &(*block_header), consensus_params);
+                (void)GetNextWorkRequired(&current_block, &(*block_header), consensus_params, false);
             }
         }
         {
