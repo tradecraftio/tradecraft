@@ -3568,7 +3568,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     const bool protocol_cleanup = pindexPrev && IsProtocolCleanupActive(consensusParams, *pindexPrev);
 
     // Check proof of work
-    if (protocol_cleanup ? !CheckNextWorkRequired(pindexPrev, block, consensusParams) : (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)))
+    if (protocol_cleanup ? !CheckNextWorkRequired(pindexPrev, block, consensusParams, protocol_cleanup) : (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, protocol_cleanup)))
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, "bad-diffbits", "incorrect proof of work");
 
     // Check against checkpoints
