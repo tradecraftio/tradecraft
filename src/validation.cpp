@@ -3285,7 +3285,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
     // Check proof of work
     if (!protocol_cleanup) {
-        if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)) {
+        if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, protocol_cleanup)) {
             return state.DoS(50, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
         }
 
