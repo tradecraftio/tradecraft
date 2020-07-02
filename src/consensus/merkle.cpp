@@ -227,6 +227,18 @@ uint256 ComputeStableMerkleRootFromBranch(const uint256& leaf, const std::vector
         pos >>= 1;
         size >>= 1;
     }
+    /* Perform any repeated hashes between the last given branch hash and the
+     * next (missing) hash.  The particular use case for this is computing the
+     * root of a subtree, such as the recomputing the block-final transaction
+     * branch of the Merkle tree when the segwit commitment is updated.  In all
+     * practical situations you want these final repeated hashes to be done,
+     * since the result is the hash value which actually shows up in other
+     * branches. */
+    while (size && (pos == size) && !(pos & 1)) {
+        hash = Hash(BEGIN(hash), END(hash), BEGIN(hash), END(hash));
+        pos >>= 1;
+        size >>= 1;
+    }
     return hash;
 }
 
