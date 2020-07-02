@@ -1,4 +1,4 @@
-Freicoin 13.2.2
+Freicoin 13.2.3
 =================
 
 Intro
