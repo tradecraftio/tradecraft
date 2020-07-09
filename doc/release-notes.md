@@ -65,7 +65,7 @@ for this release.
   This is an update to the so-called "stable" Merkle branch code, but it fixes a
   bug in the stratum server API which shows up on witness blocks with a
   transaction count that is not 2^n or 2^n + 2^(n-1).
-    
+
   Since v13.2.2, the stratum mining code does a trick to avoid copying blocks
   when verifying shares: it uses the stable Merkle branch code to recompute the
   right-half of the transaction Merkle tree when the segwit commitment is
