@@ -29,6 +29,15 @@ class UniValue;
  */
 double GetDifficulty(const CBlockIndex* blockindex = nullptr);
 
+/**
+ * Get the merge-mining difficulty of the net wrt to the given block index, or
+ * the chain tip if not provided.
+ *
+ * @return A floating point number that is a multiple of the main net minimum
+ * difficulty (4295032833 hashes).
+ */
+double GetAuxiliaryDifficulty(const CBlockIndex* blockindex = nullptr);
+
 /** Callback for when block tip changed. */
 void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
 
