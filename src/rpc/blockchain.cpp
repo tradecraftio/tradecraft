@@ -65,15 +65,12 @@ static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock;
 
-/* Calculate the difficulty for a given block index.
- */
-double GetDifficulty(const CBlockIndex* blockindex)
+double ConvertBitsToDifficulty(uint32_t nBits)
 {
-    assert(blockindex);
+    int nShift = (nBits >> 24) & 0xff;
 
-    int nShift = (blockindex->nBits >> 24) & 0xff;
     double dDiff =
-        (double)0x0000ffff / (double)(blockindex->nBits & 0x00ffffff);
+        (double)0x0000ffff / (double)(nBits & 0x00ffffff);
 
     while (nShift < 29)
     {
@@ -99,6 +96,44 @@ static int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* b
     return blockindex == tip ? 1 : -1;
 }
 
+/* Calculate the difficulty for a given block index,
+ * or the block index of the given chain.
+ */
+double inner_GetDifficulty(const CChain& chain, const CBlockIndex* blockindex, std::function<uint32_t(const CBlockIndex*)> bits_getter)
+{
+    // Floating point number that is a multiple of the minimum difficulty,
+    // minimum difficulty = 1.0.
+    if (blockindex == nullptr)
+    {
+        if (chain.Tip() == nullptr)
+            return 1.0;
+        else
+            blockindex = chain.Tip();
+    }
+
+    return ConvertBitsToDifficulty(bits_getter(blockindex));
+}
+
+double GetDifficulty(const CChain& chain, const CBlockIndex* blockindex)
+{
+    return inner_GetDifficulty(chain, blockindex, [](const CBlockIndex* pindex){return pindex->nBits;});
+}
+
+double GetDifficulty(const CBlockIndex* blockindex)
+{
+    return GetDifficulty(chainActive, blockindex);
+}
+
+double GetAuxiliaryDifficulty(const CChain& chain, const CBlockIndex* blockindex)
+{
+    return inner_GetDifficulty(chain, blockindex, [](const CBlockIndex* pindex){return pindex->m_aux_pow.IsNull()? 0x207fffff: pindex->m_aux_pow.m_commit_bits;});
+}
+
+double GetAuxiliaryDifficulty(const CBlockIndex* blockindex)
+{
+    return GetAuxiliaryDifficulty(chainActive, blockindex);
+}
+
 UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex)
 {
     UniValue result(UniValue::VOBJ);
@@ -115,6 +150,9 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     result.pushKV("nonce", (uint64_t)blockindex->nNonce);
     result.pushKV("bits", strprintf("%08x", blockindex->nBits));
     result.pushKV("difficulty", GetDifficulty(blockindex));
+    if (!blockindex->m_aux_pow.IsNull()) {
+        result.pushKV("auxdifficulty", (double)GetAuxiliaryDifficulty(blockindex));
+    }
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
 
@@ -157,6 +195,9 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("nonce", (uint64_t)block.nNonce);
     result.pushKV("bits", strprintf("%08x", block.nBits));
     result.pushKV("difficulty", GetDifficulty(blockindex));
+    if (!blockindex->m_aux_pow.IsNull()) {
+        result.pushKV("auxdifficulty", (double)GetAuxiliaryDifficulty(blockindex));
+    }
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
 
@@ -384,6 +425,23 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
 
     LOCK(cs_main);
     return GetDifficulty(chainActive.Tip());
+}
+
+UniValue getauxdifficulty(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getauxdifficulty\n"
+            "\nReturns the auxiliary proof-of-work difficulty as a multiple of the minimum difficulty.\n"
+            "\nResult:\n"
+            "n.nnn       (numeric) the auxiliary proof-of-work difficulty as a multiple of the minimum difficulty.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getdifficulty", "")
+            + HelpExampleRpc("getdifficulty", "")
+        );
+
+    LOCK(cs_main);
+    return GetAuxiliaryDifficulty(chainActive.Tip());
 }
 
 static std::string EntryDescriptionString()
@@ -755,6 +813,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
             "  \"nonce\" : n,           (numeric) The nonce\n"
             "  \"bits\" : \"1d00ffff\", (string) The bits\n"
             "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
+            "  \"auxdifficulty\" : x.xxx,  (numeric) The auxiliary difficulty\n"
             "  \"chainwork\" : \"0000...1f3\"     (string) Expected number of hashes required to produce the current chain (in hex)\n"
             "  \"nTx\" : n,             (numeric) The number of transactions in the block.\n"
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
@@ -855,6 +914,7 @@ static UniValue getblock(const JSONRPCRequest& request)
             "  \"nonce\" : n,           (numeric) The nonce\n"
             "  \"bits\" : \"1d00ffff\", (string) The bits\n"
             "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
+            "  \"auxdifficulty\" : x.xxx,  (numeric) The auxiliary difficulty\n"
             "  \"chainwork\" : \"xxxx\",  (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
             "  \"nTx\" : n,             (numeric) The number of transactions in the block.\n"
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
@@ -1279,6 +1339,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "  \"headers\": xxxxxx,            (numeric) the current number of headers we have validated\n"
             "  \"bestblockhash\": \"...\",       (string) the hash of the currently best block\n"
             "  \"difficulty\": xxxxxx,         (numeric) the current difficulty\n"
+            "  \"auxdifficulty\" : x.xxx,      (numeric) the current auxiliary difficulty\n"
             "  \"mediantime\": xxxxxx,         (numeric) median time for the current best block\n"
             "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
             "  \"initialblockdownload\": xxxx, (bool) (debug information) estimate of whether this node is in Initial Block Download mode.\n"
@@ -1331,6 +1392,9 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.pushKV("headers",               pindexBestHeader ? pindexBestHeader->nHeight : -1);
     obj.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
     obj.pushKV("difficulty",            (double)GetDifficulty(tip));
+    if (!tip->m_aux_pow.IsNull()) {
+        obj.pushKV("auxdifficulty", (double)GetAuxiliaryDifficulty(tip));
+    }
     obj.pushKV("mediantime",            (int64_t)tip->GetMedianTimePast());
     obj.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
     obj.pushKV("initialblockdownload",  IsInitialBlockDownload());
@@ -2320,6 +2384,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
     { "blockchain",         "getchaintips",           &getchaintips,           {} },
     { "blockchain",         "getdifficulty",          &getdifficulty,          {} },
+    { "blockchain",         "getauxdifficulty",       &getauxdifficulty,       {} },
     { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    {"txid","verbose"} },
     { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  {"txid","verbose"} },
     { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
