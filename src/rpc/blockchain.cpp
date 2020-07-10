@@ -82,15 +82,12 @@ static GlobalMutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
-/* Calculate the difficulty for a given block index.
- */
-double GetDifficulty(const CBlockIndex* blockindex)
+double ConvertBitsToDifficulty(uint32_t nBits)
 {
-    CHECK_NONFATAL(blockindex);
+    int nShift = (nBits >> 24) & 0xff;
 
-    int nShift = (blockindex->nBits >> 24) & 0xff;
     double dDiff =
-        (double)0x0000ffff / (double)(blockindex->nBits & 0x00ffffff);
+        (double)0x0000ffff / (double)(nBits & 0x00ffffff);
 
     while (nShift < 29)
     {
@@ -144,6 +141,22 @@ static const CBlockIndex* ParseHashOrHeight(const UniValue& param, ChainstateMan
     }
 }
 
+/* Calculate the difficulty for a given block index.
+ */
+double GetDifficulty(const CBlockIndex* blockindex)
+{
+    CHECK_NONFATAL(blockindex);
+    return ConvertBitsToDifficulty(blockindex->nBits);
+}
+
+/* Calculate the merge-mining difficulty for a given block index.
+ */
+double GetAuxiliaryDifficulty(const CBlockIndex* blockindex)
+{
+    CHECK_NONFATAL(blockindex);
+    return ConvertBitsToDifficulty(blockindex->m_aux_pow.m_commit_bits);
+}
+
 UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex)
 {
     // Serialize passed information without accessing chain state of the active chain!
@@ -163,6 +176,9 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     result.pushKV("nonce", (uint64_t)blockindex->nNonce);
     result.pushKV("bits", strprintf("%08x", blockindex->nBits));
     result.pushKV("difficulty", GetDifficulty(blockindex));
+    if (!blockindex->m_aux_pow.IsNull()) {
+        result.pushKV("auxdifficulty", (double)GetAuxiliaryDifficulty(blockindex));
+    }
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
 
@@ -433,6 +449,26 @@ static RPCHelpMan getdifficulty()
     };
 }
 
+static RPCHelpMan getauxdifficulty()
+{
+    return RPCHelpMan{"getauxdifficulty",
+        "\nReturns the auxiliary proof-of-work difficulty as a multiple of the minimum difficulty.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::NUM, "", "the auxiliaryproof-of-work difficulty as a multiple of the minimum difficulty."},
+        RPCExamples{
+            HelpExampleCli("getauxdifficulty", "")
+          + HelpExampleRpc("getauxdifficulty", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    LOCK(cs_main);
+    return GetAuxiliaryDifficulty(chainman.ActiveChain().Tip());
+},
+    };
+}
+
 static RPCHelpMan getblockfrompeer()
 {
     return RPCHelpMan{
@@ -536,6 +572,7 @@ static RPCHelpMan getblockheader()
                             {RPCResult::Type::NUM, "nonce", "The nonce"},
                             {RPCResult::Type::STR_HEX, "bits", "The bits"},
                             {RPCResult::Type::NUM, "difficulty", "The difficulty"},
+                            {RPCResult::Type::NUM, "auxdifficulty", /*optional=*/true, "The auxiliarydifficulty"},
                             {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
                             {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                             {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
@@ -672,6 +709,7 @@ static RPCHelpMan getblock()
                     {RPCResult::Type::NUM, "nonce", "The nonce"},
                     {RPCResult::Type::STR_HEX, "bits", "The bits"},
                     {RPCResult::Type::NUM, "difficulty", "The difficulty"},
+                    {RPCResult::Type::NUM, "auxdifficulty", /*optional=*/true, "The auxiliary difficulty"},
                     {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the chain up to this block (in hex)"},
                     {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                     {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
@@ -1233,6 +1271,7 @@ RPCHelpMan getblockchaininfo()
                 {RPCResult::Type::NUM, "headers", "the current number of headers we have validated"},
                 {RPCResult::Type::STR, "bestblockhash", "the hash of the currently best block"},
                 {RPCResult::Type::NUM, "difficulty", "the current difficulty"},
+                {RPCResult::Type::NUM, "auxdifficulty", /*optional=*/true, "the current auxiliary difficulty"},
                 {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::NUM, "verificationprogress", "estimate of verification progress [0..1]"},
@@ -1264,6 +1303,9 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
     obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
     obj.pushKV("difficulty", GetDifficulty(&tip));
+    if (!tip.m_aux_pow.IsNull()) {
+        obj.pushKV("auxdifficulty", GetAuxiliaryDifficulty(&tip));
+    }
     obj.pushKV("time", tip.GetBlockTime());
     obj.pushKV("mediantime", tip.GetMedianTimePast());
     obj.pushKV("verificationprogress", GuessVerificationProgress(chainman.GetParams().TxData(), &tip));
