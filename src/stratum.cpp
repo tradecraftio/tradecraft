@@ -321,7 +321,7 @@ std::string GetWorkUnit(StratumClient& client)
     tmp_index.nBits = current_work.GetBlock().nBits;
     double diff = GetDifficulty(&tmp_index);
     if (client.m_mindiff > 0) {
-        diff = std::min(diff, client.m_mindiff);
+        diff = client.m_mindiff;
     }
     diff = std::max(diff, 0.001);
 
