@@ -305,6 +305,11 @@ public:
         return (int64_t)nTimeMax;
     }
 
+    int64_t GetFilteredBlockTime() const
+    {
+        return GetBlockHeader().GetFilteredTime();
+    }
+
     enum { nMedianTimeSpan=11 };
 
     int64_t GetMedianTimePast() const
