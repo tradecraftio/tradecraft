@@ -3797,6 +3797,11 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         if (protocol_cleanup ? !CheckNextWorkRequiredAux(pindexPrev, block, consensusParams) : (block.m_aux_pow.m_commit_bits != GetNextWorkRequiredAux(pindexPrev, block, consensusParams))) {
             return state.DoS(50, false, REJECT_INVALID, "bad-aux-diffbits", false, "incorrect auxiliary proof of work target");
         }
+
+        // Check committed filter value
+        if (!protocol_cleanup && block.GetFilteredTime() != GetFilteredTimeAux(pindexPrev, consensusParams)) {
+            return state.DoS(50, false, REJECT_INVALID, "bad-aux-filter-time", false, "incorrect filtered time commitment");
+        }
     }
 
     // Check timestamp against prev
