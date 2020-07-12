@@ -3456,6 +3456,11 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
         if ((rules & SIZE_EXPANSION) ? !CheckNextWorkRequiredAux(pindexPrev, block, consensusParams) : (block.m_aux_pow.m_commit_bits != GetNextWorkRequiredAux(pindexPrev, block, consensusParams))) {
             return state.DoS(50, false, REJECT_INVALID, "bad-aux-diffbits", false, "incorrect auxiliary proof of work target");
         }
+
+        // Check committed filter value
+        if (!(rules & SIZE_EXPANSION) && block.GetFilteredTime() != GetFilteredTimeAux(pindexPrev, consensusParams)) {
+            return state.DoS(50, false, REJECT_INVALID, "bad-aux-filter-time", false, "incorrect filtered time commitment");
+        }
     }
 
     // Check against checkpoints
