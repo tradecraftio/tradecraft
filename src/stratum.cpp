@@ -308,7 +308,7 @@ uint256 ParseUInt256(const UniValue& hex, const std::string& name)
 static double ClampDifficulty(const StratumClient& client, double diff)
 {
     if (client.m_mindiff > 0) {
-        diff = std::min(diff, client.m_mindiff);
+        diff = client.m_mindiff;
     }
     diff = std::max(diff, g_min_difficulty);
     return diff;
