@@ -299,7 +299,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckAuxiliaryProofOfWork(pindexNew->GetBlockHeader(), Params().GetConsensus()) || (!IsProtocolCleanupActive(Params().GetConsensus(), pindexNew->pprev) && !CheckProofOfWork(pindexNew->GetBlockHeader(), Params().GetConsensus())))
+                if (!CheckAuxiliaryProofOfWork(pindexNew->GetBlockHeader(), Params().GetConsensus()) || (pindexNew->pprev && !IsProtocolCleanupActive(Params().GetConsensus(), *pindexNew->pprev) && !CheckProofOfWork(pindexNew->GetBlockHeader(), Params().GetConsensus())))
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
 
                 pcursor->Next();
