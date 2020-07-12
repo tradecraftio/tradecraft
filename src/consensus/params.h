@@ -88,7 +88,6 @@ struct Params {
     int64_t protocol_cleanup_activation_time;
     /** Proof of work parameters */
     uint256 powLimit;
-    bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     /** Difficulty adjustment parameters */
     int64_t nPowTargetSpacing;
