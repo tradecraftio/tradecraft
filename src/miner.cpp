@@ -46,10 +46,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
 
-    // Updating time can change work required on testnet:
-    if (consensusParams.fPowAllowMinDifficultyBlocks)
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams, pindexPrev ? GetActiveRules(consensusParams, *pindexPrev) : 0);
-
     return nNewTime - nOldTime;
 }
 
