@@ -80,7 +80,7 @@ public:
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
-        consensus.aux_pow_target_spacing = 12 * 60;
+        consensus.aux_pow_target_spacing = 15 * 60;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // OriginalTargetTimespan() / nPowTargetSpacing
@@ -285,7 +285,7 @@ public:
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
-        consensus.aux_pow_target_spacing = 12 * 60;
+        consensus.aux_pow_target_spacing = 15 * 60;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 378; // 75% for testchains
         consensus.nMinerConfirmationWindow = 504;
@@ -576,7 +576,7 @@ public:
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
-        consensus.aux_pow_target_spacing = 12 * 60;
+        consensus.aux_pow_target_spacing = 15 * 60;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
