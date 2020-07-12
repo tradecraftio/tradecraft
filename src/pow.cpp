@@ -23,6 +23,8 @@
 #include <primitives/block.h>
 #include <uint256.h>
 
+#include <array>
+
 static const uint256 k_min_pow_limit = uint256S("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
 int64_t GetActualTimespan(const CBlockIndex* pindexLast, const Consensus::Params& params)
@@ -234,20 +236,94 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
     return true;
 }
 
+int64_t GetFilteredTimeAux(const CBlockIndex* pindexLast, const Consensus::Params& params)
+{
+    // Unfortunately pretty much all digital control code looks like arcane
+    // magic to nonpractitioners.  The below code implements a second-order
+    // low-pass filter over observed inter-block intervals in order to estimate
+    // the current block expectation time for the purpose of difficulty
+    // adjustment.  Essentially `x` is an array of observed inter-block times
+    // and `y` is an array of historical predictions, and the next predicted
+    // value is calculated by:
+    //
+    //     y[0] = b0 * x[0] + b1 * x[1] + b2 * x[2]
+    //                      - a1 * y[1] - a2 * y[2]
+    //
+    // where b0, b1, b2, a1, and a2 are constants, with the constraint
+    //
+    //     (b0 + b1 + b2) - (a1 + a2) = 1.0
+    //
+    // so that the weighted sum (the prediction) is a sort of average.  Since
+    // the x's are themselves differences, a total of 4 block header timestamps
+    // are required to calculate the necessary 3 difference values.  And since
+    // prediction values are delayed a block, there are only two y values
+    // available.
+    //
+    // The magic constants are Bessel/Thomson digital filter coefficients,
+    // scaled to reflect the fact that we are operating on 32.32 fixed-point
+    // numbers.  The values were calculated with the scipy library:
+    //
+    //     b, a = signal.bessel(2, 0.5, 'low')
+    //
+    // Note that for this choice of filter, the constant a1 ends up being zero.
+    // Therefore this implementation actually implements:
+    //
+    //     y[0] = b0 * x[0] + b1 * x[1] + b2 * x[2]
+    //                                  - a2 * y
+    //
+    // The input array of x values are integers, while y (or y[2] in the full
+    // second-order equation above) is a 32.32 fixed-point number.
+    std::array<int64_t, 3> x = { 0, 0, 0 };
+    int64_t y = 0;
+
+    auto pitr = pindexLast;
+    for (size_t idx = 0; idx != x.size(); ++idx) {
+        if (pitr && pitr->pprev) {
+            x[idx] = pitr->GetBlockTime() - pitr->pprev->GetBlockTime();
+            pitr = pitr->pprev;
+        } else {
+            x[idx] = params.aux_pow_target_spacing;
+        }
+    }
+
+    if (pindexLast && pindexLast->pprev) {
+        y = pindexLast->pprev->GetFilteredBlockTime();
+    } else {
+        y = params.aux_pow_target_spacing << 32;
+    }
+
+    static const int64_t low = 0xffffffff;
+    auto time = x[0] * static_cast<int64_t>(0x4498517a)
+              + x[1] * static_cast<int64_t>(0x8930a2f5)
+              + x[2] * static_cast<int64_t>(0x4498517a)
+         - (y >> 32) * static_cast<int64_t>(0x126145ea)
+        - ((y & low) * static_cast<int64_t>(0x126145ea) >> 32);
+
+    // The predicted time is stored inside a 56-bit field within the block
+    // header, so its value needs to be clamped.  This restricts the predicted
+    // value to be +/- 97 days, which is unlikely to be an issue in practice.
+    if (time > 0x007fffffffffffffLL)
+        time = 0x007fffffffffffffLL;
+    if (time < -36028797018963968LL) // 0xffffffffffffff
+        time = -36028797018963968LL;
+
+    return time;
+}
+
 std::pair<int64_t, int64_t> GetAdjustmentFactorAux(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
-    const std::pair<int16_t, int16_t> gain(41, 400); //! 0.1025
-    const std::pair<int16_t, int16_t> limiter(211, 200); //! 1.055
+    const std::pair<int16_t, int16_t> gain(1, 64); //!< 0.015625
+    const std::pair<int16_t, int16_t> limiter(17, 16); //!< 1.0625
 
-    int64_t filtered_time = GetFilteredTime(pindexLast, params);
+    int64_t filtered_time = GetFilteredTimeAux(pindexLast, params);
 
     int64_t numerator;
     int64_t denominator;
-    if (filtered_time < 597105209444LL) {
+    if (filtered_time < -11596411699199LL) { // -2700 sec
         // Any lower and we are limited in the adjustment upward.
         numerator   = limiter.first;
         denominator = limiter.second;
-    } else if (filtered_time > 1943831401459LL) {
+    } else if (filtered_time > 18417830345788LL) { // approx. 4288 sec
         // Any higher and we are limited in the adjustment downward.
         numerator   = limiter.second;
         denominator = limiter.first;
@@ -263,9 +339,9 @@ std::pair<int64_t, int64_t> GetAdjustmentFactorAux(const CBlockIndex* pindexLast
         // Since we are computing using integers, the terms have been rearranged
         // algebraically to prevent truncation error and deal with filtered_time
         // as a 32.32 fixed-point number.
-        numerator = ((int64_t)(gain.first + gain.second) * params.aux_pow_target_spacing) << 31;
+        numerator = ((int64_t)(gain.first + gain.second) * params.aux_pow_target_spacing) << 32;
         numerator -= (int64_t)gain.first * filtered_time;
-        denominator = ((int64_t)gain.second * params.aux_pow_target_spacing) << 31;
+        denominator = ((int64_t)gain.second * params.aux_pow_target_spacing) << 32;
     }
 
     return std::make_pair(numerator, denominator);
