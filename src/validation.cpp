@@ -3533,8 +3533,16 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
     }
 
-    if (!block.m_aux_pow.IsNull() && ((rules & Consensus::SIZE_EXPANSION) ? !CheckNextWorkRequiredAux(pindexPrev, block, consensusParams) : (block.m_aux_pow.m_commit_bits != GetNextWorkRequiredAux(pindexPrev, block, consensusParams)))) {
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-aux-diffbits", "incorrect auxiliary proof of work target");
+    if (!block.m_aux_pow.IsNull()) {
+        // Check auxiliary proof of work target
+        if ((rules & Consensus::SIZE_EXPANSION) ? !CheckNextWorkRequiredAux(pindexPrev, block, consensusParams) : (block.m_aux_pow.m_commit_bits != GetNextWorkRequiredAux(pindexPrev, block, consensusParams))) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-aux-diffbits", "incorrect auxiliary proof of work target");
+        }
+
+        // Check committed filter value
+        if (!(rules & Consensus::SIZE_EXPANSION) && block.GetFilteredTime() != GetFilteredTimeAux(pindexPrev, consensusParams)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-aux-filter-time", "incorrect filtered time commitment");
+        }
     }
 
     // Check against checkpoints
