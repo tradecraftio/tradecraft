@@ -504,6 +504,29 @@ public:
         // verify that m_aux_pow is valid.
         m_aux_pow.m_commit_nonce = (m_aux_pow.m_commit_nonce & ~k_bias_mask) | bias;
     }
+
+    int64_t GetFilteredTime() const
+    {
+        if (m_aux_pow.IsNull()) {
+            return 0;
+        }
+
+        // The filtered time as calculated using the previous block is stored as
+        // a 24.32 fixed-point number spread across the unused bits of the nTime
+        // and nNonce fields in the block template commitment.  It is returned
+        // as a 32.32 fixed point number, however.
+        auto ret = static_cast<uint64_t>(m_aux_pow.m_commit_time) << 32
+                 | static_cast<uint64_t>(m_aux_pow.m_commit_nonce & ~k_bias_mask);
+        return *reinterpret_cast<int64_t*>(&ret) / 256;
+    }
+
+    void SetFilteredTime(int64_t time)
+    {
+        auto utime = *reinterpret_cast<uint64_t*>(&time);
+        m_aux_pow.m_commit_time = static_cast<uint32_t>(utime >> 24);
+        m_aux_pow.m_commit_nonce = static_cast<uint32_t>(utime << 8)
+            | (m_aux_pow.m_commit_nonce & k_bias_mask);
+    }
 };
 
 
