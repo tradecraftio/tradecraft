@@ -29,6 +29,7 @@ class CBlockIndex;
 class uint256;
 
 int64_t GetFilteredTime(const CBlockIndex* pindexLast, const Consensus::Params&);
+int64_t GetFilteredTimeAux(const CBlockIndex* pindexLast, const Consensus::Params&);
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params&);
