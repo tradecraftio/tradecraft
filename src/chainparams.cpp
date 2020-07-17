@@ -256,12 +256,12 @@ public:
         // Deployment of BIP68 and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nStartTime = 1555372800; // April 16, 2019
-        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nTimeout = 1569974400; // October 2, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_LOCKTIME].nTimeout = 1622592000; // June 2nd, 2021.
 
         // Deployment of block-final miner commitment transaction.
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 1562068800; // July 2, 2019
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1587038400; // April 16, 2020
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1622592000; // June 2nd, 2021.
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 2;
