@@ -35,7 +35,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
 
 /** Verify that a block's work target is within the range of half to
  ** twice the targets of the past 12 blocks. */
-bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params &params);
+bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);

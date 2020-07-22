@@ -194,7 +194,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
 // quarter, 10.5 times present difficulty to reduce by more than an
 // eigth, etc. To reduce to arbitrary levels requires 12 blocks worth
 // of work at the difficulty of the last valid block.
-bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params &params)
+bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params)
 {
     // Special case for the genesis block
     if (!pindexLast) {
