@@ -102,8 +102,8 @@ int64_t GetFilteredTime(const CBlockIndex* pindexLast, const Consensus::Params& 
 
 std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
-    const std::pair<int16_t, int16_t> gain(41, 400); //! 0.1025
-    const std::pair<int16_t, int16_t> limiter(211, 200); //! 1.055
+    const std::pair<int16_t, int16_t> gain(41, 400); //!< 0.1025
+    const std::pair<int16_t, int16_t> limiter(211, 200); //!< 1.055
 
     int64_t filtered_time = GetFilteredTime(pindexLast, params);
 
