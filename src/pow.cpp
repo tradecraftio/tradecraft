@@ -201,10 +201,10 @@ bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& bl
         return (block.nBits == UintToArith256(params.powLimit).GetCompact());
     }
 
-    // If look reversed, that is to be expected. We set min to the
-    // largest possible value, and max to the smallest. That way these
-    // will be replaced with actual block values as we loop through
-    // the past 12 blocks.
+    // If these look reversed, that is to be expected. We set min to
+    // the largest possible value, and max to the smallest.  That way
+    // these will be replaced with actual block values as we loop
+    // through the past 12 blocks.
     arith_uint256 min = UintToArith256(params.powLimit);
     arith_uint256 max = arith_uint256(1);
 
