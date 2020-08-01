@@ -1,0 +1,12 @@
+diff -rupN a/qtbase/configure b/qtbase/configure
+--- a/qtbase/configure	2021-01-20 10:47:56.000000000 -0800
++++ b/qtbase/configure	2021-01-20 10:49:14.000000000 -0800
+@@ -2846,7 +2846,7 @@ if [ -z "$PLATFORM" ]; then
+         # with the system. We use 'xcrun' to check the clang version that's part of
+         # the Xcode installation.
+         XCRUN=`/usr/bin/xcrun -sdk macosx clang -v 2>&1`
+-        CLANGVERSION=`echo "$XCRUN" | sed -n 's/.*version \([0-9]\).*/\1/p'`
++        CLANGVERSION=`echo "$XCRUN" | sed -n 's/.*version \([0-9]*\).*/\1/p'`
+         expr "$CLANGVERSION" : '[0-9]' > /dev/null || { echo "Unable to determine CLANG version from output of xcrun: $XCRUN" ; exit 2 ; }
+         if [ "$CLANGVERSION" -ge 3 ]; then
+             PLATFORM=macx-clang

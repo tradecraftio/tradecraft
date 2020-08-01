@@ -1,0 +1,35 @@
+diff -rupN b/qtbase/src/corelib/global/qcompilerdetection.h c/qtbase/src/corelib/global/qcompilerdetection.h
+--- b/qtbase/src/corelib/global/qcompilerdetection.h	2016-12-01 00:17:04.000000000 -0800
++++ c/qtbase/src/corelib/global/qcompilerdetection.h	2021-01-20 10:50:23.000000000 -0800
+@@ -172,7 +172,9 @@
+ /* Clang also masquerades as GCC */
+ #    if defined(__apple_build_version__)
+ #      /* http://en.wikipedia.org/wiki/Xcode#Toolchain_Versions */
+-#      if __apple_build_version__ >= 7000053
++#      if __apple_build_version__ >= 9000000
++#        define Q_CC_CLANG 900
++#      elif __apple_build_version__ >= 7000053
+ #        define Q_CC_CLANG 306
+ #      elif __apple_build_version__ >= 6000051
+ #        define Q_CC_CLANG 305
+diff -rupN b/qtbase/src/corelib/tools/qsimd_p.h c/qtbase/src/corelib/tools/qsimd_p.h
+--- b/qtbase/src/corelib/tools/qsimd_p.h	2016-12-01 00:17:04.000000000 -0800
++++ c/qtbase/src/corelib/tools/qsimd_p.h	2021-01-20 10:50:23.000000000 -0800
+@@ -465,7 +465,7 @@ static inline quint64 qCpuFeatures()
+ #define qCpuHasFeature(feature)     ((qCompilerCpuFeatures & (Q_UINT64_C(1) << CpuFeature ## feature)) \
+                                      || (qCpuFeatures() & (Q_UINT64_C(1) << CpuFeature ## feature)))
+ 
+-#if QT_HAS_BUILTIN(__builtin_clz) && QT_HAS_BUILTIN(__builtin_ctz) && defined(Q_CC_CLANG) && !defined(Q_CC_INTEL)
++#if QT_HAS_BUILTIN(__builtin_clz) && QT_HAS_BUILTIN(__builtin_ctz) && (defined(Q_CC_CLANG) && Q_CC_CLANG < 900) && !defined(Q_CC_INTEL)
+ static Q_ALWAYS_INLINE unsigned _bit_scan_reverse(unsigned val)
+ {
+     Q_ASSERT(val != 0); // if val==0, the result is undefined.
+@@ -503,7 +503,7 @@ static __forceinline unsigned long _bit_
+     _BitScanForward(&result, val);
+     return result;
+ }
+-#  elif (defined(Q_CC_CLANG) || (defined(Q_CC_GNU) && Q_CC_GNU < 405)) \
++#  elif ((defined(Q_CC_CLANG) && Q_CC_CLANG < 900) || (!defined(Q_CC_CLANG) && defined(Q_CC_GNU) && Q_CC_GNU < 405)) \
+     && !defined(Q_CC_INTEL)
+ // Clang is missing the intrinsic for _bit_scan_reverse
+ // GCC only added it in version 4.5
