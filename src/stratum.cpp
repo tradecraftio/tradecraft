@@ -667,7 +667,7 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
     // Process each line of input that we have received
     char *cstr = 0;
     size_t len = 0;
-    while (cstr = evbuffer_readln(input, &len, EVBUFFER_EOL_CRLF)) {
+    while ((cstr = evbuffer_readln(input, &len, EVBUFFER_EOL_CRLF))) {
         std::string line(cstr, len);
         free(cstr);
         LogPrint("stratum", "Received stratum request from %s : %s\n", client.GetPeer().ToString(), line);
