@@ -91,7 +91,7 @@ script: |
 
   # Build dependencies for each host
   for i in $HOSTS; do
-    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" GITIAN=1
   done
 
   # Faketime for binaries
