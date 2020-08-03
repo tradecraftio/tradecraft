@@ -261,7 +261,7 @@ std::string GetWorkUnit(StratumClient& client)
     if (tip != chainActive.Tip() || (mempool.GetTransactionsUpdated() != transactions_updated_last && (GetTime() - last_update_time) > 5) || !work_templates.count(job_id))
     {
         CBlockIndex *tip_new = chainActive.Tip();
-        const CScript script = CScript() << OP_TRUE;
+        const CScript script = CScript() << OP_FALSE;
         CBlockTemplate *new_work = BlockAssembler(Params()).CreateNewBlock(script);
         if (!new_work) {
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
@@ -339,8 +339,10 @@ std::string GetWorkUnit(StratumClient& client)
            CScript()
         << cb.lock_height
         << nonce;
-    cb.vout.front().scriptPubKey =
-        GetScriptForDestination(client.m_addr.Get());
+    if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
+        cb.vout.front().scriptPubKey =
+            GetScriptForDestination(client.m_addr.Get());
+    }
     CDataStream ds(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
     ds << CTransaction(cb);
     assert(ds.size() >= (4 + 1 + 32 + 4 + 1));
@@ -438,8 +440,10 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
         << cb.lock_height
         << nonce;
     assert(cb.vout.size() >= 1);
-    cb.vout.front().scriptPubKey =
-        GetScriptForDestination(client.m_addr.Get());
+    if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
+        cb.vout.front().scriptPubKey =
+            GetScriptForDestination(client.m_addr.Get());
+    }
 
     CMutableTransaction bf(current_work.GetBlock().vtx.back());
     std::vector<uint256> cb_branch = current_work.m_cb_branch;
