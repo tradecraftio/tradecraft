@@ -326,6 +326,71 @@ uint256 ComputeFastMerkleRootFromBranch(const uint256& leaf, const std::vector<u
     return hash;
 }
 
+static uint256 calc_bits(const uint256& key, int begin, int end)
+{
+    assert(begin <= end);
+    uint256 ret; // = 0
+    for (int idx = begin; idx < end; ++idx) {
+        unsigned char src = 255 - idx;
+        unsigned char dst = end - idx - 1;
+        if (key.begin()[31-(src/8)] & (1 << (src%8))) {
+            ret.begin()[31-(dst/8)] |= 1 << (dst%8);
+        }
+    }
+    ret.begin()[31-((end-begin)/8)] |= 1 << ((end-begin)%8);
+    return ret;
+}
+
+static uint256 calc_remainder(const uint256& key, int used)
+{
+    assert(used <= 255);
+    if (!used) {
+        return key;
+    }
+    uint256 ret; // = 0
+    for (int idx = 0; idx < (256-used); ++idx) {
+        if (key.begin()[31-(idx/8)] & (1 << (idx%8))) {
+            ret.begin()[31-(idx/8)] |= 1 << (idx%8);
+        }
+    }
+    return ret;
+}
+
+uint256 ComputeMerkleMapRootFromBranch(const uint256& value, const std::vector<std::pair<unsigned char, uint256> >& branch, const uint256& key, bool* invalid)
+{
+    size_t total = 0;
+    for (auto& skip : branch) {
+        total += 1 + (size_t)skip.first;
+    }
+
+    if (total >= 256) {
+        if (invalid) {
+            *invalid = true;
+        }
+        return {};
+    }
+
+    if (invalid) {
+        *invalid = false;
+    }
+
+    uint256 hash;
+    MerkleHash_Sha256Midstate(hash, calc_remainder(key, total), value);
+    for (auto& skip : branch) {
+        --total;
+        auto begin = total - skip.first;
+        auto end = total;
+        if (key.begin()[31-(end/8)] & (1 << (end%8))) {
+            MerkleHash_Sha256Midstate(hash, skip.second, hash);
+        } else {
+            MerkleHash_Sha256Midstate(hash, hash, skip.second);
+        }
+        MerkleHash_Sha256Midstate(hash, calc_bits(key, begin, end), hash);
+    }
+
+    return hash;
+}
+
 uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
