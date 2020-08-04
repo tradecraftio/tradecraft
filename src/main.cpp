@@ -535,7 +535,7 @@ void MaybeSetPeerAsAnnouncingHeaderAndIDs(const CNodeState* nodestate, CNode* pf
 // Requires cs_main
 bool CanDirectFetch(const Consensus::Params &consensusParams)
 {
-    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nPowTargetSpacing * 20;
+    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - (chainActive.Tip()->m_aux_pow.IsNull() ? consensusParams.nPowTargetSpacing : consensusParams.aux_pow_target_spacing) * 20;
 }
 
 // Requires cs_main
@@ -1682,7 +1682,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (!CheckAuxiliaryProofOfWork(block, consensusParams) || !CheckProofOfWork(block, consensusParams))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -3467,6 +3467,9 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
     if (IsWitnessEnabled(pindexNew->pprev, Params().GetConsensus())) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
     }
+    if (IsMergeMiningEnabled(pindexNew->pprev, Params().GetConsensus())) {
+        pindexNew->nStatus |= BLOCK_OPT_MERGE_MINING;
+    }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -3596,8 +3599,43 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
+    // Check that the variable-length auxiliary proof-of-work data are
+    // within acceptable ranges.
+    if (!block.m_aux_pow.IsNull()) {
+        const AuxProofOfWork& aux_pow = block.m_aux_pow;
+
+        if (aux_pow.m_midstate_buffer.size() >= 64) {
+            return state.DoS(100, false, REJECT_INVALID, "auxpow-midstate-buffer", false, "auxiliary proof-of-work midstate buffer is too large");
+        }
+
+        if (aux_pow.m_midstate_buffer.size() != aux_pow.m_midstate_length % 64) {
+            return state.DoS(100, false, REJECT_INVALID, "auxpow-midstate-length", false, "auxiliary proof-of-work midstate buffer doesn't match anticipated length");
+        }
+
+        if (aux_pow.m_aux_branch.size() > MAX_AUX_POW_BRANCH_LENGTH) {
+            return state.DoS(100, false, REJECT_INVALID, "auxpow-merkle-branch", false, "auxiliary proof-of-work Merkle branch is too long");
+        }
+
+        if (aux_pow.m_commit_branch.size() > MAX_AUX_POW_COMMIT_BRANCH_LENGTH) {
+            return state.DoS(100, false, REJECT_INVALID, "auxpow-commit-branch", false, "auxiliary proof-of-work Merkle map path is too long");
+        }
+
+        size_t nbits = 0;
+        for (size_t idx = 0; idx < aux_pow.m_commit_branch.size(); ++idx) {
+            ++nbits;
+            nbits += aux_pow.m_commit_branch[idx].first;
+        }
+        if (nbits >= 256) {
+            return state.DoS(100, false, REJECT_INVALID, "auxpow-commit-branch-bits", false, "auxiliary proof-of-work Merkle map path is greater than 256 bits");
+        }
+    }
+
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckAuxiliaryProofOfWork(block, consensusParams)) {
+        return state.DoS(50, false, REJECT_INVALID, "aux-pow-invalid", false, "auxiliary proof of work failed");
+    }
+
+    if (fCheckPOW && !CheckProofOfWork(block, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
@@ -3627,6 +3665,29 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         // while still invalidating it.
         if (mutated)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-duplicate", true, "duplicate transaction");
+
+        // Merge mining checks.
+        if (!block.m_aux_pow.IsNull()) {
+            // Check that auxiliary proof-of-work data have canonical encoding.
+            auto aux_hash = block.GetAuxiliaryHash(consensusParams, &mutated);
+            if (mutated) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-auxpow-mutated", true, "auxiliary proof-of-work header is non-canonical (mutated)");
+            }
+
+            // The auxiliary proof-of-work is committed to in the coinbase string.
+            if (block.vtx.empty() || block.vtx[0].vin.empty() || (block.vtx[0].vin[0].scriptSig.size() < 32) || memcmp(aux_hash.second.begin(), &(block.vtx[0].vin[0].scriptSig.end()-32)[0], 32)) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-auxpow-commit", true, "incorrect commitment to auxiliary proof-of-work in coinbase string");
+            }
+
+            // Check that AuxProofOfWork::m_commit_hash_merkle_root is correct.
+            CMutableTransaction cb(block.vtx[0]);
+            cb.vin[0].scriptSig = CScript(); // not in commitment as miner may
+            cb.vin[0].nSequence = 0;         // alter these values later.
+            auto cb_branch = BlockMerkleBranch(block, 0);
+            if (ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0) != block.m_aux_pow.m_commit_hash_merkle_root) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-commit-txnmrklroot", true, "block template hashMerkleRoot mismatch");
+            }
+        }
     }
 
     // Check if the protocol-cleanup fork has activated
@@ -3640,7 +3701,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Size limits
     const std::size_t max_block_base_size = protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCK_BASE_SIZE : MAX_BLOCK_BASE_SIZE;
-    if (block.vtx.empty() || block.vtx.size() > max_block_base_size || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > max_block_base_size)
+    if (block.vtx.empty() || block.vtx.size() > max_block_base_size || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS | SERIALIZE_BLOCK_NO_AUX_POW) > max_block_base_size)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
@@ -3694,6 +3755,12 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
 {
     LOCK(cs_main);
     return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+}
+
+bool IsMergeMiningEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    LOCK(cs_main);
+    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_AUXPOW, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
 bool GetWitnessCommitment(const CBlock& block, unsigned char* path, uint256* hash)
@@ -3776,8 +3843,19 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     const bool protocol_cleanup = IsProtocolCleanupActive(consensusParams, pindexPrev);
 
     // Check proof of work
-    if (protocol_cleanup ? CheckNextWorkRequired(pindexPrev, block, consensusParams) : (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)))
+    if (protocol_cleanup ? !CheckNextWorkRequired(pindexPrev, block, consensusParams) : (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, protocol_cleanup)))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+
+    if (!block.m_aux_pow.IsNull()) {
+        if (protocol_cleanup ? !CheckNextWorkRequiredAux(pindexPrev, block, consensusParams) : (block.m_aux_pow.m_commit_bits != GetNextWorkRequiredAux(pindexPrev, block, consensusParams))) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-aux-diffbits", false, "incorrect auxiliary proof of work target");
+        }
+
+        // Check committed filter value
+        if (!protocol_cleanup && block.GetFilteredTime() != GetFilteredTimeAux(pindexPrev, consensusParams)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-aux-filter-time", false, "incorrect filtered time commitment");
+        }
+    }
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -3797,6 +3875,19 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     // network has upgraded (until timeout activation):
     if (((pindexPrev->nHeight + 1) >= consensusParams.verify_coinbase_lock_time_activation_height) && (pindexPrev->GetMedianTimePast() < consensusParams.verify_coinbase_lock_time_timeout) && ((block.nVersion >> 28) != 3))
         return state.Invalid(false, REJECT_OBSOLETE, "bad-version", "rejected non-coinbase-mtp block before activation timeout");
+
+    // Reject merge-mining blocks prior to activation:
+    if (!IsMergeMiningEnabled(pindexPrev, consensusParams) && !block.m_aux_pow.IsNull()) {
+        return state.Invalid(false, REJECT_INVALID, "merge-mined-pre", "rejected merge-mined block before activation");
+    }
+
+    // Reject non-merge-mining blocks after activation:
+    if (IsMergeMiningEnabled(pindexPrev, consensusParams) && block.m_aux_pow.IsNull()) {
+        // Note: we do not ban nodes which relay a native-mined header
+        // after activation, because it might be an old node.  Just
+        // ignore and move on...
+        return state.Invalid(false, REJECT_INVALID, "native-mined-post", "rejected non-merge-mined block after activation");
+    }
 
     return true;
 }
@@ -4496,6 +4587,9 @@ bool RewindBlockIndex(const CChainParams& params)
         if (IsWitnessEnabled(chainActive[nHeight - 1], params.GetConsensus()) && !(chainActive[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
             break;
         }
+        if (IsMergeMiningEnabled(chainActive[nHeight - 1], params.GetConsensus()) && !(chainActive[nHeight]->nStatus & BLOCK_OPT_MERGE_MINING)) {
+            break;
+        }
         nHeight++;
     }
 
@@ -4530,7 +4624,10 @@ bool RewindBlockIndex(const CChainParams& params)
         // this block or some successor doesn't HAVE_DATA, so we were unable to
         // rewind all the way.  Blocks remaining on chainActive at this point
         // must not have their validity reduced.
-        if (IsWitnessEnabled(pindexIter->pprev, params.GetConsensus()) && !(pindexIter->nStatus & BLOCK_OPT_WITNESS) && !chainActive.Contains(pindexIter)) {
+        if (((IsWitnessEnabled(pindexIter->pprev, params.GetConsensus()) && !(pindexIter->nStatus & BLOCK_OPT_WITNESS)) ||
+             (IsMergeMiningEnabled(pindexIter->pprev, params.GetConsensus()) && !(pindexIter->nStatus & BLOCK_OPT_MERGE_MINING))) &&
+            !chainActive.Contains(pindexIter))
+        {
             // Reduce validity
             pindexIter->nStatus = std::min<unsigned int>(pindexIter->nStatus & BLOCK_VALID_MASK, BLOCK_VALID_TREE) | (pindexIter->nStatus & ~BLOCK_VALID_MASK);
             // Remove have-data flags.
@@ -5654,7 +5751,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
             // If pruning, don't inv blocks unless we have on disk and are likely to still have
             // for some reasonable time window (1 hour) that block relay might require.
-            const int nPrunedBlocksLikelyToHave = MIN_BLOCKS_TO_KEEP - 3600 / chainparams.GetConsensus().nPowTargetSpacing;
+            const int nPrunedBlocksLikelyToHave = MIN_BLOCKS_TO_KEEP - 3600 / (chainActive.Tip()->m_aux_pow.IsNull() ? chainparams.GetConsensus().nPowTargetSpacing : chainparams.GetConsensus().aux_pow_target_spacing);
             if (fPruneMode && (!(pindex->nStatus & BLOCK_HAVE_DATA) || pindex->nHeight <= chainActive.Tip()->nHeight - nPrunedBlocksLikelyToHave))
             {
                 LogPrint("net", " getblocks stopping, pruned or too old block at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
@@ -7139,7 +7236,7 @@ bool SendMessages(CNode* pto)
         if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0) {
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
             int nOtherPeersWithValidatedDownloads = nPeersWithValidatedDownloads - (state.nBlocksInFlightValidHeaders > 0);
-            if (nNow > state.nDownloadingSince + consensusParams.nPowTargetSpacing * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
+            if (nNow > state.nDownloadingSince + (chainActive.Tip()->m_aux_pow.IsNull() ? consensusParams.nPowTargetSpacing : consensusParams.aux_pow_target_spacing) * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
                 LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->id);
                 pto->fDisconnect = true;
             }

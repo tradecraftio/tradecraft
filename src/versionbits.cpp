@@ -42,6 +42,11 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
         /*.dependencies =*/ {
             Consensus::DEPLOYMENT_BLOCKFINAL
         },
+    },
+    {
+        /*.name =*/ "auxpow",
+        /*.gbt_force =*/ false,
+        /*.dependencies =*/ {},
     }
 };
 

@@ -19,6 +19,7 @@
 
 #include "chainparams.h"
 #include "consensus/merkle.h"
+#include "hash.h"
 
 #include "streams.h"
 #include "tinyformat.h"
@@ -85,7 +86,9 @@ public:
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
+        consensus.aux_pow_target_spacing = 15 * 60;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // OriginalTargetTimespan() / nPowTargetSpacing
@@ -107,6 +110,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1586995200; // April 16th, 2020.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1622592000; // June 2nd, 2021.
+
+        // Deployment of merge mining
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = 1591056000; // June 2nd, 2020.
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 1622592000; // June 2nd, 2021.
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000001bfc1acb352e9310223");
@@ -158,6 +166,15 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000005b1e3d23ecfd2dd4a6e1a35238aa0392c0a8528c40df52376d7efe2c"));
         assert(genesis.hashMerkleRoot == uint256S("0xf53b1baa971ea40be88cf51288aabd700dfec96c486bf7155a53a4919af4c8bd"));
+
+        uint256 tag;
+        CSHA256().Write(reinterpret_cast<const unsigned char*>("auxpow"), 6).Finalize(tag.begin());
+        CHashWriter hw(SER_GETHASH, PROTOCOL_VERSION);
+        hw << tag;
+        hw << tag;
+        hw << genesis;
+        consensus.aux_pow_path = hw.GetHash();
+        assert(consensus.aux_pow_path == uint256S("0x632938ec752e63b7f63cdd9a16b336c6c5cefbaad66278e402ce59d706f57ff6"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("node.freico.in", "seed.freico.in")); // Mark Friedenbach
@@ -249,7 +266,9 @@ public:
         consensus.BIP34Height = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
+        consensus.aux_pow_target_spacing = 15 * 60;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 378; // 75% for testchains
         consensus.nMinerConfirmationWindow = 504;
@@ -271,6 +290,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1586995200; // April 16th, 2020.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1622592000; // June 2nd, 2021.
+
+        // Deployment of merge mining
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = 1591056000; // June 2nd, 2020.
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 1622592000; // June 2nd, 2021.
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000100010001");
@@ -298,6 +322,15 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x00000000a52504ffe3420a43bd385ef24f81838921a903460b235d95f37cd65e"));
         assert(genesis.hashMerkleRoot == uint256S("0xf53b1baa971ea40be88cf51288aabd700dfec96c486bf7155a53a4919af4c8bd"));
+
+        uint256 tag;
+        CSHA256().Write(reinterpret_cast<const unsigned char*>("auxpow"), 6).Finalize(tag.begin());
+        CHashWriter hw(SER_GETHASH, PROTOCOL_VERSION);
+        hw << tag;
+        hw << tag;
+        hw << genesis;
+        consensus.aux_pow_path = hw.GetHash();
+        assert(consensus.aux_pow_path == uint256S("0xcb2c00dc58978bb29b78cb8449d76454e3055c10d0410fcf890b39958ab2d336"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -352,7 +385,9 @@ public:
         consensus.BIP34Height = -1; // BIP34 has not necessarily activated on regtest
         consensus.BIP34Hash = uint256();
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
+        consensus.aux_pow_target_spacing = 15 * 60;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
@@ -368,6 +403,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 999999999999ULL;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -401,6 +439,15 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x67756db06265141574ff8e7c3f97ebd57c443791e0ca27ee8b03758d6056edb8"));
         assert(genesis.hashMerkleRoot == uint256S("0xf53b1baa971ea40be88cf51288aabd700dfec96c486bf7155a53a4919af4c8bd"));
+
+        uint256 tag;
+        CSHA256().Write(reinterpret_cast<const unsigned char*>("auxpow"), 6).Finalize(tag.begin());
+        CHashWriter hw(SER_GETHASH, PROTOCOL_VERSION);
+        hw << tag;
+        hw << tag;
+        hw << genesis;
+        consensus.aux_pow_path = hw.GetHash();
+        assert(consensus.aux_pow_path == uint256S("0xd799d41af01c1ac77e6a7793ba046a7432bb6ec250b84e2f5c6f225e05f0fc74"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.

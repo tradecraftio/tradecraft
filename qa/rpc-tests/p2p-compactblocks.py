@@ -145,8 +145,9 @@ class CompactBlocksTest(FreicoinTestFramework):
         mtp = node.getblockheader(tip)['mediantime']
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
         block.nVersion = 4
+        blocktemplate = {} if height < 2 else node.getblocktemplate({'rules':['segwit','auxpow']})
         try:
-            blockfinal_prevout = node.getblocktemplate({'rules':['segwit']})['blockfinal']['prevout']
+            blockfinal_prevout = blocktemplate['blockfinal']['prevout']
         except:
             blockfinal_prevout = []
         if blockfinal_prevout:
@@ -164,6 +165,8 @@ class CompactBlocksTest(FreicoinTestFramework):
             block.rehash()
         if segwit:
             add_witness_commitment(block)
+        if 'rules' in blocktemplate and '!auxpow' in blocktemplate['rules']:
+            block.setup_default_aux_pow()
         block.solve()
         return block
 
@@ -186,6 +189,8 @@ class CompactBlocksTest(FreicoinTestFramework):
         block2 = self.build_block_on_tip(self.nodes[0])
         block2.vtx.append(tx)
         block2.hashMerkleRoot = block2.calc_merkle_root()
+        if block2.aux_pow:
+            block2.aux_pow.commit_hash_merkle_root = block2.calc_commit_merkle_root()
         block2.solve()
         self.test_node.send_and_ping(msg_block(block2))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block2.sha256)
@@ -495,6 +500,8 @@ class CompactBlocksTest(FreicoinTestFramework):
             block.vtx.append(finaltx)
 
         block.hashMerkleRoot = block.calc_merkle_root()
+        if block.aux_pow:
+            block.aux_pow.commit_hash_merkle_root = block.calc_commit_merkle_root()
         block.solve()
         return block
 
@@ -778,6 +785,8 @@ class CompactBlocksTest(FreicoinTestFramework):
         block = self.build_block_with_transactions(node, utxo, 5)
         del block.vtx[3]
         block.hashMerkleRoot = block.calc_merkle_root()
+        if block.aux_pow:
+            block.aux_pow.commit_hash_merkle_root = block.calc_commit_merkle_root()
         if use_segwit:
             # If we're testing with segwit, also drop the coinbase witness,
             # but include the witness commitment.

@@ -21,8 +21,14 @@
 
 #include "arith_uint256.h"
 #include "chain.h"
+#include "consensus/merkle.h"
+#include "hash.h"
 #include "primitives/block.h"
 #include "uint256.h"
+
+#include <array>
+
+static const uint256 k_min_pow_limit = uint256S("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
 int64_t GetActualTimespan(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
@@ -102,8 +108,8 @@ int64_t GetFilteredTime(const CBlockIndex* pindexLast, const Consensus::Params& 
 
 std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
-    const std::pair<int16_t, int16_t> gain(41, 400); //! 0.1025
-    const std::pair<int16_t, int16_t> limiter(211, 200); //! 1.055
+    const std::pair<int16_t, int16_t> gain(41, 400); //!< 0.1025
+    const std::pair<int16_t, int16_t> limiter(211, 200); //!< 1.055
 
     int64_t filtered_time = GetFilteredTime(pindexLast, params);
 
@@ -124,7 +130,7 @@ std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pinde
     return std::make_pair(numerator, denominator);
 }
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, bool protocol_cleanup)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
@@ -138,6 +144,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (pindexLast->GetBlockHash() == uint256S("0x0000000000003bd73ea13954fbbf1cf50b5384f961d142a75a3dfe106f793a20"))
         return 0x1b01c13a;
 
+    // If we are past the protocol-cleanup fork, then the minimum proof-of-work
+    // becomes something easily calculable.
+    if (protocol_cleanup) {
+        nProofOfWorkLimit = 0x207fffff;
+    }
+
     const bool use_filter = (pindexLast->nHeight >= (params.diff_adjust_threshold - 1));
     const int64_t interval = use_filter ? params.filtered_adjust_interval : params.original_adjust_interval;
 
@@ -147,10 +159,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    return CalculateNextWorkRequired(pindexLast, params);
+    return CalculateNextWorkRequired(pindexLast, params, protocol_cleanup);
 }
 
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params, bool protocol_cleanup)
 {
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
@@ -169,7 +181,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
     assert(adjustment_factor.second > 0);
 
     // Retarget
-    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    arith_uint256 bnPowLimit = UintToArith256(protocol_cleanup ? k_min_pow_limit : params.powLimit);
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     arith_uint320 bnTmp(bnNew);
@@ -194,17 +206,17 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
 // quarter, 10.5 times present difficulty to reduce by more than an
 // eigth, etc. To reduce to arbitrary levels requires 12 blocks worth
 // of work at the difficulty of the last valid block.
-bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params &params)
+bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params)
 {
     // Special case for the genesis block
     if (!pindexLast) {
         return (block.nBits == UintToArith256(params.powLimit).GetCompact());
     }
 
-    // If look reversed, that is to be expected. We set min to the
-    // largest possible value, and max to the smallest. That way these
-    // will be replaced with actual block values as we loop through
-    // the past 12 blocks.
+    // If these look reversed, that is to be expected. We set min to
+    // the largest possible value, and max to the smallest.  That way
+    // these will be replaced with actual block values as we loop
+    // through the past 12 blocks.
     arith_uint256 min = UintToArith256(params.powLimit);
     arith_uint256 max = arith_uint256(1);
 
@@ -231,20 +243,268 @@ bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& bl
     return ((min <= target) && (target <= max));
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+int64_t GetFilteredTimeAux(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
-    bool fNegative;
-    bool fOverflow;
-    arith_uint256 bnTarget;
+    // Unfortunately pretty much all digital control code looks like arcane
+    // magic to nonpractitioners.  The below code implements a second-order
+    // low-pass filter over observed inter-block intervals in order to estimate
+    // the current block expectation time for the purpose of difficulty
+    // adjustment.  Essentially `x` is an array of observed inter-block times
+    // and `y` is an array of historical predictions, and the next predicted
+    // value is calculated by:
+    //
+    //     y[0] = b0 * x[0] + b1 * x[1] + b2 * x[2]
+    //                      - a1 * y[1] - a2 * y[2]
+    //
+    // where b0, b1, b2, a1, and a2 are constants, with the constraint
+    //
+    //     (b0 + b1 + b2) - (a1 + a2) = 1.0
+    //
+    // so that the weighted sum (the prediction) is a sort of average.  Since
+    // the x's are themselves differences, a total of 4 block header timestamps
+    // are required to calculate the necessary 3 difference values.  And since
+    // prediction values are delayed a block, there are only two y values
+    // available.
+    //
+    // The magic constants are Bessel/Thomson digital filter coefficients,
+    // scaled to reflect the fact that we are operating on 32.32 fixed-point
+    // numbers.  The values were calculated with the scipy library:
+    //
+    //     b, a = signal.bessel(2, 0.5, 'low')
+    //
+    // Note that for this choice of filter, the constant a1 ends up being zero.
+    // Therefore this implementation actually implements:
+    //
+    //     y[0] = b0 * x[0] + b1 * x[1] + b2 * x[2]
+    //                                  - a2 * y
+    //
+    // The input array of x values are integers, while y (or y[2] in the full
+    // second-order equation above) is a 32.32 fixed-point number.
+    std::array<int64_t, 3> x = { 0, 0, 0 };
+    int64_t y = 0;
 
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    auto pitr = pindexLast;
+    for (size_t idx = 0; idx != x.size(); ++idx) {
+        if (pitr && pitr->pprev) {
+            x[idx] = pitr->GetBlockTime() - pitr->pprev->GetBlockTime();
+            pitr = pitr->pprev;
+        } else {
+            x[idx] = params.aux_pow_target_spacing;
+        }
+    }
+
+    if (pindexLast && pindexLast->pprev) {
+        y = pindexLast->pprev->GetFilteredBlockTime();
+    } else {
+        y = params.aux_pow_target_spacing << 32;
+    }
+
+    static const int64_t low = 0xffffffff;
+    auto time = x[0] * static_cast<int64_t>(0x4498517a)
+              + x[1] * static_cast<int64_t>(0x8930a2f5)
+              + x[2] * static_cast<int64_t>(0x4498517a)
+         - (y >> 32) * static_cast<int64_t>(0x126145ea)
+        - ((y & low) * static_cast<int64_t>(0x126145ea) >> 32);
+
+    // The predicted time is stored inside a 56-bit field within the block
+    // header, so its value needs to be clamped.  This restricts the predicted
+    // value to be +/- 97 days, which is unlikely to be an issue in practice.
+    if (time > 0x007fffffffffffffLL)
+        time = 0x007fffffffffffffLL;
+    if (time < -36028797018963968LL) // 0xffffffffffffff
+        time = -36028797018963968LL;
+
+    return time;
+}
+
+std::pair<int64_t, int64_t> GetAdjustmentFactorAux(const CBlockIndex* pindexLast, const Consensus::Params& params)
+{
+    const std::pair<int16_t, int16_t> gain(1, 64); //!< 0.015625
+    const std::pair<int16_t, int16_t> limiter(17, 16); //!< 1.0625
+
+    int64_t filtered_time = GetFilteredTimeAux(pindexLast, params);
+
+    int64_t numerator;
+    int64_t denominator;
+    if (filtered_time < -11596411699199LL) { // -2700 sec
+        // Any lower and we are limited in the adjustment upward.
+        numerator   = limiter.first;
+        denominator = limiter.second;
+    } else if (filtered_time > 18417830345788LL) { // approx. 4288 sec
+        // Any higher and we are limited in the adjustment downward.
+        numerator   = limiter.second;
+        denominator = limiter.first;
+    } else {
+        // The following computes the value
+        //
+        //   f = 1 - G * (actual - expected) / expected
+        //
+        // where f is the desired adjustment factor, actual is the
+        // filter-estimated inter-block interval (in seconds), spacing is the
+        // target interval (in seconds), and G is the gain constant: 0.015625.
+        //
+        // Since we are computing using integers, the terms have been rearranged
+        // algebraically to prevent truncation error and deal with filtered_time
+        // as a 32.32 fixed-point number.
+        numerator = ((int64_t)(gain.first + gain.second) * params.aux_pow_target_spacing) << 32;
+        numerator -= (int64_t)gain.first * filtered_time;
+        denominator = ((int64_t)gain.second * params.aux_pow_target_spacing) << 32;
+    }
+
+    return std::make_pair(numerator, denominator);
+}
+
+uint32_t GetNextWorkRequiredAux(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params)
+{
+    return CalculateNextWorkRequiredAux(pindexLast, params);
+}
+
+uint32_t CalculateNextWorkRequiredAux(const CBlockIndex* pindexLast, const Consensus::Params& params)
+{
+    arith_uint256 pow_limit = UintToArith256(params.aux_pow_limit);
+
+    // The very first block to have an auxiliary proof-of-work starts with a
+    // minimal difficulty.
+    if (!pindexLast || pindexLast->m_aux_pow.IsNull()) {
+        return pow_limit.GetCompact();
+    }
+    if (params.fPowNoRetargeting) {
+        return pindexLast->m_aux_pow.m_commit_bits;
+    }
+
+    std::pair<int64_t, int64_t> adjustment_factor;
+
+    adjustment_factor = GetAdjustmentFactorAux(pindexLast, params);
+
+    assert(adjustment_factor.first >= 0);
+    assert(adjustment_factor.second > 0);
+
+    // Retarget
+    arith_uint256 new_target;
+    new_target.SetCompact(pindexLast->m_aux_pow.m_commit_bits);
+    arith_uint320 tmp(new_target);
+    tmp *= arith_uint320(static_cast<uint64_t>(adjustment_factor.second));
+    tmp /= arith_uint320(static_cast<uint64_t>(adjustment_factor.first));
+    assert(tmp.TruncateTo256(new_target));
+
+    return ((new_target > pow_limit) ? pow_limit : new_target).GetCompact();
+}
+
+bool CheckNextWorkRequiredAux(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params)
+{
+    // There's nothing to check before activation of merged mining.
+    if (block.m_aux_pow.IsNull()) {
+        return true;
+    }
+
+    // Should never happen...
+    // (The genesis block should have already been handled above.)
+    if (!pindexLast) {
+        return false;
+    }
+
+    // Special case for the first merge-mined block.
+    if (pindexLast->m_aux_pow.IsNull()) {
+        return (block.m_aux_pow.m_commit_bits == UintToArith256(params.aux_pow_limit).GetCompact());
+    }
+
+    // If look reversed, that is to be expected. We set min to the largest
+    // possible value, and max to the smallest. That way these will be replaced
+    // with actual block values as we loop through the past 12 blocks.
+    arith_uint256 min = UintToArith256(params.aux_pow_limit);
+    arith_uint256 max = arith_uint256(1);
+
+    // After this loop, min will be half the largest work target of
+    // the past 12 blocks, and max will be twice the smallest.
+    for (int i = 0; i < 12 && pindexLast && !pindexLast->m_aux_pow.IsNull(); ++i, pindexLast = pindexLast->pprev) {
+        arith_uint256 target;
+        target.SetCompact(pindexLast->m_aux_pow.m_commit_bits);
+        arith_uint256 local_min = target >> 1;
+        arith_uint256 local_max = target << 1;
+        if (min > local_min) {
+            min = local_min;
+        }
+        if (max < local_max) {
+            max = local_max;
+        }
+    }
+
+    // See if the passed in block's m_commit_bits specifies a target within the
+    // range of half to twice the work targets of the past 12 blocks, inclusive
+    // of the endpoints.
+    arith_uint256 target;
+    target.SetCompact(block.m_aux_pow.m_commit_bits);
+    return ((min <= target) && (target <= max));
+}
+
+bool CheckAuxiliaryProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
+{
+    bool mutated = false;
+    bool negative = false;
+    bool overflow = false;
+    arith_uint256 target;
+
+    if (block.m_aux_pow.IsNull()) {
+        return true;
+    }
+
+    // Calculate the auxiliary proof-of-work, which is a block header of the
+    // parent chain, presumably bitcoin.  Since this involves a Merkle root
+    // calculation, there's a possibility the data is in non-canonical form,
+    // and we reject that as a block data mutation.
+    auto aux_hash = block.GetAuxiliaryHash(params, &mutated);
+    if (mutated) {
+        return false;
+    }
+
+    // Calculate the target value for the auxiliary proof-of-work, using
+    // the nBits value in our block header, not the auxiliary block.
+    target.SetCompact(block.m_aux_pow.m_commit_bits, &negative, &overflow);
+    if (negative || target == 0 || overflow) {
+        return false;
+    }
+
+    // Offset by the bias value.
+    unsigned char bias = block.GetBias();
+    if ((256 - target.bits()) < bias) {
+        return false;
+    }
+    target <<= bias;
+
+    // Check auxiliary proof-of-work (1st stage)
+    if (UintToArith256(aux_hash.first) > target) {
+        return false;
+    }
+
+    // Calculate target for 2nd stage.
+    target = UintToArith256(uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    target >>= bias;
+
+    // Check auxiliary proof-of-work (2nd stage)
+    if (UintToArith256(aux_hash.second) > target) {
+        return false;
+    }
+
+    return true;
+}
+
+bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
+{
+    bool negative = false;
+    bool overflow = false;
+    arith_uint256 target;
+
+    // Calculate the compatibility proof-of-work.
+    uint256 hash = block.GetHash();
+
+    target.SetCompact(block.nBits, &negative, &overflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
+    if (negative || target == 0 || overflow || target > UintToArith256(params.powLimit))
         return false;
 
     // Check proof of work matches claimed amount
-    if (UintToArith256(hash) > bnTarget)
+    if (UintToArith256(hash) > target)
         return false;
 
     return true;
