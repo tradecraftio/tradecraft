@@ -18,6 +18,7 @@
 
 #include <util.h>
 #include <utilstrencodings.h>
+#include <validation.h>
 
 #ifndef WIN32
 # include <arpa/inet.h>
