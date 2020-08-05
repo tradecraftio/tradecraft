@@ -123,7 +123,7 @@ std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pinde
     return std::make_pair(numerator, denominator);
 }
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, bool protocol_cleanup)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, Consensus::RuleSet rules)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
@@ -136,7 +136,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     // If we are past the protocol-cleanup fork, then the minimum proof-of-work
     // becomes something easily calculable.
-    if (protocol_cleanup) {
+    if (rules & Consensus::PROTOCOL_CLEANUP) {
         nProofOfWorkLimit = 0x207fffff;
     }
 
@@ -165,10 +165,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    return CalculateNextWorkRequired(pindexLast, params, protocol_cleanup);
+    return CalculateNextWorkRequired(pindexLast, params, rules);
 }
 
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params, bool protocol_cleanup)
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params, Consensus::RuleSet rules)
 {
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
@@ -187,7 +187,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
     assert(adjustment_factor.second > 0);
 
     // Retarget
-    arith_uint256 bnPowLimit = UintToArith256(protocol_cleanup ? k_min_pow_limit : params.powLimit);
+    arith_uint256 bnPowLimit = UintToArith256((rules & Consensus::PROTOCOL_CLEANUP) ? k_min_pow_limit : params.powLimit);
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     arith_uint320 bnTmp(bnNew);
@@ -212,7 +212,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
 // quarter, 10.5 times present difficulty to reduce by more than an
 // eigth, etc. To reduce to arbitrary levels requires 12 blocks worth
 // of work at the difficulty of the last valid block.
-bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params, bool protocol_cleanup)
+bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params, Consensus::RuleSet rules)
 {
     // Special case for the genesis block
     if (!pindexLast) {
@@ -228,7 +228,7 @@ bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& bl
 
     // If we are past the protocol-cleanup fork, then the minimum
     // proof-of-work becomes something easily calculable.
-    if (protocol_cleanup) {
+    if (rules & Consensus::PROTOCOL_CLEANUP) {
         min.SetCompact(0x207fffff);
     }
 

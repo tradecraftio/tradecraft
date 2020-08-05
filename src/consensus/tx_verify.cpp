@@ -169,15 +169,15 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs, bool protocol_cleanup)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs, Consensus::RuleSet rules)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
-    if (!protocol_cleanup && tx.vout.empty())
+    if (!(rules & Consensus::PROTOCOL_CLEANUP) && tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > (protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT))
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > ((rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT))
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
@@ -205,7 +205,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
 
     if (tx.IsCoinBase())
     {
-        if (!protocol_cleanup && (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100))
+        if (!(rules & Consensus::PROTOCOL_CLEANUP) && (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100))
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
     }
     else
@@ -218,7 +218,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int per_input_adjustment, int nSpendHeight, bool protocol_cleanup, CAmount& txfee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int per_input_adjustment, int nSpendHeight, RuleSet rules, CAmount& txfee)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -233,7 +233,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         assert(!coin.IsSpent());
 
         // If prev is coinbase, check that it's matured
-        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < (protocol_cleanup ? 1 : COINBASE_MATURITY)) {
+        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < ((rules & Consensus::SIZE_EXPANSION) ? 1 : COINBASE_MATURITY)) {
             return state.Invalid(false,
                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
@@ -242,7 +242,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         // Check that lock_height is monotonically increasing.
         // This restriction is removed for zero-valued inputs in
         // the protocol cleanup.
-        if ((coin.out.GetReferenceValue() || !protocol_cleanup) && !params.bitcoin_mode && (tx.lock_height < coin.refheight)) {
+        if ((coin.out.GetReferenceValue() || !(rules & Consensus::PROTOCOL_CLEANUP)) && !params.bitcoin_mode && (tx.lock_height < coin.refheight)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-non-monotonic-lock-height", false,
                              strprintf("%s: tx.lock_height %d < coin.refheight %d", __func__, tx.lock_height, coin.refheight));
         }
