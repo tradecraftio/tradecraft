@@ -16,6 +16,7 @@
 #ifndef FREICOIN_CONSENSUS_TX_VERIFY_H
 #define FREICOIN_CONSENSUS_TX_VERIFY_H
 
+#include "consensus/consensus.h"
 #include "consensus/params.h"
 
 #include <stdint.h>
@@ -29,7 +30,7 @@ class CValidationState;
 /** Transaction validation functions */
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs, bool protocol_cleanup);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs, RuleSet rules);
 
 namespace Consensus {
 /**
@@ -37,7 +38,7 @@ namespace Consensus {
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int per_input_adjustment, int nSpendHeight, bool protocol_cleanup);
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int per_input_adjustment, int nSpendHeight, RuleSet rules);
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */

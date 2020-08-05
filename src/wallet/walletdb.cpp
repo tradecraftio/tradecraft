@@ -25,6 +25,7 @@
 #include "sync.h"
 #include "util.h"
 #include "utiltime.h"
+#include "validation.h"
 #include "wallet/wallet.h"
 
 #include <atomic>
@@ -284,7 +285,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CWalletTx wtx;
             ssValue >> wtx;
             CValidationState state;
-            if (!(CheckTransaction(wtx, state, true, wtx.GetTxTime() >= Params().GetConsensus().protocol_cleanup_activation_time) && (wtx.GetHash() == hash) && state.IsValid()))
+            if (!(CheckTransaction(wtx, state, true, GetActiveRules(Params().GetConsensus(), wtx.GetTxTime())) && (wtx.GetHash() == hash) && state.IsValid()))
                 return false;
 
             // Undo serialize changes in 31600
