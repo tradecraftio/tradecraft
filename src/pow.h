@@ -17,6 +17,7 @@
 #ifndef FREICOIN_POW_H
 #define FREICOIN_POW_H
 
+#include <consensus/consensus.h>
 #include <consensus/params.h>
 
 #include <stdint.h>
@@ -27,12 +28,12 @@ class uint256;
 
 int64_t GetFilteredTime(const CBlockIndex* pindexLast, const Consensus::Params&);
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&, bool protocol_cleanup);
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params&, bool protocol_cleanup);
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&, Consensus::RuleSet rules);
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params&, Consensus::RuleSet rules);
 
 /** Verify that a block's work target is within the range of half to
  ** twice the targets of the past 12 blocks. */
-bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params&, bool protocol_cleanup);
+bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params&, Consensus::RuleSet rules);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned char bias, const Consensus::Params&);

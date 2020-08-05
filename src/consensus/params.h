@@ -23,6 +23,22 @@
 
 namespace Consensus {
 
+enum RuleSet : uint8_t {
+    NONE = 0,
+    PROTOCOL_CLEANUP = (1U << 0),
+    SIZE_EXPANSION = (1U << 1),
+};
+
+inline RuleSet operator | (RuleSet lhs, RuleSet rhs) {
+    using T = std::underlying_type_t<RuleSet>;
+    return static_cast<RuleSet>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+
+inline RuleSet& operator |= (RuleSet& lhs, RuleSet rhs) {
+    lhs = lhs | rhs;
+    return lhs;
+}
+
 /**
  * A buried deployment is one where the height of the activation has been hardcoded into
  * the client implementation long after the consensus change has activated. See BIP 90.
@@ -118,6 +134,8 @@ struct Params {
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Scheduled protocol cleanup rule change */
     int64_t protocol_cleanup_activation_time;
+    /** Scheduled size expansion rule change */
+    int64_t size_expansion_activation_time;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
@@ -167,7 +185,22 @@ struct Params {
  **/
 inline bool IsProtocolCleanupActive(const Consensus::Params& params, int64_t now)
 {
-    return (now > (params.protocol_cleanup_activation_time - 2*60*60 /* two hours */));
+    return (now > (params.protocol_cleanup_activation_time - 3*60*60 /* three hours */));
+}
+inline bool IsSizeExpansionActive(const Consensus::Params& params, int64_t now)
+{
+    return (now > (params.size_expansion_activation_time - 3*60*60 /* three hours */));
+}
+inline Consensus::RuleSet GetActiveRules(const Consensus::Params& params, int64_t now)
+{
+    Consensus::RuleSet rules = Consensus::NONE;
+    if (IsProtocolCleanupActive(params, now)) {
+        rules |= Consensus::PROTOCOL_CLEANUP;
+    }
+    if (IsSizeExpansionActive(params, now)) {
+        rules |= Consensus::SIZE_EXPANSION;
+    }
+    return rules;
 }
 
 #endif // FREICOIN_CONSENSUS_PARAMS_H
