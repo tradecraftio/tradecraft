@@ -100,26 +100,33 @@ public:
         // This is 4PM PDT, 7PM EDT, and 9AM JST.
         consensus.verify_coinbase_lock_time_timeout = 1569974400;
 
-         /**
-         * The protocol cleanup rule change is scheduled for
-         * activation on 2 June 2022 at midnight UTC. This is 4PM
-         * PDT, 7PM EDT, and 9AM JST.  Since the activation time is
-         * median-time-past, it'll actually trigger about an hour
-         * after this wall-clock time.
-         *
-         * This date is chosen to be roughly 2 years after the expected
-         * release date of official binaries. While the Freicoin developer
-         * team doesn't have the resources to provide strong ongoing support
-         * beyond emergency fixes, we nevertheless have an ideal goal of
-         * supporting release binaries for up to 2 years following the first
-         * release from that series. Any release of a new series prior to the
-         * deployment of forward blocks should set this to be at least two
-         * years from the time of release. When forward blocks is deployed,
-         * this parameter should be set to the highest value used in prior
-         * releases, and becomes the earliest time at which the hard-fork
-         * rules can activate.
+        /**
+         * The protocol cleanup rule change is scheduled for activation on 16
+         * Apr 2021 at midnight UTC.  This is 4PM PDT, 7PM EDT, and 9AM JST.
+         * Since the activation time is median-time-past, it'll actually trigger
+         * about 90 minutes after this wall-clock time.  Note that the auxpow
+         * soft-fork must activate before the protocol cleanup rule change.
          */
-        consensus.protocol_cleanup_activation_time = 1654128000;
+        consensus.protocol_cleanup_activation_time = 1618531200;
+
+        /**
+         * The size expansion rule change is scheduled for activation on 2 Sept
+         * 2022 at midnight UTC.  This is 4PM PDT, 7PM EDT, and 9AM JST.  Since
+         * the activation time is median-time-past, it'll actually trigger about
+         * 90 minutes after this wall-clock time.
+         *
+         * This date is chosen to be roughly 2 years after the expected release
+         * date of official binaries. While the Freicoin developer team doesn't
+         * have the resources to provide strong ongoing support beyond emergency
+         * fixes, we nevertheless have an ideal goal of supporting release
+         * binaries for up to 2 years following the first release from that
+         * series. Any release of a new series prior to the deployment of
+         * forward blocks should set this to be at least two years from the time
+         * of release.  When forward blocks is deployed, this parameter should
+         * be set to the highest value used in prior releases, and becomes the
+         * earliest time at which the hard-fork rules can activate.
+         */
+        consensus.size_expansion_activation_time = 1662076800;
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
@@ -262,9 +269,13 @@ public:
         // Tuesday, April 2, 2019 00:00:00 UTC
         consensus.verify_coinbase_lock_time_timeout = 1554163200;
 
+        // Two months prior to main net
+        // 16 November 2020 00:00:00 UTC
+        consensus.protocol_cleanup_activation_time = 1605484800;
+
         // Nine months prior to main net
-        // 2 September 2021 00:00:00 UTC
-        consensus.protocol_cleanup_activation_time = 1630540800;
+        // 16 January 2022 00:00:00 UTC
+        consensus.size_expansion_activation_time = 1642291200;
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
@@ -390,6 +401,7 @@ public:
          * which is unacceptable time-dependency in the build process.
          */
         consensus.protocol_cleanup_activation_time = std::numeric_limits<int64_t>::max();
+        consensus.size_expansion_activation_time = std::numeric_limits<int64_t>::max();
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
