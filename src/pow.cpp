@@ -130,7 +130,7 @@ std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pinde
     return std::make_pair(numerator, denominator);
 }
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, bool protocol_cleanup)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, RuleSet rules)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
@@ -146,7 +146,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     // If we are past the protocol-cleanup fork, then the minimum proof-of-work
     // becomes something easily calculable.
-    if (protocol_cleanup) {
+    if (rules & PROTOCOL_CLEANUP) {
         nProofOfWorkLimit = 0x207fffff;
     }
 
@@ -159,10 +159,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    return CalculateNextWorkRequired(pindexLast, params, protocol_cleanup);
+    return CalculateNextWorkRequired(pindexLast, params, rules);
 }
 
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params, bool protocol_cleanup)
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params, RuleSet rules)
 {
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
@@ -181,7 +181,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
     assert(adjustment_factor.second > 0);
 
     // Retarget
-    arith_uint256 bnPowLimit = UintToArith256(protocol_cleanup ? k_min_pow_limit : params.powLimit);
+    arith_uint256 bnPowLimit = UintToArith256((rules & PROTOCOL_CLEANUP) ? k_min_pow_limit : params.powLimit);
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     arith_uint320 bnTmp(bnNew);
