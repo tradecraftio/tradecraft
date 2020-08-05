@@ -25,19 +25,19 @@ static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
 /** The maximum allowed weight for a block (network rule) */
 static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
 /** The maximum size of a blk?????.dat file (since v10)
- ** (post-cleanup network rule) */
-static const unsigned int PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE = 0x7f000000; // (2048 - 16) MiB
+ ** (post-expansion network rule) */
+static const unsigned int SIZE_EXPANSION_MAX_BLOCKFILE_SIZE = 0x7f000000; // (2048 - 16) MiB
 /** The maximum serialized block size is constrained by the need to
  ** fit inside a block file, which has an additional 8 bytes of file
- ** data per block. (post-cleanup consensus rule) */
-static const unsigned int PROTOCOL_CLEANUP_MAX_BLOCK_SERIALIZED_SIZE = 0x7efffff8; // PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE - 8
-/** The actual hard block size limit post-activation of the protocol cleanup
- ** rules is PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE - 8, but this limit can't be
+ ** data per block. (post-expansion consensus rule) */
+static const unsigned int SIZE_EXPANSION_MAX_BLOCK_SERIALIZED_SIZE = 0x7efffff8; // SIZE_EXPANSION_MAX_BLOCKFILE_SIZE - 8
+/** The actual hard block size limit post-activation of the size expansion
+ ** rules is SIZE_EXPANSION_MAX_BLOCKFILE_SIZE - 8, but this limit can't be
  ** reached for any real block because classic blocks have a minimum size and
  ** non-witness data has quadruple weight.  So we can still keep the post-fork
  ** weight limit as a relatively round number in binary, for faster
- ** calculations.  (post-cleanup consensus rule) */
-static const unsigned int PROTOCOL_CLEANUP_MAX_BLOCK_WEIGHT = 0x7f000000; // (2048 - 16) MiB
+ ** calculations.  (post-expansion consensus rule) */
+static const unsigned int SIZE_EXPANSION_MAX_BLOCK_WEIGHT = 0x7f000000; // (2048 - 16) MiB
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const int64_t MAX_BLOCK_SIGOPS_COST = 80000;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
