@@ -653,7 +653,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     CAmount nFees = 0;
-    if (!Consensus::CheckTxInputs(tx, state, m_view, chainparams.GetConsensus(), /* per_input_adjustment = */ 0, GetSpendHeight(m_view), /* protocol_cleanup = */ false, nFees)) {
+    if (!Consensus::CheckTxInputs(tx, state, m_view, chainparams.GetConsensus(), /* per_input_adjustment = */ 0, GetSpendHeight(m_view), /* rules = */ 0, nFees)) {
         return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
     }
 
@@ -1916,6 +1916,9 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     if (pindex->pprev && IsProtocolCleanupActive(consensusparams, *pindex->pprev)) {
         flags |= SCRIPT_VERIFY_PROTOCOL_CLEANUP;
     }
+    if (pindex->pprev && IsSizeExpansionActive(consensusparams, *pindex->pprev)) {
+        flags |= SCRIPT_VERIFY_SIZE_EXPANSION;
+    }
 
     return flags;
 }
@@ -1982,7 +1985,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     }
 
     // Check for activation of rule changes
-    const bool protocol_cleanup = pindex->pprev && IsProtocolCleanupActive(chainparams.GetConsensus(), *pindex->pprev);
+    const Consensus::RuleSet rules = pindex->pprev ? GetActiveRules(chainparams.GetConsensus(), *pindex->pprev) : 0;
 
     bool fScriptChecks = true;
     if (!hashAssumeValid.IsNull()) {
@@ -2213,7 +2216,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         {
             CAmount txfee = 0;
             TxValidationState tx_state;
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, chainparams.GetConsensus(), !truncate_inputs + !use_alu, pindex->nHeight, protocol_cleanup, txfee)) {
+            if (!Consensus::CheckTxInputs(tx, tx_state, view, chainparams.GetConsensus(), !truncate_inputs + !use_alu, pindex->nHeight, rules, txfee)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                             tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -2245,7 +2248,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
         nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
-        if (!protocol_cleanup && nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
+        if (!(rules & Consensus::PROTOCOL_CLEANUP) && nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
             LogPrintf("ERROR: ConnectBlock(): too many sigops\n");
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops");
         }
@@ -3340,10 +3343,10 @@ static bool FindBlockPos(FlatFilePos &pos, unsigned int nAddSize, unsigned int n
         vinfoBlockFile.resize(nFile + 1);
     }
 
-    const bool protocol_cleanup = IsProtocolCleanupActive(Params().GetConsensus(), GetAdjustedTime());
+    const bool size_expansion = IsSizeExpansionActive(Params().GetConsensus(), GetAdjustedTime());
 
     if (!fKnown) {
-        while (vinfoBlockFile[nFile].nSize + nAddSize >= (protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE)) {
+        while (vinfoBlockFile[nFile].nSize + nAddSize >= (size_expansion ? SIZE_EXPANSION_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE)) {
             nFile++;
             if (vinfoBlockFile.size() <= nFile) {
                 vinfoBlockFile.resize(nFile + 1);
@@ -3439,8 +3442,8 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
             return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-txns-duplicate", "duplicate transaction");
     }
 
-    // Check if the protocol-cleanup fork has activated
-    const bool protocol_cleanup = IsProtocolCleanupActive(consensusParams, block);
+    // Check if the size-expansion fork has activated
+    const Consensus::RuleSet rules = GetActiveRules(consensusParams, block);
 
     // All potential-corruption validation must be done before we do any
     // transaction validation, as otherwise we may mark the header as invalid
@@ -3449,7 +3452,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     // checks that use witness data may be performed here.
 
     // Size limits
-    const std::size_t max_block_weight = protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT;
+    const std::size_t max_block_weight = (rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT;
     if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > max_block_weight || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > max_block_weight)
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
 
@@ -3464,7 +3467,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     // Must check for duplicate inputs (see CVE-2018-17144)
     for (const auto& tx : block.vtx) {
         TxValidationState tx_state;
-        if (!CheckTransaction(*tx, tx_state, protocol_cleanup)) {
+        if (!CheckTransaction(*tx, tx_state, rules)) {
             // CheckBlock() does context-free validation checks. The only
             // possible failures are consensus failures.
             assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);
@@ -3477,7 +3480,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     {
         nSigOps += GetLegacySigOpCount(*tx);
     }
-    if (!protocol_cleanup && (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_COST))
+    if (!(rules & Consensus::PROTOCOL_CLEANUP) && (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_COST))
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "out-of-bounds SigOpCount");
 
     if (fCheckPOW && fCheckMerkleRoot)
@@ -3585,10 +3588,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     const int nHeight = pindexPrev->nHeight + 1;
 
     // Check for activation of rule changes
-    const bool protocol_cleanup = pindexPrev && IsProtocolCleanupActive(consensusParams, *pindexPrev);
+    const Consensus::RuleSet rules = pindexPrev ? GetActiveRules(consensusParams, *pindexPrev) : 0;
 
     // Check proof of work
-    if (protocol_cleanup ? !CheckNextWorkRequired(pindexPrev, block, consensusParams, protocol_cleanup) : (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, protocol_cleanup)))
+    if ((rules & Consensus::PROTOCOL_CLEANUP) ? !CheckNextWorkRequired(pindexPrev, block, consensusParams, rules) : (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, rules)))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 
     // Check against checkpoints
@@ -3613,7 +3616,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2 and 3 upgrades
-    if(!protocol_cleanup && (
+    if(!(rules & Consensus::PROTOCOL_CLEANUP) && (
        (block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
        (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height)))
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
@@ -3638,7 +3641,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
     // Check for activation of rule changes
-    const bool protocol_cleanup = pindexPrev && IsProtocolCleanupActive(consensusParams, *pindexPrev);
+    const Consensus::RuleSet rules = pindexPrev ? GetActiveRules(consensusParams, *pindexPrev) : 0;
 
     // Start enforcing BIP113 (Median Time Past).
     int nLockTimeFlags = 0;
@@ -3652,7 +3655,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                               : block.GetBlockTime();
 
     // Check that the coinbase is finalized
-    if (!protocol_cleanup) {
+    if (!(rules & Consensus::PROTOCOL_CLEANUP)) {
         if (!block.vtx.empty() && !IsFinalTx(*block.vtx[0], nHeight, nLockTimeCutoff)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal", "non-final coinbase");
         }
@@ -3666,7 +3669,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (!protocol_cleanup && (nHeight >= consensusParams.BIP34Height))
+    if (!(rules & Consensus::PROTOCOL_CLEANUP) && (nHeight >= consensusParams.BIP34Height))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
@@ -3718,7 +3721,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    if (GetBlockWeight(block) > (protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT)) {
+    if (GetBlockWeight(block) > ((rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
 
@@ -4809,9 +4812,9 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
     static std::multimap<uint256, FlatFilePos> mapBlocksUnknownParent;
     int64_t nStart = GetTimeMillis();
 
-    // If the protocol cleanup fork has activated, then we should
+    // If the size expansion fork has activated, then we should
     // allow importing blocks larger than than the old MAX_BLOCK_SIZE.
-    const bool protocol_cleanup = IsProtocolCleanupActive(chainparams.GetConsensus(), GetAdjustedTime());
+    const bool size_expansion = IsSizeExpansionActive(chainparams.GetConsensus(), GetAdjustedTime());
 
     int nLoaded = 0;
     try {
@@ -4835,7 +4838,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
                     continue;
                 // read size
                 blkdat >> nSize;
-                if (nSize < 80 || nSize > (protocol_cleanup ? PROTOCOL_CLEANUP_MAX_BLOCK_SERIALIZED_SIZE : MAX_BLOCK_SERIALIZED_SIZE))
+                if (nSize < 80 || nSize > (size_expansion ? SIZE_EXPANSION_MAX_BLOCK_SERIALIZED_SIZE : MAX_BLOCK_SERIALIZED_SIZE))
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
