@@ -176,8 +176,9 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
 
 unsigned int TrimFlags(unsigned int flags)
 {
-    // Clear verification flag related to protocl rule changes
+    // Clear verification flags related to protocl rule changes
     flags &= ~(unsigned int)SCRIPT_VERIFY_PROTOCOL_CLEANUP;
+    flags &= ~(unsigned int)SCRIPT_VERIFY_SIZE_EXPANSION;
 
     // WITNESS requires P2SH
     if (!(flags & SCRIPT_VERIFY_P2SH)) flags &= ~(unsigned int)SCRIPT_VERIFY_WITNESS;
@@ -275,7 +276,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             CTransaction tx(deserialize, stream);
 
             TxValidationState state;
-            BOOST_CHECK_MESSAGE(CheckTransaction(tx, state, false), strTest);
+            BOOST_CHECK_MESSAGE(CheckTransaction(tx, state, Consensus::NONE), strTest);
             BOOST_CHECK(state.IsValid());
 
             PrecomputedTransactionData txdata(tx);
@@ -375,7 +376,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             CTransaction tx(deserialize, stream);
 
             TxValidationState state;
-            if (!CheckTransaction(tx, state, false) || state.IsInvalid()) {
+            if (!CheckTransaction(tx, state, Consensus::NONE) || state.IsInvalid()) {
                 BOOST_CHECK_MESSAGE(test[2].get_str() == "BADTX", strTest);
                 continue;
             }
@@ -435,11 +436,11 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CMutableTransaction tx;
     stream >> tx;
     TxValidationState state;
-    BOOST_CHECK_MESSAGE(CheckTransaction(CTransaction(tx), state, false) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(CheckTransaction(CTransaction(tx), state, Consensus::NONE) && state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(tx), state, false) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(tx), state, Consensus::NONE) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
 
 BOOST_AUTO_TEST_CASE(test_Get)

@@ -25,6 +25,7 @@
 #include <attributes.h>
 #include <chain.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <fs.h>
 #include <node/blockstorage.h>
 #include <policy/feerate.h>
@@ -38,6 +39,7 @@
 #include <util/hasher.h>
 #include <util/translation.h>
 
+#include <algorithm>
 #include <atomic>
 #include <map>
 #include <memory>
@@ -99,137 +101,93 @@ static const bool DEFAULT_PERSIST_MEMPOOL = true;
 
 /** Scheduled protocol cleanup rule change
  **
- ** To achieve desired scaling limits, the forward blocks architecture
- ** will eventually trigger a hard-fork modification of the consensus
- ** rules, for the primary purpose of dropping enforcement of many
- ** aggregate block limits and altering the difficulty adjustment
- ** algorithm.
+ ** Merge mining is implemented as a soft-fork change to the consensus rules to
+ ** achieve a safer and less-disruptive deployment than the hard-fork that was
+ ** used to deploy merge mining to other chains in the past: non-upgraded
+ ** clients will continue to receive blocks at the point of activation with SPV
+ ** security.  However the security of successive blocks will diminish as the
+ ** difficulty transitions from native to auxiliary proof-of-work.  When the
+ ** native difficulty reaches minimal values, there will no longer be any
+ ** effective SPV protections for old nodes, and this represents a unique
+ ** opportunity to deploy other non-controversial hard-fork changes to the
+ ** consensus rules.
  **
- ** This hard-fork will not activate until it is absolutely necessary
- ** for it to do so, at the point when real demand for additional
- ** shard space in aggregate across all forward block shard-chains
- ** exceeds the available space in the compatibility chain. It is
- ** anticipated that this will not occur until many, many years into
- ** the future, when Freicoin/Tradecraft's usage exceeds even the
- ** levels of bitcoin usage ca. 2018. However when it does eventually
- ** trigger, any node enforcing the old rules will be left behind.
+ ** For this reason, a protocol-cleanup hard-fork is scheduled to take place
+ ** after the activation of merge mining and difficulty transition.  As part of
+ ** this cleanup, the following consensus rule changes will take effect:
  **
- ** Since the rule changes for forward blocks have not been written
- ** yet and becauses this flag-day code doesn't know how to detect
- ** actual activation, we cannot have older clients enforce the new
- ** rules. What is done instead is that any rule which we anticipate
- ** changes becomes simply unenforced after this activation time, and
- ** aggregate limits are set to the maximum values the software is
- ** able to support. After the flag-day, older clients of at least
- ** version 10.4 will continue to receive blocks, but with only SPV
- ** security ("trust the most work") for the new protocol rules. So
- ** starting with the release of v10.4-7842, activation of forward
- ** blocks new scaling limits becomes a soft-fork, with the only
- ** concern being the forking off of 0.9 series and earlier nodes upon
- ** activation.
+ **   1. Remove the native proof-of-work requirement entirely.  For reasons of
+ **      infrastructure compatibility the block hash will still be the hash of
+ **      the native header, but the hash of the header will no longer have to
+ **      meet any threshold target.  This makes a winning auxiliary share
+ **      automatically a winning block.
  **
- ** The primary rules which must be altered for forward blocks scaling
- ** are:
+ **   2. Remove the MAX_BLOCK_SIGOPS_COST limit.  Switching to libsecp256k1 for
+ **      validation and better signature / script and transaction validation
+ **      caching has made this limit nearly redundant.
  **
- **   1. Significant relaxation of the rules regarding per-block
- **      difficulty adjustment, to allow adjustments of +/- 2x within
- **      twelve blocks, without regard of a target interval. Forward
- **      blocks will have a new difficulty adjustment algorithm that
- **      has yet to be determined, and will include adjusting to a
- **      variable inter-block time to achieve compatability chain
- **      scalability.
+ **   3. Allow a transaction without transaction outputs.  A transaction must
+ **      have input(s) to have a unique transaction ID, but it need not have
+ **      outputs.  There are obscure cases when this makes sense to do (and thus
+ **      forward the funds entirely as "fee" to the miner, or to process in the
+ **      block-final transaction and/or coinbase in some way).
  **
- **   2. Increase of the maximum block size. Uncapping the block size
- **      is not possible because even if the explicit limit is removed
- **      there are still implicit network and disk protocol limits
- **      that would prevent a client from syncing a chain with larger
- **      blocks. But these network and disk limits could be set much
- **      higher than the current limits based on a 1 megabyte
- **      MAX_BASE_BLOCK_SIZE / 4 megaweight MAX_BLOCK_WEIGHT.
- **
- **   3. Allow larger transactions, up to the new, larger maximum
- **      block size limit in size. This is less safe than increasing
- **      the block size since most of the quadratic validation costs
- **      are only quadratic in transaction size. But there is research
- **      to be done in choosing what new limits should be used, and in
- **      the mean time keeping transactions only limited by the (new)
- **      block size permits flexibility in that future choice.
- **
- ** That is all that MUST be done, but there are a number of other
- ** rule changes that are related, or are trivial to accomplish at the
- ** same time. These include:
- **
- **   4. Removal of MAX_BLOCK_SIGOPS_COST limit. Switching to
- **      libsecp256k1 for validation and better signature / script and
- **      transaction validation caching has made this limit nearly
- **      redundant.
- **
- **   5. Allow a transaction without transaction outputs. A
- **      transaction must have inputs to have a unique transactionn
- **      ID, but it need not have outputs. There are obscure cases
- **      when this makes sense to do (and thus forward the funds
- **      entirely as "fee" to the miner, to process in the coinbase in
- **      some way).
- **
- **   6. Do not restrict the contents of the "coinbase string" in any
- **      way. It is currently required to be between 2 and 100 bytes
- **      in size, and must begin with the serialized block height. The
- **      length restriction is unnecesary as miners have other means
- **      of padding transactions if they need to, and are generally
- **      incentivised not to because of miner fees. The serialized
- **      height requirement is redundant as lock_height is also
+ **   4. Do not restrict the contents of the "coinbase string" in any way,
+ **      beyond the required auxiliary proof-of-work commitment.  It is
+ **      currently required to be between 2 and 100 bytes in size, and must
+ **      begin with the serialized block height.  The length restriction is
+ **      unnecessary as miners have other means of padding transactions if they
+ **      need to, and are generally incentivized not to because of miner fees.
+ **      The serialized height requirement is redundant as lock_height is also
  **      required to be set to the current block height.
  **
- **   7. Reduce coinbase maturity to 1 block. Once forward blocks has
- **      activated, coinbase maturity is an unnecessary delay to
- **      processing the coinbase payout queue. It must be at least 1
- **      to prevent miners from issuing themselves excess funds for
- **      the duration of 1 block.
+ **   5. Do not require the coinbase transaction to be final, freeing up
+ **      nSequence to be used as the miner's extranonce field.  A previous
+ **      soft-fork which required the coinbase's nLockTime field to be set to
+ **      the medium-time-past value had the unfortunate side effect of requiring
+ **      nSequence to be set to 0xffffffff since even the coinbase is checked
+ **      for transaction finality.  The concept of finality makes no sense for
+ **      the coinbase and this requirement is dropped after activation of the
+ **      new rules, making the 4-byte nSequence field have no consensus-defined
+ **      meaning, allowing it to be used as an extranonce field.
  **
- **   8. Do not require zero-valued outputs to be spent by
- **      transactions with lock_height >= the coin's refheight. This
- **      restriction ensured that refheights were always increasing so
- **      that demurrage is collected, not reversed. However this
- **      argument doesn't really make sense for zero-valued outputs.
- **      At the same time "zero-valued" outputs are increasingly
- **      likely to be used for confidential or non-freicoin assets
- **      using extension outputs, for which monotonic lock_heights are
- **      just an annoying protocol complication.
+ **   6. Do not require zero-valued outputs to be spent by transactions with
+ **      lock_height >= the coin's refheight.  This restriction is to ensure
+ **      that refheights are always increasing so that demurrage is collected,
+ **      not reversed.  However this argument doesn't really make sense for
+ **      zero-valued outputs.  At the same time "zero-valued" outputs are
+ **      increasingly likely to be used for confidential transactions or
+ **      non-freicoin issued assets using extension outputs, for which the
+ **      monotonic lock_height requirement is just an annoying protocol
+ **      complication.
  **
- **   9. Do not reject "old" blocks after activation of the nVersion=2
- **      and nVersion=3 soft-forks. With the switch to version bits
- **      for soft-fork activation, this archaic check is shown to be
- **      rather pointless. Rules are enforced in a block if it is
- **      downstream of the point of activation, not based on the
- **      nVersion value.  Implicitly this also restores validity of
- **      "negative" block.nVersion values.
+ **   7. Do not reject "old" blocks after activation of the nVersion=2 and
+ **      nVersion=3 soft-forks.  With the switch to version bits for soft-fork
+ **      activation, this archaic check is shown to be rather pointless.  Rules
+ **      are enforced in a block if it is downstream of the point of activation,
+ **      not based on the nVersion value.  Implicitly this also restores
+ **      validity of "negative" block.nVersion values.
  **
- **   10. Lift restrictions inside the script interpreter on maximum
- **       script size, maximum data push, maximum number of elements
- **       on the stack, and maximum number of executed opcodes.
+ **   8. Lift restrictions inside the script interpreter on maximum script size,
+ **      maximum data push, maximum number of elements on the stack, and maximum
+ **      number of executed opcodes.
  **
- **   11. Remove checks on disabled opcodes, and cause unrecognized
- **       opcodes to "return true" instead of raising an error.
+ **   9. Remove checks on disabled opcodes, and cause unrecognized opcodes to
+ **      "return true" instead of raising an error.
  **
- **   12. Re-enable (and implement) certain disabled opcodes, and
- **       conspiciously missing opcodes which were never there in the
- **       first place.
+ **   10. Re-enable (and implement) certain disabled opcodes, and conspicuously
+ **       missing opcodes which were never there in the first place.
  **
- ** These consensus rules are eliminated or significantly relaxed at
- ** the same time as the aggregate limits are removed, hence the
- ** general label a "protocol cleanup" fork.
+ ** Activation of the protocol-cleanup fork depends on the status of the auxpow
+ ** soft-fork, and the median-time-past of the tip relative to a consensus
+ ** parameter.  While it makes more logical sense for this to be an inline
+ ** method of the chain parameters, doing so would introduce a new dependency on
+ ** CBlockIndex there.
  **
- ** Activation of the protocol-cleanup fork depends on the
- ** median-time-past of the tip relative to a consensus parameter.
- ** While it makes more logical sense for this to be an inline method
- ** of the chain parameters, doing so would introduce a new dependency
- ** on CBlockIndex there.
- **
- ** There are two implementations that appear to do different things,
- ** but actually are making the same check. The median-time-past is
- ** stored in the coinbase of the block within the nLockTime field,
- ** which allows this check to be made at points where no chain
- ** context is available.
+ ** There are two implementations that appear to do different things, but
+ ** actually are making the same check.  The median-time-past is stored in the
+ ** coinbase of the block within the nLockTime field, which allows this check to
+ ** be made at points where no chain context is available.
  **/
 inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBlock& block)
 {
@@ -238,6 +196,102 @@ inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBloc
 inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBlockIndex& index)
 {
     return (index.GetMedianTimePast() >= params.protocol_cleanup_activation_time);
+}
+
+/** Scheduled size expansion rule change
+ **
+ ** To achieve desired scaling limits, the forward blocks architecture will
+ ** eventually trigger a hard-fork modification of the consensus rules, for the
+ ** primary purpose of dropping enforcement of many aggregate block limits so as
+ ** to allow larger blocks on the compatibility chain.
+ **
+ ** This hard-fork will not activate until it is absolutely necessary for it to
+ ** do so, at the point when real demand for additional shard space in aggregate
+ ** across all forward block shard-chains exceeds the available space in the
+ ** compatibility chain.  It is anticipated that this will not occur until many,
+ ** many years into the future, when Freicoin/Tradecraft's usage exceeds even
+ ** the levels of bitcoin usage ca. 2018.  However when it does eventually
+ ** trigger, any node enforcing the old rules will be left behind.
+ **
+ ** Since the rule changes for forward blocks have not been written yet and
+ ** because this flag-day code doesn't know how to detect actual activation, we
+ ** cannot have older clients enforce the new rules.  What is done instead is
+ ** that any rule which we anticipate changing becomes simply unenforced after
+ ** this activation time, and aggregate limits are set to the maximum values the
+ ** software is able to support.  After the flag-day, older clients of at least
+ ** version 13.2.4 will continue to receive blocks, but with only SPV security
+ ** ("trust the most work") for the new protocol rules.  So starting with the
+ ** release of v13.2.4-11864, activation of forward blocks' new scaling limits
+ ** becomes a soft-fork, with the only concern being the forking off of older
+ ** nodes upon activation.
+ **
+ ** The primary rules which must be altered for forward blocks scaling are:
+ **
+ **   1. Significant relaxation of the rules regarding per-block auxiliary
+ **      difficulty adjustment, to allow adjustments of +/- 2x within eleven
+ **      blocks, without regard of a target interval.  Forward blocks may have a
+ **      new difficulty adjustment algorithm that has yet to be determined, and
+ **      might include targeting a variable inter-block time to achieve
+ **      compatibility chain scalability.
+ **
+ **   2. Increase of the maximum block size.  Uncapping the block size is not
+ **      possible because even if the explicit limit is removed there are still
+ **      implicit network and disk protocol limits that would prevent a client
+ **      from syncing a chain with larger blocks.  But these network and disk
+ **      limits could be set much higher than the current limits based on a 1
+ **      megabyte MAX_BASE_BLOCK_SIZE / 4 megaweight MAX_BLOCK_WEIGHT.
+ **
+ **   3. Allow larger transactions, up to the new, larger maximum block size
+ **      limit in size.  This is less safe than increasing the block size since
+ **      most of the nonlinear validation costs are quadratic in transaction
+ **      size.  But there is research to be done in choosing what new limits
+ **      should be used, and in the mean time keeping transactions only limited
+ **      by the (new) block size permits flexibility in that future choice.
+ **
+ **   4. Reduce coinbase maturity to 1 block.  Once forward blocks has
+ **      activated, coinbase maturity is an unnecessary delay to processing the
+ **      coinbase payout queue.  It must be at least 1 to prevent miners from
+ **      issuing themselves excess funds for the duration of 1 block.
+ **
+ ** Since we don't know when forward blocks will be deployed and activated, we
+ ** schedule these rule changes to occur at the end of the support window for
+ ** each client release, which is typically 2 years.  Each new release pushes
+ ** back this activation date, and since the new rules are a relaxation of the
+ ** old rules older clients will remain compatible so long as a majority of
+ ** miners have upgrade and thereby pushed back their activation dates.  When
+ ** forward blocks is finally deployed and activated, it will schedule its own
+ ** modified rule relaxation to occur after the most distant flag day.
+ **/
+inline bool IsSizeExpansionActive(const Consensus::Params& params, const CBlock& block)
+{
+    return ((!block.vtx.empty() ? block.vtx[0]->nLockTime : 0) >= params.size_expansion_activation_time);
+}
+inline bool IsSizeExpansionActive(const Consensus::Params& params, const CBlockIndex& index)
+{
+    return (index.GetMedianTimePast() >= params.size_expansion_activation_time);
+}
+
+inline Consensus::RuleSet GetActiveRules(const Consensus::Params& params, const CBlock& block)
+{
+    Consensus::RuleSet rules = Consensus::NONE;
+    if (IsProtocolCleanupActive(params, block)) {
+        rules |= Consensus::PROTOCOL_CLEANUP;
+    }
+    if (IsSizeExpansionActive(params, block)) {
+        rules |= Consensus::SIZE_EXPANSION;
+    }
+    return rules;
+}
+inline Consensus::RuleSet GetActiveRules(const Consensus::Params& params, const CBlockIndex& index)
+{
+    Consensus::RuleSet rules = Consensus::NONE;
+    if (IsProtocolCleanupActive(params, index)) {
+        rules |= Consensus::PROTOCOL_CLEANUP;
+    }
+    if (IsSizeExpansionActive(params, index)) {
+        rules |= Consensus::SIZE_EXPANSION;
+    }
+    return rules;
 }
 
 /** Default for -stopatheight */
