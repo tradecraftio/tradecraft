@@ -22,6 +22,7 @@
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/params.h"
+#include "main.h"
 #include "timedata.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -98,14 +99,14 @@ const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, 
 extern int nMaxConnections; // declared in net.h
 std::size_t MaxProtocolMessageLength(const Consensus::Params &params)
 {
-    // Unconstraining the block size in the protocol cleanup fork
+    // Unconstraining the block size in the size expansion fork
     // means that network message size must also be unconstrained,
     // which is a potential DoS vector. Unfortunately there is no
     // easy way around this. Until better tools are available in
     // future versions, we must accept that after activation of
-    // the protocol cleanup fork we might receive a message up to
+    // the size expansion fork we might receive a message up to
     // the largest possible block size, which is limited only by
-    // PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE, which is nearly 2 GiB.
+    // SIZE_EXPANSION_MAX_BLOCKFILE_SIZE, which is nearly 2 GiB.
     //
     // However this value is dangerously high for 32-bit clients,
     // as it presents an easy DoS vector for memory exhaustion
@@ -118,7 +119,7 @@ std::size_t MaxProtocolMessageLength(const Consensus::Params &params)
     // with the network in such an instance, this is deemed an
     // acceptable tradeoff.
     std::size_t max_msg_size = MAX_PROTOCOL_MESSAGE_LENGTH;
-    if (GetAdjustedTime() > (Params().GetConsensus().protocol_cleanup_activation_time - 2*60*60 /* two hours */)) {
+    if (IsSizeExpansionActive(Params().GetConsensus(), GetAdjustedTime())) {
         // Use no more than 2 GiB for messages in flight on 32-bit
         // peers. With the default max of 125 connections this is
         // slightly more than 16 MiB. A 32-bit node operator could
@@ -132,7 +133,7 @@ std::size_t MaxProtocolMessageLength(const Consensus::Params &params)
         // enormous number, so we use the lower implicit protocol
         // rule of the maximum blockfile size--a block larger than
         // this value could not be stored to disk.
-        max_msg_size = std::min(max_data_per_peer, static_cast<std::size_t>(PROTOCOL_CLEANUP_MAX_BLOCK_SERIALIZED_SIZE + 24));
+        max_msg_size = std::min(max_data_per_peer, static_cast<std::size_t>(SIZE_EXPANSION_MAX_BLOCK_SERIALIZED_SIZE + 24));
     }
     return max_msg_size;
 }
