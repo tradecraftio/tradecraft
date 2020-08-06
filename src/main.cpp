@@ -3849,7 +3849,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     // Check proof of work
     if (!(rules & PROTOCOL_CLEANUP)) {
-        if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, rules)) {
+        if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)) {
             return state.DoS(50, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
         }
 

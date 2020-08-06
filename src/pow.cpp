@@ -130,9 +130,9 @@ std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pinde
     return std::make_pair(numerator, denominator);
 }
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, RuleSet rules)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
-    unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+    static const unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // Genesis block
     if (pindexLast == NULL)
@@ -144,12 +144,6 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (pindexLast->GetBlockHash() == uint256S("0x0000000000003bd73ea13954fbbf1cf50b5384f961d142a75a3dfe106f793a20"))
         return 0x1b01c13a;
 
-    // If we are past the protocol-cleanup fork, then the minimum proof-of-work
-    // becomes something easily calculable.
-    if (rules & PROTOCOL_CLEANUP) {
-        nProofOfWorkLimit = 0x207fffff;
-    }
-
     const bool use_filter = (pindexLast->nHeight >= (params.diff_adjust_threshold - 1));
     const int64_t interval = use_filter ? params.filtered_adjust_interval : params.original_adjust_interval;
 
@@ -159,10 +153,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    return CalculateNextWorkRequired(pindexLast, params, rules);
+    return CalculateNextWorkRequired(pindexLast, params);
 }
 
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params, RuleSet rules)
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
@@ -181,7 +175,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
     assert(adjustment_factor.second > 0);
 
     // Retarget
-    arith_uint256 bnPowLimit = UintToArith256((rules & PROTOCOL_CLEANUP) ? k_min_pow_limit : params.powLimit);
+    arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     arith_uint320 bnTmp(bnNew);
@@ -342,17 +336,16 @@ uint32_t CalculateNextWorkRequiredAux(const CBlockIndex* pindexLast, const Conse
     return ((new_target > pow_limit) ? pow_limit : new_target).GetCompact();
 }
 
-// Called after activation of the protocol-cleanup rule changes, at
-// which time the difficulty adjustment is largely unchecked. For DoS
-// prevention purposes we require that the difficulty adjust by no
-// more than +/- 2x as compared with the difficulties of the last 12
-// blocks. This is enough of a constraint that any DoS attack is
-// forced to have non-trivial mining costs (e.g. equal to extending
-// the tip by 6 blocks to reduce difficulty by more than a half, work
-// equal to extending the tip by 9 blocks to reduce by more than a
-// quarter, 10.5 times present difficulty to reduce by more than an
-// eigth, etc. To reduce to arbitrary levels requires 12 blocks worth
-// of work at the difficulty of the last valid block.
+// Called after activation of the size-expansion rule changes, at which time the
+// difficulty adjustment becomes largely unchecked.  For DoS prevention purposes
+// we require that the difficulty adjust by no more than +/- 2x as compared with
+// the difficulties of the last 11 blocks. This is enough of a constraint that
+// any DoS attack is forced to have non-trivial mining costs (e.g. equal to
+// extending the tip by 6 blocks to reduce difficulty by more than a half, work
+// equal to extending the tip by 9 blocks to reduce by more than a quarter, 10.5
+// times present difficulty to reduce by more than an eigth, etc.  To reduce to
+// arbitrary levels requires a dozen blocks worth of work at the difficulty of
+// the last valid block.
 bool CheckNextWorkRequiredAux(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params)
 {
     // There's nothing to check before activation of merged mining.
@@ -373,13 +366,13 @@ bool CheckNextWorkRequiredAux(const CBlockIndex* pindexLast, const CBlockHeader&
 
     // If look reversed, that is to be expected. We set min to the largest
     // possible value, and max to the smallest. That way these will be replaced
-    // with actual block values as we loop through the past 12 blocks.
+    // with actual block values as we loop through the past 11 blocks.
     arith_uint256 min = UintToArith256(params.aux_pow_limit);
     arith_uint256 max = arith_uint256(1);
 
     // After this loop, min will be half the largest work target of
-    // the past 12 blocks, and max will be twice the smallest.
-    for (int i = 0; i < 12 && pindexLast && !pindexLast->m_aux_pow.IsNull(); ++i, pindexLast = pindexLast->pprev) {
+    // the past 11 blocks, and max will be twice the smallest.
+    for (int i = 0; i < 11 && pindexLast && !pindexLast->m_aux_pow.IsNull(); ++i, pindexLast = pindexLast->pprev) {
         arith_uint256 target;
         target.SetCompact(pindexLast->m_aux_pow.m_commit_bits);
         arith_uint256 local_min = target >> 1;
@@ -393,7 +386,7 @@ bool CheckNextWorkRequiredAux(const CBlockIndex* pindexLast, const CBlockHeader&
     }
 
     // See if the passed in block's m_commit_bits specifies a target within the
-    // range of half to twice the work targets of the past 12 blocks, inclusive
+    // range of half to twice the work targets of the past 11 blocks, inclusive
     // of the endpoints.
     arith_uint256 target;
     target.SetCompact(block.m_aux_pow.m_commit_bits);
