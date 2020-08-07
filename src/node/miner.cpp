@@ -243,7 +243,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
         // Set difficulty for the auxiliary proof-of-work.
         pblock->SetFilteredTime(GetFilteredTimeAux(pindexPrev, chainparams.GetConsensus()));
-        pblock->m_aux_pow.m_commit_bits = CalculateNextWorkRequiredAux(pindexPrev, chainparams.GetConsensus());;
+        pblock->m_aux_pow.m_commit_bits = GetNextWorkRequiredAux(pindexPrev, *pblock, chainparams.GetConsensus());;
 
         // Setup the auxiliary header fields to have reasonable values.
         pblock->m_aux_pow.m_aux_version = VERSIONBITS_TOP_BITS;

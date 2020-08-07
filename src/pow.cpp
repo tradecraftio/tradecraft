@@ -349,6 +349,15 @@ std::pair<int64_t, int64_t> GetAdjustmentFactorAux(const CBlockIndex* pindexLast
 
 uint32_t GetNextWorkRequiredAux(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params& params)
 {
+    // The very first block to have an auxiliary proof-of-work starts
+    // with 50% the native difficulty.
+    if (!pindexLast || pindexLast->m_aux_pow.IsNull()) {
+        arith_uint256 target;
+        target.SetCompact(block.nBits);
+        target <<= 1;
+        return target.GetCompact();
+    }
+
     return CalculateNextWorkRequiredAux(pindexLast, params);
 }
 
@@ -356,11 +365,6 @@ uint32_t CalculateNextWorkRequiredAux(const CBlockIndex* pindexLast, const Conse
 {
     arith_uint256 pow_limit = UintToArith256(params.aux_pow_limit);
 
-    // The very first block to have an auxiliary proof-of-work starts with a
-    // minimal difficulty.
-    if (!pindexLast || pindexLast->m_aux_pow.IsNull()) {
-        return pow_limit.GetCompact();
-    }
     if (params.fPowNoRetargeting) {
         return pindexLast->m_aux_pow.m_commit_bits;
     }
