@@ -133,7 +133,7 @@ const CChainParams &Params();
 void SelectParams(const std::string& chain);
 
 /**
- * Allows modifying the Version Bits regtest parameters.
+ * Allows modifying the Version Bits parameters.
  */
 void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 
