@@ -80,7 +80,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
  */
 class CMainParams : public CChainParams {
 public:
-    CMainParams() {
+    explicit CMainParams(const CChainParams::MainNetOptions& opts) {
         m_chain_type = ChainType::MAIN;
         consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
@@ -178,6 +178,8 @@ public:
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 620;
         m_assumed_chain_state_size = 14;
+
+        UpdateDeploymentInfo(opts);
 
         genesis = CreateGenesisBlock(1356123600, 278229610, 0x1d00ffff, 1);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -290,7 +292,7 @@ public:
  */
 class CTestNetParams : public CChainParams {
 public:
-    CTestNetParams() {
+    explicit CTestNetParams(const CChainParams::TestNetOptions& opts) {
         m_chain_type = ChainType::TESTNET;
         consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
@@ -362,6 +364,8 @@ public:
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 93;
         m_assumed_chain_state_size = 19;
+
+        UpdateDeploymentInfo(opts);
 
         const std::string timestamp("The Times 7/Aug/2020 Foreign Office cat quits to spend more time with family");
         CMutableTransaction genesis_tx;
@@ -550,6 +554,8 @@ public:
         nDefaultPort = 38639;
         nPruneAfterHeight = 1000;
 
+        UpdateDeploymentInfo(options);
+
         genesis = CreateGenesisBlock(1598918400, 5293684, 0x1e0377ae, 1);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256{"000000500fc45aa5ed5763371527daca0ddc04212352e4759b8c9b563cc53934"});
@@ -683,11 +689,7 @@ public:
             }
         }
 
-        for (const auto& [deployment_pos, version_bits_params] : opts.version_bits_parameters) {
-            consensus.vDeployments[deployment_pos].nStartTime = version_bits_params.start_time;
-            consensus.vDeployments[deployment_pos].nTimeout = version_bits_params.timeout;
-            consensus.vDeployments[deployment_pos].min_activation_height = version_bits_params.min_activation_height;
-        }
+        UpdateDeploymentInfo(opts);
 
         genesis = CreateGenesisBlock(1356123600, 1, 0x207fffff, 1);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -765,14 +767,14 @@ std::unique_ptr<const CChainParams> CChainParams::RegTest(const RegTestOptions& 
     return std::make_unique<const CRegTestParams>(options);
 }
 
-std::unique_ptr<const CChainParams> CChainParams::Main()
+std::unique_ptr<const CChainParams> CChainParams::Main(const MainNetOptions& options)
 {
-    return std::make_unique<const CMainParams>();
+    return std::make_unique<const CMainParams>(options);
 }
 
-std::unique_ptr<const CChainParams> CChainParams::TestNet()
+std::unique_ptr<const CChainParams> CChainParams::TestNet(const TestNetOptions& options)
 {
-    return std::make_unique<const CTestNetParams>();
+    return std::make_unique<const CTestNetParams>(options);
 }
 
 std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
@@ -788,8 +790,8 @@ std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
 
 std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
 {
-    const auto mainnet_msg = CChainParams::Main()->MessageStart();
-    const auto testnet_msg = CChainParams::TestNet()->MessageStart();
+    const auto mainnet_msg = CChainParams::Main({})->MessageStart();
+    const auto testnet_msg = CChainParams::TestNet({})->MessageStart();
     const auto regtest_msg = CChainParams::RegTest({})->MessageStart();
     const auto signet_msg = CChainParams::SigNet({})->MessageStart();
 
