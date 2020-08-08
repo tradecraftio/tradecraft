@@ -1579,7 +1579,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
     // Send wrong network's V1 header
     {
         V2TransportTester tester(false);
-        tester.SendV1Version(CChainParams::Main()->MessageStart());
+        tester.SendV1Version(CChainParams::Main(CChainParams::MainNetOptions())->MessageStart());
         auto ret = tester.Interact();
         BOOST_CHECK(!ret);
     }
