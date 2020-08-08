@@ -23,6 +23,7 @@
 #include <primitives/block.h>
 #include <protocol.h>
 #include <util/hash_type.h>
+#include <util/system.h>
 
 #include <memory>
 #include <string>
@@ -155,6 +156,17 @@ protected:
     CCheckpointData checkpointData;
     MapAssumeutxo m_assumeutxo_data;
     ChainTxData chainTxData;
+
+    /**
+     * Allows modifying the Version Bits parameters.
+     */
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int min_activation_height)
+    {
+        consensus.vDeployments[d].nStartTime = nStartTime;
+        consensus.vDeployments[d].nTimeout = nTimeout;
+        consensus.vDeployments[d].min_activation_height = min_activation_height;
+    }
+    void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
 
 /**
