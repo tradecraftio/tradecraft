@@ -59,7 +59,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
  */
 class CMainParams : public CChainParams {
 public:
-    CMainParams() {
+    explicit CMainParams(const ArgsManager& args) {
         strNetworkID = CBaseChainParams::MAIN;
         consensus.bitcoin_mode = false;
         consensus.nSubsidyHalvingInterval = 0; // never
@@ -152,6 +152,8 @@ public:
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 320;
         m_assumed_chain_state_size = 4;
+
+        UpdateActivationParametersFromArgs(args);
 
         genesis = CreateGenesisBlock(1356123600, 278229610, 0x1d00ffff, 1);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -246,7 +248,7 @@ public:
  */
 class CTestNetParams : public CChainParams {
 public:
-    CTestNetParams() {
+    explicit CTestNetParams(const ArgsManager& args) {
         strNetworkID = CBaseChainParams::TESTNET;
         consensus.bitcoin_mode = false;
         consensus.nSubsidyHalvingInterval = 0; // never
@@ -312,6 +314,8 @@ public:
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 40;
         m_assumed_chain_state_size = 2;
+
+        UpdateActivationParametersFromArgs(args);
 
         const std::string timestamp("The Times 7/Aug/2020 Foreign Office cat quits to spend more time with family");
         CMutableTransaction genesis_tx;
@@ -496,19 +500,9 @@ public:
 
         bech32_hrp = "fcrt";
     }
-
-    /**
-     * Allows modifying the Version Bits regtest parameters.
-     */
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
-    {
-        consensus.vDeployments[d].nStartTime = nStartTime;
-        consensus.vDeployments[d].nTimeout = nTimeout;
-    }
-    void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
 
-void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
+void CChainParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
     if (gArgs.IsArgSet("-segwitheight")) {
         int64_t height = gArgs.GetArg("-segwitheight", consensus.SegwitHeight);
@@ -561,9 +555,9 @@ const CChainParams &Params() {
 std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return std::unique_ptr<CChainParams>(new CMainParams());
+        return std::unique_ptr<CChainParams>(new CMainParams(gArgs));
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return std::unique_ptr<CChainParams>(new CTestNetParams(gArgs));
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams(gArgs));
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));

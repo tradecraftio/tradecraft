@@ -21,6 +21,7 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <util/system.h>
 
 #include <memory>
 #include <vector>
@@ -118,6 +119,16 @@ protected:
     bool m_is_mockable_chain;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
+
+    /**
+     * Allows modifying the Version Bits parameters.
+     */
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+    {
+        consensus.vDeployments[d].nStartTime = nStartTime;
+        consensus.vDeployments[d].nTimeout = nTimeout;
+    }
+    void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
 
 /**
