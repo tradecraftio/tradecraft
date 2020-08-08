@@ -59,7 +59,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
  */
 class CMainParams : public CChainParams {
 public:
-    CMainParams() {
+    explicit CMainParams(const ArgsManager& args) {
         strNetworkID = "main";
         consensus.bitcoin_mode = false;
         consensus.nSubsidyHalvingInterval = 0; // never
@@ -163,6 +163,8 @@ public:
         m_assumed_blockchain_size = 240;
         m_assumed_chain_state_size = 3;
 
+        UpdateVersionBitsParametersFromArgs(args);
+
         genesis = CreateGenesisBlock(1356123600, 278229610, 0x1d00ffff, 1);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000005b1e3d23ecfd2dd4a6e1a35238aa0392c0a8528c40df52376d7efe2c"));
@@ -258,7 +260,7 @@ public:
  */
 class CTestNetParams : public CChainParams {
 public:
-    CTestNetParams() {
+    explicit CTestNetParams(const ArgsManager& args) {
         strNetworkID = "test";
         consensus.bitcoin_mode = false;
         consensus.nSubsidyHalvingInterval = 0; // never
@@ -334,6 +336,8 @@ public:
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
+
+        UpdateVersionBitsParametersFromArgs(args);
 
         genesis = CreateGenesisBlock(1356123600, 3098244593U, 0x1d00ffff, 1);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -509,19 +513,9 @@ public:
         /* enable fallback fee on regtest */
         m_fallback_fee_enabled = true;
     }
-
-    /**
-     * Allows modifying the Version Bits regtest parameters.
-     */
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
-    {
-        consensus.vDeployments[d].nStartTime = nStartTime;
-        consensus.vDeployments[d].nTimeout = nTimeout;
-    }
-    void UpdateVersionBitsParametersFromArgs(const ArgsManager& args);
 };
 
-void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args)
+void CChainParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args)
 {
     if (!args.IsArgSet("-vbparams")) return;
 
@@ -563,9 +557,9 @@ const CChainParams &Params() {
 std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return std::unique_ptr<CChainParams>(new CMainParams());
+        return std::unique_ptr<CChainParams>(new CMainParams(gArgs));
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return std::unique_ptr<CChainParams>(new CTestNetParams(gArgs));
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams(gArgs));
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
