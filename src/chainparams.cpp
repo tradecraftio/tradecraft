@@ -58,7 +58,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
  */
 class CMainParams : public CChainParams {
 public:
-    CMainParams() {
+    explicit CMainParams(const ArgsManager& args) {
         strNetworkID = CBaseChainParams::MAIN;
         consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
@@ -159,6 +159,8 @@ public:
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 460;
         m_assumed_chain_state_size = 6;
+
+        UpdateActivationParametersFromArgs(args);
 
         genesis = CreateGenesisBlock(1356123600, 278229610, 0x1d00ffff, 1);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -261,7 +263,7 @@ public:
  */
 class CTestNetParams : public CChainParams {
 public:
-    CTestNetParams() {
+    explicit CTestNetParams(const ArgsManager& args) {
         strNetworkID = CBaseChainParams::TESTNET;
         consensus.bitcoin_mode = false;
         consensus.signet_blocks = false;
@@ -335,6 +337,8 @@ public:
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 40;
         m_assumed_chain_state_size = 2;
+
+        UpdateActivationParametersFromArgs(args);
 
         const std::string timestamp("The Times 7/Aug/2020 Foreign Office cat quits to spend more time with family");
         CMutableTransaction genesis_tx;
@@ -684,17 +688,6 @@ public:
 
         bech32_hrp = "fcrt";
     }
-
-    /**
-     * Allows modifying the Version Bits regtest parameters.
-     */
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int min_activation_height)
-    {
-        consensus.vDeployments[d].nStartTime = nStartTime;
-        consensus.vDeployments[d].nTimeout = nTimeout;
-        consensus.vDeployments[d].min_activation_height = min_activation_height;
-    }
-    void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
 
 static void MaybeUpdateHeights(const ArgsManager& args, Consensus::Params& consensus)
@@ -724,7 +717,7 @@ static void MaybeUpdateHeights(const ArgsManager& args, Consensus::Params& conse
     }
 }
 
-void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
+void CChainParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
     MaybeUpdateHeights(args, consensus);
 
@@ -772,9 +765,9 @@ const CChainParams &Params() {
 std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN) {
-        return std::unique_ptr<CChainParams>(new CMainParams());
+        return std::unique_ptr<CChainParams>(new CMainParams(args));
     } else if (chain == CBaseChainParams::TESTNET) {
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return std::unique_ptr<CChainParams>(new CTestNetParams(args));
     } else if (chain == CBaseChainParams::SIGNET) {
         return std::unique_ptr<CChainParams>(new SigNetParams(args));
     } else if (chain == CBaseChainParams::REGTEST) {
