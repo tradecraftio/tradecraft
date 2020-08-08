@@ -254,9 +254,9 @@ public:
         consensus.bitcoin_mode = false;
         consensus.nSubsidyHalvingInterval = 0; // never
         consensus.perpetual_subsidy = 9536743164; // 95.367,431,64fc
-        consensus.equilibrium_height = 161280; // three years
-        consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
-        consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
+        consensus.equilibrium_height = 0; // disable
+        consensus.equilibrium_monetary_base = 0;
+        consensus.initial_excess_subsidy = 0;
         consensus.verify_dersig_activation_height = 1;
         consensus.truncate_inputs_activation_height = 1;
         consensus.alu_activation_height = 1;
@@ -299,9 +299,8 @@ public:
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000100010001");
 
-        consensus.verify_coinbase_lock_time_activation_height = 2016;
-        // Tuesday, April 2, 2019 00:00:00 UTC
-        consensus.verify_coinbase_lock_time_timeout = 1554163200;
+        consensus.verify_coinbase_lock_time_activation_height = 1;
+        consensus.verify_coinbase_lock_time_timeout = 0;
 
         // Nine months prior to main net
         // 2 September 2021 00:00:00 UTC
@@ -309,7 +308,7 @@ public:
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
-        consensus.diff_adjust_threshold = 2016;
+        consensus.diff_adjust_threshold = 144;
 
         pchMessageStart[0] = 0x5e;
         pchMessageStart[1] = 0xd6;
@@ -318,10 +317,31 @@ public:
         nDefaultPort = 18639;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1356123600, 3098244593U, 0x1d00ffff, 1);
+        std::string timestamp("The Times 7/Aug/2020 Foreign Office cat quits to spend more time with family");
+        CMutableTransaction genesis_tx;
+        genesis_tx.nVersion = 2;
+        genesis_tx.vin.resize(1);
+        genesis_tx.vin[0].prevout.SetNull();
+        genesis_tx.vin[0].scriptSig = CScript() << 0 << std::vector<unsigned char>((const unsigned char*)timestamp.data(), (const unsigned char*)timestamp.data() + timestamp.length());
+        genesis_tx.vin[0].nSequence = 0xffffffff;
+        genesis_tx.vout.resize(1);
+        genesis_tx.vout[0].SetReferenceValue(consensus.perpetual_subsidy);
+        genesis_tx.vout[0].scriptPubKey = CScript() << OP_RETURN;
+        genesis_tx.nLockTime = 1596931200;
+        genesis_tx.lock_height = 0;
+
+        genesis = CBlock();
+        genesis.nVersion = 1;
+        genesis.hashPrevBlock.SetNull();
+        genesis.nTime = 1596931200;
+        genesis.nBits = 0x1d00ffff;
+        genesis.nNonce = 1566443406UL;
+        genesis.vtx.push_back(CTransaction(genesis_tx));
+        genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000000a52504ffe3420a43bd385ef24f81838921a903460b235d95f37cd65e"));
-        assert(genesis.hashMerkleRoot == uint256S("0xf53b1baa971ea40be88cf51288aabd700dfec96c486bf7155a53a4919af4c8bd"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000003b5183593282fd30d3d7e79243eb883d6c2d8670f69811c6b9a76585"));
+        assert(genesis.hashMerkleRoot == uint256S("0xda41f94f1a4a7d4a5cd54245bf4ad423da65a292a4de6d86d7746c4ad41e7ee7"));
 
         uint256 tag;
         CSHA256().Write(reinterpret_cast<const unsigned char*>("auxpow"), 6).Finalize(tag.begin());
@@ -330,7 +350,7 @@ public:
         hw << tag;
         hw << genesis;
         consensus.aux_pow_path = hw.GetHash();
-        assert(consensus.aux_pow_path == uint256S("0xcb2c00dc58978bb29b78cb8449d76454e3055c10d0410fcf890b39958ab2d336"));
+        assert(consensus.aux_pow_path == uint256S("0xe99fc44bfacee2f7e28d135845ff8a385d6d31353928d5b499700f1a2ad1b18b"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -353,10 +373,10 @@ public:
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
-            (2016, uint256S("0x0000000000001e891fcab0d810f81795497da3ac799ef8c179ec8e839ccc001b")),
-            1594881439,
-            2017,
-            292
+            (0, uint256S("0x000000003b5183593282fd30d3d7e79243eb883d6c2d8670f69811c6b9a76585")),
+            1596931200,
+            1,
+            192
         };
 
     }
