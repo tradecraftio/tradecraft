@@ -142,14 +142,6 @@ public:
     const ChainTxData& TxData() const { return chainTxData; }
 
     /**
-     * SigNetOptions holds configurations for creating a signet CChainParams.
-     */
-    struct SigNetOptions {
-        std::optional<std::vector<uint8_t>> challenge{};
-        std::optional<std::vector<std::string>> seeds{};
-    };
-
-    /**
      * VersionBitsParameters holds activation parameters
      */
     struct VersionBitsParameters {
@@ -159,18 +151,42 @@ public:
     };
 
     /**
+     * Base class containing options common to all chains
+     */
+    struct BaseChainOptions {
+        std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
+    };
+
+    /**
+     * MainNetOptions holds configurations for creating a mainnet CChainParams.
+     */
+    struct MainNetOptions : public BaseChainOptions {};
+
+    /**
+     * TestNetOptions holds configurations for creating a testnet CChainParams.
+     */
+    struct TestNetOptions : public BaseChainOptions {};
+
+    /**
+     * SigNetOptions holds configurations for creating a signet CChainParams.
+     */
+    struct SigNetOptions : public BaseChainOptions {
+        std::optional<std::vector<uint8_t>> challenge{};
+        std::optional<std::vector<std::string>> seeds{};
+    };
+
+    /**
      * RegTestOptions holds configurations for creating a regtest CChainParams.
      */
-    struct RegTestOptions {
-        std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
+    struct RegTestOptions : public BaseChainOptions {
         std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
         bool fastprune{false};
     };
 
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
-    static std::unique_ptr<const CChainParams> Main();
-    static std::unique_ptr<const CChainParams> TestNet();
+    static std::unique_ptr<const CChainParams> Main(const MainNetOptions& options);
+    static std::unique_ptr<const CChainParams> TestNet(const TestNetOptions& options);
 
 protected:
     CChainParams() {}
@@ -192,6 +208,14 @@ protected:
     CCheckpointData checkpointData;
     std::vector<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
+
+    void UpdateDeploymentInfo(const BaseChainOptions& opts) {
+        for (const auto& [deployment_pos, version_bits_params] : opts.version_bits_parameters) {
+            consensus.vDeployments[deployment_pos].nStartTime = version_bits_params.start_time;
+            consensus.vDeployments[deployment_pos].nTimeout = version_bits_params.timeout;
+            consensus.vDeployments[deployment_pos].min_activation_height = version_bits_params.min_activation_height;
+        }
+    }
 };
 
 #endif // FREICOIN_KERNEL_CHAINPARAMS_H
