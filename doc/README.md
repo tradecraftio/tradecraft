@@ -1,4 +1,4 @@
-Freicoin 13.2.3
+Freicoin 13.2.4
 =================
 
 Setup
