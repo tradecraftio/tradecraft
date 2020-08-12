@@ -88,6 +88,8 @@ struct Params {
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Scheduled protocol cleanup rule change */
     int64_t protocol_cleanup_activation_time;
+    /** Scheduled size expansion rule change */
+    int64_t size_expansion_activation_time;
     /** Proof of work parameters */
     uint256 powLimit;
     uint256 aux_pow_limit;
