@@ -240,10 +240,11 @@ static const bool DEFAULT_PEERBLOOMFILTERS = true;
  **   10. Re-enable (and implement) certain disabled opcodes, and conspicuously
  **       missing opcodes which were never there in the first place.
  **
- ** Activation of the protocol-cleanup fork depends on the median-time-past of
- ** the tip relative to a consensus parameter.  While it makes more logical
- ** sense for this to be an inline method of the chain parameters, doing so
- ** would introduce a new dependency on CBlockIndex there.
+ ** Activation of the protocol-cleanup fork depends on the status of the auxpow
+ ** soft-fork, and the median-time-past of the tip relative to a consensus
+ ** parameter.  While it makes more logical sense for this to be an inline
+ ** method of the chain parameters, doing so would introduce a new dependency on
+ ** CBlockIndex there.
  **
  ** There are two implementations that appear to do different things, but
  ** actually are making the same check.  The median-time-past is stored in the
@@ -288,7 +289,7 @@ inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBloc
  ** software is able to support.  After the flag-day, older clients of at least
  ** version 13.2.4 will continue to receive blocks, but with only SPV security
  ** ("trust the most work") for the new protocol rules.  So starting with the
- ** release of v13.2.4-?????, activation of forward blocks' new scaling limits
+ ** release of v13.2.4-11864, activation of forward blocks' new scaling limits
  ** becomes a soft-fork, with the only concern being the forking off of older
  ** nodes upon activation.
  **
