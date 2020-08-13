@@ -192,8 +192,8 @@ this cleanup, the following consensus rule changes will take effect:
    the unfortunate side effect of requiring nSequence to be set to 0xffffffff
    since even the coinbase is checked for transaction finality.  The concept of
    finality makes no sense for the coinbase and this requirement is dropped
-   after activation of the new rules, making the 4-byte nSquence field have no
-   consensus-defined meaning, allowing it to be used as an extrnonce field.
+   after activation of the new rules, making the 4-byte nSequence field have no
+   consensus-defined meaning, allowing it to be used as an extranonce field.
 
 6. Do not require zero-valued outputs to be spent by transactions with
    lock_height >= the coin's refheight.  This restriction was to ensure that
