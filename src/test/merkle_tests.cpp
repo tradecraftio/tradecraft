@@ -232,4 +232,45 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
 
     BOOST_CHECK_EQUAL(merkleRootofHashes, blockWitness);
 }
+
+BOOST_AUTO_TEST_CASE(fast_merkle_branch)
+{
+    const std::vector<uint256> leaves = {
+      (CHashWriter{PROTOCOL_VERSION} << static_cast<uint8_t>('a')).GetHash(),
+      (CHashWriter{PROTOCOL_VERSION} << static_cast<uint8_t>('b')).GetHash(),
+      (CHashWriter{PROTOCOL_VERSION} << static_cast<uint8_t>('c')).GetHash(),
+    };
+    const uint256 root = ComputeFastMerkleRoot(leaves);
+    BOOST_CHECK(root == uint256S("0x35d7dea3df173ecb85f59ebb88b2003be3c94b576576b12eb8d017f9fc33b289"));
+    {
+        std::vector<uint256> branch;
+        uint32_t path;
+        std::tie(branch, path) = ComputeFastMerkleBranch(leaves, 0);
+        BOOST_CHECK(path == 0);
+        BOOST_CHECK(branch.size() == 2);
+        BOOST_CHECK(branch[0] == leaves[1]);
+        BOOST_CHECK(branch[1] == leaves[2]);
+        BOOST_CHECK(root == ComputeFastMerkleRootFromBranch(leaves[0], branch, path));
+    }
+    {
+        std::vector<uint256> branch;
+        uint32_t path;
+        std::tie(branch, path) = ComputeFastMerkleBranch(leaves, 1);
+        BOOST_CHECK(path == 1);
+        BOOST_CHECK(branch.size() == 2);
+        BOOST_CHECK(branch[0] == leaves[0]);
+        BOOST_CHECK(branch[1] == leaves[2]);
+        BOOST_CHECK(root == ComputeFastMerkleRootFromBranch(leaves[1], branch, path));
+    }
+    {
+        std::vector<uint256> branch;
+        uint32_t path;
+        std::tie(branch, path) = ComputeFastMerkleBranch(leaves, 2);
+        BOOST_CHECK(path == 1);
+        BOOST_CHECK(branch.size() == 1);
+        BOOST_CHECK(branch[0] == uint256S("0xa6e8f6cfa607807d35da463f0599aa0d8032dda4e5635c806098a9ed332b6279"));
+        BOOST_CHECK(root == ComputeFastMerkleRootFromBranch(leaves[2], branch, path));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
