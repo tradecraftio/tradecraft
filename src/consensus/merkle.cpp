@@ -43,9 +43,31 @@
 
 typedef unsigned merklecomputationopts;
 static const merklecomputationopts MERKLE_COMPUTATION_MUTABLE = 0x1;
+static const merklecomputationopts MERKLE_COMPUTATION_FAST    = 0x2;
 
-static void MerkleHash_Hash256(uint256& parent, const uint256& left, const uint256& right) {
+void MerkleHash_Hash256(uint256& parent, const uint256& left, const uint256& right) {
     CHash256().Write(left).Write(right).Finalize(parent);
+}
+
+/* Calculated by using standard FIPS-180 SHA-256 to produce the digest of the
+ * empty string / zero-length byte array, then feeding the resulting digest into
+ * SHA-256 twice in order to fill a block and trigger a compression round.  The
+ * midstate is then extracted and used as our hash value.  Expressed with the
+ * pure-Python sha256 package, this would be something like the following:
+ *
+ *     import struct
+ *     from sha256 import SHA256
+ *     iv = b''.join([struct.pack(">I", i) for i in
+ *                    SHA256(SHA256(b"").digest() +
+ *                           SHA256(b"").digest()).state])
+ */
+static unsigned char _MidstateIV[32] =
+    { 0x1e, 0x4e, 0x0f, 0x95, 0x5a, 0x4b, 0xc8, 0x1c,
+      0x08, 0xc8, 0xaf, 0x1c, 0x94, 0xf3, 0x4b, 0x9d,
+      0x0a, 0xf2, 0xf4, 0x50, 0xdc, 0x24, 0xa3, 0xbc,
+      0xef, 0x98, 0x31, 0x8f, 0xaf, 0x5e, 0x25, 0x06 };
+void MerkleHash_Sha256Midstate(uint256& parent, const uint256& left, const uint256& right) {
+    CSHA256(_MidstateIV).Write(left.begin(), 32).Write(right.begin(), 32).Midstate(parent.begin(), nullptr, nullptr);
 }
 
 /* This implements a constant-space merkle root/path calculator, limited to 2^32 leaves. */
@@ -58,6 +80,9 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
     }
     bool is_mutable = (flags & MERKLE_COMPUTATION_MUTABLE) != 0;
     auto MerkleHash = MerkleHash_Hash256;
+    if (flags & MERKLE_COMPUTATION_FAST) {
+        MerkleHash = MerkleHash_Sha256Midstate;
+    }
     bool mutated = false;
     // count is the number of leaves processed so far.
     uint32_t count = 0;
@@ -174,6 +199,77 @@ uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint2
             hash = Hash(hash, *it);
         }
         nIndex >>= 1;
+    }
+    return hash;
+}
+
+uint256 ComputeFastMerkleRoot(const std::vector<uint256>& leaves) {
+    if (leaves.empty()) {
+        return CHashWriter(SER_GETHASH, PROTOCOL_VERSION).GetHash();
+    }
+    uint256 hash;
+    MerkleComputation(leaves, &hash, nullptr, -1, nullptr, MERKLE_COMPUTATION_FAST);
+    return hash;
+}
+
+std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
+    std::vector<uint256> branch;
+    MerkleComputation(leaves, nullptr, nullptr, position, &branch, MERKLE_COMPUTATION_FAST);
+    /* Calculate the largest possible size the branch vector can be.
+     * This is one more than the zero-based index of the highest set
+     * bit. */
+    std::size_t max = 0;
+    for (max = 32; max > 0; --max)
+        if (position & ((uint32_t)1)<<(max-1))
+            break;
+    /* If the number of returned hashes in the branch vector is less
+     * than the maximum allowed size, it must be because the branch
+     * lies at least partially along the right-most path of an
+     * unbalanced tree.
+     *
+     * We calculate the path by dropping the necessary number of
+     * most-significant zero bits from the binary representation of
+     * position. */
+    uint32_t path = position;
+    while (max > branch.size()) {
+        /* Find the first clear/zero bit *below* the most significant
+         * set bit.  We do this by starting with what we know to be
+         * the most-significant set bit, and then working backwards
+         * until we hit a zero bit. */
+        int i;
+        for (i = max-1; i >= 0; --i)
+            if (!(path & ((uint32_t)1)<<i))
+                break;
+        /* It will never be the case that we don't find a zero bit as
+         * in that situation MerkleComputation would have returned
+         * more hashes.  However for the purpose helping code analysis
+         * tools which can't make this inference, we detect failure
+         * and return. */
+        if (i < 0) // Should never happen
+            return {};
+        /* Bit-fiddle to build two masks: one covering all the bits
+         * above the i'th position, and one covering all bits below.
+         * Apply both to path and shift the top bits down by one
+         * position, effectively eliminating the i'th bit. */
+        path = ((path & ~((((uint32_t)1)<<(i+1))-1))>>1) // e.g. 0b11111111111111111111111100000000
+             |  (path &  ((((uint32_t)1)<< i   )-1));    //      0b00000000000000000000000001111111
+        --max;                                           //                                |
+    }                                                    //                        i = 7 --^
+    return {branch, path};
+}
+
+uint256 ComputeFastMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path, bool* invalid) {
+    uint256 hash = leaf;
+    for (const uint256& h : branch) {
+        if (path & 1) {
+            MerkleHash_Sha256Midstate(hash, h, hash);
+        } else {
+            MerkleHash_Sha256Midstate(hash, hash, h);
+        }
+        path >>= 1;
+    }
+    if (invalid) {
+        *invalid = (path != 0);
     }
     return hash;
 }
