@@ -758,9 +758,9 @@ UniValue stratum_mining_configure(StratumClient& client, const UniValue& params)
         if ("version-rolling" == name) {
             uint32_t mask = ParseHexInt4(find_value(config, "version-rolling.mask"), "version-rolling.mask");
             size_t min_bit_count = find_value(config, "version-rolling.min-bit-count").get_int();
-            client.m_version_rolling_mask = mask;
+            client.m_version_rolling_mask = mask & 0x1fffe000;
             res.push_back(Pair("version-rolling", true));
-            res.push_back(Pair("version-rolling.mask", HexInt4(mask & 0x1fffffff)));
+            res.push_back(Pair("version-rolling.mask", HexInt4(client.m_version_rolling_mask)));
             LogPrint("stratum", "Received version rolling request from %s\n", client.GetPeer().ToString());
         }
 
