@@ -21,6 +21,8 @@ License
 Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
+Some components of Bitcoin Core are released under the terms of the Mozilla Public License Version 2.0. See [MPL-2.0.txt](MPL-2.0.txt) for more information or visit https://www.mozilla.org/en-US/MPL/2.0/ in your web browser.
+
 Development Process
 -------------------
 
