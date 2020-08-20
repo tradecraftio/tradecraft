@@ -397,12 +397,20 @@ public:
             READWRITE(VARINT(nUndoPos));
 
         // block header
-        READWRITE(this->nVersion);
-        READWRITE(hashPrev);
-        READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
+        CBlockHeader blkhdr;
+        if (!ser_action.ForRead()) {
+            blkhdr = GetBlockHeader();
+        }
+        READWRITE(blkhdr);
+        if (ser_action.ForRead()) {
+            this->nVersion = blkhdr.nVersion;
+            hashPrev       = blkhdr.hashPrevBlock;
+            hashMerkleRoot = blkhdr.hashMerkleRoot;
+            nTime          = blkhdr.nTime;
+            nBits          = blkhdr.nBits;
+            nNonce         = blkhdr.nNonce;
+            m_aux_pow      = blkhdr.m_aux_pow;
+        }
     }
 
     uint256 GetBlockHash() const
