@@ -497,6 +497,7 @@ std::string GetWorkUnit(StratumClient& client)
     params.push_back(UniValue((client.m_last_tip != tip)
                            || (client.m_second_stage != bool(current_work.m_aux_hash2))));
     client.m_last_tip = tip;
+    client.m_second_stage = bool(current_work.m_aux_hash2);
 
     UniValue mining_notify(UniValue::VOBJ);
     mining_notify.push_back(Pair("params", params));
