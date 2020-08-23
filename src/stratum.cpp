@@ -769,7 +769,7 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
     uint256 job_id = uint256S(params[1].get_str());
     if (!work_templates.count(job_id)) {
         LogPrint("stratum", "Received completed share for unknown job_id : %s\n", job_id.GetHex());
-        return true;
+        return false;
     }
     StratumWork &current_work = work_templates[job_id];
 
