@@ -10,9 +10,6 @@
 
 #include <event2/event.h>
 
-/** Setup the stratum connection listening services. */
-bool StratumBindAddresses(event_base* base);
-
 /** Configure the stratum server. */
 bool InitStratumServer();
 

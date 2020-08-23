@@ -958,7 +958,7 @@ static void stratum_accept_conn_cb(evconnlistener *listener, evutil_socket_t fd,
 }
 
 /** Setup the stratum connection listening services */
-bool StratumBindAddresses(event_base* base)
+static bool StratumBindAddresses(event_base* base)
 {
     int defaultPort = GetArg("-stratumport", BaseParams().StratumPort());
     std::vector<std::pair<std::string, uint16_t> > endpoints;
