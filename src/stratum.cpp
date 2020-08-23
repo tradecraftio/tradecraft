@@ -106,11 +106,17 @@ struct StratumClient {
     //! new work needs to be generated for the client.
     bool m_send_work;
 
+    //! Set to true when the client sends a 'mining.aux.subscribe' message,
+    //! indicating the client is a merge-mining proxy server.
+    bool m_supports_aux;
+    //! A list of auxiliary addresses to report to the merge-mining proxy server.
+    std::set<CTxDestination> m_aux_addr;
+
     //! Whether the client supports the "mining.set_extranonce" message.
     bool m_supports_extranonce;
 
-    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
-    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_aux(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_aux(false), m_supports_extranonce(false) { GenSecret(); }
 
     //! Generate a new random secret for this client.
     void GenSecret();
@@ -354,7 +360,7 @@ static std::string GetExtraNonceRequest(StratumClient& client, const JobId& job_
     return ret;
 }
 
-void CustomizeWork(const ChainstateManager& chainman, const StratumClient& client, const JobId& job_id, const StratumWork& current_work, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch) {
+void CustomizeWork(const ChainstateManager& chainman, const StratumClient& client, const CTxDestination& addr, const JobId& job_id, const StratumWork& current_work, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch) {
     if (current_work.GetBlock().vtx.empty()) {
         const std::string msg = strprintf("%s: no transactions in block template; unable to submit work", __func__);
         LogPrint(BCLog::STRATUM, "%s\n", msg);
@@ -395,7 +401,7 @@ void CustomizeWork(const ChainstateManager& chainman, const StratumClient& clien
         }
         if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
             cb.vout.front().scriptPubKey =
-                GetScriptForDestination(IsValidDestination(client.m_addr) ? client.m_addr : current_work.m_coinbase_dest);
+                GetScriptForDestination(IsValidDestination(addr) ? addr : current_work.m_coinbase_dest);
         }
     }
 
@@ -405,6 +411,32 @@ void CustomizeWork(const ChainstateManager& chainman, const StratumClient& clien
         UpdateSegwitCommitment(chainman, current_work, cb, bf, cb_branch);
         LogPrint(BCLog::STRATUM, "Updated segwit commitment in coinbase.\n");
     }
+}
+
+uint256 CustomizeCommitHash(const ChainstateManager& chainman, const StratumClient& client, const CTxDestination& addr, const JobId& job_id, const StratumWork& current_work, const uint256& secret)
+{
+    CMutableTransaction cb, bf;
+    std::vector<uint256> cb_branch;
+    static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
+    CustomizeWork(chainman, client, addr, job_id, current_work, dummy, cb, bf, cb_branch);
+
+    CMutableTransaction cb2(cb);
+    cb2.vin[0].scriptSig = CScript();
+    cb2.vin[0].nSequence = 0;
+
+    const AuxProofOfWork& aux_pow = current_work.GetBlock().m_aux_pow;
+
+    CBlockHeader blkhdr;
+    blkhdr.nVersion = aux_pow.m_commit_version;
+    blkhdr.hashPrevBlock = current_work.GetBlock().hashPrevBlock;
+    blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb2.GetHash(), cb_branch, 0);
+    blkhdr.nTime = aux_pow.m_commit_time;
+    blkhdr.nBits = aux_pow.m_commit_bits;
+    blkhdr.nNonce = aux_pow.m_commit_nonce;
+    uint256 hash = blkhdr.GetHash();
+
+    hash = MerkleHash_Sha256Midstate(hash, secret);
+    return hash;
 }
 
 std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
@@ -433,7 +465,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
         throw JSONRPCError(RPC_CLIENT_MEMPOOL_DISABLED, "Error: Mempool disabled or instance not found");
     }
 
-    if (!client.m_authorized) {
+    if (!client.m_authorized && client.m_aux_addr.empty()) {
         throw JSONRPCError(RPC_INVALID_REQUEST, "Stratum client not authorized.  Use mining.authorize first, with a Freicoin address as the username.");
     }
 
@@ -520,6 +552,43 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
 
     StratumWork& current_work = work_templates[job_id];
 
+    if (client.m_supports_aux && !current_work.GetBlock().m_aux_pow.IsNull() && !current_work.m_aux_hash2 && !client.m_aux_addr.empty()) {
+        const AuxProofOfWork& aux_pow = current_work.GetBlock().m_aux_pow;
+
+        CHashWriter secret_writer(PROTOCOL_VERSION);
+        secret_writer << aux_pow.m_secret_lo;
+        secret_writer << aux_pow.m_secret_hi;
+        uint256 secret = secret_writer.GetHash();
+
+        UniValue commits(UniValue::VOBJ);
+        for (const auto& addr : client.m_aux_addr) {
+            uint256 hash = CustomizeCommitHash(*g_context->chainman, client, addr, job_id, current_work, secret);
+            commits.pushKV(EncodeDestination(addr), HexStr(hash));
+        }
+
+        UniValue params(UniValue::VARR);
+        params.push_back(HexStr(job_id));
+        params.push_back(commits);
+
+        unsigned char bias = current_work.GetBlock().GetBias();
+        uint32_t bits = aux_pow.m_commit_bits;
+        bits += static_cast<uint32_t>(bias / 8) << 24;
+        bias = bias % 8;
+        params.push_back(HexInt4(bits));
+        params.push_back(UniValue((int)bias));
+
+        params.push_back(UniValue(client.m_last_tip != tip));
+        client.m_last_tip = tip;
+        client.m_second_stage = false;
+
+        UniValue mining_aux_notify(UniValue::VOBJ);
+        mining_aux_notify.pushKV("params", params);
+        mining_aux_notify.pushKV("id", client.m_nextid++);
+        mining_aux_notify.pushKV("method", "mining.aux.notify");
+
+        return mining_aux_notify.write() + '\n';
+    }
+
     CBlockIndex tmp_index;
     if (!current_work.GetBlock().m_aux_pow.IsNull() && !current_work.m_aux_hash2) {
         // Auxiliary proof-of-work difficulty
@@ -541,7 +610,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     std::vector<uint256> cb_branch;
     {
         static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
-        CustomizeWork(*g_context->chainman, client, job_id, current_work, dummy, cb, bf, cb_branch);
+        CustomizeWork(*g_context->chainman, client, client.m_addr, job_id, current_work, dummy, cb, bf, cb_branch);
     }
 
     CBlockHeader blkhdr;
@@ -678,7 +747,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
 
     CMutableTransaction cb, bf;
     std::vector<uint256> cb_branch;
-    CustomizeWork(*g_context->chainman, client, job_id, current_work, extranonce2, cb, bf, cb_branch);
+    CustomizeWork(*g_context->chainman, client, client.m_addr, job_id, current_work, extranonce2, cb, bf, cb_branch);
 
     bool res = false;
     if (!current_work.GetBlock().m_aux_pow.IsNull() && !current_work.m_aux_hash2) {
@@ -812,6 +881,57 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
     return res;
 }
 
+bool SubmitAuxiliaryBlock(StratumClient& client, const CTxDestination& addr, const JobId& job_id, const StratumWork& current_work, CBlockHeader& blkhdr) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+{
+    if (!g_context) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Node context not found when submitting block");
+    }
+    if (!g_context->chainman) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Node chainman not found when submitting block");
+    }
+    CMutableTransaction cb, bf;
+    std::vector<uint256> cb_branch;
+    static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
+    CustomizeWork(*g_context->chainman, client, addr, job_id, current_work, dummy, cb, bf, cb_branch);
+
+    CMutableTransaction cb2(cb);
+    cb2.vin[0].scriptSig = CScript();
+    cb2.vin[0].nSequence = 0;
+
+    blkhdr.m_aux_pow.m_commit_hash_merkle_root = ComputeMerkleRootFromBranch(cb2.GetHash(), cb_branch, 0);
+
+    const Consensus::Params& params = Params().GetConsensus();
+    auto aux_hash = blkhdr.GetAuxiliaryHash(params);
+    if (!CheckAuxiliaryProofOfWork(blkhdr, params)) {
+        LogPrintf("NEW AUXILIARY SHARE!!! by %s: %s, %s\n", EncodeDestination(addr), aux_hash.first.ToString(), aux_hash.second.ToString());
+        return false;
+    }
+
+    LogPrintf("GOT AUXILIARY BLOCK!!! by %s: %s, %s\n", EncodeDestination(addr), aux_hash.first.ToString(), aux_hash.second.ToString());
+    blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0);
+
+    JobId new_job_id(blkhdr.GetHash());
+    work_templates[new_job_id] = current_work;
+    StratumWork& new_work = work_templates[new_job_id];
+    new_work.GetBlock().vtx[0] = MakeTransactionRef(std::move(cb));
+    if (new_work.m_is_witness_enabled) {
+        new_work.GetBlock().vtx.back() = MakeTransactionRef(std::move(bf));
+    }
+    new_work.GetBlock().hashMerkleRoot = BlockMerkleRoot(new_work.GetBlock(), nullptr);
+    new_work.m_cb_branch = cb_branch;
+    new_work.GetBlock().m_aux_pow = blkhdr.m_aux_pow;
+    new_work.GetBlock().nTime = blkhdr.nTime;
+    new_work.m_aux_hash2 = aux_hash.second;
+    if (new_job_id != JobId(new_work.GetBlock().GetHash())) {
+        throw std::runtime_error("First-stage hash does not match expected value.");
+    }
+
+    half_solved_work = new_job_id;
+    client.m_send_work = true;
+
+    return false;
+}
+
 void BoundParams(const std::string& method, const UniValue& params, size_t min, size_t max)
 {
     if (params.size() < min) {
@@ -917,6 +1037,72 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
     return true;
 }
 
+UniValue stratum_mining_aux_authorize(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+{
+    const std::string method("mining.aux.authorize");
+    BoundParams(method, params, 1, 2);
+
+    std::string username = params[0].get_str();
+    boost::trim(username);
+
+    // The second parameter is the password.  We don't actually do any
+    // authorization, so we ignore the password field.
+
+    size_t pos = username.find('+');
+    if (pos != std::string::npos) {
+        // Ignore suffix.
+        username.resize(pos);
+        boost::trim_right(username);
+    }
+
+    CTxDestination addr = DecodeDestination(username);
+    if (!IsValidDestination(addr)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+    }
+    if (client.m_aux_addr.count(addr)) {
+        LogPrint(BCLog::STRATUM, "Client with address %s is already registered for stratum miner %s\n", EncodeDestination(addr), client.GetPeer().ToStringAddrPort());
+        return EncodeDestination(addr);
+    }
+
+    client.m_aux_addr.insert(addr);
+    client.m_send_work = true;
+
+    LogPrintf("Authorized client %s of stratum miner %s\n", EncodeDestination(addr), client.GetPeer().ToStringAddrPort());
+
+    return EncodeDestination(addr);
+}
+
+UniValue stratum_mining_aux_deauthorize(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+{
+    const std::string method("mining.aux.deauthorize");
+    BoundParams(method, params, 1, 1);
+
+    std::string username = params[0].get_str();
+    boost::trim(username);
+
+    size_t pos = username.find('+');
+    if (pos != std::string::npos) {
+        // Ignore suffix.
+        username.resize(pos);
+        boost::trim_right(username);
+    }
+
+    CTxDestination addr = DecodeDestination(username);
+    if (!IsValidDestination(addr)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+    }
+    if (!client.m_aux_addr.count(addr)) {
+        LogPrint(BCLog::STRATUM, "No client with address %s is currently registered for stratum miner %s\n", EncodeDestination(addr), client.GetPeer().ToStringAddrPort());
+        return false;
+    }
+
+    client.m_aux_addr.erase(addr);
+
+    LogPrintf("Deauthorized client %s of stratum miner %s\n", EncodeDestination(addr), client.GetPeer().ToStringAddrPort());
+
+    return true;
+}
+
 UniValue stratum_mining_configure(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     const std::string method("mining.configure");
@@ -978,6 +1164,135 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     SubmitBlock(client, job_id, current_work, extranonce2, nTime, nNonce, nVersion);
 
     return true;
+}
+
+UniValue stratum_mining_aux_submit(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+{
+    const std::string method("mining.aux.submit");
+    BoundParams(method, params, 14, 14);
+
+    std::string username = params[0].get_str();
+    boost::trim(username);
+
+    size_t pos = username.find('+');
+    if (pos != std::string::npos) {
+        // Ignore suffix.
+        username.resize(pos);
+        boost::trim_right(username);
+    }
+
+    CTxDestination addr = DecodeDestination(username);
+    if (!IsValidDestination(addr)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+    }
+    if (!client.m_aux_addr.count(addr)) {
+        LogPrint(BCLog::STRATUM, "No user with address %s is currently registered\n", EncodeDestination(addr));
+    }
+
+    JobId job_id(ParseUInt256(params[1].get_str(), "job_id"));
+    if (!work_templates.count(job_id)) {
+        LogPrint(BCLog::STRATUM, "Received completed auxiliary share for unknown job_id : %s\n", HexStr(job_id));
+        return false;
+    }
+    StratumWork &current_work = work_templates[job_id];
+
+    CBlockHeader blkhdr(current_work.GetBlock());
+    AuxProofOfWork& aux_pow = blkhdr.m_aux_pow;
+
+    const UniValue& commit_branch = params[2].get_array();
+    aux_pow.m_commit_branch.clear();
+    for (int i = 0; i < commit_branch.size(); ++i) {
+        const UniValue& inner_hash_node = commit_branch[i].get_array();
+        if (inner_hash_node.size() != 2) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "commit_branch has unexpected size; must be of the form [[int, uint256]...]");
+        }
+        int bits = inner_hash_node[0].getInt<int>();
+        if (bits < 0 || bits > 255) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "bits parameter within commit_branch does not fit in unsigned char");
+        }
+        uint256 hash = ParseUInt256(inner_hash_node[1], "commit_branch");
+        aux_pow.m_commit_branch.emplace_back((unsigned char)bits, hash);
+    }
+    if (aux_pow.m_commit_branch.size() > MAX_AUX_POW_COMMIT_BRANCH_LENGTH) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "auxiliary proof-of-work Merkle map path is too long");
+    }
+    size_t nbits = 0;
+    for (size_t idx = 0; idx < aux_pow.m_commit_branch.size(); ++idx) {
+        ++nbits;
+        nbits += aux_pow.m_commit_branch[idx].first;
+    }
+    if (nbits >= 256) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "auxiliary proof-of-work Merkle map path is greater than 256 bits");
+    }
+
+    aux_pow.m_midstate_hash = ParseUInt256(params[3], "midstate_hash");
+    if (!params[4].get_str().empty()) {
+        aux_pow.m_midstate_buffer = ParseHexV(params[4], "midstate_buffer");
+    }
+    if (aux_pow.m_midstate_buffer.size() >= 64) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "auxiliary proof-of-work midstate buffer is too large");
+    }
+    int64_t midstate_length = 0;
+    try {
+        midstate_length = params[5].getInt<int64_t>();
+    } catch (...) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "midstate_length is not an integer as expected");
+    }
+    if (midstate_length < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "midstate length cannot be negative");
+    }
+    if (midstate_length >= std::numeric_limits<uint32_t>::max()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "non-representable midstate length for auxiliary proof-of-work");
+    }
+    aux_pow.m_midstate_length = (uint32_t)midstate_length;
+    if (aux_pow.m_midstate_buffer.size() != aux_pow.m_midstate_length % 64) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "auxiliary proof-of-work midstate buffer doesn't match anticipated length");
+    }
+
+    aux_pow.m_aux_lock_time = ParseHexInt4(params[6], "lock_time");
+
+    const UniValue& aux_branch = params[7].get_array();
+    aux_pow.m_aux_branch.clear();
+    for (int i = 0; i < aux_branch.size(); ++i) {
+        aux_pow.m_aux_branch.push_back(ParseUInt256(aux_branch[i], "aux_branch"));
+    }
+    if (aux_pow.m_aux_branch.size() > MAX_AUX_POW_BRANCH_LENGTH) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "auxiliary proof-of-work Merkle branch is too long");
+    }
+    int64_t num_txns = params[8].getInt<int64_t>();
+    if (num_txns < 1) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "number of transactions in auxiliary block cannot be less than one");
+    }
+    if (num_txns > std::numeric_limits<uint32_t>::max()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "non-representable number of transactions in auxiliary block");
+    }
+    aux_pow.m_aux_num_txns = (uint32_t)num_txns;
+
+    aux_pow.m_aux_hash_prev_block = ParseUInt256(params[10], "hashPrevBlock");
+    blkhdr.nTime = ParseHexInt4(params[11], "nTime");
+    aux_pow.m_aux_bits = ParseHexInt4(params[12], "nBits");
+    aux_pow.m_aux_nonce = ParseHexInt4(params[13], "nNonce");
+    aux_pow.m_aux_version = ParseHexInt4(params[9], "nVersion");
+
+    SubmitAuxiliaryBlock(client, addr, job_id, current_work, blkhdr);
+
+    return true;
+}
+
+UniValue stratum_mining_aux_subscribe(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+{
+    const std::string method("mining.aux.subscribe");
+    BoundParams(method, params, 0, 0);
+
+    client.m_supports_aux = true;
+
+    UniValue ret(UniValue::VARR);
+    const uint256& aux_pow_path = Params().GetConsensus().aux_pow_path;
+    ret.push_back(HexStr(aux_pow_path));
+    ret.push_back(UniValue((int)MAX_AUX_POW_COMMIT_BRANCH_LENGTH));
+    ret.push_back(UniValue((int)MAX_AUX_POW_BRANCH_LENGTH));
+
+    return ret;
 }
 
 UniValue stratum_mining_extranonce_subscribe(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
@@ -1219,7 +1534,7 @@ void BlockWatcher()
             evbuffer *output = bufferevent_get_output(bev);
             StratumClient& client = subscription.second;
             // Ignore clients that aren't authorized yet.
-            if (!client.m_authorized) {
+            if (!client.m_authorized && client.m_aux_addr.empty()) {
                 continue;
             }
             // Ignore clients that are already working on the new block.
@@ -1306,7 +1621,15 @@ bool InitStratumServer(node::NodeContext& node)
     stratum_method_dispatch["mining.authorize"] = stratum_mining_authorize;
     stratum_method_dispatch["mining.configure"] = stratum_mining_configure;
     stratum_method_dispatch["mining.submit"] = stratum_mining_submit;
-    stratum_method_dispatch["mining.extranonce.subscribe"] = stratum_mining_extranonce_subscribe;
+    stratum_method_dispatch["mining.aux.submit"] = stratum_mining_aux_submit;
+    stratum_method_dispatch["mining.aux.authorize"] =
+        stratum_mining_aux_authorize;
+    stratum_method_dispatch["mining.aux.deauthorize"] =
+        stratum_mining_aux_deauthorize;
+    stratum_method_dispatch["mining.aux.subscribe"] =
+        stratum_mining_aux_subscribe;
+    stratum_method_dispatch["mining.extranonce.subscribe"] =
+        stratum_mining_extranonce_subscribe;
 
     // Start thread to wait for block notifications and send updated
     // work to miners.
