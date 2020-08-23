@@ -764,17 +764,7 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
 {
     const std::string method("mining.submit");
     BoundParams(method, params, 5, 6);
-
-    std::string username = params[0].get_str();
-    boost::trim(username);
-
-    // There may or may not be a '+' suffix in the username, so we
-    // clean it up just in case:
-    size_t pos = username.find('+');
-    if (pos != std::string::npos) {
-        username.resize(pos);
-        boost::trim_right(username);
-    }
+    // First parameter is the client username, which is ignored.
 
     uint256 job_id = uint256S(params[1].get_str());
     if (!work_templates.count(job_id)) {
