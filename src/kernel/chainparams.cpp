@@ -117,8 +117,8 @@ public:
 
         // Deployment of block-final miner commitment transaction.
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 1599004800; // September 2, 2020
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1719878400; // July 2, 2024
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000088e186b70e0862c193ec44d6"};
@@ -250,8 +250,8 @@ public:
 
         // Deployment of block-final miner commitment transaction.
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 1599004800; // September 2, 2020
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = 1719878400; // July 2, 2024
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000000000f209695166be8b61fa9"};
