@@ -615,7 +615,7 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
         }
 
         if (!current_work.GetBlock().m_aux_pow.IsNull() && nTime != current_work.GetBlock().nTime) {
-            LogPrint("stratum", strprintf("Error: miner %s returned altered nTime value for native proof-of-work; nTime-rolling is not supported\n", client.m_addr.ToString()).data());
+            LogPrintf("Error: miner %s returned altered nTime value for native proof-of-work; nTime-rolling is not supported\n", client.m_addr.ToString());
             throw JSONRPCError(RPC_INVALID_PARAMETER, "nTime-rolling is not supported");
         }
 
