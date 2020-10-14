@@ -589,8 +589,8 @@ or "all", output all debug logging. If <category> is 0 or "none",
 any other categories are ignored. Other valid values for
 <category> are: addrman, bench, blockstorage, cmpctblock, coindb,
 estimatefee, http, i2p, ipc, leveldb, libevent, mempool,
-mempoolrej, net, proxy, prune, qt, rand, reindex, rpc, scan,
-selectcoins, stratum, tor, txpackages, txreconciliation,
+mempoolrej, mergemine, net, proxy, prune, qt, rand, reindex, rpc,
+scan, selectcoins, stratum, tor, txpackages, txreconciliation,
 validation, walletdb, zmq. This option can be specified multiple
 times to output multiple categories.
 .HP
@@ -839,6 +839,15 @@ Stratum server:
 Set the default mining address for the stratum server, used if the miner
 authenticates with a blank username. (Conflicts with
 \fB\-stratumwallet\fR option)
+.HP
+\fB\-mergemine=\fR<addr>:<port>
+.IP
+Merge\-mine another chain using the auxiliary block commitment
+information served by stratum+tcp://<addr>:<port>
+.HP
+\fB\-mergeminename=\fR<name>:<chainid>
+.IP
+Use <name> as an alternative specifier for the given chainid.
 .HP
 \fB\-miningmindiff=\fR<n>
 .IP
