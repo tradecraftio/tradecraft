@@ -581,11 +581,11 @@ Output debug and trace logging (default: \fB\-nodebug\fR, supplying <category>
 is optional). If <category> is not supplied or if <category> = 1,
 output all debug and trace logging. <category> can be: addrman,
 bench, blockstorage, cmpctblock, coindb, estimatefee, http, i2p,
-ipc, leveldb, libevent, mempool, mempoolrej, net, proxy, prune,
-qt, rand, reindex, rpc, scan, selectcoins, stratum, tor,
-txpackages, txreconciliation, util, validation, walletdb, zmq.
-This option can be specified multiple times to output multiple
-categories.
+ipc, leveldb, libevent, mempool, mempoolrej, mergemine, net,
+proxy, prune, qt, rand, reindex, rpc, scan, selectcoins, stratum,
+tor, txpackages, txreconciliation, util, validation, walletdb,
+zmq. This option can be specified multiple times to output
+multiple categories.
 .HP
 \fB\-debugexclude=\fR<category>
 .IP
@@ -821,6 +821,15 @@ Stratum server:
 Set the default mining address for the stratum server, used if the miner
 authenticates with a blank username. (Conflicts with
 \fB\-stratumwallet\fR option)
+.HP
+\fB\-mergemine=\fR<addr>:<port>
+.IP
+Merge\-mine another chain using the auxiliary block commitment
+information served by stratum+tcp://<addr>:<port>
+.HP
+\fB\-mergeminename=\fR<name>:<chainid>
+.IP
+Use <name> as an alternative specifier for the given chainid.
 .HP
 \fB\-miningmindiff=\fR<n>
 .IP
