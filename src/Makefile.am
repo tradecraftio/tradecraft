@@ -174,6 +174,7 @@ BITCOIN_CORE_H = \
   logging/timer.h \
   mapport.h \
   memusage.h \
+  mergemine.h \
   merkleblock.h \
   miner.h \
   net.h \
@@ -341,6 +342,7 @@ libbitcoin_server_a_SOURCES = \
   index/txindex.cpp \
   init.cpp \
   mapport.cpp \
+  mergemine.cpp \
   miner.cpp \
   net.cpp \
   net_processing.cpp \
