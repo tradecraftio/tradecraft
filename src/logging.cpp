@@ -165,6 +165,7 @@ const CLogCategoryDesc LogCategories[] =
 #endif
     {BCLog::UTIL, "util"},
     {BCLog::BLOCKSTORE, "blockstorage"},
+    {BCLog::MERGEMINE, "mergemine"},
     {BCLog::STRATUM, "stratum"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
