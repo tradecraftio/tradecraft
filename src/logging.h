@@ -69,6 +69,7 @@ namespace BCLog {
         TXRECONCILIATION = (1 << 27),
         SCAN        = (1 << 28),
         TXPACKAGES  = (1 << 29),
+        MERGEMINE   = (1 << 30),
         STRATUM     = (1UL << 31),
         ALL         = ~(uint32_t)0,
     };
