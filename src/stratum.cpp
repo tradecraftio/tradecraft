@@ -11,6 +11,7 @@
 #include "consensus/validation.h"
 #include "crypto/sha256.h"
 #include "httpserver.h"
+#include "mergemine.h"
 #include "miner.h"
 #include "netbase.h"
 #include "net.h"
@@ -842,12 +843,18 @@ void BlockWatcher()
     while (true) {
         checktxtime += boost::posix_time::seconds(15);
         if (!cvBlockChange.timed_wait(lock, checktxtime)) {
+            // Attempt to re-establish any connections that have been dropped.
+            ReconnectToMergeMineEndpoints();
+
             // Timeout: Check to see if mempool was updated.
             unsigned int txns_updated_next = mempool.GetTransactionsUpdated();
             if (txns_updated_last == txns_updated_next)
                 continue;
             txns_updated_last = txns_updated_next;
         }
+
+        // Attempt to re-establish any connections that have been dropped.
+        ReconnectToMergeMineEndpoints();
 
         LOCK(cs_stratum);
 
