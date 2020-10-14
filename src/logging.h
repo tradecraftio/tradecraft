@@ -66,6 +66,7 @@ namespace BCLog {
 #endif
         UTIL        = (1 << 25),
         BLOCKSTORE  = (1 << 26),
+        MERGEMINE   = (1 << 30),
         STRATUM     = (1UL << 31),
         ALL         = ~(uint32_t)0,
     };
