@@ -20,6 +20,7 @@
 #include "httprpc.h"
 #include "key.h"
 #include "main.h"
+#include "mergemine.h"
 #include "miner.h"
 #include "net.h"
 #include "policy/policy.h"
@@ -168,6 +169,7 @@ static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
 void Interrupt(boost::thread_group& threadGroup)
 {
     InterruptStratumServer();
+    InterruptMergeMining();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -195,6 +197,7 @@ void Shutdown()
     StopREST();
     StopRPC();
     StopStratumServer();
+    StopMergeMining();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -485,6 +488,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-stratumbind=<addr>", _("Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)"));
     strUsage += HelpMessageOpt("-stratumport=<port>", strprintf(_("Listen for Stratum work requests on <port> (default: %u or testnet: %u)"), BaseParams(CBaseChainParams::MAIN).StratumPort(), BaseParams(CBaseChainParams::TESTNET).StratumPort()));
     strUsage += HelpMessageOpt("-stratumallowip=<ip>", _("Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times"));
+    strUsage += HelpMessageOpt("-mergemine=<addr>:<port>", _("Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://<addr>:<port>"));
+    strUsage += HelpMessageOpt("-mergeminename=<name>:<chainid>", _("Use <name> as an alternative specifier for the given chainid."));
 
     return strUsage;
 }
@@ -679,6 +684,8 @@ bool AppInitServers(boost::thread_group& threadGroup)
     RPCServer::OnStopped(&OnRPCStopped);
     RPCServer::OnPreCommand(&OnRPCPreCommand);
     if (!InitHTTPServer())
+        return false;
+    if (!InitMergeMining())
         return false;
     if (GetBoolArg("-stratum", DEFAULT_STRATUM_ENABLE) && !InitStratumServer())
         return false;

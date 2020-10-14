@@ -119,6 +119,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Maximum total fees (in %s) to use in a single wallet transaction or raw "
 "transaction; setting this too low may abort large transactions (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Merge-mine another chain using the auxiliary block commitment information "
+"served by stratum+tcp://<addr>:<port>"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Number of seconds to keep misbehaving peers from reconnecting (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Output debugging information (default: %u, supplying <category> is optional)"),
@@ -364,6 +367,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported argument -benchmark ignored, use 
 QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported argument -debugnet ignored, use -debug=net."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported argument -tor found, use -onion."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Upgrade wallet to latest format on startup"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Use <name> as an alternative specifier for the given chainid."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Use UPnP to map the listening port (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Username for JSON-RPC connections"),
