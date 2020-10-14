@@ -31,6 +31,7 @@
 #include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
+#include <mergemine.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
@@ -212,6 +213,7 @@ void Interrupt(NodeContext& node)
     ShutdownNotify(*node.args);
 #endif
     InterruptStratumServer();
+    InterruptMergeMining();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -248,6 +250,7 @@ void Shutdown(NodeContext& node)
     StopREST();
     StopRPC();
     StopStratumServer();
+    StopMergeMining();
     StopHTTPServer();
     for (const auto& client : node.chain_clients) {
         client->flush();
@@ -621,6 +624,8 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-stratumport=<port>", strprintf("Listen for Stratum work requests on <port> (default: %u or testnet: %u)", defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::STRATUM);
     argsman.AddArg("-stratumallowip=<ip>", "Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
     argsman.AddArg("-defaultminingaddress=<addr>", "Set the default mining address for the stratum server, used if the miner authenticates with a blank username. (Conflicts with -stratumwallet option)", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
+    argsman.AddArg("-mergemine=<addr>:<port>", "Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://<addr>:<port>", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
+    argsman.AddArg("-mergeminename=<name>:<chainid>", "Use <name> as an alternative specifier for the given chainid.", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
 
 #if HAVE_DECL_FORK
     argsman.AddArg("-daemon", strprintf("Run in the background as a daemon and accept commands (default: %d)", DEFAULT_DAEMON), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -670,6 +675,8 @@ static bool AppInitServers(NodeContext& node)
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
+        return false;
+    if (!InitMergeMining(node))
         return false;
     if (args.GetBoolArg("-stratum", DEFAULT_STRATUM_ENABLE) && !InitStratumServer(node))
         return false;
