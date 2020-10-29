@@ -299,6 +299,12 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
         transactions_updated_last = mempool.GetTransactionsUpdated();
         last_update_time = GetTime();
 
+        // Use the wallet to add a block-final transaction,
+        // if there isn't one there already.
+        if (!new_work->has_block_final_tx) {
+            AddBlockFinalTransaction(*new_work);
+        }
+
         // So that block.GetHash() is correct
         new_work->block.hashMerkleRoot = BlockMerkleRoot(new_work->block);
 
