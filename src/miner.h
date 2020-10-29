@@ -218,4 +218,10 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block);
 
+/** Use the wallet to add a block-final transaction to an existing block template.  This involves first creating and signing a transaction using wallet inputs, and then (possibly) removing transactions from the end of the block to make room.  Return value indicates whether the template has a block-final transaction after the call. */
+bool AddBlockFinalTransaction(CBlockTemplate& tmpl);
+
+/** Modify the block-final transaction commitment */
+bool UpdateBlockFinalTransaction(CMutableTransaction &ret, const uint256& hash);
+
 #endif // BITCOIN_MINER_H

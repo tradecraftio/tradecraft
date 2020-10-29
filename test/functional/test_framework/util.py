@@ -359,6 +359,7 @@ def initialize_datadir(dirname, n, chain):
         f.write("fallbackfee=0.0002\n")
         f.write("server=1\n")
         f.write("stratumport=" + str(stratum_port(n)) + "\n")
+        f.write("walletblockfinaltx=0\n")
         f.write("keypool=1\n")
         f.write("discover=0\n")
         f.write("dnsseed=0\n")
