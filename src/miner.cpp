@@ -24,6 +24,11 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
+#ifdef ENABLE_WALLET
+#include "base58.h"
+#include "script/sign.h"
+#include "wallet/wallet.h"
+#endif
 
 #include <algorithm>
 #include <boost/thread.hpp>
@@ -209,8 +214,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
 
-    if (block_final_state & HAS_BLOCK_FINAL_TX)
-        initFinalTx(*prev_final);
+    initFinalTx(prev_final ? *prev_final : CCoins());
 
     addPriorityTxs();
     addPackageTxs();
@@ -450,37 +454,130 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemP
 
 void BlockAssembler::initFinalTx(const CCoins& prev_final)
 {
-    // Block-final transactions are only created after we have reached the final
-    // state of activation.
-    if (!(block_final_state & HAS_BLOCK_FINAL_TX)) {
-        return;
-    }
-
     // Create block-final tx
     CMutableTransaction txFinal;
     txFinal.nVersion = 2;
-    txFinal.vout.resize(1);
-    txFinal.vout[0].nValue = 0;
-    txFinal.vout[0].scriptPubKey = CScript() << OP_TRUE;
     txFinal.nLockTime = static_cast<uint32_t>(nMedianTimePast);
 
-    // Add all outputs from the prior block-final transaction.  We do nothing
-    // here to prevent selected transactions from spending these same outputs
-    // out from underneath us; we depend insted on mempool protections that
-    // prevent such transactions from being considered in the first place.
-    COutPoint prevout(pcoinsTip->GetFinalTx(), 0);
-    for (; prevout.n < prev_final.vout.size(); ++prevout.n) {
-        if (IsTriviallySpendable(prev_final, prevout, MANDATORY_SCRIPT_VERIFY_FLAGS|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
-            txFinal.vin.push_back(CTxIn(prevout, CScript(), CTxIn::SEQUENCE_FINAL));
+    // Block-final transactions are only created from prior block-final outputs
+    // after we have reached the final state of activation.
+    if (block_final_state & HAS_BLOCK_FINAL_TX) {
+        // Add all outputs from the prior block-final transaction.  We do
+        // nothing here to prevent selected transactions from spending these
+        // same outputs out from underneath us; we depend insted on mempool
+        // protections that prevent such transactions from being considered in
+        // the first place.
+        COutPoint prevout(pcoinsTip->GetFinalTx(), 0);
+        for (; prevout.n < prev_final.vout.size(); ++prevout.n) {
+            if (IsTriviallySpendable(prev_final, prevout, MANDATORY_SCRIPT_VERIFY_FLAGS|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
+                txFinal.vin.push_back(CTxIn(prevout, CScript(), CTxIn::SEQUENCE_FINAL));
+            }
         }
     }
 
-    // The previous loop should have found and added at least one input from the
-    // prior block-final transaction, so this check should never pass.  The
-    // situation in which it would is if the fork is aborted after lock-in or
-    // activation, a truly abornmal circumstance in which this version of the
-    // client should stop generating blocks anyway.
-    assert(!txFinal.vin.empty());
+#ifdef ENABLE_WALLET
+    else {
+        if (!GetBoolArg("-walletblockfinaltx", true)) {
+            // User has requested that block-final transactions only be present
+            // if the block-final rule change has activated.  The wallet will
+            // not be used to generate a block-final transaction prior to
+            // activation.
+            return;
+        }
+
+        if (!pwalletMain) {
+            LogPrintf("No wallet; unable to fetch outputs for block-final transaction.\n");
+            return;
+        }
+
+        LOCK(pwalletMain->cs_wallet);
+
+        CBitcoinAddress minesweep(GetArg("-minesweepto", ""));
+        CBitcoinAddress carryforward(GetArg("-carryforward", ""));
+
+        // Get a vector of available outputs from the wallet.  This should not
+        // include any outputs spent in this block, because outputs in the
+        // mempool are excluded (and the transactions of the block were pulled
+        // from the mempool).
+        std::vector<COutput> outputs;
+        pwalletMain->AvailableCoins(outputs, false, nullptr, true);
+        if (outputs.empty()) {
+            LogPrintf("No available wallet outputs for block-final transaction.\n");
+            return;
+        }
+
+        // Gather inputs
+        CAmount totalin = 0;
+        std::vector<CCoins> coins;
+        for (const COutput& out : outputs) {
+            if (!out.tx || out.nDepth<=0) {
+                // Do not use unconfirmed outputs because we don't know if they
+                // will be included in the block or not.
+                continue;
+            }
+            txFinal.vin.emplace_back(COutPoint(out.tx->GetHash(), out.i));
+            totalin += out.tx->vout[out.i].nValue;
+            coins.emplace_back(*out.tx, out.nDepth);
+            if (!minesweep.IsValid()) {
+                // If we're not sweeping the wallet, then we only need one.
+                break;
+            }
+        }
+        // Optional: sweep outputs
+        if (minesweep.IsValid()) {
+            // The block-final transaction already includes all
+            // confirmed wallet outputs.  So we just have to add an
+            // output to the minesweep address claiming the funds.
+            txFinal.vout.emplace_back(totalin, GetScriptForDestination(minesweep.Get()));
+            totalin = 0;
+        }
+        // Optional: fixed carry-forward addr
+        if (carryforward.IsValid()) {
+            // If a carry-forward address is specified, we make sure
+            // the tx includes an output to that address, to enable
+            // future blocks to be mined.
+            txFinal.vout.emplace_back(totalin, GetScriptForDestination(carryforward.Get()));
+            totalin = 0;
+        }
+        // Default: send funds to reserve address
+        if (totalin || !carryforward.IsValid()) {
+            boost::shared_ptr<CReserveScript> reserve;
+            GetMainSignals().ScriptForMining(reserve);
+            if (!reserve) {
+                LogPrintf("Keypool ran out while reserving script for block-final transaction, please call keypoolrefill\n");
+                return;
+            }
+            if (reserve->reserveScript.empty()) {
+                LogPrintf("No coinbase script available for block-final transaction (merge mining requires a wallet!)\n");
+                return;
+            }
+            txFinal.vout.emplace_back(totalin, reserve->reserveScript);
+            totalin = 0;
+        }
+    }
+#endif // ENABLE_WALLET
+
+    // We should have input(s) for the block-final transaction either from the
+    // prior block-final transaction, or from the wallet.  If not, we cannot
+    // create a block-final transaction because any non-coinbase transaction
+    // must have valid inputs.
+    if (txFinal.vin.empty()) {
+        LogPrintf("Unable to create block-final transaction due to lack of inputs.\n");
+        return;
+    }
+
+    // Add commitment and sign block-final transaction.
+    if (!UpdateBlockFinalTransaction(txFinal, uint256())) {
+        LogPrintf("Error signing block-final transaction; cannot use invalid transaction.\n");
+        return;
+    }
+
+#ifdef ENABLE_WALLET
+    // If the block-final transaction was created via the wallet, then we need
+    // to update the state to indicate that the block-final transaction is
+    // present.
+    block_final_state |= HAS_BLOCK_FINAL_TX;
+#endif // ENABLE_WALLET
 
     // Add block-final transaction to block template.
     pblock->vtx.push_back(txFinal);
@@ -499,9 +596,8 @@ void BlockAssembler::initFinalTx(const CCoins& prev_final)
     nBlockSigOpsCost += nTxSigOpsCost;
 
     // ...the size is not:
-    uint64_t nTxSize = ::GetSerializeSize(txFinal, SER_NETWORK, PROTOCOL_VERSION);
-    nBlockWeight += WITNESS_SCALE_FACTOR * nTxSize;
-    nBlockSize += nTxSize;
+    nBlockWeight += GetTransactionWeight(txFinal);
+    nBlockSize += ::GetSerializeSize(txFinal, SER_NETWORK, PROTOCOL_VERSION);
 }
 
 // This transaction selection algorithm orders the mempool based
@@ -723,4 +819,54 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 
     pblock->vtx[0] = txCoinbase;
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+}
+
+bool UpdateBlockFinalTransaction(CMutableTransaction &ret, const uint256& hash)
+{
+    CMutableTransaction mtx(ret);
+
+    // Generate new commitment
+    std::vector<unsigned char> new_commitment(36, 0x00);
+    std::copy(hash.begin(), hash.end(),
+              new_commitment.begin());
+    new_commitment[32] = 0x4b;
+    new_commitment[33] = 0x4a;
+    new_commitment[34] = 0x49;
+    new_commitment[35] = 0x48;
+
+    // Find & update commitment
+    if (!mtx.vout.empty() && mtx.vout.back().scriptPubKey.size() == 37 && mtx.vout.back().scriptPubKey[0] == 36 && mtx.vout.back().scriptPubKey[33] == 0x4b && mtx.vout.back().scriptPubKey[34] == 0x4a && mtx.vout.back().scriptPubKey[35] == 0x49 && mtx.vout.back().scriptPubKey[36] == 0x48) {
+        mtx.vout.back().scriptPubKey = CScript() << new_commitment;
+    } else {
+        mtx.vout.emplace_back(0, CScript() << new_commitment);
+    }
+
+#ifdef ENABLE_WALLET
+    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+
+    // Sign transaction
+    CTransaction tx(mtx);
+    ScriptError serror = SCRIPT_ERR_OK;
+    for (size_t i = 0; i < tx.vin.size(); ++i) {
+        CTxIn& txin = mtx.vin[i];
+        const CCoins* coin = pcoinsTip->AccessCoins(txin.prevout.hash);
+        if (!coin) {
+            LogPrintf("Unable to find UTXO for block-final transaction input hash %s; unable to sign block-final transaction.\n", txin.prevout.hash.ToString());
+            return false;
+        }
+        const CScript& prevPubKey = coin->vout[txin.prevout.n].scriptPubKey;
+        const CAmount& amount = coin->vout[txin.prevout.n].nValue;
+        SignatureData sigdata;
+        ProduceSignature(MutableTransactionSignatureCreator(pwalletMain, &mtx, i, amount, SIGHASH_NONE), prevPubKey, sigdata);
+        UpdateTransaction(mtx, i, sigdata);
+        ScriptError serror = SCRIPT_ERR_OK;
+        if (!VerifyScript(txin.scriptSig, prevPubKey, mtx.wit.vtxinwit.size() > i ? &mtx.wit.vtxinwit[i].scriptWitness : NULL, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&tx, i, amount), &serror)) {
+            LogPrintf("error creating signature for wallet input to block-final transaction: %s", ScriptErrorString(serror));
+            return false;
+        }
+    }
+#endif // ENABLE_WALLET
+
+    ret = mtx;
+    return true;
 }
