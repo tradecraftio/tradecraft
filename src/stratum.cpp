@@ -54,6 +54,7 @@ struct StratumClient
     evutil_socket_t m_socket;
     bufferevent* m_bev;
     CService m_from;
+    int m_nextid;
     uint256 m_secret;
 
     CService GetPeer() const
@@ -73,8 +74,8 @@ struct StratumClient
 
     bool m_supports_extranonce;
 
-    StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
-    StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient() : m_listener(0), m_socket(0), m_bev(0), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient(evconnlistener* listener, evutil_socket_t socket, bufferevent* bev, CService from) : m_listener(listener), m_socket(socket), m_bev(bev), m_nextid(0), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_second_stage(false), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
 
     void GenSecret();
     std::vector<unsigned char> ExtraNonce1(uint256 job_id) const;
@@ -376,7 +377,7 @@ std::string GetWorkUnit(StratumClient& client)
     diff = std::max(diff, 0.001);
 
     UniValue set_difficulty(UniValue::VOBJ);
-    set_difficulty.push_back(Pair("id", NullUniValue));
+    set_difficulty.push_back(Pair("id", client.m_nextid++));
     set_difficulty.push_back(Pair("method", "mining.set_difficulty"));
     UniValue set_difficulty_params(UniValue::VARR);
     set_difficulty_params.push_back(diff);
@@ -503,7 +504,7 @@ std::string GetWorkUnit(StratumClient& client)
 
     UniValue mining_notify(UniValue::VOBJ);
     mining_notify.push_back(Pair("params", params));
-    mining_notify.push_back(Pair("id", NullUniValue));
+    mining_notify.push_back(Pair("id", client.m_nextid++));
     mining_notify.push_back(Pair("method", "mining.notify"));
 
     std::string extranonce_req;
