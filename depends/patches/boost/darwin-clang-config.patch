@@ -1,0 +1,27 @@
+diff -rupN a/tools/build/src/tools/darwin.jam b/tools/build/src/tools/darwin.jam
+--- a/tools/build/src/tools/darwin.jam	2019-04-09 12:36:57.000000000 -0700
++++ b/tools/build/src/tools/darwin.jam	2021-01-23 14:09:05.000000000 -0800
+@@ -138,15 +138,15 @@ rule init ( version ? : command * : opti
+     common.handle-options darwin : $(condition) : $(command) : $(options) ;
+     
+     # - GCC 4.0 and higher in Darwin does not have -fcoalesce-templates.
+-    if $(real-version) < "4.0.0"
+-    {
+-        flags darwin.compile.c++ OPTIONS $(condition) : -fcoalesce-templates ;
+-    }
++    #if $(real-version) < "4.0.0"
++    #{
++    #    flags darwin.compile.c++ OPTIONS $(condition) : -fcoalesce-templates ;
++    #}
+     # - GCC 4.2 and higher in Darwin does not have -Wno-long-double.
+-    if $(real-version) < "4.2.0"
+-    {
+-        flags darwin.compile OPTIONS $(condition) : -Wno-long-double ;
+-    }
++    #if $(real-version) < "4.2.0"
++    #{
++    #    flags darwin.compile OPTIONS $(condition) : -Wno-long-double ;
++    #}
+     # - GCC on Darwin with -pedantic, suppress unsupported long long warning
+     flags darwin.compile OPTIONS $(condition)/<warnings>all : -Wno-long-long ;
+ 
