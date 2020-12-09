@@ -1,0 +1,33 @@
+diff -rupN a/tools/build/src/engine/execcmd.c b/tools/build/src/engine/execcmd.c
+--- a/tools/build/src/engine/execcmd.c	2015-08-11 06:53:51.000000000 -0700
++++ b/tools/build/src/engine/execcmd.c	2020-12-09 09:39:49.000000000 -0800
+@@ -10,6 +10,7 @@
+ 
+ #include "jam.h"
+ #include "execcmd.h"
++#include "output.h"
+ 
+ #include <assert.h>
+ #include <stdio.h>
+diff -rupN a/tools/build/src/engine/make.c b/tools/build/src/engine/make.c
+--- a/tools/build/src/engine/make.c	2015-08-11 06:53:51.000000000 -0700
++++ b/tools/build/src/engine/make.c	2020-12-09 09:39:03.000000000 -0800
+@@ -39,6 +39,7 @@
+ #include "headers.h"
+ #include "lists.h"
+ #include "object.h"
++#include "output.h"
+ #include "parse.h"
+ #include "rules.h"
+ #include "search.h"
+diff -rupN a/tools/build/src/engine/modules/path.c b/tools/build/src/engine/modules/path.c
+--- a/tools/build/src/engine/modules/path.c	2015-08-11 06:53:51.000000000 -0700
++++ b/tools/build/src/engine/modules/path.c	2020-12-09 09:42:12.000000000 -0800
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include "../constants.h"
++#include "../filesys.h"
+ #include "../frames.h"
+ #include "../lists.h"
+ #include "../native.h"
