@@ -308,7 +308,7 @@ static std::string GetExtraNonceRequest(StratumClient& client, const uint256& jo
     return ret;
 }
 
-void CustomizeWork(const StratumClient& client, const CTxDestination& addr, const uint256& job_id, const StratumWork& current_work, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch)
+void CustomizeWork(const StratumClient& client, const StratumWork& current_work, const CTxDestination& addr, const std::vector<unsigned char>& extranonce1, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch)
 {
     if (current_work.GetBlock().vtx.empty()) {
         const std::string msg = strprintf("%s: no transactions in block template; unable to submit work", __func__);
@@ -321,7 +321,7 @@ void CustomizeWork(const StratumClient& client, const CTxDestination& addr, cons
         LogPrint(BCLog::STRATUM, "%s\n", msg);
         throw std::runtime_error(msg);
     }
-    auto nonce = client.ExtraNonce1(job_id);
+    std::vector<unsigned char> nonce(extranonce1);
     if ((nonce.size() + extranonce2.size()) != 12) {
         const std::string msg = strprintf("%s: unexpected combined nonce length: extranonce1(%d) + extranonce2(%d) != 12; unable to submit work", __func__, nonce.size(), extranonce2.size());
         LogPrint(BCLog::STRATUM, "%s\n", msg);
@@ -367,7 +367,7 @@ uint256 CustomizeCommitHash(const StratumClient& client, const CTxDestination& a
     CMutableTransaction cb, bf;
     std::vector<uint256> cb_branch;
     static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
-    CustomizeWork(client, addr, job_id, current_work, dummy, cb, bf, cb_branch);
+    CustomizeWork(client, current_work, addr, client.ExtraNonce1(job_id), dummy, cb, bf, cb_branch);
 
     CMutableTransaction cb2(cb);
     cb2.vin[0].scriptSig = CScript();
@@ -551,7 +551,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     std::vector<uint256> cb_branch;
     {
         static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
-        CustomizeWork(client, client.m_addr, job_id, current_work, dummy, cb, bf, cb_branch);
+        CustomizeWork(client, current_work, client.m_addr, client.ExtraNonce1(job_id), dummy, cb, bf, cb_branch);
     }
 
     CBlockHeader blkhdr;
@@ -671,8 +671,13 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
          + mining_notify.write()  + "\n";
 }
 
-bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, std::optional<uint32_t> nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork& current_work, const std::vector<unsigned char>& extranonce1, const std::vector<unsigned char>& extranonce2, std::optional<uint32_t> nVersion, uint32_t nTime, uint32_t nNonce) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
+    if (extranonce1.size() != 8) {
+        std::string msg = strprintf("extranonce1 is wrong length (received %d bytes; expected %d bytes", extranonce2.size(), 8);
+        LogPrint(BCLog::STRATUM, "%s\n", msg);
+        throw JSONRPCError(RPC_INVALID_PARAMETER, msg);
+    }
     if (extranonce2.size() != 4) {
         std::string msg = strprintf("%s: extranonce2 is wrong length (received %d bytes; expected %d bytes", __func__, extranonce2.size(), 4);
         LogPrint(BCLog::STRATUM, "%s\n", msg);
@@ -681,7 +686,7 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
 
     CMutableTransaction cb, bf;
     std::vector<uint256> cb_branch;
-    CustomizeWork(client, client.m_addr, job_id, current_work, extranonce2, cb, bf, cb_branch);
+    CustomizeWork(client, current_work, client.m_addr, extranonce1, extranonce2, cb, bf, cb_branch);
 
     bool res = false;
     if (!current_work.GetBlock().m_aux_pow.IsNull() && !current_work.m_aux_hash2) {
@@ -799,7 +804,7 @@ bool SubmitAuxiliaryBlock(StratumClient& client, const CTxDestination& addr, con
     CMutableTransaction cb, bf;
     std::vector<uint256> cb_branch;
     static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
-    CustomizeWork(client, addr, job_id, current_work, dummy, cb, bf, cb_branch);
+    CustomizeWork(client, current_work, addr, client.ExtraNonce1(job_id), dummy, cb, bf, cb_branch);
 
     CMutableTransaction cb2(cb);
     cb2.vin[0].scriptSig = CScript();
@@ -1028,7 +1033,7 @@ UniValue stratum_mining_configure(StratumClient& client, const UniValue& params)
 UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     const std::string method("mining.submit");
-    BoundParams(method, params, 5, 6);
+    BoundParams(method, params, 5, 7);
     // First parameter is the client username, which is ignored.
 
     uint256 job_id = ParseUInt256(params[1], "job_id");
@@ -1048,8 +1053,17 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     if (params.size() > 5) {
         nVersion = ParseHexInt4(params[5], "nVersion");
     }
+    std::vector<unsigned char> extranonce1;
+    if (params.size() > 6) {
+        extranonce1 = ParseHexV(params[6], "extranonce1");
+        if (extranonce1.size() != 8) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Expected 8 bytes for extranonce1 field; received %d", extranonce1.size()));
+        }
+    } else {
+        extranonce1 = client.ExtraNonce1(job_id);
+    }
 
-    SubmitBlock(client, job_id, current_work, extranonce2, nTime, nNonce, nVersion);
+    SubmitBlock(client, job_id, current_work, extranonce1, extranonce2, nVersion, nTime, nNonce);
 
     return true;
 }
