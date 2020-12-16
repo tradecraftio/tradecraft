@@ -1112,7 +1112,7 @@ void StopStratumServer()
 {
     LOCK(cs_stratum);
     /* Tear-down active connections. */
-    for (auto subscription : subscriptions) {
+    for (const auto& subscription : subscriptions) {
         LogPrint("stratum", "Closing stratum server connection to %s due to process termination\n", subscription.second.GetPeer().ToString());
         bufferevent_free(subscription.first);
     }
