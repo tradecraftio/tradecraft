@@ -16,12 +16,12 @@
 #include "netbase.h"
 #include "net.h"
 #include "rpc/server.h"
-#include "utilstrencodings.h"
 #include "serialize.h"
 #include "streams.h"
 #include "sync.h"
 #include "txmempool.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <univalue.h>
 
@@ -270,8 +270,6 @@ void CustomizeWork(const StratumClient& client, const uint256& job_id, const Str
 
 std::string GetWorkUnit(StratumClient& client)
 {
-    using std::swap;
-
     LOCK(cs_main);
 
     if (vNodes.empty() && !Params().MineBlocksOnDemand()) {
@@ -474,7 +472,7 @@ std::string GetWorkUnit(StratumClient& client)
     uint256 hashPrevBlock(blkhdr.hashPrevBlock);
     for (int i = 0; i < 256/32; ++i) {
         ((uint32_t*)hashPrevBlock.begin())[i] = bswap_32(
-            ((uint32_t*)hashPrevBlock.begin())[i]);
+        ((uint32_t*)hashPrevBlock.begin())[i]);
     }
     std::reverse(hashPrevBlock.begin(),
                  hashPrevBlock.end());
