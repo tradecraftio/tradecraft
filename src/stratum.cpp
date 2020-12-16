@@ -225,7 +225,7 @@ std::string HexInt4(uint32_t val)
     return HexStr(vch);
 }
 
-uint32_t ParseHexInt4(UniValue hex, std::string name)
+uint32_t ParseHexInt4(const UniValue& hex, const std::string& name)
 {
     std::vector<unsigned char> vch = ParseHexV(hex, name);
     if (vch.size() != 4) {
@@ -328,7 +328,7 @@ std::string GetWorkUnit(StratumClient& client)
         std::vector<uint256> old_job_ids;
         boost::optional<uint256> oldest_job_id = boost::none;
         uint32_t oldest_job_nTime = last_update_time;
-        for (auto work_template : work_templates) {
+        for (const auto& work_template : work_templates) {
             // If, for whatever reason the new work was generated with
             // an old nTime, don't erase it!
             if (work_template.first == job_id) {
@@ -346,7 +346,7 @@ std::string GetWorkUnit(StratumClient& client)
             }
         }
         // Remove all outdated work.
-        for (auto old_job_id : old_job_ids) {
+        for (const auto& old_job_id : old_job_ids) {
             work_templates.erase(old_job_id);
             LogPrint("stratum", "Removed outdated stratum block template (%d total): %s\n", work_templates.size(), old_job_id.GetHex());
         }
