@@ -96,7 +96,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     // Regenerate the segwit commitment
     RegenerateCommitments(block);
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, 0, chainparams.GetConsensus())) ++block.nNonce;
 
     return block;
 }
