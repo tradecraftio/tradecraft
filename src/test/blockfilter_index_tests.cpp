@@ -103,7 +103,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     // Regenerate the segwit commitment
     node::RegenerateCommitments(block, *m_node.chainman);
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, 0, m_node.chainman->GetConsensus())) ++block.nNonce;
 
     return block;
 }
