@@ -455,9 +455,13 @@ std::string GetWorkUnit(StratumClient& client)
 
     CDataStream ds(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
     ds << CTransaction(cb);
-    assert(ds.size() >= (4 + 1 + 32 + 4 + 1));
+    if (ds.size() < (4 + 1 + 32 + 4 + 1)) {
+        throw std::runtime_error("Serialized transaction is too small to be parsed.  Is this even a coinbase?");
+    }
     size_t pos = 4 + 1 + 32 + 4 + 1 + ds[4+1+32+4] - (current_work.m_aux_hash2? 32: 0);
-    assert(ds.size() >= pos);
+    if (ds.size() < pos) {
+        throw std::runtime_error("Customized coinbase transaction does not contain extranonce field at expected location.");
+    }
 
     std::string cb1 = HexStr(&ds[0], &ds[pos-4-8]);
     std::string cb2 = HexStr(&ds[pos], &ds[ds.size()]);
@@ -777,7 +781,9 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
     StratumWork &current_work = work_templates[job_id];
 
     std::vector<unsigned char> extranonce2 = ParseHexV(params[2], "extranonce2");
-    assert(extranonce2.size() == 4);
+    if (extranonce2.size() != 4) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Expected 4 bytes for extranonce2 field; received %d", extranonce2.size()));
+    }
     uint32_t nTime = ParseHexInt4(params[3], "nTime");
     uint32_t nNonce = ParseHexInt4(params[4], "nNonce");
     boost::optional<uint32_t> nVersion;
