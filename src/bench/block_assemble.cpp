@@ -40,7 +40,7 @@ static CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(coinbase_scriptPubKey);
 
-    while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
+    while (!CheckProofOfWork(block->GetHash(), block->nBits, 0, Params().GetConsensus())) {
         assert(++block->nNonce);
     }
 
