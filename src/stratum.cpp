@@ -585,7 +585,9 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
             new_work.GetBlock().m_aux_pow.m_aux_nonce = nNonce;
             new_work.GetBlock().m_aux_pow.m_aux_version = version;
             new_work.m_aux_hash2 = aux_hash.second;
-            assert(new_job_id == new_work.GetBlock().GetHash());
+            if (new_job_id != new_work.GetBlock().GetHash()) {
+                throw std::runtime_error("First-stage hash does not match expected value.");
+            }
             half_solved_work = new_job_id;
         } else {
             LogPrintf("NEW AUXILIARY SHARE!!! by %s: %s, %s\n", client.m_addr.ToString(), aux_hash.first.ToString(), aux_hash.second.ToString());
