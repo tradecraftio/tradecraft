@@ -163,7 +163,9 @@ StratumWork::StratumWork(const CBlockTemplate& block_template, bool is_witness_e
         }
         CMutableTransaction bf(m_block_template.block.vtx.back());
         CScript& scriptPubKey = bf.vout.back().scriptPubKey;
-        assert(scriptPubKey.size() >= 37);
+        if (scriptPubKey.size() < 37) {
+            throw std::runtime_error("Expected last output of block-final transaction to have enough room for segwit commitment, but alas.");
+        }
         std::fill_n(&scriptPubKey[scriptPubKey.size()-37], 33, 0x00);
         leaves.back() = bf.GetHash();
         m_cb_wit_branch = ComputeFastMerkleBranch(leaves, 0).first;
