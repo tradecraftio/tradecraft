@@ -564,7 +564,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
 
     bool res = false;
     uint256 hash = blkhdr.GetHash();
-    if (CheckProofOfWork(hash, blkhdr.nBits, Params().GetConsensus())) {
+    if (CheckProofOfWork(hash, blkhdr.nBits, 0, Params().GetConsensus())) {
         LogPrintf("GOT BLOCK!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
         CBlock block(current_work.GetBlock());
         block.nVersion = nVersion;
