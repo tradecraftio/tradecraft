@@ -322,7 +322,7 @@ std::string GetWorkUnit(StratumClient& client)
         delete new_work;
         new_work = NULL;
 
-        LogPrint("stratum", "New stratum block template (%d total): %s\n", work_templates.size(), job_id.GetHex());
+        LogPrint("stratum", "New stratum block template (%d total): %s\n", work_templates.size(), HexStr(job_id.begin(), job_id.end()));
 
         // Remove any old templates
         std::vector<uint256> old_job_ids;
@@ -348,13 +348,13 @@ std::string GetWorkUnit(StratumClient& client)
         // Remove all outdated work.
         for (const auto& old_job_id : old_job_ids) {
             work_templates.erase(old_job_id);
-            LogPrint("stratum", "Removed outdated stratum block template (%d total): %s\n", work_templates.size(), old_job_id.GetHex());
+            LogPrint("stratum", "Removed outdated stratum block template (%d total): %s\n", work_templates.size(), HexStr(old_job_id.begin(), old_job_id.end()));
         }
         // Remove the oldest work unit if we're still over the maximum
         // number of stored work templates.
         if (work_templates.size() > 30 && oldest_job_id) {
             work_templates.erase(oldest_job_id.get());
-            LogPrint("stratum", "Removed oldest stratum block template (%d total): %s\n", work_templates.size(), oldest_job_id.get().GetHex());
+            LogPrint("stratum", "Removed oldest stratum block template (%d total): %s\n", work_templates.size(), HexStr(oldest_job_id.get().begin(), oldest_job_id.get().end()));
         }
     }
 
@@ -465,7 +465,7 @@ std::string GetWorkUnit(StratumClient& client)
     std::string cb2 = HexStr(&ds[pos], &ds[ds.size()]);
 
     UniValue params(UniValue::VARR);
-    params.push_back(job_id.GetHex());
+    params.push_back(HexStr(job_id.begin(), job_id.end()));
     // For reasons of who-the-heck-knows-why, stratum byte-swaps each
     // 32-bit chunk of the hashPrevBlock, and prints in reverse order.
     // The byte swaps are only done with this hash.
@@ -474,21 +474,13 @@ std::string GetWorkUnit(StratumClient& client)
         ((uint32_t*)hashPrevBlock.begin())[i] = bswap_32(
         ((uint32_t*)hashPrevBlock.begin())[i]);
     }
-    std::reverse(hashPrevBlock.begin(),
-                 hashPrevBlock.end());
-    params.push_back(hashPrevBlock.GetHex());
+    params.push_back(HexStr(hashPrevBlock.begin(), hashPrevBlock.end()));
     params.push_back(cb1);
     params.push_back(cb2);
 
-    // Reverse the order of the hashes, because that's what stratum does.
-    for (int j = 0; j < cb_branch.size(); ++j) {
-        std::reverse(cb_branch[j].begin(),
-                     cb_branch[j].end());
-    }
-
     UniValue branch(UniValue::VARR);
-    for (auto hash : cb_branch) {
-        branch.push_back(hash.GetHex());
+    for (const auto& hash : cb_branch) {
+        branch.push_back(HexStr(hash.begin(), hash.end()));
     }
     params.push_back(branch);
 
@@ -771,9 +763,9 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
     BoundParams(method, params, 5, 6);
     // First parameter is the client username, which is ignored.
 
-    uint256 job_id = uint256S(params[1].get_str());
+    uint256 job_id = ParseUint256(params[1].get_str(), "job_id");
     if (!work_templates.count(job_id)) {
-        LogPrint("stratum", "Received completed share for unknown job_id : %s\n", job_id.GetHex());
+        LogPrint("stratum", "Received completed share for unknown job_id : %s\n", HexStr(job_id.begin(), job_id.end()));
         return false;
     }
     StratumWork &current_work = work_templates[job_id];
