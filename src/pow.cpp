@@ -122,13 +122,17 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
     return true;
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned char bias, const Consensus::Params& params)
 {
-    bool fNegative;
-    bool fOverflow;
+    bool fNegative = false;
+    bool fOverflow = false;
     arith_uint256 bnTarget;
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    if (bias) {
+        fOverflow = fOverflow || (bias > (256 - bnTarget.bits()));
+        bnTarget <<= bias;
+    }
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
