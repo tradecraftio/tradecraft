@@ -138,7 +138,7 @@ StratumWork::StratumWork(const CBlockTemplate& block_template, bool is_witness_e
     // Merkle proof for the coinbase.  If segwit is active, we also use this
     // field in a different way, so we compute it in both branches.
     std::vector<uint256> leaves;
-    for (auto tx : m_block_template.block.vtx) {
+    for (const auto& tx : m_block_template.block.vtx) {
         leaves.push_back(tx.GetHash());
     }
     m_cb_branch = ComputeMerkleBranch(leaves, 0);
