@@ -7,6 +7,8 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "hash.h"
+#include "main.h"
 #include "netbase.h"
 #include "rpc/server.h"
 #include "stratum.h"
@@ -26,8 +28,11 @@
 // for argument-dependent lookup
 using std::swap;
 
+#include <boost/algorithm/string.hpp> // for boost::trim
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <boost/none.hpp>
+#include <boost/optional.hpp>
 #include <boost/thread.hpp>
 
 #include <event2/event.h>
@@ -62,12 +67,17 @@ struct AuxWorkServer
     CService socket;
     bufferevent* bev;
     int idflags;
+    int nextid;
     std::vector<unsigned char> extranonce1;
     int extranonce2_size;
     uint256 aux_pow_path;
+    std::map<int, std::string> aux_auth_jreqid;
+    std::map<std::string, std::string> aux_auth;
+    std::map<std::string, AuxWork> aux_work;
+    double diff;
 
-    AuxWorkServer() : bev(nullptr), idflags(0), extranonce2_size(0) { }
-    AuxWorkServer(const std::string& nameIn, const CService& socketIn, bufferevent* bevIn) : name(nameIn), socket(socketIn), bev(bevIn), idflags(0), extranonce2_size(0) { }
+    AuxWorkServer() : bev(nullptr), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) { }
+    AuxWorkServer(const std::string& nameIn, const CService& socketIn, bufferevent* bevIn) : name(nameIn), socket(socketIn), bev(bevIn), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) { }
 };
 
 struct AuxServerDisconnect
@@ -91,6 +101,379 @@ static std::map<bufferevent*, AuxWorkServer> g_mergemine_conn;
 
 //! An index mapping aux_pow_path to AuxWorkServer (via bev).
 static std::map<uint256, bufferevent*> g_mergemine;
+
+//! A collection of second-stage work units to be solved, mapping chainid -> SecondStageWork.
+static std::map<uint256, SecondStageWork> g_second_stage;
+
+static AuxWorkServer* GetServerFromChainId(const uint256& chainid, const std::string& caller)
+{
+    if (!g_mergemine.count(chainid)) {
+        LogPrint("mergemine", "%s: error: unrecognized chainid with no active connection: 0x%s\n", caller, HexStr(chainid.begin(), chainid.end()));
+        return nullptr;
+    }
+    bufferevent* bev = g_mergemine[chainid];
+
+    if (!g_mergemine_conn.count(bev)) {
+        // This should never happen!!
+        LogPrintf("%s: error: currently no server record for bufferevent object; this should never happen!\n", caller);
+        return nullptr;
+    }
+    return &g_mergemine_conn[bev];
+}
+
+static int SendAuxAuthorizeRequest(AuxWorkServer& server, const std::string& username, const std::string& password)
+{
+    LogPrintf("Authoriing aux-pow work on chain 0x%s through stratum+tcp://%s (%s) for client %s\n", HexStr(server.aux_pow_path.begin(), server.aux_pow_path.end()), server.socket.ToString(), server.name, username);
+
+    int id = server.nextid++;
+
+    UniValue msg(UniValue::VOBJ);
+    msg.push_back(Pair("id", id));
+    msg.push_back(Pair("method", "mining.aux.authorize"));
+    UniValue params(UniValue::VARR);
+    params.push_back(username);
+    if (!password.empty()) {
+        params.push_back(password);
+    }
+    msg.push_back(Pair("params", params));
+
+    std::string request = msg.write() + "\n";
+    LogPrint("mergemine", "Sending stratum request to %s (%s) : %s", server.socket.ToString(), server.name, request);
+    evbuffer *output = bufferevent_get_output(server.bev);
+    if (evbuffer_add(output, request.data(), request.size())) {
+        LogPrint("mergemine", "Sending stratum request failed. (Reason: %d, '%s')\n", errno, evutil_socket_error_to_string(errno));
+    }
+
+    return id;
+}
+
+static int SendAuxSubmitRequest(AuxWorkServer& server, const std::string& address, const AuxWork& work, const AuxProof& proof)
+{
+    int id = server.nextid++;
+
+    // Construct the mining.aux.submit message
+    UniValue msg(UniValue::VOBJ);
+    msg.push_back(Pair("id", id));
+    msg.push_back(Pair("method", "mining.aux.submit"));
+    UniValue params(UniValue::VARR);
+    params.push_back(address);
+    params.push_back(work.job_id);
+    params.push_back(UniValue(UniValue::VARR)); // FIXME: no commit branch
+    params.push_back(HexStr(proof.midstate_hash.begin(),
+                            proof.midstate_hash.end()));
+    params.push_back(HexStr(proof.midstate_buffer.begin(),
+                            proof.midstate_buffer.end()));
+    params.push_back(UniValue(static_cast<uint64_t>(proof.midstate_length)));
+    params.push_back(HexInt4(proof.lock_time));
+    UniValue aux_branch(UniValue::VARR);
+    for (const uint256& hash : proof.aux_branch) {
+        aux_branch.push_back(HexStr(hash.begin(),
+                                    hash.end()));
+    }
+    params.push_back(aux_branch);
+    params.push_back(UniValue(static_cast<uint64_t>(proof.num_txns)));
+    params.push_back(HexInt4(proof.nVersion));
+    params.push_back(HexStr(proof.hashPrevBlock.begin(),
+                            proof.hashPrevBlock.end()));
+    params.push_back(HexInt4(proof.nTime));
+    params.push_back(HexInt4(proof.nBits));
+    params.push_back(HexInt4(proof.nNonce));
+    msg.push_back(Pair("params", params));
+
+    // Send
+    std::string request = msg.write() + "\n";
+    LogPrint("mergemine", "Sending stratum request to %s (%s) : %s", server.socket.ToString(), server.name, request);
+    evbuffer *output = bufferevent_get_output(server.bev);
+    if (evbuffer_add(output, request.data(), request.size())) {
+        LogPrint("mergemine", "Sending stratum request failed. (Reason: %d, '%s')\n", errno, evutil_socket_error_to_string(errno));
+    }
+
+    return id;
+}
+
+static int SendSubmitRequest(AuxWorkServer& server, const std::string& address, const SecondStageWork& work, const SecondStageProof& proof)
+{
+    int id = server.nextid++;
+
+    // Construct the mining.submit message
+    UniValue msg(UniValue::VOBJ);
+    msg.push_back(Pair("id", id));
+    msg.push_back(Pair("method", "mining.submit"));
+    UniValue params(UniValue::VARR);
+    params.push_back(address);
+    params.push_back(work.job_id);
+    params.push_back(HexStr(proof.extranonce2.begin(),
+                            proof.extranonce2.end()));
+    params.push_back(HexInt4(proof.nTime));
+    params.push_back(HexInt4(proof.nNonce));
+    params.push_back(HexInt4(proof.nVersion));
+    params.push_back(HexStr(proof.extranonce1.begin(),
+                            proof.extranonce1.end()));
+    msg.push_back(Pair("params", params));
+
+    // Send
+    std::string request = msg.write() + "\n";
+    LogPrint("mergemine", "Sending stratum request to %s (%s) : %s", server.socket.ToString(), server.name, request);
+    evbuffer *output = bufferevent_get_output(server.bev);
+    if (evbuffer_add(output, request.data(), request.size())) {
+        LogPrint("mergemine", "Sending stratum request failed. (Reason: %d, '%s')\n", errno, evutil_socket_error_to_string(errno));
+    }
+
+    return id;
+}
+
+static void RegisterMergeMineClient(AuxWorkServer& server, const std::string& username, const std::string& password)
+{
+    LOCK(cs_merge_mining);
+
+    // Send mining.aux.authorize message
+    int id = SendAuxAuthorizeRequest(server, username, password);
+
+    // Log the id of the message so that reply (which contains the user's
+    // canonical adddress string) can be matched.
+    server.aux_auth_jreqid[id] = username;
+}
+
+void RegisterMergeMineClient(const uint256& chainid, const std::string& username, const std::string& password)
+{
+    LOCK(cs_merge_mining);
+
+    // Lookup server from chainid
+    AuxWorkServer* server = GetServerFromChainId(chainid, __func__);
+    if (!server) {
+        throw std::runtime_error(strprintf("No active connection to chainid 0x%s", HexStr(chainid.begin(), chainid.end())));
+    }
+
+    RegisterMergeMineClient(*server, username, password);
+}
+
+std::map<uint256, AuxWork> GetMergeMineWork(const std::map<uint256, std::pair<std::string, std::string> >& auth)
+{
+    LOCK(cs_merge_mining);
+
+    // Return value is a mapping of chainid -> AuxWork
+    std::map<uint256, AuxWork> ret;
+
+    // For each chain (identified by chainid), the caller has supplied a
+    // username:password pair of authentication credentials.
+    for (const auto& item : auth) {
+        const uint256& chainid = item.first;
+        const std::string& username = item.second.first;
+        const std::string& password = item.second.second;
+
+        // Lookup the server
+        AuxWorkServer* server = GetServerFromChainId(chainid, __func__);
+        if (!server) {
+            continue;
+        }
+
+        // Lookup the canonical address for the user.
+        if (!server->aux_auth.count(username)) {
+            LogPrint("mergemine", "Requested work for chain 0x%s but user \"%s\" is not registered.\n", HexStr(chainid.begin(), chainid.end()), username);
+            RegisterMergeMineClient(*server, username, password);
+            continue;
+        }
+        const std::string address = server->aux_auth[username];
+
+        // Check to see if there is any work available for this user.
+        if (!server->aux_work.count(address)) {
+            LogPrint("mergemine", "No work available for user \"%s\" (\"%s\") on chain 0x%s\n", username, address, HexStr(chainid.begin(), chainid.end()));
+            continue;
+        }
+        ret[chainid] = server->aux_work[address];
+    }
+
+    // Return all found work units back to caller.
+    return ret;
+}
+
+boost::optional<std::pair<uint256, SecondStageWork> > GetSecondStageWork(boost::optional<uint256> hint)
+{
+    LOCK(cs_merge_mining);
+
+    // If the caller was already mining a second stage work unit for a
+    // particular chain, be sure to return the current second stage work unit
+    // for that chain, to prevent unnecessary work resets.
+    if (hint && g_second_stage.count(*hint)) {
+        return std::make_pair(*hint, g_second_stage[*hint]);
+    }
+
+    // If there is any second-stage work available, return whichever one is
+    // easiest to fetch.
+    if (!g_second_stage.empty()) {
+        auto itr = g_second_stage.begin();
+        return std::make_pair(itr->first, itr->second);
+    }
+
+    // Report that there is no second-stage work available.
+    return boost::none;
+}
+
+static std::string GetRegisteredAddress(const AuxWorkServer& server, const std::string& username)
+{
+    std::string ret;
+    if (server.aux_auth.count(username)) {
+        ret = server.aux_auth.at(username);
+    } else {
+        // This should never happen.  Nevertheless, we don't want to throw
+        // shares away.  Usually the username is the address, so let's assume
+        // that and hope for the best.
+        ret = username;
+        // Remove the "+opts" suffix from the username, if present
+        size_t pos = 0;
+        if ((pos = ret.find('+')) != std::string::npos) {
+            ret.resize(pos);
+        }
+        boost::trim(ret);
+        LogPrint("mergemine", "Submitted work for chain 0x%s but user \"%s\" is not registered; assuming address is \"%s\".\n", HexStr(server.aux_pow_path.begin(), server.aux_pow_path.end()), username, ret);
+    }
+    return ret;
+}
+
+void SubmitAuxChainShare(const uint256& chainid, const std::string& username, const AuxWork& work, const AuxProof& proof)
+{
+    LOCK(cs_merge_mining);
+
+    // Lookup the server corresponding to this chainid:
+    AuxWorkServer* server = GetServerFromChainId(chainid, __func__);
+    if (!server) {
+        return;
+    }
+
+    // Lookup the registered address for the user.
+    const std::string address = GetRegisteredAddress(*server, username);
+
+    // Submit the share to the server:
+    SendAuxSubmitRequest(*server, address, work, proof);
+}
+
+void SubmitSecondStageShare(const uint256& chainid, const std::string& username, const SecondStageWork& work, const SecondStageProof& proof)
+{
+    LOCK(cs_merge_mining);
+
+    // Lookup the server corresponding to this chainid:
+    AuxWorkServer* server = GetServerFromChainId(chainid, __func__);
+    if (!server) {
+        return;
+    }
+
+    // Lookup the registered address for the user.
+    const std::string address = GetRegisteredAddress(*server, username);
+
+    SendSubmitRequest(*server, address, work, proof);
+}
+
+static UniValue stratum_mining_aux_notify(AuxWorkServer& server, const UniValue& params)
+{
+    const std::string method("mining.aux.notify");
+    BoundParams(method, params, 5, 5);
+
+    // Timestamp for the work
+    uint64_t time = GetTimeMillis();
+
+    // The job_id's internal structure is technically not defined.  For maximum
+    // compatibility we make no assumptions and store it in the format in which
+    // we received it: a string.
+    std::string job_id = params[0].get_str();
+
+    // The second parameter is the list of commitments for each registered miner
+    // on this channel.  We'll come back to that.
+
+    // The third parameter is the base difficulty of the share.
+    uint32_t bits = ParseHexInt4(params[2], "nBits");
+
+    // The fourth value is the share's bias setting.
+    int bias = params[3].get_int();
+    if (bias < 0 || 255 < bias) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "aux proof-of-work bias value out of range");
+    }
+
+    // If there is currently a second-stage work unit for this chain, then clear
+    // it out.  Receipt of new mining.aux.notify message indicates that a block
+    // has been solved.
+    if (g_second_stage.count(server.aux_pow_path)) {
+        LogPrint("mergemine", "Removing unsolved second-stage work unit for chain 0x%s", HexStr(server.aux_pow_path.begin(), server.aux_pow_path.end()));
+        g_second_stage.erase(server.aux_pow_path);
+    }
+
+    std::map<std::string, uint256> work;
+    const UniValue& commits = params[1].get_obj();
+    for (const std::string& address : commits.getKeys()) {
+        // The commitment is a 256-bit hash.
+        uint256 commit = ParseUInt256(commits[address].get_str(), "commit");
+        LogPrint("mergemine", "Got commitment for aux address \"%s\" on chain 0x%s: 0x%s %s,%d\n", address, HexStr(server.aux_pow_path.begin(), server.aux_pow_path.end()), commit.ToString(), HexInt4(bits), bias);
+        server.aux_work[address] = AuxWork(time, job_id, commit, bits, bias);
+    }
+
+    // Trigger stratum work reset.
+    cvBlockChange.notify_all();
+
+    return true;
+}
+
+static UniValue stratum_mining_set_difficulty(AuxWorkServer& server, const UniValue& params)
+{
+    const std::string method("mining.set_difficulty");
+    BoundParams(method, params, 1, 1);
+
+    server.diff = params[0].get_real();
+
+    return true;
+}
+
+static UniValue stratum_mining_notify(AuxWorkServer& server, const UniValue& params)
+{
+    const std::string method("mining.notify");
+    BoundParams(method, params, 8, 9);
+
+    // Timestamp for the work
+    uint64_t time = GetTimeMillis();
+
+    // As above, we ignore whatever internal structure there might be to job_id.
+    // It's just a standard string to us.
+    std::string job_id = params[0].get_str();
+
+    // Stratum byte-swaps the hashPrevBlock for unknown reasons.
+    uint256 hashPrevBlock = ParseUInt256(params[1].get_str(), "hashPrevBlock");
+    for (int i = 0; i < 256/32; ++i) {
+        ((uint32_t*)hashPrevBlock.begin())[i] = bswap_32(
+        ((uint32_t*)hashPrevBlock.begin())[i]);
+    }
+
+    // The next two fields are the split coinbase transaction.
+    std::vector<unsigned char> cb1 = ParseHexV(params[2], "cb1");
+    std::vector<unsigned char> cb2 = ParseHexV(params[3], "cb2");
+
+    std::vector<uint256> cb_branch;
+    UniValue branch = params[4].get_array();
+    for (int i = 0; i < branch.size(); ++i) {
+        cb_branch.push_back(ParseUInt256(branch[i].get_str(), strprintf("cb_branch[%d]", i)));
+    }
+
+    uint32_t nVersion = ParseHexInt4(params[5], "nVersion");
+    uint32_t nBits = ParseHexInt4(params[6], "nBits");
+    uint32_t nTime = ParseHexInt4(params[7], "nTime");
+
+    bool reset = false;
+    if (g_second_stage.count(server.aux_pow_path) && (g_second_stage[server.aux_pow_path].hashPrevBlock != hashPrevBlock)) {
+        reset = true;
+    }
+    if ((params.size() > 8) && params[8].get_bool()) {
+        reset = true;
+    }
+
+    if (g_second_stage.count(server.aux_pow_path)) {
+        LogPrint("mergemine", "Replacing second stage work unit for chain 0x%s\n", HexStr(server.aux_pow_path.begin(), server.aux_pow_path.end()));
+    }
+    g_second_stage[server.aux_pow_path] = SecondStageWork(time, server.diff, job_id, hashPrevBlock, cb1, cb2, cb_branch, nVersion, nBits, nTime);
+
+    // Trigger stratum work reset.
+    if (reset) {
+        cvBlockChange.notify_all();
+    }
+
+    return true;
+}
 
 static void merge_mining_read_cb(bufferevent *bev, void *ctx)
 {
@@ -130,11 +513,11 @@ static void merge_mining_read_cb(bufferevent *bev, void *ctx)
                 const int id = val["id"].get_int();
                 if ((id == -1 || id == -2) && (server.idflags & id)) {
                     server.idflags ^= -id;
-                } else {
+                } else if (!server.aux_auth_jreqid.count(id)) {
                     // Not a JSON-RPC reply we care about.  Ignore.
                     throw std::runtime_error("Ignorable stratum response");
                 }
-                // Is JSON reply to our subscription request.
+                // Is JSON reply we're expecting.
                 // Will handle later.
             }
             else if (!val.exists("method") || !val.exists("params")) {
@@ -215,6 +598,14 @@ static void merge_mining_read_cb(bufferevent *bev, void *ctx)
             done = true;
         }
         if (isreply) {
+            int id = val["id"].get_int();
+            if (server.aux_auth_jreqid.count(id)) {
+                std::string username(server.aux_auth_jreqid[id]);
+                std::string address(val["result"].get_str());
+                LogPrint("mergemine", "Mapping username \"%s\" to remote address \"%s\" for stratum+tcp://%s (%s)\n", username, address, server.socket.ToString(), server.name);
+                server.aux_auth[username] = address;
+                server.aux_auth_jreqid.erase(id);
+            }
             continue;
         }
 
@@ -500,6 +891,10 @@ bool InitMergeMining()
         LogPrintf("Unable to create event_base object, cannot setup merge-mining.\n");
         return false;
     }
+
+    stratum_method_dispatch["mining.aux.notify"] = stratum_mining_aux_notify;
+    stratum_method_dispatch["mining.set_difficulty"] = stratum_mining_set_difficulty;
+    stratum_method_dispatch["mining.notify"] = stratum_mining_notify;
 
     merge_mining_manager_thread = boost::thread(boost::bind(&TraceThread<void (*)()>, "merge-mining", &MergeMiningManagerThread));
 
