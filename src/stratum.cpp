@@ -545,9 +545,11 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
     if (!current_work.GetBlock().m_aux_pow.IsNull() && !current_work.m_aux_hash2) {
         // Check auxiliary proof-of-work
         uint32_t version = current_work.GetBlock().m_aux_pow.m_aux_version;
-        if (nVersion) {
+        if (nVersion && client.m_version_rolling_mask) {
             version = (version & ~client.m_version_rolling_mask)
                     | (*nVersion & client.m_version_rolling_mask);
+        } else if (nVersion) {
+            version = *nVersion;
         }
 
         CMutableTransaction cb2(cb);
@@ -597,9 +599,11 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
     else {
         // Check native proof-of-work
         uint32_t version = current_work.GetBlock().nVersion;
-        if (nVersion) {
+        if (nVersion && client.m_version_rolling_mask) {
             version = (version & ~client.m_version_rolling_mask)
                     | (*nVersion & client.m_version_rolling_mask);
+        } else if (nVersion) {
+            version = *nVersion;
         }
 
         if (!current_work.GetBlock().m_aux_pow.IsNull() && nTime != current_work.GetBlock().nTime) {
