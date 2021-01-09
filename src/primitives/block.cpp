@@ -63,7 +63,7 @@ std::pair<uint256, uint256> CBlockHeader::GetAuxiliaryHash(const Consensus::Para
     // using the midstate data and commitment root hash.
     {
         CSHA256 midstate(m_aux_pow.m_midstate_hash.begin(),
-                         &m_aux_pow.m_midstate_buffer[0],
+                        &m_aux_pow.m_midstate_buffer[0],
                          m_aux_pow.m_midstate_length << 3);
         // Write the commitment root hash.
         midstate.Write(hash.begin(), 32);
