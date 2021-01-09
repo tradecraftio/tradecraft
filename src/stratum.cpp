@@ -378,7 +378,7 @@ std::string GetWorkUnit(StratumClient& client)
     set_difficulty.push_back(Pair("id", client.m_nextid++));
     set_difficulty.push_back(Pair("method", "mining.set_difficulty"));
     UniValue set_difficulty_params(UniValue::VARR);
-    set_difficulty_params.push_back(diff);
+    set_difficulty_params.push_back(UniValue(diff));
     set_difficulty.push_back(Pair("params", set_difficulty_params));
 
     CMutableTransaction cb, bf;
@@ -492,8 +492,8 @@ std::string GetWorkUnit(StratumClient& client)
     params.push_back(HexInt4(blkhdr.nVersion));
     params.push_back(HexInt4(blkhdr.nBits));
     params.push_back(HexInt4(blkhdr.nTime));
-    params.push_back((client.m_last_tip != tip)
-                  || (client.m_second_stage != bool(current_work.m_aux_hash2)));
+    params.push_back(UniValue((client.m_last_tip != tip)
+                           || (client.m_second_stage != bool(current_work.m_aux_hash2))));
     client.m_last_tip = tip;
 
     UniValue mining_notify(UniValue::VOBJ);
