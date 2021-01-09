@@ -683,7 +683,7 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
     ret.push_back(msg);
     // client.m_supports_extranonce is false, so the job_id isn't used.
     ret.push_back(HexStr(client.ExtraNonce1(uint256())));
-    ret.push_back(4); // sizeof(extranonce2)
+    ret.push_back(UniValue(4)); // sizeof(extranonce2)
 
     //ScheduleSendWork(client);
     return ret;
