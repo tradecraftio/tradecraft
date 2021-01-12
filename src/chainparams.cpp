@@ -444,6 +444,10 @@ public:
         consensus.verify_coinbase_lock_time_activation_height = std::numeric_limits<int64_t>::max();
         consensus.verify_coinbase_lock_time_timeout = 1356123600;
 
+        // Two months prior to main net
+        // 16 November 2020 00:00:00 UTC
+        consensus.protocol_cleanup_activation_time = 1605484800;
+
         /**
          * Effectively never.
          *
@@ -453,7 +457,6 @@ public:
          * checking pre-activationn rules fail at some point in the future,
          * which is unacceptable time-dependency in the build process.
          */
-        consensus.protocol_cleanup_activation_time = std::numeric_limits<int64_t>::max();
         consensus.size_expansion_activation_time = std::numeric_limits<int64_t>::max();
 
         consensus.original_adjust_interval = 2016; // two weeks
