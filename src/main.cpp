@@ -1681,7 +1681,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckAuxiliaryProofOfWork(block, consensusParams) || !CheckProofOfWork(block, consensusParams))
+    if (!CheckAuxiliaryProofOfWork(block, consensusParams) || (!IsProtocolCleanupActive(consensusParams, block) && !CheckProofOfWork(block, consensusParams)))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -3643,7 +3643,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
         return state.DoS(50, false, REJECT_INVALID, "aux-pow-invalid", false, "auxiliary proof of work failed");
     }
 
-    if (fCheckPOW && !CheckProofOfWork(block, consensusParams))
+    if (fCheckPOW && !IsProtocolCleanupActive(consensusParams, block.nTime) && !CheckProofOfWork(block, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
@@ -3851,17 +3851,24 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     const RuleSet rules = GetActiveRules(consensusParams, pindexPrev);
 
     // Check proof of work
-    if (!(rules & PROTOCOL_CLEANUP) && (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)))
-        return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+    if (!(rules & PROTOCOL_CLEANUP)) {
+        if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams)) {
+            return state.DoS(50, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+        }
+
+        if (!CheckProofOfWork(block, consensusParams)) {
+            return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+        }
+    }
 
     if (!block.m_aux_pow.IsNull()) {
         if ((rules & SIZE_EXPANSION) ? !CheckNextWorkRequiredAux(pindexPrev, block, consensusParams) : (block.m_aux_pow.m_commit_bits != GetNextWorkRequiredAux(pindexPrev, block, consensusParams))) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-aux-diffbits", false, "incorrect auxiliary proof of work target");
+            return state.DoS(50, false, REJECT_INVALID, "bad-aux-diffbits", false, "incorrect auxiliary proof of work target");
         }
 
         // Check committed filter value
         if (!(rules & SIZE_EXPANSION) && block.GetFilteredTime() != GetFilteredTimeAux(pindexPrev, consensusParams)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-aux-filter-time", false, "incorrect filtered time commitment");
+            return state.DoS(50, false, REJECT_INVALID, "bad-aux-filter-time", false, "incorrect filtered time commitment");
         }
     }
 
