@@ -127,12 +127,12 @@ public:
 
         /**
          * The protocol cleanup rule change is scheduled for activation on 16
-         * Jan 2021 at midnight UTC.  This is 4PM PDT, 7PM EDT, and 9AM JST.
+         * Apr 2021 at midnight UTC.  This is 4PM PDT, 7PM EDT, and 9AM JST.
          * Since the activation time is median-time-past, it'll actually trigger
          * about 90 minutes after this wall-clock time.  Note that the auxpow
          * soft-fork must activate before the protocol cleanup rule change.
          */
-        consensus.protocol_cleanup_activation_time = 1610755200;
+        consensus.protocol_cleanup_activation_time = 1618531200;
 
         /**
          * The size expansion rule change is scheduled for activation on 2 Sept
