@@ -1,16 +1,16 @@
-Freicoin version v13.2.5-XXX is now available from:
+Freicoin version v13.2.5-11909 is now available from:
 
-  * [Linux i686 (Intel 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-i686-pc-linux-gnu.tar.gz)
-  * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-x86_64-linux-gnu.tar.gz)
-  * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-arm-linux-gnueabihf.tar.gz)
-  * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-aarch64-linux-gnu.tar.gz)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-osx64.tar.gz)
-  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-win32-setup.exe)
-  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-win32.zip)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-XXX-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v13.2.5-XXX.zip)
+  * [Linux i686 (Intel 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-i686-pc-linux-gnu.tar.gz)
+  * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-x86_64-linux-gnu.tar.gz)
+  * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-arm-linux-gnueabihf.tar.gz)
+  * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-aarch64-linux-gnu.tar.gz)
+  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-osx.dmg)
+  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-osx64.tar.gz)
+  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-win32-setup.exe)
+  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-win32.zip)
+  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-win64-setup.exe)
+  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v13.2.5-11909-win64.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/v13.2.5-11909.zip)
 
 This is a new patch release, containing a changes to the auxiliary proof-of-work
 (AKA "merge mining") support in the built-in stratum server for the purpose of
@@ -147,8 +147,8 @@ At the time of release, this change of the activation date has already been
 adopted by a majority of the hashrate.  This official release serves to protect
 other users as well.
 
-v13.2.5-XXX Change log
-======================
+v13.2.5-11909 Change log
+========================
 
 The following pull requests were merged into the Tradecraft code repository for
 this release.
