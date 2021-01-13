@@ -156,7 +156,7 @@ this release.
 - #90 Add auxiliary subscription capability, for bitcoin merge-mining
 
   This pull request accomplishes a couple of tasks:
-    
+
   - Relicense the stratum subsystem under the terms of the Mozilla Public
     License 2.0, which allows it to be extracted and used in Bitcoin Core
     without engaging the GPL's viral clauses.  This is, in principle, something
@@ -177,7 +177,7 @@ this release.
 
   - A large number of small fixes to the stratum mining subsystem to improve
     performance, stability, and logging.
-    
+
   This PR adds sufficient capability to serve work to upstream merge-mining
   servers implemented in Bitcoin Core. There will be a separate PR to add this
   capability to the `bitcoin-merge-mining-13` and later branches of the
