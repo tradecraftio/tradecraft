@@ -91,6 +91,8 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
+    /** Default merge-mine chain if chain id isn't specified */
+    const uint256& DefaultAuxPowPath() const { return default_aux_pow_path; }
 protected:
     CChainParams() {}
 
@@ -112,6 +114,7 @@ protected:
     bool m_is_mockable_chain;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
+    uint256 default_aux_pow_path;
 };
 
 /**
