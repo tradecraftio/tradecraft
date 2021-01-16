@@ -75,6 +75,8 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
+    /** Default merge-mine chain if chain id isn't specified */
+    const uint256& DefaultAuxPowPath() const { return default_aux_pow_path; }
 protected:
     CChainParams() {}
 
@@ -93,6 +95,7 @@ protected:
     bool fMineBlocksOnDemand;
     bool fTestnetToBeDeprecatedFieldRPC;
     CCheckpointData checkpointData;
+    uint256 default_aux_pow_path;
 };
 
 /**
