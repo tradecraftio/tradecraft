@@ -120,7 +120,7 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, 0, Params().GetConsensus())) {
             ++pblock->nNonce;
             --nMaxTries;
         }
@@ -388,6 +388,15 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
+            "  \"finaltx\" : {                  (json object) information necessary to construct the block-final transaction\n"
+            "      \"prevout\" : [                 (array) UTXO records of inputs which must be included in the block-final transaction\n"
+            "          {\n"
+            "              \"txid\" : txid,        (string) input txid\n"
+            "              \"vout\" : n,           (numeric) index of input\n"
+            "              \"amount\" : n,         (numeric) value of input\n"
+            "          }, ...\n"
+            "      ],\n"
+            "  }\n"
             "}\n"
 
             "\nExamples:\n"
@@ -560,10 +569,10 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     UniValue transactions(UniValue::VARR);
     map<uint256, int64_t> setTxIndex;
-    int i = 0;
-    BOOST_FOREACH (CTransaction& tx, pblock->vtx) {
+    for (int i = 0; i < pblock->vtx.size() - !!pblocktemplate->has_block_final_tx; ++i) {
+        const CTransaction& tx = pblock->vtx[i];
         uint256 txHash = tx.GetHash();
-        setTxIndex[txHash] = i++;
+        setTxIndex[txHash] = i;
 
         if (tx.IsCoinBase())
             continue;
@@ -582,7 +591,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         }
         entry.push_back(Pair("depends", deps));
 
-        int index_in_template = i - 1;
+        int index_in_template = i;
         entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
         int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
         if (fPreSegWit) {
@@ -666,7 +675,10 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
     result.push_back(Pair("coinbaseaux", aux));
-    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
+    CAmount finaltx_fee = pblocktemplate->has_block_final_tx
+                           ? pblocktemplate->vTxFees.back()
+                           : 0;
+    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue - finaltx_fee));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
     result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
@@ -683,6 +695,23 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
+    if (pblocktemplate->has_block_final_tx) {
+        UniValue finaltx_prevout(UniValue::VARR);
+        BOOST_FOREACH(const CTxIn& txin, pblock->vtx.back().vin) {
+            UniValue in(UniValue::VOBJ);
+            in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
+            in.push_back(Pair("vout", (int64_t)txin.prevout.n));
+            CCoins coins;
+            if (!pcoinsTip->GetCoins(txin.prevout.hash, coins) || txin.prevout.n>=coins.vout.size() || coins.vout[txin.prevout.n].IsNull()) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("UTXO record for block-final input '%s:%d' not found", txin.prevout.hash.GetHex(), txin.prevout.n));
+            }
+            in.push_back(Pair("amount", (int64_t)coins.vout[txin.prevout.n].nValue));
+            finaltx_prevout.push_back(in);
+        }
+        UniValue finaltx(UniValue::VOBJ);
+        finaltx.push_back(Pair("prevout", finaltx_prevout));
+        result.push_back(Pair("finaltx", finaltx));
+    }
 
     const struct BIP9DeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
     if (!pblocktemplate->vchCoinbaseCommitment.empty() && setClientRules.find(segwit_info.name) != setClientRules.end()) {
