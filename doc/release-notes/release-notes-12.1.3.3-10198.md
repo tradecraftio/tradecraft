@@ -79,7 +79,7 @@ work, with the entire payout of each block assigned to the miner that
 solves it.
 
 To use, configure your miner to connect to the interface and port
-used, e.g. `tcp+stratum://127.0.0.1:9638`, and provide as the username
+used, e.g. `stratum+tcp://127.0.0.1:9638`, and provide as the username
 the freicoin address you desire to collect the mining proceeds.  The
 username may optionally be suffixed with '+' followed by a numeric
 minimum difficulty.  The password is unused and may be any value.
