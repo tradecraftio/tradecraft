@@ -160,6 +160,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set lowest fee rate (in %s/kB) for transactions to be included in block "
 "creation. (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set the number of script verification threads (%u to %d, 0 = auto, <0 = "
 "leave that many cores free, default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -362,7 +364,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Send transactions with full-RBF opt-in enable
 QT_TRANSLATE_NOOP("bitcoin-core", "Set database cache size in megabytes (%d to %d, default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set key pool size to <n> (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set maximum BIP141 block weight (default: %d)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Set maximum block size in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set the number of threads to service RPC calls (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Show all debugging options (usage: --help -help-debug)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
