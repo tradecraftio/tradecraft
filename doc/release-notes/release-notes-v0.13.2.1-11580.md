@@ -1,4 +1,4 @@
-Bitcoin version 0.13.2.1-11580 is now available from:
+Bitcoin version v0.13.2.1-11580 is now available from:
 
   * [Linux i686 (Intel 32-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.13.2.1-11580-i686-pc-linux-gnu.tar.gz)
   * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.13.2.1-11580-x86_64-linux-gnu.tar.gz)
