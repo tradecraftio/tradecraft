@@ -1,9 +1,9 @@
-23.2 Release Notes
+25.2 Release Notes
 ==================
 
-Bitcoin Core version 23.2 is now available from:
+Bitcoin Core version 25.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-23.2/>
+  <https://bitcoincore.org/bin/bitcoin-core-25.2>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -37,36 +37,38 @@ Core should also work on most other Unix-like systems but is not as
 frequently tested on them.  It is not recommended to use Bitcoin Core on
 unsupported systems.
 
-### P2P
+Notable changes
+===============
 
-- #26909 net: prevent peers.dat corruptions by only serializing once
-- #27608 p2p: Avoid prematurely clearing download state for other peers
-- #27610 Improve performance of p2p inv to send queues
+### Gui
 
-### Build system
+- gui#774 Fix crash on selecting "Mask values" in transaction view
 
-- #25436 build: suppress array-bounds errors in libxkbcommon
-- #25763 bdb: disable Werror for format-security
-- #26944 depends: fix systemtap download URL
-- #27462 depends: fix compiling bdb with clang-16 on aarch64
+### RPC
 
-### Miscellaneous
+- #29003 rpc: fix getrawtransaction segfault
 
-- #25444 ci: macOS task imrovements
-- #26388 ci: Use macos-ventura-xcode:14.1 image for "macOS native" task
-- #26924 refactor: Add missing includes to fix gcc-13 compile error
+### Wallet
+
+- #29176 wallet: Fix use-after-free in WalletBatch::EraseRecords
+- #29510 wallet: `getrawchangeaddress` and `getnewaddress` failures should not affect keypools for descriptor wallets
+
+### P2P and network changes
+
+- #29412 p2p: Don't process mutated blocks
+- #29524 p2p: Don't consider blocks mutated if they don't connect to known prev block
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Anthony Towns
-- Hennadii Stepanov
-- MacroFake
 - Martin Zumsande
-- Michael Ford
-- Suhas Daftuar
+- Sebastian Falbesoner
+- MarcoFalke
+- UdjinM6
+- dergoegge
+- Greg Sanders
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
