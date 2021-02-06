@@ -144,6 +144,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error: A fatal internal error occurred, see d
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Disk space is low!"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to rescan the wallet during initialization"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Fee exceeds maximum configured by -maxtxfee"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Importing..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Information"),
