@@ -156,7 +156,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "and enables automatic pruning of old blocks if a target size in MiB is "
 "provided. This mode is incompatible with -txindex and -rescan. Warning: "
 "Reverting this setting requires re-downloading the entire blockchain. "
-"(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u "
+"(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u "
 "= automatically prune block files to stay under the specified target size in "
 "MiB)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
