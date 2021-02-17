@@ -10,8 +10,15 @@ This test takes 30 mins or more (up to 2 hours)
 """
 import os
 
-from test_framework.blocktools import create_coinbase
-from test_framework.messages import CBlock
+from test_framework.blocktools import (
+    create_coinbase,
+    get_final_tx_info,
+    add_final_tx,
+)
+from test_framework.messages import (
+    CBlock,
+    CTxOut,
+)
 from test_framework.script import (
     CScript,
     OP_NOP,
@@ -43,6 +50,7 @@ def mine_large_blocks(node, n):
     # Get the block parameters for the first block
     big_script = CScript([OP_RETURN] + [OP_NOP] * 950000)
     best_block = node.getblock(node.getbestblockhash())
+    final_tx = []
     height = int(best_block["height"]) + 1
     mine_large_blocks.nTime = max(mine_large_blocks.nTime, int(best_block["time"])) + 1
     previousblockhash = int(best_block["hash"], 16)
@@ -51,7 +59,9 @@ def mine_large_blocks(node, n):
         # Build the coinbase transaction (with large scriptPubKey)
         coinbase_tx = create_coinbase(height)
         coinbase_tx.vin[0].nSequence = 2 ** 32 - 1
-        coinbase_tx.vout[0].scriptPubKey = big_script
+        # We keep the block reward in an anyone-can-spend output at
+        # coinbase_tx.vout[0]
+        coinbase_tx.vout.append(CTxOut(0, big_script))
         coinbase_tx.rehash()
 
         # Build the block
@@ -62,6 +72,10 @@ def mine_large_blocks(node, n):
         block.nBits = int('207fffff', 16)
         block.nNonce = 0
         block.vtx = [coinbase_tx]
+        if not final_tx:
+            final_tx = get_final_tx_info(node)
+        if final_tx:
+            final_tx = add_final_tx(final_tx, block)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
@@ -83,16 +97,16 @@ class PruneTest(BitcoinTestFramework):
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
-        self.full_node_default_args = ["-maxreceivebuffer=20000", "-checkblocks=5"]
+        self.full_node_default_args = ["-vbparams=finaltx:-2:1", "-maxreceivebuffer=20000", "-checkblocks=5"]
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
         # Create nodes 5 to test wallet in prune mode, but do not connect
         self.extra_args = [
             self.full_node_default_args,
             self.full_node_default_args,
-            ["-maxreceivebuffer=20000", "-prune=550"],
-            ["-maxreceivebuffer=20000"],
-            ["-maxreceivebuffer=20000"],
-            ["-prune=550"],
+            ["-vbparams=finaltx:-2:1", "-maxreceivebuffer=20000", "-prune=550"],
+            ["-vbparams=finaltx:-2:1", "-maxreceivebuffer=20000"],
+            ["-vbparams=finaltx:-2:1", "-maxreceivebuffer=20000"],
+            ["-vbparams=finaltx:-2:1", "-prune=550"],
         ]
         self.rpc_timeout = 120
 
