@@ -164,10 +164,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         final_tx = m_chainstate.CoinsTip().GetFinalTx();
         if (final_tx.IsNull()) {
             // Should never happen
-            // FIXME: Change to "return nullptr" once the FinalTx code
-            //        is in, and remove the "else".
-            m_block_final_state = NO_BLOCK_FINAL_TX;
-        } else
+            return nullptr;
+        }
         // Fetch the unspent outputs of the last block-final tx.  This call
         // should always return results because the prior block-final
         // transaction was the last processed transaction (so none of the
@@ -177,11 +175,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             const auto& coin = m_chainstate.CoinsTip().AccessCoin(prevout);
             if (coin.IsSpent()) {
                 // Should never happen
-                // FIXME: Change to "return nullptr" once the FinalTx code is
-                //        being tracked, and remove the "else".
-                m_block_final_state = NO_BLOCK_FINAL_TX;
-                break;
-            } else
+                return nullptr;
+            }
             // If it was a coinbase, meaning we're in the first 100 blocks after
             // activation, then we need to make sure it has matured, otherwise
             // we do nothing at all.
@@ -381,14 +376,6 @@ void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
         } else {
             LogPrintf("WARNING: non-trivial output in block-final transaction record; this should never happen (%s:%n)\n", prevout.hash.ToString(), prevout.n);
         }
-    }
-
-    // FIXME: Until the block-final validation code is in, there will be no
-    //        outputs identified in the above code.  This can be removed once
-    //        that code is in.
-    if (txFinal.vin.empty()) {
-        m_block_final_state ^= HAS_BLOCK_FINAL_TX;
-        return;
     }
 
     // We should have input(s) for the block-final transaction from the prior
