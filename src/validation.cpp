@@ -2059,8 +2059,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
     if (block_hash == m_params.GetConsensus().hashGenesisBlock) {
-        if (!fJustCheck)
+        if (!fJustCheck) {
             view.SetBestBlock(pindex->GetBlockHash());
+            view.SetFinalTx({});
+        }
         return true;
     }
 
@@ -2191,6 +2193,13 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
+    // Coordinate enforcement of block-final transaction using versionbits logic
+    bool enforce_block_final = pindex->pprev && DeploymentActiveAfter(pindex->pprev, m_chainman, Consensus::DEPLOYMENT_FINALTX);
+
+    // The very first block after activation has to provide an anyone-can-spend
+    // output of a particular form in its coinbase transaction.
+    const bool initial_block_final = enforce_block_final && pindex->pprev->pprev && !DeploymentActiveAfter(pindex->pprev->pprev, m_chainman, Consensus::DEPLOYMENT_FINALTX);
+
     // Get the script flags for this block
     unsigned int flags{GetBlockScriptFlags(*pindex, m_chainman)};
 
@@ -2199,6 +2208,140 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     CBlockUndo blockundo;
     blockundo.final_tx = view.GetFinalTx();
+
+    if (initial_block_final) {
+        // Should be caught by prior call to CheckBlock, but we check again here
+        // so local code analysis tools don't think we have an unhandled case
+        // that could cause a crash:
+        if (block.vtx.empty()) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
+        }
+        // Make sure there is at least *one* output in the coinbase which
+        // satisfies our spend criteria.
+        if (block.vtx[0]->vout.empty()) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing-outputs", "block-final activation coinbase has no outputs");
+        }
+        // Check that the first output of the transaction is trivially
+        // spendable.
+        if (!IsTriviallySpendable(*block.vtx[0], 0, flags|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
+            return state.Invalid(BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE, "bad-cb-missing-initial-block-final-output", "block-final activation coinbase missing trivial output");
+        }
+        // Rules for the initial block final are different from those that are
+        // enforced later.
+        enforce_block_final = false;
+    }
+
+    BlockFinalTxEntry entry;
+    bool any_prev_final_utxos = false;
+    if (enforce_block_final) {
+        // The view contains the hash of the last block-final transaction and
+        // the trivially-spendable indices, which necessarily *MUST* exist in
+        // the unspent txout database, since it occured in a prior block.
+        entry = view.GetFinalTx();
+
+        // The output spent by the very first block-final transaction is
+        // generated in a coinbase at the point of activation, so it takes
+        // COINBASE_MATURITY blocks until that output matures and we're able to
+        // really start enforcing the block-final tx rules.
+        for (uint32_t n = 0; n < entry.size; ++n) {
+            COutPoint prevout(entry.hash, n);
+            const Coin& coin = view.AccessCoin(prevout);
+            // Should never happen, but for the purpose of code analysis we
+            // handle in a well-defined way the cases in which an output is
+            // already spent or never existed.
+            if (coin.IsSpent()) {
+                continue;
+            }
+            // If the output is a coinbase and still maturing, then we must wait
+            // for the outputs to mature before we begin enforcing block-final
+            // rules.
+            if (coin.IsCoinBase() && (pindex->nHeight - coin.nHeight < COINBASE_MATURITY)) {
+                enforce_block_final = false;
+                break;
+            }
+            // Indicate that we found at least one unspent, mature output.
+            any_prev_final_utxos = true;
+        }
+    }
+
+    if (enforce_block_final && !any_prev_final_utxos) {
+        // This state of affairs shouldn't happen, because the function
+        // RewindBlockIndex is called by the initialization code, and rewinds to
+        // the point of activation if this condition is encountered, which one
+        // might expect to occur when performing a system upgrade from a prior
+        // node version to one which supports validation of block-final rules,
+        // but *after* rule activation.  Should RewindBlockIndex somehow fail to
+        // be called, normal tip validation in init.cpp will halt on this error
+        // and notify that the user that their block database is corrupted,
+        // which is fixed by starting with -reindex=1.
+        return AbortNode(state, strprintf("%s: prior block-final tx hash %s not found; corruption likely!", __func__, entry.hash.GetHex()), _("Database corruption likely.  Try restarting with `-reindex=1`."));
+    }
+
+    if (enforce_block_final) {
+        // Make sure the block contains *at least* 2 transactions, the coinbase
+        // and the block-final transaction. This is not stricly necessary since
+        // coinbase can't have inputs, but for clarity we explicitly check and
+        // fail with the relevant error message.
+        if (block.vtx.size() < 2) {
+            return state.Invalid(BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE, "missing-block-final-tx", "missing block-final transaction");
+        }
+        const CTransaction& final_tx = *block.vtx.back();
+        // Make sure each txin comes from either the prior block-final
+        // transaction, or an output that matured in this block.
+        std::size_t spends_from_prior_tx = 0;
+        for (const CTxIn& txin : final_tx.vin) {
+            // All outputs of the prior block-final transaction need to be
+            // spent, so obviously they're allowed.
+            if (txin.prevout.hash == entry.hash) {
+                ++spends_from_prior_tx;
+                continue;
+            }
+            // Fetching the UTXO record will fail for any outputs sourced from
+            // the current block, and all such spends are allowed (for future
+            // expansion purposes).  It's just the weirdness of the AccessCoin
+            // API that a failure is indicated by returning a "spent" output.
+            const Coin& from = view.AccessCoin(txin.prevout);
+            if (from.IsSpent()) {
+                continue;
+            }
+            // The other source of inputs that is allowed is the coinbase
+            // transaction whose outputs matured in this block.
+            if (from.IsCoinBase() && (from.nHeight >= (pindex->nHeight - COINBASE_MATURITY))) {
+                continue;
+            }
+            // Otherwise we must be spending an already-matured coin which
+            // doesn't fit into the above categories.
+            return state.Invalid(BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE, "block-final-spend-invalid", "block-final transaction makes invalid spend");
+        }
+        // The very first output of the prior block-final transaction is certain
+        // to be to be defined, even in the case of the initial output defined
+        // in a coinbase transaction at the point of activation.
+        COutPoint prevout(entry.hash, 0);
+        const Coin& coin = view.AccessCoin(prevout);
+        if (coin.IsSpent()) {
+            // Should never happen.
+            return AbortNode(state, strprintf("%s: unspent output of prior block-final tx outpoint %s:0 not found; corruption likely!", __func__, entry.hash.GetHex()), _("Database corruption likely.  Try restarting with `-reindex=1`."));
+        }
+        // Block-final transactions are chained together, and must spend every
+        // single output of the prior block-final transaction, so that we don't
+        // end up with coinbase-like reorg risk taint.
+        if (!coin.IsCoinBase() && (spends_from_prior_tx < entry.size)) {
+            return state.Invalid(BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE, "block-final-missing-prior-input", "missing txin of prior block-final transaction");
+        }
+        // As a DoS prevention measure, the block-final transaction is only
+        // allowed to have as many outputs as it has has inputs.
+        if (final_tx.vout.size() > final_tx.vin.size()) {
+            return state.Invalid(BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE, "block-final-excess-output", "too many outputs for block-final transaction");
+        }
+        // Every output of the block-final transaction must be trivially
+        // spendable (with current validation flags, without providing a
+        // scriptSig or witness).
+        for (const CTxOut& txout : final_tx.vout) {
+            if (!IsTriviallySpendable(final_tx, 0, flags|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
+                return state.Invalid(BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE, "block-final-nontrivial-ouput", "block-final txout not trivially spendable");
+            }
+        }
+    }
 
     // Precomputed transaction data pointers must not be invalidated
     // until after `control` has run the script checks (potentially
@@ -2310,6 +2453,17 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
         m_blockman.m_dirty_blockindex.insert(pindex);
     }
+
+    // record the block-final transaction hash
+    if (initial_block_final) {
+        entry.hash = block.vtx[0]->GetHash();
+        entry.size = 1;
+    }
+    if (enforce_block_final) {
+        entry.hash = block.vtx.back()->GetHash();
+        entry.size = block.vtx.back()->vout.size();
+    }
+    view.SetFinalTx(entry);
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -4136,6 +4290,19 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
         // Pass check = true as every addition may be an overwrite.
         AddCoins(inputs, *tx, pindex->nHeight, true);
     }
+
+    const bool enforce_block_final = pindex->pprev && DeploymentActiveAfter(pindex->pprev, m_chainman, Consensus::DEPLOYMENT_FINALTX);
+    const bool initial_block_final = enforce_block_final && pindex->pprev->pprev && !DeploymentActiveAfter(pindex->pprev->pprev, m_chainman, Consensus::DEPLOYMENT_FINALTX);
+    BlockFinalTxEntry entry;
+    if (initial_block_final) {
+        entry.hash = block.vtx[0]->GetHash();
+        entry.size = 1;
+    } else
+    if (enforce_block_final) {
+        entry.hash = block.vtx.back()->GetHash();
+        entry.size = block.vtx.back()->vout.size();
+    }
+    inputs.SetFinalTx(entry);
     return true;
 }
 
@@ -4201,6 +4368,7 @@ bool Chainstate::ReplayBlocks()
         if (!RollforwardBlock(&pindex, cache)) return false;
     }
 
+    // cache.SetFinalTx() is called in RollforwardBlock()
     cache.SetBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     uiInterface.ShowProgress("", 100, false);
@@ -4213,6 +4381,14 @@ bool Chainstate::NeedsRedownload() const
 
     // At and above m_params.SegwitHeight, segwit consensus rules must be validated
     CBlockIndex* block{m_chain.Tip()};
+
+    // Check if we have blocks from after activation of block-final tx
+    // rules, but without a BlockFinalTxEntry in the UTXO database.
+    if (block != nullptr && block->pprev != nullptr && DeploymentActiveAt(*block, m_chainman, Consensus::DEPLOYMENT_FINALTX)) {
+        if (CoinsTip().GetFinalTx().IsNull()) {
+            return true;
+        }
+    }
 
     while (block != nullptr && DeploymentActiveAt(*block, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) {
         if (!(block->nStatus & BLOCK_OPT_WITNESS)) {
@@ -5026,6 +5202,11 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         Coin coin;
         if (!coins_cache.GetCoin(outpoint, coin)) {
             LogPrintf("[snapshot] bad snapshot - final_tx outpoint %s not found\n",
+                outpoint.ToString());
+            return false;
+        }
+        if (!IsTriviallySpendable(coin, outpoint, MANDATORY_SCRIPT_VERIFY_FLAGS|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
+            LogPrintf("[snapshot] bad snapshot - final_tx outpoint %s is not trivially spendable\n",
                 outpoint.ToString());
             return false;
         }
