@@ -52,7 +52,7 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
 
         self.log.info("prune exactly up to the blockfilterindexes best block while blockfilters are disabled")
         pruneheight_2 = self.nodes[0].pruneblockchain(1000)
-        assert_equal(pruneheight_2, 998)
+        assert_equal(pruneheight_2, 909)
         self.restart_node(0, extra_args=["-fastprune", "-prune=1", "-blockfilterindex=1"])
         self.log.info("make sure that we can continue with the partially synced index after having pruned up to the index height")
         self.sync_index(height=1500)
