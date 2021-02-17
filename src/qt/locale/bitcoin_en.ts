@@ -4280,7 +4280,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+69"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4295,7 +4295,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-162"/>
+        <location line="-163"/>
         <source>The %s developers</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4412,6 +4412,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
     <message>
         <location line="+1"/>
         <source>Could not parse asmap file %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Database corruption likely.  Try restarting with `-reindex=1`.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4610,7 +4615,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-152"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4630,7 +4635,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+28"/>
         <source>Error reading from database, shutting down.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4766,7 +4771,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-174"/>
+        <location line="-175"/>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4791,7 +4796,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+21"/>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4841,7 +4846,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation>Insufficient funds</translation>
     </message>
     <message>
-        <location line="-102"/>
+        <location line="-103"/>
         <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4861,7 +4866,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+40"/>
         <source>Loading block index...</source>
         <translation>Loading block index...</translation>
     </message>
@@ -4871,12 +4876,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation>Loading wallet...</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-43"/>
         <source>Cannot downgrade wallet</source>
         <translation>Cannot downgrade wallet</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+52"/>
         <source>Rescanning...</source>
         <translation>Rescanning...</translation>
     </message>
