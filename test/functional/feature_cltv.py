@@ -8,10 +8,10 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 1351.
 """
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.blocktools import create_coinbase, create_block, create_transaction, get_final_tx_info, add_final_tx
 from test_framework.messages import CTransaction, msg_block, ToHex
 from test_framework.p2p import P2PInterface
-from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, CScriptNum
+from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, OP_TRUE, CScriptNum
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -85,6 +85,8 @@ class BIP65Test(BitcoinTestFramework):
 
         self.log.info("Test that an invalid-according-to-CLTV transaction can still appear in a block")
 
+        final_tx = get_final_tx_info(self.nodes[0])
+
         spendtx = create_transaction(self.nodes[0], self.coinbase_txids[0],
                 self.nodeaddress, amount=1.0)
         cltv_invalidate(spendtx)
@@ -93,8 +95,9 @@ class BIP65Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
+        final_tx = add_final_tx(final_tx, block)
         block.nVersion = 3
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
@@ -107,6 +110,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
+        final_tx = add_final_tx(final_tx, block)
         block.nVersion = 3
         block.solve()
 
@@ -131,11 +135,11 @@ class BIP65Test(BitcoinTestFramework):
         )
 
         # Now we verify that a block with this transaction is also invalid.
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=['CheckInputScripts on {} failed with non-mandatory-script-verify-flag (Negative locktime)'.format(block.vtx[-1].hash)]):
+        with self.nodes[0].assert_debug_log(expected_msgs=['CheckInputScripts on {} failed with non-mandatory-script-verify-flag (Negative locktime)'.format(block.vtx[-2].hash)]):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()
@@ -145,7 +149,7 @@ class BIP65Test(BitcoinTestFramework):
         spendtx.rehash()
 
         block.vtx.pop(1)
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 

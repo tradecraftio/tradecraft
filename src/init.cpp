@@ -1710,7 +1710,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 if (!fReset) {
                     // Note that RewindBlockIndex MUST run even if we're about to -reindex-chainstate.
                     // It both disconnects blocks based on the chainstate, and drops block data in
-                    // BlockIndex() based on lack of available witness data.
+                    // BlockIndex() based on lack of available witness data or missing block-final tx info.
                     uiInterface.InitMessage(_("Rewinding blocks...").translated);
                     if (!chainstate->RewindBlockIndex(chainparams)) {
                         strLoadError = _(
