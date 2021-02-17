@@ -91,8 +91,8 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             assert node.gettxoutsetinfo(hash_type="muhash", hash_or_height=height_hash)['muhash']
 
         # mine and sync index up to a height that will later be the pruneheight
-        self.generate(self.nodes[0], 51)
-        self.sync_index(height=751)
+        self.generate(self.nodes[0], 912 - 700)
+        self.sync_index(height=912)
 
         self.restart_without_indices()
 
@@ -104,12 +104,12 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             msg = "Querying specific block heights requires coinstatsindex"
             assert_raises_rpc_error(-8, msg, node.gettxoutsetinfo, "muhash", height_hash)
 
-        self.mine_batches(749)
+        self.mine_batches(1500 - 912)
 
         self.log.info("prune exactly up to the indices best blocks while the indices are disabled")
         for i in range(3):
             pruneheight_2 = self.nodes[i].pruneblockchain(1000)
-            assert_equal(pruneheight_2, 750)
+            assert_equal(pruneheight_2, 912 - 1)
             # Restart the nodes again with the indices activated
             self.restart_node(i, extra_args=self.extra_args[i])
 
@@ -145,7 +145,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         for node in self.nodes[:2]:
             with node.assert_debug_log(['limited pruning to height 2489']):
                 pruneheight_new = node.pruneblockchain(2500)
-                assert_equal(pruneheight_new, 2005)
+                assert_equal(pruneheight_new, 2129)
 
         self.log.info("ensure that prune locks don't prevent indices from failing in a reorg scenario")
         with self.nodes[0].assert_debug_log(['basic block filter index prune lock moved back to 2480']):
