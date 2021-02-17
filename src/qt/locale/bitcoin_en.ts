@@ -5356,6 +5356,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <location line="+1"/>
+        <source>Database corruption likely.  Try restarting with `-reindex=1`.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Disk space is too low!</source>
         <translation type="unfinished"></translation>
     </message>
