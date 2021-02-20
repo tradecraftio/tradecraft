@@ -546,18 +546,18 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), true, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", false, OptionsCategory::RPC);
 
-#if HAVE_DECL_DAEMON
-    gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", false, OptionsCategory::OPTIONS);
-#else
-    hidden_args.emplace_back("-daemon");
-#endif
-
     gArgs.AddArg("-stratum", _("Enable stratum server (default: off)"), false, OptionsCategory::STRATUM);
     gArgs.AddArg("-stratumbind=<addr>", _("Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)"), false, OptionsCategory::STRATUM);
     gArgs.AddArg("-stratumport=<port>", strprintf(_("Listen for Stratum work requests on <port> (default: %u or testnet: %u)"), defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()), false, OptionsCategory::STRATUM);
     gArgs.AddArg("-stratumallowip=<ip>", _("Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times"), false, OptionsCategory::STRATUM);
     gArgs.AddArg("-mergemine=<addr>:<port>", _("Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://<addr>:<port>"), false, OptionsCategory::STRATUM);
     gArgs.AddArg("-mergeminename=<name>:<chainid>", _("Use <name> as an alternative specifier for the given chainid."), false, OptionsCategory::STRATUM);
+
+#if HAVE_DECL_DAEMON
+    gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", false, OptionsCategory::OPTIONS);
+#else
+    hidden_args.emplace_back("-daemon");
+#endif
 
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
