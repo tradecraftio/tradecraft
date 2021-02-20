@@ -842,27 +842,29 @@ bool UpdateBlockFinalTransaction(CMutableTransaction &ret, const uint256& hash)
     }
 
 #ifdef ENABLE_WALLET
-    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+    if (pwalletMain) {
+        LOCK2(cs_main, &pwalletMain->cs_wallet);
 
-    // Sign transaction
-    CTransaction tx(mtx);
-    ScriptError serror = SCRIPT_ERR_OK;
-    for (size_t i = 0; i < tx.vin.size(); ++i) {
-        CTxIn& txin = mtx.vin[i];
-        const CCoins* coin = pcoinsTip->AccessCoins(txin.prevout.hash);
-        if (!coin) {
-            LogPrintf("Unable to find UTXO for block-final transaction input hash %s; unable to sign block-final transaction.\n", txin.prevout.hash.ToString());
-            return false;
-        }
-        const CScript& prevPubKey = coin->vout[txin.prevout.n].scriptPubKey;
-        const CAmount& amount = coin->vout[txin.prevout.n].nValue;
-        SignatureData sigdata;
-        ProduceSignature(MutableTransactionSignatureCreator(pwalletMain, &mtx, i, amount, SIGHASH_NONE), prevPubKey, sigdata);
-        UpdateTransaction(mtx, i, sigdata);
+        // Sign transaction
+        CTransaction tx(mtx);
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, mtx.wit.vtxinwit.size() > i ? &mtx.wit.vtxinwit[i].scriptWitness : NULL, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&tx, i, amount), &serror)) {
-            LogPrintf("error creating signature for wallet input to block-final transaction: %s", ScriptErrorString(serror));
-            return false;
+        for (size_t i = 0; i < tx.vin.size(); ++i) {
+            CTxIn& txin = mtx.vin[i];
+            const CCoins* coin = pcoinsTip->AccessCoins(txin.prevout.hash);
+            if (!coin) {
+                LogPrintf("Unable to find UTXO for block-final transaction input hash %s; unable to sign block-final transaction.\n", txin.prevout.hash.ToString());
+                return false;
+            }
+            const CScript& prevPubKey = coin->vout[txin.prevout.n].scriptPubKey;
+            const CAmount& amount = coin->vout[txin.prevout.n].nValue;
+            SignatureData sigdata;
+            ProduceSignature(MutableTransactionSignatureCreator(pwalletMain, &mtx, i, amount, SIGHASH_NONE), prevPubKey, sigdata);
+            UpdateTransaction(mtx, i, sigdata);
+            ScriptError serror = SCRIPT_ERR_OK;
+            if (!VerifyScript(txin.scriptSig, prevPubKey, mtx.wit.vtxinwit.size() > i ? &mtx.wit.vtxinwit[i].scriptWitness : NULL, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&tx, i, amount), &serror)) {
+                LogPrintf("error creating signature for wallet input to block-final transaction: %s", ScriptErrorString(serror));
+                return false;
+            }
         }
     }
 #endif // ENABLE_WALLET
