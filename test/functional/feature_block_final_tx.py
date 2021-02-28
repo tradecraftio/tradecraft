@@ -106,7 +106,7 @@ class BlockFinalTxTest(FreicoinTestFramework):
             return info['deployments']['!' + key]['bip9']
 
     def run_test(self):
-        bitno = 12
+        bitno = 1
         activated_version = 0x20000000 | (1 << bitno)
 
         node = self.nodes[0]  # convenience reference to the node
