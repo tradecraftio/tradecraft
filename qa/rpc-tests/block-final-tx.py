@@ -101,7 +101,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         assert('finaltx' not in tmpl['vbavailable'])
         assert('finaltx' not in tmpl)
         assert_equal(tmpl['vbrequired'], 0)
-        assert_equal(tmpl['version'] & 0xe0001000, 0x20000000)
+        assert_equal(tmpl['version'] & 0xe0000002, 0x20000000)
 
         # Test 1
         # Advance from DEFINED to STARTED
@@ -113,9 +113,9 @@ class BlockFinalTxTest(ComparisonTestFramework):
         assert('finaltx' not in tmpl['rules'])
         assert('finaltx' in tmpl['vbavailable'])
         assert('finaltx' not in tmpl)
-        assert_equal(tmpl['vbavailable']['finaltx'], 12)
+        assert_equal(tmpl['vbavailable']['finaltx'], 1)
         assert_equal(tmpl['vbrequired'], 0)
-        assert_equal(tmpl['version'] & 0xe0001000, 0x20001000)
+        assert_equal(tmpl['version'] & 0xe0000002, 0x20000002)
 
         # Save one of the anyone-can-spend coinbase outputs for later.
         assert_equal(test_blocks[-1][0].vtx[0].vout[0].nValue, 5000000000)
@@ -125,24 +125,24 @@ class BlockFinalTxTest(ComparisonTestFramework):
         # Test 2
         # Fail to achieve LOCKED_IN (100 out 144 signal bit 1)
         # using a variety of bits to simulate multiple parallel soft-forks
-        test_blocks = self.generate_blocks(50, 0x20001000) # signalling ready
+        test_blocks = self.generate_blocks(50, 0x20000002) # signalling ready
         test_blocks = self.generate_blocks(20, 3, test_blocks) # signalling not ready
-        test_blocks = self.generate_blocks(50, 0x20001200, test_blocks) # signalling ready
+        test_blocks = self.generate_blocks(50, 0x20000202, test_blocks) # signalling ready
         test_blocks = self.generate_blocks(24, 0x20020000, test_blocks) # signalling not ready
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status('finaltx')['status'], 'started')
         tmpl = self.nodes[0].getblocktemplate({})
-        assert_equal(tmpl['vbavailable']['finaltx'], 12)
+        assert_equal(tmpl['vbavailable']['finaltx'], 1)
         assert_equal(tmpl['vbrequired'], 0)
-        assert_equal(tmpl['version'] & 0xe0001000, 0x20001000)
+        assert_equal(tmpl['version'] & 0xe0000002, 0x20000002)
 
         # Test 3
         # 108 out of 144 signal bit 1 to achieve LOCKED_IN
         # using a variety of bits to simulate multiple parallel soft-forks
-        test_blocks = self.generate_blocks(58, 0x20001000) # signalling ready
+        test_blocks = self.generate_blocks(58, 0x20000002) # signalling ready
         test_blocks = self.generate_blocks(26, 3, test_blocks) # signalling not ready
-        test_blocks = self.generate_blocks(50, 0x20001200, test_blocks) # signalling ready
+        test_blocks = self.generate_blocks(50, 0x20000202, test_blocks) # signalling ready
         test_blocks = self.generate_blocks(10, 0x20020000, test_blocks) # signalling not ready
         yield TestInstance(test_blocks, sync_every_block=False)
 
@@ -160,7 +160,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         assert('finaltx' not in tmpl['rules'])
         assert('finaltx' in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
-        assert(tmpl['version'] & (1 << 12))
+        assert(tmpl['version'] & (1 << 1))
 
         # Test 5
         # Generate a block without any spendable outputs, which should
@@ -180,7 +180,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         assert('finaltx' in tmpl['rules'])
         assert('finaltx' not in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
-        assert(not (tmpl['version'] & 2))
+        assert(not (tmpl['version'] & (1 << 1)))
 
         # Test 6
         # Attempt to do the same thing: generate a block with no
