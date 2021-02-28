@@ -80,7 +80,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
 
     def get_tests(self):
         bipName = 'finaltx'
-        bitno = 12
+        bitno = 1
         activated_version = 0x20000000 | (1 << bitno)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')

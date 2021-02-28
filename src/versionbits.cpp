@@ -26,12 +26,12 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.gbt_force =*/ true,
     },
     {
-        /*.name =*/ "segwit",
-        /*.gbt_force =*/ false,
-    },
-    {
         /*.name =*/ "finaltx",
         /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "segwit",
+        /*.gbt_force =*/ false,
     }
 };
 
