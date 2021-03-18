@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin developers
-# Copyright (c) 2019 The Freicoin Developers
-# Copyright (c) 2010-2021 The Freicoin Developers
+# Copyright (c) 2015-2016 The Bitcoin Developers
+# Copyright (c) 2019-2021 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the conjunctive terms of BOTH version 3 of the GNU Affero
