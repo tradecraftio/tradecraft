@@ -154,14 +154,14 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Check if this is the first block for which the block-final rules are
     // enforced, in which case all we need to do is add the initial
     // anyone-can-spend output.
-    if ((block_final_state & HAS_BLOCK_FINAL_TX) && (!pindexPrev->pprev || !DeploymentActiveAfter(pindexPrev->pprev, m_chainstate.m_chainman, Consensus::DEPLOYMENT_FINALTX))) {
+    if ((block_final_state == HAS_BLOCK_FINAL_TX) && (!pindexPrev->pprev || !DeploymentActiveAfter(pindexPrev->pprev, m_chainstate.m_chainman, Consensus::DEPLOYMENT_FINALTX))) {
         block_final_state = INITIAL_BLOCK_FINAL_TXOUT;
     }
 
     // Otherwise we will need to check if the prior block-final transaction
     // was a coinbase and if insufficient blocks have occured for it to mature.
     BlockFinalTxEntry final_tx;
-    if (block_final_state & HAS_BLOCK_FINAL_TX) {
+    if (block_final_state == HAS_BLOCK_FINAL_TX) {
         final_tx = m_chainstate.CoinsTip().GetFinalTx();
         if (final_tx.IsNull()) {
             // Should never happen
@@ -189,7 +189,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         }
     }
 
-    if (block_final_state & HAS_BLOCK_FINAL_TX)
+    if (block_final_state == HAS_BLOCK_FINAL_TX)
         initFinalTx(final_tx);
 
     int nPackagesSelected = 0;
@@ -211,7 +211,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-    if (block_final_state & INITIAL_BLOCK_FINAL_TXOUT) {
+    if (block_final_state == INITIAL_BLOCK_FINAL_TXOUT) {
         CTxOut txout(0, CScript() << OP_TRUE);
         coinbaseTx.vout.insert(coinbaseTx.vout.begin(), txout);
     }
@@ -222,9 +222,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // The miner needs to know whether the last transaction is a special
     // transaction, or not.
-    pblocktemplate->has_block_final_tx = (block_final_state & HAS_BLOCK_FINAL_TX);
+    pblocktemplate->has_block_final_tx = (block_final_state == HAS_BLOCK_FINAL_TX);
 
-    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, (block_final_state & HAS_BLOCK_FINAL_TX) ? nFees - pblocktemplate->vTxFees.back() : nFees, nBlockSigOpsCost);
+    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, (block_final_state == HAS_BLOCK_FINAL_TX) ? nFees - pblocktemplate->vTxFees.back() : nFees, nBlockSigOpsCost);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -284,9 +284,9 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 {
     // If we have a block-final transaction, insert just
     // before the end, so the block-final tx remains last.
-    pblocktemplate->block.vtx.insert(pblocktemplate->block.vtx.end() - !!(block_final_state & HAS_BLOCK_FINAL_TX), iter->GetSharedTx());
-    pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.end() - !!(block_final_state & HAS_BLOCK_FINAL_TX), iter->GetFee());
-    pblocktemplate->vTxSigOpsCost.insert(pblocktemplate->vTxSigOpsCost.end() - !!(block_final_state & HAS_BLOCK_FINAL_TX), iter->GetSigOpCost());
+    pblocktemplate->block.vtx.insert(pblocktemplate->block.vtx.end() - !!(block_final_state == HAS_BLOCK_FINAL_TX), iter->GetSharedTx());
+    pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.end() - !!(block_final_state == HAS_BLOCK_FINAL_TX), iter->GetFee());
+    pblocktemplate->vTxSigOpsCost.insert(pblocktemplate->vTxSigOpsCost.end() - !!(block_final_state == HAS_BLOCK_FINAL_TX), iter->GetSigOpCost());
     nBlockWeight += iter->GetTxWeight();
     ++nBlockTx;
     nBlockSigOpsCost += iter->GetSigOpCost();
@@ -350,7 +350,7 @@ void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
 {
     // Block-final transactions are only created after we have reached the final
     // state of activation.
-    if (!(block_final_state & HAS_BLOCK_FINAL_TX)) {
+    if (block_final_state != HAS_BLOCK_FINAL_TX) {
         return;
     }
 
