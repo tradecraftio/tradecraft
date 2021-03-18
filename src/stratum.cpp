@@ -1059,7 +1059,7 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
         } catch (const UniValue& objError) {
             reply = JSONRPCReply(NullUniValue, objError, jreq.id);
         } catch (const std::exception& e) {
-            reply = JSONRPCReply(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
+            reply = JSONRPCReply(NullUniValue, JSONRPCError(RPC_INTERNAL_ERROR, e.what()), jreq.id);
         }
 
         LogPrint("stratum", "Sending stratum response to %s : %s", client.GetPeer().ToString(), reply);
