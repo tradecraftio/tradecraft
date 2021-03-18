@@ -82,7 +82,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
 
         # FINALTX begins in DEFINED state
         assert_equal(self.get_bip9_status('finaltx')['status'], 'defined')
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert('finaltx' not in tmpl['rules'])
         assert('finaltx' not in tmpl['vbavailable'])
         assert('finaltx' not in tmpl)
@@ -95,7 +95,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status('finaltx')['status'], 'started')
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert('finaltx' not in tmpl['rules'])
         assert('finaltx' in tmpl['vbavailable'])
         assert('finaltx' not in tmpl)
@@ -118,7 +118,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status('finaltx')['status'], 'started')
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert_equal(tmpl['vbavailable']['finaltx'], 12)
         assert_equal(tmpl['vbrequired'], 0)
         assert_equal(tmpl['version'] & 0xe0001000, 0x20001000)
@@ -133,7 +133,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status('finaltx')['status'], 'locked_in')
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert('finaltx' not in tmpl['rules'])
 
         # Test 4
@@ -142,7 +142,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status('finaltx')['status'], 'locked_in')
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert('finaltx' not in tmpl['rules'])
         assert('finaltx' in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
@@ -162,7 +162,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         self.tip = test_blocks[-1][0].sha256
 
         assert_equal(self.get_bip9_status('finaltx')['status'], 'active')
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert('finaltx' in tmpl['rules'])
         assert('finaltx' not in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
@@ -199,7 +199,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         test_blocks = self.generate_blocks(98, 3)
         yield TestInstance(test_blocks, sync_every_block=False)
 
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert('finaltx' not in tmpl)
 
         # Test 9
@@ -209,7 +209,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         test_blocks = self.generate_blocks(1, 3)
         yield TestInstance(test_blocks, sync_every_block=False)
 
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert('finaltx' in tmpl)
         assert_equal(len(tmpl['finaltx']['prevout']), 1)
         assert_equal(tmpl['finaltx']['prevout'][0]['txid'], encode(ser_uint256(non_protected_output.hash)[::-1], 'hex_codec').decode('ascii'))
@@ -252,7 +252,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         self.tip = block.sha256
         self.height += 1
 
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+        tmpl = self.nodes[0].getblocktemplate({})
         assert('finaltx' in tmpl)
         assert_equal(len(tmpl['finaltx']['prevout']), 1)
         assert_equal(tmpl['finaltx']['prevout'][0]['txid'], encode(ser_uint256(tx_final.sha256)[::-1], 'hex_codec').decode('ascii'))
