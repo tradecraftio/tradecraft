@@ -3779,7 +3779,7 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+324"/>
+        <location filename="../bitcoinstrings.cpp" line="+321"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
@@ -3804,12 +3804,12 @@
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
-        <location line="-143"/>
+        <location line="-140"/>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+32"/>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3859,7 +3859,7 @@
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
-        <location line="-235"/>
+        <location line="-232"/>
         <source>Bitcoin Core</source>
         <translation type="unfinished">Bitcoin Core</translation>
     </message>
@@ -3946,11 +3946,6 @@
     <message>
         <location line="+7"/>
         <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://&lt;addr&gt;:&lt;port&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4340,11 +4335,6 @@
     </message>
     <message>
         <location line="+2"/>
-        <source>Use &lt;name&gt; as an alternative specifier for the given chainid.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4384,7 +4374,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-353"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4444,7 +4434,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+21"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4644,7 +4634,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Username for JSON-RPC connections</translation>
     </message>
@@ -4674,17 +4664,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-68"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="-236"/>
+        <location line="-233"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+158"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
@@ -4694,7 +4684,7 @@
         <translation>Loading addresses...</translation>
     </message>
     <message>
-        <location line="-297"/>
+        <location line="-294"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4729,7 +4719,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+13"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>

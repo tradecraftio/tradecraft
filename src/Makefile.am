@@ -106,7 +106,6 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   main.h \
   memusage.h \
-  mergemine.h \
   merkleblock.h \
   miner.h \
   net.h \
@@ -179,7 +178,6 @@ libbitcoin_server_a_SOURCES = \
   dbwrapper.cpp \
   main.cpp \
   merkleblock.cpp \
-  mergemine.cpp \
   miner.cpp \
   net.cpp \
   noui.cpp \
