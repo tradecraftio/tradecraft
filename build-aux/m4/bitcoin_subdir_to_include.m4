@@ -1,6 +1,20 @@
 dnl Copyright (c) 2013-2014 The Bitcoin Core developers
-dnl Distributed under the MIT software license, see the accompanying
-dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
+dnl Copyright (c) 2013-2021 The Freicoin Developers
+dnl
+dnl This program is free software: you can redistribute it and/or
+dnl modify it under the conjunctive terms of BOTH version 3 of the GNU
+dnl Affero General Public License as published by the Free Software
+dnl Foundation AND the MIT/X11 software license.
+dnl
+dnl This program is distributed in the hope that it will be useful, but
+dnl WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+dnl Affero General Public License and the MIT/X11 software license for
+dnl more details.
+dnl
+dnl You should have received a copy of both licenses along with this
+dnl program.  If not, see <https://www.gnu.org/licenses/> and
+dnl <http://www.opensource.org/licenses/mit-license.php>
 
 dnl BITCOIN_SUBDIR_TO_INCLUDE([CPPFLAGS-VARIABLE-NAME],[SUBDIRECTORY-NAME],[HEADER-FILE])
 dnl SUBDIRECTORY-NAME must end with a path separator
