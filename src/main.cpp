@@ -2487,7 +2487,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // Make sure there is at least *one* output in the coinbase which
         // satisfies our spend criteria.
         if (block.vtx[0].vout.empty()) {
-            return state.DoS(100, error("%s activation coinbase has no outputs", __func__),
+            return state.DoS(100, error("%s: activation coinbase has no outputs", __func__),
                              REJECT_INVALID, "bad-cb-missing-outputs");
         }
         uint32_t idx;

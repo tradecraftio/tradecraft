@@ -201,7 +201,7 @@ class SegWitTest(BitcoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['segwit']})['finaltx']['prevout']
         except:
             finaltx_prevout = []
         if finaltx_prevout:
@@ -403,13 +403,13 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(get_bip9_status(self.nodes[0], 'finaltx')['status'], 'active')
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
         # Advance a further 100 blocks to finish activation of block-final rules
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
+        gbt = self.nodes[0].getblocktemplate({"rules":["segwit"]})
         assert('finaltx' not in gbt)
         self.nodes[0].generate(99)
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
+        gbt = self.nodes[0].getblocktemplate({"rules":["segwit"]})
         assert('finaltx' not in gbt)
         self.nodes[0].generate(1)
-        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
+        gbt = self.nodes[0].getblocktemplate({"rules":["segwit"]})
         assert('finaltx' in gbt)
         assert('prevout' in gbt['finaltx'])
 
@@ -1741,7 +1741,7 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[2].setmocktime(int(time.time())+10)
 
         for node in [self.nodes[0], self.nodes[2]]:
-            gbt_results = node.getblocktemplate({"rules" : ["segwit","finaltx"]})
+            gbt_results = node.getblocktemplate({"rules" : ["segwit"]})
             block_version = gbt_results['version']
             if node == self.nodes[2]:
                 # If this is a non-segwit node, we should still not get a witness
