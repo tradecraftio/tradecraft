@@ -1,6 +1,4 @@
-bitcoin (0.13.2.1-precise1) precise; urgency=medium
-
- -- Mark Friedenbach <mark@friedenbach.org>  Tue, 19 Jan 2021 12:00:00
+bitcoin (0.11.0-precise1) precise; urgency=medium
 
   * New upstream release.
 
