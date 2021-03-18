@@ -155,11 +155,11 @@ private:
 
     // The current state of the block-final activation logic
     enum BlockFinalState {
-        NO_BLOCK_FINAL_TX = 0,
-        INITIAL_BLOCK_FINAL_TXOUT = 1,
-        HAS_BLOCK_FINAL_TX = 2,
+        NO_BLOCK_FINAL_TX,
+        INITIAL_BLOCK_FINAL_TXOUT,
+        HAS_BLOCK_FINAL_TX,
     };
-    int block_final_state;
+    BlockFinalState block_final_state;
 
 public:
     struct Options {
