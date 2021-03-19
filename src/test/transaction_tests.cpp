@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Freicoin developers
 // Copyright (c) 2011-2021 The Freicoin Developers
 //
 // This program is free software: you can redistribute it and/or
@@ -18,7 +18,7 @@
 
 #include "data/tx_invalid.json.h"
 #include "data/tx_valid.json.h"
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #include "clientversion.h"
 #include "checkqueue.h"

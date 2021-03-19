@@ -16,11 +16,11 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_CRYPTO_COMMON_H
-#define BITCOIN_CRYPTO_COMMON_H
+#ifndef FREICOIN_CRYPTO_COMMON_H
+#define FREICOIN_CRYPTO_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "freicoin-config.h"
 #endif
 
 #include <stdint.h>
@@ -77,4 +77,4 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
     *((uint64_t*)ptr) = htobe64(x);
 }
 
-#endif // BITCOIN_CRYPTO_COMMON_H
+#endif // FREICOIN_CRYPTO_COMMON_H

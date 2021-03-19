@@ -16,9 +16,9 @@
 # program.  If not, see <https://www.gnu.org/licenses/> and
 # <http://www.opensource.org/licenses/mit-license.php>
 from distutils.core import setup
-setup(name='btcspendfrom',
+setup(name='frcspendfrom',
       version='1.0',
-      description='Command-line utility for bitcoin "coin control"',
+      description='Command-line utility for freicoin "coin control"',
       author='Gavin Andresen',
       author_email='gavin@bitcoinfoundation.org',
       requires=['jsonrpc'],

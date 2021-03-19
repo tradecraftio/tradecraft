@@ -16,9 +16,9 @@ dnl You should have received a copy of both licenses along with this
 dnl program.  If not, see <https://www.gnu.org/licenses/> and
 dnl <http://www.opensource.org/licenses/mit-license.php>
 
-dnl BITCOIN_SUBDIR_TO_INCLUDE([CPPFLAGS-VARIABLE-NAME],[SUBDIRECTORY-NAME],[HEADER-FILE])
+dnl FREICOIN_SUBDIR_TO_INCLUDE([CPPFLAGS-VARIABLE-NAME],[SUBDIRECTORY-NAME],[HEADER-FILE])
 dnl SUBDIRECTORY-NAME must end with a path separator
-AC_DEFUN([BITCOIN_SUBDIR_TO_INCLUDE],[
+AC_DEFUN([FREICOIN_SUBDIR_TO_INCLUDE],[
   if test "x$2" = "x"; then
     AC_MSG_RESULT([default])
   else

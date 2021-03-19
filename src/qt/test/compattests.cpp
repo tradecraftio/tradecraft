@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016 The Freicoin developers
 // Copyright (c) 2011-2021 The Freicoin Developers
 //
 // This program is free software: you can redistribute it and/or
@@ -24,7 +24,7 @@
 
 void CompatTests::bswapTests()
 {
-	// Sibling in bitcoin/src/test/bswap_tests.cpp
+	// Sibling in freicoin/src/test/bswap_tests.cpp
 	uint16_t u1 = 0x1234;
 	uint32_t u2 = 0x56789abc;
 	uint64_t u3 = 0xdef0123456789abc;

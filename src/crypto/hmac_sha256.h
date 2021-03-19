@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_CRYPTO_HMAC_SHA256_H
-#define BITCOIN_CRYPTO_HMAC_SHA256_H
+#ifndef FREICOIN_CRYPTO_HMAC_SHA256_H
+#define FREICOIN_CRYPTO_HMAC_SHA256_H
 
 #include "crypto/sha256.h"
 
@@ -44,4 +44,4 @@ public:
     void Midstate(unsigned char hash[OUTPUT_SIZE*2], unsigned char* buffer, uint64_t* length);
 };
 
-#endif // BITCOIN_CRYPTO_HMAC_SHA256_H
+#endif // FREICOIN_CRYPTO_HMAC_SHA256_H

@@ -17,8 +17,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_UI_INTERFACE_H
-#define BITCOIN_UI_INTERFACE_H
+#ifndef FREICOIN_UI_INTERFACE_H
+#define FREICOIN_UI_INTERFACE_H
 
 #include <stdint.h>
 #include <string>
@@ -130,4 +130,4 @@ std::string AmountErrMsg(const char* const optname, const std::string& strValue)
 
 extern CClientUIInterface uiInterface;
 
-#endif // BITCOIN_UI_INTERFACE_H
+#endif // FREICOIN_UI_INTERFACE_H

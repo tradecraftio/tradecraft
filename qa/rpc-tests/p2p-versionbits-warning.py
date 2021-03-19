@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016 The Freicoin developers
 # Copyright (c) 2010-2021 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 # <http://www.opensource.org/licenses/mit-license.php>
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import re
 import time
@@ -77,7 +77,7 @@ class TestNode(NodeConnCB):
         return received_pong
 
 
-class VersionBitsWarningTest(BitcoinTestFramework):
+class VersionBitsWarningTest(FreicoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True

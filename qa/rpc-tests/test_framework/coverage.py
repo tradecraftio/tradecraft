@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Freicoin developers
 # Copyright (c) 2010-2021 The Freicoin Developers
 #
 # This program is free software: you can redistribute it and/or modify
@@ -87,7 +87,7 @@ def get_filename(dirname, n_node):
 
 def write_all_rpc_commands(dirname, node):
     """
-    Write out a list of all RPC functions available in `bitcoin-cli` for
+    Write out a list of all RPC functions available in `freicoin-cli` for
     coverage comparison. This will only happen once per coverage
     directory.
 

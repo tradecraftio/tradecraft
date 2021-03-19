@@ -16,8 +16,8 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_MERKLE
-#define BITCOIN_MERKLE
+#ifndef FREICOIN_MERKLE
+#define FREICOIN_MERKLE
 
 #include <stdint.h>
 #include <vector>

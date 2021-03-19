@@ -18,7 +18,7 @@
 // <http://www.opensource.org/licenses/mit-license.php>
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/freicoin-config.h"
 #endif
 
 #include "utiltime.h"

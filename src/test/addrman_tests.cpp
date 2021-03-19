@@ -16,7 +16,7 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 #include "addrman.h"
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 #include <string>
 #include <boost/test/unit_test.hpp>
 

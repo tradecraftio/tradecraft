@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016 The Freicoin developers
 // Copyright (c) 2011-2021 The Freicoin Developers
 //
 // This program is free software: you can redistribute it and/or
@@ -16,10 +16,10 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_WALLET_TEST_FIXTURE_H
-#define BITCOIN_WALLET_TEST_FIXTURE_H
+#ifndef FREICOIN_WALLET_TEST_FIXTURE_H
+#define FREICOIN_WALLET_TEST_FIXTURE_H
 
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 /** Testing setup and teardown for wallet.
  */

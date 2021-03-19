@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016 The Freicoin developers
 // Copyright (c) 2011-2021 The Freicoin Developers
 //
 // This program is free software: you can redistribute it and/or
@@ -17,7 +17,7 @@
 // <http://www.opensource.org/licenses/mit-license.php>
 
 #include "compat/byteswap.h"
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -25,7 +25,7 @@ BOOST_FIXTURE_TEST_SUITE(bswap_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(bswap_tests)
 {
-	// Sibling in bitcoin/src/qt/test/compattests.cpp
+	// Sibling in freicoin/src/qt/test/compattests.cpp
 	uint16_t u1 = 0x1234;
 	uint32_t u2 = 0x56789abc;
 	uint64_t u3 = 0xdef0123456789abc;

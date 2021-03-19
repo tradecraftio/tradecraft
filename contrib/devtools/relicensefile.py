@@ -88,9 +88,9 @@ program.  If not, see <https://www.gnu.org/licenses/> and
 # Manpages and other ditsribution files
     ["""
 
-Please contribute if you find Bitcoin Core useful. Visit
-<https://bitcoincore.org> for further information about the software.
-The source code is available from <https://github.com/bitcoin/bitcoin>.
+Please contribute if you find Freicoin useful. Visit
+<https://freico.in> for further information about the software.
+The source code is available from <https://github.com/freicoin/freicoin>.
 
 This is experimental software.
 Distributed under the MIT software license, see the accompanying file COPYING
@@ -98,9 +98,9 @@ or <http://www.opensource.org/licenses/mit-license.php>.
 ""","""
 Copyright (C) 2011-2021 The Freicoin Developers
 
-Please contribute if you find Bitcoin Core useful. Visit
-<https://bitcoincore.org> for further information about the software.
-The source code is available from <https://github.com/bitcoin/bitcoin>.
+Please contribute if you find Freicoin useful. Visit
+<https://freico.in> for further information about the software.
+The source code is available from <https://github.com/freicoin/freicoin>.
 
 This is experimental software.
 
@@ -143,7 +143,7 @@ program.  If not, see <https://www.gnu.org/licenses/> and
 \t<http://www.opensource.org/licenses/mit-license.php>
 """],
 
-# C/C++ source files. Work on the Freicoin fork of Bitcoin started in
+# C/C++ source files. Work on the Freicoin fork of Freicoin started in
 # 2011, and the current codebase is a direct continuation of that.
     ["""
 // Distributed under the MIT software license, see the accompanying

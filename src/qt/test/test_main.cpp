@@ -17,7 +17,7 @@
 // <http://www.opensource.org/licenses/mit-license.php>
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/freicoin-config.h"
 #endif
 
 #include "util.h"
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     // Don't remove this, it's needed to access
     // QCoreApplication:: in the tests
     QCoreApplication app(argc, argv);
-    app.setApplicationName("Bitcoin-Qt-test");
+    app.setApplicationName("Freicoin-Qt-test");
 
     SSL_library_init();
 

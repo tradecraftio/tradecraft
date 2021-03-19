@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016 The Freicoin developers
 // Copyright (c) 2011-2021 The Freicoin Developers
 //
 // This program is free software: you can redistribute it and/or
@@ -16,11 +16,11 @@
 // program.  If not, see <https://www.gnu.org/licenses/> and
 // <http://www.opensource.org/licenses/mit-license.php>
 
-#ifndef BITCOIN_WALLET_RPCWALLET_H
-#define BITCOIN_WALLET_RPCWALLET_H
+#ifndef FREICOIN_WALLET_RPCWALLET_H
+#define FREICOIN_WALLET_RPCWALLET_H
 
 class CRPCTable;
 
 void RegisterWalletRPCCommands(CRPCTable &tableRPC);
 
-#endif //BITCOIN_WALLET_RPCWALLET_H
+#endif //FREICOIN_WALLET_RPCWALLET_H
