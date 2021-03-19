@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 
     BOOST_CHECK_NO_THROW(r = CallRPC(string("setban 127.0.0.0/24 add 1607731200 true")));
     BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
-#if 0 // This test fails in upstream Freicoin.  We're not going to bother
+#if 0 // This test fails in upstream Bitcoin Core.  We're not going to bother
       // fixing it.
     ar = r.get_array();
     o1 = ar[0].get_obj();
