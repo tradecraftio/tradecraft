@@ -3,7 +3,7 @@ Freicoin integration/staging tree
 
 [![Build Status](https://travis-ci.org/tradecraftio/tradecraft.svg?branch=13)](https://travis-ci.org/tradecraftio/tradecraft)
 
-https://freico.in
+http://freico.in
 
 What is Freicoin?
 ----------------
