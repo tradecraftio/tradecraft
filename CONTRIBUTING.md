@@ -58,10 +58,7 @@ Communication Channels
 
 Most communication about Freicoin development happens on IRC, in the
 `#freicoin` channel on Libera. The easiest way to participate on IRC is
-with the web client, [web.libera.chat](https://web.libera.chat/). Chat
-history logs can be found
-on [http://www.erisian.com.au/freicoin-dev/](http://www.erisian.com.au/freicoin-dev/)
-and [http://gnusha.org/freicoin-dev/](http://gnusha.org/freicoin-dev/).
+with the web client, [web.libera.chat](https://web.libera.chat/).
 
 Discussion about codebase improvements happens in GitHub issues and pull
 requests.
