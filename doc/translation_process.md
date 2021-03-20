@@ -98,4 +98,4 @@ To create a new language template, you will need to edit the languages manifest 
 
 ### Questions and general assistance
 
-If you are a translator, you should also subscribe to the mailing list, https://groups.google.com/forum/#!forum/freicoin-translators. Announcements will be posted during application pre-releases to notify translators to check for updates.
+If you are a translator, you should also subscribe to the [mailing list](https://tradecraft.groups.io/g/translators). Announcements will be posted during application pre-releases to notify translators to check for updates.
