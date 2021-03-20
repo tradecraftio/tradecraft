@@ -11,12 +11,11 @@ What is Freicoin?
 Freicoin is an experimental digital currency that enables instant payments to
 anyone, anywhere in the world. Freicoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Freicoin is the name of open source
+out collectively by the network. Freicoin is also the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Freicoin software, see http://freico.in/en/download, or read the
-[original whitepaper](http://freico.in/freicoin.pdf).
+the Freicoin software, see [freico.in/download](http://freico.in/download).
 
 License
 -------
@@ -30,13 +29,15 @@ Some components of Freicoin are released under the terms of the Mozilla Public L
 Development Process
 -------------------
 
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/tradecraftio/tradecraft/tags) are created
+Development takes place on numbered branches corresponding to upstream releases
+of Bitcoin Core.  This `13` branch is based on the upstream `bitcoin/0.13`
+branch and is is regularly built and tested, but is not guaranteed to be
+completely stable.  [Tags](https://github.com/tradecraftio/tradecraft/tags) are created
 regularly to indicate new official, stable release versions of Freicoin.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/freicoin-dev)
+The developer [mailing list](https://tradecraft.groups.io/g/devel/)
 should be used to discuss complicated or controversial changes before working
 on a patch set.
 
@@ -74,7 +75,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Freicoin's Transifex page](https://www.transifex.com/projects/p/freicoin/).
+[Freicoin's Transifex page](https://www.transifex.com/tradecraft/freicoin-1/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
@@ -82,4 +83,4 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/freicoin-translators).
+Translators should also subscribe to the [mailing list](https://tradecraft.groups.io/g/translators).
