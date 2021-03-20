@@ -3,7 +3,7 @@ Release Process
 
 Before every release candidate:
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/freicoin/freicoin/blob/master/doc/translation_process.md#synchronising-translations).
+* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/tradecraftio/tradecraft/blob/master/doc/translation_process.md#synchronising-translations).
 
 Before every minor and major release:
 
@@ -14,7 +14,7 @@ Before every minor and major release:
 
 Before every major release:
 
-* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/freicoin/freicoin/pull/7415) for an example.
+* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/tradecraftio/tradecraft/pull/7415) for an example.
 
 ### First time / New builders
 
@@ -22,9 +22,9 @@ Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
     git clone https://github.com/freicoin/gitian.sigs.git
-    git clone https://github.com/freicoin/freicoin-detached-sigs.git
+    git clone https://github.com/tradecraftio/tradecraft-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
-    git clone https://github.com/freicoin/freicoin.git
+    git clone https://github.com/tradecraftio/tradecraft.git
 
 ### Freicoin maintainers/release engineers, update version in sources
 
@@ -165,7 +165,7 @@ Commit your signature to gitian.sigs:
 Wait for Windows/OS X detached signatures:
 
 - Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
-- Detached signatures will then be committed to the [freicoin-detached-sigs](https://github.com/freicoin/freicoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
+- Detached signatures will then be committed to the [freicoin-detached-sigs](https://github.com/tradecraftio/tradecraft-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
 Create (and optionally verify) the signed OS X binary:
 

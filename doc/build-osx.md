@@ -29,7 +29,7 @@ Build Freicoin
 
 1. Clone the freicoin source code and cd into `freicoin`
 
-        git clone https://github.com/freicoin/freicoin
+        git clone https://github.com/tradecraftio/tradecraft
         cd freicoin
 
 2.  Build freicoin:
@@ -96,4 +96,4 @@ Notes
 
 * Tested on OS X 10.8 through 10.12 on 64-bit Intel processors only.
 
-* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/freicoin/freicoin/issues/7714)
+* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/tradecraftio/tradecraft/issues/7714)

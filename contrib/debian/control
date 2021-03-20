@@ -24,8 +24,8 @@ Build-Depends: debhelper,
  python
 Standards-Version: 3.9.2
 Homepage: http://freico.in/
-Vcs-Git: git://github.com/freicoin/freicoin.git
-Vcs-Browser: https://github.com/freicoin/freicoin
+Vcs-Git: git://github.com/tradecraftio/tradecraft.git
+Vcs-Browser: https://github.com/tradecraftio/tradecraft
 
 Package: freicoind
 Architecture: any

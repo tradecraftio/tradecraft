@@ -90,7 +90,7 @@ program.  If not, see <https://www.gnu.org/licenses/> and
 
 Please contribute if you find Freicoin useful. Visit
 <http://freico.in> for further information about the software.
-The source code is available from <https://github.com/freicoin/freicoin>.
+The source code is available from <https://github.com/tradecraftio/tradecraft>.
 
 This is experimental software.
 Distributed under the MIT software license, see the accompanying file COPYING
@@ -100,7 +100,7 @@ Copyright (C) 2011-2021 The Freicoin Developers
 
 Please contribute if you find Freicoin useful. Visit
 <http://freico.in> for further information about the software.
-The source code is available from <https://github.com/freicoin/freicoin>.
+The source code is available from <https://github.com/tradecraftio/tradecraft>.
 
 This is experimental software.
 

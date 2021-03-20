@@ -12,7 +12,7 @@ allowip to allow rpc connections from potentially hostile hosts.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/freicoin/freicoin/issues
+  https://github.com/tradecraftio/tradecraft/issues
 
 How to Upgrade
 --------------

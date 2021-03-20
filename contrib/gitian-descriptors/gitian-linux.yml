@@ -28,7 +28,7 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/freicoin/freicoin.git"
+- "url": "https://github.com/tradecraftio/tradecraft.git"
   "dir": "freicoin"
 files: []
 script: |

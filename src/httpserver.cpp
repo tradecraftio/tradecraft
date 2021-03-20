@@ -510,7 +510,7 @@ void StopHTTPServer()
         // at least libevent 2.0.21 and always introduced a delay. In libevent
         // master that appears to be solved, so in the future that solution
         // could be used again (if desirable).
-        // (see discussion in https://github.com/freicoin/freicoin/pull/6990)
+        // (see discussion in https://github.com/tradecraftio/tradecraft/pull/6990)
 #if BOOST_VERSION >= 105000
         if (!threadHTTP.try_join_for(boost::chrono::milliseconds(2000))) {
 #else

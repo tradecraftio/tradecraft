@@ -95,8 +95,8 @@ if "FREICOINCLI" not in os.environ:
     os.environ["FREICOINCLI"] = BUILDDIR + '/src/freicoin-cli' + EXEEXT
 
 if EXEEXT == ".exe" and "-win" not in opts:
-    # https://github.com/freicoin/freicoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-    # https://github.com/freicoin/freicoin/pull/5677#issuecomment-136646964
+    # https://github.com/tradecraftio/tradecraft/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+    # https://github.com/tradecraftio/tradecraft/pull/5677#issuecomment-136646964
     print("Win tests currently disabled by default.  Use -win option to enable")
     sys.exit(0)
 

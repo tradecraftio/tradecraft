@@ -503,7 +503,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/freicoin/freicoin>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/tradecraftio/tradecraft>";
     const std::string URL_WEBSITE = "<http://freico.in>";
     // todo: remove urls from translations on next change
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +

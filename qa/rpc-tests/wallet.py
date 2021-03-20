@@ -341,7 +341,7 @@ class WalletTest (FreicoinTestFramework):
             '-reindex',
             '-zapwallettxes=1',
             '-zapwallettxes=2',
-            # disabled until issue is fixed: https://github.com/freicoin/freicoin/issues/7463
+            # disabled until issue is fixed: https://github.com/tradecraftio/tradecraft/issues/7463
             # '-salvagewallet',
         ]
         chainlimit = 6
