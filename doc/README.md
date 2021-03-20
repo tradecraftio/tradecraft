@@ -30,8 +30,7 @@ Drag Freicoin to your applications folder, and then run Freicoin.
 
 * See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
 for help and more information.
-* Ask for help on [#freicoin](http://webchat.freenode.net?channels=freicoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=freicoin).
-* Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
+* Ask for help on [#freicoin](https://web.libera.chat/?channel=#freicoin) on Libera. If you don't have an IRC client use [webchat here](https://web.libera.chat/?channel=#freicoin).
 
 Building
 ---------------------
@@ -63,9 +62,8 @@ The Freicoin repo's [root README](/README.md) contains relevant information on t
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
-* Discuss project-specific development on #freicoin on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=freicoin).
-* Discuss general Freicoin development on #freicoin-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=freicoin-dev).
+* Discuss project-specific development on #freicoin on Libera. If you don't have an IRC client use [webchat here](https://web.libera.chat/?channel=#freicoin).
+* Discuss general Freicoin development on #freicoin-dev on Libera. If you don't have an IRC client use [webchat here](https://web.libera.chat/?channel=#freicoin-dev).
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)

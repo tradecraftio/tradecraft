@@ -22,10 +22,8 @@ Communication Channels
 ----------------------
 
 Most communication about Freicoin development happens on IRC, in the
-#freicoin channel on Freenode. The easiest way to participate on IRC is
-with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
-history logs can be found
-on [botbot.me](https://botbot.me/freenode/freicoin-dev/).
+#freicoin channel on Libera. The easiest way to participate on IRC is
+with the web client, [web.libera.chat](https://web.libera.chat).
 
 Discussion about code base improvements happens in GitHub issues and on pull
 requests.
