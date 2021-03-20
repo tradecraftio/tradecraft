@@ -36,7 +36,7 @@ TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test/"
-BASEDIR="https://freico.in/bin/"
+BASEDIR="http://freico.in/bin/"
 VERSIONPREFIX="freicoin-"
 RCVERSIONSTRING="rc"
 

@@ -86,7 +86,7 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://freico.in/cfields/osslsigncode-Backports-to-1.7.1.patch
+    wget -P inputs http://freico.in/cfields/osslsigncode-Backports-to-1.7.1.patch
     wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
     popd
 
@@ -262,7 +262,7 @@ freico.in (see below for freico.in update instructions).
 
   - freicoin-dev and freicoin-dev mailing list
 
-  - Freicoin announcements list https://freico.in/en/list/announcements/join/
+  - Freicoin announcements list http://freico.in/en/list/announcements/join/
 
   - freico.in blog post
 

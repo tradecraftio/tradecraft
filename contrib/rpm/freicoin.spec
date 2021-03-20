@@ -20,8 +20,8 @@ Summary:	Peer to Peer Cryptographic Currency
 
 Group:		Applications/System
 License:	MIT
-URL:		https://freico.in/
-Source0:	https://freico.in/bin/freicoin-%{version}/freicoin-%{version}.tar.gz
+URL:		http://freico.in/
+Source0:	http://freico.in/bin/freicoin-%{version}/freicoin-%{version}.tar.gz
 Source1:	http://download.oracle.com/berkeley-db/db-%{bdbv}.NC.tar.gz
 
 Source10:	https://raw.githubusercontent.com/freicoin/freicoin/v%{version}/contrib/debian/examples/freicoin.conf

@@ -89,7 +89,7 @@ program.  If not, see <https://www.gnu.org/licenses/> and
     ["""
 
 Please contribute if you find Freicoin useful. Visit
-<https://freico.in> for further information about the software.
+<http://freico.in> for further information about the software.
 The source code is available from <https://github.com/freicoin/freicoin>.
 
 This is experimental software.
@@ -99,7 +99,7 @@ or <http://www.opensource.org/licenses/mit-license.php>.
 Copyright (C) 2011-2021 The Freicoin Developers
 
 Please contribute if you find Freicoin useful. Visit
-<https://freico.in> for further information about the software.
+<http://freico.in> for further information about the software.
 The source code is available from <https://github.com/freicoin/freicoin>.
 
 This is experimental software.
