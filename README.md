@@ -27,17 +27,20 @@ Some components of Freicoin are released under the terms of the Mozilla Public L
 Development Process
 -------------------
 
-The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/tradecraftio/tradecraft/tags) are created
-regularly from release branches to indicate new official, stable release versions of Freicoin.
-
-The https://github.com/freicoin/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
+Development takes place on numbered branches corresponding to upstream releases
+of Bitcoin Core.  The `21` branch is based on the upstream `bitcoin/0.21`
+branch and is is regularly built and tested, but is not guaranteed to be
+completely stable.  [Tags](https://github.com/tradecraftio/tradecraft/tags) are created
+regularly to indicate new official, stable release versions of Freicoin.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+
+The developer [mailing list](https://tradecraft.groups.io/g/devel/)
+should be used to discuss complicated or controversial changes before working
+on a patch set.
+
+Developer IRC can be found on Libera at #freicoin.
 
 Testing
 -------
