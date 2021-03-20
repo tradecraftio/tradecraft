@@ -30,9 +30,7 @@ Drag Freicoin to your applications folder, and then run Freicoin.
 
 * See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
 for help and more information.
-* Ask for help on [Freicoin StackExchange](https://freicoin.stackexchange.com).
-* Ask for help on #freicoin on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#freicoin).
-* Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
+* Ask for help on #tradecraft on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#tradecraft).
 
 Building
 ---------------------
@@ -66,8 +64,7 @@ The Freicoin repo's [root README](/README.md) contains relevant information on t
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
-* Discuss project-specific development on #freicoin on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#freicoin).
+* Discuss project-specific development on #tradecraft on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#tradecraft).
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
