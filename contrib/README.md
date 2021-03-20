@@ -43,7 +43,7 @@ PGP keys used for signing Freicoin [Gitian release](/doc/release-process.md) res
 Scripts and notes for Mac builds. 
 
 ### [RPM](/contrib/rpm) ###
-RPM spec file for building freicoin on RPM based distributions
+RPM spec file for building Freicoin on RPM based distributions
 
 Test and Verify Tools 
 ---------------------
