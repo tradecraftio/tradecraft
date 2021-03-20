@@ -1,4 +1,4 @@
-dnl Copyright (c) 2013-2016 The Freicoin developers
+dnl Copyright (c) 2013-2016 The Bitcoin Core developers
 dnl Copyright (c) 2013-2021 The Freicoin Developers
 dnl
 dnl This program is free software: you can redistribute it and/or
