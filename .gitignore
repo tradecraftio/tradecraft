@@ -104,6 +104,8 @@ win32-build
 qa/pull-tester/tests_config.py
 qa/cache/*
 
+src/wallet.backup
+
 !src/leveldb*/Makefile
 
 /doc/doxygen/
