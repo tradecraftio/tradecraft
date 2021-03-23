@@ -112,6 +112,8 @@ win32-build
 test/config.ini
 test/cache/*
 
+src/wallet.backup
+
 !src/leveldb*/Makefile
 
 /doc/doxygen/
