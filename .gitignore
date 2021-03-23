@@ -132,6 +132,8 @@ test/config.ini
 test/cache/*
 test/.mypy_cache/
 
+src/wallet.backup
+
 !src/leveldb*/Makefile
 
 /doc/doxygen/
