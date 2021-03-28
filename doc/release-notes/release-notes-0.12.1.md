@@ -46,7 +46,7 @@ The deployment sets the block version number to 0x20000001 between
 midnight 1st May 2016 and midnight 1st May 2017 to signal readiness for 
 deployment. The version number consists of 0x20000000 to indicate version
 bits together with setting bit 0 to indicate support for this combined
-deployment, shown as "csv" in the `getblockchaininfo` RPC call.
+deployment, shown as "locktime in the `getblockchaininfo` RPC call.
 
 For more information about the soft forking change, please see
 <https://github.com/bitcoin/bitcoin/pull/7648>

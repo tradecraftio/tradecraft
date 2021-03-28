@@ -44,8 +44,8 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
         return "bip65";
     case Consensus::DEPLOYMENT_DERSIG:
         return "bip66";
-    case Consensus::DEPLOYMENT_CSV:
-        return "csv";
+    case Consensus::DEPLOYMENT_LOCKTIME:
+        return "locktime";
     case Consensus::DEPLOYMENT_SEGWIT:
         return "segwit";
     } // no default case, so the compiler can warn about missing cases
@@ -62,8 +62,8 @@ std::optional<Consensus::BuriedDeployment> GetBuriedDeployment(const std::string
         return Consensus::BuriedDeployment::DEPLOYMENT_DERSIG;
     } else if (name == "cltv") {
         return Consensus::BuriedDeployment::DEPLOYMENT_CLTV;
-    } else if (name == "csv") {
-        return Consensus::BuriedDeployment::DEPLOYMENT_CSV;
+    } else if (name == "locktime") {
+        return Consensus::BuriedDeployment::DEPLOYMENT_LOCKTIME;
     }
     return std::nullopt;
 }
