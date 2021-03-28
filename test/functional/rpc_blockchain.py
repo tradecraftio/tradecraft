@@ -211,7 +211,7 @@ class BlockchainTest(BitcoinTestFramework):
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
             'bip66': {'type': 'buried', 'active': True, 'height': 3},
             'bip65': {'type': 'buried', 'active': True, 'height': 4},
-            'csv': {'type': 'buried', 'active': True, 'height': 5},
+            'locktime': {'type': 'buried', 'active': True, 'height': 5},
             'finaltx': {
                 'type': 'bip9',
                 'height': 0,
@@ -274,7 +274,7 @@ class BlockchainTest(BitcoinTestFramework):
             '-testactivationheight=bip34@2',
             '-testactivationheight=dersig@3',
             '-testactivationheight=cltv@4',
-            '-testactivationheight=csv@5',
+            '-testactivationheight=locktime@5',
             '-testactivationheight=segwit@6',
         ])
 
