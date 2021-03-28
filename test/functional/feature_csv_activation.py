@@ -101,7 +101,7 @@ def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
 
 
-CSV_ACTIVATION_HEIGHT = 432
+LOCKTIME_ACTIVATION_HEIGHT = 432
 
 
 class BIP68_112_113Test(BitcoinTestFramework):
@@ -110,7 +110,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [[
             '-whitelist=noban@127.0.0.1',
-            f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
+            f'-testactivationheight=locktime@{LOCKTIME_ACTIVATION_HEIGHT}',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
         self.supports_cli = False
@@ -221,9 +221,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # Activation height is hardcoded
         # We advance to block height five below BIP112 activation for the following tests
-        test_blocks = self.generate_blocks(CSV_ACTIVATION_HEIGHT - 5 - COINBASE_BLOCK_COUNT)
+        test_blocks = self.generate_blocks(LOCKTIME_ACTIVATION_HEIGHT - 5 - COINBASE_BLOCK_COUNT)
         self.send_blocks(test_blocks)
-        assert not softfork_active(self.nodes[0], 'csv')
+        assert not softfork_active(self.nodes[0], 'locktime')
 
         # Inputs at height = 431
         #
@@ -271,9 +271,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
         test_blocks = self.generate_blocks(2)
         self.send_blocks(test_blocks)
 
-        assert_equal(self.tipheight, CSV_ACTIVATION_HEIGHT - 2)
-        self.log.info(f"Height = {self.tipheight}, CSV not yet active (will activate for block {CSV_ACTIVATION_HEIGHT}, not {CSV_ACTIVATION_HEIGHT - 1})")
-        assert not softfork_active(self.nodes[0], 'csv')
+        assert_equal(self.tipheight, LOCKTIME_ACTIVATION_HEIGHT - 2)
+        self.log.info(f"Height = {self.tipheight}, locktime not yet active (will activate for block {LOCKTIME_ACTIVATION_HEIGHT}, not {LOCKTIME_ACTIVATION_HEIGHT - 1})")
+        assert not softfork_active(self.nodes[0], 'locktime')
 
         # Test both version 1 and version 2 transactions for all tests
         # BIP113 test transaction will be modified before each use to put in appropriate block time
@@ -352,10 +352,10 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # 1 more version 4 block to get us to height 432 so the fork should now be active for the next block
-        assert not softfork_active(self.nodes[0], 'csv')
+        assert not softfork_active(self.nodes[0], 'locktime')
         test_blocks = self.generate_blocks(1)
         self.send_blocks(test_blocks)
-        assert softfork_active(self.nodes[0], 'csv')
+        assert softfork_active(self.nodes[0], 'locktime')
 
         self.log.info("Post-Soft Fork Tests.")
 

@@ -1653,7 +1653,7 @@ UniValue DeploymentInfo(const CBlockIndex* blockindex, const Consensus::Params& 
     SoftForkDescPushBack(blockindex, softforks, consensusParams, Consensus::DEPLOYMENT_HEIGHTINCB);
     SoftForkDescPushBack(blockindex, softforks, consensusParams, Consensus::DEPLOYMENT_DERSIG);
     SoftForkDescPushBack(blockindex, softforks, consensusParams, Consensus::DEPLOYMENT_CLTV);
-    SoftForkDescPushBack(blockindex, softforks, consensusParams, Consensus::DEPLOYMENT_CSV);
+    SoftForkDescPushBack(blockindex, softforks, consensusParams, Consensus::DEPLOYMENT_LOCKTIME);
     SoftForkDescPushBack(blockindex, softforks, consensusParams, Consensus::DEPLOYMENT_FINALTX);
     SoftForkDescPushBack(blockindex, softforks, consensusParams, Consensus::DEPLOYMENT_SEGWIT);
     SoftForkDescPushBack(blockindex, softforks, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
