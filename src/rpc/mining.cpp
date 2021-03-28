@@ -845,7 +845,7 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("capabilities", aCaps);
 
     UniValue aRules(UniValue::VARR);
-    aRules.push_back("csv");
+    aRules.push_back("locktime");
     if (!fPreSegWit) aRules.push_back("!segwit");
     if (consensusParams.signet_blocks) {
         // indicate to miner that they must understand signet rules
