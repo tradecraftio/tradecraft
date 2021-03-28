@@ -1362,7 +1362,7 @@ RPCHelpMan getblockchaininfo()
     BuriedForkDescPushBack(softforks, "bip34", consensusParams.BIP34Height);
     BuriedForkDescPushBack(softforks, "bip66", consensusParams.BIP66Height);
     BuriedForkDescPushBack(softforks, "bip65", consensusParams.BIP65Height);
-    BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight);
+    BuriedForkDescPushBack(softforks, "locktime", consensusParams.LockTimeHeight);
     BuriedForkDescPushBack(softforks, "segwit", consensusParams.SegwitHeight);
     BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
     BIP9SoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
