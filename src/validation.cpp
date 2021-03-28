@@ -2369,7 +2369,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     // Enforce BIP68 (sequence locks)
     int nLockTimeFlags = 0;
-    if (DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_CSV)) {
+    if (DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_LOCKTIME)) {
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
@@ -4019,7 +4019,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
 
     // Enforce BIP113 (Median Time Past).
     bool enforce_locktime_median_time_past{false};
-    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CSV)) {
+    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_LOCKTIME)) {
         assert(pindexPrev != nullptr);
         enforce_locktime_median_time_past = true;
     }
