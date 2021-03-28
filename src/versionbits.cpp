@@ -22,7 +22,7 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.gbt_force =*/ true,
     },
     {
-        /*.name =*/ "csv",
+        /*.name =*/ "locktime",
         /*.gbt_force =*/ true,
     },
     {
