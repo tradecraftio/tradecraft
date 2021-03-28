@@ -189,7 +189,7 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CSV is active
-        assert self.nodes[0].getdeploymentinfo()['deployments']['csv']['active']
+        assert self.nodes[0].getdeploymentinfo()['deployments']['locktime']['active']
 
         # Create a P2WSH script with CSV
         script = CScript([1, OP_CHECKSEQUENCEVERIFY, OP_DROP])
