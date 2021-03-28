@@ -58,7 +58,7 @@ class BIP68Test(BitcoinTestFramework):
         self.test_bip68_not_consensus()
 
         self.log.info("Activating BIP68 (and 112/113)")
-        self.activateCSV()
+        self.activateMTP()
 
         self.log.info("Verifying nVersion=2 transactions are standard.")
         self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
@@ -347,7 +347,7 @@ class BIP68Test(BitcoinTestFramework):
     # being run, then it's possible the test has activated the soft fork, and
     # this test should be moved to run earlier, or deleted.
     def test_bip68_not_consensus(self):
-        assert(get_bip9_status(self.nodes[0], 'csv')['status'] != 'active')
+        assert(get_bip9_status(self.nodes[0], 'locktime')['status'] != 'active')
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 2)
 
         tx1 = FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid))
@@ -392,16 +392,16 @@ class BIP68Test(BitcoinTestFramework):
         self.nodes[0].submitblock(bytes_to_hex_str(block.serialize(True)))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
-    def activateCSV(self):
+    def activateMTP(self):
         # activation should happen at block height 432 (3 periods)
-        # getblockchaininfo will show CSV as active at block 431 (144 * 3 -1) since it's returning whether CSV is active for the next block.
+        # getblockchaininfo will show MTP as active at block 431 (144 * 3 -1) since it's returning whether MTP is active for the next block.
         min_activation_height = 432
         height = self.nodes[0].getblockcount()
         assert_greater_than(min_activation_height - height, 2)
         self.nodes[0].generate(min_activation_height - height - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "locked_in")
+        assert_equal(get_bip9_status(self.nodes[0], 'locktime')['status'], "locked_in")
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "active")
+        assert_equal(get_bip9_status(self.nodes[0], 'locktime')['status'], "active")
         sync_blocks(self.nodes)
 
     # Use self.nodes[1] to test that version 2 transactions are standard.
