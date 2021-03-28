@@ -52,11 +52,11 @@ class BIP68Test(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             [
-                '-testactivationheight=csv@432',
+                '-testactivationheight=locktime@432',
                 "-acceptnonstdtxn=1",
             ],
             [
-                '-testactivationheight=csv@432',
+                '-testactivationheight=locktime@432',
                 "-acceptnonstdtxn=0",
             ],
         ]
@@ -83,7 +83,7 @@ class BIP68Test(BitcoinTestFramework):
         self.test_bip68_not_consensus()
 
         self.log.info("Activating BIP68 (and 112/113)")
-        self.activateCSV()
+        self.activateMTP()
 
         self.log.info("Verifying nVersion=2 transactions are standard.")
         self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
@@ -373,7 +373,7 @@ class BIP68Test(BitcoinTestFramework):
     # being run, then it's possible the test has activated the soft fork, and
     # this test should be moved to run earlier, or deleted.
     def test_bip68_not_consensus(self):
-        assert not softfork_active(self.nodes[0], 'csv')
+        assert not softfork_active(self.nodes[0], 'locktime')
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 2)
 
         tx1 = tx_from_hex(self.nodes[0].getrawtransaction(txid))
@@ -411,16 +411,16 @@ class BIP68Test(BitcoinTestFramework):
         assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
-    def activateCSV(self):
+    def activateMTP(self):
         # activation should happen at block height 432 (3 periods)
-        # getblockchaininfo will show CSV as active at block 431 (144 * 3 -1) since it's returning whether CSV is active for the next block.
+        # getblockchaininfo will show MTP as active at block 431 (144 * 3 -1) since it's returning whether MTP is active for the next block.
         min_activation_height = 432
         height = self.nodes[0].getblockcount()
         assert_greater_than(min_activation_height - height, 2)
         self.generate(self.nodes[0], min_activation_height - height - 2, sync_fun=self.no_op)
-        assert not softfork_active(self.nodes[0], 'csv')
+        assert not softfork_active(self.nodes[0], 'locktime')
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        assert softfork_active(self.nodes[0], 'csv')
+        assert softfork_active(self.nodes[0], 'locktime')
         self.sync_blocks()
 
     # Use self.nodes[1] to test that version 2 transactions are standard.

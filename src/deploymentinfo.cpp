@@ -42,8 +42,8 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
         return "bip65";
     case Consensus::DEPLOYMENT_DERSIG:
         return "bip66";
-    case Consensus::DEPLOYMENT_CSV:
-        return "csv";
+    case Consensus::DEPLOYMENT_LOCKTIME:
+        return "locktime";
     case Consensus::DEPLOYMENT_SEGWIT:
         return "segwit";
     } // no default case, so the compiler can warn about missing cases
