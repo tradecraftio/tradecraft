@@ -71,7 +71,7 @@ from test_framework.util import (
 TESTING_TX_COUNT = 83  # Number of testing transactions: 1 BIP113 tx, 16 BIP68 txs, 66 BIP112 txs (see comments above)
 COINBASE_BLOCK_COUNT = TESTING_TX_COUNT  # Number of coinbase blocks we need to generate as inputs for our txs
 BASE_RELATIVE_LOCKTIME = 10
-CSV_ACTIVATION_HEIGHT = 432
+LOCKTIME_ACTIVATION_HEIGHT = 432
 SEQ_DISABLE_FLAG = 1 << 31
 SEQ_RANDOM_HIGH_BIT = 1 << 25
 SEQ_TYPE_FLAG = 1 << 22
@@ -220,9 +220,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # Activation height is hardcoded
         # We advance to block height five below BIP112 activation for the following tests
-        test_blocks = self.generate_blocks(CSV_ACTIVATION_HEIGHT-5 - COINBASE_BLOCK_COUNT)
+        test_blocks = self.generate_blocks(LOCKTIME_ACTIVATION_HEIGHT-5 - COINBASE_BLOCK_COUNT)
         self.send_blocks(test_blocks)
-        assert not softfork_active(self.nodes[0], 'csv')
+        assert not softfork_active(self.nodes[0], 'locktime')
 
         # Inputs at height = 431
         #
@@ -270,9 +270,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
         test_blocks = self.generate_blocks(2)
         self.send_blocks(test_blocks)
 
-        assert_equal(self.tipheight, CSV_ACTIVATION_HEIGHT - 2)
-        self.log.info("Height = {}, CSV not yet active (will activate for block {}, not {})".format(self.tipheight, CSV_ACTIVATION_HEIGHT, CSV_ACTIVATION_HEIGHT - 1))
-        assert not softfork_active(self.nodes[0], 'csv')
+        assert_equal(self.tipheight, LOCKTIME_ACTIVATION_HEIGHT - 2)
+        self.log.info("Height = {}, locktime not yet active (will activate for block {}, not {})".format(self.tipheight, LOCKTIME_ACTIVATION_HEIGHT, LOCKTIME_ACTIVATION_HEIGHT - 1))
+        assert not softfork_active(self.nodes[0], 'locktime')
 
         # Test both version 1 and version 2 transactions for all tests
         # BIP113 test transaction will be modified before each use to put in appropriate block time
@@ -351,10 +351,10 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # 1 more version 4 block to get us to height 432 so the fork should now be active for the next block
-        assert not softfork_active(self.nodes[0], 'csv')
+        assert not softfork_active(self.nodes[0], 'locktime')
         test_blocks = self.generate_blocks(1)
         self.send_blocks(test_blocks)
-        assert softfork_active(self.nodes[0], 'csv')
+        assert softfork_active(self.nodes[0], 'locktime')
 
         self.log.info("Post-Soft Fork Tests.")
 
