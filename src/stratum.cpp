@@ -252,7 +252,7 @@ std::string GetWorkUnit(StratumClient& client)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
-    if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0) {
+    if (!Params().MineBlocksOnDemand() && g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0) {
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
     }
 
