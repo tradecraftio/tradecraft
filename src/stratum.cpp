@@ -763,6 +763,24 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
             block.nNonce = nNonce;
             std::shared_ptr<const CBlock> pblock = std::make_shared<const CBlock>(block);
             res = ProcessNewBlock(Params(), pblock, true, NULL);
+            if (res) {
+                CBlockIndex* block_index = nullptr;
+                {
+                    LOCK(cs_main);
+                    if (::BlockIndex().count(hash)) {
+                        block_index = ::BlockIndex().at(hash);
+                    }
+                }
+                if (!block_index) {
+                    LogPrintf("Unable to find new block index entry; cannot prioritise block 0x%s\n", hash.ToString());
+                } else {
+                    CValidationState state;
+                    PreciousBlock(state, Params(), block_index);
+                    if (!state.IsValid()) {
+                        LogPrintf("Database error while prioritising new block 0x%s: %d (%s) %s\n", hash.ToString(), state.GetRejectCode(), state.GetRejectReason(), state.GetDebugMessage());
+                    }
+                }
+            }
         } else {
             LogPrintf("NEW SHARE!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
         }
