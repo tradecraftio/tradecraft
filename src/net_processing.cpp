@@ -1811,7 +1811,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     return true;
 }
 
-void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_set, std::list<CTransactionRef>& removed_txn) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_set, std::list<CTransactionRef>& removed_txn, const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_cs_orphans);
@@ -1874,7 +1874,7 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
             EraseOrphanTx(orphanHash);
             done = true;
         }
-        mempool.check(&::ChainstateActive().CoinsTip());
+        mempool.check(&::ChainstateActive().CoinsTip(), chainparams.GetConsensus());
     }
 }
 
@@ -2537,7 +2537,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         if (!AlreadyHave(inv) &&
             AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
-            mempool.check(&::ChainstateActive().CoinsTip());
+            mempool.check(&::ChainstateActive().CoinsTip(), chainparams.GetConsensus());
             RelayTransaction(tx.GetHash(), *connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
@@ -2556,7 +2556,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 mempool.size(), mempool.DynamicMemoryUsage() / 1000);
 
             // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(connman, pfrom->orphan_work_set, lRemovedTxn);
+            ProcessOrphanTx(connman, pfrom->orphan_work_set, lRemovedTxn, chainparams);
         }
         else if (fMissingInputs)
         {
@@ -3315,7 +3315,7 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     if (!pfrom->orphan_work_set.empty()) {
         std::list<CTransactionRef> removed_txn;
         LOCK2(cs_main, g_cs_orphans);
-        ProcessOrphanTx(connman, pfrom->orphan_work_set, removed_txn);
+        ProcessOrphanTx(connman, pfrom->orphan_work_set, removed_txn, chainparams);
         for (const CTransactionRef& removedTx : removed_txn) {
             AddToCompactExtraTransactions(removedTx);
         }
