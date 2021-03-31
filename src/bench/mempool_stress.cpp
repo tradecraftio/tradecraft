@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <bench/bench.h>
+#include <chainparams.h>
 #include <policy/policy.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -121,7 +122,7 @@ static void MempoolCheck(benchmark::Bench& bench)
 
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         // Bump up the spendheight so we don't hit premature coinbase spend errors.
-        pool.check(coins_tip, /*spendheight=*/300);
+        pool.check(coins_tip, /*spendheight=*/300, Params().GetConsensus());
     });
 }
 
