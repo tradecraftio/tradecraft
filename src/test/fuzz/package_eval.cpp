@@ -300,6 +300,6 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
     UnregisterSharedValidationInterface(outpoints_updater);
 
-    WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
+    WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1, chainstate.m_chainman.GetParams().GetConsensus()));
 }
 } // namespace
