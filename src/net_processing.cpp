@@ -2083,7 +2083,7 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
             break;
         }
     }
-    m_mempool.check(&::ChainstateActive().CoinsTip());
+    m_mempool.check(&::ChainstateActive().CoinsTip(), m_chainparams.GetConsensus());
 }
 
 /**
@@ -3074,7 +3074,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         std::list<CTransactionRef> lRemovedTxn;
 
         if (AcceptToMemoryPool(m_mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */)) {
-            m_mempool.check(&::ChainstateActive().CoinsTip());
+            m_mempool.check(&::ChainstateActive().CoinsTip(), m_chainparams.GetConsensus());
             // As this version of the transaction was acceptable, we can forget about any
             // requests for it.
             m_txrequest.ForgetTxHash(tx.GetHash());
