@@ -16,6 +16,7 @@
 #include "tx_verify.h"
 
 #include "consensus.h"
+#include "consensus/params.h"
 #include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "validation.h"
@@ -215,7 +216,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const Consensus::Params& params, int nSpendHeight)
 {
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
