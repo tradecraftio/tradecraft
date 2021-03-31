@@ -27,6 +27,7 @@
 
 #include <coins.h>
 #include <consensus/amount.h>
+#include <consensus/params.h>
 #include <indirectmap.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
@@ -587,7 +588,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void check(const CCoinsViewCache& active_coins_tip, int64_t spendheight, const Consensus::Params& params) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
