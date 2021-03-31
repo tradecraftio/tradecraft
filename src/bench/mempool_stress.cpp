@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <bench/bench.h>
+#include <chainparams.h>
 #include <policy/policy.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -122,7 +123,7 @@ static void MempoolCheck(benchmark::Bench& bench)
     for (auto& tx : ordered_coins) AddTx(tx, pool);
 
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        pool.check(coins_tip, /* spendheight */ 2);
+        pool.check(coins_tip, /* spendheight */ 2, Params().GetConsensus());
     });
 }
 
