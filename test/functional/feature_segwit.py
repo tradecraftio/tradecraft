@@ -30,7 +30,7 @@ from test_framework.blocktools import witness_script, send_to_witness
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, sha256, ToHex
 from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, connect_nodes, hex_str_to_bytes, sync_blocks, try_rpc
+from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, connect_nodes, hex_str_to_bytes, sync_blocks, try_rpc, JSONRPCException
 
 from io import BytesIO
 
@@ -223,11 +223,20 @@ class SegWitTest(BitcoinTestFramework):
         assert(tmpl['transactions'][0]['txid'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 8)
 
-        print("Non-segwit miners are able to use GBT response after activation.")
-        txid = send_to_witness(1, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.998"))
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
-        # TODO: add a transaction with witness to mempool, and verify it's not
-        # selected for mining.
+        print("Verify non-segwit miners get a valid GBT response after the fork")
+        send_to_witness(1, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.998"))
+        try:
+            tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+            assert(len(tmpl['transactions']) == 1)  # Doesn't include witness tx
+            assert(tmpl['sizelimit'] == 1000000)
+            assert('weightlimit' not in tmpl)
+            assert(tmpl['sigoplimit'] == 20000)
+            assert(tmpl['transactions'][0]['hash'] == txid)
+            assert(tmpl['transactions'][0]['sigops'] == 2)
+            assert(('!segwit' in tmpl['rules']) or ('segwit' not in tmpl['rules']))
+        except JSONRPCException:
+            # This is an acceptable outcome
+            pass
 
         self.log.info("Verify behaviour of importaddress, addwitnessaddress and listunspent")
 
