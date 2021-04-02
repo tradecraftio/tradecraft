@@ -213,11 +213,20 @@ class SegWitTest(BitcoinTestFramework):
         assert(tmpl['transactions'][0]['txid'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 8)
 
-        print("Non-segwit miners are able to use GBT response after activation.")
-        txid = send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.998"))
-        tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
-        # TODO: add a transaction with witness to mempool, and verify it's not
-        # selected for mining.
+        print("Verify non-segwit miners get a valid GBT response after the fork")
+        send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.998"))
+        try:
+            tmpl = self.nodes[0].getblocktemplate({'rules':['finaltx']})
+            assert(len(tmpl['transactions']) == 1)  # Doesn't include witness tx
+            assert(tmpl['sizelimit'] == 1000000)
+            assert('weightlimit' not in tmpl)
+            assert(tmpl['sigoplimit'] == 20000)
+            assert(tmpl['transactions'][0]['hash'] == txid)
+            assert(tmpl['transactions'][0]['sigops'] == 2)
+            assert(('!segwit' in tmpl['rules']) or ('segwit' not in tmpl['rules']))
+        except JSONRPCException:
+            # This is an acceptable outcome
+            pass
 
         self.log.info("Verify behaviour of importaddress, addwitnessaddress and listunspent")
 

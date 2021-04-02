@@ -96,7 +96,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         # bipName begins in DEFINED state
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
         assert_equal(self.get_bip9_status(bipName)['since'], 0)
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert(bipName not in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])
         assert('finaltx' not in tmpl)
@@ -112,7 +112,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         assert_equal(self.get_bip9_status(bipName)['since'], 144)
         assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
         assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
         assert_equal(tmpl['vbrequired'], 0)
@@ -166,7 +166,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         assert_equal(self.get_bip9_status(bipName)['since'], 144)
         assert_equal(self.get_bip9_status(bipName)['statistics']['elapsed'], 0)
         assert_equal(self.get_bip9_status(bipName)['statistics']['count'], 0)
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert(bipName not in tmpl['rules'])
         assert_equal(tmpl['vbavailable'][bipName], bitno)
         assert_equal(tmpl['vbrequired'], 0)
@@ -193,7 +193,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
         assert_equal(self.get_bip9_status(bipName)['since'], 576)
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert(bipName not in tmpl['rules'])
 
         # Test 8
@@ -203,7 +203,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
         assert_equal(self.get_bip9_status(bipName)['since'], 576)
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert(bipName not in tmpl['rules'])
         assert(bipName in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
@@ -223,7 +223,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         self.tip = test_blocks[-1][0].sha256
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'active')
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert('finaltx' in tmpl['rules'])
         assert(bipName not in tmpl['vbavailable'])
         assert_equal(tmpl['vbrequired'], 0)
@@ -259,7 +259,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         test_blocks = self.generate_blocks(98, 4)
         yield TestInstance(test_blocks, sync_every_block=False)
 
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert('finaltx' not in tmpl)
 
         # Test 13
@@ -268,7 +268,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         test_blocks = self.generate_blocks(1, 4)
         yield TestInstance(test_blocks, sync_every_block=False)
 
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert('finaltx' in tmpl)
         assert_equal(len(tmpl['finaltx']['prevout']), 1)
         assert_equal(tmpl['finaltx']['prevout'][0]['txid'], encode(ser_uint256(non_protected_output.hash)[::-1], 'hex_codec').decode('ascii'))
@@ -309,7 +309,7 @@ class BlockFinalTxTest(ComparisonTestFramework):
         self.tip = block.sha256
         self.height += 1
 
-        tmpl = self.nodes[0].getblocktemplate({'rules':[bipName]})
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit',bipName]})
         assert('finaltx' in tmpl)
         assert_equal(len(tmpl['finaltx']['prevout']), 1)
         assert_equal(tmpl['finaltx']['prevout'][0]['txid'], encode(ser_uint256(tx_final.sha256)[::-1], 'hex_codec').decode('ascii'))
