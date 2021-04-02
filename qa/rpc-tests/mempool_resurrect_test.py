@@ -19,11 +19,11 @@
 # the blockchain is re-organized.
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
-class MempoolCoinbaseTest(BitcoinTestFramework):
+class MempoolCoinbaseTest(FreicoinTestFramework):
 
     def __init__(self):
         super().__init__()

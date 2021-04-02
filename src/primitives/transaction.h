@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
-#define BITCOIN_PRIMITIVES_TRANSACTION_H
+#ifndef FREICOIN_PRIMITIVES_TRANSACTION_H
+#define FREICOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
 #include "script/script.h"
@@ -175,17 +175,17 @@ public:
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,
-        // which has units satoshis-per-kilobyte.
+        // which has units kria-per-kilobyte.
         // If you'd pay more than 1/3 in fees
         // to spend something, then we consider it dust.
         // A typical spendable non-segwit txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend:
         // so dust is a spendable txout less than
-        // 546*minRelayTxFee/1000 (in satoshis).
+        // 546*minRelayTxFee/1000 (in kria).
         // A typical spendable segwit txout is 31 bytes big, and will
         // need a CTxIn of at least 67 bytes to spend:
         // so dust is a spendable txout less than
-        // 294*minRelayTxFee/1000 (in satoshis).
+        // 294*minRelayTxFee/1000 (in kria).
         if (scriptPubKey.IsUnspendable())
             return 0;
 
@@ -468,4 +468,4 @@ template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txI
 /** Compute the weight of a transaction, as defined by BIP 141 */
 int64_t GetTransactionWeight(const CTransaction &tx);
 
-#endif // BITCOIN_PRIMITIVES_TRANSACTION_H
+#endif // FREICOIN_PRIMITIVES_TRANSACTION_H

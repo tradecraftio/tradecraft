@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCRIPT_SIGN_H
-#define BITCOIN_SCRIPT_SIGN_H
+#ifndef FREICOIN_SCRIPT_SIGN_H
+#define FREICOIN_SCRIPT_SIGN_H
 
 #include "script/interpreter.h"
 
@@ -92,4 +92,4 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn);
 void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data);
 
-#endif // BITCOIN_SCRIPT_SIGN_H
+#endif // FREICOIN_SCRIPT_SIGN_H

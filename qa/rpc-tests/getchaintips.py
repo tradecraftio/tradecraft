@@ -18,10 +18,10 @@
 # on chains of different lengths, and join the network together again.
 # This gives us two tips, verify that it works.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
-class GetChainTipsTest (BitcoinTestFramework):
+class GetChainTipsTest (FreicoinTestFramework):
     def __init__(self):
         super().__init__()
         self.num_nodes = 4

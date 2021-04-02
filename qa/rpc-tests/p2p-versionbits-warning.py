@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import re
 import time
@@ -74,7 +74,7 @@ class TestNode(NodeConnCB):
         return received_pong
 
 
-class VersionBitsWarningTest(BitcoinTestFramework):
+class VersionBitsWarningTest(FreicoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True

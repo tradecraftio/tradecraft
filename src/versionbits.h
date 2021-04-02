@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CONSENSUS_VERSIONBITS
-#define BITCOIN_CONSENSUS_VERSIONBITS
+#ifndef FREICOIN_CONSENSUS_VERSIONBITS
+#define FREICOIN_CONSENSUS_VERSIONBITS
 
 #include "chain.h"
 #include <map>

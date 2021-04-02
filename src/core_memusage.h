@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CORE_MEMUSAGE_H
-#define BITCOIN_CORE_MEMUSAGE_H
+#ifndef FREICOIN_CORE_MEMUSAGE_H
+#define FREICOIN_CORE_MEMUSAGE_H
 
 #include "primitives/transaction.h"
 #include "primitives/block.h"
@@ -74,4 +74,4 @@ static inline size_t RecursiveDynamicUsage(const CBlockLocator& locator) {
     return memusage::DynamicUsage(locator.vHave);
 }
 
-#endif // BITCOIN_CORE_MEMUSAGE_H
+#endif // FREICOIN_CORE_MEMUSAGE_H

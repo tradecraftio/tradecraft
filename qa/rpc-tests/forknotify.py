@@ -18,10 +18,10 @@
 # Test -alertnotify 
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
-class ForkNotifyTest(BitcoinTestFramework):
+class ForkNotifyTest(FreicoinTestFramework):
 
     def __init__(self):
         super().__init__()

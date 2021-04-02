@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CORE_IO_H
-#define BITCOIN_CORE_IO_H
+#ifndef FREICOIN_CORE_IO_H
+#define FREICOIN_CORE_IO_H
 
 #include <string>
 #include <vector>
@@ -41,4 +41,4 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry);
 
-#endif // BITCOIN_CORE_IO_H
+#endif // FREICOIN_CORE_IO_H

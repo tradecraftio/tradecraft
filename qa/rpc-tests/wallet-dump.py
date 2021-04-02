@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (start_nodes, start_node, assert_equal, bitcoind_processes)
+from test_framework.test_framework import FreicoinTestFramework
+from test_framework.util import (start_nodes, start_node, assert_equal, freicoind_processes)
 
 
 def read_dump(file_name, addrs, hd_master_addr_old):
@@ -63,7 +63,7 @@ def read_dump(file_name, addrs, hd_master_addr_old):
         return found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
 
-class WalletDumpTest(BitcoinTestFramework):
+class WalletDumpTest(FreicoinTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -102,7 +102,7 @@ class WalletDumpTest(BitcoinTestFramework):
 
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
-        bitcoind_processes[0].wait()
+        freicoind_processes[0].wait()
         self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args[0])
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_VERSION_H
-#define BITCOIN_VERSION_H
+#ifndef FREICOIN_VERSION_H
+#define FREICOIN_VERSION_H
 
 /**
  * network protocol versioning
@@ -56,4 +56,4 @@ static const int SHORT_IDS_BLOCKS_VERSION = 70014;
 //! not banning for invalid compact blocks starts with this version
 static const int INVALID_CB_NO_BAN_VERSION = 70015;
 
-#endif // BITCOIN_VERSION_H
+#endif // FREICOIN_VERSION_H

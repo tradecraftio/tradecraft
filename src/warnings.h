@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WARNINGS_H
-#define BITCOIN_WARNINGS_H
+#ifndef FREICOIN_WARNINGS_H
+#define FREICOIN_WARNINGS_H
 
 #include <stdlib.h>
 #include <string>
@@ -29,4 +29,4 @@ std::string GetWarnings(const std::string& strFor);
 
 static const bool DEFAULT_TESTSAFEMODE = false;
 
-#endif //  BITCOIN_WARNINGS_H
+#endif //  FREICOIN_WARNINGS_H

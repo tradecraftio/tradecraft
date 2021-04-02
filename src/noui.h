@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NOUI_H
-#define BITCOIN_NOUI_H
+#ifndef FREICOIN_NOUI_H
+#define FREICOIN_NOUI_H
 
 extern void noui_connect();
 
-#endif // BITCOIN_NOUI_H
+#endif // FREICOIN_NOUI_H

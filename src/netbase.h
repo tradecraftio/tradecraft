@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NETBASE_H
-#define BITCOIN_NETBASE_H
+#ifndef FREICOIN_NETBASE_H
+#define FREICOIN_NETBASE_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/freicoin-config.h"
 #endif
 
 #include "compat.h"
@@ -76,4 +76,4 @@ bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking);
 struct timeval MillisToTimeval(int64_t nTimeout);
 void InterruptSocks5(bool interrupt);
 
-#endif // BITCOIN_NETBASE_H
+#endif // FREICOIN_NETBASE_H

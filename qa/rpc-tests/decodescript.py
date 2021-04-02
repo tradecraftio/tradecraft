@@ -14,12 +14,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import *
 from io import BytesIO
 
-class DecodeScriptTest(BitcoinTestFramework):
+class DecodeScriptTest(FreicoinTestFramework):
     """Tests decoding scripts via RPC command "decodescript"."""
 
     def __init__(self):

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_COINCONTROL_H
-#define BITCOIN_WALLET_COINCONTROL_H
+#ifndef FREICOIN_WALLET_COINCONTROL_H
+#define FREICOIN_WALLET_COINCONTROL_H
 
 #include "primitives/transaction.h"
 
@@ -87,4 +87,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // BITCOIN_WALLET_COINCONTROL_H
+#endif // FREICOIN_WALLET_COINCONTROL_H

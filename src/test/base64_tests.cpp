@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #include <boost/test/unit_test.hpp>
 

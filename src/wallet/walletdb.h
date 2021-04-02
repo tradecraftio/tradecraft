@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_WALLETDB_H
-#define BITCOIN_WALLET_WALLETDB_H
+#ifndef FREICOIN_WALLET_WALLETDB_H
+#define FREICOIN_WALLET_WALLETDB_H
 
 #include "amount.h"
 #include "primitives/transaction.h"
@@ -196,4 +196,4 @@ private:
 
 void ThreadFlushWalletDB();
 
-#endif // BITCOIN_WALLET_WALLETDB_H
+#endif // FREICOIN_WALLET_WALLETDB_H

@@ -18,7 +18,7 @@
 # Test the SegWit changeover logic
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import sha256, ripemd160, CTransaction, CTxIn, COutPoint, CTxOut
 from test_framework.address import script_to_p2sh, key_to_p2pkh
@@ -87,7 +87,7 @@ def find_unspent(node, min_value):
         if utxo['amount'] >= min_value:
             return utxo
 
-class SegWitTest(BitcoinTestFramework):
+class SegWitTest(FreicoinTestFramework):
 
     def __init__(self):
         super().__init__()

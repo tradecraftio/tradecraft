@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CHAIN_H
-#define BITCOIN_CHAIN_H
+#ifndef FREICOIN_CHAIN_H
+#define FREICOIN_CHAIN_H
 
 #include "arith_uint256.h"
 #include "primitives/block.h"
@@ -485,4 +485,4 @@ public:
     CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;
 };
 
-#endif // BITCOIN_CHAIN_H
+#endif // FREICOIN_CHAIN_H

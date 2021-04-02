@@ -21,7 +21,7 @@
 
 from decimal import Decimal
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.authproxy import JSONRPCException
 from test_framework.util import (
     assert_equal,
@@ -33,7 +33,7 @@ from test_framework.util import (
 )
 
 
-class BlockchainTest(BitcoinTestFramework):
+class BlockchainTest(FreicoinTestFramework):
     """
     Test blockchain-related RPC calls:
 

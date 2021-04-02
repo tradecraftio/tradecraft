@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPCREGISTER_H
-#define BITCOIN_RPCREGISTER_H
+#ifndef FREICOIN_RPCREGISTER_H
+#define FREICOIN_RPCREGISTER_H
 
 /** These are in one header file to avoid creating tons of single-function
  * headers for everything under src/rpc/ */

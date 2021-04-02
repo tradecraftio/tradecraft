@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "amount.h"
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(-1), 1000) == CFeeRate(-1));
     BOOST_CHECK(CFeeRate(CAmount(0), 1000) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(1), 1000) == CFeeRate(1));
-    // lost precision (can only resolve satoshis per kB)
+    // lost precision (can only resolve kria per kB)
     BOOST_CHECK(CFeeRate(CAmount(1), 1001) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(2), 1001) == CFeeRate(1));
     // some more integer checks

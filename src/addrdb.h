@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ADDRDB_H
-#define BITCOIN_ADDRDB_H
+#ifndef FREICOIN_ADDRDB_H
+#define FREICOIN_ADDRDB_H
 
 #include "serialize.h"
 
@@ -110,4 +110,4 @@ public:
     bool Read(banmap_t& banSet);
 };
 
-#endif // BITCOIN_ADDRDB_H
+#endif // FREICOIN_ADDRDB_H

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NET_H
-#define BITCOIN_NET_H
+#ifndef FREICOIN_NET_H
+#define FREICOIN_NET_H
 
 #include "addrdb.h"
 #include "addrman.h"
@@ -830,4 +830,4 @@ public:
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds);
 
-#endif // BITCOIN_NET_H
+#endif // FREICOIN_NET_H

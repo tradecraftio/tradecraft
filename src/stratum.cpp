@@ -64,7 +64,7 @@ struct StratumClient
     std::string m_client;
 
     bool m_authorized;
-    CBitcoinAddress m_addr;
+    CFreicoinAddress m_addr;
     double m_mindiff;
 
     uint32_t m_version_rolling_mask;
@@ -253,15 +253,15 @@ std::string GetWorkUnit(StratumClient& client)
     }
 
     if (!Params().MineBlocksOnDemand() && g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0) {
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Freicoin is not connected!");
     }
 
     if (IsInitialBlockDownload()) {
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Freicoin is downloading blocks...");
     }
 
     if (!client.m_authorized) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Stratum client not authorized.  Use mining.authorize first, with a Bitcoin address as the username.");
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Stratum client not authorized.  Use mining.authorize first, with a Freicoin address as the username.");
     }
 
     static CBlockIndex* tip = NULL;
@@ -558,10 +558,10 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
         boost::trim_right(username);
     }
 
-    CBitcoinAddress addr(username);
+    CFreicoinAddress addr(username);
 
     if (!addr.IsValid()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Bitcoin address: %s", username));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
     }
 
     client.m_addr = addr;

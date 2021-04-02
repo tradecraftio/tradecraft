@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_SENDCOINSDIALOG_H
-#define BITCOIN_QT_SENDCOINSDIALOG_H
+#ifndef FREICOIN_QT_SENDCOINSDIALOG_H
+#define FREICOIN_QT_SENDCOINSDIALOG_H
 
 #include "walletmodel.h"
 
@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
 
-/** Dialog for sending bitcoins */
+/** Dialog for sending freicoins */
 class SendCoinsDialog : public QDialog
 {
     Q_OBJECT
@@ -130,4 +130,4 @@ private:
     int secDelay;
 };
 
-#endif // BITCOIN_QT_SENDCOINSDIALOG_H
+#endif // FREICOIN_QT_SENDCOINSDIALOG_H

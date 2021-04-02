@@ -18,7 +18,7 @@
 # Test PreciousBlock code
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
@@ -48,7 +48,7 @@ def node_sync_via_rpc(nodes):
                 continue
             unidirectional_node_sync_via_rpc(node_src, node_dest)
 
-class PreciousTest(BitcoinTestFramework):
+class PreciousTest(FreicoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True

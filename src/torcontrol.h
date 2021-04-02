@@ -16,8 +16,8 @@
 /**
  * Functionality for communicating with Tor.
  */
-#ifndef BITCOIN_TORCONTROL_H
-#define BITCOIN_TORCONTROL_H
+#ifndef FREICOIN_TORCONTROL_H
+#define FREICOIN_TORCONTROL_H
 
 #include "scheduler.h"
 
@@ -28,4 +28,4 @@ void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler);
 void InterruptTorControl();
 void StopTorControl();
 
-#endif /* BITCOIN_TORCONTROL_H */
+#endif /* FREICOIN_TORCONTROL_H */

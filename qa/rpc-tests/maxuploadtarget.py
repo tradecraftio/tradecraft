@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import time
 
@@ -90,7 +90,7 @@ class TestNode(NodeConnCB):
         self.ping_counter += 1
         return success
 
-class MaxUploadTest(BitcoinTestFramework):
+class MaxUploadTest(FreicoinTestFramework):
  
     def __init__(self):
         super().__init__()

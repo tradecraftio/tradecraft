@@ -21,13 +21,13 @@ import buildenv
 import argparse
 import logging
 
-help_text="""Test framework for bitcoin utils.
+help_text="""Test framework for freicoin utils.
 
 Runs automatically during `make check`.
 
 Can also be run manually from the src directory by specifying the source directory:
 
-test/bitcoin-util-test.py --srcdir='srcdir' [--verbose]
+test/freicoin-util-test.py --srcdir='srcdir' [--verbose]
 """
 
 if __name__ == '__main__':
@@ -53,4 +53,4 @@ if __name__ == '__main__':
     # Add the format/level to the logger
     logging.basicConfig(format = formatter, level=level)
 
-    bctest.bctester(srcdir + "/test/data", "bitcoin-util-test.json", buildenv)
+    bctest.bctester(srcdir + "/test/data", "freicoin-util-test.json", buildenv)

@@ -15,7 +15,7 @@
 #include "arith_uint256.h"
 #include "uint256.h"
 #include "version.h"
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #include <boost/test/unit_test.hpp>
 #include <stdint.h>

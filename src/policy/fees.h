@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef BITCOIN_POLICYESTIMATOR_H
-#define BITCOIN_POLICYESTIMATOR_H
+#ifndef FREICOIN_POLICYESTIMATOR_H
+#define FREICOIN_POLICYESTIMATOR_H
 
 #include "amount.h"
 #include "uint256.h"
@@ -287,4 +287,4 @@ private:
     std::set<double> feeset;
     FastRandomContext insecure_rand;
 };
-#endif /*BITCOIN_POLICYESTIMATOR_H */
+#endif /*FREICOIN_POLICYESTIMATOR_H */

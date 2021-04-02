@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_OPTIONSDIALOG_H
-#define BITCOIN_QT_OPTIONSDIALOG_H
+#ifndef FREICOIN_QT_OPTIONSDIALOG_H
+#define FREICOIN_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
 #include <QValidator>
@@ -78,4 +78,4 @@ private:
     QDataWidgetMapper *mapper;
 };
 
-#endif // BITCOIN_QT_OPTIONSDIALOG_H
+#endif // FREICOIN_QT_OPTIONSDIALOG_H

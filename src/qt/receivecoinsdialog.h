@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_RECEIVECOINSDIALOG_H
-#define BITCOIN_QT_RECEIVECOINSDIALOG_H
+#ifndef FREICOIN_QT_RECEIVECOINSDIALOG_H
+#define FREICOIN_QT_RECEIVECOINSDIALOG_H
 
 #include "guiutil.h"
 
@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
 
-/** Dialog for requesting payment of bitcoins */
+/** Dialog for requesting payment of freicoins */
 class ReceiveCoinsDialog : public QDialog
 {
     Q_OBJECT
@@ -89,4 +89,4 @@ private Q_SLOTS:
     void copyAmount();
 };
 
-#endif // BITCOIN_QT_RECEIVECOINSDIALOG_H
+#endif // FREICOIN_QT_RECEIVECOINSDIALOG_H

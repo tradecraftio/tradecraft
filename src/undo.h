@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UNDO_H
-#define BITCOIN_UNDO_H
+#ifndef FREICOIN_UNDO_H
+#define FREICOIN_UNDO_H
 
 #include "compressor.h" 
 #include "primitives/transaction.h"
@@ -233,4 +233,4 @@ public:
     }
 };
 
-#endif // BITCOIN_UNDO_H
+#endif // FREICOIN_UNDO_H

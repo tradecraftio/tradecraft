@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_REVERSELOCK_H
-#define BITCOIN_REVERSELOCK_H
+#ifndef FREICOIN_REVERSELOCK_H
+#define FREICOIN_REVERSELOCK_H
 
 /**
  * An RAII-style reverse lock. Unlocks on construction and locks on destruction.
@@ -42,4 +42,4 @@ private:
     Lock templock;
 };
 
-#endif // BITCOIN_REVERSELOCK_H
+#endif // FREICOIN_REVERSELOCK_H

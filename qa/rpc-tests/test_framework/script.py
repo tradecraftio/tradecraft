@@ -17,7 +17,7 @@
 #
 # script.py
 #
-# This file is modified from python-bitcoinlib.
+# This file is modified from python-freicoinlib.
 #
 
 """Scripts

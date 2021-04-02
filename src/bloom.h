@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_BLOOM_H
-#define BITCOIN_BLOOM_H
+#ifndef FREICOIN_BLOOM_H
+#define FREICOIN_BLOOM_H
 
 #include "serialize.h"
 
@@ -151,4 +151,4 @@ private:
     int nHashFuncs;
 };
 
-#endif // BITCOIN_BLOOM_H
+#endif // FREICOIN_BLOOM_H

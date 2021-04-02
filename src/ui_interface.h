@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UI_INTERFACE_H
-#define BITCOIN_UI_INTERFACE_H
+#ifndef FREICOIN_UI_INTERFACE_H
+#define FREICOIN_UI_INTERFACE_H
 
 #include <stdint.h>
 #include <string>
@@ -132,4 +132,4 @@ std::string AmountErrMsg(const char* const optname, const std::string& strValue)
 
 extern CClientUIInterface uiInterface;
 
-#endif // BITCOIN_UI_INTERFACE_H
+#endif // FREICOIN_UI_INTERFACE_H

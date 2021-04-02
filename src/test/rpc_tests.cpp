@@ -19,7 +19,7 @@
 #include "base58.h"
 #include "netbase.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_freicoin.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(json_parse_errors)
     // Invalid, trailing garbage
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0sds"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0]"), std::runtime_error);
-    // BTC addresses should fail parsing
+    // FRC addresses should fail parsing
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), std::runtime_error);
 }
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/24 add 1607731200 true")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-#if 0 // This test fails in upstream Bitcoin Core.  We're not going to bother
+#if 0 // This test fails in upstream Freicoin.  We're not going to bother
       // fixing it.
     ar = r.get_array();
     o1 = ar[0].get_obj();

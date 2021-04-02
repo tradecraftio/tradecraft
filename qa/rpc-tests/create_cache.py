@@ -16,12 +16,12 @@
 
 #
 # Helper script to create the cache
-# (see BitcoinTestFramework.setup_chain)
+# (see FreicoinTestFramework.setup_chain)
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 
-class CreateCache(BitcoinTestFramework):
+class CreateCache(FreicoinTestFramework):
 
     def __init__(self):
         super().__init__()
