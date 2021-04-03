@@ -3877,7 +3877,7 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+339"/>
+        <location filename="../bitcoinstrings.cpp" line="+329"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
@@ -3902,7 +3902,7 @@
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
-        <location line="-239"/>
+        <location line="-229"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect/-noconnect)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3912,7 +3912,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+12"/>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3937,7 +3937,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+134"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3962,7 +3962,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-382"/>
+        <location line="-372"/>
         <source>Bitcoin Core</source>
         <translation type="unfinished">Bitcoin Core</translation>
     </message>
@@ -4002,12 +4002,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Create an output to the specified address in the block-final transaction, typically to provide an input to the block-final transaction of the next block (default: use wallet-generated change address)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4093,16 +4088,6 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>Use the block-final transaction to send all value of the walletblockfinaltx wallet to the specified address in generated block templates</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Use the named wallet for constructing block-final transactions using wallet outputs prior to activation of the block-final transaction rules</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
         <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4472,7 +4457,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-380"/>
+        <location line="-370"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4487,7 +4472,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+13"/>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4547,7 +4532,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+31"/>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4737,12 +4722,12 @@
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="-251"/>
+        <location line="-245"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <location line="+176"/>
+        <location line="+170"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
@@ -4752,7 +4737,7 @@
         <translation>Loading addresses...</translation>
     </message>
     <message>
-        <location line="-312"/>
+        <location line="-302"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4762,7 +4747,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+51"/>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4852,7 +4837,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+15"/>
         <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
         <translation type="unfinished"></translation>
     </message>

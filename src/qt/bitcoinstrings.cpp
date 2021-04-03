@@ -54,10 +54,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Connect only to the specified node(s); -noconnect or -connect=0 alone to "
 "disable automatic connections"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Create an output to the specified address in the block-final transaction, "
-"typically to provide an input to the block-final transaction of the next "
-"block (default: use wallet-generated change address)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Create new files with system default permissions, instead of umask 077 (only "
 "effective with disabled wallet functionality)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -214,12 +210,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
 "%s)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Use the block-final transaction to send all value of the walletblockfinaltx "
-"wallet to the specified address in generated block templates"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Use the named wallet for constructing block-final transactions using wallet "
-"outputs prior to activation of the block-final transaction rules"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Username and hashed password for JSON-RPC connections. The field <userpw> "
 "comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is "

@@ -3562,10 +3562,6 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
                                " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
 
-    strUsage += HelpMessageOpt("-walletblockfinaltx=<wallet>", _("Use the named wallet for constructing block-final transactions using wallet outputs prior to activation of the block-final transaction rules"));
-    strUsage += HelpMessageOpt("-minesweepto=<address>", _("Use the block-final transaction to send all value of the walletblockfinaltx wallet to the specified address in generated block templates"));
-    strUsage += HelpMessageOpt("-carryforward=<address>", _("Create an output to the specified address in the block-final transaction, typically to provide an input to the block-final transaction of the next block (default: use wallet-generated change address)"));
-
     if (showDebug)
     {
         strUsage += HelpMessageGroup(_("Wallet debugging/testing options:"));
