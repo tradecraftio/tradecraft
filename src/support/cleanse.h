@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SUPPORT_CLEANSE_H
-#define BITCOIN_SUPPORT_CLEANSE_H
+#ifndef FREICOIN_SUPPORT_CLEANSE_H
+#define FREICOIN_SUPPORT_CLEANSE_H
 
 #include <stdlib.h>
 
 // Attempt to overwrite data in the specified memory span.
 void memory_cleanse(void *ptr, size_t len);
 
-#endif // BITCOIN_SUPPORT_CLEANSE_H
+#endif // FREICOIN_SUPPORT_CLEANSE_H

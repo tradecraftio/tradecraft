@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UINT256_H
-#define BITCOIN_UINT256_H
+#ifndef FREICOIN_UINT256_H
+#define FREICOIN_UINT256_H
 
 #include <assert.h>
 #include <cstring>
@@ -169,4 +169,4 @@ inline uint256 uint256S(const std::string& str)
     return rv;
 }
 
-#endif // BITCOIN_UINT256_H
+#endif // FREICOIN_UINT256_H

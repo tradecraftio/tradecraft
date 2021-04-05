@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_LIMITEDMAP_H
-#define BITCOIN_LIMITEDMAP_H
+#ifndef FREICOIN_LIMITEDMAP_H
+#define FREICOIN_LIMITEDMAP_H
 
 #include <assert.h>
 #include <map>
@@ -108,4 +108,4 @@ public:
     }
 };
 
-#endif // BITCOIN_LIMITEDMAP_H
+#endif // FREICOIN_LIMITEDMAP_H

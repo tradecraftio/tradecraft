@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_FS_H
-#define BITCOIN_FS_H
+#ifndef FREICOIN_FS_H
+#define FREICOIN_FS_H
 
 #include <stdio.h>
 #include <string>
@@ -32,4 +32,4 @@ namespace fsbridge {
     FILE *freopen(const fs::path& p, const char *mode, FILE *stream);
 };
 
-#endif // BITCOIN_FS_H
+#endif // FREICOIN_FS_H

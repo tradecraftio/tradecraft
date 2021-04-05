@@ -17,9 +17,9 @@
 import os
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 
-class ForkNotifyTest(BitcoinTestFramework):
+class ForkNotifyTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
@@ -41,7 +41,7 @@ class ForkNotifyTest(BitcoinTestFramework):
         self.nodes[1].generate(1)
         self.sync_all()
 
-        # Give bitcoind 10 seconds to write the alert notification
+        # Give freicoind 10 seconds to write the alert notification
         timeout = 10.0
         while timeout > 0:
             if os.path.exists(self.alert_filename) and os.path.getsize(self.alert_filename):

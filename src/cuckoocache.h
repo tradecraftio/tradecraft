@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef _BITCOIN_CUCKOOCACHE_H_
-#define _BITCOIN_CUCKOOCACHE_H_
+#ifndef _FREICOIN_CUCKOOCACHE_H_
+#define _FREICOIN_CUCKOOCACHE_H_
 
 #include <array>
 #include <algorithm>

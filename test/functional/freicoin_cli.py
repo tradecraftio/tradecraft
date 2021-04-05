@@ -13,11 +13,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Test bitcoin-cli"""
-from test_framework.test_framework import BitcoinTestFramework
+"""Test freicoin-cli"""
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
-class TestBitcoinCli(BitcoinTestFramework):
+class TestFreicoinCli(FreicoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -26,11 +26,11 @@ class TestBitcoinCli(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        self.log.info("Compare responses from getinfo RPC and `bitcoin-cli getinfo`")
+        self.log.info("Compare responses from getinfo RPC and `freicoin-cli getinfo`")
         cli_get_info = self.nodes[0].cli.getinfo()
         rpc_get_info = self.nodes[0].getinfo()
 
         assert_equal(cli_get_info, rpc_get_info)
 
 if __name__ == '__main__':
-    TestBitcoinCli().main()
+    TestFreicoinCli().main()

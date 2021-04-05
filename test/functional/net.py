@@ -20,7 +20,7 @@ Tests correspond to code in rpc/net.cpp.
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -28,7 +28,7 @@ from test_framework.util import (
     p2p_port,
 )
 
-class NetTest(BitcoinTestFramework):
+class NetTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
