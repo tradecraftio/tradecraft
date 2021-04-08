@@ -173,7 +173,7 @@ class ExampleTest(FreicoinTestFramework):
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
         self.block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
 
-        height = 1
+        height = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height'] + 1
 
         for i in range(10):
             # Use the mininode and blocktools functionality to manually build a block
