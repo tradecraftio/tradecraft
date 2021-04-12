@@ -1,7 +1,7 @@
 Freicoin version 12.1.3-10161 is now available from:
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-linux64.zip)
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-linux32.tar.gz)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-linux64.tar.gz)
   * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-osx.dmg)
   * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-osx64.tar.gz)
   * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3-10161-win32-setup.exe)

@@ -1,7 +1,7 @@
 Freicoin version 10.4.2 is now available from:
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.2-7851-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.2-7851-linux64.zip)
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.2-7851-linux32.tar.gz)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.2-7851-linux64.tar.gz)
   * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.2-7851-osx.dmg)
   * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.2-7851-osx64.tar.gz)
   * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4.2-7851-win32-setup.exe)

@@ -1,7 +1,7 @@
 Freicoin version 0.9.5.1 is now available from:
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v0.9.5.1-5869-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v0.9.5.1-5869-linux64.zip)
+  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v0.9.5.1-5869-linux32.tar.gz)
+  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v0.9.5.1-5869-linux64.tar.gz)
   * [macOS](https://s3.amazonaws.com/in.freico.stable/freicoin-v0.9.5.1-5869-osx.dmg)
   * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v0.9.5.1-5869-win32-setup.exe)
   * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v0.9.5.1-5869-win32.zip)
