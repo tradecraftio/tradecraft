@@ -23,6 +23,7 @@
  * network protocol versioning
  */
 
+static const int VERSION_MASK = 0x1ffffff;
 static const int PROTOCOL_VERSION = 70016;
 
 //! initial proto version, to be increased after version/verack negotiation
