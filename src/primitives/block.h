@@ -338,7 +338,7 @@ public:
         uint32_t bits = nBits;
         if (!ser_action.ForRead()) {
             extended = !m_aux_pow.IsNull()
-                    &&  (s.GetVersion() >= AUX_POW_VERSION)
+                    && !(s.GetType() == SER_NETWORK && (s.GetVersion() & VERSION_MASK) < AUX_POW_VERSION)
                     && !(s.GetVersion() & SERIALIZE_BLOCK_NO_AUX_POW);
             if (extended) {
                 bits |= 1 << 23;
@@ -371,7 +371,7 @@ public:
             // The auxiliary proof of work is the only currently extended
             // block header data serialization presently supported.
             if (   (flags & 1)
-                && (s.GetVersion() >= AUX_POW_VERSION)
+                && !(s.GetType() == SER_NETWORK && (s.GetVersion() & VERSION_MASK) < AUX_POW_VERSION)
                 && !(s.GetVersion() & SERIALIZE_BLOCK_NO_AUX_POW))
             {
                 flags ^= 1; // clear the aux_pow bit
