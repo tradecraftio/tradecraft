@@ -147,6 +147,11 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "This is a pre-release test build - use at your own risk - do not use for "
 "mining or merchant applications"),
 QT_TRANSLATE_NOOP("freicoin", ""
+"This node does not support the auxiliary proof-of-work soft-fork, leaving it "
+"exposed to denial-of-service attacks from untrusted peers. Please use the '-"
+"connect' option to configure this node to only connect to trusted peers you "
+"control.\n"),
+QT_TRANSLATE_NOOP("freicoin", ""
 "This product includes software developed by the OpenSSL Project for use in "
 "the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software "
 "written by Eric Young and UPnP software written by Thomas Bernard."),

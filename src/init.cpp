@@ -869,6 +869,17 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // also see: InitParameterInteraction()
 
+    // We do not distinguish between the protocol-cleanup rule changes and the
+    // relaxation of aggregate block limits in the size-expansion flag day, nor
+    // do we support the auxiliary proof-of-work rules.  As a result, it is
+    // trivial for a malicious peer to perform a disk-space exhausting denial of
+    // service attack against us once the protocol-cleanup rule change activates
+    // on April 16th, 2021.  We therefore require the user to connect to a
+    // trusted peer with the `-connect` parameter.
+    if (!mapArgs.count("-connect") || mapMultiArgs["-connect"].size() == 0) {
+        return InitError(_("This node does not support the auxiliary proof-of-work soft-fork, leaving it exposed to denial-of-service attacks from untrusted peers. Please use the '-connect' option to configure this node to only connect to trusted peers you control.\n"));
+    }
+
     // if using block pruning, then disable txindex
     if (GetArg("-prune", 0)) {
         if (GetBoolArg("-txindex", DEFAULT_TXINDEX))

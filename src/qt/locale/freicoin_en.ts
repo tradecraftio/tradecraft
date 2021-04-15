@@ -4266,6 +4266,12 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>This node does not support the auxiliary proof-of-work soft-fork, leaving it exposed to denial-of-service attacks from untrusted peers. Please use the &apos;-connect&apos; option to configure this node to only connect to trusted peers you control.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation type="unfinished"></translation>
     </message>
