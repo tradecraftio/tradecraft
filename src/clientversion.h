@@ -31,8 +31,8 @@
 #define CLIENT_VERSION_MAJOR 12
 #define CLIENT_VERSION_MINOR 1
 #define CLIENT_VERSION_REVISION 3
-#define CLIENT_VERSION_PATCH 3
-#define CLIENT_VERSION_BUILD 10198
+#define CLIENT_VERSION_PATCH 4
+#define CLIENT_VERSION_BUILD 10205
 
 //! Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE true
@@ -41,7 +41,7 @@
  * Copyright year (2009-this)
  * Todo: update this when changing our copyright comments in the source
  */
-#define COPYRIGHT_YEAR 2019
+#define COPYRIGHT_YEAR 2021
 
 #endif //HAVE_CONFIG_H
 
@@ -53,7 +53,7 @@
 #define DO_STRINGIZE(X) #X
 
 //! Copyright string used in Windows .rc files
-#define COPYRIGHT_STR "2009-2016 The Freicoin Developers, " \
+#define COPYRIGHT_STR "2009-2016 The Bitcoin Developers, " \
                       "2011-" STRINGIZE(COPYRIGHT_YEAR) " The Freicoin Developers"
 
 /**
