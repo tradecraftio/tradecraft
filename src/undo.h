@@ -160,7 +160,7 @@ public:
         // preserves the ability to downgrade until the block-final transaction
         // rules activate, which causes final_tx to be set, which forces
         // extended serialization.
-        uint8_t flags = !!final_tx.size;
+        uint8_t flags = !final_tx.IsNull();
         if (flags) {
             // Write header.
             uint8_t dummy = 0xff;
