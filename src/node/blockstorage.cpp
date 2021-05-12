@@ -789,6 +789,25 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     if (!ReadBlockFromDisk(block, block_pos, consensusParams)) {
         return false;
     }
+
+    // The activation of auxiliary proof-of-work introduces some unavoidable
+    // malleability into the block serialization format.  A merge-mined block
+    // can be serialized with or without its auxiliary proof-of-work header, and
+    // the choice does not change the calculated block hash.  Through a process
+    // which is at this time not well characterized, it appears possible for
+    // nodes to get into a state in which the block file on disk is missing the
+    // auxiliary proof-of-work of a fully validated block, but the chainstate
+    // database (which contains the block headers in the form of CBlockIndex
+    // records) has the complete header with auxiliary proof-of-work fields.
+    //
+    // Until the underlying bug is found and fixed, the workaround is to copy
+    // the auxiliary proof-of-work fields from the chainstate database when
+    // loading a block from disk.  In tests this is shown to make the complete
+    // block header available wherever the block is used.
+    if (block.m_aux_pow.IsNull()) {
+        block.m_aux_pow = pindex->m_aux_pow;
+    }
+
     if (block.GetHash() != pindex->GetBlockHash()) {
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                      pindex->ToString(), block_pos.ToString());
