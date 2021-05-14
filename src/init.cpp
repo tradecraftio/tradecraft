@@ -1471,6 +1471,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             case ChainstateLoadingError::ERROR_PRUNED_NEEDS_REINDEX:
                 strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
                 break;
+            case ChainstateLoadingError::ERROR_CHAINSTATE_NEEDS_REINDEX:
+                strLoadError = _("You need to rebuild the coin database and block-undo records using -reindex when upgrading from a pre-v15 chainstate database.  If pruning is enabled, this will redownload the entire blockchain.");
+                break;
             case ChainstateLoadingError::ERROR_LOAD_GENESIS_BLOCK_FAILED:
                 strLoadError = _("Error initializing block database");
                 break;

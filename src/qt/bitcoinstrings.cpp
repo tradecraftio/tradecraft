@@ -151,6 +151,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Witness data for blocks after height %d requires validation. Please restart "
 "with -reindex."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"You need to rebuild the coin database and block-undo records using -reindex "
+"when upgrading from a pre-v15 chainstate database.  If pruning is enabled, "
+"this will redownload the entire blockchain."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "You need to rebuild the database using -reindex to go back to unpruned "
 "mode.  This will redownload the entire blockchain"),
 QT_TRANSLATE_NOOP("bitcoin-core", "%s is set very high!"),
