@@ -416,6 +416,22 @@ public:
 
 }
 
+/** Check if a full-chain reindex is required.
+ *
+ * Currently this only checks if the per-tx utxo model to per-txout
+ * upgrade needs to be done, since this cannot be done in-place on
+ * Freicoin/Tradecraft due to complications related to the block-final
+ * transaction undo records.
+ */
+bool CCoinsViewDB::NeedsReindex() {
+    std::unique_ptr<CDBIterator> pcursor(m_db->NewIterator());
+    pcursor->Seek(std::make_pair(DB_COINS, uint256()));
+    if (!pcursor->Valid()) {
+        return false;
+    }
+    return true;
+}
+
 /** Upgrade the database from older formats.
  *
  * Currently implemented: from the per-tx utxo model (0.8..0.14.x) to per-txout.

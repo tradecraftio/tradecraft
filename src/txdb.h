@@ -77,6 +77,13 @@ public:
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, const BlockFinalTxEntry &final_tx) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
 
+    //! Check if the coin database is in a state that cannot be recovered
+    //! in-place, necessitating a complete chain reindex.  This does not check
+    //! for all possible reasons a reindex might be required.  In fact it
+    //! presently only checks if the v14->v15 coin database upgrade needs to be
+    //! done, since that requires a full reindex on Freicoin/Tradecraft.
+    bool NeedsReindex();
+
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
     size_t EstimateSize() const override;

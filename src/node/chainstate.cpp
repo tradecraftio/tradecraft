@@ -101,6 +101,17 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
             chainstate->CoinsErrorCatcher().AddReadErrCallback(coins_error_cb);
         }
 
+        // While the utxo-set database can be upgraded in-place using
+        // upstream code from Bitcoin, the block-final transaction
+        // record cannot, as it depends on data that is not presently
+        // contained in the utxo-set, and requires rewriting the undo
+        // files.  The user will get a notification that they need to
+        // reindex, which can be done automatically in the GUI or by
+        // providing the '-reindex' option on the command line.
+        if (chainstate->CoinsDB().NeedsReindex()) {
+            return ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED;
+        }
+
         // If necessary, upgrade from older database format.
         // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
         if (!chainstate->CoinsDB().Upgrade()) {
