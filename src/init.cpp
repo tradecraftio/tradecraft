@@ -1524,6 +1524,18 @@ bool AppInitMain()
                 pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState));
                 pcoinscatcher.reset(new CCoinsViewErrorCatcher(pcoinsdbview.get()));
 
+                // While the utxo-set database can be upgraded in-place using
+                // upstream code from Bitcoin, the block-final transaction
+                // record cannot, as it depends on data that is not presently
+                // contained in the utxo-set, and requires rewriting the undo
+                // files.  The user will get a notification that they need to
+                // reindex, which can be done automatically in the GUI or by
+                // providing the '-reindex' option on the command line.
+                if (pcoinsdbview->NeedsReindex()) {
+                    strLoadError = _("You need to rebuild the coin database and block-undo records using -reindex when upgrading from a pre-v15 chainstate database.  If pruning is enabled, this will redownload the entire blockchain.");
+                    break;
+                }
+
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
                 if (!pcoinsdbview->Upgrade()) {
