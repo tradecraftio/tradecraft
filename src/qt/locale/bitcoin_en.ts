@@ -3997,7 +3997,7 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+361"/>
+        <location filename="../bitcoinstrings.cpp" line="+365"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
@@ -4022,7 +4022,7 @@
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
-        <location line="-163"/>
+        <location line="-167"/>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4042,7 +4042,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+151"/>
+        <location line="+155"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4067,7 +4067,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-412"/>
         <source>Bitcoin Core</source>
         <translation type="unfinished">Bitcoin Core</translation>
     </message>
@@ -4252,7 +4252,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>You need to rebuild the coin database and block-undo records using -reindex when upgrading from a pre-v15 chainstate database.  If pruning is enabled, this will redownload the entire blockchain.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4627,7 +4632,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-407"/>
+        <location line="-411"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4692,7 +4697,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4927,17 +4932,17 @@
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="-264"/>
+        <location line="-268"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <location line="+183"/>
+        <location line="+187"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
     <message>
-        <location line="-266"/>
+        <location line="-270"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5082,7 +5087,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+15"/>
         <source>%s is set very high!</source>
         <translation type="unfinished"></translation>
     </message>
