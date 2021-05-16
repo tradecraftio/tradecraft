@@ -138,7 +138,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['transactions'], 201) # + 1 block-final tx
         assert_equal(res['height'], 200)
         assert_equal(res['txouts'], 201)
-        assert_equal(res['bogosize'], 17087),
+        assert_equal(res['bogosize'], 17051),
         assert_equal(res['bestblock'], node.getblockhash(200))
         size = res['disk_size']
         assert size > 6400
