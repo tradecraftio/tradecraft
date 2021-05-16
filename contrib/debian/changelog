@@ -1,7 +1,3 @@
-bitcoin (0.16.3.1-precise1) precise; urgency=medium
-
- -- Mark Friedenbach <mark@friedenbach.org>  Mon, 8 Feb 2021 12:00:00
-
 bitcoin (0.15.2.1-precise1) precise; urgency=medium
 
  -- Mark Friedenbach <mark@friedenbach.org>  Sat, 6 Feb 2021 12:00:00
