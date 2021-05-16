@@ -21,7 +21,6 @@
 #include <httprpc.h>
 #include <key.h>
 #include <validation.h>
-#include <mergemine.h>
 #include <miner.h>
 #include <netbase.h>
 #include <net.h>
@@ -164,7 +163,6 @@ static CScheduler scheduler;
 void Interrupt()
 {
     InterruptStratumServer();
-    InterruptMergeMining();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -193,7 +191,6 @@ void Shutdown()
     StopREST();
     StopRPC();
     StopStratumServer();
-    StopMergeMining();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
     FlushWallets();
@@ -532,8 +529,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-stratumbind=<addr>", _("Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)"));
     strUsage += HelpMessageOpt("-stratumport=<port>", strprintf(_("Listen for Stratum work requests on <port> (default: %u or testnet: %u)"), defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()));
     strUsage += HelpMessageOpt("-stratumallowip=<ip>", _("Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times"));
-    strUsage += HelpMessageOpt("-mergemine=<addr>:<port>", _("Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://<addr>:<port>"));
-    strUsage += HelpMessageOpt("-mergeminename=<name>:<chainid>", _("Use <name> as an alternative specifier for the given chainid."));
 
     return strUsage;
 }
@@ -743,8 +738,6 @@ bool AppInitServers()
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
-        return false;
-    if (!InitMergeMining())
         return false;
     if (gArgs.GetBoolArg("-stratum", DEFAULT_STRATUM_ENABLE) && !InitStratumServer())
         return false;

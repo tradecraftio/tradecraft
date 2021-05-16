@@ -4167,11 +4167,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://&lt;addr&gt;:&lt;port&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location line="+7"/>
         <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation type="unfinished"></translation>
@@ -4589,11 +4584,6 @@
     <message>
         <location line="+2"/>
         <source>Upgrading UTXO database</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Use &lt;name&gt; as an alternative specifier for the given chainid.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
