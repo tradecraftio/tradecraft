@@ -10,6 +10,8 @@ Test the DERSIG soft-fork activation on regtest.
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
+    get_final_tx_info,
+    add_final_tx,
 )
 from test_framework.messages import msg_block
 from test_framework.p2p import P2PInterface
@@ -79,6 +81,8 @@ class BIP66Test(BitcoinTestFramework):
 
         self.log.info("Test that a transaction with non-DER signature can still appear in a block")
 
+        final_tx = get_final_tx_info(self.nodes[0])
+
         spendtx = self.create_tx(self.coinbase_txids[0])
         unDERify(spendtx)
         spendtx.rehash()
@@ -86,6 +90,8 @@ class BIP66Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time, txlist=[spendtx])
+        final_tx = add_final_tx(final_tx, block)
+        block.rehash()
         block.solve()
 
         assert_equal(self.nodes[0].getblockcount(), DERSIG_HEIGHT - 2)
@@ -99,6 +105,8 @@ class BIP66Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time, version=2)
+        final_tx = add_final_tx(final_tx, block)
+        block.rehash()
         block.solve()
 
         with self.nodes[0].assert_debug_log(expected_msgs=[f'{block.hash}, bad-version(0x00000002)']):
@@ -126,11 +134,11 @@ class BIP66Test(BitcoinTestFramework):
         )
 
         # Now we verify that a block with this transaction is also invalid.
-        block.vtx.append(spendtx)
+        block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-1].hash} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)']):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-2].hash} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)']):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()

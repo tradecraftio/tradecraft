@@ -326,7 +326,7 @@ class RESTTest (BitcoinTestFramework):
 
         # Check if the 3 tx show up in the new block
         json_obj = self.test_rest_request(f"/block/{newblockhash[0]}")
-        non_coinbase_txs = {tx['txid'] for tx in json_obj['tx']
+        non_coinbase_txs = {tx['txid'] for tx in json_obj['tx'][:-1] #exclude final tx
                             if 'coinbase' not in tx['vin'][0]}
         assert_equal(non_coinbase_txs, set(txs))
 
