@@ -56,7 +56,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
     BOOST_CHECK_EQUAL(&active_chain, &c1.m_chain);
 
     // Get to a valid assumeutxo tip (per chainparams);
-    mineBlocks(10);
+    mineBlocks(9);
     BOOST_CHECK_EQUAL(WITH_LOCK(manager.GetMutex(), return manager.ActiveHeight()), 110);
     auto active_tip = WITH_LOCK(manager.GetMutex(), return manager.ActiveTip());
     auto exp_tip = c1.m_chain.Tip();
@@ -215,7 +215,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             }
 
             BOOST_CHECK_EQUAL(total_coins, initial_total_coins);
-            BOOST_CHECK_EQUAL(initial_size, initial_total_coins);
+            BOOST_CHECK_EQUAL(initial_size, initial_total_coins + 3);
         }
 
         Chainstate& validation_chainstate = chainman.ActiveChainstate();
@@ -228,9 +228,9 @@ struct SnapshotTestSetup : TestChain100Setup {
         // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
         // be found.
         constexpr int snapshot_height = 110;
-        mineBlocks(10);
-        initial_size += 10;
-        initial_total_coins += 10;
+        mineBlocks(9);
+        initial_size += 9;
+        initial_total_coins += 9;
 
         // Should not load malleated snapshots
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
@@ -323,7 +323,7 @@ struct SnapshotTestSetup : TestChain100Setup {
                     total_coins++;
                 }
 
-                BOOST_CHECK_EQUAL(initial_size , coinscache.GetCacheSize());
+                BOOST_CHECK_EQUAL(initial_size , coinscache.GetCacheSize() + 3);
                 BOOST_CHECK_EQUAL(total_coins, initial_total_coins);
                 chains_tested++;
             }
@@ -442,7 +442,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
 
     // Mine to height 120, past the hardcoded regtest assumeutxo snapshot at
     // height 110
-    mineBlocks(20);
+    mineBlocks(19);
 
     CBlockIndex* validated_tip{nullptr};
     CBlockIndex* assumed_base{nullptr};
