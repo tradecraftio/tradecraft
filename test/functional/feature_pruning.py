@@ -49,13 +49,15 @@ def mine_large_blocks(node, n):
     # Get the block parameters for the first block
     big_script = CScript([OP_RETURN] + [OP_NOP] * 950000)
     best_block = node.getblock(node.getbestblockhash())
-    final_tx = []
+    final_tx = get_final_tx_info(node)
     height = int(best_block["height"]) + 1
     mine_large_blocks.nTime = max(mine_large_blocks.nTime, int(best_block["time"])) + 1
     previousblockhash = int(best_block["hash"], 16)
 
     for _ in range(n):
         block = create_block(hashprev=previousblockhash, ntime=mine_large_blocks.nTime, coinbase=create_coinbase(height, script_pubkey=big_script))
+        if height > 100:
+            final_tx = add_final_tx(final_tx, block)
         block.solve()
 
         # Submit to the node
@@ -79,16 +81,16 @@ class PruneTest(BitcoinTestFramework):
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
-        self.full_node_default_args = ["-vbparams=finaltx:-2:1", "-maxreceivebuffer=20000", "-checkblocks=5"]
+        self.full_node_default_args = ["-maxreceivebuffer=20000", "-checkblocks=5"]
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
         # Create nodes 5 to test wallet in prune mode, but do not connect
         self.extra_args = [
             self.full_node_default_args,
             self.full_node_default_args,
-            ["-vbparams=finaltx:-2:1", "-maxreceivebuffer=20000", "-prune=550"],
-            ["-vbparams=finaltx:-2:1", "-maxreceivebuffer=20000"],
-            ["-vbparams=finaltx:-2:1", "-maxreceivebuffer=20000"],
-            ["-vbparams=finaltx:-2:1", "-prune=550", "-blockfilterindex=1"],
+            ["-maxreceivebuffer=20000", "-prune=550"],
+            ["-maxreceivebuffer=20000"],
+            ["-maxreceivebuffer=20000"],
+            ["-prune=550", "-blockfilterindex=1"],
         ]
         self.rpc_timeout = 120
 

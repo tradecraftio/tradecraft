@@ -10,6 +10,8 @@ from decimal import Decimal
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
+    get_final_tx_info,
+    add_final_tx,
 )
 from test_framework.messages import DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PTxInvStore
@@ -54,6 +56,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         block_time = int(time.time()) + 6 * 60
         node.setmocktime(block_time)
         block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
+        final_tx = add_final_tx(get_final_tx_info(node), block)
         block.solve()
         node.submitblock(block.serialize().hex())
 
@@ -123,6 +126,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         block_time = entry_time + 6 * 60
         node.setmocktime(block_time)
         block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
+        final_tx = add_final_tx(final_tx, block)
         block.solve()
         node.submitblock(block.serialize().hex())
         # Set correct m_best_block_time, which is used in ResubmitWalletTransactions

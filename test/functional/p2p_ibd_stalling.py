@@ -10,9 +10,11 @@ import time
 
 from test_framework.blocktools import (
         create_block,
-        create_coinbase
+        create_coinbase,
+        add_final_tx,
 )
 from test_framework.messages import (
+        CTxOut,
         MSG_BLOCK,
         MSG_TYPE_MASK,
 )
@@ -21,6 +23,10 @@ from test_framework.p2p import (
         msg_block,
         msg_headers,
         P2PDataStore,
+)
+from test_framework.script import (
+        CScript,
+        OP_TRUE,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -60,12 +66,25 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         self.log.info("Prepare blocks without sending them to the node")
         block_dict = {}
         for _ in range(NUM_BLOCKS):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
-            blocks[-1].solve()
-            tip = blocks[-1].sha256
+            block = create_block(tip, create_coinbase(height), block_time)
+            if height == 1:
+                block.vtx[0].vout.insert(0, CTxOut(0, CScript([OP_TRUE])))
+                block.vtx[0].rehash()
+                final_tx = [{
+                    'txid': block.vtx[0].hash,
+                    'vout': 0,
+                    'amount': 0,
+                }]
+                block.hashMerkleRoot = block.calc_merkle_root()
+                block.rehash()
+            if height > 100:
+                final_tx = add_final_tx(final_tx, block)
+            block.solve()
+            blocks.append(block)
+            tip = block.sha256
             block_time += 1
             height += 1
-            block_dict[blocks[-1].sha256] = blocks[-1]
+            block_dict[tip] = block
         stall_block = blocks[0].sha256
 
         headers_message = msg_headers()
@@ -80,7 +99,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
 
         # Need to wait until 1023 blocks are received - the magic total bytes number is a workaround in lack of an rpc
         # returning the number of downloaded (but not connected) blocks.
-        self.wait_until(lambda: self.total_bytes_recv_for_blocks() == 172761)
+        self.wait_until(lambda: self.total_bytes_recv_for_blocks() == 229125)
 
         self.all_sync_send_with_ping(peers)
         # If there was a peer marked for stalling, it would get disconnected
