@@ -189,7 +189,7 @@ def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, script_pub_key=C
     return tx
 
 def create_transaction(node, txid, to_address, *, amount):
-    """ Return signed transaction spending the first output of the
+    """ Return signed transaction spending all non-zero outputs of the
         input txid. Note that the node must have a wallet that can
         sign for the output that is being spent.
     """
@@ -198,11 +198,19 @@ def create_transaction(node, txid, to_address, *, amount):
     return tx
 
 def create_raw_transaction(node, txid, to_address, *, amount):
-    """ Return raw signed transaction spending the first output of the
+    """ Return raw signed transaction spending all non-zero outputs of the
         input txid. Note that the node must have a wallet that can sign
         for the output that is being spent.
     """
-    psbt = node.createpsbt(inputs=[{"txid": txid, "vout": 0}], outputs={to_address: amount})
+    for w in node.listwallets():
+        wrpc = node.get_wallet_rpc(w)
+        try:
+            tx = node.decoderawtransaction(wrpc.gettransaction(txid)["hex"])
+            inputs = [{"txid":tx["txid"], "vout":txout["n"]} for txout in tx["vout"] if txout["value"] > 0]
+            break
+        except:
+            continue
+    psbt = node.createpsbt(inputs=inputs, outputs={to_address: amount})
     for _ in range(2):
         for w in node.listwallets():
             wrpc = node.get_wallet_rpc(w)

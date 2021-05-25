@@ -193,24 +193,17 @@ class BlockchainTest(BitcoinTestFramework):
             'csv': {'type': 'buried', 'active': True, 'height': 5},
             'finaltx': {
                 'type': 'bip9',
-                'active': False,
+                'height': 0,
+                'active': True,
                 'bip9': {
-                    'bit': 12,
-                    'start_time': 0,
-                    'timeout': 0x7fffffffffffffff,
+                    'start_time': -1,
+                    'timeout': 9223372036854775807,
                     'min_activation_height': 0,
-                    'status': 'started',
-                    'since': 144,
-                    'status_next': status_next,
-                    'statistics': {
-                        'period': 144,
-                        'elapsed': height - 143,
-                        'count': height - 143,
-                        'threshold': 108,
-                        'possible': True
-                    },
-                    'signalling': '#'*(height-143),
-                },
+                    'status': 'active',
+                    'since': 0,
+                    'status_next':
+                    'active'
+                }
             },
             'segwit': {'type': 'buried', 'active': True, 'height': 6},
             'testdummy': {
@@ -298,10 +291,10 @@ class BlockchainTest(BitcoinTestFramework):
 
         chaintxstats = self.nodes[0].getchaintxstats(nblocks=1)
         # 200 txs plus genesis tx
-        assert_equal(chaintxstats['txcount'], HEIGHT + 1)
-        # tx rate should be 1 per 10 minutes, or 1/600
+        assert_equal(chaintxstats['txcount'], 2*HEIGHT - 100 + 1)
+        # tx rate should be 2 per 10 minutes, or 2/600
         # we have to round because of binary math
-        assert_equal(round(chaintxstats['txrate'] * TIME_RANGE_STEP, 10), Decimal(1))
+        assert_equal(round(chaintxstats['txrate'] * TIME_RANGE_STEP, 10), Decimal(2))
 
         b1_hash = self.nodes[0].getblockhash(1)
         b1 = self.nodes[0].getblock(b1_hash)
@@ -311,13 +304,13 @@ class BlockchainTest(BitcoinTestFramework):
 
         chaintxstats = self.nodes[0].getchaintxstats()
         assert_equal(chaintxstats['time'], b200['time'])
-        assert_equal(chaintxstats['txcount'], HEIGHT + 1)
+        assert_equal(chaintxstats['txcount'], 2*HEIGHT - 100 + 1)
         assert_equal(chaintxstats['window_final_block_hash'], b200_hash)
         assert_equal(chaintxstats['window_final_block_height'], HEIGHT )
         assert_equal(chaintxstats['window_block_count'], HEIGHT - 1)
-        assert_equal(chaintxstats['window_tx_count'], HEIGHT - 1)
+        assert_equal(chaintxstats['window_tx_count'], 2*HEIGHT - 100 - 1)
         assert_equal(chaintxstats['window_interval'], time_diff)
-        assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(HEIGHT - 1))
+        assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(2*HEIGHT - 100 - 1))
 
         chaintxstats = self.nodes[0].getchaintxstats(blockhash=b1_hash)
         assert_equal(chaintxstats['time'], b1['time'])
@@ -334,10 +327,10 @@ class BlockchainTest(BitcoinTestFramework):
         res = node.gettxoutsetinfo()
 
         assert_equal(res['total_amount'], Decimal('8725.00000000'))
-        assert_equal(res['transactions'], HEIGHT)
+        assert_equal(res['transactions'], HEIGHT + 1)
         assert_equal(res['height'], HEIGHT)
-        assert_equal(res['txouts'], HEIGHT)
-        assert_equal(res['bogosize'], 16800),
+        assert_equal(res['txouts'], HEIGHT + 1)
+        assert_equal(res['bogosize'], 16851),
         assert_equal(res['bestblock'], node.getblockhash(HEIGHT))
         size = res['disk_size']
         assert size > 6400
@@ -407,7 +400,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(header['confirmations'], 1)
         assert_equal(header['previousblockhash'], secondbesthash)
         assert_is_hex_string(header['chainwork'])
-        assert_equal(header['nTx'], 1)
+        assert_equal(header['nTx'], 2)
         assert_is_hash_string(header['hash'])
         assert_is_hash_string(header['previousblockhash'])
         assert_is_hash_string(header['merkleroot'])

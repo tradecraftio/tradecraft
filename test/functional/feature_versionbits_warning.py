@@ -10,7 +10,7 @@ soft-forks, and test that warning alerts are generated.
 import os
 import re
 
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import create_block, create_coinbase, get_final_tx_info, add_final_tx
 from test_framework.messages import msg_block
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -46,9 +46,14 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         height = self.nodes[0].getblockcount()
         block_time = self.nodes[0].getblockheader(tip)["time"] + 1
         tip = int(tip, 16)
+        final_tx = False
 
         for _ in range(numblocks):
             block = create_block(tip, create_coinbase(height + 1), block_time, version=version)
+            if height >= 100:
+                if not final_tx:
+                    final_tx = get_final_tx_info(self.nodes[0])
+                final_tx = add_final_tx(final_tx, block)
             block.solve()
             peer.send_message(msg_block(block))
             block_time += 1
