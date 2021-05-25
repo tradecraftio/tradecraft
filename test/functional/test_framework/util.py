@@ -540,7 +540,10 @@ def gen_return_txouts():
     return txouts
 
 def create_tx(node, coinbase, to_address, amount):
-    inputs = [{"txid": coinbase, "vout": 0}]
+    inputs = []
+    for n,txout in enumerate(node.getrawtransaction(coinbase, True)['vout']):
+        if txout['value'] > 0:
+            inputs.append({ "txid" : coinbase, "vout" : n })
     outputs = {to_address: amount}
     rawtx = node.createrawtransaction(inputs, outputs)
     signresult = node.signrawtransaction(rawtx)

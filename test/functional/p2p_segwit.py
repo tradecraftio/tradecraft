@@ -119,7 +119,7 @@ class SegWitTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
-        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]
+        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0", "-vbparams=finaltx:0:999999999999"]]
 
     def setup_network(self):
         self.setup_nodes()

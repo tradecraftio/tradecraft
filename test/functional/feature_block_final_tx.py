@@ -25,7 +25,8 @@ from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, O
 class BlockFinalTxTest(ComparisonTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-whitelist=127.0.0.1']]
+        self.extra_args = [['-vbparams=finaltx:0:999999999999',
+                            '-whitelist=127.0.0.1']]
         self.setup_clean_chain = True
 
     def run_test(self):

@@ -51,7 +51,10 @@ def cltv_validate(node, tx, height):
 
 def create_transaction(node, coinbase, to_address, amount):
     from_txid = node.getblock(coinbase)['tx'][0]
-    inputs = [{ "txid" : from_txid, "vout" : 0}]
+    inputs = []
+    for n,txout in enumerate(node.getrawtransaction(from_txid, True)['vout']):
+        if txout['value'] > 0:
+            inputs.append({ "txid" : from_txid, "vout" : n })
     outputs = { to_address : amount }
     rawtx = node.createrawtransaction(inputs, outputs)
     signresult = node.signrawtransaction(rawtx)
@@ -62,7 +65,7 @@ def create_transaction(node, coinbase, to_address, amount):
 class BIP65Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-promiscuousmempoolflags=1', '-whitelist=127.0.0.1']]
+        self.extra_args = [['-vbparams=finaltx:0:999999999999', '-promiscuousmempoolflags=1', '-whitelist=127.0.0.1']]
         self.setup_clean_chain = True
 
     def run_test(self):

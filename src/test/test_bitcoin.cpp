@@ -55,6 +55,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
+        UpdateVersionBitsParameters(Consensus::DEPLOYMENT_FINALTX,
+                                    1199145601,  //  January  1, 2008
+                                    1230767999); // December 31, 2008
         noui_connect();
 }
 
