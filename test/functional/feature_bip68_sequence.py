@@ -6,7 +6,7 @@
 
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.blocktools import create_block, create_coinbase, get_final_tx_info, add_final_tx, add_witness_commitment
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, ToHex
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
@@ -258,6 +258,9 @@ class BIP68Test(BitcoinTestFramework):
         test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=True)
         test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=False)
 
+        # Save the block-final tx info for later reorg
+        final_tx = get_final_tx_info(self.nodes[0])
+
         # Mine tx2, and then try again
         self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(self.relayfee*COIN))
 
@@ -310,6 +313,7 @@ class BIP68Test(BitcoinTestFramework):
         height = self.nodes[0].getblockcount()
         for i in range(2):
             block = create_block(tip, create_coinbase(height), cur_time)
+            final_tx = add_final_tx(final_tx, block)
             block.nVersion = 3
             block.rehash()
             block.solve()
@@ -364,9 +368,11 @@ class BIP68Test(BitcoinTestFramework):
 
         # make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)
+        final_tx = get_final_tx_info(self.nodes[0])
         block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1))
         block.nVersion = 3
         block.vtx.extend([tx1, tx2, tx3])
+        final_tx = add_final_tx(final_tx, block)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         add_witness_commitment(block)
