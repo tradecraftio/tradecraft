@@ -42,7 +42,7 @@ from itertools import product
 from io import BytesIO
 import time
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.blocktools import create_coinbase, create_block, create_transaction, get_final_tx_info, add_final_tx
 from test_framework.messages import ToHex, CTransaction
 from test_framework.mininode import P2PDataStore
 from test_framework.script import (
@@ -167,12 +167,16 @@ class BIP68_112_113Test(BitcoinTestFramework):
             self.last_block_time += 600
             self.tip = block.sha256
             self.tipheight += 1
+            self.final_tx = self.next_final_tx
         return test_blocks
 
     def create_test_block(self, txs):
         block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600)
         block.nVersion = 4
         block.vtx.extend(txs)
+        self.next_final_tx = self.final_tx
+        if self.tipheight >= 100:
+            self.next_final_tx = add_final_tx(self.final_tx, block)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()
@@ -196,6 +200,12 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.last_block_time = long_past_time
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
         self.nodeaddress = self.nodes[0].getnewaddress()
+        self.initial_coinbase_hash = self.nodes[0].getblock(self.coinbase_blocks[0])['tx'][0]
+        self.final_tx = [{
+            'txid': self.initial_coinbase_hash,
+            'vout': 0,
+            'amount': 0,
+        }]
 
         # Activation height is hardcoded
         # We advance to block height five below BIP112 activation for the following tests
@@ -242,7 +252,8 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.tip = int(inputblockhash, 16)
         self.tipheight += 1
         self.last_block_time += 600
-        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), TESTING_TX_COUNT + 1)
+        self.final_tx = get_final_tx_info(self.nodes[0])
+        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), 1 + TESTING_TX_COUNT + 1)
 
         # 2 more version 4 blocks
         test_blocks = self.generate_blocks(2)

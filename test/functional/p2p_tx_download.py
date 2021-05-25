@@ -91,7 +91,7 @@ class TxDownloadTest(BitcoinTestFramework):
         tx = self.nodes[0].createrawtransaction(
             inputs=[{  # coinbase
                 "txid": self.nodes[0].getblock(self.nodes[0].getblockhash(1))['tx'][0],
-                "vout": 0
+                "vout": 1
             }],
             outputs={ADDRESS_BCRT1_UNSPENDABLE: 50 - 0.00025},
         )

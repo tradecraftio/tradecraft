@@ -12,6 +12,7 @@ import copy
 from decimal import Decimal
 
 from test_framework.blocktools import (
+    add_final_tx,
     create_coinbase,
     TIME_GENESIS_BLOCK,
 )
@@ -53,7 +54,7 @@ class MiningTest(BitcoinTestFramework):
         mining_info = self.nodes[0].getmininginfo()
         assert_equal(mining_info['blocks'], 200)
         assert_equal(mining_info['currentblocktx'], 0)
-        assert_equal(mining_info['currentblockweight'], 4000)
+        assert_equal(mining_info['currentblockweight'], 4388)
         self.restart_node(0)
         connect_nodes(self.nodes[0], 1)
 
@@ -105,6 +106,9 @@ class MiningTest(BitcoinTestFramework):
         block.nNonce = 0
         block.vtx = [coinbase_tx]
 
+        if 'finaltx' in tmpl and 'prevout' in tmpl['finaltx']:
+            add_final_tx(tmpl['finaltx']['prevout'], block)
+
         self.log.info("getblocktemplate: segwit rule must be set")
         assert_raises_rpc_error(-8, "getblocktemplate must be called with the segwit rule set", node.getblocktemplate)
 
@@ -128,7 +132,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("getblocktemplate: Test duplicate transaction")
         bad_block = copy.deepcopy(block)
-        bad_block.vtx.append(bad_block.vtx[0])
+        bad_block.vtx.insert(-1, bad_block.vtx[0])
         assert_template(node, bad_block, 'bad-txns-duplicate')
         assert_submitblock(bad_block, 'bad-txns-duplicate', 'bad-txns-duplicate')
 
@@ -137,7 +141,7 @@ class MiningTest(BitcoinTestFramework):
         bad_tx = copy.deepcopy(bad_block.vtx[0])
         bad_tx.vin[0].prevout.hash = 255
         bad_tx.rehash()
-        bad_block.vtx.append(bad_tx)
+        bad_block.vtx.insert(-1, bad_tx)
         assert_template(node, bad_block, 'bad-txns-inputs-missingorspent')
         assert_submitblock(bad_block, 'bad-txns-inputs-missingorspent')
 
@@ -151,7 +155,7 @@ class MiningTest(BitcoinTestFramework):
         self.log.info("getblocktemplate: Test bad tx count")
         # The tx count is immediately after the block header
         bad_block_sn = bytearray(block.serialize())
-        assert_equal(bad_block_sn[BLOCK_HEADER_SIZE], 1)
+        assert_equal(bad_block_sn[BLOCK_HEADER_SIZE], 2)
         bad_block_sn[BLOCK_HEADER_SIZE] += 1
         assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': bad_block_sn.hex(), 'mode': 'proposal', 'rules': ['segwit']})
 
