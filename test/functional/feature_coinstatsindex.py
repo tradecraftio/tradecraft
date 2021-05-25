@@ -15,6 +15,8 @@ from test_framework.blocktools import (
     COINBASE_MATURITY,
     create_block,
     create_coinbase,
+    get_final_tx_info,
+    add_final_tx,
 )
 from test_framework.messages import (
     COIN,
@@ -192,6 +194,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblock(tip)['time'] + 1
         block = create_block(int(tip, 16), cb, block_time)
+        add_final_tx(get_final_tx_info(self.nodes[0]), block)
         block.solve()
         self.nodes[0].submitblock(block.serialize().hex())
         self.sync_all()
