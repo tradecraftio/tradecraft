@@ -2372,7 +2372,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     // The very first block after activation has to provide an anyone-can-spend
     // output of a particular form in its coinbase transaction.
-    const bool initial_block_final = enforce_block_final && pindex->pprev->pprev && !DeploymentActiveAfter(pindex->pprev->pprev, m_chainman, Consensus::DEPLOYMENT_FINALTX);
+    const bool initial_block_final = enforce_block_final && (!pindex->pprev->pprev || !DeploymentActiveAfter(pindex->pprev->pprev, m_chainman, Consensus::DEPLOYMENT_FINALTX));
 
     // Get the script flags for this block
     unsigned int flags{GetBlockScriptFlags(*pindex, m_chainman)};
