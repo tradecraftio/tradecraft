@@ -64,7 +64,16 @@ CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
     bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
     assert(processed);
 
-    return CTxIn{block->vtx[0]->GetHash(), 0};
+    const CTransaction& coinbase = *block->vtx[0];
+    uint32_t n = 0;
+    for (; n < (uint32_t)coinbase.vout.size(); ++n) {
+        if (coinbase.vout[n].scriptPubKey == coinbase_scriptPubKey) {
+            break;
+        }
+    }
+    assert(n < (uint32_t)coinbase.vout.size());
+
+    return CTxIn{coinbase.GetHash(), n};
 }
 
 std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey)

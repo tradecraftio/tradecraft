@@ -85,7 +85,7 @@ d. Announce 49 headers that don't connect.
 e. Announce one more that doesn't connect.
    Expect: disconnect.
 """
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import create_block, create_coinbase, get_final_tx_info, add_final_tx
 from test_framework.messages import CInv
 from test_framework.mininode import (
     CBlockHeader,
@@ -247,12 +247,16 @@ class SendHeadersTest(BitcoinTestFramework):
         inv_node.sync_with_ping()
         test_node.sync_with_ping()
 
+        # Activate block-final transations
+        self.nodes[0].generate(100)
+
         self.test_null_locators(test_node, inv_node)
         self.test_nonnull_locators(test_node, inv_node)
 
     def test_null_locators(self, test_node, inv_node):
         tip = self.nodes[0].getblockheader(self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)[0])
         tip_hash = int(tip["hash"], 16)
+        final_tx = get_final_tx_info(self.nodes[0])
 
         inv_node.check_last_inv_announcement(inv=[tip_hash])
         test_node.check_last_inv_announcement(inv=[tip_hash])
@@ -264,6 +268,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         self.log.info("Verify getheaders with null locator and invalid hashstop does not return headers.")
         block = create_block(int(tip["hash"], 16), create_coinbase(tip["height"] + 1), tip["mediantime"] + 1)
+        final_tx = add_final_tx(final_tx, block)
         block.solve()
         test_node.send_header_for_blocks([block])
         test_node.clear_block_announcements()
@@ -284,6 +289,7 @@ class SendHeadersTest(BitcoinTestFramework):
             self.log.debug("Part 1.{}: starting...".format(i))
             old_tip = tip
             tip = self.mine_blocks(1)
+            final_tx = get_final_tx_info(self.nodes[0])
             inv_node.check_last_inv_announcement(inv=[tip])
             test_node.check_last_inv_announcement(inv=[tip])
             # Try a few different responses; none should affect next announcement
@@ -304,6 +310,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 last_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
                 block_time = last_time + 1
                 new_block = create_block(tip, create_coinbase(height + 1), block_time)
+                final_tx = add_final_tx(final_tx, new_block)
                 new_block.solve()
                 test_node.send_header_for_blocks([new_block])
                 test_node.wait_for_getdata([new_block.sha256])
@@ -325,6 +332,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Now that we've synced headers, headers announcements should work
         tip = self.mine_blocks(1)
+        final_tx = get_final_tx_info(self.nodes[0])
         inv_node.check_last_inv_announcement(inv=[tip])
         test_node.check_last_headers_announcement(headers=[tip])
 
@@ -340,7 +348,9 @@ class SendHeadersTest(BitcoinTestFramework):
                 self.log.debug("Part 2.{}.{}: starting...".format(i, j))
                 blocks = []
                 for b in range(i + 1):
-                    blocks.append(create_block(tip, create_coinbase(height), block_time))
+                    block = create_block(tip, create_coinbase(height), block_time)
+                    final_tx = add_final_tx(final_tx, block)
+                    blocks.append(block)
                     blocks[-1].solve()
                     tip = blocks[-1].sha256
                     block_time += 1
@@ -372,6 +382,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 assert "inv" not in inv_node.last_message
                 assert "headers" not in inv_node.last_message
                 tip = self.mine_blocks(1)
+                final_tx = get_final_tx_info(self.nodes[0])
                 inv_node.check_last_inv_announcement(inv=[tip])
                 test_node.check_last_headers_announcement(headers=[tip])
                 height += 1
@@ -451,11 +462,14 @@ class SendHeadersTest(BitcoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         last_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
         block_time = last_time + 1
+        final_tx = get_final_tx_info(self.nodes[0])
 
         # Create 2 blocks.  Send the blocks, then send the headers.
         blocks = []
         for b in range(2):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            block = create_block(tip, create_coinbase(height), block_time)
+            final_tx = add_final_tx(final_tx, block)
+            blocks.append(block)
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1
@@ -473,7 +487,11 @@ class SendHeadersTest(BitcoinTestFramework):
         # This time, direct fetch should work
         blocks = []
         for b in range(3):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            block = create_block(tip, create_coinbase(height), block_time)
+            final_tx = add_final_tx(final_tx, block)
+            if not blocks:
+                old_final_tx = final_tx
+            blocks.append(block)
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1
@@ -491,10 +509,13 @@ class SendHeadersTest(BitcoinTestFramework):
         tip = blocks[0].sha256
         height -= 2
         blocks = []
+        final_tx = old_final_tx
 
         # Create extra blocks for later
         for b in range(20):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            block = create_block(tip, create_coinbase(height), block_time)
+            final_tx = add_final_tx(final_tx, block)
+            blocks.append(block)
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1
@@ -541,7 +562,9 @@ class SendHeadersTest(BitcoinTestFramework):
             blocks = []
             # Create two more blocks.
             for j in range(2):
-                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                block = create_block(tip, create_coinbase(height), block_time)
+                final_tx = add_final_tx(final_tx, block)
+                blocks.append(block)
                 blocks[-1].solve()
                 tip = blocks[-1].sha256
                 block_time += 1
@@ -562,7 +585,9 @@ class SendHeadersTest(BitcoinTestFramework):
         # don't go into an infinite loop trying to get them to connect.
         MAX_UNCONNECTING_HEADERS = 10
         for j in range(MAX_UNCONNECTING_HEADERS + 1):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            block = create_block(tip, create_coinbase(height), block_time)
+            final_tx = add_final_tx(final_tx, block)
+            blocks.append(block)
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1

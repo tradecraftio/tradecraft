@@ -96,11 +96,21 @@ class ZMQTest (BitcoinTestFramework):
             tx.calc_sha256()
             assert_equal(tx.hash, txid.hex())
 
+            # Should receive the block-final txid.
+            final_txid = hashtx.receive()
+
+            # Should receive the final tx raw transaction
+            hex = rawtx.receive()
+            final_tx = CTransaction()
+            final_tx.deserialize(BytesIO(hex))
+            final_tx.calc_sha256()
+            assert_equal(final_tx.hash, final_txid.hex())
+
             # Should receive the generated block hash.
             hash = hashblock.receive().hex()
             assert_equal(genhashes[x], hash)
-            # The block should only have the coinbase txid.
-            assert_equal([txid.hex()], self.nodes[1].getblock(hash)["tx"])
+            # The block should only have the coinbase and block-final txids.
+            assert_equal([txid.hex(), final_txid.hex()], self.nodes[1].getblock(hash)["tx"])
 
             # Should receive the generated raw block.
             block = rawblock.receive()
