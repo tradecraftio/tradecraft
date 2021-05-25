@@ -107,8 +107,9 @@ class BIP65Test(BitcoinTestFramework):
         self.test_cltv_info(is_active=False)
 
         self.log.info("Mining %d blocks", CLTV_HEIGHT - 2)
+        self.nodes[0].generate(1)
         wallet.generate(10)
-        self.nodes[0].generate(CLTV_HEIGHT - 2 - 10)
+        self.nodes[0].generate(CLTV_HEIGHT - 2 - 10 - 1)
 
         self.log.info("Test that invalid-according-to-CLTV transactions can still appear in a block")
 

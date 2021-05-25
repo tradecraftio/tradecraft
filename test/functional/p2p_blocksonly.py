@@ -23,6 +23,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
+        self.nodes[0].generate(1)
         self.miniwallet.generate(2)
         self.nodes[0].generate(COINBASE_MATURITY)
 
@@ -83,7 +84,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         # Ensure we disconnect if a block-relay-only connection sends us a transaction
         self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="block-relay-only")
         assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], False)
-        _, txid, _, tx_hex = self.check_p2p_tx_violation(index=2)
+        _, txid, _, tx_hex = self.check_p2p_tx_violation(index=3)
 
         self.log.info("Check that txs from RPC are not sent to blockrelay connection")
         conn = self.nodes[0].add_outbound_p2p_connection(P2PTxInvStore(), p2p_idx=1, connection_type="block-relay-only")
@@ -96,7 +97,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         conn.sync_send_with_ping()
         assert(int(txid, 16) not in conn.get_invs())
 
-    def check_p2p_tx_violation(self, index=1):
+    def check_p2p_tx_violation(self, index=2):
         self.log.info('Check that txs from P2P are rejected and result in disconnect')
         input_txid = self.nodes[0].getblock(self.nodes[0].getblockhash(index), 2)['tx'][0]['txid']
         utxo_to_spend = self.miniwallet.get_utxo(txid=input_txid)

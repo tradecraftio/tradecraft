@@ -21,6 +21,8 @@ from test_framework.blocktools import (
     create_block,
     create_coinbase,
     send_to_witness,
+    get_final_tx_info,
+    add_final_tx,
 )
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
@@ -588,6 +590,8 @@ def submit_block_with_tx(node, tx):
     block_time = node.getblockheader(tip)["mediantime"] + 1
     block = create_block(int(tip, 16), create_coinbase(height), block_time)
     block.vtx.append(ctx)
+    if height > 100:
+        add_final_tx(get_final_tx_info(node), block)
     block.rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     add_witness_commitment(block)
