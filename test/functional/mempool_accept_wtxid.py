@@ -44,7 +44,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
         self.log.info('Start with empty mempool and 101 blocks')
         # The last 100 coinbase transactions are premature
-        blockhash = self.generate(node, 101)[0]
+        blockhash = self.generate(node, 101)[1]
         txid = node.getblock(blockhash=blockhash, verbosity=2)["tx"][0]["txid"]
         assert_equal(node.getmempoolinfo()['size'], 0)
 

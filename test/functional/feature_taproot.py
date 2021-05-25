@@ -9,6 +9,8 @@ from test_framework.blocktools import (
     create_coinbase,
     create_block,
     add_witness_commitment,
+    get_final_tx_info,
+    add_final_tx,
     MAX_BLOCK_SIGOPS_WEIGHT,
     WITNESS_SCALE_FACTOR,
 )
@@ -1296,6 +1298,7 @@ class TaprootTest(BitcoinTestFramework):
 
         coinbase_tx = create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees)
         block = create_block(self.tip, coinbase_tx, self.lastblocktime + 1, txlist=txs)
+        final_tx = add_final_tx(self.final_tx, block)
         witness and add_witness_commitment(block)
         block.solve()
         block_response = node.submitblock(block.serialize().hex())
@@ -1307,6 +1310,7 @@ class TaprootTest(BitcoinTestFramework):
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1
+            self.final_tx = final_tx
         else:
             assert node.getbestblockhash() == self.lastblockhash, "Failed to reject: " + msg
 
@@ -1317,6 +1321,7 @@ class TaprootTest(BitcoinTestFramework):
         block = node.getblock(self.lastblockhash)
         self.lastblockheight = block['height']
         self.lastblocktime = block['time']
+        self.final_tx = get_final_tx_info(node)
 
     def test_spenders(self, node, spenders, input_counts):
         """Run randomized tests with a number of "spenders".
@@ -1531,10 +1536,10 @@ class TaprootTest(BitcoinTestFramework):
         coinbase = CTransaction()
         coinbase.nVersion = 1
         coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), SEQUENCE_FINAL)]
-        coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
+        coinbase.vout = [CTxOut(0, CScript([OP_1])), CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
         coinbase.rehash()
-        assert coinbase.hash == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
+        assert_equal(coinbase.hash, "25bfc55241721f03f90f4340cbae3a9b346789d32829c98075622680748f9e39")
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
         block.rehash()
@@ -1623,6 +1628,8 @@ class TaprootTest(BitcoinTestFramework):
             tx = CTransaction()
             tx.nVersion = 1
             tx.vin = [CTxIn(COutPoint(lasttxid, i & 1), CScript([]), SEQUENCE_FINAL)]
+            if i == 0:
+                tx.vin[0].prevout.n = 1
             tx.vout = [CTxOut(val, spk), CTxOut(amount - val, CScript([OP_1]))]
             if i & 1:
                 tx.vout = list(reversed(tx.vout))
@@ -1745,7 +1752,7 @@ class TaprootTest(BitcoinTestFramework):
         aux = tx_test.setdefault("auxiliary", {})
         aux['fullySignedTx'] = tx.serialize().hex()
         keypath_tests.append(tx_test)
-        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "24bab662cb55a7f3bae29b559f651674c62bcc1cd442d44715c0133939107b38")
+        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "47827b96c27a65d36a96fceb2bdcfaa3cf363b5cd773212a425dfa719d085ca9")
         # Mine the spending transaction
         self.block_submit(self.nodes[0], [tx], "Spending txn", None, sigops_weight=10000, accept=True, witness=True)
 

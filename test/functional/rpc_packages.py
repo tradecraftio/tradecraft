@@ -48,7 +48,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         # get an UTXO that requires signature to be spent
         deterministic_address = node.get_deterministic_priv_key().address
-        blockhash = self.generatetoaddress(node, 1, deterministic_address)[0]
+        blockhash = self.generatetoaddress(node, 2, deterministic_address)[1]
         coinbase = node.getblock(blockhash=blockhash, verbosity=2)["tx"][0]
         coin = {
                 "txid": coinbase["txid"],

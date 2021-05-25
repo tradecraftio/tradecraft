@@ -9,7 +9,9 @@ import os
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.blocktools import (
     COINBASE_MATURITY,
-    create_block
+    create_block,
+    get_final_tx_info,
+    add_final_tx,
 )
 from test_framework.blocktools import create_coinbase
 from test_framework.test_framework import BitcoinTestFramework
@@ -40,6 +42,7 @@ class WalletPruningTest(BitcoinTestFramework):
     def mine_large_blocks(self, node, n):
         # Get the block parameters for the first block
         best_block = node.getblockheader(node.getbestblockhash())
+        final_tx = get_final_tx_info(node)
         height = int(best_block["height"]) + 1
         self.nTime = max(self.nTime, int(best_block["time"])) + 1
         previousblockhash = int(best_block["hash"], 16)
@@ -50,6 +53,7 @@ class WalletPruningTest(BitcoinTestFramework):
                 i.setmocktime(self.nTime + 600 * n)
         for _ in range(n):
             block = create_block(hashprev=previousblockhash, ntime=self.nTime, coinbase=create_coinbase(height, script_pubkey=big_script))
+            final_tx = add_final_tx(final_tx, block)
             block.solve()
 
             # Submit to the node
