@@ -136,10 +136,11 @@ class BlockchainTest(BitcoinTestFramework):
 
         chaintxstats = self.nodes[0].getchaintxstats(1)
         # 200 txs plus genesis tx
-        assert_equal(chaintxstats['txcount'], 201)
-        # tx rate should be 1 per 10 minutes, or 1/600
+        # finaltx start on block 101
+        assert_equal(chaintxstats['txcount'], 301)
+        # tx rate should be 2 per 10 minute block, or 2/600
         # we have to round because of binary math
-        assert_equal(round(chaintxstats['txrate'] * 600, 10), Decimal(1))
+        assert_equal(round(chaintxstats['txrate'] * 600, 10), Decimal(2))
 
         b1_hash = self.nodes[0].getblockhash(1)
         b1 = self.nodes[0].getblock(b1_hash)
@@ -149,12 +150,12 @@ class BlockchainTest(BitcoinTestFramework):
 
         chaintxstats = self.nodes[0].getchaintxstats()
         assert_equal(chaintxstats['time'], b200['time'])
-        assert_equal(chaintxstats['txcount'], 201)
+        assert_equal(chaintxstats['txcount'], 301)
         assert_equal(chaintxstats['window_final_block_hash'], b200_hash)
         assert_equal(chaintxstats['window_block_count'], 199)
-        assert_equal(chaintxstats['window_tx_count'], 199)
+        assert_equal(chaintxstats['window_tx_count'], 299)
         assert_equal(chaintxstats['window_interval'], time_diff)
-        assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(199))
+        assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(299))
 
         chaintxstats = self.nodes[0].getchaintxstats(blockhash=b1_hash)
         assert_equal(chaintxstats['time'], b1['time'])
@@ -170,10 +171,10 @@ class BlockchainTest(BitcoinTestFramework):
         res = node.gettxoutsetinfo()
 
         assert_equal(res['total_amount'], Decimal('8725.00000000'))
-        assert_equal(res['transactions'], 200)
+        assert_equal(res['transactions'], 201) # + 1 block-final tx
         assert_equal(res['height'], 200)
-        assert_equal(res['txouts'], 200)
-        assert_equal(res['bogosize'], 15000),
+        assert_equal(res['txouts'], 201)
+        assert_equal(res['bogosize'], 15087),
         assert_equal(res['bestblock'], node.getblockhash(200))
         size = res['disk_size']
         assert size > 6400
@@ -217,7 +218,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(header['confirmations'], 1)
         assert_equal(header['previousblockhash'], secondbesthash)
         assert_is_hex_string(header['chainwork'])
-        assert_equal(header['nTx'], 1)
+        assert_equal(header['nTx'], 2)
         assert_is_hash_string(header['hash'])
         assert_is_hash_string(header['previousblockhash'])
         assert_is_hash_string(header['merkleroot'])

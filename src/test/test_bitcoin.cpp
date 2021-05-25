@@ -57,6 +57,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     InitScriptExecutionCache();
     fCheckBlockIndex = true;
     SelectParams(chainName);
+    UpdateVersionBitsParameters(Consensus::DEPLOYMENT_FINALTX,
+                                1199145601,  //  January  1, 2008
+                                1230767999); // December 31, 2008
     noui_connect();
 }
 

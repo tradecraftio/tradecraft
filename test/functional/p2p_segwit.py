@@ -197,7 +197,7 @@ class SegWitTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
-        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]
+        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0", "-vbparams=finaltx:0:999999999999"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -1997,7 +1997,10 @@ class SegWitTest(BitcoinTestFramework):
 
         # Restart with the new binary
         self.stop_node(2)
-        self.start_node(2, extra_args=["-vbparams=segwit:0:999999999999"])
+        self.start_node(2, extra_args=[
+            "-vbparams=segwit:0:999999999999",
+            "-vbparams=finaltx:0:999999999999",
+        ])
         connect_nodes(self.nodes[0], 2)
 
         sync_blocks(self.nodes)
