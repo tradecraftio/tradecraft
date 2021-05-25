@@ -6,7 +6,7 @@
 import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE, ADDRESS_BCRT1_P2WSH_OP_TRUE
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_final_tx_info, add_final_tx
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import CTransaction, hash256, FromHex
 from test_framework.util import (
@@ -125,6 +125,16 @@ class ZMQTest (BitcoinTestFramework):
             tx.calc_sha256()
             assert_equal(tx.hash, txid.hex())
 
+            # Should receive the block-final txid.
+            final_txid = hashtx.receive()
+
+            # Should receive the final tx raw transaction
+            hex = rawtx.receive()
+            final_tx = CTransaction()
+            final_tx.deserialize(BytesIO(hex))
+            final_tx.calc_sha256()
+            assert_equal(final_tx.hash, final_txid.hex())
+
             # Should receive the generated raw block.
             block = rawblock.receive()
             assert_equal(genhashes[x], hash256_reversed(block[:80]).hex())
@@ -132,8 +142,8 @@ class ZMQTest (BitcoinTestFramework):
             # Should receive the generated block hash.
             hash = hashblock.receive().hex()
             assert_equal(genhashes[x], hash)
-            # The block should only have the coinbase txid.
-            assert_equal([txid.hex()], self.nodes[1].getblock(hash)["tx"])
+            # The block should only have the coinbase and block-final txids.
+            assert_equal([txid.hex(), final_txid.hex()], self.nodes[1].getblock(hash)["tx"])
 
 
         if self.is_wallet_compiled():
@@ -197,6 +207,7 @@ class ZMQTest (BitcoinTestFramework):
         # Generate 1 block in nodes[0] with 1 mempool tx and receive all notifications
         payment_txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)
         disconnect_block = self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+        disconnect_final_tx = self.nodes[0].getblock(disconnect_block)["tx"][-1]
         disconnect_cb = self.nodes[0].getblock(disconnect_block)["tx"][0]
         assert_equal(self.nodes[0].getbestblockhash(), hashblock.receive().hex())
         assert_equal(hashtx.receive().hex(), payment_txid)
@@ -215,19 +226,24 @@ class ZMQTest (BitcoinTestFramework):
         # During reorg:
         # Get old payment transaction notification from disconnect and disconnected cb
         assert_equal(hashtx.receive().hex(), payment_txid)
+        assert_equal(hashtx.receive().hex(), disconnect_final_tx)
         assert_equal(hashtx.receive().hex(), disconnect_cb)
         # And the payment transaction again due to mempool entry
         assert_equal(hashtx.receive().hex(), payment_txid)
+        assert_equal(hashtx.receive().hex(), disconnect_final_tx)
         assert_equal(hashtx.receive().hex(), payment_txid)
         # And the new connected coinbases
         for i in [0, 1]:
-            assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[i])["tx"][0])
+            for txhash in self.nodes[1].getblock(connect_blocks[i])["tx"]:
+                assert_equal(hashtx.receive().hex(), txhash)
 
         # If we do a simple invalidate we announce the disconnected coinbase
         self.nodes[0].invalidateblock(connect_blocks[1])
-        assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[1])["tx"][0])
+        for txhash in self.nodes[1].getblock(connect_blocks[1])["tx"]:
+            assert_equal(hashtx.receive().hex(), txhash);
         # And the current tip
-        assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[0])["tx"][0])
+        for txhash in self.nodes[1].getblock(connect_blocks[0])["tx"]:
+            assert_equal(hashtx.receive().hex(), txhash)
 
     def test_sequence(self):
         """
@@ -299,7 +315,7 @@ class ZMQTest (BitcoinTestFramework):
             self.sync_all()
             # Make sure the number of mined transactions matches the number of txs out of mempool
             mempool_size_delta = mempool_size - len(self.nodes[0].getrawmempool())
-            assert_equal(len(self.nodes[0].getblock(c_block)["tx"])-1, mempool_size_delta)
+            assert_equal(len(self.nodes[0].getblock(c_block)["tx"])-2, mempool_size_delta)
             seq_num += mempool_size_delta
             payment_txid_2 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)
             self.sync_all()
@@ -355,6 +371,7 @@ class ZMQTest (BitcoinTestFramework):
             for txid in more_tx:
                 tx = FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid))
                 block.vtx.append(tx)
+            add_final_tx(get_final_tx_info(self.nodes[0]), block)
             add_witness_commitment(block)
             block.solve()
             assert_equal(self.nodes[0].submitblock(block.serialize().hex()), None)

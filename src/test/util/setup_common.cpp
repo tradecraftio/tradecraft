@@ -200,10 +200,12 @@ TestChain100Setup::TestChain100Setup()
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < COINBASE_MATURITY; i++) {
+    for (int i = 0; i < COINBASE_MATURITY + 1; i++) {
         std::vector<CMutableTransaction> noTxns;
-        CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
-        m_coinbase_txns.push_back(b.vtx[0]);
+        CBlock b = CreateAndProcessBlock(noTxns, (i == 0) ? (CScript() << OP_TRUE) : scriptPubKey);
+        if (i != 0) {
+            m_coinbase_txns.push_back(b.vtx[0]);
+        }
     }
 }
 
@@ -211,11 +213,19 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
 {
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
-    CBlock block = BlockAssembler(empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(empty_pool, chainparams).CreateNewBlock(scriptPubKey);
+    CBlock& block = pblocktemplate->block;
 
+    CTransactionRef final_tx = block.vtx.back();
+    if (pblocktemplate->has_block_final_tx) {
+        block.vtx.pop_back();
+    }
     Assert(block.vtx.size() == 1);
     for (const CMutableTransaction& tx : txns) {
         block.vtx.push_back(MakeTransactionRef(tx));
+    }
+    if (pblocktemplate->has_block_final_tx) {
+        block.vtx.push_back(final_tx);
     }
     RegenerateCommitments(block);
 

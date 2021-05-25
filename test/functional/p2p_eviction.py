@@ -15,7 +15,7 @@ Therefore, this test is limited to the remaining protection criteria.
 
 import time
 
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import create_block, create_coinbase, add_final_tx, get_final_tx_info
 from test_framework.messages import CTransaction, FromHex, msg_pong, msg_tx
 from test_framework.p2p import P2PDataStore, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -56,6 +56,7 @@ class P2PEvict(BitcoinTestFramework):
             tip = int(best_block, 16)
             best_block_time = node.getblock(best_block)['time']
             block = create_block(tip, create_coinbase(node.getblockcount() + 1), best_block_time + 1)
+            add_final_tx(get_final_tx_info(node), block)
             block.solve()
             block_peer.send_blocks_and_test([block], node, success=True)
             protected_peers.add(current_peer)
@@ -71,7 +72,7 @@ class P2PEvict(BitcoinTestFramework):
             current_peer += 1
             txpeer.sync_with_ping()
 
-            prevtx = node.getblock(node.getblockhash(i + 1), 2)['tx'][0]
+            prevtx = node.getblock(node.getblockhash(i + 2), 2)['tx'][0]
             rawtx = node.createrawtransaction(
                 inputs=[{'txid': prevtx['txid'], 'vout': 0}],
                 outputs=[{node.get_deterministic_priv_key().address: 50 - 0.00125}],
