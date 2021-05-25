@@ -16,7 +16,7 @@ make assumptions about execution order.
 from decimal import Decimal
 import io
 
-from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
+from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, get_final_tx_info, add_final_tx, send_to_witness
 from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -569,6 +569,8 @@ def submit_block_with_tx(node, tx):
     block_time = node.getblockheader(tip)["mediantime"] + 1
     block = create_block(int(tip, 16), create_coinbase(height), block_time)
     block.vtx.append(ctx)
+    if height > 100:
+        add_final_tx(get_final_tx_info(node), block)
     block.rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     add_witness_commitment(block)
