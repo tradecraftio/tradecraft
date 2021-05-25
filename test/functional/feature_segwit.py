@@ -84,13 +84,13 @@ class SegWitTest(BitcoinTestFramework):
     def success_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
         block = node.generate(1)
-        assert_equal(len(node.getblock(block[0])["tx"]), 2)
+        assert_equal(len(node.getblock(block[0])["tx"]), 3)
         self.sync_blocks()
 
     def skip_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
         block = node.generate(1)
-        assert_equal(len(node.getblock(block[0])["tx"]), 1)
+        assert_equal(len(node.getblock(block[0])["tx"]), 2)
         self.sync_blocks()
 
     def fail_accept(self, node, error_msg, txid, sign, redeem_script=""):
@@ -162,7 +162,7 @@ class SegWitTest(BitcoinTestFramework):
         blockhash = self.nodes[2].generate(1)[0]  # block 432 (first block with new rules; 432 = 144 * 3)
         self.sync_blocks()
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
-        segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"]
+        segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"][:-1]
         assert_equal(len(segwit_tx_list), 5)
 
         self.log.info("Verify default node can't accept txs with missing witness")
