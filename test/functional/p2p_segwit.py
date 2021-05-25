@@ -9,7 +9,7 @@ import random
 import struct
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
+from test_framework.blocktools import add_final_tx, create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
 from test_framework.key import ECKey
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
@@ -212,9 +212,9 @@ class SegWitTest(BitcoinTestFramework):
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1"],
-            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
-            ["-acceptnonstdtxn=1", "-segwitheight=-1"],
+            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-vbparams=finaltx:0:999999999999", "-whitelist=noban@127.0.0.1"],
+            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT), "-vbparams=finaltx:0:999999999999"],
+            ["-acceptnonstdtxn=1", "-segwitheight=-1", "-vbparams=finaltx:0:999999999999"],
         ]
         self.supports_cli = False
 
@@ -236,19 +236,10 @@ class SegWitTest(BitcoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
-        except:
-            finaltx_prevout = []
-        if finaltx_prevout:
-            finaltx = CTransaction()
-            finaltx.nLockTime = block.vtx[0].nLockTime
-            finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-            for prevout in finaltx_prevout:
-                finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
-                finaltx.vout[-1].nValue += prevout['amount']
-            finaltx.rehash()
-            block.vtx.append(finaltx)
-            block.hashMerkleRoot = block.calc_merkle_root()
+            final_tx = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            add_final_tx(final_tx, block)
+        except KeyError:
+            pass
         block.nVersion = version
         block.rehash()
         return block
@@ -277,6 +268,9 @@ class SegWitTest(BitcoinTestFramework):
         self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=NODE_NETWORK | NODE_WITNESS)
 
         assert self.test_node.nServices & NODE_WITNESS != 0
+
+        # Exit IBD
+        self.nodes[0].generate(1)
 
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
@@ -1987,12 +1981,12 @@ class SegWitTest(BitcoinTestFramework):
         # insufficiently validated blocks per segwit consensus rules.
         self.stop_node(2)
         self.nodes[2].assert_start_raises_init_error(
-            extra_args=[f"-segwitheight={SEGWIT_HEIGHT}"],
+            extra_args=[f"-segwitheight={SEGWIT_HEIGHT}", "-vbparams=finaltx:0:999999999999"],
             expected_msg=f": Witness data for blocks after height {SEGWIT_HEIGHT} requires validation. Please restart with -reindex..\nPlease restart with -reindex or -reindex-chainstate to recover.",
         )
 
         # As directed, the user restarts the node with -reindex
-        self.start_node(2, extra_args=["-reindex", f"-segwitheight={SEGWIT_HEIGHT}"])
+        self.start_node(2, extra_args=["-reindex", f"-segwitheight={SEGWIT_HEIGHT}", "-vbparams=finaltx:0:999999999999"])
 
         # With the segwit consensus rules, the node is able to validate only up to SEGWIT_HEIGHT - 1
         assert_equal(self.nodes[2].getblockcount(), SEGWIT_HEIGHT - 1)
