@@ -165,7 +165,7 @@ def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, script_pub_key=C
     return tx
 
 def create_transaction(node, txid, to_address, *, amount):
-    """ Return signed transaction spending the first output of the
+    """ Return signed transaction spending all non-zero outputs of the
         input txid. Note that the node must be able to sign for the
         output that is being spent, and the node must not be running
         multiple wallets.
@@ -176,12 +176,14 @@ def create_transaction(node, txid, to_address, *, amount):
     return tx
 
 def create_raw_transaction(node, txid, to_address, *, amount):
-    """ Return raw signed transaction spending the first output of the
+    """ Return raw signed transaction spending all non-zero outputs of the
         input txid. Note that the node must be able to sign for the
         output that is being spent, and the node must not be running
         multiple wallets.
     """
-    rawtx = node.createrawtransaction(inputs=[{"txid": txid, "vout": 0}], outputs={to_address: amount})
+    tx = node.decoderawtransaction(node.gettransaction(txid)["hex"])
+    inputs = [{"txid":tx["txid"], "vout":txout["n"]} for txout in tx["vout"] if txout["value"] > 0]
+    rawtx = node.createrawtransaction(inputs=inputs, outputs={to_address: amount})
     signresult = node.signrawtransactionwithwallet(rawtx)
     assert_equal(signresult["complete"], True)
     return signresult['hex']

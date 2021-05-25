@@ -24,7 +24,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         rawtx = self.nodes[0].createrawtransaction(
             inputs=[{
                 'txid': prevtx['txid'],
-                'vout': 0
+                'vout': 1
             }],
             outputs=[{
                 self.nodes[0].get_deterministic_priv_key().address: 50 - 0.00125
@@ -35,8 +35,8 @@ class P2PBlocksOnly(BitcoinTestFramework):
             privkeys=[self.nodes[0].get_deterministic_priv_key().key],
             prevtxs=[{
                 'txid': prevtx['txid'],
-                'vout': 0,
-                'scriptPubKey': prevtx['vout'][0]['scriptPubKey']['hex'],
+                'vout': 1,
+                'scriptPubKey': prevtx['vout'][1]['scriptPubKey']['hex'],
             }],
         )['hex']
         assert_equal(self.nodes[0].getnetworkinfo()['localrelay'], False)

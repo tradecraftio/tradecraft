@@ -9,7 +9,7 @@ import random
 import struct
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
+from test_framework.blocktools import add_final_tx, create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
 from test_framework.key import ECKey
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
@@ -189,7 +189,7 @@ class SegWitTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
-        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]
+        self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0", "-vbparams=finaltx:0:999999999999"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -209,19 +209,10 @@ class SegWitTest(BitcoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
-        except:
-            finaltx_prevout = []
-        if finaltx_prevout:
-            finaltx = CTransaction()
-            finaltx.nLockTime = block.vtx[0].nLockTime
-            finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-            for prevout in finaltx_prevout:
-                finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
-                finaltx.vout[-1].nValue += prevout['amount']
-            finaltx.rehash()
-            block.vtx.append(finaltx)
-            block.hashMerkleRoot = block.calc_merkle_root()
+            final_tx = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            add_final_tx(final_tx, block)
+        except KeyError:
+            pass
         block.nVersion = version
         block.rehash()
         return block
@@ -248,6 +239,9 @@ class SegWitTest(BitcoinTestFramework):
         self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK | NODE_WITNESS)
 
         assert self.test_node.nServices & NODE_WITNESS != 0
+
+        # Exit IBD
+        self.nodes[0].generate(1)
 
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
@@ -1967,7 +1961,10 @@ class SegWitTest(BitcoinTestFramework):
 
         # Restart with the new binary
         self.stop_node(2)
-        self.start_node(2, extra_args=["-vbparams=segwit:0:999999999999"])
+        self.start_node(2, extra_args=[
+            "-vbparams=segwit:0:999999999999",
+            "-vbparams=finaltx:0:999999999999",
+        ])
         connect_nodes(self.nodes[0], 2)
 
         sync_blocks(self.nodes)
