@@ -442,7 +442,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
@@ -483,11 +483,11 @@ public:
         m_assumeutxo_data = MapAssumeutxo{
             {
                 110,
-                {AssumeutxoHash{uint256S("0x1ebbf5850204c0bdb15bf030f47c7fe91d45c44c712697e4509ba67adb01c618")}, 110},
+                {AssumeutxoHash{uint256S("0xda14b0d0bfc9142ce070266e26815ceed191105a36acff02cec7235ef435f6e1")}, 110},
             },
             {
                 200,
-                {AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")}, 200},
+                {AssumeutxoHash{uint256S("0x211a567f0e90f0577256934f1607d3db6c9df986098a6183adc388d7404eb30d")}, 200},
             },
         };
 
