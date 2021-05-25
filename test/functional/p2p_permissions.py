@@ -31,6 +31,9 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.setup_clean_chain = True
 
     def run_test(self):
+        # Let bitcoind handle the block-final initial output logic
+        self.generate(self.nodes[0], 1)
+
         self.check_tx_relay()
 
         self.checkpermission(

@@ -10,6 +10,7 @@ import time
 
 from test_framework.blocktools import (
     WITNESS_COMMITMENT_HEADER,
+    add_final_tx,
     add_witness_commitment,
     create_block,
     create_coinbase,
@@ -221,8 +222,8 @@ class SegWitTest(BitcoinTestFramework):
         self.num_nodes = 2
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-acceptnonstdtxn=1", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}", "-whitelist=noban@127.0.0.1", "-par=1"],
-            ["-acceptnonstdtxn=0", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}"],
+            ["-acceptnonstdtxn=1", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}", "-vbparams=finaltx:0:999999999999", "-whitelist=noban@127.0.0.1", "-par=1"],
+            ["-acceptnonstdtxn=0", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}", "-vbparams=finaltx:0:999999999999"],
         ]
         self.supports_cli = False
 
@@ -235,19 +236,10 @@ class SegWitTest(BitcoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
-        except:
-            finaltx_prevout = []
-        if finaltx_prevout:
-            finaltx = CTransaction()
-            finaltx.nLockTime = block.vtx[0].nLockTime
-            finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-            for prevout in finaltx_prevout:
-                finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(bytes.fromhex(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
-                finaltx.vout[-1].nValue += prevout['amount']
-            finaltx.rehash()
-            block.vtx.append(finaltx)
-            block.hashMerkleRoot = block.calc_merkle_root()
+            final_tx = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            add_final_tx(final_tx, block)
+        except KeyError:
+            pass
         block.rehash()
         return block
 
@@ -275,6 +267,9 @@ class SegWitTest(BitcoinTestFramework):
         self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=P2P_SERVICES)
 
         assert self.test_node.nServices & NODE_WITNESS != 0
+
+        # Exit IBD
+        self.generate(self.nodes[0], 1)
 
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []

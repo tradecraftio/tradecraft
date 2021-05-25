@@ -24,8 +24,8 @@ using node::CBlockTemplate;
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
 
 struct BuildChainTestingSetup : public TestChain100Setup {
-    CBlock CreateBlock(const CBlockIndex* prev, const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey);
-    bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key, size_t length, std::vector<std::shared_ptr<CBlock>>& chain);
+    CBlock CreateBlock(const CBlockIndex* prev, BlockFinalTxEntry& entry, const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey);
+    bool BuildChain(const CBlockIndex* pindex, const BlockFinalTxEntry& entry, const CScript& coinbase_script_pub_key, size_t length, std::vector<std::shared_ptr<CBlock>>& chain);
 };
 
 static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex* block_index,
@@ -63,6 +63,7 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
 }
 
 CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
+    BlockFinalTxEntry& entry,
     const std::vector<CMutableTransaction>& txns,
     const CScript& scriptPubKey)
 {
@@ -76,12 +77,30 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     for (const CMutableTransaction& tx : txns) {
         block.vtx.push_back(MakeTransactionRef(tx));
     }
+    // Add block-final transaction
+    if (!entry.IsNull()) {
+        // Create transaction
+        CMutableTransaction final_tx;
+        final_tx.nVersion = 2;
+        for (uint32_t n = 0; n < entry.size; ++n) {
+            final_tx.vin.emplace_back(COutPoint(entry.hash, n));
+        }
+        final_tx.vout.emplace_back(0, CScript() << OP_TRUE);
+        final_tx.nLockTime = prev->GetMedianTimePast();
+        // Store block-final info for next block
+        entry.hash = final_tx.GetHash();
+        entry.size = 1;
+        // Add it to the block
+        block.vtx.push_back(MakeTransactionRef(std::move(final_tx)));
+    }
     {
         CMutableTransaction tx_coinbase{*block.vtx.at(0)};
         tx_coinbase.vin.at(0).scriptSig = CScript{} << prev->nHeight + 1;
         block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
         block.hashMerkleRoot = BlockMerkleRoot(block);
     }
+    // Regenerate the segwit commitment
+    node::RegenerateCommitments(block, *m_node.chainman);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
 
@@ -89,6 +108,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
 }
 
 bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
+    const BlockFinalTxEntry& entry,
     const CScript& coinbase_script_pub_key,
     size_t length,
     std::vector<std::shared_ptr<CBlock>>& chain)
@@ -96,8 +116,9 @@ bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
     std::vector<CMutableTransaction> no_txns;
 
     chain.resize(length);
+    BlockFinalTxEntry current_entry = entry;
     for (auto& block : chain) {
-        block = std::make_shared<CBlock>(CreateBlock(pindex, no_txns, coinbase_script_pub_key));
+        block = std::make_shared<CBlock>(CreateBlock(pindex, current_entry, no_txns, coinbase_script_pub_key));
         CBlockHeader header = block->GetBlockHeader();
 
         BlockValidationState state;
@@ -161,9 +182,13 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 
     // Create two forks.
     const CBlockIndex* tip;
+    BlockFinalTxEntry entry;
     {
         LOCK(cs_main);
         tip = m_node.chainman->ActiveChain().Tip();
+        while ((entry = m_node.chainman->ActiveChainstate().CoinsTip().GetFinalTx()).IsNull()) {
+            std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get()}.CreateNewBlock(CScript() << OP_TRUE);
+        }
     }
     CKey coinbase_key_A, coinbase_key_B;
     coinbase_key_A.MakeNewKey(true);
@@ -171,8 +196,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     CScript coinbase_script_pub_key_A = GetScriptForDestination(PKHash(coinbase_key_A.GetPubKey()));
     CScript coinbase_script_pub_key_B = GetScriptForDestination(PKHash(coinbase_key_B.GetPubKey()));
     std::vector<std::shared_ptr<CBlock>> chainA, chainB;
-    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key_A, 10, chainA));
-    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key_B, 10, chainB));
+    BOOST_REQUIRE(BuildChain(tip, entry, coinbase_script_pub_key_A, 10, chainA));
+    BOOST_REQUIRE(BuildChain(tip, entry, coinbase_script_pub_key_B, 10, chainB));
 
     // Check that new blocks on chain A get indexed.
     uint256 chainA_last_header = last_header;

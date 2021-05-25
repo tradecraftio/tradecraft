@@ -21,6 +21,8 @@ from test_framework.blocktools import (
     create_block,
     create_coinbase,
     send_to_witness,
+    get_final_tx_info,
+    add_final_tx,
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
@@ -643,6 +645,8 @@ def submit_block_with_tx(node, tx):
     height = node.getblockcount() + 1
     block_time = node.getblockheader(tip)["mediantime"] + 1
     block = create_block(int(tip, 16), create_coinbase(height), block_time, txlist=[tx])
+    if height > 100:
+        add_final_tx(get_final_tx_info(node), block)
     add_witness_commitment(block)
     block.solve()
     node.submitblock(block.serialize().hex())

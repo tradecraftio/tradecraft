@@ -86,16 +86,8 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
                 tx = tx_from_hex(tx)
             block.vtx.append(tx)
     finaltx_prevout = tmpl.get('finaltx', {}).get('prevout', [])
-    if finaltx_prevout:
-        finaltx = CTransaction()
-        finaltx.nVersion = 2
-        finaltx.nLockTime = block.vtx[0].nLockTime
-        finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-        for prevout in finaltx_prevout:
-            finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(bytes.fromhex(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
-            finaltx.vout[-1].nValue += prevout['amount']
-        finaltx.rehash()
-        block.vtx.append(finaltx)
+    if finaltx_prevout and tmpl['height'] > 100:
+        add_final_tx(finaltx_prevout, block)
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
     return block
