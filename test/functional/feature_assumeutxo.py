@@ -71,7 +71,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # block hash of the snapshot base is stored right at the start (first 32 bytes)
         assert_equal(valid_snapshot_contents[:32][::-1].hex(),
-            '12d7dbe45c375a6ca4bbcdf60a9691f2f69c8d07d95bca4f9faa0551e61e8aaf')
+            'd9f3d69084982aea6260173878c68d96bf16b30ef66e7a4f80880aca1fc5d5d2')
 
         def expected_error(log_msg="", rpc_details=""):
             with self.nodes[1].assert_debug_log([log_msg]):
@@ -88,28 +88,36 @@ class AssumeutxoTest(BitcoinTestFramework):
             expected_error(rpc_details=error_details)
 
         self.log.info("  - snapshot file with wrong number of coins")
-        valid_num_coins = int.from_bytes(valid_snapshot_contents[32:32 + 8], "little")
+        idx = 32
+        if valid_snapshot_contents[0] & 0x80:
+            flag = valid_snapshot_contents[idx]
+            idx += 1
+            if flag & 0x01:
+                while valid_snapshot_contents[idx] & 0x80:
+                    idx += 1
+                idx += 33
+        valid_num_coins = int.from_bytes(valid_snapshot_contents[idx:idx + 8], "little")
         for off in [-1, +1]:
             with open(bad_snapshot_path, 'wb') as f:
-                f.write(valid_snapshot_contents[:32])
+                f.write(valid_snapshot_contents[:idx])
                 f.write((valid_num_coins + off).to_bytes(8, "little"))
-                f.write(valid_snapshot_contents[32 + 8:])
-            expected_error(log_msg=f"bad snapshot - coins left over after deserializing 298 coins" if off == -1 else f"bad snapshot format or truncated snapshot after deserializing 299 coins")
+                f.write(valid_snapshot_contents[idx + 8:])
+            expected_error(log_msg=f"bad snapshot - coins left over after deserializing 299 coins" if off == -1 else f"bad snapshot format or truncated snapshot after deserializing 300 coins")
 
         self.log.info("  - snapshot file with alternated UTXO data")
         cases = [
-            [b"\xff" * 32, 0, "05030e506678f2eca8d624ffed97090ab3beadad1b51ee6e5985ba91c5720e37"], # wrong outpoint hash
-            [(1).to_bytes(4, "little"), 32, "7d29cfe2c1e242bc6f103878bb70cfffa8b4dac20dbd001ff6ce24b7de2d2399"], # wrong outpoint index
-            [b"\x81", 36, "f03939a195531f96d5dff983e294a1af62af86049fa7a19a7627246f237c03f1"], # wrong coin code VARINT((coinbase ? 1 : 0) | (height << 1))
-            [b"\x83", 36, "e4577da84590fb288c0f7967e89575e1b0aa46624669640f6f5dfef028d39930"], # another wrong coin code
+            [b"\xff" * 32, 0, "931a1e0c09d5a84b8ad92985611e160ab2692db7a90c3aa04ef10b42cfd8b08d"], # wrong outpoint hash
+            [(1).to_bytes(4, "little"), 32, "6fe5b7796e409d3eab33798d4b4c79288dce36a754a5e851947ef74e2a0b9c0e"], # wrong outpoint index
+            [b"\x81", 36, "9ed772bed1f54f29da3ba481b934f5edb14e442ce9df455be4911c58e1d93f29"], # wrong coin code VARINT((coinbase ? 1 : 0) | (height << 1))
+            [b"\x82", 36, "1c906b41a6330a1436d9f43d682273cae1b9771a35e96d3b5f0b93a945c0c696"], # another wrong coin code
         ]
 
         for content, offset, wrong_hash in cases:
             with open(bad_snapshot_path, "wb") as f:
-                f.write(valid_snapshot_contents[:(32 + 8 + offset)])
+                f.write(valid_snapshot_contents[:(idx + 8 + offset)])
                 f.write(content)
-                f.write(valid_snapshot_contents[(32 + 8 + offset + len(content)):])
-            expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected 61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53, got {wrong_hash}")
+                f.write(valid_snapshot_contents[(idx + 8 + offset + len(content)):])
+            expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected cc3c630ee4d03eb6b383b822db02682591884d4e484311315e44f23ddf151373, got {wrong_hash}")
 
     def run_test(self):
         """
@@ -156,8 +164,8 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         assert_equal(
             dump_output['txoutset_hash'],
-            '61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53')
-        assert_equal(dump_output['nchaintx'], 300)
+            'cc3c630ee4d03eb6b383b822db02682591884d4e484311315e44f23ddf151373')
+        assert_equal(dump_output['nchaintx'], 499)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
         # Mine more blocks on top of the snapshot that n1 hasn't yet seen. This
@@ -173,7 +181,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
         loaded = n1.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT + 1)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         normal, snapshot = n1.getchainstates()["chainstates"]
@@ -247,7 +255,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info(f"Loading snapshot into third node from {dump_output['path']}")
         loaded = n2.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT + 1)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         normal, snapshot = n2.getchainstates()['chainstates']

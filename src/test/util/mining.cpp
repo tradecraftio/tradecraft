@@ -104,7 +104,7 @@ COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
     const bool was_valid{bvsc.m_state && bvsc.m_state->IsValid()};
     assert(old_height + was_valid == WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight()));
 
-    if (was_valid) return {block->vtx[0]->GetHash(), 0};
+    if (was_valid) return {block->vtx[0]->GetHash(), static_cast<uint32_t>(block->vtx[0]->vout.size()-2)};
     return {};
 }
 

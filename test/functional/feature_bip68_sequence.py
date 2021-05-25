@@ -337,6 +337,11 @@ class BIP68Test(BitcoinTestFramework):
             tmpl = self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
             tmpl['previousblockhash'] = '%x' % tip
             tmpl['transactions'] = []
+            tmpl['finaltx'] = {'prevout': [{
+                'txid': block.vtx[-1].hash,
+                'vout': n,
+                'amount': block.vtx[-1].vout[n].nValue,
+            } for n in range(len(block.vtx[-1].vout))]}
             cur_time += 1
 
         mempool = self.nodes[0].getrawmempool()
