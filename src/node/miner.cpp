@@ -154,7 +154,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Check if this is the first block for which the block-final rules are
     // enforced, in which case all we need to do is add the initial
     // anyone-can-spend output.
-    if ((block_final_state & HAS_BLOCK_FINAL_TX) && pindexPrev->pprev && !DeploymentActiveAfter(pindexPrev->pprev, m_chainstate.m_chainman, Consensus::DEPLOYMENT_FINALTX)) {
+    if ((block_final_state & HAS_BLOCK_FINAL_TX) && (!pindexPrev->pprev || !DeploymentActiveAfter(pindexPrev->pprev, m_chainstate.m_chainman, Consensus::DEPLOYMENT_FINALTX))) {
         block_final_state = INITIAL_BLOCK_FINAL_TXOUT;
     }
 
