@@ -176,7 +176,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
         }
 
         BOOST_CHECK_EQUAL(total_coins, initial_total_coins);
-        BOOST_CHECK_EQUAL(initial_size, initial_total_coins);
+        BOOST_CHECK_EQUAL(initial_size, initial_total_coins + 3);
     }
 
     // Snapshot should refuse to load at this height.
@@ -187,9 +187,9 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
     // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
     // be found.
     constexpr int snapshot_height = 110;
-    mineBlocks(10);
-    initial_size += 10;
-    initial_total_coins += 10;
+    mineBlocks(9);
+    initial_size += 9;
+    initial_total_coins += 9;
 
     // Should not load malleated snapshots
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
@@ -265,7 +265,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
                 total_coins++;
             }
 
-            BOOST_CHECK_EQUAL(initial_size , coinscache.GetCacheSize());
+            BOOST_CHECK_EQUAL(initial_size , coinscache.GetCacheSize() + 3);
             BOOST_CHECK_EQUAL(total_coins, initial_total_coins);
             chains_tested++;
         }
