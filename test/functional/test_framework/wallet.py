@@ -128,7 +128,9 @@ class MiniWallet:
         for b in blocks:
             block_info = self._test_node.getblock(blockhash=b, verbosity=2)
             cb_tx = block_info['tx'][0]
-            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'height': block_info['height']})
+            cb_vout = [x for x in cb_tx['vout'] if x['scriptPubKey']['hex'] == self._scriptPubKey.hex()]
+            for vout in cb_vout:
+                self._utxos.append({'txid': cb_tx['txid'], 'vout': vout['n'], 'value': vout['value'], 'height': block_info['height']})
         return blocks
 
     def get_descriptor(self):

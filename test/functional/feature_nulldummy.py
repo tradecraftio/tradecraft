@@ -20,6 +20,8 @@ from test_framework.blocktools import (
     add_witness_commitment,
     create_block,
     create_transaction,
+    get_final_tx_info,
+    add_final_tx,
 )
 from test_framework.messages import CTransaction
 from test_framework.script import (
@@ -50,7 +52,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         # This script tests NULLDUMMY activation, which is part of the 'segwit' deployment, so we go through
         # normal segwit activation here (and don't use the default always-on behaviour).
         self.extra_args = [[
-            f'-testactivationheight=segwit@{COINBASE_MATURITY + 5}',
+            f'-testactivationheight=segwit@{COINBASE_MATURITY + 6}',
             '-addresstype=legacy',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
@@ -72,14 +74,15 @@ class NULLDUMMYTest(BitcoinTestFramework):
             wmulti.importaddress(self.ms_address)
             wmulti.importaddress(self.wit_ms_address)
 
-        self.coinbase_blocks = self.generate(self.nodes[0], 2)  # block height = 2
+        self.coinbase_blocks = self.generate(self.nodes[0], 3)[1:]  # block height = 3
         coinbase_txid = []
         for i in self.coinbase_blocks:
             coinbase_txid.append(self.nodes[0].getblock(i)['tx'][0])
         self.generate(self.nodes[0], COINBASE_MATURITY)  # block height = COINBASE_MATURITY + 2
         self.lastblockhash = self.nodes[0].getbestblockhash()
-        self.lastblockheight = COINBASE_MATURITY + 2
+        self.lastblockheight = COINBASE_MATURITY + 3
         self.lastblocktime = int(time.time()) + self.lastblockheight
+        self.final_tx = get_final_tx_info(self.nodes[0])
 
         self.log.info(f"Test 1: NULLDUMMY compliant base transactions should be accepted to mempool and mined before activation [{COINBASE_MATURITY + 3}]")
         test1txs = [create_transaction(self.nodes[0], coinbase_txid[0], self.ms_address, amount=49)]
@@ -122,6 +125,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         assert_equal(tmpl['previousblockhash'], self.lastblockhash)
         assert_equal(tmpl['height'], self.lastblockheight + 1)
         block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1, txlist=txs)
+        next_final_tx = add_final_tx(self.final_tx, block)
         if with_witness:
             add_witness_commitment(block)
         block.solve()
@@ -131,6 +135,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1
+            self.final_tx = next_final_tx
         else:
             assert_equal(node.getbestblockhash(), self.lastblockhash)
 

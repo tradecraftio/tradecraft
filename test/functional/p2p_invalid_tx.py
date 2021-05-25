@@ -49,13 +49,16 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.bootstrap_p2p()  # Add one p2p connection to the node
 
+        # Let bitcoind handle the block-final initial output logic
+        self.generate(self.nodes[0], 1)
+
         best_block = self.nodes[0].getbestblockhash()
         tip = int(best_block, 16)
         best_block_time = self.nodes[0].getblock(best_block)['time']
         block_time = best_block_time + 1
 
         self.log.info("Create a new block with an anyone-can-spend coinbase.")
-        height = 1
+        height = self.nodes[0].getblockcount() + 1
         block = create_block(tip, create_coinbase(height), block_time)
         block.solve()
         # Save the coinbase for later
