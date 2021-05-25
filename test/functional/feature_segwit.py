@@ -118,7 +118,7 @@ class SegWitTest(BitcoinTestFramework):
     def success_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
         block = self.generate(node, 1)
-        assert_equal(len(node.getblock(block[0])["tx"]), 2)
+        assert_equal(len(node.getblock(block[0])["tx"]), 3)
         self.sync_blocks()
 
     def fail_accept(self, node, error_msg, txid, sign, redeem_script=""):
@@ -129,7 +129,7 @@ class SegWitTest(BitcoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit','finaltx']})
         assert_equal(tmpl['sizelimit'], 1000000)
         assert 'weightlimit' not in tmpl
         assert_equal(tmpl['sigoplimit'], 20000)
@@ -211,7 +211,7 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[2].getrawmempool()), 4)
         blockhash = self.generate(self.nodes[2], 1)[0]  # block 165 (first block with new rules)
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
-        segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"]
+        segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"][:-1]
         assert_equal(len(segwit_tx_list), 5)
 
         self.log.info("Verify default node can't accept txs with missing witness")
@@ -259,7 +259,7 @@ class SegWitTest(BitcoinTestFramework):
         self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         raw_tx = self.nodes[0].getrawtransaction(txid, True)
-        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit','finaltx']})
         assert_greater_than_or_equal(tmpl['sizelimit'], 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
         assert_equal(tmpl['weightlimit'], 4000000)
         assert_equal(tmpl['sigoplimit'], 80000)
@@ -317,7 +317,7 @@ class SegWitTest(BitcoinTestFramework):
         assert txid3 in self.nodes[0].getrawmempool()
 
         # Check that getblocktemplate includes all transactions.
-        template = self.nodes[0].getblocktemplate({"rules": ["segwit"]})
+        template = self.nodes[0].getblocktemplate({"rules": ["segwit","finaltx"]})
         template_txids = [t['txid'] for t in template['transactions']]
         assert txid1 in template_txids
         assert txid2 in template_txids
