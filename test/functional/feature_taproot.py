@@ -8,6 +8,8 @@ from test_framework.blocktools import (
     create_coinbase,
     create_block,
     add_witness_commitment,
+    get_final_tx_info,
+    add_final_tx,
     MAX_BLOCK_SIGOPS_WEIGHT,
     NORMAL_GBT_REQUEST_PARAMS,
     WITNESS_SCALE_FACTOR,
@@ -1210,10 +1212,11 @@ class TaprootTest(BitcoinTestFramework):
         extra_output_script = CScript([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR))
 
         block = create_block(self.tip, create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees), self.lastblocktime + 1)
+        final_tx = add_final_tx(self.final_tx, block)
         block.nVersion = 4
         for tx in txs:
             tx.rehash()
-            block.vtx.append(tx)
+            block.vtx.insert(-1, tx)
         block.hashMerkleRoot = block.calc_merkle_root()
         witness and add_witness_commitment(block)
         block.rehash()
@@ -1227,6 +1230,7 @@ class TaprootTest(BitcoinTestFramework):
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1
+            self.final_tx = final_tx
         else:
             assert node.getbestblockhash() == self.lastblockhash, "Failed to reject: " + msg
 
@@ -1262,6 +1266,7 @@ class TaprootTest(BitcoinTestFramework):
         block = node.getblock(self.lastblockhash)
         self.lastblockheight = block['height']
         self.lastblocktime = block['time']
+        self.final_tx = get_final_tx_info(node)
 
         # Create transactions spending up to 50 of the wallet's inputs, with one output for each spender, and
         # one change output at the end. The transaction is constructed on the Python side to enable
@@ -1439,6 +1444,7 @@ class TaprootTest(BitcoinTestFramework):
         # Post-taproot activation tests go first (pre-taproot tests' blocks are invalid post-taproot).
         self.log.info("Post-activation tests...")
         self.nodes[1].generate(101)
+        self.final_tx = get_final_tx_info(self.nodes[0])
         self.test_spenders(self.nodes[1], spenders_taproot_active(), input_counts=[1, 2, 2, 2, 2, 3])
 
         # Re-connect nodes in case they have been disconnected
@@ -1463,6 +1469,7 @@ class TaprootTest(BitcoinTestFramework):
 
         # Mine a block with the transaction
         block = create_block(tmpl=self.nodes[1].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS), txlist=[rawtx])
+        self.final_tx = add_final_tx(self.final_tx, block)
         add_witness_commitment(block)
         block.rehash()
         block.solve()

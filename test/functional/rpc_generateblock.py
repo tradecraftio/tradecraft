@@ -26,13 +26,13 @@ class GenerateBlockTest(BitcoinTestFramework):
         address = node.getnewaddress()
         hash = node.generateblock(output=address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
-        assert_equal(len(block['tx']), 1)
+        assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], address)
 
         self.log.info('Generate an empty block to a descriptor')
         hash = node.generateblock('addr(' + address + ')', [])['hash']
         block = node.getblock(blockhash=hash, verbosity=2)
-        assert_equal(len(block['tx']), 1)
+        assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], address)
 
         self.log.info('Generate an empty block to a combo descriptor with compressed pubkey')
@@ -40,7 +40,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         combo_address = 'bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080'
         hash = node.generateblock('combo(' + combo_key + ')', [])['hash']
         block = node.getblock(hash, 2)
-        assert_equal(len(block['tx']), 1)
+        assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], combo_address)
 
         self.log.info('Generate an empty block to a combo descriptor with uncompressed pubkey')
@@ -48,7 +48,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         combo_address = 'mkc9STceoCcjoXEXe6cm66iJbmjM6zR9B2'
         hash = node.generateblock('combo(' + combo_key + ')', [])['hash']
         block = node.getblock(hash, 2)
-        assert_equal(len(block['tx']), 1)
+        assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], combo_address)
 
         # Generate 110 blocks to spend
@@ -62,7 +62,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         txid = node.sendtoaddress(address, 1)
         hash = node.generateblock(address, [txid])['hash']
         block = node.getblock(hash, 1)
-        assert_equal(len(block['tx']), 2)
+        assert_equal(len(block['tx']), 3)
         assert_equal(block['tx'][1], txid)
 
         self.log.info('Generate block with raw tx')
@@ -71,7 +71,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         signed_raw = node.signrawtransactionwithwallet(raw)['hex']
         hash = node.generateblock(address, [signed_raw])['hash']
         block = node.getblock(hash, 1)
-        assert_equal(len(block['tx']), 2)
+        assert_equal(len(block['tx']), 3)
         txid = block['tx'][1]
         assert_equal(node.gettransaction(txid)['hex'], signed_raw)
 

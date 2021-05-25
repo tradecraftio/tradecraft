@@ -31,7 +31,7 @@ Start three nodes:
 """
 import time
 
-from test_framework.blocktools import (create_block, create_coinbase)
+from test_framework.blocktools import (add_final_tx, create_block, create_coinbase)
 from test_framework.key import ECKey
 from test_framework.messages import (
     CBlockHeader,
@@ -114,6 +114,15 @@ class AssumeValidTest(BitcoinTestFramework):
         # Create the first block with a coinbase output to our key
         height = 1
         block = create_block(self.tip, create_coinbase(height, coinbase_pubkey), self.block_time)
+        block.vtx[0].vout.insert(0, CTxOut(0, CScript([OP_TRUE])))
+        block.vtx[0].rehash()
+        final_tx = [{
+            'txid': block.vtx[0].hash,
+            'vout': 0,
+            'amount': 0,
+        }]
+        block.hashMerkleRoot = block.calc_merkle_root()
+        block.rehash()
         self.blocks.append(block)
         self.block_time += 1
         block.solve()
@@ -125,6 +134,8 @@ class AssumeValidTest(BitcoinTestFramework):
         # Bury the block 100 deep so the coinbase output is spendable
         for _ in range(100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
+            if height > 100:
+                final_tx = add_final_tx(final_tx, block)
             block.solve()
             self.blocks.append(block)
             self.tip = block.sha256
@@ -133,13 +144,14 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Create a transaction spending the coinbase output with an invalid (null) signature
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(self.block1.vtx[0].sha256, 0), scriptSig=b""))
+        tx.vin.append(CTxIn(COutPoint(self.block1.vtx[0].sha256, 1), scriptSig=b""))
         tx.vout.append(CTxOut(49 * 100000000, CScript([OP_TRUE])))
         tx.calc_sha256()
 
         block102 = create_block(self.tip, create_coinbase(height), self.block_time)
         self.block_time += 1
         block102.vtx.extend([tx])
+        final_tx = add_final_tx(final_tx, block102)
         block102.hashMerkleRoot = block102.calc_merkle_root()
         block102.rehash()
         block102.solve()
@@ -151,6 +163,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # Bury the assumed valid block 2100 deep
         for _ in range(2100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
+            final_tx = add_final_tx(final_tx, block)
             block.nVersion = 4
             block.solve()
             self.blocks.append(block)
