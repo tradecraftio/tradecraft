@@ -41,10 +41,14 @@ class InvalidTxRequestTest(ComparisonTestFramework):
         '''
         height = 1
         block = create_block(self.tip, create_coinbase(height), self.block_time)
+        block.vtx[0].vout[0].scriptPubKey = CScript()
+        block.vtx[0].vout.insert(0, CTxOut(0, CScript([OP_TRUE])))
+        block.vtx[0].rehash()
+        block.hashMerkleRoot = block.calc_merkle_root()
         self.block_time += 1
         block.solve()
         # Save the coinbase for later
-        self.block1 = block
+        self.block1 = None
         self.tip = block.sha256
         height += 1
         yield TestInstance([[block, True]])
@@ -53,14 +57,18 @@ class InvalidTxRequestTest(ComparisonTestFramework):
         Now we need that block to mature so we can spend the coinbase.
         '''
         test = TestInstance(sync_every_block=False)
-        for i in range(100):
+        for i in range(99):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
+            if self.block1 is None:
+                self.block1 = block
             self.tip = block.sha256
             self.block_time += 1
             test.blocks_and_transactions.append([block, True])
             height += 1
         yield test
+
+        self.nodes[0].generate(1)
 
         # b'\x64' is OP_NOTIF
         # Transaction will be rejected with code 16 (REJECT_INVALID)

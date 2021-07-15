@@ -8,7 +8,7 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
+from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER, add_final_tx
 from test_framework.key import CECKey, CPubKey
 import time
 import random
@@ -135,19 +135,10 @@ class SegWitTest(BitcoinTestFramework):
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         try:
-            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
-        except:
-            finaltx_prevout = []
-        if finaltx_prevout:
-            finaltx = CTransaction()
-            finaltx.nLockTime = block.vtx[0].nLockTime
-            finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-            for prevout in finaltx_prevout:
-                finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
-                finaltx.vout[-1].nValue += prevout['amount']
-            finaltx.rehash()
-            block.vtx.append(finaltx)
-            block.hashMerkleRoot = block.calc_merkle_root()
+            final_tx = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+            add_final_tx(final_tx, block)
+        except KeyError:
+            pass
         block.nVersion = nVersion
         block.rehash()
         return block
@@ -177,6 +168,7 @@ class SegWitTest(BitcoinTestFramework):
         # Mine a block with an anyone-can-spend coinbase,
         # let it mature, then try to spend it.
         self.log.info("Testing non-witness transaction")
+        self.nodes[0].generate(1)
         block = self.build_next_block(nVersion=1)
         block.solve()
         self.test_node.send_message(msg_block(block))
@@ -1540,7 +1532,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Restart with the new binary
         self.stop_node(node_id)
-        self.start_node(node_id, extra_args=["-vbparams=segwit:0:999999999999"])
+        self.start_node(node_id, extra_args=["-vbparams=segwit:0:999999999999", "-vbparams=finaltx:0:999999999999"])
         connect_nodes(self.nodes[0], node_id)
 
         sync_blocks(self.nodes)

@@ -288,6 +288,8 @@ def submit_block_with_tx(node, tx):
     block_time = node.getblockheader(tip)["mediantime"] + 1
     block = blocktools.create_block(int(tip, 16), blocktools.create_coinbase(height), block_time)
     block.vtx.append(ctx)
+    if height > 100:
+        blocktools.add_final_tx(blocktools.get_final_tx_info(node), block)
     block.rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     blocktools.add_witness_commitment(block)

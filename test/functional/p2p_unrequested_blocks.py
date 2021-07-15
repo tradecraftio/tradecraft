@@ -55,7 +55,7 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import time
-from test_framework.blocktools import create_block, create_coinbase, create_transaction
+from test_framework.blocktools import create_block, create_coinbase, create_transaction, add_final_tx
 
 class AcceptBlockTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -168,9 +168,17 @@ class AcceptBlockTest(BitcoinTestFramework):
         # 4c. Now mine 288 more blocks and deliver; all should be processed but
         # the last (height-too-high) on node (as long as its not missing any headers)
         tip = block_h3
+        final_tx = [{
+            'txid': block_h1f.vtx[0].hash,
+            'vout': 0,
+            'amount': 0,
+        }]
         all_blocks = []
         for i in range(288):
-            next_block = create_block(tip.sha256, create_coinbase(i + 4), tip.nTime+1)
+            height = i + 4
+            next_block = create_block(tip.sha256, create_coinbase(height), tip.nTime+1)
+            if height > 100:
+                final_tx = add_final_tx(final_tx, next_block)
             next_block.solve()
             all_blocks.append(next_block)
             tip = next_block

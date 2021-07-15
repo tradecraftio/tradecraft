@@ -59,6 +59,7 @@ class FullBlockTest(ComparisonTestFramework):
         self.num_nodes = 1
         self.setup_clean_chain = True
         self.block_heights = {}
+        self.final_txs = {}
         self.coinbase_key = CECKey()
         self.coinbase_key.set_secretbytes(b"horsebattery")
         self.coinbase_pubkey = self.coinbase_key.get_pubkey()
@@ -77,7 +78,9 @@ class FullBlockTest(ComparisonTestFramework):
 
     def add_transactions_to_block(self, block, tx_list):
         [ tx.rehash() for tx in tx_list ]
+        final_tx = block.vtx.pop()
         block.vtx.extend(tx_list)
+        block.vtx.append(final_tx)
 
     # this is a little handier to use than the version in blocktools.py
     def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])):
@@ -109,23 +112,31 @@ class FullBlockTest(ComparisonTestFramework):
             block_time = self.tip.nTime + 1
         # First create the coinbase
         height = self.block_heights[base_block_hash] + 1
+        final_tx = self.final_txs[base_block_hash]
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         coinbase.vout[0].nValue += additional_coinbase_value
+        if height == 1:
+            coinbase.vout.insert(0, CTxOut(0, CScript([OP_TRUE])))
         coinbase.rehash()
         if spend == None:
             block = create_block(base_block_hash, coinbase, block_time)
+            if height > 100:
+                final_tx = add_final_tx(final_tx, block)
         else:
             coinbase.vout[0].nValue += spend.tx.vout[spend.n].nValue - 1 # all but one satoshi to fees
             coinbase.rehash()
             block = create_block(base_block_hash, coinbase, block_time)
+            final_tx = add_final_tx(final_tx, block)
             tx = create_transaction(spend.tx, spend.n, b"", 1, script)  # spend 1 satoshi
             self.sign_tx(tx, spend.tx, spend.n)
             self.add_transactions_to_block(block, [tx])
-            block.hashMerkleRoot = block.calc_merkle_root()
+        block.hashMerkleRoot = block.calc_merkle_root()
+        block.rehash()
         if solve:
             block.solve()
         self.tip = block
         self.block_heights[block.sha256] = height
+        self.final_txs[block.sha256] = final_tx
         assert number not in self.blocks
         self.blocks[number] = block
         return block
@@ -133,6 +144,7 @@ class FullBlockTest(ComparisonTestFramework):
     def get_tests(self):
         self.genesis_hash = int(self.nodes[0].getbestblockhash(), 16)
         self.block_heights[self.genesis_hash] = 0
+        self.final_txs[self.genesis_hash] = []
         spendable_outputs = []
 
         # save the current tip so it can be spent by a later block
@@ -141,7 +153,8 @@ class FullBlockTest(ComparisonTestFramework):
 
         # get an output that we previously marked as spendable
         def get_spendable_output():
-            return PreviousSpendableOutput(spendable_outputs.pop(0).vtx[0], 0)
+            idx = int(spendable_outputs[0].vtx[0].hash == self.blocks[0].vtx[0].hash)
+            return PreviousSpendableOutput(spendable_outputs.pop(0).vtx[0], idx)
 
         # returns a test case that asserts that the current tip was accepted
         def accepted():
@@ -169,7 +182,9 @@ class FullBlockTest(ComparisonTestFramework):
             self.tip = block
             if block.sha256 != old_sha256:
                 self.block_heights[block.sha256] = self.block_heights[old_sha256]
+                self.final_txs[block.sha256] = self.final_txs[old_sha256]
                 del self.block_heights[old_sha256]
+                del self.final_txs[old_sha256]
             self.blocks[block_number] = block
             return block
 
@@ -187,6 +202,11 @@ class FullBlockTest(ComparisonTestFramework):
         save_spendable_output()
         yield accepted()
 
+        self.final_txs[self.tip.sha256] = [{
+            'txid': self.tip.vtx[0].hash,
+            'vout': 0,
+            'amount': 0,
+        }]
 
         # Now we need that block to mature so we can spend the coinbase.
         test = TestInstance(sync_every_block=False)
@@ -533,7 +553,7 @@ class FullBlockTest(ComparisonTestFramework):
             total_size += len(tx_new.serialize())
             if total_size >= MAX_BLOCK_BASE_SIZE:
                 break
-            b39.vtx.append(tx_new) # add tx to block
+            b39.vtx.insert(-1, tx_new) # add tx to block
             tx_last = tx_new
             b39_outputs += 1
 
@@ -585,7 +605,7 @@ class FullBlockTest(ComparisonTestFramework):
         # same as b40, but one less sigop
         tip(39)
         block(41, spend=None)
-        update_block(41, b40.vtx[1:-1])
+        update_block(41, b40.vtx[1:-2])
         b41_sigops_to_fill = b40_sigops_to_fill - 1
         tx = CTransaction()
         tx.vin.append(CTxIn(lastOutpoint, b''))
@@ -617,6 +637,7 @@ class FullBlockTest(ComparisonTestFramework):
         # The next few blocks are going to be created "by hand" since they'll do funky things, such as having
         # the first transaction be non-coinbase, etc.  The purpose of b44 is to make sure this works.
         height = self.block_heights[self.tip.sha256] + 1
+        final_tx = self.final_txs[self.tip.sha256]
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         b44 = CBlock()
         b44.nTime = self.tip.nTime + 1
@@ -624,9 +645,11 @@ class FullBlockTest(ComparisonTestFramework):
         b44.nBits = 0x207fffff
         b44.vtx.append(coinbase)
         b44.hashMerkleRoot = b44.calc_merkle_root()
+        final_tx = add_final_tx(final_tx, b44)
         b44.solve()
         self.tip = b44
         self.block_heights[b44.sha256] = height
+        self.final_txs[b44.sha256] = final_tx
         self.blocks[44] = b44
         yield accepted()
 
@@ -637,10 +660,12 @@ class FullBlockTest(ComparisonTestFramework):
         b45.hashPrevBlock = self.tip.sha256
         b45.nBits = 0x207fffff
         b45.vtx.append(non_coinbase)
+        final_tx = add_final_tx(final_tx, b45)
         b45.hashMerkleRoot = b45.calc_merkle_root()
         b45.calc_sha256()
         b45.solve()
         self.block_heights[b45.sha256] = self.block_heights[self.tip.sha256]+1
+        self.final_txs[b45.sha256] = final_tx
         self.tip = b45
         self.blocks[45] = b45
         yield rejected(RejectResult(16, b'bad-cb-missing'))
@@ -655,6 +680,7 @@ class FullBlockTest(ComparisonTestFramework):
         b46.hashMerkleRoot = 0
         b46.solve()
         self.block_heights[b46.sha256] = self.block_heights[b44.sha256]+1
+        self.final_txs[b46.sha256] = self.final_txs[b44.sha256]
         self.tip = b46
         assert 46 not in self.blocks
         self.blocks[46] = b46
@@ -761,15 +787,14 @@ class FullBlockTest(ComparisonTestFramework):
         tip(55)
         b57 = block(57)
         tx = create_and_sign_tx(out[16].tx, out[16].n, 1)
-        tx1 = create_tx(tx, 0, 1)
-        b57 = update_block(57, [tx, tx1])
+        b57 = update_block(57, [tx])
 
         # b56 - copy b57, add a duplicate tx
         tip(55)
         b56 = copy.deepcopy(b57)
         self.blocks[56] = b56
         assert_equal(len(b56.vtx),3)
-        b56 = update_block(56, [tx1])
+        b56 = update_block(56, b56.vtx[-1:])
         assert_equal(b56.hash, b57.hash)
         yield rejected(RejectResult(16, b'bad-txns-duplicate'))
 
@@ -780,16 +805,15 @@ class FullBlockTest(ComparisonTestFramework):
         tx1 = create_tx(tx, 0, 1)
         tx2 = create_tx(tx1, 0, 1)
         tx3 = create_tx(tx2, 0, 1)
-        tx4 = create_tx(tx3, 0, 1)
-        b57p2 = update_block("57p2", [tx, tx1, tx2, tx3, tx4])
+        b57p2 = update_block("57p2", [tx, tx1, tx2, tx3])
 
         # b56p2 - copy b57p2, duplicate two non-consecutive tx's
         tip(55)
         b56p2 = copy.deepcopy(b57p2)
         self.blocks["b56p2"] = b56p2
-        assert_equal(b56p2.hash, b57p2.hash)
         assert_equal(len(b56p2.vtx),6)
-        b56p2 = update_block("b56p2", [tx3, tx4])
+        b56p2 = update_block("b56p2", [b56p2.vtx[-1], tx3])
+        assert_equal(b56p2.hash, b57p2.hash)
         yield rejected(RejectResult(16, b'bad-txns-duplicate'))
 
         tip("57p2")
@@ -1014,11 +1038,11 @@ class FullBlockTest(ComparisonTestFramework):
         tip(69)
         b72 = block(72)
         tx1 = create_and_sign_tx(out[21].tx, out[21].n, 2)
-        tx2 = create_and_sign_tx(tx1, 0, 1)
-        b72 = update_block(72, [tx1, tx2])  # now tip is 72
+        b72 = update_block(72, [tx1])  # now tip is 72
         b71 = copy.deepcopy(b72)
-        b71.vtx.append(tx2)   # add duplicate tx2
+        b71.vtx.insert(-1, b72.vtx[-1])   # add duplicate tx2
         self.block_heights[b71.sha256] = self.block_heights[b69.sha256] + 1  # b71 builds off b69
+        self.final_txs[b71.sha256] = self.final_txs[b72.sha256]
         self.blocks[71] = b71
 
         assert_equal(len(b71.vtx), 4)

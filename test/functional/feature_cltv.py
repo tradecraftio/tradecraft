@@ -11,7 +11,7 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import *
-from test_framework.blocktools import create_coinbase, create_block, add_final_tx
+from test_framework.blocktools import create_coinbase, create_block, get_final_tx_info, add_final_tx
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, OP_TRUE, CScriptNum
 from io import BytesIO
 
@@ -82,6 +82,8 @@ class BIP65Test(BitcoinTestFramework):
 
         self.log.info("Test that an invalid-according-to-CLTV transaction can still appear in a block")
 
+        final_tx = get_final_tx_info(self.nodes[0])
+
         spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[0],
                 self.nodeaddress, 1.0)
         cltv_invalidate(spendtx)
@@ -90,7 +92,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
-        add_final_tx(self.nodes[0], block)
+        final_tx = add_final_tx(final_tx, block)
         block.nVersion = 3
         block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -103,7 +105,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
-        add_final_tx(self.nodes[0], block)
+        final_tx = add_final_tx(final_tx, block)
         block.nVersion = 3
         block.solve()
         self.nodes[0].p2p.send_and_ping(msg_block(block))

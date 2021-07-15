@@ -12,7 +12,7 @@ import copy
 from binascii import b2a_hex
 from decimal import Decimal
 
-from test_framework.blocktools import create_coinbase
+from test_framework.blocktools import create_coinbase, add_final_tx
 from test_framework.mininode import CBlock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
@@ -64,6 +64,9 @@ class MiningTest(BitcoinTestFramework):
         block.nNonce = 0
         block.vtx = [coinbase_tx]
 
+        if 'finaltx' in tmpl and 'prevout' in tmpl['finaltx']:
+            add_final_tx(tmpl['finaltx']['prevout'], block)
+
         self.log.info("getblocktemplate: Test valid block")
         assert_template(node, block, None)
 
@@ -84,7 +87,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("getblocktemplate: Test duplicate transaction")
         bad_block = copy.deepcopy(block)
-        bad_block.vtx.append(bad_block.vtx[0])
+        bad_block.vtx.insert(-1, bad_block.vtx[0])
         assert_template(node, bad_block, 'bad-txns-duplicate')
 
         self.log.info("getblocktemplate: Test invalid transaction")
@@ -92,7 +95,7 @@ class MiningTest(BitcoinTestFramework):
         bad_tx = copy.deepcopy(bad_block.vtx[0])
         bad_tx.vin[0].prevout.hash = 255
         bad_tx.rehash()
-        bad_block.vtx.append(bad_tx)
+        bad_block.vtx.insert(-1, bad_tx)
         assert_template(node, bad_block, 'bad-txns-inputs-missingorspent')
 
         self.log.info("getblocktemplate: Test nonfinal transaction")
@@ -105,7 +108,7 @@ class MiningTest(BitcoinTestFramework):
         # The tx count is immediately after the block header
         TX_COUNT_OFFSET = 80
         bad_block_sn = bytearray(block.serialize())
-        assert_equal(bad_block_sn[TX_COUNT_OFFSET], 1)
+        assert_equal(bad_block_sn[TX_COUNT_OFFSET], 2)
         bad_block_sn[TX_COUNT_OFFSET] += 1
         assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(bad_block_sn), 'mode': 'proposal'})
 

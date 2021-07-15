@@ -46,6 +46,9 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         '''
         height = 1
         block = create_block(self.tip, create_coinbase(height), self.block_time)
+        block.vtx[0].vout.insert(0, CTxOut(0, CScript([OP_TRUE])))
+        block.vtx[0].rehash()
+        block.hashMerkleRoot = block.calc_merkle_root()
         self.block_time += 1
         block.solve()
         # Save the coinbase for later
@@ -58,7 +61,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         Now we need that block to mature so we can spend the coinbase.
         '''
         test = TestInstance(sync_every_block=False)
-        for i in range(100):
+        for i in range(99):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             self.tip = block.sha256
@@ -66,6 +69,12 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
             test.blocks_and_transactions.append([block, True])
             height += 1
         yield test
+
+        final_tx = [{
+            'txid': self.block1.vtx[0].hash,
+            'vout': 0,
+            'amount': 0,
+        }]
 
         '''
         Now we use merkle-root malleability to generate an invalid block with
@@ -78,18 +87,19 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         self.block_time += 1
 
         # b'0x51' is OP_TRUE
-        tx1 = create_transaction(self.block1.vtx[0], 0, b'\x51', 50 * COIN)
+        tx1 = create_transaction(self.block1.vtx[0], 1, b'\x51', 50 * COIN)
         tx2 = create_transaction(tx1, 0, b'\x51', 50 * COIN)
 
-        block2.vtx.extend([tx1, tx2])
+        block2.vtx.extend([tx1])
         block2.hashMerkleRoot = block2.calc_merkle_root()
+        final_tx = add_final_tx(final_tx, block2)
         block2.rehash()
         block2.solve()
         orig_hash = block2.sha256
         block2_orig = copy.deepcopy(block2)
 
         # Mutate block 2
-        block2.vtx.append(tx2)
+        block2.vtx.append(block2.vtx[-1])
         assert_equal(block2.hashMerkleRoot, block2.calc_merkle_root())
         assert_equal(orig_hash, block2.rehash())
         assert(block2_orig.vtx != block2.vtx)
@@ -101,8 +111,8 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         self.log.info("Test duplicate input block.")
 
         block2_dup = copy.deepcopy(block2_orig)
-        block2_dup.vtx[2].vin.append(block2_dup.vtx[2].vin[0])
-        block2_dup.vtx[2].rehash()
+        block2_dup.vtx[1].vin.append(block2_dup.vtx[1].vin[0])
+        block2_dup.vtx[1].rehash()
         block2_dup.hashMerkleRoot = block2_dup.calc_merkle_root()
         block2_dup.rehash()
         block2_dup.solve()
@@ -118,6 +128,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         block3.vtx[0].sha256=None
         block3.vtx[0].calc_sha256()
         block3.hashMerkleRoot = block3.calc_merkle_root()
+        final_tx = add_final_tx(final_tx, block3)
         block3.rehash()
         block3.solve()
 

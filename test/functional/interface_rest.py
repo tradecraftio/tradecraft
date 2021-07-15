@@ -305,7 +305,7 @@ class RESTTest (BitcoinTestFramework):
         #check if the 3 tx show up in the new block
         json_string = http_get_call(url.hostname, url.port, '/rest/block/'+newblockhash[0]+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
-        for tx in json_obj['tx']:
+        for tx in json_obj['tx'][:-1]: #exclude final tx
             if not 'coinbase' in tx['vin'][0]: #exclude coinbase
                 assert_equal(tx['txid'] in txs, True)
 

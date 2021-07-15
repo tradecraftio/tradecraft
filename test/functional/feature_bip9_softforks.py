@@ -23,7 +23,7 @@ import itertools
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction, network_thread_start
-from test_framework.blocktools import create_coinbase, create_block
+from test_framework.blocktools import create_coinbase, create_block, add_final_tx
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP
 
@@ -42,6 +42,8 @@ class BIP9SoftForksTest(ComparisonTestFramework):
     def create_transaction(self, node, coinbase, to_address, amount):
         from_txid = node.getblock(coinbase)['tx'][0]
         inputs = [{ "txid" : from_txid, "vout" : 0}]
+        if coinbase == self.coinbase_blocks[0]:
+            inputs[0]["vout"] = 1
         outputs = { to_address : amount }
         rawtx = node.createrawtransaction(inputs, outputs)
         tx = CTransaction()
@@ -60,6 +62,8 @@ class BIP9SoftForksTest(ComparisonTestFramework):
     def generate_blocks(self, number, version, test_blocks = []):
         for i in range(number):
             block = create_block(self.tip, create_coinbase(self.height), self.last_block_time + 1)
+            if self.height > 100:
+                self.final_tx = add_final_tx(self.final_tx, block)
             block.nVersion = version
             block.rehash()
             block.solve()
@@ -83,6 +87,13 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
         self.last_block_time = int(time.time())
+
+        # Save the initial output which primes the block-final transaction chain
+        self.final_tx = [{
+            'txid': self.nodes[0].getblock(self.coinbase_blocks[0])['tx'][0],
+            'vout': 0,
+            'amount': 0,
+        }]
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
         assert_equal(self.get_bip9_status(bipName)['since'], 0)
@@ -201,6 +212,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         block = create_block(self.tip, create_coinbase(self.height), self.last_block_time + 1)
         block.nVersion = activated_version
         block.vtx.append(spendtx)
+        self.final_tx = add_final_tx(self.final_tx, block)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()
@@ -231,6 +243,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         block = create_block(self.tip, create_coinbase(self.height), self.last_block_time + 1)
         block.nVersion = 5
         block.vtx.append(spendtx)
+        add_final_tx(self.final_tx, block)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()
