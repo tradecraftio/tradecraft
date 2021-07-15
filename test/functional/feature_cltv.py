@@ -8,7 +8,7 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 1351.
 """
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction, add_final_tx
+from test_framework.blocktools import create_coinbase, create_block, create_transaction, get_final_tx_info, add_final_tx
 from test_framework.messages import CTransaction, msg_block, ToHex
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, OP_TRUE, CScriptNum
@@ -64,10 +64,12 @@ class BIP65Test(BitcoinTestFramework):
         self.nodes[0].add_p2p_connection(P2PInterface())
 
         self.log.info("Mining %d blocks", CLTV_HEIGHT - 2)
-        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.nodes[0].generate(CLTV_HEIGHT - 2)]
+        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.nodes[0].generate(CLTV_HEIGHT - 2)[1:]]
         self.nodeaddress = self.nodes[0].getnewaddress()
 
         self.log.info("Test that an invalid-according-to-CLTV transaction can still appear in a block")
+
+        final_tx = get_final_tx_info(self.nodes[0])
 
         spendtx = create_transaction(self.nodes[0], self.coinbase_txids[0],
                 self.nodeaddress, amount=1.0)
@@ -77,7 +79,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
-        add_final_tx(self.nodes[0], block)
+        final_tx = add_final_tx(final_tx, block)
         block.nVersion = 3
         block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -90,7 +92,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
-        add_final_tx(self.nodes[0], block)
+        final_tx = add_final_tx(final_tx, block)
         block.nVersion = 3
         block.solve()
         self.nodes[0].p2p.send_and_ping(msg_block(block))

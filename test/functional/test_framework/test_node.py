@@ -82,7 +82,6 @@ class TestNode():
             "-debugexclude=leveldb",
             "-mocktime=" + str(mocktime),
             "-uacomment=testnode%d" % i,
-            "-vbparams=finaltx:0:0",
         ]
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
