@@ -13,13 +13,13 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Verify that starting bitcoin with -h works as expected."""
+"""Verify that starting freicoin with -h works as expected."""
 import subprocess
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
-class HelpTest(BitcoinTestFramework):
+class HelpTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -29,7 +29,7 @@ class HelpTest(BitcoinTestFramework):
         # Don't start the node
 
     def run_test(self):
-        self.log.info("Start bitcoin with -h for help text")
+        self.log.info("Start freicoin with -h for help text")
         self.nodes[0].start(extra_args=['-h'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         # Node should exit immediately and output help to stdout.
         ret_code = self.nodes[0].process.wait(timeout=1)
@@ -39,7 +39,7 @@ class HelpTest(BitcoinTestFramework):
         self.log.info("Help text received: {} (...)".format(output[0:60]))
         self.nodes[0].running = False
 
-        self.log.info("Start bitcoin with -version for version information")
+        self.log.info("Start freicoin with -version for version information")
         self.nodes[0].start(extra_args=['-version'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         # Node should exit immediately and output version to stdout.
         ret_code = self.nodes[0].process.wait(timeout=1)

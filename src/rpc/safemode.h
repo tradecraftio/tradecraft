@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_SAFEMODE_H
-#define BITCOIN_RPC_SAFEMODE_H
+#ifndef FREICOIN_RPC_SAFEMODE_H
+#define FREICOIN_RPC_SAFEMODE_H
 
 static const bool DEFAULT_DISABLE_SAFEMODE = true;
 
 void ObserveSafeMode();
 
-#endif // BITCOIN_RPC_SAFEMODE_H
+#endif // FREICOIN_RPC_SAFEMODE_H

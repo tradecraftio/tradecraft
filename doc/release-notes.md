@@ -1,25 +1,25 @@
-Bitcoin Core version 0.16.x is now available from:
+Freicoin version 0.16.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.16.x/>
+  <http://freico.in/bin/freicoin-0.16.x/>
 
 This is a new minor version release, with various bugfixes
 as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tradecraftio/tradecraft/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <http://freico.in/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Freicoin-Qt` (on Mac)
+or `freicoind`/`freicoin-qt` (on Linux).
 
 The first time you run version 0.15.0 or newer, your chainstate database will be converted to a
 new format, which will take anywhere from a few minutes to half an hour,
@@ -40,10 +40,10 @@ wallets that were created with older versions are not affected by this.
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+Freicoin is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+Freicoin should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes
@@ -67,4 +67,4 @@ And to those that reported security issues:
 
 (to be filled in)
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/freicoin/).

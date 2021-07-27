@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_TEST_RPC_NESTED_TESTS_H
-#define BITCOIN_QT_TEST_RPC_NESTED_TESTS_H
+#ifndef FREICOIN_QT_TEST_RPC_NESTED_TESTS_H
+#define FREICOIN_QT_TEST_RPC_NESTED_TESTS_H
 
 #include <QObject>
 #include <QTest>
@@ -30,4 +30,4 @@ class RPCNestedTests : public QObject
     void rpcNestedTests();
 };
 
-#endif // BITCOIN_QT_TEST_RPC_NESTED_TESTS_H
+#endif // FREICOIN_QT_TEST_RPC_NESTED_TESTS_H

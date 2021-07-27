@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_INIT_H
-#define BITCOIN_WALLET_INIT_H
+#ifndef FREICOIN_WALLET_INIT_H
+#define FREICOIN_WALLET_INIT_H
 
 #include <string>
 
@@ -51,4 +51,4 @@ void StopWallets();
 //! Close all wallets.
 void CloseWallets();
 
-#endif // BITCOIN_WALLET_INIT_H
+#endif // FREICOIN_WALLET_INIT_H

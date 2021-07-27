@@ -24,7 +24,7 @@ import re
 from test_framework.blocktools import create_block, create_coinbase, get_final_tx_info, add_final_tx
 from test_framework.messages import msg_block
 from test_framework.mininode import P2PInterface, network_thread_start, mininode_lock
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import wait_until
 
 VB_PERIOD = 144           # versionbits period length for regtest
@@ -37,7 +37,7 @@ WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible un
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
 VB_PATTERN = re.compile("Warning: unknown new rules activated.*versionbit")
 
-class VersionBitsWarningTest(BitcoinTestFramework):
+class VersionBitsWarningTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -110,7 +110,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # is cleared. This will move the versionbit state to ACTIVE.
         node.generate(VB_PERIOD)
 
-        # Stop-start the node. This is required because bitcoind will only warn once about unknown versions or unknown rules activating.
+        # Stop-start the node. This is required because freicoind will only warn once about unknown versions or unknown rules activating.
         self.restart_node(0)
 
         # Generating one block guarantees that we'll get out of IBD

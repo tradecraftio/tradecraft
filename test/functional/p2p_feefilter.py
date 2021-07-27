@@ -16,7 +16,7 @@
 """Test processing of feefilter messages."""
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 import time
 
@@ -47,7 +47,7 @@ class TestNode(P2PInterface):
         with mininode_lock:
             self.txinvs = []
 
-class FeeFilterTest(BitcoinTestFramework):
+class FeeFilterTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 

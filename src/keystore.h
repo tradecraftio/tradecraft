@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KEYSTORE_H
-#define BITCOIN_KEYSTORE_H
+#ifndef FREICOIN_KEYSTORE_H
+#define FREICOIN_KEYSTORE_H
 
 #include <key.h>
 #include <pubkey.h>
@@ -96,4 +96,4 @@ typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > Crypt
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */
 CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest);
 
-#endif // BITCOIN_KEYSTORE_H
+#endif // FREICOIN_KEYSTORE_H

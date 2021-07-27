@@ -24,7 +24,7 @@ Generate 427 more blocks.
 [Policy/Consensus] Check that the new NULLDUMMY rules are enforced on the 432nd block.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction, network_thread_start
 from test_framework.blocktools import create_coinbase, create_block, add_witness_commitment, get_final_tx_info, add_final_tx
@@ -46,7 +46,7 @@ def trueDummy(tx):
     tx.vin[0].scriptSig = CScript(newscript)
     tx.rehash()
 
-class NULLDUMMYTest(BitcoinTestFramework):
+class NULLDUMMYTest(FreicoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 2

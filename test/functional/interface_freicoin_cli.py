@@ -13,11 +13,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Test bitcoin-cli"""
-from test_framework.test_framework import BitcoinTestFramework
+"""Test freicoin-cli"""
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_raises_process_error, get_auth_cookie
 
-class TestBitcoinCli(BitcoinTestFramework):
+class TestFreicoinCli(FreicoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -26,12 +26,12 @@ class TestBitcoinCli(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        self.log.info("Compare responses from gewalletinfo RPC and `bitcoin-cli getwalletinfo`")
+        self.log.info("Compare responses from gewalletinfo RPC and `freicoin-cli getwalletinfo`")
         cli_response = self.nodes[0].cli.getwalletinfo()
         rpc_response = self.nodes[0].getwalletinfo()
         assert_equal(cli_response, rpc_response)
 
-        self.log.info("Compare responses from getblockchaininfo RPC and `bitcoin-cli getblockchaininfo`")
+        self.log.info("Compare responses from getblockchaininfo RPC and `freicoin-cli getblockchaininfo`")
         cli_response = self.nodes[0].cli.getblockchaininfo()
         rpc_response = self.nodes[0].getblockchaininfo()
         assert_equal(cli_response, rpc_response)
@@ -49,7 +49,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Make sure that -getinfo with arguments fails")
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
 
-        self.log.info("Compare responses from `bitcoin-cli -getinfo` and the RPCs data is retrieved from.")
+        self.log.info("Compare responses from `freicoin-cli -getinfo` and the RPCs data is retrieved from.")
         cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
         wallet_info = self.nodes[0].getwalletinfo()
         network_info = self.nodes[0].getnetworkinfo()
@@ -73,4 +73,4 @@ class TestBitcoinCli(BitcoinTestFramework):
         # unlocked_until is not tested because the wallet is not encrypted
 
 if __name__ == '__main__':
-    TestBitcoinCli().main()
+    TestFreicoinCli().main()

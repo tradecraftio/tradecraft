@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Class for bitcoind node under test"""
+"""Class for freicoind node under test"""
 
 import decimal
 import errno
@@ -38,10 +38,10 @@ from .util import (
 # For Python 3.4 compatibility
 JSONDecodeError = getattr(json, "JSONDecodeError", ValueError)
 
-BITCOIND_PROC_WAIT_TIMEOUT = 60
+FREICOIND_PROC_WAIT_TIMEOUT = 60
 
 class TestNode():
-    """A class for representing a bitcoind node under test.
+    """A class for representing a freicoind node under test.
 
     This class contains:
 
@@ -64,7 +64,7 @@ class TestNode():
             # Wait for up to 60 seconds for the RPC server to respond
             self.rpc_timeout = 60
         if binary is None:
-            self.binary = os.getenv("BITCOIND", "bitcoind")
+            self.binary = os.getenv("FREICOIND", "freicoind")
         else:
             self.binary = binary
         self.stderr = stderr
@@ -73,7 +73,7 @@ class TestNode():
         self.extra_args = extra_args
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
 
-        self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "bitcoin-cli"), self.datadir)
+        self.cli = TestNodeCLI(os.getenv("FREICOINCLI", "freicoin-cli"), self.datadir)
         self.use_cli = use_cli
 
         self.running = False
@@ -87,7 +87,7 @@ class TestNode():
         self.p2ps = []
 
     def __del__(self):
-        # Ensure that we don't leave any bitcoind processes lying around after
+        # Ensure that we don't leave any freicoind processes lying around after
         # the test ends
         if self.process and self.cleanup_on_exit:
             # Should only happen on test failure
@@ -111,19 +111,19 @@ class TestNode():
         if stderr is None:
             stderr = self.stderr
         # Delete any existing cookie file -- if such a file exists (eg due to
-        # unclean shutdown), it will get overwritten anyway by bitcoind, and
+        # unclean shutdown), it will get overwritten anyway by freicoind, and
         # potentially interfere with our attempt to authenticate
         delete_cookie_file(self.datadir)
         self.process = subprocess.Popen(self.args + extra_args, stderr=stderr, *args, **kwargs)
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        self.log.debug("freicoind started, waiting for RPC to come up")
 
     def wait_for_rpc_connection(self):
-        """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
+        """Sets up an RPC connection to the freicoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
-            assert self.process.poll() is None, "bitcoind exited with status %i during initialization" % self.process.returncode
+            assert self.process.poll() is None, "freicoind exited with status %i during initialization" % self.process.returncode
             try:
                 self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
@@ -138,11 +138,11 @@ class TestNode():
             except JSONRPCException as e:  # Initialization phase
                 if e.error['code'] != -28:  # RPC in warmup?
                     raise  # unknown JSON RPC exception
-            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
+            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. freicoind still starting
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
-        raise AssertionError("Unable to connect to bitcoind")
+        raise AssertionError("Unable to connect to freicoind")
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
@@ -184,13 +184,13 @@ class TestNode():
         self.log.debug("Node stopped")
         return True
 
-    def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
+    def wait_until_stopped(self, timeout=FREICOIND_PROC_WAIT_TIMEOUT):
         wait_until(self.is_node_stopped, timeout=timeout)
 
     def node_encrypt_wallet(self, passphrase):
         """"Encrypts the wallet.
 
-        This causes bitcoind to shutdown, so this method takes
+        This causes freicoind to shutdown, so this method takes
         care of cleaning up resources."""
         self.encryptwallet(passphrase)
         self.wait_until_stopped()
@@ -237,17 +237,17 @@ class TestNodeCLIAttr:
         return lambda: self(*args, **kwargs)
 
 class TestNodeCLI():
-    """Interface to bitcoin-cli for an individual node"""
+    """Interface to freicoin-cli for an individual node"""
 
     def __init__(self, binary, datadir):
         self.options = []
         self.binary = binary
         self.datadir = datadir
         self.input = None
-        self.log = logging.getLogger('TestFramework.bitcoincli')
+        self.log = logging.getLogger('TestFramework.freicoincli')
 
     def __call__(self, *options, input=None):
-        # TestNodeCLI is callable with bitcoin-cli command-line options
+        # TestNodeCLI is callable with freicoin-cli command-line options
         cli = TestNodeCLI(self.binary, self.datadir)
         cli.options = [str(o) for o in options]
         cli.input = input
@@ -266,18 +266,18 @@ class TestNodeCLI():
         return results
 
     def send_cli(self, command=None, *args, **kwargs):
-        """Run bitcoin-cli command. Deserializes returned string as python object."""
+        """Run freicoin-cli command. Deserializes returned string as python object."""
 
         pos_args = [str(arg) for arg in args]
         named_args = [str(key) + "=" + str(value) for (key, value) in kwargs.items()]
-        assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same bitcoin-cli call"
+        assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same freicoin-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:
             p_args += ["-named"]
         if command is not None:
             p_args += [command]
         p_args += pos_args + named_args
-        self.log.debug("Running bitcoin-cli command: %s" % command)
+        self.log.debug("Running freicoin-cli command: %s" % command)
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()

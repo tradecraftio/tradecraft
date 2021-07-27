@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test longpolling with getblocktemplate."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 
 import threading
@@ -33,7 +33,7 @@ class LongpollThread(threading.Thread):
     def run(self):
         self.node.getblocktemplate({'rules':['segwit'],'longpollid':self.longpollid})
 
-class GetBlockTemplateLPTest(BitcoinTestFramework):
+class GetBlockTemplateLPTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 

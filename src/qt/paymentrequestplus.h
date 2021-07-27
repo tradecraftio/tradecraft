@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_PAYMENTREQUESTPLUS_H
-#define BITCOIN_QT_PAYMENTREQUESTPLUS_H
+#ifndef FREICOIN_QT_PAYMENTREQUESTPLUS_H
+#define FREICOIN_QT_PAYMENTREQUESTPLUS_H
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -59,4 +59,4 @@ private:
     payments::PaymentDetails details;
 };
 
-#endif // BITCOIN_QT_PAYMENTREQUESTPLUS_H
+#endif // FREICOIN_QT_PAYMENTREQUESTPLUS_H

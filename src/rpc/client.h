@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPCCLIENT_H
-#define BITCOIN_RPCCLIENT_H
+#ifndef FREICOIN_RPCCLIENT_H
+#define FREICOIN_RPCCLIENT_H
 
 #include <univalue.h>
 
@@ -30,4 +30,4 @@ UniValue RPCConvertNamedValues(const std::string& strMethod, const std::vector<s
  */
 UniValue ParseNonRFCJSONValue(const std::string& strVal);
 
-#endif // BITCOIN_RPCCLIENT_H
+#endif // FREICOIN_RPCCLIENT_H

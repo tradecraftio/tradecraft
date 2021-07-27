@@ -20,13 +20,13 @@ Version 2 compact blocks are post-segwit (wtxids)
 """
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_final_tx_info, add_final_tx
 from test_framework.script import CScript, OP_TRUE, OP_DROP
 
 
-# TestNode: A peer we use to send messages to bitcoind, and store responses.
+# TestNode: A peer we use to send messages to freicoind, and store responses.
 class TestNode(P2PInterface):
     def __init__(self):
         super().__init__()
@@ -100,7 +100,7 @@ class TestNode(P2PInterface):
         self.send_message(message)
         wait_until(lambda: self.state != "connected", timeout=timeout, lock=mininode_lock)
 
-class CompactBlocksTest(BitcoinTestFramework):
+class CompactBlocksTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         # Node0 = pre-segwit, node1 = segwit-aware
@@ -248,7 +248,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             old_node.request_headers_and_sync(locator=[tip])
             check_announcement_of_new_block(node, old_node, lambda p: "cmpctblock" in p.last_message)
 
-    # This test actually causes bitcoind to (reasonably!) disconnect us, so do this last.
+    # This test actually causes freicoind to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
         self.nodes[0].generate(101)
         block = self.build_block_on_tip(self.nodes[0])
@@ -263,7 +263,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
 
     # Compare the generated shortids to what we expect based on BIP 152, given
-    # bitcoind's choice of nonce.
+    # freicoind's choice of nonce.
     def test_compactblock_construction(self, node, test_node, version, use_witness_address):
         # Generate a bunch of transactions.
         node.generate(101)
@@ -274,7 +274,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             # a witness address.
             address = node.addwitnessaddress(address)
             value_to_send = node.getbalance()
-            node.sendtoaddress(address, satoshi_round(value_to_send-Decimal(0.1)))
+            node.sendtoaddress(address, kria_round(value_to_send-Decimal(0.1)))
             node.generate(1)
 
         segwit_tx_generated = False
@@ -377,7 +377,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 header_and_shortids.shortids.pop(0)
             index += 1
 
-    # Test that bitcoind requests compact blocks when we announce new blocks
+    # Test that freicoind requests compact blocks when we announce new blocks
     # via header or inv, and that responding to getblocktxn causes the block
     # to be successfully reconstructed.
     # Post-segwit: upgraded nodes would only make this request of cb-version-2,
@@ -399,7 +399,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 test_node.send_header_for_blocks([block])
             wait_until(lambda: "getdata" in test_node.last_message, timeout=30, lock=mininode_lock)
             assert_equal(len(test_node.last_message["getdata"].inv), 1)
-            #FIXME: For some reason bitcoind is returning a non-compact block
+            #FIXME: For some reason freicoind is returning a non-compact block
             #       request here when block-final transactions are enabled.  I
             #       admit I don't exactly know why, or even whether this is a
             #       problem.  It shouldn't be, because whether a full or a
@@ -580,7 +580,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(absolute_indexes, [6, 7, 8, 9, 10])
 
         # Now give an incorrect response.
-        # Note that it's possible for bitcoind to be smart enough to know we're
+        # Note that it's possible for freicoind to be smart enough to know we're
         # lying, since it could check to see if the shortid matches what we're
         # sending, and eg disconnect us for misbehavior.  If that behavior
         # change were made, we could just modify this test by having a
@@ -610,7 +610,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     def test_getblocktxn_handler(self, node, test_node, version):
-        # bitcoind will not send blocktxn responses for blocks whose height is
+        # freicoind will not send blocktxn responses for blocks whose height is
         # more than 10 blocks deep.
         MAX_GETBLOCKTXN_DEPTH = 10
         chain_height = node.getblockcount()

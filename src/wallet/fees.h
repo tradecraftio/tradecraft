@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_FEES_H
-#define BITCOIN_WALLET_FEES_H
+#ifndef FREICOIN_WALLET_FEES_H
+#define FREICOIN_WALLET_FEES_H
 
 #include <amount.h>
 
@@ -42,4 +42,4 @@ CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, c
  */
 CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator);
 
-#endif // BITCOIN_WALLET_FEES_H
+#endif // FREICOIN_WALLET_FEES_H

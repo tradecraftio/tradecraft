@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPCSERVER_H
-#define BITCOIN_RPCSERVER_H
+#ifndef FREICOIN_RPCSERVER_H
+#define FREICOIN_RPCSERVER_H
 
 #include <amount.h>
 #include <rpc/protocol.h>
@@ -148,7 +148,7 @@ public:
 };
 
 /**
- * Bitcoin RPC command dispatcher.
+ * Freicoin RPC command dispatcher.
  */
 class CRPCTable
 {
@@ -207,4 +207,4 @@ std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq);
 // Retrieves any serialization flags requested in command line argument
 int RPCSerializationFlags();
 
-#endif // BITCOIN_RPCSERVER_H
+#endif // FREICOIN_RPCSERVER_H

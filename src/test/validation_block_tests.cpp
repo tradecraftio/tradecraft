@@ -21,7 +21,7 @@
 #include <miner.h>
 #include <pow.h>
 #include <random.h>
-#include <test/test_bitcoin.h>
+#include <test/test_freicoin.h>
 #include <validation.h>
 #include <validationinterface.h>
 

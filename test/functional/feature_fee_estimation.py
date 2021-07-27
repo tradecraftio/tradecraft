@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test fee estimation code."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import *
 from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_EQUAL, hash160, OP_TRUE
 from test_framework.mininode import CTransaction, CTxIn, CTxOut, COutPoint, ToHex, COIN
@@ -48,7 +48,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     # Exponentially distributed from 1-128 * fee_increment
     rand_fee = float(fee_increment)*(1.1892**random.randint(0,28))
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
-    fee = min_fee - fee_increment + satoshi_round(rand_fee)
+    fee = min_fee - fee_increment + kria_round(rand_fee)
     tx = CTransaction()
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
@@ -86,7 +86,7 @@ def split_inputs(from_node, txins, txouts, initial_split = False):
     tx = CTransaction()
     tx.vin.append(CTxIn(COutPoint(int(prevtxout["txid"], 16), prevtxout["vout"]), b""))
 
-    half_change = satoshi_round(prevtxout["amount"]/2)
+    half_change = kria_round(prevtxout["amount"]/2)
     rem_change = prevtxout["amount"] - half_change  - Decimal("0.00001000")
     tx.vout.append(CTxOut(int(half_change*COIN), P2SH_1))
     tx.vout.append(CTxOut(int(rem_change*COIN), P2SH_2))
@@ -151,7 +151,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     return all_estimates
 
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
 
