@@ -550,6 +550,7 @@ RPCHelpMan importwallet()
         pwallet->chain().showProgress(strprintf("%s " + _("Importing…").translated, pwallet->GetDisplayName()), 0, false); // show progress dialog in GUI
         std::vector<std::tuple<CKey, int64_t, bool, std::string>> keys;
         std::vector<std::pair<CScript, int64_t>> scripts;
+        std::vector<WitnessV0ScriptEntry> witscripts;
         while (file.good()) {
             pwallet->chain().showProgress("", std::max(1, std::min(50, (int)(((double)file.tellg() / (double)nFilesize) * 100))), false);
             std::string line;
@@ -581,9 +582,14 @@ RPCHelpMan importwallet()
                 keys.push_back(std::make_tuple(key, nTime, fLabel, strLabel));
             } else if(IsHex(vstr[0])) {
                 std::vector<unsigned char> vData(ParseHex(vstr[0]));
-                CScript script = CScript(vData.begin(), vData.end());
                 int64_t birth_time = ParseISO8601DateTime(vstr[1]);
-                scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
+                if (vstr[2] == "script=1") {
+                    CScript script = CScript(vData.begin(), vData.end());
+                    scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
+                } else if (vstr[2] == "witver=0") {
+                    WitnessV0ScriptEntry entry(vData);
+                    witscripts.push_back(entry);
+                }
             }
         }
         file.close();
@@ -592,7 +598,7 @@ RPCHelpMan importwallet()
             pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
             throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled when private keys are disabled");
         }
-        double total = (double)(keys.size() + scripts.size());
+        double total = (double)(keys.size() + scripts.size() + witscripts.size());
         double progress = 0;
         for (const auto& key_tuple : keys) {
             pwallet->chain().showProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
@@ -635,6 +641,15 @@ RPCHelpMan importwallet()
 
             progress++;
         }
+        for (const auto& entry : witscripts) {
+            pwallet->chain().showProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
+            if (!pwallet->ImportWitnessV0Scripts({entry}, 0 /* timestamp */)) {
+                pwallet->WalletLogPrintf("Error improting witscript %s\n", HexStr(entry.m_script));
+                fGood = false;
+                continue;
+            }
+            progress++;
+        }
         pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
     }
     pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
@@ -642,7 +657,7 @@ RPCHelpMan importwallet()
     pwallet->MarkDirty();
 
     if (!fGood)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys/scripts to wallet");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys/scripts/witscripts to wallet");
 
     return NullUniValue;
 },
@@ -699,7 +714,7 @@ RPCHelpMan dumpwallet()
 {
     return RPCHelpMan{"dumpwallet",
                 "\nDumps all wallet keys in a human-readable format to a server-side file. This does not allow overwriting existing files.\n"
-                "Imported scripts are included in the dumpfile, but corresponding BIP173 addresses, etc. may not be added automatically by importwallet.\n"
+                "Imported scripts and witscripts are included in the dumpfile, but corresponding BIP173 addresses, etc. may not be added automatically by importwallet.\n"
                 "Note that if your wallet contains keys which are not derived from your HD seed (e.g. imported keys), these are not covered by\n"
                 "only backing up the seed itself, and must be backed up too (e.g. ensure you back up the whole dumpfile).\n",
                 {
@@ -760,6 +775,7 @@ RPCHelpMan dumpwallet()
 
     const std::map<CKeyID, int64_t>& mapKeyPool = spk_man.GetAllReserveKeys();
     std::set<CScriptID> scripts = spk_man.GetCScripts();
+    std::set<WitnessV0ScriptHash> witscripts = spk_man.GetWitnessV0Scripts();
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
@@ -825,6 +841,17 @@ RPCHelpMan dumpwallet()
         }
         if(spk_man.GetCScript(scriptid, script)) {
             file << strprintf("%s %s script=1", HexStr(script), create_time);
+            file << strprintf(" # addr=%s\n", address);
+        }
+    }
+    file << "\n";
+    for (const WitnessV0ScriptHash& shortid : witscripts) {
+        WitnessV0ScriptEntry entry;
+        std::string create_time = "0";
+        std::string address = EncodeDestination(shortid);
+        if(spk_man.GetWitnessV0Script(shortid, entry)) {
+            // FIXME: find some way of getting birth times from metadata
+            file << strprintf("%s %s witver=0", HexStr(entry.m_script), create_time);
             file << strprintf(" # addr=%s\n", address);
         }
     }
