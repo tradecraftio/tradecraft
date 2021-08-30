@@ -25,7 +25,7 @@ from test_framework.util import (
 )
 
 
-def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
+def read_dump(file_name, addrs, script_addrs, witscript_addrs, hd_master_addr_old):
     """
     Read the given dump, count the addrs that match, count change and reserve.
     Also check that the old hd_master is inactive
@@ -36,6 +36,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
         found_p2sh_segwit_addr = 0
         found_bech32_addr = 0
         found_script_addr = 0
+        found_witscript_addr = 0
         found_addr_chg = 0
         found_addr_rsv = 0
         hd_master_addr_ret = None
@@ -69,7 +70,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     # ensure we have generated a new hd master key
                     assert hd_master_addr_old != addr
                     hd_master_addr_ret = addr
-                elif keytype == "script=1":
+                elif keytype == "script=1" or keytype == "witver=0":
                     # scripts don't have keypaths
                     keypath = None
                 else:
@@ -96,11 +97,15 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
 
                 # count scripts
                 for script_addr in script_addrs:
-                    if script_addr == addr.rstrip() and keytype == "script=1":
+                    if script_addr == addr.rstrip() and (keytype == "script=1"):
                         found_script_addr += 1
                         break
+                for witscript_addr in witscript_addrs:
+                    if witscript_addr == addr.rstrip() and (keytype == "witver=0"):
+                        found_witscript_addr += 1
+                        break;
 
-        return found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
+        return found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_witscript_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
 
 class WalletDumpTest(FreicoinTestFramework):
@@ -139,6 +144,8 @@ class WalletDumpTest(FreicoinTestFramework):
 
         # Test scripts dump by adding a 1-of-1 multisig address
         multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])["address"]
+        p2wsh_addr = self.nodes[0].addwitnessaddress(multisig_addr, p2sh=False)
+        p2sh_p2wsh_addr = self.nodes[0].addwitnessaddress(multisig_addr, p2sh=True)
 
         # Refill the keypool. getnewaddress() refills the keypool *before* taking a key from
         # the keypool, so the final call to getnewaddress leaves the keypool with one key below
@@ -169,8 +176,8 @@ class WalletDumpTest(FreicoinTestFramework):
         result = self.nodes[0].dumpwallet(wallet_unenc_dump)
         assert_equal(result['filename'], wallet_unenc_dump)
 
-        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
-            read_dump(wallet_unenc_dump, addrs, [multisig_addr], None)
+        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_witscript_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
+            read_dump(wallet_unenc_dump, addrs, [multisig_addr, p2sh_p2wsh_addr], [p2wsh_addr], None)
         assert '# End of dump' in found_comments  # Check that file is not corrupt
         assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
         assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
@@ -178,7 +185,8 @@ class WalletDumpTest(FreicoinTestFramework):
         assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_script_addr, 1)  # all scripts must be in the dump
+        assert_equal(found_script_addr, 2)  # all scripts must be in the dump
+        assert_equal(found_witscript_addr, 1)  # all witscripts must be in the dump
         assert_equal(found_addr_chg, 0)  # 0 blocks where mined
         assert_equal(found_addr_rsv, 90 * 2)  # 90 keys plus 100% internal keys
 
@@ -189,8 +197,8 @@ class WalletDumpTest(FreicoinTestFramework):
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(wallet_enc_dump)
 
-        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
-            read_dump(wallet_enc_dump, addrs, [multisig_addr], hd_master_addr_unenc)
+        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_witscript_addr, found_addr_chg, found_addr_rsv, _ = \
+            read_dump(wallet_enc_dump, addrs, [multisig_addr, p2sh_p2wsh_addr], [p2wsh_addr], hd_master_addr_unenc)
         assert '# End of dump' in found_comments  # Check that file is not corrupt
         assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
         assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
@@ -198,7 +206,8 @@ class WalletDumpTest(FreicoinTestFramework):
         assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_script_addr, 1)
+        assert_equal(found_script_addr, 2)
+        assert_equal(found_witscript_addr, 1)
         assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
         assert_equal(found_addr_rsv, 90 * 2)
 
