@@ -224,6 +224,16 @@ bool FillableSigningProvider::HaveWitnessV0Script(const WitnessV0ScriptHash& wit
     return mapWitnessV0Scripts.count(witnessprogram) > 0;
 }
 
+std::set<WitnessV0ScriptHash> FillableSigningProvider::GetWitnessV0Scripts() const
+{
+    LOCK(cs_KeyStore);
+    std::set<WitnessV0ScriptHash> ret;
+    for (const auto& mi : mapWitnessV0Scripts) {
+        ret.insert(mi.first);
+    }
+    return ret;
+}
+
 bool FillableSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
 {
     LOCK(cs_KeyStore);
