@@ -34,7 +34,8 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
         found_script_addr = 0
         found_addr_chg = 0
         found_addr_rsv = 0
-        witness_addr_ret = None
+        p2wsh_ret = None
+        p2sh_p2wsh_ret = None
         hd_master_addr_ret = None
         for line in inputfile:
             # only read non comment lines
@@ -58,7 +59,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     # ensure we have generated a new hd master key
                     assert (hd_master_addr_old != addr)
                     hd_master_addr_ret = addr
-                elif keytype == "script=1":
+                elif keytype == "script=1" or keytype == "witver=0":
                     # scripts don't have keypaths
                     keypath = None
                 else:
@@ -69,11 +70,12 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     if addrObj['address'] == addr.split(",")[0] and addrObj['hdkeypath'] == keypath and keytype == "label=":
                         # a labeled entry in the wallet should contain both a native address
                         # and the p2sh-p2wpkh address that was added at wallet setup
-                        if len(addr.split(",")) == 2:
+                        if len(addr.split(",")) == 3:
                             addr_list = addr.split(",")
                             # the entry should be of the first key in the wallet
                             assert_equal(addrs[0]['address'], addr_list[0])
-                            witness_addr_ret = addr_list[1]
+                            p2sh_p2wsh_ret = addr_list[1]
+                            p2wsh_ret = addr_list[2]
                         found_addr += 1
                         break
                     elif keytype == "change=1":
@@ -85,11 +87,11 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
 
                 # count scripts
                 for script_addr in script_addrs:
-                    if script_addr == addr.rstrip() and keytype == "script=1":
+                    if script_addr == addr.rstrip() and (keytype == "script=1" or keytype == "witver=0"):
                         found_script_addr += 1
                         break
 
-        return found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret, witness_addr_ret
+        return found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret, p2wsh_ret, p2sh_p2wsh_ret
 
 
 class WalletDumpTest(FreicoinTestFramework):
@@ -122,21 +124,23 @@ class WalletDumpTest(FreicoinTestFramework):
         self.nodes[0].keypoolrefill()
 
         # Test scripts dump by adding a P2SH witness and a 1-of-1 multisig address
-        witness_addr = self.nodes[0].addwitnessaddress(addrs[0]["address"], True)
+        p2wsh = self.nodes[0].addwitnessaddress(addrs[0]["address"], False)
+        p2sh_p2wsh = self.nodes[0].addwitnessaddress(addrs[0]["address"], True)
         multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])["address"]
-        script_addrs = [witness_addr, multisig_addr]
+        script_addrs = [p2wsh, p2sh_p2wsh, multisig_addr]
 
         # dump unencrypted wallet
         result = self.nodes[0].dumpwallet(wallet_unenc_dump)
         assert_equal(result['filename'], wallet_unenc_dump)
 
-        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc, witness_addr_ret = \
+        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc, p2wsh_ret, p2sh_p2wsh_ret = \
             read_dump(wallet_unenc_dump, addrs, script_addrs, None)
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_script_addr, 2)  # all scripts must be in the dump
         assert_equal(found_addr_chg, 0)  # 0 blocks where mined
         assert_equal(found_addr_rsv, 90 * 2)  # 90 keys plus 100% internal keys
-        assert_equal(witness_addr_ret, witness_addr)  # p2sh-p2wsh address added to the first key
+        assert_equal(p2wsh_ret, p2wsh) # p2wsh address added to the first key
+        assert_equal(p2sh_p2wsh_ret, p2sh_p2wsh) # p2sh-p2wsh address added to the first key
 
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
@@ -145,13 +149,14 @@ class WalletDumpTest(FreicoinTestFramework):
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(wallet_enc_dump)
 
-        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, _, witness_addr_ret = \
+        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, _, p2wsh_ret, p2sh_p2wsh_ret = \
             read_dump(wallet_enc_dump, addrs, script_addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
         assert_equal(found_script_addr, 2)
         assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
         assert_equal(found_addr_rsv, 90 * 2)
-        assert_equal(witness_addr_ret, witness_addr)
+        assert_equal(p2wsh_ret, p2wsh)
+        assert_equal(p2sh_p2wsh_ret, p2sh_p2wsh)
 
         # Overwriting should fail
         assert_raises_rpc_error(-8, "already exists", lambda: self.nodes[0].dumpwallet(wallet_enc_dump))
@@ -161,14 +166,16 @@ class WalletDumpTest(FreicoinTestFramework):
         self.start_node(0, ['-wallet=w2'])
 
         # Make sure the address is not IsMine before import
-        result = self.nodes[0].getaddressinfo(multisig_addr)
-        assert(result['ismine'] == False)
+        for addr in script_addrs:
+            result = self.nodes[0].getaddressinfo(addr)
+            assert(result['ismine'] == False)
 
         self.nodes[0].importwallet(wallet_unenc_dump)
 
         # Now check IsMine is true
-        result = self.nodes[0].getaddressinfo(multisig_addr)
-        assert(result['ismine'] == True)
+        for addr in script_addrs:
+            result = self.nodes[0].getaddressinfo(addr)
+            assert(result['ismine'] == True)
 
 if __name__ == '__main__':
     WalletDumpTest().main()
