@@ -45,6 +45,7 @@ public:
     //! Support for witness scripts
     virtual bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry) =0;
     virtual bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnesshash) const =0;
+    virtual std::set<WitnessV0ScriptHash> GetWitnessV0Scripts() const =0;
     virtual bool GetWitnessV0Script(const WitnessV0ScriptHash& witnesshash, WitnessV0ScriptEntry& entryOut) const =0;
 
     //! Support for Watch-only addresses
@@ -88,6 +89,7 @@ public:
 
     bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry) override;
     bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnessprogram) const override;
+    std::set<WitnessV0ScriptHash> GetWitnessV0Scripts() const override;
     bool GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
 
     bool AddWatchOnly(const CScript &dest) override;
