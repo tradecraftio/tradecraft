@@ -602,18 +602,30 @@ UniValue importwallet(const JSONRPCRequest& request)
             } else if(IsHex(vstr[0])) {
                std::vector<unsigned char> vData(ParseHex(vstr[0]));
                CScript script = CScript(vData.begin(), vData.end());
-               if (pwallet->HaveCScript(script)) {
+               WitnessV0ScriptHash longid;
+               CSHA256().Write(vData.data(), vData.size()).Finalize(longid.begin());
+               if (pwallet->HaveCScript(script) || pwallet->HaveWitnessV0Script(longid)) {
                    LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
                    continue;
                }
-               if(!pwallet->AddCScript(script)) {
-                   LogPrintf("Error importing script %s\n", vstr[0]);
-                   fGood = false;
-                   continue;
-               }
                int64_t birth_time = DecodeDumpTime(vstr[1]);
+               if (vstr[2] == "script=1") {
+                   if(!pwallet->AddCScript(script)) {
+                       LogPrintf("Error importing script %s\n", vstr[0]);
+                       fGood = false;
+                       continue;
+                   }
+                   if (birth_time > 0) {
+                       pwallet->m_script_metadata[CScriptID(script)].nCreateTime = birth_time;
+                   }
+               } else if (vstr[2] == "witver=0") {
+                   if (!pwallet->AddWitnessV0Script(vData)) {
+                       LogPrintf("Error importing witscript %s\n", vstr[0]);
+                       fGood = false;
+                       continue;
+                   }
+               }
                if (birth_time > 0) {
-                   pwallet->m_script_metadata[CScriptID(script)].nCreateTime = birth_time;
                    nTimeBegin = std::min(nTimeBegin, birth_time);
                }
             }
@@ -726,6 +738,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     std::set<CScriptID> scripts = pwallet->GetCScripts();
     // TODO: include scripts in GetKeyBirthTimes() output instead of separate
+    std::set<WitnessV0ScriptHash> witscripts = pwallet->GetWitnessV0Scripts();
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
@@ -793,6 +806,17 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         }
         if(pwallet->GetCScript(scriptid, script)) {
             file << strprintf("%s %s script=1", HexStr(script.begin(), script.end()), create_time);
+            file << strprintf(" # addr=%s\n", address);
+        }
+    }
+    file << "\n";
+    for (const WitnessV0ScriptHash& shortid : witscripts) {
+        std::vector<unsigned char> witscript;
+        std::string create_time = "0";
+        std::string address = EncodeDestination(shortid);
+        if(pwallet->GetWitnessV0Script(shortid, witscript)) {
+            // FIXME: find some way of getting birth times from metadata
+            file << strprintf("%s %s witver=0", HexStr(witscript.begin(), witscript.end()), create_time);
             file << strprintf(" # addr=%s\n", address);
         }
     }
