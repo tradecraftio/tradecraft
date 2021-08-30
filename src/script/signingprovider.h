@@ -313,6 +313,7 @@ public:
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
     virtual bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry);
     virtual bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnessprogram) const override;
+    virtual std::set<WitnessV0ScriptHash> GetWitnessV0Scripts() const;
     virtual bool GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
 };
 
