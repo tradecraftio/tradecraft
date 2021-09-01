@@ -175,6 +175,8 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
         if (!ParseOutputType(request.params[1].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
         }
+    } else if (output_type == OutputType::BECH32 && !IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus())) {
+        output_type = OutputType::P2SH_SEGWIT;
     }
 
     if (!pwallet->IsLocked()) {
@@ -285,6 +287,8 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
         if (!ParseOutputType(request.params[0].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[0].get_str()));
         }
+    } else if (output_type == OutputType::BECH32 && !IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus())) {
+        output_type = OutputType::P2SH_SEGWIT;
     }
 
     CReserveKey reservekey(pwallet);
