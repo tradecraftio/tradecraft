@@ -2816,10 +2816,13 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain::Lock& locked_cha
     return locktime;
 }
 
-OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend)
+OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend, bool is_witness_enabled)
 {
     // If -changetype is specified, always use that change type.
     if (change_type != OutputType::CHANGE_AUTO) {
+        if (change_type == OutputType::BECH32 && !is_witness_enabled) {
+            return OutputType::P2SH_SEGWIT;
+        }
         return change_type;
     }
 
@@ -2841,6 +2844,9 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     }
 
     // else use m_default_address_type for change
+    if (m_default_address_type == OutputType::BECH32 && !is_witness_enabled) {
+        return OutputType::P2SH_SEGWIT;
+    }
     return m_default_address_type;
 }
 
@@ -2878,6 +2884,11 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     {
         std::set<CInputCoin> setCoins;
         auto locked_chain = chain().lock();
+        bool is_witness_enabled = false;
+        {
+            LOCK(cs_main);
+            is_witness_enabled = IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus());
+        }
         LOCK(cs_wallet);
         if (refheight < 0) {
             refheight = chainActive.Height() + 1;
@@ -2917,7 +2928,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     return false;
                 }
 
-                const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
+                const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend, is_witness_enabled);
 
                 LearnRelatedScripts(vchPubKey, change_type);
                 scriptChange = GetScriptForDestination(GetDestinationForKey(vchPubKey, change_type));

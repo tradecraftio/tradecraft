@@ -968,7 +968,7 @@ public:
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
-    OutputType TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend);
+    OutputType TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend, bool is_witness_enabled);
 
     /**
      * Insert additional inputs into the transaction by
