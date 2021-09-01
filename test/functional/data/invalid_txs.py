@@ -101,7 +101,7 @@ class SizeTooSmall(BadTxTemplate):
     def get_tx(self):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
-        tx.vout.append(CTxOut(0, sc.CScript([sc.OP_TRUE])))
+        tx.vout.append(CTxOut(0, sc.CScript()))
         tx.calc_sha256()
         return tx
 
