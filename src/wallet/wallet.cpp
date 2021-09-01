@@ -2706,10 +2706,13 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     return true;
 }
 
-OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend)
+OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend, bool is_witness_enabled)
 {
     // If -changetype is specified, always use that change type.
     if (change_type != OUTPUT_TYPE_NONE) {
+        if (change_type == OUTPUT_TYPE_BECH32 && !is_witness_enabled) {
+            return OUTPUT_TYPE_P2SH_SEGWIT;
+        }
         return change_type;
     }
 
@@ -2731,6 +2734,9 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     }
 
     // else use g_address_type for change
+    if (g_address_type == OUTPUT_TYPE_BECH32 && !is_witness_enabled) {
+        return OUTPUT_TYPE_P2SH_SEGWIT;
+    }
     return g_address_type;
 }
 
@@ -2832,7 +2838,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, int64_t 
                     return false;
                 }
 
-                const OutputType change_type = TransactionChangeType(coin_control.change_type, vecSend);
+                const OutputType change_type = TransactionChangeType(coin_control.change_type, vecSend, IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus()));
 
                 LearnRelatedScripts(vchPubKey, change_type);
                 scriptChange = GetScriptForDestination(GetDestinationForKey(vchPubKey, change_type));
