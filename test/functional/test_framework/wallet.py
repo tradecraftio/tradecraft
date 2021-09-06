@@ -25,7 +25,7 @@ from typing import (
 )
 from test_framework.address import (
     address_to_scriptpubkey,
-    create_deterministic_address_bcrt1_p2tr_op_true,
+    create_deterministic_address_fcrt1_p2tr_op_true,
     key_to_p2pkh,
     key_to_p2wpk,
     output_key_to_p2tr,
@@ -105,7 +105,7 @@ class MiniWallet:
             pub_key = self._priv_key.get_pubkey()
             self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
+            self._address, self._internal_key = create_deterministic_address_fcrt1_p2tr_op_true()
             self._scriptPubKey = address_to_scriptpubkey(self._address)
 
         # When the pre-mined test framework chain is used, it contains coinbase
