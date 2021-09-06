@@ -18,7 +18,7 @@
 Test that permissions are correctly calculated and applied
 """
 
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.address import ADDRESS_FCRT1_P2WSH_OP_TRUE
 from test_framework.messages import (
     CTxInWitness,
     tx_from_hex,
@@ -108,7 +108,7 @@ class P2PPermissionsTests(FreicoinTestFramework):
         self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1/10"], "Cannot resolve -whitebind address", match=ErrorMatch.PARTIAL_REGEX)
 
     def check_tx_relay(self):
-        block_op_true = self.nodes[0].getblock(self.generatetoaddress(self.nodes[0], 100, ADDRESS_BCRT1_P2WSH_OP_TRUE)[0])
+        block_op_true = self.nodes[0].getblock(self.generatetoaddress(self.nodes[0], 100, ADDRESS_FCRT1_P2WSH_OP_TRUE)[0])
 
         self.log.debug("Create a connection from a forcerelay peer that rebroadcasts raw txs")
         # A test framework p2p connection is needed to send the raw transaction directly. If a full node was used, it could only
@@ -124,7 +124,7 @@ class P2PPermissionsTests(FreicoinTestFramework):
                     'txid': block_op_true['tx'][0],
                     'vout': 0,
                 }], outputs=[{
-                    ADDRESS_BCRT1_P2WSH_OP_TRUE: 5,
+                    ADDRESS_FCRT1_P2WSH_OP_TRUE: 5,
                 }]),
         )
         tx.wit.vtxinwit = [CTxInWitness()]

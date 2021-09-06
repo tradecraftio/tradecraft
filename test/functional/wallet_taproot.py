@@ -183,7 +183,7 @@ def compute_taproot_address(pubkey, scripts):
     tap = taproot_construct(pubkey, scripts)
     assert tap.scriptPubKey[0] == OP_1NEGATE
     assert tap.scriptPubKey[1] == 0x20
-    return encode_segwit_address("bcrt", 1, tap.scriptPubKey[2:])
+    return encode_segwit_address("fcrt", 1, tap.scriptPubKey[2:])
 
 class WalletTaprootTest(FreicoinTestFramework):
     """Test generation and spending of P2TR address outputs."""

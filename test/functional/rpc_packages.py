@@ -18,7 +18,7 @@
 from decimal import Decimal
 import random
 
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.address import ADDRESS_FCRT1_P2WSH_OP_TRUE
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.messages import (
     MAX_SEQUENCE_NONFINAL,
@@ -173,7 +173,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         first_coin = self.coins.pop()
         value = (first_coin["amount"] - Decimal("0.0002")) / 2 # Deduct reasonable fee and make 2 outputs
         inputs = [{"txid": first_coin["txid"], "vout": 0}]
-        outputs = [{self.address : value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : value}]
+        outputs = [{self.address : value}, {ADDRESS_FCRT1_P2WSH_OP_TRUE : value}]
         rawtx = node.createrawtransaction(inputs, outputs, 0, first_coin["refheight"])
 
         parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
@@ -252,7 +252,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         prevtx = self.coins.pop()
         inputs = [{"txid": prevtx["txid"], "vout": 0}]
         output1 = {node.get_deterministic_priv_key().address: 50 - 0.00125}
-        output2 = {ADDRESS_BCRT1_P2WSH_OP_TRUE: 50 - 0.00125}
+        output2 = {ADDRESS_FCRT1_P2WSH_OP_TRUE: 50 - 0.00125}
 
         # tx1 and tx2 share the same inputs
         rawtx1 = node.createrawtransaction(inputs, output1, 0, prevtx["refheight"])

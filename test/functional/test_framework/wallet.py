@@ -22,7 +22,7 @@ from random import choice
 from typing import Optional
 from test_framework.address import (
     base58_to_byte,
-    create_deterministic_address_bcrt1_p2tr_op_true,
+    create_deterministic_address_fcrt1_p2tr_op_true,
     key_to_p2pkh,
     key_to_p2wpk,
     script_to_witscript,
@@ -100,7 +100,7 @@ class MiniWallet:
             pub_key = self._priv_key.get_pubkey()
             self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
+            self._address, self._internal_key = create_deterministic_address_fcrt1_p2tr_op_true()
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
     def rescan_utxos(self):

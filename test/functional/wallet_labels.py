@@ -152,15 +152,15 @@ class WalletLabelsTest(FreicoinTestFramework):
             node.createwallet(wallet_name='watch_only', disable_private_keys=True)
             wallet_watch_only = node.get_wallet_rpc('watch_only')
             BECH32_VALID = {
-                '✔️_VER15_PROG40': 'bcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxkg7fn',
-                '✔️_VER15_PROG41': 'bcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhyw2pz',
-                '✔️_VER15_PROG48': 'bcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj0a7kf',
-                '✔️_VER16_PROG03': 'bcrt1sqqqqq8uhdgr',
-                '✔️_VER16_PROB02': 'bcrt1sqqqq4wstyw',
+                '✔️_VER15_PROG40': 'fcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq42m3z7',
+                '✔️_VER15_PROG41': 'fcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqh0uvv8',
+                '✔️_VER15_PROG48': 'fcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgkeeg8',
+                '✔️_VER16_PROG03': 'fcrt1sqqqqqpvw8md',
+                '✔️_VER16_PROB02': 'fcrt1sqqqqdr476k',
             }
             BECH32_INVALID = {
-                '❌_VER15_PROG49': 'bcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq8a6uxa',
-                '❌_VER16_PROB01': 'bcrt1sqq5r4036',
+                '❌_VER15_PROG49': 'fcrt10qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqwp8lc0',
+                '❌_VER16_PROB01': 'fcrt1sqq9y9n2m',
             }
             for l in BECH32_VALID:
                 ad = BECH32_VALID[l]

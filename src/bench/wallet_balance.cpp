@@ -35,7 +35,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
 
-    const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
+    const auto& ADDRESS_WATCHONLY = ADDRESS_FCRT1_UNSPENDABLE;
 
     CWallet wallet{test_setup->m_node.chain.get(), "", gArgs, CreateMockWalletDatabase()};
     {
