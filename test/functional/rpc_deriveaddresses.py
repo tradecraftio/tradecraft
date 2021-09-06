@@ -26,19 +26,19 @@ class DeriveaddressesTest(FreicoinTestFramework):
         assert_raises_rpc_error(-5, "Missing checksum", self.nodes[0].deriveaddresses, "a")
 
         descriptor = "wpk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/0)#9s6thyyf"
-        address = "bcrt1qvd5lu3yvps5v589rz2fdax0ukftjzlhsxza4mz"
+        address = "fcrt1qvd5lu3yvps5v589rz2fdax0ukftjzlhs4k5je5"
         assert_equal(self.nodes[0].deriveaddresses(descriptor), [address])
 
         descriptor = descriptor[:-9]
         assert_raises_rpc_error(-5, "Missing checksum", self.nodes[0].deriveaddresses, descriptor)
 
         descriptor_pubkey = "wpk(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/1/0)#cdc7rk2u"
-        address = "bcrt1qvd5lu3yvps5v589rz2fdax0ukftjzlhsxza4mz"
+        address = "fcrt1qvd5lu3yvps5v589rz2fdax0ukftjzlhs4k5je5"
         assert_equal(self.nodes[0].deriveaddresses(descriptor_pubkey), [address])
 
         ranged_descriptor = "wpk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/*)#crlc28zc"
-        assert_equal(self.nodes[0].deriveaddresses(ranged_descriptor, [1, 2]), ["bcrt1qkr5ev88ht0z7vg8t62mgta96q8n5twuaa7h7x0", "bcrt1qs0c46z3s6ah7lgtn8qxujdmey62st2z2zvp9mj"])
-        assert_equal(self.nodes[0].deriveaddresses(ranged_descriptor, 2), [address, "bcrt1qkr5ev88ht0z7vg8t62mgta96q8n5twuaa7h7x0", "bcrt1qs0c46z3s6ah7lgtn8qxujdmey62st2z2zvp9mj"])
+        assert_equal(self.nodes[0].deriveaddresses(ranged_descriptor, [1, 2]), ["fcrt1qkr5ev88ht0z7vg8t62mgta96q8n5twuaw27eye", "fcrt1qs0c46z3s6ah7lgtn8qxujdmey62st2z23cgzey"])
+        assert_equal(self.nodes[0].deriveaddresses(ranged_descriptor, 2), [address, "fcrt1qkr5ev88ht0z7vg8t62mgta96q8n5twuaw27eye", "fcrt1qs0c46z3s6ah7lgtn8qxujdmey62st2z23cgzey"])
 
         assert_raises_rpc_error(-8, "Range should not be specified for an un-ranged descriptor", self.nodes[0].deriveaddresses, descsum_create("wpk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/0)"), [0, 2])
 
@@ -63,7 +63,7 @@ class DeriveaddressesTest(FreicoinTestFramework):
         # positive value of a signed int32, and - currently - the
         # maximum value that the deriveaddresses freicoin RPC call
         # accepts as derivation index.
-        assert_equal(self.nodes[0].deriveaddresses(descsum_create("wpk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/*)"), [2147483647, 2147483647]), ["bcrt1qlha0y4ccmea7gxywfa40me9kcw9d0pnd50evfr"])
+        assert_equal(self.nodes[0].deriveaddresses(descsum_create("wpk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/*)"), [2147483647, 2147483647]), ["fcrt1qlha0y4ccmea7gxywfa40me9kcw9d0pnd8mstt4"])
 
         hardened_without_privkey_descriptor = descsum_create("wpk(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1'/1/0)")
         assert_raises_rpc_error(-5, "Cannot derive script without private keys", self.nodes[0].deriveaddresses, hardened_without_privkey_descriptor)

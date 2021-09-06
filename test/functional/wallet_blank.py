@@ -6,8 +6,8 @@
 
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.address import (
-    ADDRESS_BCRT1_UNSPENDABLE,
-    ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR,
+    ADDRESS_FCRT1_UNSPENDABLE,
+    ADDRESS_FCRT1_UNSPENDABLE_DESCRIPTOR,
 )
 from test_framework.util import (
     assert_equal,
@@ -34,7 +34,7 @@ class WalletBlankTest(FreicoinTestFramework):
         info = wallet.getwalletinfo()
         assert_equal(info["descriptors"], False)
         assert_equal(info["blank"], True)
-        wallet.importaddress(ADDRESS_BCRT1_UNSPENDABLE)
+        wallet.importaddress(ADDRESS_FCRT1_UNSPENDABLE)
         assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_importpubkey(self):
@@ -77,7 +77,7 @@ class WalletBlankTest(FreicoinTestFramework):
         assert_equal(info["descriptors"], False)
         assert_equal(info["blank"], True)
         wallet.importmulti([{
-            "desc": ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR,
+            "desc": ADDRESS_FCRT1_UNSPENDABLE_DESCRIPTOR,
             "timestamp": "now",
         }])
         assert_equal(wallet.getwalletinfo()["blank"], False)
@@ -92,7 +92,7 @@ class WalletBlankTest(FreicoinTestFramework):
         assert_equal(info["descriptors"], True)
         assert_equal(info["blank"], True)
         wallet.importdescriptors([{
-            "desc": ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR,
+            "desc": ADDRESS_FCRT1_UNSPENDABLE_DESCRIPTOR,
             "timestamp": "now",
         }])
         assert_equal(wallet.getwalletinfo()["blank"], True)
