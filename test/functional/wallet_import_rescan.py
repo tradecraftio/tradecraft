@@ -33,7 +33,7 @@ happened previously.
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.address import (
     AddressType,
-    ADDRESS_BCRT1_UNSPENDABLE,
+    ADDRESS_FCRT1_UNSPENDABLE,
 )
 from test_framework.util import (
     assert_equal,
@@ -300,7 +300,7 @@ class ImportRescanTest(FreicoinTestFramework):
             child = self.nodes[1].send(
                 add_to_wallet=False,
                 inputs=[unspent_txid_map[variant.initial_txid]],
-                outputs=[{ADDRESS_BCRT1_UNSPENDABLE : variant.initial_amount}],
+                outputs=[{ADDRESS_FCRT1_UNSPENDABLE : variant.initial_amount}],
                 lockheight=unspent_txid_map[variant.initial_txid]["refheight"],
                 subtract_fee_from_outputs=[0]
             )
