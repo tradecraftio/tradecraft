@@ -62,7 +62,7 @@ Note that if the passphrase is lost, all the coins in the wallet will also be lo
 If the wallet is encrypted and the user tries any operation related to private keys, such as sending freicoins, an error message will be displayed.
 
 ```
-$ freicoin-cli -rpcwallet="wallet-01" sendtoaddress "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx" 0.01
+$ freicoin-cli -rpcwallet="wallet-01" sendtoaddress "tf1qw508d6qejxtdg4y5r3zarvary0c5xw7kz03qzv" 0.01
 error code: -13
 error message:
 Error: Please enter the wallet passphrase with walletpassphrase first.
