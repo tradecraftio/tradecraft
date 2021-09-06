@@ -165,7 +165,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
         xpub = "tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H"
         addresses = ["2N7yv4p8G8yEaPddJxY41kPihnWvs39qCMf", "2MsHxyb2JS3pAySeNUsJ7mNnurtpeenDzLA"] # hdkeypath=m/0'/0'/0' and 1'
-        addresses += ["bcrt1qrd3n235cj2czsfmsuvqqpr3lu6lg0ju7scl8gn", "bcrt1qfqeppuvj0ww98r6qghmdkj70tv8qpchehegrg8"] # wpk subscripts corresponding to the above addresses
+        addresses += ["fcrt1qrd3n235cj2czsfmsuvqqpr3lu6lg0ju7rvkq29", "fcrt1qfqeppuvj0ww98r6qghmdkj70tv8qpcheydpy23"] # wpk subscripts corresponding to the above addresses
         desc = "wpk(" + xpub + "/0/0/*" + ")"
 
         self.log.info("Ranged descriptors cannot have labels")
@@ -270,11 +270,11 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         self.log.info('Key ranges should be imported in order')
         xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
         addresses = [
-            'bcrt1qpjdewptcahxy8vpnvr7ukevzx4a7zyhp664v9x', # m/0'/0'/0
-            'bcrt1qq5m59csrvle2us5lj9c59etglje69yuaxn5wqj', # m/0'/0'/1
-            'bcrt1qjxc9np7uux87shxkzgqy23ek8eap52xfa5hmuc', # m/0'/0'/2
-            'bcrt1qa5pwzv5wsxgddqltx77ljlfrsnf9rs5nhazwtv', # m/0'/0'/3
-            'bcrt1qg3zm4zh6prq45r6hduznyl63f2upm5mjmtgtq3', # m/0'/0'/4
+            'fcrt1qpjdewptcahxy8vpnvr7ukevzx4a7zyhpfwut8s', # m/0'/0'/0
+            'fcrt1qq5m59csrvle2us5lj9c59etglje69yua48afzy', # m/0'/0'/1
+            'fcrt1qjxc9np7uux87shxkzgqy23ek8eap52xfwq7u7w', # m/0'/0'/2
+            'fcrt1qa5pwzv5wsxgddqltx77ljlfrsnf9rs5nyftff6', # m/0'/0'/3
+            'fcrt1qg3zm4zh6prq45r6hduznyl63f2upm5mjglpvz8', # m/0'/0'/4
         ]
 
         self.test_importdesc({'desc': descsum_create('wpk([80002067/0h/0h]' + xpub + '/*)'),
@@ -356,7 +356,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
 
         # # Test importing a descriptor containing a WIF private key
         wif_priv = "cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh"
-        address = "bcrt1qm2nvsr3n8kljgt3r0c9yjm7x8dm7srz3p9njq7"
+        address = "fcrt1qm2nvsr3n8kljgt3r0c9yjm7x8dm7srz3j364zg"
         desc = "wpk(" + wif_priv + ")"
         self.log.info("Should import a descriptor with a WIF private key as spendable")
         self.test_importdesc({"desc": descsum_create(desc),
@@ -412,9 +412,9 @@ class ImportDescriptorsTest(FreicoinTestFramework):
 
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1001) # Range end (1000) is inclusive, so 1001 addresses generated
         addr = wmulti_priv.getnewaddress('', 'bech32') # uses receive 0
-        assert_equal(addr, 'bcrt1qkhstg8fm7ngqxnh076musrw844vjtl27s3yuvjkt5nfvz043gs2qv474ee') # Derived at m/84'/0'/0'/0
+        assert_equal(addr, 'fcrt1qkhstg8fm7ngqxnh076musrw844vjtl27s3yuvjkt5nfvz043gs2qjqpf6v') # Derived at m/84'/0'/0'/0
         change_addr = wmulti_priv.getrawchangeaddress('bech32') # uses change 0
-        assert_equal(change_addr, 'bcrt1qrk995famq96k2m32gz2lh4cv2mh4n4r8dj4w78kc5qel00zer9uqx8l5wx') # Derived at m/84'/1'/0'/0
+        assert_equal(change_addr, 'fcrt1qrk995famq96k2m32gz2lh4cv2mh4n4r8dj4w78kc5qel00zer9uqcjqgdn') # Derived at m/84'/1'/0'/0
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1000)
         txid = w0.sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 6)
@@ -445,9 +445,9 @@ class ImportDescriptorsTest(FreicoinTestFramework):
 
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 1000) # The first one was already consumed by previous import and is detected as used
         addr = wmulti_pub.getnewaddress('', 'bech32') # uses receive 1
-        assert_equal(addr, 'bcrt1q4gzj9trudwwcjuu6aj54mflqmc6exgr8hwx6m6v2edj6p696l2cqpqxfgj') # Derived at m/84'/0'/0'/1
+        assert_equal(addr, 'fcrt1q4gzj9trudwwcjuu6aj54mflqmc6exgr8hwx6m6v2edj6p696l2cql4e4t8') # Derived at m/84'/0'/0'/1
         change_addr = wmulti_pub.getrawchangeaddress('bech32') # uses change 2
-        assert_equal(change_addr, 'bcrt1qkuyj0xw82rvcz22769x802hdpkcsen22gyjsauhzxylphcl5u8nsm5f2w0') # Derived at m/84'/1'/0'/2
+        assert_equal(change_addr, 'fcrt1qkuyj0xw82rvcz22769x802hdpkcsen22gyjsauhzxylphcl5u8ns9pkkd6') # Derived at m/84'/1'/0'/2
         assert send_txid in self.nodes[0].getrawmempool(True)
         assert send_txid in (x['txid'] for x in wmulti_pub.listunspent(0))
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 999)

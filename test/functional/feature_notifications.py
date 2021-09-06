@@ -16,7 +16,7 @@
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
 import os
 
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+from test_framework.address import ADDRESS_FCRT1_UNSPENDABLE
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
@@ -93,7 +93,7 @@ class NotificationsTest(FreicoinTestFramework):
 
         self.log.info("test -blocknotify")
         block_count = 10
-        blocks = self.generatetoaddress(self.nodes[1], block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)
+        blocks = self.generatetoaddress(self.nodes[1], block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_FCRT1_UNSPENDABLE)
 
         # wait at most 10 seconds for expected number of files before reading the content
         self.wait_until(lambda: len(os.listdir(self.blocknotify_dir)) == block_count, timeout=10)
@@ -126,11 +126,11 @@ class NotificationsTest(FreicoinTestFramework):
             # triggered by node 1
             self.log.info("test -walletnotify with conflicting transactions")
             self.nodes[0].rescanblockchain()
-            self.generatetoaddress(self.nodes[0], 100, ADDRESS_BCRT1_UNSPENDABLE)
+            self.generatetoaddress(self.nodes[0], 100, ADDRESS_FCRT1_UNSPENDABLE)
 
             # Generate transaction on node 0, sync mempools, and check for
             # notification on node 1.
-            tx1 = self.nodes[0].sendtoaddress(address=ADDRESS_BCRT1_UNSPENDABLE, amount=1, replaceable=True)
+            tx1 = self.nodes[0].sendtoaddress(address=ADDRESS_FCRT1_UNSPENDABLE, amount=1, replaceable=True)
             assert_equal(tx1 in self.nodes[0].getrawmempool(), True)
             self.sync_mempools()
             self.expect_wallet_notify([(tx1, -1, UNCONFIRMED_HASH_STRING)])
@@ -146,14 +146,14 @@ class NotificationsTest(FreicoinTestFramework):
 
             # Add bump1 transaction to new block, checking for a notification
             # and the correct number of confirmations.
-            blockhash1 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+            blockhash1 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE)[0]
             blockheight1 = self.nodes[0].getblockcount()
             self.sync_blocks()
             self.expect_wallet_notify([(bump1, blockheight1, blockhash1)])
             assert_equal(self.nodes[1].gettransaction(bump1)["confirmations"], 1)
 
             # Generate a second transaction to be bumped.
-            tx2 = self.nodes[0].sendtoaddress(address=ADDRESS_BCRT1_UNSPENDABLE, amount=1, replaceable=True)
+            tx2 = self.nodes[0].sendtoaddress(address=ADDRESS_FCRT1_UNSPENDABLE, amount=1, replaceable=True)
             assert_equal(tx2 in self.nodes[0].getrawmempool(), True)
             self.sync_mempools()
             self.expect_wallet_notify([(tx2, -1, UNCONFIRMED_HASH_STRING)])
@@ -163,7 +163,7 @@ class NotificationsTest(FreicoinTestFramework):
             # about newly confirmed bump2 and newly conflicted tx2.
             self.disconnect_nodes(0, 1)
             bump2 = self.nodes[0].bumpfee(tx2)["txid"]
-            blockhash2 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
+            blockhash2 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
             blockheight2 = self.nodes[0].getblockcount()
             assert_equal(self.nodes[0].gettransaction(bump2)["confirmations"], 1)
             assert_equal(tx2 in self.nodes[1].getrawmempool(), True)
