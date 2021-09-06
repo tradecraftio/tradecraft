@@ -22,7 +22,7 @@
 
 static void WalletBalance(benchmark::State& state, const bool set_dirty, const bool add_watchonly, const bool add_mine)
 {
-    const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
+    const auto& ADDRESS_WATCHONLY = ADDRESS_FCRT1_UNSPENDABLE;
 
     std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain();
     CWallet wallet{chain.get(), WalletLocation(), WalletDatabase::CreateMock()};

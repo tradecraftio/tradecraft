@@ -28,7 +28,7 @@
 #include <wallet/wallet.h>
 #endif
 
-const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
+const std::string ADDRESS_FCRT1_UNSPENDABLE = "fcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq0nr988";
 
 #ifdef ENABLE_WALLET
 std::string getnewaddress(CWallet& w)

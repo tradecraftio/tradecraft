@@ -134,7 +134,7 @@ bool VerifyChecksum(const std::string& hrp, const data& values)
     // if we required that the checksum was 0, it would be the case that appending a 0 to a valid
     // list of values would result in a new valid list. For that reason, Bech32 requires the
     // resulting checksum to be 1 instead.
-    return PolyMod(Cat(ExpandHRP(hrp), values)) == 1;
+    return PolyMod(Cat(ExpandHRP(hrp), values)) == 0x2bc830a3;
 }
 
 /** Create a checksum. */
@@ -142,7 +142,7 @@ data CreateChecksum(const std::string& hrp, const data& values)
 {
     data enc = Cat(ExpandHRP(hrp), values);
     enc.resize(enc.size() + 6); // Append 6 zeroes
-    uint32_t mod = PolyMod(enc) ^ 1; // Determine what to XOR into those 6 zeroes.
+    uint32_t mod = PolyMod(enc) ^ 0x2bc830a3; // Determine what to XOR into those 6 zeroes.
     data ret(6);
     for (size_t i = 0; i < 6; ++i) {
         // Convert the 5-bit groups in mod to checksum values.

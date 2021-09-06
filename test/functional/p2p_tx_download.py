@@ -35,7 +35,7 @@ from test_framework.util import (
     assert_equal,
     wait_until,
 )
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+from test_framework.address import ADDRESS_FCRT1_UNSPENDABLE
 
 import time
 
@@ -105,7 +105,7 @@ class TxDownloadTest(FreicoinTestFramework):
                 "txid": self.nodes[0].getblock(self.nodes[0].getblockhash(1))['tx'][0],
                 "vout": 1
             }],
-            outputs={ADDRESS_BCRT1_UNSPENDABLE: 50 - 0.00025},
+            outputs={ADDRESS_FCRT1_UNSPENDABLE: 50 - 0.00025},
         )
         tx = self.nodes[0].signrawtransactionwithkey(
             hexstring=tx,
