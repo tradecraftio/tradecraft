@@ -1450,8 +1450,7 @@ static UniValue addwitnessaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
     {
         std::string msg = "addwitnessaddress \"address\"\n"
-            "\nDEPRECATED: set the address_type argument of getnewaddress, or option -addresstype=bech32 instead.\n"
-            "Add a witness address for a script (with pubkey or redeemscript known). Requires a new wallet backup.\n"
+            "\nAdd a witness address for a script (with pubkey or redeemscript known). Requires a new wallet backup.\n"
             "It returns the witness script.\n"
 
             "\nArguments:\n"
@@ -1462,12 +1461,6 @@ static UniValue addwitnessaddress(const JSONRPCRequest& request)
             "}\n"
         ;
         throw std::runtime_error(msg);
-    }
-
-    if (!IsDeprecatedRPCEnabled("addwitnessaddress")) {
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "addwitnessaddress is deprecated and will be fully removed in v17. "
-            "To use addwitnessaddress in v16, restart freicoind with -deprecatedrpc=addwitnessaddress.\n"
-            "Projects should transition to using the address_type argument of getnewaddress, or option -addresstype=bech32 instead.\n");
     }
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
@@ -4755,7 +4748,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
     { "wallet",             "abortrescan",                      &abortrescan,                   {} },
     { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","label|account","address_type"} },
-    { "hidden",             "addwitnessaddress",                &addwitnessaddress,             {"address"} },
+    { "wallet",             "addwitnessaddress",                &addwitnessaddress,             {"address"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
     { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys"} },
