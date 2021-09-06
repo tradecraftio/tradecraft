@@ -17,8 +17,8 @@
 import struct
 
 from test_framework.address import (
-    ADDRESS_BCRT1_P2WSH_OP_TRUE,
-    ADDRESS_BCRT1_UNSPENDABLE,
+    ADDRESS_FCRT1_P2WSH_OP_TRUE,
+    ADDRESS_FCRT1_UNSPENDABLE,
 )
 from test_framework.blocktools import (
     add_witness_commitment,
@@ -210,7 +210,7 @@ class ZMQTest (FreicoinTestFramework):
 
         num_blocks = 5
         self.log.info(f"Generate {num_blocks} blocks (and {num_blocks} coinbase txes)")
-        genhashes = self.generatetoaddress(self.nodes[0], num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
+        genhashes = self.generatetoaddress(self.nodes[0], num_blocks, ADDRESS_FCRT1_UNSPENDABLE)
 
         for x in range(num_blocks):
             # Should receive the coinbase txid.
@@ -259,7 +259,7 @@ class ZMQTest (FreicoinTestFramework):
 
         # Mining the block with this tx should result in second notification
         # after coinbase tx notification
-        self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE)
         hashtx.receive()
         txid = hashtx.receive()
         assert_equal(payment_txid, txid.hex())
@@ -287,7 +287,7 @@ class ZMQTest (FreicoinTestFramework):
 
         # Generate 1 block in nodes[0] with 1 mempool tx and receive all notifications
         payment_txid = self.wallet.send_self_transfer(from_node=self.nodes[0])['txid']
-        disconnect_block = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
+        disconnect_block = self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
         disconnect_final_tx = self.nodes[0].getblock(disconnect_block)["tx"][-1]
         disconnect_cb = self.nodes[0].getblock(disconnect_block)["tx"][0]
         assert_equal(self.nodes[0].getbestblockhash(), hashblock.receive().hex())
@@ -295,7 +295,7 @@ class ZMQTest (FreicoinTestFramework):
         assert_equal(hashtx.receive().hex(), disconnect_cb)
 
         # Generate 2 blocks in nodes[1] to a different address to ensure split
-        connect_blocks = self.generatetoaddress(self.nodes[1], 2, ADDRESS_BCRT1_P2WSH_OP_TRUE, sync_fun=self.no_op)
+        connect_blocks = self.generatetoaddress(self.nodes[1], 2, ADDRESS_FCRT1_P2WSH_OP_TRUE, sync_fun=self.no_op)
 
         # nodes[0] will reorg chain after connecting back nodes[1]
         self.connect_nodes(0, 1)
@@ -344,13 +344,13 @@ class ZMQTest (FreicoinTestFramework):
         seq_num = 1
 
         # Generate 1 block in nodes[0] and receive all notifications
-        dc_block = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
+        dc_block = self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
 
         # Note: We are not notified of any block transactions, coinbase or mined
         assert_equal((self.nodes[0].getbestblockhash(), "C", None), seq.receive_sequence())
 
         # Generate 2 blocks in nodes[1] to a different address to ensure a chain split
-        self.generatetoaddress(self.nodes[1], 2, ADDRESS_BCRT1_P2WSH_OP_TRUE, sync_fun=self.no_op)
+        self.generatetoaddress(self.nodes[1], 2, ADDRESS_FCRT1_P2WSH_OP_TRUE, sync_fun=self.no_op)
 
         # nodes[0] will reorg chain after connecting back nodes[1]
         self.connect_nodes(0, 1)
@@ -385,7 +385,7 @@ class ZMQTest (FreicoinTestFramework):
         # though the mempool sequence number does go up by the number of transactions
         # removed from the mempool by the block mining it.
         mempool_size = len(self.nodes[0].getrawmempool())
-        c_block = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+        c_block = self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE)[0]
         # Make sure the number of mined transactions matches the number of txs out of mempool
         mempool_size_delta = mempool_size - len(self.nodes[0].getrawmempool())
         assert_equal(len(self.nodes[0].getblock(c_block)["tx"])-2, mempool_size_delta)
@@ -424,7 +424,7 @@ class ZMQTest (FreicoinTestFramework):
 
         # Other things may happen but aren't wallet-deterministic so we don't test for them currently
         self.nodes[0].reconsiderblock(best_hash)
-        self.generatetoaddress(self.nodes[1], 1, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[1], 1, ADDRESS_FCRT1_UNSPENDABLE)
 
         self.log.info("Evict mempool transaction by block conflict")
         orig_tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
@@ -473,7 +473,7 @@ class ZMQTest (FreicoinTestFramework):
         # Last tx
         assert_equal((orig_txid_2, "A", mempool_seq), seq.receive_sequence())
         mempool_seq += 1
-        self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE)
         self.sync_all()  # want to make sure we didn't break "consensus" for other tests
 
     def test_mempool_sync(self):
@@ -523,7 +523,7 @@ class ZMQTest (FreicoinTestFramework):
         txs[-1]['tx'].vout[0].nValue -= 1000
         self.nodes[0].sendrawtransaction(txs[-1]['tx'].serialize().hex())
         self.sync_all()
-        self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE)
         final_txid = self.wallet.send_self_transfer(from_node=self.nodes[0])['txid']
 
         # 3) Consume ZMQ backlog until we get to "now" for the mempool snapshot
@@ -579,7 +579,7 @@ class ZMQTest (FreicoinTestFramework):
 
         # 5) If you miss a zmq/mempool sequence number, go back to step (2)
 
-        self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE)
 
     def test_multiple_interfaces(self):
         # Set up two subscribers with different addresses
@@ -592,7 +592,7 @@ class ZMQTest (FreicoinTestFramework):
         ], sync_blocks=False)
 
         # Generate 1 block in nodes[0] and receive all notifications
-        self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE, sync_fun=self.no_op)
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE, sync_fun=self.no_op)
 
         # Should receive the same block hash on both subscribers
         assert_equal(self.nodes[0].getbestblockhash(), subscribers[0].receive().hex())
@@ -609,7 +609,7 @@ class ZMQTest (FreicoinTestFramework):
         ], ipv6=True)
 
         # Generate 1 block in nodes[0]
-        self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_FCRT1_UNSPENDABLE)
 
         # Should receive the same block hash
         assert_equal(self.nodes[0].getbestblockhash(), subscribers[0].receive().hex())
