@@ -16,7 +16,7 @@
 """Test the ZMQ notification interface."""
 import struct
 
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+from test_framework.address import ADDRESS_FCRT1_UNSPENDABLE
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.messages import CTransaction
 from test_framework.util import (
@@ -93,7 +93,7 @@ class ZMQTest (FreicoinTestFramework):
     def _zmq_test(self):
         num_blocks = 5
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
-        genhashes = self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
+        genhashes = self.nodes[0].generatetoaddress(num_blocks, ADDRESS_FCRT1_UNSPENDABLE)
         self.sync_all()
 
         for x in range(num_blocks):

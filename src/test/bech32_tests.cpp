@@ -36,13 +36,13 @@ static bool CaseInsensitiveEqual(const std::string &s1, const std::string &s2)
 BOOST_AUTO_TEST_CASE(bip173_testvectors_valid)
 {
     static const std::string CASES[] = {
-        "A12UEL5L",
-        "a12uel5l",
-        "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
-        "abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
-        "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j",
-        "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
-        "?1ezyfcl",
+        "A1LQFN3A",
+        "a1lqfn3a",
+        "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio17hy8dj",
+        "abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lwusvrv",
+        "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqdm6ems",
+        "split1checkupstagehandshakeupstreamerranterredcaperredlc445v",
+        "?1v759aa",
     };
     for (const std::string& str : CASES) {
         auto ret = bech32::Decode(str);

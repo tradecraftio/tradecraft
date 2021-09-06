@@ -805,11 +805,11 @@ class ImportMultiTest(FreicoinTestFramework):
         assert_equal(wrpc.getwalletinfo()["private_keys_enabled"], False)
         xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
         addresses = [
-            'bcrt1qpjdewptcahxy8vpnvr7ukevzx4a7zyhp664v9x', # m/0'/0'/0
-            'bcrt1qq5m59csrvle2us5lj9c59etglje69yuaxn5wqj', # m/0'/0'/1
-            'bcrt1qjxc9np7uux87shxkzgqy23ek8eap52xfa5hmuc', # m/0'/0'/2
-            'bcrt1qa5pwzv5wsxgddqltx77ljlfrsnf9rs5nhazwtv', # m/0'/0'/3
-            'bcrt1qg3zm4zh6prq45r6hduznyl63f2upm5mjmtgtq3', # m/0'/0'/4
+            'fcrt1qpjdewptcahxy8vpnvr7ukevzx4a7zyhpfwut8s', # m/0'/0'/0
+            'fcrt1qq5m59csrvle2us5lj9c59etglje69yua48afzy', # m/0'/0'/1
+            'fcrt1qjxc9np7uux87shxkzgqy23ek8eap52xfwq7u7w', # m/0'/0'/2
+            'fcrt1qa5pwzv5wsxgddqltx77ljlfrsnf9rs5nyftff6', # m/0'/0'/3
+            'fcrt1qg3zm4zh6prq45r6hduznyl63f2upm5mjglpvz8', # m/0'/0'/4
         ]
         result = wrpc.importmulti(
             [{

@@ -16,7 +16,7 @@
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
 import os
 
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+from test_framework.address import ADDRESS_FCRT1_UNSPENDABLE
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, wait_until, connect_nodes_bi
 
@@ -46,7 +46,7 @@ class NotificationsTest(FreicoinTestFramework):
     def run_test(self):
         self.log.info("test -blocknotify")
         block_count = 10
-        blocks = self.nodes[1].generatetoaddress(block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)
+        blocks = self.nodes[1].generatetoaddress(block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_FCRT1_UNSPENDABLE)
 
         # wait at most 10 seconds for expected number of files before reading the content
         wait_until(lambda: len(os.listdir(self.blocknotify_dir)) == block_count, timeout=10)
