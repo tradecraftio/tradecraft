@@ -33,7 +33,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
         },
     };
 
-    const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
+    const auto& ADDRESS_WATCHONLY = ADDRESS_FCRT1_UNSPENDABLE;
 
     NodeContext node;
     std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);

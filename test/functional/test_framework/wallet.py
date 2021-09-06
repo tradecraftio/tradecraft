@@ -16,7 +16,7 @@
 """A limited-functionality wallet, which may replace a real wallet in tests"""
 
 from decimal import Decimal
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.address import ADDRESS_FCRT1_P2WSH_OP_TRUE
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -40,7 +40,7 @@ class MiniWallet:
     def __init__(self, test_node):
         self._test_node = test_node
         self._utxos = []
-        self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
+        self._address = ADDRESS_FCRT1_P2WSH_OP_TRUE
         self._scriptPubKey = hex_str_to_bytes(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
     def generate(self, num_blocks):

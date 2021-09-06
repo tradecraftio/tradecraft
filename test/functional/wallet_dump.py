@@ -87,7 +87,7 @@ def read_dump(file_name, addrs, script_addrs, witscript_addrs, hd_master_addr_ol
                         elif addr.startswith('2'):
                             # P2SH-segwit address
                             found_p2sh_segwit_addr += 1
-                        elif addr.startswith('bcrt1'):
+                        elif addr.startswith('fcrt1'):
                             found_bech32_addr += 1
                         break
                     elif keytype == "change=1":
