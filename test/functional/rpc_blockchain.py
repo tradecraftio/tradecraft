@@ -34,7 +34,7 @@ import http.client
 import os
 import subprocess
 
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.address import ADDRESS_FCRT1_P2WSH_OP_TRUE
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
@@ -86,7 +86,7 @@ class BlockchainTest(FreicoinTestFramework):
         for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 600, 600):
             # ten-minute steps from genesis block time
             self.nodes[0].setmocktime(t)
-            self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_P2WSH_OP_TRUE)
+            self.nodes[0].generatetoaddress(1, ADDRESS_FCRT1_P2WSH_OP_TRUE)
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
 
     def _test_getblockchaininfo(self):
@@ -346,12 +346,12 @@ class BlockchainTest(FreicoinTestFramework):
 
     def _test_stopatheight(self):
         assert_equal(self.nodes[0].getblockcount(), 200)
-        self.nodes[0].generatetoaddress(6, ADDRESS_BCRT1_P2WSH_OP_TRUE)
+        self.nodes[0].generatetoaddress(6, ADDRESS_FCRT1_P2WSH_OP_TRUE)
         assert_equal(self.nodes[0].getblockcount(), 206)
         self.log.debug('Node should not stop at this height')
         assert_raises(subprocess.TimeoutExpired, lambda: self.nodes[0].process.wait(timeout=3))
         try:
-            self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_P2WSH_OP_TRUE)
+            self.nodes[0].generatetoaddress(1, ADDRESS_FCRT1_P2WSH_OP_TRUE)
         except (ConnectionError, http.client.BadStatusLine):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
