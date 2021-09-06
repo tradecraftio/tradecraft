@@ -55,7 +55,7 @@ public:
         std::vector<unsigned char> data = {0};
         data.reserve(33);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
-        return bech32::Encode(bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
+        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const WitnessV0LongHash& id) const
@@ -63,7 +63,7 @@ public:
         std::vector<unsigned char> data = {0};
         data.reserve(53);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
-        return bech32::Encode(bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
+        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const WitnessUnknown& id) const
@@ -106,10 +106,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     if ((dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) && dec.data.size() > 0 && dec.hrp == params.Bech32HRP()) {
         // Bech32 decoding
         int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-30)
-        if (version == 0 && dec.encoding != bech32::Encoding::BECH32) {
-            return CNoDestination();
-        }
-        if (version != 0 && dec.encoding != bech32::Encoding::BECH32M) {
+        if (dec.encoding != bech32::Encoding::BECH32M) {
             return CNoDestination();
         }
         // The rest of the symbols are converted witness program bytes.

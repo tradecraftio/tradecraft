@@ -140,7 +140,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         mredeem = msig["redeemScript"]
         assert_equal(desc, msig['descriptor'])
         if self.output_type == 'bech32':
-            assert madd[0:4] == "bcrt"  # actually a bech32 address
+            assert madd[0:4] == "fcrt"  # actually a bech32 address
 
         # compare against addmultisigaddress
         msigw = node1.addmultisigaddress(self.nsigs, self.pub, None, self.output_type)

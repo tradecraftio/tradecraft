@@ -22,7 +22,7 @@ class CWallet;
 
 // Constants //
 
-extern const std::string ADDRESS_BCRT1_UNSPENDABLE;
+extern const std::string ADDRESS_FCRT1_UNSPENDABLE;
 
 // RPC-like //
 

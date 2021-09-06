@@ -22,10 +22,10 @@ from .util import hex_str_to_bytes
 
 from . import segwit_addr
 
-ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
-ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
+ADDRESS_FCRT1_UNSPENDABLE = 'fcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq0nr988'
+ADDRESS_FCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(fcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq0nr988)#04du8fc2'
 # Coins sent to this address can be spent with a version=0 witness stack of just OP_TRUE
-ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qpfumrmcfcusnnjk4k6gfdpdh4940m0jlxh92kxnl6p403cvrfatsp0tfxn'
+ADDRESS_FCRT1_P2WSH_OP_TRUE = 'fcrt1qpfumrmcfcusnnjk4k6gfdpdh4940m0jlxh92kxnl6p403cvrfatsl6549x'
 
 
 class AddressType(enum.Enum):
@@ -77,7 +77,7 @@ def program_to_witness(version, program, main = False):
     assert 0 <= version <= 16
     assert 2 <= len(program) <= 40
     assert version > 0 or len(program) in [20, 32]
-    return segwit_addr.encode("bc" if main else "bcrt", version, program)
+    return segwit_addr.encode("fc" if main else "fcrt", version, program)
 
 def script_to_p2wsh(script, main = False):
     script = check_script(script)

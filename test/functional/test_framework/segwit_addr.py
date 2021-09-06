@@ -121,14 +121,14 @@ def decode(hrp, addr):
         return (None, None)
     if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
         return (None, None)
-    if (data[0] == 0 and encoding != Encoding.BECH32) or (data[0] != 0 and encoding != Encoding.BECH32M):
+    if encoding != Encoding.BECH32M:
         return (None, None)
     return (data[0], decoded)
 
 
 def encode(hrp, witver, witprog):
     """Encode a segwit address."""
-    encoding = Encoding.BECH32 if witver == 0 else Encoding.BECH32M
+    encoding = Encoding.BECH32M
     ret = bech32_encode(encoding, hrp, [witver] + convertbits(witprog, 8, 5))
     if decode(hrp, ret) == (None, None):
         return None
