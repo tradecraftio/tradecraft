@@ -63,7 +63,7 @@ static void WalletIsMine(benchmark::Bench& bench, bool legacy_wallet, int num_co
         }
     }
 
-    const CScript script = GetScriptForDestination(DecodeDestination(ADDRESS_BCRT1_UNSPENDABLE));
+    const CScript script = GetScriptForDestination(DecodeDestination(ADDRESS_FCRT1_UNSPENDABLE));
 
     bench.run([&] {
         LOCK(wallet->cs_wallet);
