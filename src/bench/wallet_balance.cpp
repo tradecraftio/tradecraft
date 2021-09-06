@@ -31,13 +31,13 @@ using wallet::DBErrors;
 using wallet::GetBalance;
 using wallet::WALLET_FLAG_DESCRIPTORS;
 
-const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
+const std::string ADDRESS_FCRT1_UNSPENDABLE = "fcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq0nr988";
 
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_mine)
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
 
-    const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
+    const auto& ADDRESS_WATCHONLY = ADDRESS_FCRT1_UNSPENDABLE;
 
     CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockWalletDatabase()};
     {
