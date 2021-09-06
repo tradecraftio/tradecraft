@@ -17,7 +17,7 @@
 
 from decimal import Decimal
 
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.address import ADDRESS_FCRT1_P2WSH_OP_TRUE
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.messages import (
     COIN,
@@ -143,7 +143,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         parent_value = (first_coin["amount"] - Decimal("0.0002")) / 2 # Deduct reasonable fee and make 2 outputs
         parent_refheight = first_coin["refheight"]
         inputs = [{"txid": first_coin["txid"], "vout": 0}]
-        outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : parent_value}]
+        outputs = [{self.address : parent_value}, {ADDRESS_FCRT1_P2WSH_OP_TRUE : parent_value}]
         rawtx = node.createrawtransaction(inputs, outputs, 0, parent_refheight)
 
         parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
@@ -223,7 +223,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         parent_value = (first_coin_a["amount"] - DEFAULT_FEE) / 2 # Deduct reasonable fee and make 2 outputs
         parent_refheight = first_coin_a["refheight"]
         inputs = [{"txid": first_coin_a["txid"], "vout": 0}]
-        outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : parent_value}]
+        outputs = [{self.address : parent_value}, {ADDRESS_FCRT1_P2WSH_OP_TRUE : parent_value}]
         rawtx = node.createrawtransaction(inputs, outputs, 0, parent_refheight)
 
         parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
@@ -519,7 +519,7 @@ class MempoolPackageLimitsTest(FreicoinTestFramework):
         parent_value = (first_coin["amount"] - high_fee) / 2 # Deduct fee and make 2 outputs
         parent_refheight = first_coin["refheight"]
         inputs = [{"txid": first_coin["txid"], "vout": 0}]
-        outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE:  parent_value}]
+        outputs = [{self.address : parent_value}, {ADDRESS_FCRT1_P2WSH_OP_TRUE:  parent_value}]
         rawtx = node.createrawtransaction(inputs, outputs, 0, parent_refheight)
         parent_tx = bulk_transaction(tx_from_hex(rawtx), node, target_weight, self.privkeys)
         node.sendrawtransaction(parent_tx.serialize().hex())

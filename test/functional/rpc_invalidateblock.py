@@ -16,7 +16,7 @@
 """Test the invalidateblock RPC."""
 
 from test_framework.test_framework import FreicoinTestFramework
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
+from test_framework.address import ADDRESS_FCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.util import (
     assert_equal,
 )
@@ -71,7 +71,7 @@ class InvalidateTest(FreicoinTestFramework):
         self.wait_until(lambda: self.nodes[1].getblockcount() == 4, timeout=5)
 
         self.log.info("Verify that we reconsider all ancestors as well")
-        blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)
+        blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_FCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
         # Invalidate the two blocks at the tip
         self.nodes[1].invalidateblock(blocks[-1])
@@ -83,7 +83,7 @@ class InvalidateTest(FreicoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
         self.log.info("Verify that we reconsider all descendants")
-        blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)
+        blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_FCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
         # Invalidate the two blocks at the tip
         self.nodes[1].invalidateblock(blocks[-2])

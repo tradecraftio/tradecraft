@@ -3,8 +3,8 @@
         "4f20eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         {
             "asm": "-1 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-            "address": "bcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqz6nvlh",
-            "desc": "addr(bcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqz6nvlh)#v52jnujz",
+            "address": "fcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqfnuueq",
+            "desc": "addr(fcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqfnuueq)#hzlst3vw",
             "type": "witness_v1_taproot"
         }
     ],
@@ -12,8 +12,8 @@
         "4f02eeee",
         {
             "asm": "-1 -28398",
-            "address": "bcrt1pamhqk96edn",
-            "desc": "addr(bcrt1pamhqk96edn)#vkh8uj5a",
+            "address": "fcrt1pamhqwglvnt",
+            "desc": "addr(fcrt1pamhqwglvnt)#6ge0rjlq",
             "type": "witness_unknown"
         }
     ],
@@ -21,8 +21,8 @@
         "0020eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         {
             "asm": "0 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-            "address": "bcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqgdn98t",
-            "desc": "addr(bcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqgdn98t)#afaecevx",
+            "address": "fcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqkcvey7",
+            "desc": "addr(fcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqkcvey7)#qcjxxz9c",
             "type": "witness_v0_longhash"
         }
     ],
@@ -68,9 +68,9 @@
             "p2sh": "2N34iiGoUUkVSPiaaTFpJjB1FR9TXQu3PGM",
             "segwit": {
                 "asm": "0 e9a24cbd44d36dfd108fd2e6347223055f70d237beb2cc42c5824025ceee8f4b",
-                "desc": "addr(bcrt1qax3ye02y6dkl6yy06tnrgu3rq40hp53hh6evcsk9sfqztnhw3a9sthgefq)#r3ake4l4",
+                "desc": "addr(fcrt1qax3ye02y6dkl6yy06tnrgu3rq40hp53hh6evcsk9sfqztnhw3a9s4zh924)#ks3424mt",
                 "hex": "0020e9a24cbd44d36dfd108fd2e6347223055f70d237beb2cc42c5824025ceee8f4b",
-                "address": "bcrt1qax3ye02y6dkl6yy06tnrgu3rq40hp53hh6evcsk9sfqztnhw3a9sthgefq",
+                "address": "fcrt1qax3ye02y6dkl6yy06tnrgu3rq40hp53hh6evcsk9sfqztnhw3a9s4zh924",
                 "type": "witness_v0_longhash"
             }
         }

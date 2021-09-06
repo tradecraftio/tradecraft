@@ -104,7 +104,7 @@ class WalletSignerTest(FreicoinTestFramework):
         assert_equal(hww.getwalletinfo()["keypoolsize"], 20)
 
         address1 = hww.getnewaddress(address_type="bech32")
-        assert_equal(address1, "bcrt1q55f34cyg0hy9w4ka6pnlf6h5za68jccjex27gc")
+        assert_equal(address1, "fcrt1q55f34cyg0hy9w4ka6pnlf6h5za68jccj2jre2w")
         address_info = hww.getaddressinfo(address1)
         assert_equal(address_info['solvable'], True)
         assert_equal(address_info['ismine'], True)

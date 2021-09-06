@@ -48,7 +48,7 @@ class GenerateBlockTest(FreicoinTestFramework):
 
         self.log.info('Generate an empty block to a combo descriptor with compressed pubkey')
         combo_key = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
-        combo_address = 'bcrt1q9c2m4uf60087l25c9rkczngmdz6a94ppg68sl2'
+        combo_address = 'fcrt1q9c2m4uf60087l25c9rkczngmdz6a94ppmwwhau'
         hash = self.generateblock(node, 'combo(' + combo_key + ')', [])['hash']
         block = node.getblock(hash, 2)
         assert_equal(len(block['tx']), 2)

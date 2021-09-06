@@ -38,7 +38,7 @@ from test_framework.script_util import (
     DUMMY_2_P2WPK_SCRIPT,
 )
 from test_framework.wallet import MiniWallet
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+from test_framework.address import ADDRESS_FCRT1_UNSPENDABLE
 
 MAX_REPLACEMENT_LIMIT = 100
 class ReplaceByFeeTest(FreicoinTestFramework):
@@ -515,7 +515,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
     def test_rpc(self):
         us0 = self.wallet.get_utxo()
         ins = [us0]
-        outs = {ADDRESS_BCRT1_UNSPENDABLE: Decimal(1.0000000)}
+        outs = {ADDRESS_FCRT1_UNSPENDABLE: Decimal(1.0000000)}
         rawtx0 = self.nodes[0].createrawtransaction(ins, outs, 1)
         rawtx1 = self.nodes[0].createrawtransaction(ins, outs, 0)
         json0 = self.nodes[0].decoderawtransaction(rawtx0)
