@@ -26,18 +26,18 @@ BOOST_AUTO_TEST_SUITE(bech32_tests)
 BOOST_AUTO_TEST_CASE(bech32_testvectors_valid)
 {
     static const std::string CASES[] = {
-        "A12UEL5L",
-        "a12uel5l",
-        "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
-        "abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
-        "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j",
-        "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
-        "?1ezyfcl",
+        "A1LQFN3A",
+        "a1lqfn3a",
+        "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio17hy8dj",
+        "abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lwusvrv",
+        "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqdm6ems",
+        "split1checkupstagehandshakeupstreamerranterredcaperredlc445v",
+        "?1v759aa",
     };
     for (const std::string& str : CASES) {
         const auto dec = bech32::Decode(str);
-        BOOST_CHECK(dec.encoding == bech32::Encoding::BECH32);
-        std::string recode = bech32::Encode(bech32::Encoding::BECH32, dec.hrp, dec.data);
+        BOOST_CHECK(dec.encoding == bech32::Encoding::BECH32M);
+        std::string recode = bech32::Encode(bech32::Encoding::BECH32M, dec.hrp, dec.data);
         BOOST_CHECK(!recode.empty());
         BOOST_CHECK(CaseInsensitiveEqual(str, recode));
     }

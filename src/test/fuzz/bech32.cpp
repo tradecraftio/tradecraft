@@ -44,11 +44,11 @@ FUZZ_TARGET(bech32)
     if (input.size() + 3 + bech32::CHECKSUM_SIZE <= bech32::CharLimit::BECH32) {
         // If it's possible to encode input in Bech32(m) without exceeding the bech32-character limit:
         for (auto encoding : {bech32::Encoding::BECH32, bech32::Encoding::BECH32M}) {
-            const std::string encoded = bech32::Encode(encoding, "bc", input);
+            const std::string encoded = bech32::Encode(encoding, "fc", input);
             assert(!encoded.empty());
             const auto r2 = bech32::Decode(encoded);
             assert(r2.encoding == encoding);
-            assert(r2.hrp == "bc");
+            assert(r2.hrp == "fc");
             assert(r2.data == input);
         }
     }
