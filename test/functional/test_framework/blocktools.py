@@ -88,7 +88,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
 def add_final_tx(node, block):
     try:
         finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
-    except:
+    except KeyError:
         finaltx_prevout = []
     finaltx = CTransaction()
     finaltx.nLockTime = block.vtx[0].nLockTime
