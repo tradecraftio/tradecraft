@@ -15,7 +15,7 @@ Freicoin version *v16.3-16386* is now available from:
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
-Please report bugs using the issue tracker at github:
+Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/tradecraftio/tradecraft/issues>
 
@@ -85,7 +85,7 @@ override the `-changetype` argument for specific transactions.
 
 - All keypool keys that are seen used in transactions explicitly get their
   witness scripts added to the wallet files.  This means that downgrading after
-  recovering from a backup that includes a segwit address will work
+  recovering from a backup that includes a segwit address will work.
 
 Note that some RPCs do not yet support segwit addresses.  Notably,
 `signmessage`/`verifymessage` doesn't support segwit addresses, nor does
@@ -166,7 +166,7 @@ now the default and no longer deemed experimental.
 GUI changes
 -----------
 
-- Uses of "µBTC" in the GUI now also show the more colloquial term "bits",
+- Uses of "µFRC" in the GUI now also show the more colloquial term "bits",
   specified in BIP176.
 
 - The option to reuse a previous address has now been removed.  This was
@@ -217,7 +217,7 @@ This script can be used to create `rpcauth` credentials for a JSON-RPC user.
 The `validateaddress` RPC output has been extended with a few new fields, and
 support for segwit (Bech32) addresses.  Specifically:
 
-* A new field `iswitness` is True for P2WSH addresses ("bc1..."  addresses), but
+* A new field `iswitness` is True for P2WSH addresses ("fc1..." addresses), but
   not for legacy addresses (see below).
 
 * The existing field `isscript` will now also report True for P2WSH addresses.
