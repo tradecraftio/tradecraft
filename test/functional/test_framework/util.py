@@ -302,7 +302,6 @@ def initialize_datadir(dirname, n):
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
         f.write("server=1\n")
         f.write("stratumport=" + str(stratum_port(n)) + "\n")
-        f.write("walletblockfinaltx=0\n")
         f.write("keypool=1\n")
         f.write("discover=0\n")
         f.write("listenonion=0\n")
