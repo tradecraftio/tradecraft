@@ -86,7 +86,7 @@ class MutableTransactionSignatureCreator : public BaseSignatureCreator {
     const MutableTransactionSignatureChecker checker;
 
 public:
-    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn = SIGHASH_ALL);
+    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn);
     const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
 };
@@ -729,7 +729,7 @@ bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, 
 bool PSTInputSigned(PSTInput& input);
 
 /** Signs a PSTInput, verifying that all provided data matches what is being signed. */
-bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& pst, SignatureData& sigdata, int index, int sighash = SIGHASH_ALL);
+bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& pst, SignatureData& sigdata, int index, int sighash);
 
 /** Extract signature data from a transaction input, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
