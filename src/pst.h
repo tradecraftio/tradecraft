@@ -563,7 +563,7 @@ struct PartiallySignedTransaction
 bool PSTInputSigned(PSTInput& input);
 
 /** Signs a PSTInput, verifying that all provided data matches what is being signed. */
-bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& pst, int index, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool use_dummy = false);
+bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& pst, int index, int sighash, SignatureData* out_sigdata = nullptr, bool use_dummy = false);
 
 /**
  * Finalizes a PST if possible, combining partial signatures.
