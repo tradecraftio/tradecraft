@@ -1240,7 +1240,7 @@ bool PSTInputSignedAndVerified(const PartiallySignedTransaction pst, unsigned in
  * txdata should be the output of PrecomputePSTData (which can be shared across
  * multiple SignPSTInput calls). If it is nullptr, a dummy signature will be created.
  **/
-bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& pst, int index, const PrecomputedTransactionData* txdata, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool finalize = true);
+bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& pst, int index, const PrecomputedTransactionData* txdata, int sighash, SignatureData* out_sigdata = nullptr, bool finalize = true);
 
 /** Counts the unsigned inputs of a PST. */
 size_t CountPSTUnsignedInputs(const PartiallySignedTransaction& pst);
