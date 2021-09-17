@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_UTIL_H
-#define BITCOIN_RPC_UTIL_H
+#ifndef FREICOIN_RPC_UTIL_H
+#define FREICOIN_RPC_UTIL_H
 
 #include <pubkey.h>
 #include <script/standard.h>
@@ -35,4 +35,4 @@ CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey
 
 UniValue DescribeAddress(const CTxDestination& dest);
 
-#endif // BITCOIN_RPC_UTIL_H
+#endif // FREICOIN_RPC_UTIL_H

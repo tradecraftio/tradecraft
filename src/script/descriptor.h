@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCRIPT_DESCRIPTOR_H
-#define BITCOIN_SCRIPT_DESCRIPTOR_H
+#ifndef FREICOIN_SCRIPT_DESCRIPTOR_H
+#define FREICOIN_SCRIPT_DESCRIPTOR_H
 
 #include <script/script.h>
 #include <script/sign.h>
@@ -62,5 +62,5 @@ struct Descriptor {
 /** Parse a descriptor string. Included private keys are put in out. Returns nullptr if parsing fails. */
 std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out);
 
-#endif // BITCOIN_SCRIPT_DESCRIPTOR_H
+#endif // FREICOIN_SCRIPT_DESCRIPTOR_H
 

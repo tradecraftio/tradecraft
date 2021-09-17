@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CORE_IO_H
-#define BITCOIN_CORE_IO_H
+#ifndef FREICOIN_CORE_IO_H
+#define FREICOIN_CORE_IO_H
 
 #include <amount.h>
 
@@ -36,7 +36,7 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
 bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 uint256 ParseHashStr(const std::string&, const std::string& strName);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
-bool DecodePSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error);
+bool DecodePST(PartiallySignedTransaction& pst, const std::string& base64_tx, std::string& error);
 int ParseSighashString(const UniValue& sighash);
 
 // core_write.cpp
@@ -48,4 +48,4 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_address);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0);
 
-#endif // BITCOIN_CORE_IO_H
+#endif // FREICOIN_CORE_IO_H

@@ -244,17 +244,17 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
     return sigdata.complete;
 }
 
-bool PSBTInputSigned(PSBTInput& input)
+bool PSTInputSigned(PSTInput& input)
 {
     return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
 }
 
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, SignatureData& sigdata, int index, int sighash)
+bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& pst, SignatureData& sigdata, int index, int sighash)
 {
-    PSBTInput& input = psbt.inputs.at(index);
-    const CMutableTransaction& tx = *psbt.tx;
+    PSTInput& input = pst.inputs.at(index);
+    const CMutableTransaction& tx = *pst.tx;
 
-    if (PSBTInputSigned(input)) {
+    if (PSTInputSigned(input)) {
         return true;
     }
 
@@ -340,7 +340,7 @@ struct Stacks
 };
 }
 
-// Extracts signatures and scripts from incomplete scriptSigs. Please do not extend this, use PSBT instead
+// Extracts signatures and scripts from incomplete scriptSigs. Please do not extend this, use PST instead
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout)
 {
     SignatureData data;
@@ -531,31 +531,31 @@ bool PartiallySignedTransaction::IsNull() const
     return !tx && inputs.empty() && outputs.empty() && unknown.empty();
 }
 
-void PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
+void PartiallySignedTransaction::Merge(const PartiallySignedTransaction& pst)
 {
     for (unsigned int i = 0; i < inputs.size(); ++i) {
-        inputs[i].Merge(psbt.inputs[i]);
+        inputs[i].Merge(pst.inputs[i]);
     }
     for (unsigned int i = 0; i < outputs.size(); ++i) {
-        outputs[i].Merge(psbt.outputs[i]);
+        outputs[i].Merge(pst.outputs[i]);
     }
-    unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
+    unknown.insert(pst.unknown.begin(), pst.unknown.end());
 }
 
 bool PartiallySignedTransaction::IsSane() const
 {
-    for (PSBTInput input : inputs) {
+    for (PSTInput input : inputs) {
         if (!input.IsSane()) return false;
     }
     return true;
 }
 
-bool PSBTInput::IsNull() const
+bool PSTInput::IsNull() const
 {
     return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
 }
 
-void PSBTInput::FillSignatureData(SignatureData& sigdata) const
+void PSTInput::FillSignatureData(SignatureData& sigdata) const
 {
     if (!final_script_sig.empty()) {
         sigdata.scriptSig = final_script_sig;
@@ -581,7 +581,7 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
     }
 }
 
-void PSBTInput::FromSignatureData(const SignatureData& sigdata)
+void PSTInput::FromSignatureData(const SignatureData& sigdata)
 {
     if (sigdata.complete) {
         partial_sigs.clear();
@@ -607,7 +607,7 @@ void PSBTInput::FromSignatureData(const SignatureData& sigdata)
     }
 }
 
-void PSBTInput::Merge(const PSBTInput& input)
+void PSTInput::Merge(const PSTInput& input)
 {
     if (!non_witness_utxo && input.non_witness_utxo) non_witness_utxo = input.non_witness_utxo;
     if (witness_utxo.IsNull() && !input.witness_utxo.IsNull()) {
@@ -625,7 +625,7 @@ void PSBTInput::Merge(const PSBTInput& input)
     if (final_script_witness.IsNull() && !input.final_script_witness.IsNull()) final_script_witness = input.final_script_witness;
 }
 
-bool PSBTInput::IsSane() const
+bool PSTInput::IsSane() const
 {
     // Cannot have both witness and non-witness utxos
     if (!witness_utxo.IsNull() && non_witness_utxo) return false;
@@ -637,7 +637,7 @@ bool PSBTInput::IsSane() const
     return true;
 }
 
-void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
+void PSTOutput::FillSignatureData(SignatureData& sigdata) const
 {
     if (!redeem_script.empty()) {
         sigdata.redeem_script = redeem_script;
@@ -650,7 +650,7 @@ void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
     }
 }
 
-void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
+void PSTOutput::FromSignatureData(const SignatureData& sigdata)
 {
     if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
         redeem_script = sigdata.redeem_script;
@@ -660,12 +660,12 @@ void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
     }
 }
 
-bool PSBTOutput::IsNull() const
+bool PSTOutput::IsNull() const
 {
     return redeem_script.empty() && witness_script.empty() && hd_keypaths.empty() && unknown.empty();
 }
 
-void PSBTOutput::Merge(const PSBTOutput& output)
+void PSTOutput::Merge(const PSTOutput& output)
 {
     hd_keypaths.insert(output.hd_keypaths.begin(), output.hd_keypaths.end());
     unknown.insert(output.unknown.begin(), output.unknown.end());

@@ -173,14 +173,14 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     return true;
 }
 
-bool DecodePSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error)
+bool DecodePST(PartiallySignedTransaction& pst, const std::string& base64_tx, std::string& error)
 {
     std::vector<unsigned char> tx_data = DecodeBase64(base64_tx.c_str());
     CDataStream ss_data(tx_data, SER_NETWORK, PROTOCOL_VERSION);
     try {
-        ss_data >> psbt;
+        ss_data >> pst;
         if (!ss_data.empty()) {
-            error = "extra data after PSBT";
+            error = "extra data after PST";
             return false;
         }
     } catch (const std::exception& e) {

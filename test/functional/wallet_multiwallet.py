@@ -15,13 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test multiwallet.
 
-Verify that a bitcoind node can load multiple wallet files
+Verify that a freicoind node can load multiple wallet files
 """
 import os
 import shutil
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
@@ -29,7 +29,7 @@ from test_framework.util import (
 )
 
 
-class MultiWalletTest(BitcoinTestFramework):
+class MultiWalletTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

@@ -18,7 +18,7 @@
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
@@ -26,7 +26,7 @@ from test_framework.util import (
 )
 
 
-class WalletHDTest(BitcoinTestFramework):
+class WalletHDTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

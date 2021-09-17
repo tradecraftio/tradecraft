@@ -25,14 +25,14 @@ from test_framework.messages import (
     CTxOut,
 )
 from test_framework.mininode import P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     wait_until,
 )
 
 
-class InvalidTxRequestTest(BitcoinTestFramework):
+class InvalidTxRequestTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -60,7 +60,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.bootstrap_p2p()  # Add one p2p connection to the node
 
-        # Let bitcoind handle the block-final initial output logic
+        # Let freicoind handle the block-final initial output logic
         self.nodes[0].generate(1)
 
         best_block = self.nodes[0].getbestblockhash()

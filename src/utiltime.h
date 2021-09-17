@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTILTIME_H
-#define BITCOIN_UTILTIME_H
+#ifndef FREICOIN_UTILTIME_H
+#define FREICOIN_UTILTIME_H
 
 #include <stdint.h>
 #include <string>
@@ -46,4 +46,4 @@ std::string FormatISO8601DateTime(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
 std::string FormatISO8601Time(int64_t nTime);
 
-#endif // BITCOIN_UTILTIME_H
+#endif // FREICOIN_UTILTIME_H

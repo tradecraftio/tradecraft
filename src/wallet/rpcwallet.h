@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_RPCWALLET_H
-#define BITCOIN_WALLET_RPCWALLET_H
+#ifndef FREICOIN_WALLET_RPCWALLET_H
+#define FREICOIN_WALLET_RPCWALLET_H
 
 #include <string>
 
@@ -41,5 +41,5 @@ bool EnsureWalletIsAvailable(CWallet *, bool avoidException);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
-bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false);
-#endif //BITCOIN_WALLET_RPCWALLET_H
+bool FillPST(const CWallet* pwallet, PartiallySignedTransaction& pstx, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false);
+#endif //FREICOIN_WALLET_RPCWALLET_H

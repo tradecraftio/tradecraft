@@ -1,25 +1,25 @@
-Bitcoin Core version 0.17.2 is now available from:
+Freicoin version 0.17.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.17.2/>
+  <http://freico.in/bin/freicoin-0.17.2/>
 
 This is a new minor version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tradecraftio/tradecraft/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <http://freico.in/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Freicoin-Qt` (on Mac)
+or `freicoind`/`freicoin-qt` (on Linux).
 
 If your node has a txindex, the txindex db will be migrated the first time you
 run 0.17.0 or newer, which may take up to a few hours. Your node will not be
@@ -48,10 +48,10 @@ processing the entire blockchain.
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+Freicoin is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.10+, and Windows 7 and newer (Windows XP is not supported).
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+Freicoin should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 From 0.17.0 onwards macOS <10.10 is no longer supported. 0.17.0 is built using Qt 5.9.x, which doesn't
@@ -63,8 +63,8 @@ Notable changes
 Documentation
 -------------
 
-- A new document introduces Bitcoin Core's BIP174
-  [Partially-Signed Bitcoin Transactions (PSBT)](https://github.com/bitcoin/bitcoin/blob/0.17/doc/psbt.md)
+- A new document introduces Freicoin's BIP174
+  [Partially-Signed Freicoin Transactions (PST)](https://github.com/tradecraftio/tradecraft/blob/0.17/doc/pst.md)
   interface, which is used to allow multiple programs to collaboratively
   work to create, sign, and broadcast new transactions.  This is useful
   for offline (cold storage) wallets, multisig wallets, coinjoin
@@ -74,7 +74,7 @@ Documentation
 Wallet
 ------
 
-- When creating a transaction with a fee above -maxtxfee (default 0.1 BTC), the RPC commands walletcreatefundedpsbt and fundrawtransaction will now fail instead of rounding down the fee. Be aware that the feeRate argument is specified in BTC per 1,000 vbytes, not satoshi per vbyte. (#16639)
+- When creating a transaction with a fee above -maxtxfee (default 0.1 FRC), the RPC commands walletcreatefundedpst and fundrawtransaction will now fail instead of rounding down the fee. Be aware that the feeRate argument is specified in FRC per 1,000 vbytes, not kria per vbyte. (#16639)
 
 0.17.2 change log
 =================
@@ -84,12 +84,12 @@ Wallet
 - #15983 build with -fstack-reuse=none (MarcoFalke)
 
 ### Documentation
-- #13941 Add PSBT documentation (sipa)
-- #14319 Fix PSBT howto and example parameters (priscoan)
+- #13941 Add PST documentation (sipa)
+- #14319 Fix PST howto and example parameters (priscoan)
 - #14944 Update NetBSD build instructions for 8.0 (fanquake)
 - #14966 fix testmempoolaccept CLI syntax (1Il1)
-- #15012 Fix minor error in doc/psbt.md (bitcoinhodler)
-- #15213 Remove errant paste from walletcreatefundedpsbt for nLocktime replaceable (instagibbs)
+- #15012 Fix minor error in doc/pst.md (freicoinhodler)
+- #15213 Remove errant paste from walletcreatefundedpst for nLocktime replaceable (instagibbs)
 
 ### GUI
 - #14123 Add GUIUtil::bringToFront (promag)
@@ -123,7 +123,7 @@ Thanks to everyone who directly contributed to this release:
 - 1Il1
 - Andrew Chow
 - Ben Carman
-- bitcoinhodler
+- freicoinhodler
 - Chun Kuan Lee
 - David A. Harding
 - Dimitris Apostolou
@@ -140,4 +140,4 @@ Thanks to everyone who directly contributed to this release:
 - Sjors Provoost
 - Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/freicoin/).

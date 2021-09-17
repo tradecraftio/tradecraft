@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COINS_H
-#define BITCOIN_COINS_H
+#ifndef FREICOIN_COINS_H
+#define FREICOIN_COINS_H
 
 #include <primitives/transaction.h>
 #include <compressor.h>
@@ -336,7 +336,7 @@ public:
     size_t DynamicMemoryUsage() const;
 
     /**
-     * Amount of bitcoins coming in to a transaction
+     * Amount of freicoins coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
      *
@@ -366,4 +366,4 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool 
 // lookups to database, so it should be used with care.
 const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
 
-#endif // BITCOIN_COINS_H
+#endif // FREICOIN_COINS_H

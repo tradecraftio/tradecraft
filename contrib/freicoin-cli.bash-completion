@@ -1,4 +1,4 @@
-# bash programmable completion for bitcoin-cli(1)
+# bash programmable completion for freicoin-cli(1)
 # Copyright (c) 2012-2016 The Bitcoin Core developers
 # Copyright (c) 2010-2021 The Freicoin Developers
 #
@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# call $bitcoin-cli for RPC
-_bitcoin_rpc() {
+# call $freicoin-cli for RPC
+_freicoin_rpc() {
     # determine already specified args necessary for RPC
     local rpcargs=()
     for i in ${COMP_LINE}; do
@@ -25,23 +25,23 @@ _bitcoin_rpc() {
                 ;;
         esac
     done
-    $bitcoin_cli "${rpcargs[@]}" "$@"
+    $freicoin_cli "${rpcargs[@]}" "$@"
 }
 
 # Add wallet accounts to COMPREPLY
-_bitcoin_accounts() {
+_freicoin_accounts() {
     local accounts
-    accounts=$(_bitcoin_rpc listaccounts | awk -F '"' '{ print $2 }')
+    accounts=$(_freicoin_rpc listaccounts | awk -F '"' '{ print $2 }')
     COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$accounts" -- "$cur" ) )
 }
 
-_bitcoin_cli() {
+_freicoin_cli() {
     local cur prev words=() cword
-    local bitcoin_cli
+    local freicoin_cli
 
-    # save and use original argument to invoke bitcoin-cli for -help, help and RPC
-    # as bitcoin-cli might not be in $PATH
-    bitcoin_cli="$1"
+    # save and use original argument to invoke freicoin-cli for -help, help and RPC
+    # as freicoin-cli might not be in $PATH
+    freicoin_cli="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n = cur prev words cword
@@ -71,7 +71,7 @@ _bitcoin_cli() {
     if ((cword > 3)); then
         case ${words[cword-3]} in
             addmultisigaddress)
-                _bitcoin_accounts
+                _freicoin_accounts
                 return 0
                 ;;
             getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
@@ -96,7 +96,7 @@ _bitcoin_cli() {
                 return 0
                 ;;
             move|setaccount)
-                _bitcoin_accounts
+                _freicoin_accounts
                 return 0
                 ;;
         esac
@@ -112,7 +112,7 @@ _bitcoin_cli() {
             return 0
             ;;
         getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
-            _bitcoin_accounts
+            _freicoin_accounts
             return 0
             ;;
     esac
@@ -136,12 +136,12 @@ _bitcoin_cli() {
 
             # only parse -help if senseful
             if [[ -z "$cur" || "$cur" =~ ^- ]]; then
-                helpopts=$($bitcoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
+                helpopts=$($freicoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
             fi
 
             # only parse help if senseful
             if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
-                commands=$(_bitcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
+                commands=$(_freicoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
             fi
 
             COMPREPLY=( $( compgen -W "$helpopts $commands" -- "$cur" ) )
@@ -154,7 +154,7 @@ _bitcoin_cli() {
             ;;
     esac
 } &&
-complete -F _bitcoin_cli bitcoin-cli
+complete -F _freicoin_cli freicoin-cli
 
 # Local variables:
 # mode: shell-script

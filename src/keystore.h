@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KEYSTORE_H
-#define BITCOIN_KEYSTORE_H
+#ifndef FREICOIN_KEYSTORE_H
+#define FREICOIN_KEYSTORE_H
 
 #include <key.h>
 #include <pubkey.h>
@@ -91,4 +91,4 @@ CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest);
 /** Checks if a CKey is in the given CKeyStore compressed or otherwise*/
 bool HaveKey(const CKeyStore& store, const CKey& key);
 
-#endif // BITCOIN_KEYSTORE_H
+#endif // FREICOIN_KEYSTORE_H

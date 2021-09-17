@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Functionality to build scripts, as well as SignatureHash().
 
-This file is modified from python-bitcoinlib.
+This file is modified from python-freicoinlib.
 """
 
 from .messages import CTransaction, CTxOut, sha256, hash256, uint256_from_str, ser_uint256, ser_string

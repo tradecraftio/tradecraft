@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INTERFACES_HANDLER_H
-#define BITCOIN_INTERFACES_HANDLER_H
+#ifndef FREICOIN_INTERFACES_HANDLER_H
+#define FREICOIN_INTERFACES_HANDLER_H
 
 #include <memory>
 
@@ -43,4 +43,4 @@ std::unique_ptr<Handler> MakeHandler(boost::signals2::connection connection);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_HANDLER_H
+#endif // FREICOIN_INTERFACES_HANDLER_H
