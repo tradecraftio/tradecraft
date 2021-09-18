@@ -5017,15 +5017,15 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+151"/>
+        <location line="+150"/>
         <location line="+10"/>
-        <location line="+18"/>
+        <location line="+17"/>
         <source>Error</source>
         <translation type="unfinished">Error</translation>
     </message>
     <message>
-        <location line="-28"/>
-        <source>Unable to decode PST from clipboard (invalid base64)</source>
+        <location line="-27"/>
+        <source>Unable to decode PST from clipboard (invalid hex)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5044,7 +5044,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+17"/>
         <source>Unable to decode PST</source>
         <translation type="unfinished"></translation>
     </message>

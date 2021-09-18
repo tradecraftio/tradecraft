@@ -43,8 +43,7 @@ FUZZ_TARGET_INIT(pst, initialize_pst)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     PartiallySignedTransaction pst_mut;
     std::string error;
-    auto str = fuzzed_data_provider.ConsumeRandomLengthString();
-    if (!DecodeRawPST(pst_mut, MakeByteSpan(str), error)) {
+    if (!DecodeRawPST(pst_mut, fuzzed_data_provider.ConsumeRandomLengthBytes<std::byte>(), error)) {
         return;
     }
     const PartiallySignedTransaction pst = pst_mut;
@@ -91,8 +90,7 @@ FUZZ_TARGET_INIT(pst, initialize_pst)
     }
 
     PartiallySignedTransaction pst_merge;
-    str = fuzzed_data_provider.ConsumeRandomLengthString();
-    if (!DecodeRawPST(pst_merge, MakeByteSpan(str), error)) {
+    if (!DecodeRawPST(pst_merge, fuzzed_data_provider.ConsumeRandomLengthBytes<std::byte>(), error)) {
         pst_merge = pst;
     }
     pst_mut = pst;

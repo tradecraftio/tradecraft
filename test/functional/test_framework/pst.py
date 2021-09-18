@@ -14,8 +14,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import base64
-
 from .messages import (
     CTransaction,
     deser_string,
@@ -143,9 +141,9 @@ class PST:
 
         self.g = PSTMap(map={0: self.g.map[0]})
 
-    def to_base64(self):
-        return base64.b64encode(self.serialize()).decode("utf8")
+    def hex(self):
+        return self.serialize().hex()
 
     @classmethod
-    def from_base64(cls, b64pst):
-        return from_binary(cls, base64.b64decode(b64pst))
+    def fromhex(cls, hexpst):
+        return from_binary(cls, bytes.fromhex(hexpst))

@@ -92,10 +92,10 @@ def do_createpst(block, signme, spendme):
                          PST_IN_SIGHASH_TYPE: bytes([1,0,0,0])})
              ]
     pst.o = [ PSTMap() ]
-    return pst.to_base64()
+    return pst.hex()
 
-def do_decode_pst(b64pst):
-    pst = PST.from_base64(b64pst)
+def do_decode_pst(hexpst):
+    pst = PST.fromhex(hexpst)
 
     assert len(pst.tx.vin) == 1
     assert len(pst.tx.vout) == 1
