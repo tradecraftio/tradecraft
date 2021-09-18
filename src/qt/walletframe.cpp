@@ -207,12 +207,11 @@ void WalletFrame::gotoLoadPST(bool from_clipboard)
 
     if (from_clipboard) {
         std::string raw = QApplication::clipboard()->text().toStdString();
-        auto result = DecodeBase64(raw);
-        if (!result) {
-            Q_EMIT message(tr("Error"), tr("Unable to decode PST from clipboard (invalid base64)"), CClientUIInterface::MSG_ERROR);
+        if (!IsHex(raw)) {
+            Q_EMIT message(tr("Error"), tr("Unable to decode PST from clipboard (invalid hex)"), CClientUIInterface::MSG_ERROR);
             return;
         }
-        data = std::move(*result);
+        data = ParseHex(raw);
     } else {
         QString filename = GUIUtil::getOpenFileName(this,
             tr("Load Transaction Data"), QString(),
@@ -225,12 +224,11 @@ void WalletFrame::gotoLoadPST(bool from_clipboard)
         std::ifstream in{filename.toLocal8Bit().data(), std::ios::binary};
         data.assign(std::istreambuf_iterator<char>{in}, {});
 
-        // Some pst files may be base64 strings in the file rather than binary data
-        std::string b64_str{data.begin(), data.end()};
-        b64_str.erase(b64_str.find_last_not_of(" \t\n\r\f\v") + 1); // Trim trailing whitespace
-        auto b64_dec = DecodeBase64(b64_str);
-        if (b64_dec.has_value()) {
-            data = b64_dec.value();
+        // Some pst files may be hex strings in the file rather than binary data
+        std::string hex_str{data.begin(), data.end()};
+        hex_str.erase(hex_str.find_last_not_of(" \t\n\r\f\v") + 1); // Trim trailing whitespace
+        if (IsHex(hex_str)) {
+            data = ParseHex(hex_str);
         }
     }
 

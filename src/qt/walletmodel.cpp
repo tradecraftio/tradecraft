@@ -553,7 +553,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         // Serialize the PST
         DataStream ssTx{};
         ssTx << pstx;
-        GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
+        GUIUtil::setClipboard(HexStr(ssTx).c_str());
         Q_EMIT message(tr("PST copied"), tr("Fee-bump PST copied to clipboard"), CClientUIInterface::MSG_INFORMATION | CClientUIInterface::MODAL);
         return true;
     }
