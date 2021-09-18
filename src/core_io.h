@@ -49,10 +49,10 @@ bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 bool ParseHashStr(const std::string& strHex, uint256& result);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
 
-//! Decode a base64ed PST into a PartiallySignedTransaction
-NODISCARD bool DecodeBase64PST(PartiallySignedTransaction& decoded_pst, const std::string& base64_pst, std::string& error);
+//! Decode a hex PST into a PartiallySignedTransaction
+NODISCARD bool DecodeHexPST(PartiallySignedTransaction& decoded_pst, const std::string& hex_pst, std::string& error);
 //! Decode a raw (binary blob) PST into a PartiallySignedTransaction
-NODISCARD bool DecodeRawPST(PartiallySignedTransaction& decoded_pst, const std::string& raw_pst, std::string& error);
+NODISCARD bool DecodeRawPST(PartiallySignedTransaction& decoded_pst, const std::vector<unsigned char>& raw_pst, std::string& error);
 int ParseSighashString(const UniValue& sighash);
 
 // core_write.cpp

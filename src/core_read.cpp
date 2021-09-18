@@ -188,20 +188,18 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     return true;
 }
 
-bool DecodeBase64PST(PartiallySignedTransaction& pst, const std::string& base64_tx, std::string& error)
+bool DecodeHexPST(PartiallySignedTransaction& pst, const std::string& hex_tx, std::string& error)
 {
-    bool invalid;
-    std::string tx_data = DecodeBase64(base64_tx, &invalid);
-    if (invalid) {
-        error = "invalid base64";
+    if (!IsHex(hex_tx)) {
+        error = "invalid hex";
         return false;
     }
-    return DecodeRawPST(pst, tx_data, error);
+    return DecodeRawPST(pst, ParseHex(hex_tx), error);
 }
 
-bool DecodeRawPST(PartiallySignedTransaction& pst, const std::string& tx_data, std::string& error)
+bool DecodeRawPST(PartiallySignedTransaction& pst, const std::vector<unsigned char>& tx_data, std::string& error)
 {
-    CDataStream ss_data(tx_data.data(), tx_data.data() + tx_data.size(), SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ss_data(tx_data, SER_NETWORK, PROTOCOL_VERSION);
     try {
         ss_data >> pst;
         if (!ss_data.empty()) {
