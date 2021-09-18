@@ -46,6 +46,8 @@ class FuzzedDataProvider {
   template <typename T> std::vector<T> ConsumeBytes(size_t num_bytes);
   template <typename T>
   std::vector<T> ConsumeBytesWithTerminator(size_t num_bytes, T terminator = 0);
+  template <typename T> std::vector<T> ConsumeRandomLengthBytes(size_t max_length);
+  template <typename T> std::vector<T> ConsumeRandomLengthBytes();
   template <typename T> std::vector<T> ConsumeRemainingBytes();
 
   // Methods returning strings. Use only when you need a std::string or a null
@@ -121,6 +123,19 @@ std::vector<T> FuzzedDataProvider::ConsumeBytesWithTerminator(size_t num_bytes,
   std::vector<T> result = ConsumeBytes<T>(num_bytes + 1, num_bytes);
   result.back() = terminator;
   return result;
+}
+
+// Returns a std::vector containing a random length of bytes of to max_length
+template <typename T>
+std::vector<T> FuzzedDataProvider::ConsumeRandomLengthBytes(size_t max_length) {
+  return ConsumeBytes<T>(ConsumeIntegralInRange<size_t>(0, max_length));
+}
+
+// Returns a std::vector containing a random length of bytes up to the remainder
+// of the input data.
+template <typename T>
+std::vector<T> FuzzedDataProvider::ConsumeRandomLengthBytes() {
+  return ConsumeRandomLengthBytes<T>(remaining_bytes_);
 }
 
 // Returns a std::vector containing all remaining bytes of the input data.

@@ -413,7 +413,7 @@ void SendCoinsDialog::presentPST(PartiallySignedTransaction& pstx)
     // Serialize the PST
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
-    GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
+    GUIUtil::setClipboard(HexStr(ssTx).c_str());
     QMessageBox msgBox(this);
     //: Caption of "PST has been copied" messagebox
     msgBox.setText(tr("Unsigned Transaction", "PST copied"));

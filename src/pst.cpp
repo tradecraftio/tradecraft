@@ -509,14 +509,13 @@ std::string PSTRoleName(PSTRole role) {
     assert(false);
 }
 
-bool DecodeBase64PST(PartiallySignedTransaction& pst, const std::string& base64_tx, std::string& error)
+bool DecodeHexPST(PartiallySignedTransaction& pst, const std::string& hex_pst, std::string& error)
 {
-    auto tx_data = DecodeBase64(base64_tx);
-    if (!tx_data) {
-        error = "invalid base64";
+    if (!IsHex(hex_pst)) {
+        error = "invalid hex";
         return false;
     }
-    return DecodeRawPST(pst, MakeByteSpan(*tx_data), error);
+    return DecodeRawPST(pst, MakeByteSpan(ParseHex(hex_pst)), error);
 }
 
 bool DecodeRawPST(PartiallySignedTransaction& pst, Span<const std::byte> tx_data, std::string& error)
