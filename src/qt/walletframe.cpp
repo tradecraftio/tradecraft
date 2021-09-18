@@ -230,7 +230,7 @@ void WalletFrame::gotoLoadPST(bool from_clipboard)
 
     std::string error;
     PartiallySignedTransaction pstx;
-    if (!DecodeRawPST(pstx, data, error)) {
+    if (!DecodeRawPST(pstx, ParseHex(data), error)) {
         Q_EMIT message(tr("Error"), tr("Unable to decode PST") + "\n" + QString::fromStdString(error), CClientUIInterface::MSG_ERROR);
         return;
     }

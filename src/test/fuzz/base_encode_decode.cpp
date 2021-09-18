@@ -64,5 +64,5 @@ FUZZ_TARGET_INIT(base_encode_decode, initialize_base_encode_decode)
 
     PartiallySignedTransaction pst;
     std::string error;
-    (void)DecodeBase64PST(pst, random_encoded_string, error);
+    (void)DecodeHexPST(pst, random_encoded_string, error);
 }

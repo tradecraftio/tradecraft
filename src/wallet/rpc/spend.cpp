@@ -874,7 +874,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         RPCResult{
             RPCResult::Type::OBJ, "", "", Cat(
                 want_pst ?
-                std::vector<RPCResult>{{RPCResult::Type::STR, "pst", "The base64-encoded unsigned PST of the new transaction."}} :
+                std::vector<RPCResult>{{RPCResult::Type::STR, "pst", "The hex-encoded unsigned PST of the new transaction."}} :
                 std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction."}},
             {
                 {RPCResult::Type::STR_AMOUNT, "origfee", "The fee of the replaced transaction."},
@@ -963,7 +963,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     UniValue result(UniValue::VOBJ);
 
     // For bumpfee, return the new transaction id.
-    // For pstbumpfee, return the base64-encoded unsigned PST of the new transaction.
+    // For pstbumpfee, return the hex-encoded unsigned PST of the new transaction.
     if (!want_pst) {
         if (!feebumper::SignTransaction(*pwallet, mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
@@ -983,7 +983,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         CHECK_NONFATAL(!complete);
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << pstx;
-        result.pushKV("pst", EncodeBase64(ssTx.str()));
+        result.pushKV("pst", HexStr(ssTx));
     }
 
     result.pushKV("origfee", ValueFromAmount(old_fee));
@@ -1076,7 +1076,7 @@ RPCHelpMan send()
                     {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id for the send. Only 1 transaction is created regardless of the number of addresses."},
                     {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
-                    {RPCResult::Type::STR, "pst", /*optional=*/true, "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
+                    {RPCResult::Type::STR, "pst", /*optional=*/true, "If more signatures are needed, or if add_to_wallet is false, the hex-encoded (partially) signed transaction"}
                 }
         },
         RPCExamples{""
@@ -1181,7 +1181,7 @@ RPCHelpMan send()
                 // Serialize the PST
                 CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
                 ssTx << pstx;
-                result.pushKV("pst", EncodeBase64(ssTx.str()));
+                result.pushKV("pst", HexStr(ssTx));
             }
 
             if (complete) {
@@ -1209,7 +1209,7 @@ RPCHelpMan walletprocesspst()
                 "that we can sign for." +
         HELP_REQUIRING_PASSPHRASE,
                 {
-                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction hex string"},
                     {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating (requires wallet to be unlocked)"},
                     {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type to sign with if not specified by the PST. Must be one of\n"
             "       \"DEFAULT\"\n"
@@ -1225,7 +1225,7 @@ RPCHelpMan walletprocesspst()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "pst", "The base64-encoded partially signed transaction"},
+                        {RPCResult::Type::STR, "pst", "The hex-encoded partially signed transaction"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     }
                 },
@@ -1247,7 +1247,7 @@ RPCHelpMan walletprocesspst()
     // Unserialize the transaction
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1270,7 +1270,7 @@ RPCHelpMan walletprocesspst()
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
-    result.pushKV("pst", EncodeBase64(ssTx.str()));
+    result.pushKV("pst", HexStr(ssTx));
     result.pushKV("complete", complete);
 
     return result;
@@ -1350,7 +1350,7 @@ RPCHelpMan walletcreatefundedpst()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "pst", "The resulting raw transaction (base64-encoded string)"},
+                        {RPCResult::Type::STR, "pst", "The resulting raw transaction (hex-encoded string)"},
                         {RPCResult::Type::STR_AMOUNT, "fee", "Fee in " + CURRENCY_UNIT + " the resulting transaction pays"},
                         {RPCResult::Type::NUM, "changepos", "The position of the added change output, or -1"},
                     }
@@ -1406,7 +1406,7 @@ RPCHelpMan walletcreatefundedpst()
     ssTx << pstx;
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("pst", EncodeBase64(ssTx.str()));
+    result.pushKV("pst", HexStr(ssTx));
     result.pushKV("fee", ValueFromAmount(fee));
     result.pushKV("changepos", change_position);
     return result;
