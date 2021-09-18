@@ -3596,7 +3596,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
         CHECK_NONFATAL(!complete);
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << pstx;
-        result.pushKV("pst", EncodeBase64(ssTx.str()));
+        result.pushKV("pst", HexStr(ssTx));
     }
 
     result.pushKV("origfee", ValueFromAmount(old_fee));
@@ -4171,7 +4171,7 @@ UniValue walletprocesspst(const JSONRPCRequest& request)
                 "that we can sign for." +
         HELP_REQUIRING_PASSPHRASE,
                 {
-                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction hex string"},
                     {"sign", RPCArg::Type::BOOL, /* default */ "true", "Also sign the transaction when updating"},
                     {"sighashtype", RPCArg::Type::STR, /* default */ "ALL", "The signature hash type to sign with if not specified by the PST. Must be one of\n"
             "       \"ALL\"\n"
@@ -4185,7 +4185,7 @@ UniValue walletprocesspst(const JSONRPCRequest& request)
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "pst", "The base64-encoded partially signed transaction"},
+                        {RPCResult::Type::STR, "pst", "The hex-encoded partially signed transaction"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     }
                 },
@@ -4199,7 +4199,7 @@ UniValue walletprocesspst(const JSONRPCRequest& request)
     // Unserialize the transaction
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -4218,7 +4218,7 @@ UniValue walletprocesspst(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
-    result.pushKV("pst", EncodeBase64(ssTx.str()));
+    result.pushKV("pst", HexStr(ssTx.str()));
     result.pushKV("complete", complete);
 
     return result;
@@ -4294,7 +4294,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "pst", "The resulting raw transaction (base64-encoded string)"},
+                        {RPCResult::Type::STR, "pst", "The resulting raw transaction (hex-encoded string)"},
                         {RPCResult::Type::STR_AMOUNT, "fee", "Fee in " + CURRENCY_UNIT + " the resulting transaction pays"},
                         {RPCResult::Type::NUM, "changepos", "The position of the added change output, or -1"},
                     }
@@ -4335,7 +4335,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
     ssTx << pstx;
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("pst", EncodeBase64(ssTx.str()));
+    result.pushKV("pst", HexStr(ssTx.str()));
     result.pushKV("fee", ValueFromAmount(fee));
     result.pushKV("changepos", change_position);
     return result;
