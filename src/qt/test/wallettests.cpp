@@ -447,11 +447,11 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
     QVERIFY(!pst_string.empty());
 
     // Decode pst
-    std::optional<std::vector<unsigned char>> decoded_pst = DecodeBase64(pst_string);
-    QVERIFY(decoded_pst);
+    QVERIFY(IsHex(pst_string));
+    std::vector<unsigned char> decoded_pst = ParseHex(pst_string);
     PartiallySignedTransaction pst;
     std::string err;
-    QVERIFY(DecodeRawPST(pst, MakeByteSpan(*decoded_pst), err));
+    QVERIFY(DecodeRawPST(pst, MakeByteSpan(decoded_pst), err));
 }
 
 void TestGUI(interfaces::Node& node)
