@@ -237,11 +237,11 @@ class WalletMiniscriptTest(FreicoinTestFramework):
 
         self.log.info("Signing it and checking the satisfaction.")
         if sha256_preimages is not None:
-            pst = PST.from_base64(pst)
+            pst = PST.fromhex(pst)
             for (h, preimage) in sha256_preimages.items():
                 k = PST_IN_SHA256.to_bytes(1, "big") + bytes.fromhex(h)
                 pst.i[0].map[k] = bytes.fromhex(preimage)
-            pst = pst.to_base64()
+            pst = pst.hex()
         res = self.ms_sig_wallet.walletprocesspst(pst=pst, finalize=False)
         pstin = self.nodes[0].rpc.decodepst(res["pst"])["inputs"][0]
         assert len(pstin["partial_signatures"]) == sigs_count
