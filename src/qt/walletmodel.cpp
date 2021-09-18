@@ -557,7 +557,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         // Serialize the PST
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << pstx;
-        GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
+        GUIUtil::setClipboard(HexStr(ssTx).c_str());
         Q_EMIT message(tr("PST copied"), tr("Copied to clipboard", "Fee-bump PST saved"), CClientUIInterface::MSG_INFORMATION);
         return true;
     }

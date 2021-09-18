@@ -97,7 +97,7 @@ A future extension could add an optional return field `reachable`, in case `<cmd
 Usage:
 ```
 $ <cmd> --fingerprint=<fingerprint> (--testnet) signtransaction <pst>
-base64_encode_signed_pst
+hex_encode_signed_pst
 ```
 
 The command returns a pst with any signatures.
