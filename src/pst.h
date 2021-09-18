@@ -30,7 +30,7 @@
 #include <optional>
 
 // Magic bytes
-static constexpr uint8_t PST_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
+static constexpr uint8_t PST_MAGIC_BYTES[4] = {'p', 's', 't', 0xff};
 
 // Global types
 static constexpr uint8_t PST_GLOBAL_UNSIGNED_TX = 0x00;
@@ -767,9 +767,9 @@ struct PartiallySignedTransaction
     template <typename Stream>
     inline void Unserialize(Stream& s) {
         // Read the magic bytes
-        uint8_t magic[5];
+        uint8_t magic[4];
         s >> magic;
-        if (!std::equal(magic, magic + 5, PST_MAGIC_BYTES)) {
+        if (!std::equal(magic, magic + 4, PST_MAGIC_BYTES)) {
             throw std::ios_base::failure("Invalid PST magic bytes");
         }
 
