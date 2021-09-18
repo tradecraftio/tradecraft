@@ -436,7 +436,7 @@ class PSTTest(FreicoinTestFramework):
         # BIP 174 Test Vectors
 
         # Check that unknown values are just passed through
-        unknown_pst = "cHNidP8BAD8CAAAAAf//////////////////////////////////////////AAAAAAD/////AQAAAAAAAAAAA2oBAAAAAAAACg8BAgMEBQYHCAkPAQIDBAUGBwgJCgsMDQ4PAAA="
+        unknown_pst = "70736274ff01003f0200000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000ffffffff010000000000000000036a010000000000000a0f0102030405060708090f0102030405060708090a0b0c0d0e0f0000"
         unknown_out = self.nodes[0].walletprocesspst(unknown_pst)['pst']
         assert_equal(unknown_pst, unknown_out)
 
@@ -503,8 +503,8 @@ class PSTTest(FreicoinTestFramework):
         pst = self.nodes[1].walletcreatefundedpst([], [{p2pkh : 1}], 0, {"includeWatching" : True}, True)
         self.nodes[0].decodepst(pst['pst'])
 
-        # Test decoding error: invalid base64
-        assert_raises_rpc_error(-22, "TX decode failed invalid base64", self.nodes[0].decodepst, ";definitely not base64;")
+        # Test decoding error: invalid hex
+        assert_raises_rpc_error(-22, "TX decode failed invalid hex", self.nodes[0].decodepst, ";definitely not hex;")
 
         # Send to all types of addresses
         addr1 = self.nodes[1].getnewaddress("", "bech32")
@@ -596,28 +596,28 @@ class PSTTest(FreicoinTestFramework):
         assert analyzed['inputs'][0]['has_utxo'] and analyzed['inputs'][0]['is_final'] and analyzed['next'] == 'extractor'
 
         self.log.info("PST spending unspendable outputs should have error message and Creator as next")
-        analysis = self.nodes[0].analyzepst('cHNidP8BAJoCAAAAAljoeiG1ba8MI76OcHBFbDNvfLqlyHV5JPVFiHuyq911AAAAAAD/////g40EJ9DsZQpoqka7CwmK6kQiwHGyyng1Kgd5WdB86h0BAAAAAP////8CcKrwCAAAAAAWAEHYXCtx0AYLCcmIauuBXlCZHdoSTQDh9QUAAAAAFv8/wADXYP/7//////8JxOh0LR2HAI8AAAAAAAEBIADC6wsAAAAAF2oUt/X69ELjeX2nTof+fZ10l+OyAokDAQcJAwEHEAABAACAAAEBIADC6wsAAAAAF2oUt/X69ELjeX2nTof+fZ10l+OyAokDAQcJAwEHENkMak8AAAAA')
+        analysis = self.nodes[0].analyzepst('70736274ff01009a020000000258e87a21b56daf0c23be8e7070456c336f7cbaa5c8757924f545887bb2abdd750000000000ffffffff838d0427d0ec650a68aa46bb0b098aea4422c071b2ca78352a077959d07cea1d0100000000ffffffff0270aaf00800000000160041d85c2b71d0060b09c9886aeb815e50991dda124d00e1f5050000000016ff3fc000d760fffbffffffffff09c4e8742d1d87008f000000000001012000c2eb0b00000000176a14b7f5faf442e3797da74e87fe7d9d7497e3b20289030107090301071000010000800001012000c2eb0b00000000176a14b7f5faf442e3797da74e87fe7d9d7497e3b202890301070903010710d90c6a4f00000000')
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PST is not valid. Input 0 spends unspendable output')
 
         self.log.info("PST with invalid values should have error message and Creator as next")
-        analysis = self.nodes[0].analyzepst('cHNidP8BAHECAAAAAfA00BFgAm6tp86RowwH6BMImQNL5zXUcTT97XoLGz0BAAAAAAD/////AgD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XL87QKVAAAAABYAFPck4gF7iL4NL4wtfRAKgQbghiTUAAAAAAABAR8AgIFq49AHABYAFJUDtxf2PHo641HEOBOAIvFMNTr2AAAA')
+        analysis = self.nodes[0].analyzepst('70736274ff0100710200000001f034d01160026eada7ce91a30c07e8130899034be735d47134fded7a0b1b3d010000000000ffffffff0200f902950000000016001428dc34c7c1d172d0209afa1ebe6e2ed526cded72fced029500000000160014f724e2017b88be0d2f8c2d7d100a8106e08624d4000000000001011f0080816ae3d007001600149503b717f63c7a3ae351c438138022f14c353af6000000')
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PST is not valid. Input 0 has invalid value')
 
         self.log.info("PST with signed, but not finalized, inputs should have Finalizer as next")
-        analysis = self.nodes[0].analyzepst('cHNidP8BAHECAAAAAZYezcxdnbXoQCmrD79t/LzDgtUo9ERqixk8wgioAobrAAAAAAD9////AlDDAAAAAAAAFgAUy/UxxZuzZswcmFnN/E9DGSiHLUsuGPUFAAAAABYAFLsH5o0R38wXx+X2cCosTMCZnQ4baAAAAAABAR8A4fUFAAAAABYAFOBI2h5thf3+Lflb2LGCsVSZwsltIgIC/i4dtVARCRWtROG0HHoGcaVklzJUcwo5homgGkSNAnJHMEQCIGx7zKcMIGr7cEES9BR4Kdt/pzPTK3fKWcGyCJXb7MVnAiALOBgqlMH4GbC1HDh/HmylmO54fyEy4lKde7/BT/PWxwEBAwQBAAAAIgYC/i4dtVARCRWtROG0HHoGcaVklzJUcwo5homgGkSNAnIYDwVpQ1QAAIABAACAAAAAgAAAAAAAAAAAAAAiAgL+CIiB59NSCssOJRGiMYQK1chahgAaaJpIXE41Cyir+xgPBWlDVAAAgAEAAIAAAACAAQAAAAAAAAAA')
+        analysis = self.nodes[0].analyzepst('70736274ff0100710200000001961ecdcc5d9db5e84029ab0fbf6dfcbcc382d528f4446a8b193cc208a80286eb0000000000fdffffff0250c3000000000000160014cbf531c59bb366cc1c9859cdfc4f431928872d4b2e18f50500000000160014bb07e68d11dfcc17c7e5f6702a2c4cc0999d0e1b680000000001011f00e1f50500000000160014e048da1e6d85fdfe2df95bd8b182b15499c2c96d220202fe2e1db550110915ad44e1b41c7a0671a564973254730a398689a01a448d027247304402206c7bcca70c206afb704112f4147829db7fa733d32b77ca59c1b20895dbecc56702200b38182a94c1f819b0b51c387f1e6ca598ee787f2132e2529d7bbfc14ff3d6c70101030401000000220602fe2e1db550110915ad44e1b41c7a0671a564973254730a398689a01a448d0272180f05694354000080010000800000008000000000000000000000220202fe088881e7d3520acb0e2511a231840ad5c85a86001a689a485c4e350b28abfb180f056943540000800100008000000080010000000000000000')
         assert_equal(analysis['next'], 'finalizer')
 
-        analysis = self.nodes[0].analyzepst('cHNidP8BAHECAAAAAfA00BFgAm6tp86RowwH6BMImQNL5zXUcTT97XoLGz0BAAAAAAD/////AgCAgWrj0AcAFgAUKNw0x8HRctAgmvoevm4u1SbN7XL87QKVAAAAABYAFPck4gF7iL4NL4wtfRAKgQbghiTUAAAAAAABAR8A8gUqAQAAABYAFJUDtxf2PHo641HEOBOAIvFMNTr2AAAA')
+        analysis = self.nodes[0].analyzepst('70736274ff0100710200000001f034d01160026eada7ce91a30c07e8130899034be735d47134fded7a0b1b3d010000000000ffffffff020080816ae3d0070016001428dc34c7c1d172d0209afa1ebe6e2ed526cded72fced029500000000160014f724e2017b88be0d2f8c2d7d100a8106e08624d4000000000001011f00f2052a010000001600149503b717f63c7a3ae351c438138022f14c353af6000000')
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PST is not valid. Output amount invalid')
 
-        analysis = self.nodes[0].analyzepst('cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==')
+        analysis = self.nodes[0].analyzepst('70736274ff01009a02000000024bc45bc3670ed74db43a6c9b37be1edd8b1f7e4825c2afd348ca02552cdb546b0300000000ffffffff4bc45bc3670ed74db43a6c9b37be1edd8b1f7e4825c2afd348ca02552cdb546b0100000000feffffff02c0b60295000000001600148d24ace36946f7b8ec62c6cbe1d46184ddf5bbcd00f902950000000016001428dc34c7c1d172d0209afa1ebe6e2ed526cded72000000000001009d020000000273331adf6d6d547b8de062962919dcc9c236d9a5f7b9783048550a336a2b8d1b0100000000feffffff73331adf6d6d547b8de062962919dcc9c236d9a5f7b9783048550a336a2b8d1b0000000000feffffff0200f90295000000001976a914fdcd751503c2ece6256aca72c77b9fef49ed57c988ac40cd0295000000001600146659051c8d28e0850f3fb87e019ffce46a4c0bb4000000000001011f40cd0295000000001600146659051c8d28e0850f3fb87e019ffce46a4c0bb4000000')
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PST is not valid. Input 0 specifies invalid prevout')
 
-        assert_raises_rpc_error(-25, 'Inputs missing or spent', self.nodes[0].walletprocesspst, 'cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==')
+        assert_raises_rpc_error(-25, 'Inputs missing or spent', self.nodes[0].walletprocesspst, '70736274ff01009a02000000024bc45bc3670ed74db43a6c9b37be1edd8b1f7e4825c2afd348ca02552cdb546b0300000000ffffffff4bc45bc3670ed74db43a6c9b37be1edd8b1f7e4825c2afd348ca02552cdb546b0100000000feffffff02c0b60295000000001600148d24ace36946f7b8ec62c6cbe1d46184ddf5bbcd00f902950000000016001428dc34c7c1d172d0209afa1ebe6e2ed526cded72000000000001009d020000000273331adf6d6d547b8de062962919dcc9c236d9a5f7b9783048550a336a2b8d1b0100000000feffffff73331adf6d6d547b8de062962919dcc9c236d9a5f7b9783048550a336a2b8d1b0000000000feffffff0200f90295000000001976a914fdcd751503c2ece6256aca72c77b9fef49ed57c988ac40cd0295000000001600146659051c8d28e0850f3fb87e019ffce46a4c0bb4000000000001011f40cd0295000000001600146659051c8d28e0850f3fb87e019ffce46a4c0bb4000000')
 
         self.log.info("Test that we can fund psts with external inputs specified")
 

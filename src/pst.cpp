@@ -397,18 +397,16 @@ std::string PSTRoleName(PSTRole role) {
     assert(false);
 }
 
-bool DecodeBase64PST(PartiallySignedTransaction& pst, const std::string& base64_tx, std::string& error)
+bool DecodeHexPST(PartiallySignedTransaction& pst, const std::string& hex_pst, std::string& error)
 {
-    bool invalid;
-    std::string tx_data = DecodeBase64(base64_tx, &invalid);
-    if (invalid) {
-        error = "invalid base64";
+    if (!IsHex(hex_pst)) {
+        error = "invalid hex";
         return false;
     }
-    return DecodeRawPST(pst, tx_data, error);
+    return DecodeRawPST(pst, ParseHex(hex_pst), error);
 }
 
-bool DecodeRawPST(PartiallySignedTransaction& pst, const std::string& tx_data, std::string& error)
+bool DecodeRawPST(PartiallySignedTransaction& pst, const std::vector<unsigned char>& tx_data, std::string& error)
 {
     CDataStream ss_data(MakeByteSpan(tx_data), SER_NETWORK, PROTOCOL_VERSION);
     try {
