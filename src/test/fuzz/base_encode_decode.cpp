@@ -64,5 +64,5 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     PartiallySignedTransaction pst;
     std::string error;
-    (void)DecodeBase64PST(pst, random_encoded_string, error);
+    (void)DecodeHexPST(pst, random_encoded_string, error);
 }

@@ -218,16 +218,16 @@ void WalletView::gotoVerifyMessageTab(QString addr)
 
 void WalletView::gotoLoadPST(bool from_clipboard)
 {
-    std::string data;
+    std::vector<unsigned char> data;
 
     if (from_clipboard) {
         std::string raw = QApplication::clipboard()->text().toStdString();
         bool invalid;
-        data = DecodeBase64(raw, &invalid);
-        if (invalid) {
-            Q_EMIT message(tr("Error"), tr("Unable to decode PST from clipboard (invalid base64)"), CClientUIInterface::MSG_ERROR);
+        if (!IsHex(raw)) {
+            Q_EMIT message(tr("Error"), tr("Unable to decode PST from clipboard (invalid hex)"), CClientUIInterface::MSG_ERROR);
             return;
         }
+        data = ParseHex(raw);
     } else {
         QString filename = GUIUtil::getOpenFileName(this,
             tr("Load Transaction Data"), QString(),
@@ -238,7 +238,7 @@ void WalletView::gotoLoadPST(bool from_clipboard)
             return;
         }
         std::ifstream in(filename.toLocal8Bit().data(), std::ios::binary);
-        data = std::string(std::istreambuf_iterator<char>{in}, {});
+        data = std::vector<unsigned char>(std::istreambuf_iterator<char>{in}, {});
     }
 
     std::string error;
