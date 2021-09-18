@@ -610,9 +610,9 @@ bool FinalizeAndExtractPST(PartiallySignedTransaction& pstx, CMutableTransaction
  */
 NODISCARD TransactionError CombinePSTs(PartiallySignedTransaction& out, const std::vector<PartiallySignedTransaction>& pstxs);
 
-//! Decode a base64ed PST into a PartiallySignedTransaction
-NODISCARD bool DecodeBase64PST(PartiallySignedTransaction& decoded_pst, const std::string& base64_pst, std::string& error);
+//! Decode a hex PST into a PartiallySignedTransaction
+NODISCARD bool DecodeHexPST(PartiallySignedTransaction& decoded_pst, const std::string& hex_pst, std::string& error);
 //! Decode a raw (binary blob) PST into a PartiallySignedTransaction
-NODISCARD bool DecodeRawPST(PartiallySignedTransaction& decoded_pst, const std::string& raw_pst, std::string& error);
+NODISCARD bool DecodeRawPST(PartiallySignedTransaction& decoded_pst, const std::vector<unsigned char>& raw_pst, std::string& error);
 
 #endif // FREICOIN_PST_H

@@ -943,9 +943,9 @@ static std::string WriteHDKeypath(std::vector<uint32_t>& keypath)
 UniValue decodepst(const JSONRPCRequest& request)
 {
             RPCHelpMan{"decodepst",
-                "\nReturn a JSON object representing the serialized, base64-encoded partially signed Freicoin transaction.\n",
+                "\nReturn a JSON object representing the serialized, hex-encoded partially signed Freicoin transaction.\n",
                 {
-                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The PST base64 string"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The PST hex string"},
                 },
                 RPCResult{
             "{\n"
@@ -1045,7 +1045,7 @@ UniValue decodepst(const JSONRPCRequest& request)
     // Unserialize the transactions
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1235,17 +1235,17 @@ UniValue combinepst(const JSONRPCRequest& request)
                 "\nCombine multiple partially signed Freicoin transactions into one transaction.\n"
                 "Implements the Combiner role.\n",
                 {
-                    {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of base64 strings of partially signed transactions",
+                    {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of hex strings of partially signed transactions",
                         {
-                            {"pst", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A base64 string of a PST"},
+                            {"pst", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A hex string of a PST"},
                         },
                         },
                 },
                 RPCResult{
-            "  \"pst\"          (string) The base64-encoded partially signed transaction\n"
+            "  \"pst\"          (string) The hex-encoded partially signed transaction\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("combinepst", "[\"mybase64_1\", \"mybase64_2\", \"mybase64_3\"]")
+                    HelpExampleCli("combinepst", "[\"myhex_1\", \"myhex_2\", \"myhex_3\"]")
                 },
             }.Check(request);
 
@@ -1260,7 +1260,7 @@ UniValue combinepst(const JSONRPCRequest& request)
     for (unsigned int i = 0; i < txs.size(); ++i) {
         PartiallySignedTransaction pstx;
         std::string error;
-        if (!DecodeBase64PST(pstx, txs[i].get_str(), error)) {
+        if (!DecodeHexPST(pstx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
         }
         pstxs.push_back(pstx);
@@ -1274,7 +1274,7 @@ UniValue combinepst(const JSONRPCRequest& request)
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << merged_pst;
-    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+    return HexStr(ssTx.str());
 }
 
 UniValue finalizepst(const JSONRPCRequest& request)
@@ -1285,13 +1285,13 @@ UniValue finalizepst(const JSONRPCRequest& request)
                 "created which has the final_scriptSig and final_scriptWitness fields filled for inputs that are complete.\n"
                 "Implements the Finalizer and Extractor roles.\n",
                 {
-                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A hex string of a PST"},
                     {"extract", RPCArg::Type::BOOL, /* default */ "true", "If true and the transaction is complete,\n"
             "                             extract and return the complete transaction in normal network serialization instead of the PST."},
                 },
                 RPCResult{
             "{\n"
-            "  \"pst\" : \"value\",          (string) The base64-encoded partially signed transaction if not extracted\n"
+            "  \"pst\" : \"value\",          (string) The hex-encoded partially signed transaction if not extracted\n"
             "  \"hex\" : \"value\",           (string) The hex-encoded network transaction if extracted\n"
             "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
             "  ]\n"
@@ -1307,7 +1307,7 @@ UniValue finalizepst(const JSONRPCRequest& request)
     // Unserialize the transactions
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1326,8 +1326,7 @@ UniValue finalizepst(const JSONRPCRequest& request)
         result.pushKV("hex", result_str);
     } else {
         ssTx << pstx;
-        result_str = EncodeBase64(ssTx.str());
-        result.pushKV("pst", result_str);
+        result.pushKV("pst", HexStr(ssTx.str()));
     }
     result.pushKV("complete", complete);
 
@@ -1371,7 +1370,7 @@ UniValue createpst(const JSONRPCRequest& request)
                     {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
                 },
                 RPCResult{
-                            "  \"pst\"        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "  \"pst\"        (string)  The resulting raw transaction (hex-encoded string)\n"
                 },
                 RPCExamples{
                     HelpExampleCli("createpst", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
@@ -1402,7 +1401,7 @@ UniValue createpst(const JSONRPCRequest& request)
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
 
-    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+    return HexStr(ssTx.str());
 }
 
 UniValue converttopst(const JSONRPCRequest& request)
@@ -1423,7 +1422,7 @@ UniValue converttopst(const JSONRPCRequest& request)
                     },
                 },
                 RPCResult{
-                            "  \"pst\"        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "  \"pst\"        (string)  The resulting raw transaction (hex-encoded string)\n"
                 },
                 RPCExamples{
                             "\nCreate a transaction\n"
@@ -1469,7 +1468,7 @@ UniValue converttopst(const JSONRPCRequest& request)
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
 
-    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+    return HexStr(ssTx.str());
 }
 
 UniValue utxoupdatepst(const JSONRPCRequest& request)
@@ -1477,7 +1476,7 @@ UniValue utxoupdatepst(const JSONRPCRequest& request)
             RPCHelpMan{"utxoupdatepst",
             "\nUpdates all segwit inputs and outputs in a PST with data from output descriptors, the UTXO set or the mempool.\n",
             {
-                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"},
+                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A hex string of a PST"},
                 {"descriptors", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "An array of either strings or objects", {
                     {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "An output descriptor"},
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "An object with an output descriptor and extra information", {
@@ -1487,7 +1486,7 @@ UniValue utxoupdatepst(const JSONRPCRequest& request)
                 }},
             },
             RPCResult {
-                "  \"pst\"          (string) The base64-encoded partially signed transaction with inputs updated\n"
+                "  \"pst\"          (string) The hex-encoded partially signed transaction with inputs updated\n"
             },
             RPCExamples {
                 HelpExampleCli("utxoupdatepst", "\"pst\"")
@@ -1498,7 +1497,7 @@ UniValue utxoupdatepst(const JSONRPCRequest& request)
     // Unserialize the transactions
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1556,7 +1555,7 @@ UniValue utxoupdatepst(const JSONRPCRequest& request)
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
-    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+    return HexStr(ssTx.str());
 }
 
 UniValue joinpsts(const JSONRPCRequest& request)
@@ -1565,13 +1564,13 @@ UniValue joinpsts(const JSONRPCRequest& request)
             "\nJoins multiple distinct PSTs with different inputs and outputs into one PST with inputs and outputs from all of the PSTs\n"
             "No input in any of the PSTs can be in more than one of the PSTs.\n",
             {
-                {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of base64 strings of partially signed transactions",
+                {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of hex strings of partially signed transactions",
                     {
-                        {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"}
+                        {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A hex string of a PST"}
                     }}
             },
             RPCResult {
-                "  \"pst\"          (string) The base64-encoded partially signed transaction\n"
+                "  \"pst\"          (string) The hex-encoded partially signed transaction\n"
             },
             RPCExamples {
                 HelpExampleCli("joinpsts", "\"pst\"")
@@ -1592,7 +1591,7 @@ UniValue joinpsts(const JSONRPCRequest& request)
     for (unsigned int i = 0; i < txs.size(); ++i) {
         PartiallySignedTransaction pstx;
         std::string error;
-        if (!DecodeBase64PST(pstx, txs[i].get_str(), error)) {
+        if (!DecodeHexPST(pstx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
         }
         pstxs.push_back(pstx);
@@ -1649,7 +1648,7 @@ UniValue joinpsts(const JSONRPCRequest& request)
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << shuffled_pst;
-    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+    return HexStr(ssTx.str());
 }
 
 UniValue analyzepst(const JSONRPCRequest& request)
@@ -1657,7 +1656,7 @@ UniValue analyzepst(const JSONRPCRequest& request)
             RPCHelpMan{"analyzepst",
             "\nAnalyzes and provides information about the current status of a PST and its inputs\n",
             {
-                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"}
+                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A hex string of a PST"}
             },
             RPCResult {
                 "{\n"
@@ -1695,7 +1694,7 @@ UniValue analyzepst(const JSONRPCRequest& request)
     // Unserialize the transaction
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
