@@ -96,12 +96,12 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& pstx, std::stri
     };
 
     if (!std::any_of(pstx.inputs.begin(), pstx.inputs.end(), matches_signer_fingerprint)) {
-        error = "Signer fingerprint " + m_fingerprint + " does not match any of the inputs:\n" + EncodeBase64(ssTx.str());
+        error = "Signer fingerprint " + m_fingerprint + " does not match any of the inputs:\n" + HexStr(ssTx.str());
         return false;
     }
 
     const std::string command = m_command + " --stdin --fingerprint \"" + m_fingerprint + "\"" + NetworkArg();
-    const std::string stdinStr = "signtx \"" + EncodeBase64(ssTx.str()) + "\"";
+    const std::string stdinStr = "signtx \"" + HexStr(ssTx) + "\"";
 
     const UniValue signer_result = RunCommandParseJSON(command, stdinStr);
 
@@ -117,7 +117,7 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& pstx, std::stri
 
     PartiallySignedTransaction signer_pstx;
     std::string signer_pst_error;
-    if (!DecodeBase64PST(signer_pstx, find_value(signer_result, "pst").get_str(), signer_pst_error)) {
+    if (!DecodeHexPST(signer_pstx, find_value(signer_result, "pst").get_str(), signer_pst_error)) {
         error = strprintf("TX decode failed %s", signer_pst_error);
         return false;
     }

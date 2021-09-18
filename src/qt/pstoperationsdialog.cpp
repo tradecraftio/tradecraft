@@ -142,7 +142,7 @@ void PSTOperationsDialog::broadcastTransaction()
 void PSTOperationsDialog::copyToClipboard() {
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << m_transaction_data;
-    GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
+    GUIUtil::setClipboard(HexStr(ssTx.str()).c_str());
     showStatus(tr("PST copied to clipboard."), StatusLevel::INFO);
 }
 
