@@ -36,7 +36,7 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
 bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 uint256 ParseHashStr(const std::string&, const std::string& strName);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
-bool DecodePST(PartiallySignedTransaction& pst, const std::string& base64_tx, std::string& error);
+bool DecodePST(PartiallySignedTransaction& pst, const std::string& hex_tx, std::string& error);
 int ParseSighashString(const UniValue& sighash);
 
 // core_write.cpp

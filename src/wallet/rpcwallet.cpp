@@ -4547,7 +4547,7 @@ UniValue walletprocesspst(const JSONRPCRequest& request)
             + HelpRequiringPassphrase(pwallet) + "\n"
 
             "\nArguments:\n"
-            "1. \"pst\"                      (string, required) The transaction base64 string\n"
+            "1. \"pst\"                      (string, required) The transaction hex string\n"
             "2. sign                          (boolean, optional, default=true) Also sign the transaction when updating\n"
             "3. \"sighashtype\"            (string, optional, default=ALL) The signature hash type to sign with if not specified by the PST. Must be one of\n"
             "       \"ALL\"\n"
@@ -4560,7 +4560,7 @@ UniValue walletprocesspst(const JSONRPCRequest& request)
 
             "\nResult:\n"
             "{\n"
-            "  \"pst\" : \"value\",          (string) The base64-encoded partially signed transaction\n"
+            "  \"pst\" : \"value\",          (string) The hex-encoded partially signed transaction\n"
             "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
             "  ]\n"
             "}\n"
@@ -4589,7 +4589,7 @@ UniValue walletprocesspst(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
-    result.pushKV("pst", EncodeBase64(ssTx.str()));
+    result.pushKV("pst", HexStr(ssTx.str()));
     result.pushKV("complete", complete);
 
     return result;
@@ -4655,7 +4655,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
                             "5. bip32derivs                    (boolean, optional, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
                             "\nResult:\n"
                             "{\n"
-                            "  \"pst\": \"value\",        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "  \"pst\": \"value\",        (string)  The resulting raw transaction (hex-encoded string)\n"
                             "  \"fee\":       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
                             "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
                             "}\n"
@@ -4690,7 +4690,7 @@ UniValue walletcreatefundedpst(const JSONRPCRequest& request)
     ssTx << pstx;
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("pst", EncodeBase64(ssTx.str()));
+    result.pushKV("pst", HexStr(ssTx.str()));
     result.pushKV("fee", ValueFromAmount(fee));
     result.pushKV("changepos", change_position);
     return result;

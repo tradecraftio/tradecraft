@@ -252,7 +252,7 @@ class PSTTest(FreicoinTestFramework):
         # BIP 174 Test Vectors
 
         # Check that unknown values are just passed through
-        unknown_pst = "cHNidP8BAD8CAAAAAf//////////////////////////////////////////AAAAAAD/////AQAAAAAAAAAAA2oBAAAAAAAACg8BAgMEBQYHCAkPAQIDBAUGBwgJCgsMDQ4PAAA="
+        unknown_pst = "70736274ff01003f0200000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000ffffffff010000000000000000036a010000000000000a0f0102030405060708090f0102030405060708090a0b0c0d0e0f0000"
         unknown_out = self.nodes[0].walletprocesspst(unknown_pst)['pst']
         assert_equal(unknown_pst, unknown_out)
 

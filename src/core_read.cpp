@@ -173,9 +173,9 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     return true;
 }
 
-bool DecodePST(PartiallySignedTransaction& pst, const std::string& base64_tx, std::string& error)
+bool DecodePST(PartiallySignedTransaction& pst, const std::string& hex_tx, std::string& error)
 {
-    std::vector<unsigned char> tx_data = DecodeBase64(base64_tx.c_str());
+    std::vector<unsigned char> tx_data = ParseHex(hex_tx.c_str());
     CDataStream ss_data(tx_data, SER_NETWORK, PROTOCOL_VERSION);
     try {
         ss_data >> pst;

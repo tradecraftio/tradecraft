@@ -1286,10 +1286,10 @@ UniValue decodepst(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "decodepst \"pst\"\n"
-            "\nReturn a JSON object representing the serialized, base64-encoded partially signed Freicoin transaction.\n"
+            "\nReturn a JSON object representing the serialized, hex-encoded partially signed Freicoin transaction.\n"
 
             "\nArguments:\n"
-            "1. \"pst\"            (string, required) The PST base64 string\n"
+            "1. \"pst\"            (string, required) The PST hex string\n"
 
             "\nResult:\n"
             "{\n"
@@ -1571,16 +1571,16 @@ UniValue combinepst(const JSONRPCRequest& request)
             "\nCombine multiple partially signed Freicoin transactions into one transaction.\n"
             "Implements the Combiner role.\n"
             "\nArguments:\n"
-            "1. \"txs\"                   (string) A json array of base64 strings of partially signed transactions\n"
+            "1. \"txs\"                   (string) A json array of hex strings of partially signed transactions\n"
             "    [\n"
-            "      \"pst\"             (string) A base64 string of a PST\n"
+            "      \"pst\"             (string) A hex string of a PST\n"
             "      ,...\n"
             "    ]\n"
 
             "\nResult:\n"
-            "  \"pst\"          (string) The base64-encoded partially signed transaction\n"
+            "  \"pst\"          (string) The hex-encoded partially signed transaction\n"
             "\nExamples:\n"
-            + HelpExampleCli("combinepst", "[\"mybase64_1\", \"mybase64_2\", \"mybase64_3\"]")
+            + HelpExampleCli("combinepst", "[\"myhex_1\", \"myhex_2\", \"myhex_3\"]")
         );
 
     RPCTypeCheck(request.params, {UniValue::VARR}, true);
@@ -1613,7 +1613,7 @@ UniValue combinepst(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << merged_pst;
-    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+    return HexStr(ssTx.str());
 }
 
 UniValue finalizepst(const JSONRPCRequest& request)
@@ -1626,13 +1626,13 @@ UniValue finalizepst(const JSONRPCRequest& request)
             "created which has the final_scriptSig and final_scriptWitness fields filled for inputs that are complete.\n"
             "Implements the Finalizer and Extractor roles.\n"
             "\nArguments:\n"
-            "1. \"pst\"                 (string) A base64 string of a PST\n"
+            "1. \"pst\"                 (string) A hex string of a PST\n"
             "2. \"extract\"              (boolean, optional, default=true) If true and the transaction is complete, \n"
             "                             extract and return the complete transaction in normal network serialization instead of the PST.\n"
 
             "\nResult:\n"
             "{\n"
-            "  \"pst\" : \"value\",          (string) The base64-encoded partially signed transaction if not extracted\n"
+            "  \"pst\" : \"value\",          (string) The hex-encoded partially signed transaction if not extracted\n"
             "  \"hex\" : \"value\",           (string) The hex-encoded network transaction if extracted\n"
             "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
             "  ]\n"
@@ -1674,7 +1674,7 @@ UniValue finalizepst(const JSONRPCRequest& request)
         result.pushKV("hex", HexStr(ssTx.str()));
     } else {
         ssTx << pstx;
-        result.pushKV("pst", EncodeBase64(ssTx.str()));
+        result.pushKV("pst", HexStr(ssTx.str()));
     }
     result.pushKV("complete", complete);
 
@@ -1713,7 +1713,7 @@ UniValue createpst(const JSONRPCRequest& request)
                             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
                             "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
                             "\nResult:\n"
-                            "  \"pst\"        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "  \"pst\"        (string)  The resulting raw transaction (hex-encoded string)\n"
                             "\nExamples:\n"
                             + HelpExampleCli("createpst", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
                             );
@@ -1742,7 +1742,7 @@ UniValue createpst(const JSONRPCRequest& request)
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
 
-    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+    return HexStr(ssTx.str());
 }
 
 UniValue converttopst(const JSONRPCRequest& request)
@@ -1761,7 +1761,7 @@ UniValue converttopst(const JSONRPCRequest& request)
                             "                              will be tried. If false, only non-witness deserialization wil be tried. Only has an effect if\n"
                             "                              permitsigdata is true.\n"
                             "\nResult:\n"
-                            "  \"pst\"        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "  \"pst\"        (string)  The resulting raw transaction (hex-encoded string)\n"
                             "\nExamples:\n"
                             "\nCreate a transaction\n"
                             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"") +
@@ -1806,7 +1806,7 @@ UniValue converttopst(const JSONRPCRequest& request)
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
 
-    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+    return HexStr(ssTx.str());
 }
 
 static const CRPCCommand commands[] =
