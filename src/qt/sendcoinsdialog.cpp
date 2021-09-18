@@ -468,7 +468,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         // Serialize the PST
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << pstx;
-        GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
+        GUIUtil::setClipboard(HexStr(ssTx.str()).c_str());
         QMessageBox msgBox;
         msgBox.setText("Unsigned Transaction");
         msgBox.setInformativeText("The PST has been copied to the clipboard. You can also save it.");
