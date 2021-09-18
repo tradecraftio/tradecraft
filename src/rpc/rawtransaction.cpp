@@ -894,9 +894,9 @@ static RPCHelpMan decodepst()
 {
     return RPCHelpMan{
         "decodepst",
-        "Return a JSON object representing the serialized, base64-encoded partially signed Freicoin transaction.",
+        "Return a JSON object representing the serialized, hex-encoded partially signed Freicoin transaction.",
                 {
-                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The PST base64 string"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The PST hex string"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -944,7 +944,7 @@ static RPCHelpMan decodepst()
     // Unserialize the transactions
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1339,17 +1339,17 @@ static RPCHelpMan combinepst()
                 "\nCombine multiple partially signed Freicoin transactions into one transaction.\n"
                 "Implements the Combiner role.\n",
                 {
-                    {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",
+                    {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The hex strings of partially signed transactions",
                         {
-                            {"pst", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A base64 string of a PST"},
+                            {"pst", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A hex string of a PST"},
                         },
                         },
                 },
                 RPCResult{
-                    RPCResult::Type::STR, "", "The base64-encoded partially signed transaction"
+                    RPCResult::Type::STR, "", "The hex-encoded partially signed transaction"
                 },
                 RPCExamples{
-                    HelpExampleCli("combinepst", R"('["mybase64_1", "mybase64_2", "mybase64_3"]')")
+                    HelpExampleCli("combinepst", R"('["myhex_1", "myhex_2", "myhex_3"]')")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1364,7 +1364,7 @@ static RPCHelpMan combinepst()
     for (unsigned int i = 0; i < txs.size(); ++i) {
         PartiallySignedTransaction pstx;
         std::string error;
-        if (!DecodeBase64PST(pstx, txs[i].get_str(), error)) {
+        if (!DecodeHexPST(pstx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
         }
         pstxs.push_back(pstx);
@@ -1378,7 +1378,7 @@ static RPCHelpMan combinepst()
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << merged_pst;
-    return EncodeBase64(ssTx);
+    return HexStr(ssTx);
 },
     };
 }
@@ -1391,14 +1391,14 @@ static RPCHelpMan finalizepst()
                 "created which has the final_scriptSig and final_scriptWitness fields filled for inputs that are complete.\n"
                 "Implements the Finalizer and Extractor roles.\n",
                 {
-                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A hex string of a PST"},
                     {"extract", RPCArg::Type::BOOL, RPCArg::Default{true}, "If true and the transaction is complete,\n"
             "                             extract and return the complete transaction in normal network serialization instead of the PST."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "pst", /*optional=*/true, "The base64-encoded partially signed transaction if not extracted"},
+                        {RPCResult::Type::STR, "pst", /*optional=*/true, "The hex-encoded partially signed transaction if not extracted"},
                         {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded network transaction if extracted"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     }
@@ -1413,7 +1413,7 @@ static RPCHelpMan finalizepst()
     // Unserialize the transactions
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1432,8 +1432,7 @@ static RPCHelpMan finalizepst()
         result.pushKV("hex", result_str);
     } else {
         ssTx << pstx;
-        result_str = EncodeBase64(ssTx.str());
-        result.pushKV("pst", result_str);
+        result.pushKV("pst", HexStr(ssTx.str()));
     }
     result.pushKV("complete", complete);
 
@@ -1449,7 +1448,7 @@ static RPCHelpMan createpst()
                 "Implements the Creator role.\n",
                 CreateTxDoc(),
                 RPCResult{
-                    RPCResult::Type::STR, "", "The resulting raw transaction (base64-encoded string)"
+                    RPCResult::Type::STR, "", "The resulting raw transaction (hex-encoded string)"
                 },
                 RPCExamples{
                     HelpExampleCli("createpst", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
@@ -1485,7 +1484,7 @@ static RPCHelpMan createpst()
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
 
-    return EncodeBase64(ssTx);
+    return HexStr(ssTx);
 },
     };
 }
@@ -1508,7 +1507,7 @@ static RPCHelpMan converttopst()
                     },
                 },
                 RPCResult{
-                    RPCResult::Type::STR, "", "The resulting raw transaction (base64-encoded string)"
+                    RPCResult::Type::STR, "", "The resulting raw transaction (hex-encoded string)"
                 },
                 RPCExamples{
                             "\nCreate a transaction\n"
@@ -1554,7 +1553,7 @@ static RPCHelpMan converttopst()
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
 
-    return EncodeBase64(ssTx);
+    return HexStr(ssTx);
 },
     };
 }
@@ -1564,7 +1563,7 @@ static RPCHelpMan utxoupdatepst()
     return RPCHelpMan{"utxoupdatepst",
             "\nUpdates all segwit inputs and outputs in a PST with data from output descriptors, the UTXO set or the mempool.\n",
             {
-                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"},
+                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A hex string of a PST"},
                 {"descriptors", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "An array of either strings or objects", {
                     {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "An output descriptor"},
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "An object with an output descriptor and extra information", {
@@ -1574,7 +1573,7 @@ static RPCHelpMan utxoupdatepst()
                 }},
             },
             RPCResult {
-                    RPCResult::Type::STR, "", "The base64-encoded partially signed transaction with inputs updated"
+                    RPCResult::Type::STR, "", "The hex-encoded partially signed transaction with inputs updated"
             },
             RPCExamples {
                 HelpExampleCli("utxoupdatepst", "\"pst\"")
@@ -1586,7 +1585,7 @@ static RPCHelpMan utxoupdatepst()
     // Unserialize the transactions
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1648,7 +1647,7 @@ static RPCHelpMan utxoupdatepst()
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << pstx;
-    return EncodeBase64(ssTx);
+    return HexStr(ssTx);
 },
     };
 }
@@ -1659,13 +1658,13 @@ static RPCHelpMan joinpsts()
             "\nJoins multiple distinct PSTs with different inputs and outputs into one PST with inputs and outputs from all of the PSTs\n"
             "No input in any of the PSTs can be in more than one of the PSTs.\n",
             {
-                {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",
+                {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The hex strings of partially signed transactions",
                     {
-                        {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"}
+                        {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A hex string of a PST"}
                     }}
             },
             RPCResult {
-                    RPCResult::Type::STR, "", "The base64-encoded partially signed transaction"
+                    RPCResult::Type::STR, "", "The hex-encoded partially signed transaction"
             },
             RPCExamples {
                 HelpExampleCli("joinpsts", "\"pst\"")
@@ -1687,7 +1686,7 @@ static RPCHelpMan joinpsts()
     for (unsigned int i = 0; i < txs.size(); ++i) {
         PartiallySignedTransaction pstx;
         std::string error;
-        if (!DecodeBase64PST(pstx, txs[i].get_str(), error)) {
+        if (!DecodeHexPST(pstx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
         }
         pstxs.push_back(pstx);
@@ -1751,7 +1750,7 @@ static RPCHelpMan joinpsts()
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << shuffled_pst;
-    return EncodeBase64(ssTx);
+    return HexStr(ssTx);
 },
     };
 }
@@ -1761,7 +1760,7 @@ static RPCHelpMan analyzepst()
     return RPCHelpMan{"analyzepst",
             "\nAnalyzes and provides information about the current status of a PST and its inputs\n",
             {
-                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"}
+                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A hex string of a PST"}
             },
             RPCResult {
                 RPCResult::Type::OBJ, "", "",
@@ -1805,7 +1804,7 @@ static RPCHelpMan analyzepst()
     // Unserialize the transaction
     PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
+    if (!DecodeHexPST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
