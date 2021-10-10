@@ -389,6 +389,7 @@ ArgsManager::ArgsManager() :
       "-addnode", "-connect",
       "-port", "-bind",
       "-rpcport", "-rpcbind",
+      "-stratumport",
       "-wallet",
     }
 {
