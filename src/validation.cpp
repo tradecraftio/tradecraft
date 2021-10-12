@@ -660,7 +660,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // do all inputs exist?
         const BlockFinalTxEntry& final_tx = view.GetFinalTx();
         for (const CTxIn& txin : tx.vin) {
-            if (txin.prevout.hash == final_tx.hash) {
+            if (txin.prevout.hash == final_tx.hash && txin.prevout.n < final_tx.size) {
                 return state.Invalid(false, REJECT_INVALID, "spend-block-final-txn");
             }
             if (!pcoinsTip->HaveCoinInCache(txin.prevout)) {
