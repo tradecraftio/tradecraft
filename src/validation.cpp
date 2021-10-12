@@ -634,7 +634,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // do all inputs exist?
     const BlockFinalTxEntry& final_tx = m_view.GetFinalTx();
     for (const CTxIn& txin : tx.vin) {
-        if (txin.prevout.hash == final_tx.hash) {
+        if (txin.prevout.hash == final_tx.hash && txin.prevout.n < final_tx.size) {
             return state.Invalid(ValidationInvalidReason::TX_SPEND_BLOCK_FINAL, false, REJECT_INVALID, "spend-block-final-txn");
         }
 
