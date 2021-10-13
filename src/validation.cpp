@@ -4651,11 +4651,6 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             if (IsWitnessEnabled(entry.second->pprev, params.GetConsensus()) && !(entry.second->nStatus & BLOCK_OPT_WITNESS) && !m_chain.Contains(entry.second)) {
                 EraseBlockData(entry.second);
             }
-            // Also erase blocks after activation of block-final transaction but
-            // without a BlockFinalTxEntry in the UTXO database.
-            if (IsFinalTxEnforced(entry.second->pprev, params.GetConsensus()) && ::ChainstateActive().CoinsTip().GetFinalTx().IsNull()) {
-                EraseBlockData(entry.second);
-            }
         }
     }
 
@@ -4669,6 +4664,11 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             // blocks in ConnectBlock, we don't need to go back and
             // re-download/re-verify blocks from before segwit actually activated.
             if (IsWitnessEnabled(m_chain[nHeight - 1], params.GetConsensus()) && !(m_chain[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
+                break;
+            }
+            // Also check if we have blocks from after activation of block-final
+            // tx rules, but without a BlockFinalTxEntry in the UTXO database.
+            if (IsFinalTxEnforced(m_chain[nHeight - 1], params.GetConsensus()) && CoinsTip().GetFinalTx().IsNull()) {
                 break;
             }
             nHeight++;
