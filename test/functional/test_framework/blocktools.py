@@ -69,20 +69,28 @@ def create_block(hashprev, coinbase, ntime=None, *, version=1):
     block.calc_sha256()
     return block
 
-def add_final_tx(node, block):
+def get_final_tx_info(node):
     try:
         finaltx_prevout = node.getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
     except KeyError:
         finaltx_prevout = []
+    return finaltx_prevout
+
+def add_final_tx(info, block):
     finaltx = CTransaction()
     finaltx.nLockTime = block.vtx[0].nLockTime
     finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-    for prevout in finaltx_prevout:
+    for prevout in info:
         finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(unhexlify(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
         finaltx.vout[-1].nValue += prevout['amount']
     finaltx.rehash()
     block.vtx.append(finaltx)
     block.hashMerkleRoot = block.calc_merkle_root()
+    return [{
+        'txid': finaltx.hash,
+        'vout': 0,
+        'amount': int(finaltx.vout[-1].nValue),
+    }]
 
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
