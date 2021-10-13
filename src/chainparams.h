@@ -84,8 +84,6 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
-    /** Default merge-mine chain if chain id isn't specified */
-    const uint256& DefaultAuxPowPath() const { return default_aux_pow_path; }
 protected:
     CChainParams() {}
 
@@ -107,7 +105,6 @@ protected:
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     bool m_fallback_fee_enabled;
-    uint256 default_aux_pow_path;
 };
 
 /**
