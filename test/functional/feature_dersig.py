@@ -7,7 +7,7 @@
 Test that the DERSIG soft-fork activates at (regtest) height 1251.
 """
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction, add_final_tx
+from test_framework.blocktools import create_coinbase, create_block, create_transaction, get_final_tx_info, add_final_tx
 from test_framework.messages import msg_block
 from test_framework.mininode import P2PInterface
 from test_framework.script import CScript
@@ -69,6 +69,8 @@ class BIP66Test(BitcoinTestFramework):
 
         self.log.info("Test that a transaction with non-DER signature can still appear in a block")
 
+        final_tx = get_final_tx_info(self.nodes[0])
+
         spendtx = create_transaction(self.nodes[0], self.coinbase_txids[0],
                 self.nodeaddress, amount=1.0)
         unDERify(spendtx)
@@ -77,7 +79,7 @@ class BIP66Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time)
-        add_final_tx(self.nodes[0], block)
+        final_tx = add_final_tx(final_tx, block)
         block.nVersion = 2
         block.vtx.insert(-1, spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -93,7 +95,7 @@ class BIP66Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
-        add_final_tx(self.nodes[0], block)
+        final_tx = add_final_tx(final_tx, block)
         block.nVersion = 2
         block.rehash()
         block.solve()
