@@ -3618,7 +3618,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 bool IsFinalTxEnforced(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     LOCK(cs_main);
-    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_FINALTX, versionbitscache) == ThresholdState::ACTIVE);
+    return (pindexPrev && VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_FINALTX, versionbitscache) == ThresholdState::ACTIVE);
 }
 
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
