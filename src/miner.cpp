@@ -518,7 +518,6 @@ void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
 
     // Add block-final transaction to block template.
     pblock->vtx.emplace_back(MakeTransactionRef(std::move(txFinal)));
-    ++nBlockTx;
 
     // Record the fees forwarded by the block-final transaction to the coinbase.
     CAmount nTxFees = ::ChainstateActive().CoinsTip().GetValueIn(*pblock->vtx.back())
