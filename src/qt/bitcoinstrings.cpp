@@ -48,9 +48,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Merge-mine another chain using the auxiliary block commitment information "
-"served by stratum+tcp://<addr>:<port>"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -198,7 +195,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Unknown network specified in -onlynet: '%s'")
 QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported logging category %s=%s."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Upgrading UTXO database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Upgrading txindex database"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Use <name> as an alternative specifier for the given chainid."),
 QT_TRANSLATE_NOOP("bitcoin-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying wallet(s)..."),

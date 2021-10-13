@@ -24,7 +24,6 @@
 #include <index/txindex.h>
 #include <key.h>
 #include <validation.h>
-#include <mergemine.h>
 #include <miner.h>
 #include <netbase.h>
 #include <net.h>
@@ -181,7 +180,6 @@ static CScheduler scheduler;
 void Interrupt()
 {
     InterruptStratumServer();
-    InterruptMergeMining();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -214,7 +212,6 @@ void Shutdown(InitInterfaces& interfaces)
     StopREST();
     StopRPC();
     StopStratumServer();
-    StopMergeMining();
     StopHTTPServer();
     for (const auto& client : interfaces.chain_clients) {
         client->flush();
@@ -550,8 +547,6 @@ void SetupServerArgs()
     gArgs.AddArg("-stratumbind=<addr>", _("Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)"), false, OptionsCategory::STRATUM);
     gArgs.AddArg("-stratumport=<port>", strprintf(_("Listen for Stratum work requests on <port> (default: %u or testnet: %u)"), defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()), false, OptionsCategory::STRATUM);
     gArgs.AddArg("-stratumallowip=<ip>", _("Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times"), false, OptionsCategory::STRATUM);
-    gArgs.AddArg("-mergemine=<addr>:<port>", _("Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://<addr>:<port>"), false, OptionsCategory::STRATUM);
-    gArgs.AddArg("-mergeminename=<name>:<chainid>", _("Use <name> as an alternative specifier for the given chainid."), false, OptionsCategory::STRATUM);
 
 #if HAVE_DECL_DAEMON
     gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", false, OptionsCategory::OPTIONS);
@@ -770,8 +765,6 @@ static bool AppInitServers()
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
-        return false;
-    if (!InitMergeMining())
         return false;
     if (gArgs.GetBoolArg("-stratum", DEFAULT_STRATUM_ENABLE) && !InitStratumServer())
         return false;
