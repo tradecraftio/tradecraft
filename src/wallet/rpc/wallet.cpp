@@ -827,6 +827,7 @@ RPCHelpMan getrawchangeaddress();
 RPCHelpMan setlabel();
 RPCHelpMan listaddressgroupings();
 RPCHelpMan addmultisigaddress();
+RPCHelpMan addwitnessaddress();
 RPCHelpMan keypoolrefill();
 RPCHelpMan newkeypool();
 RPCHelpMan getaddressesbylabel();
@@ -899,6 +900,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &abandontransaction},
         {"wallet", &abortrescan},
         {"wallet", &addmultisigaddress},
+        {"wallet", &addwitnessaddress},
         {"wallet", &backupwallet},
         {"wallet", &bumpfee},
         {"wallet", &psbtbumpfee},
