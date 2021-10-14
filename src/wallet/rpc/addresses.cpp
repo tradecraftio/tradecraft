@@ -324,6 +324,139 @@ RPCHelpMan addmultisigaddress()
     };
 }
 
+class Witnessifier : public boost::static_visitor<bool>
+{
+public:
+    std::shared_ptr<CWallet> pwallet;
+    CTxDestination result;
+    bool already_witness;
+
+    explicit Witnessifier(std::shared_ptr<CWallet> &_pwallet) : pwallet(_pwallet), already_witness(false) {}
+
+    bool operator()(const PKHash &pkhash) {
+        if (pwallet) {
+            CScript script = GetScriptForDestination(pkhash);
+            CScript witscript = GetScriptForDestination(WitnessV0KeyHash(pkhash));
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(witscript);
+            if (!provider || !IsSolvable(*provider, witscript)) {
+                return false;
+            }
+            return ExtractDestination(witscript, result);
+        }
+        return false;
+    }
+
+    bool operator()(const ScriptHash &scripthash) {
+        if (pwallet) {
+            CScript script = GetScriptForDestination(scripthash);
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(script);
+            CScript subscript;
+            if (provider && provider->GetCScript(CScriptID(scripthash), subscript)) {
+                int witnessversion;
+                std::vector<unsigned char> witprog;
+                if (subscript.IsWitnessProgram(witnessversion, witprog)) {
+                    ExtractDestination(subscript, result);
+                    already_witness = true;
+                    return true;
+                }
+                std::vector<std::vector<unsigned char>> vSolutions;
+                TxoutType typ = Solver(subscript, vSolutions);
+                CScript witscript;
+                if (typ == TxoutType::PUBKEY) {
+                    witscript = GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0])));
+                } else if (typ == TxoutType::PUBKEYHASH) {
+                    witscript = GetScriptForDestination(WitnessV0KeyHash(uint160{vSolutions[0]}));
+                } else {
+                    witscript = GetScriptForDestination(WitnessV0ScriptHash(subscript));
+                }
+                if (!IsSolvable(*provider, witscript)) {
+                    return false;
+                }
+                return ExtractDestination(witscript, result);
+            }
+        }
+        return false;
+    }
+
+    bool operator()(const WitnessV0KeyHash& id)
+    {
+        already_witness = true;
+        result = id;
+        return true;
+    }
+
+    bool operator()(const WitnessV0ScriptHash& id)
+    {
+        already_witness = true;
+        result = id;
+        return true;
+    }
+
+    template<typename T>
+    bool operator()(const T& dest) { return false; }
+};
+
+RPCHelpMan addwitnessaddress()
+{
+    return RPCHelpMan{"addwitnessaddress",
+                      "\nAdd a witness address for a script (with pubkey or redeemscript known).\n"
+                      "Requires a new wallet backup.  It returns the witness script.\n",
+                      {
+                          {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "A bitcoin address known to the wallet."},
+                          {"p2sh", RPCArg::Type::BOOL, RPCArg::Default{true}, "Embed inside P2SH."},
+                      },
+                      RPCResult{
+                          RPCResult::Type::STR, "witnessaddress", "The new witness address (P2SH or BIP173)."
+                      },
+                      RPCExamples{
+                          HelpExampleCli("addwitnessaddress", "1Q5GLnvfuTSppvWrxNJ81wc9dB8WXgYP6Y")
+                        + HelpExampleRpc("addwitnessaddress", "1Q5GLnvfuTSppvWrxNJ81wc9dB8WXgYP6Y")
+                      },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+
+    CTxDestination dest = DecodeDestination(request.params[0].get_str());
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+    }
+
+    bool p2sh = true;
+    if (request.params.size() > 1 && !request.params[1].isNull()) {
+        p2sh = request.params[1].get_bool();
+    }
+
+    Witnessifier w(pwallet);
+    bool ret = std::visit(w, dest);
+    if (!ret) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Public key or redeemscript not known to wallet, or the key is uncompressed");
+    }
+
+    CScript witprogram = GetScriptForDestination(w.result);
+
+    if (p2sh) {
+        w.result = ScriptHash(witprogram);
+    }
+
+    if (w.already_witness) {
+        if (!(dest == w.result)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot convert between witness address types");
+        }
+    } else {
+        auto spk_man = pwallet->GetLegacyScriptPubKeyMan();
+        if (!spk_man) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet does not have a legacy script pubkey manager");
+        }
+        spk_man->AddCScript(witprogram); // Implicit for single-key now, but necessary for multisig and for compatibility with older software
+        pwallet->SetAddressBook(w.result, "", "receive");
+    }
+
+    return EncodeDestination(w.result);
+},
+    };
+}
+
 RPCHelpMan keypoolrefill()
 {
     return RPCHelpMan{"keypoolrefill",
