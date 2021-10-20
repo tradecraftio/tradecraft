@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_TRANSACTION_H
-#define BITCOIN_NODE_TRANSACTION_H
+#ifndef FREICOIN_NODE_TRANSACTION_H
+#define FREICOIN_NODE_TRANSACTION_H
 
 #include <attributes.h>
 #include <primitives/transaction.h>
@@ -27,8 +27,8 @@ enum class TransactionError {
     P2P_DISABLED,
     MEMPOOL_REJECTED,
     MEMPOOL_ERROR,
-    INVALID_PSBT,
-    PSBT_MISMATCH,
+    INVALID_PST,
+    PST_MISMATCH,
     SIGHASH_MISMATCH,
 };
 
@@ -45,4 +45,4 @@ std::string TransactionErrorString(const TransactionError error);
  */
 NODISCARD TransactionError BroadcastTransaction(CTransactionRef tx, uint256& txid, std::string& err_string, const CAmount& highfee);
 
-#endif // BITCOIN_NODE_TRANSACTION_H
+#endif // FREICOIN_NODE_TRANSACTION_H

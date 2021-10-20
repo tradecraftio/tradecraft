@@ -17,7 +17,7 @@
 #include <coins.h>
 #include <consensus/validation.h>
 #include <script/standard.h>
-#include <test/test_bitcoin.h>
+#include <test/test_freicoin.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/strencodings.h>

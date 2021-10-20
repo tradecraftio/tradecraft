@@ -23,7 +23,7 @@
 #include <crypto/hmac_sha512.h>
 #include <random.h>
 #include <util/strencodings.h>
-#include <test/test_bitcoin.h>
+#include <test/test_freicoin.h>
 
 #include <vector>
 

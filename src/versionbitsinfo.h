@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_VERSIONBITSINFO_H
-#define BITCOIN_VERSIONBITSINFO_H
+#ifndef FREICOIN_VERSIONBITSINFO_H
+#define FREICOIN_VERSIONBITSINFO_H
 
 struct VBDeploymentInfo {
     /** Deployment name */
@@ -25,4 +25,4 @@ struct VBDeploymentInfo {
 
 extern const struct VBDeploymentInfo VersionBitsDeploymentInfo[];
 
-#endif // BITCOIN_VERSIONBITSINFO_H
+#endif // FREICOIN_VERSIONBITSINFO_H

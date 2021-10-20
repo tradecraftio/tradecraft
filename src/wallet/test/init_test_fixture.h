@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
-#define BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#ifndef FREICOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#define FREICOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 
 #include <interfaces/chain.h>
-#include <test/test_bitcoin.h>
+#include <test/test_freicoin.h>
 
 
 struct InitWalletDirTestingSetup: public BasicTestingSetup {
@@ -32,4 +32,4 @@ struct InitWalletDirTestingSetup: public BasicTestingSetup {
     std::unique_ptr<interfaces::ChainClient> m_chain_client;
 };
 
-#endif // BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#endif // FREICOIN_WALLET_TEST_INIT_TEST_FIXTURE_H

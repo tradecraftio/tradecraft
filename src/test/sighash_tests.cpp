@@ -21,7 +21,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/test_bitcoin.h>
+#include <test/test_freicoin.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <version.h>

@@ -17,8 +17,8 @@
 /**
  * Utilities for converting data from/to strings.
  */
-#ifndef BITCOIN_UTIL_STRENCODINGS_H
-#define BITCOIN_UTIL_STRENCODINGS_H
+#ifndef FREICOIN_UTIL_STRENCODINGS_H
+#define FREICOIN_UTIL_STRENCODINGS_H
 
 #include <attributes.h>
 
@@ -252,4 +252,4 @@ constexpr char ToUpper(char c)
  */
 std::string Capitalize(std::string str);
 
-#endif // BITCOIN_UTIL_STRENCODINGS_H
+#endif // FREICOIN_UTIL_STRENCODINGS_H

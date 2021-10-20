@@ -40,11 +40,11 @@ FUZZ_TARGETS = \
 if ENABLE_FUZZ
 noinst_PROGRAMS += $(FUZZ_TARGETS:=)
 else
-bin_PROGRAMS += test/test_bitcoin
+bin_PROGRAMS += test/test_freicoin
 endif
 
 TEST_SRCDIR = test
-TEST_BINARY=test/test_bitcoin$(EXEEXT)
+TEST_BINARY=test/test_freicoin$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
@@ -61,17 +61,17 @@ RAW_TEST_FILES =
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
-BITCOIN_TEST_SUITE = \
-  test/test_bitcoin_main.cpp \
-  test/test_bitcoin.h \
-  test/test_bitcoin.cpp
+FREICOIN_TEST_SUITE = \
+  test/test_freicoin_main.cpp \
+  test/test_freicoin.h \
+  test/test_freicoin.cpp
 
 FUZZ_SUITE = \
   test/fuzz/fuzz.cpp \
   test/fuzz/fuzz.h
 
-# test_bitcoin binary #
-BITCOIN_TESTS =\
+# test_freicoin binary #
+FREICOIN_TESTS =\
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \
@@ -142,442 +142,442 @@ BITCOIN_TESTS =\
   test/versionbits_tests.cpp
 
 if ENABLE_PROPERTY_TESTS
-BITCOIN_TESTS += \
+FREICOIN_TESTS += \
   test/key_properties.cpp
 
-BITCOIN_TEST_SUITE += \
+FREICOIN_TEST_SUITE += \
   test/gen/crypto_gen.cpp \
   test/gen/crypto_gen.h
 endif
 
 if ENABLE_WALLET
-BITCOIN_TESTS += \
+FREICOIN_TESTS += \
   wallet/test/db_tests.cpp \
-  wallet/test/psbt_wallet_tests.cpp \
+  wallet/test/pst_wallet_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp \
   wallet/test/init_tests.cpp
 
-BITCOIN_TEST_SUITE += \
+FREICOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/init_test_fixture.cpp \
   wallet/test/init_test_fixture.h
 endif
 
-test_test_bitcoin_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_bitcoin_LDADD =
+test_test_freicoin_SOURCES = $(FREICOIN_TEST_SUITE) $(FREICOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_freicoin_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_freicoin_LDADD =
 if ENABLE_WALLET
-test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
+test_test_freicoin_LDADD += $(LIBFREICOIN_WALLET)
 endif
 
-test_test_bitcoin_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
+test_test_freicoin_LDADD += $(LIBFREICOIN_SERVER) $(LIBFREICOIN_CLI) $(LIBFREICOIN_COMMON) $(LIBFREICOIN_UTIL) $(LIBFREICOIN_CONSENSUS) $(LIBFREICOIN_CRYPTO) $(LIBUNIVALUE) \
   $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
-test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_freicoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_bitcoin_LDADD += $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(RAPIDCHECK_LIBS)
-test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
+test_test_freicoin_LDADD += $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(RAPIDCHECK_LIBS)
+test_test_freicoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
-test_test_bitcoin_LDADD += $(ZMQ_LIBS)
+test_test_freicoin_LDADD += $(ZMQ_LIBS)
 endif
 
 if ENABLE_FUZZ
 test_fuzz_block_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_block_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCK_DESERIALIZE=1
+test_fuzz_block_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBLOCK_DESERIALIZE=1
 test_fuzz_block_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_block_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_block_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_transaction_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTRANSACTION_DESERIALIZE=1
+test_fuzz_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DTRANSACTION_DESERIALIZE=1
 test_fuzz_transaction_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_transaction_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_transaction_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_transaction_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_blocklocator_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_blocklocator_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKLOCATOR_DESERIALIZE=1
+test_fuzz_blocklocator_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBLOCKLOCATOR_DESERIALIZE=1
 test_fuzz_blocklocator_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blocklocator_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_blocklocator_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_blocklocator_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_blockmerkleroot_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_blockmerkleroot_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKMERKLEROOT=1
+test_fuzz_blockmerkleroot_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBLOCKMERKLEROOT=1
 test_fuzz_blockmerkleroot_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blockmerkleroot_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_blockmerkleroot_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_blockmerkleroot_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_addrman_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_addrman_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DADDRMAN_DESERIALIZE=1
+test_fuzz_addrman_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DADDRMAN_DESERIALIZE=1
 test_fuzz_addrman_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_addrman_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_addrman_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_addrman_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_blockheader_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_blockheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKHEADER_DESERIALIZE=1
+test_fuzz_blockheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBLOCKHEADER_DESERIALIZE=1
 test_fuzz_blockheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blockheader_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_blockheader_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_blockheader_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_banentry_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_banentry_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBANENTRY_DESERIALIZE=1
+test_fuzz_banentry_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBANENTRY_DESERIALIZE=1
 test_fuzz_banentry_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_banentry_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_banentry_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_banentry_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_txundo_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_txundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXUNDO_DESERIALIZE=1
+test_fuzz_txundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DTXUNDO_DESERIALIZE=1
 test_fuzz_txundo_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_txundo_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_txundo_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_txundo_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_blockundo_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_blockundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKUNDO_DESERIALIZE=1
+test_fuzz_blockundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBLOCKUNDO_DESERIALIZE=1
 test_fuzz_blockundo_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blockundo_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_blockundo_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_blockundo_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_coins_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_coins_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCOINS_DESERIALIZE=1
+test_fuzz_coins_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DCOINS_DESERIALIZE=1
 test_fuzz_coins_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_coins_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_coins_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_coins_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_netaddr_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_netaddr_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DNETADDR_DESERIALIZE=1
+test_fuzz_netaddr_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DNETADDR_DESERIALIZE=1
 test_fuzz_netaddr_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_netaddr_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_netaddr_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_netaddr_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_script_flags_SOURCES = $(FUZZ_SUITE) test/fuzz/script_flags.cpp
-test_fuzz_script_flags_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_flags_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES)
 test_fuzz_script_flags_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_flags_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_script_flags_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_script_flags_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_service_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_service_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSERVICE_DESERIALIZE=1
+test_fuzz_service_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DSERVICE_DESERIALIZE=1
 test_fuzz_service_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_service_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_service_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_service_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_messageheader_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_messageheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGEHEADER_DESERIALIZE=1
+test_fuzz_messageheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DMESSAGEHEADER_DESERIALIZE=1
 test_fuzz_messageheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_messageheader_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_messageheader_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_messageheader_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_address_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_address_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DADDRESS_DESERIALIZE=1
+test_fuzz_address_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DADDRESS_DESERIALIZE=1
 test_fuzz_address_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_address_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_address_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_address_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_inv_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_inv_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DINV_DESERIALIZE=1
+test_fuzz_inv_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DINV_DESERIALIZE=1
 test_fuzz_inv_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_inv_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_inv_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_inv_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_bloomfilter_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_bloomfilter_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOOMFILTER_DESERIALIZE=1
+test_fuzz_bloomfilter_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBLOOMFILTER_DESERIALIZE=1
 test_fuzz_bloomfilter_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_bloomfilter_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_bloomfilter_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_bloomfilter_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_diskblockindex_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_diskblockindex_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DDISKBLOCKINDEX_DESERIALIZE=1
+test_fuzz_diskblockindex_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DDISKBLOCKINDEX_DESERIALIZE=1
 test_fuzz_diskblockindex_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_diskblockindex_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_diskblockindex_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_diskblockindex_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_txoutcompressor_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_txoutcompressor_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXOUTCOMPRESSOR_DESERIALIZE=1
+test_fuzz_txoutcompressor_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DTXOUTCOMPRESSOR_DESERIALIZE=1
 test_fuzz_txoutcompressor_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_txoutcompressor_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_txoutcompressor_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_txoutcompressor_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_blocktransactions_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_blocktransactions_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKTRANSACTIONS_DESERIALIZE=1
+test_fuzz_blocktransactions_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBLOCKTRANSACTIONS_DESERIALIZE=1
 test_fuzz_blocktransactions_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blocktransactions_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_blocktransactions_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_blocktransactions_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_blocktransactionsrequest_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_blocktransactionsrequest_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKTRANSACTIONSREQUEST_DESERIALIZE=1
+test_fuzz_blocktransactionsrequest_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) -DBLOCKTRANSACTIONSREQUEST_DESERIALIZE=1
 test_fuzz_blocktransactionsrequest_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blocktransactionsrequest_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_blocktransactionsrequest_deserialize_LDADD = \
  $(LIBUNIVALUE) \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CRYPTO_SSE41) \
- $(LIBBITCOIN_CRYPTO_AVX2) \
- $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBFREICOIN_SERVER) \
+ $(LIBFREICOIN_COMMON) \
+ $(LIBFREICOIN_UTIL) \
+ $(LIBFREICOIN_CONSENSUS) \
+ $(LIBFREICOIN_CRYPTO) \
+ $(LIBFREICOIN_CRYPTO_SSE41) \
+ $(LIBFREICOIN_CRYPTO_AVX2) \
+ $(LIBFREICOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_blocktransactionsrequest_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 endif # ENABLE_FUZZ
 
-nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
+nodist_test_test_freicoin_SOURCES = $(GENERATED_TEST_FILES)
 
-$(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
+$(FREICOIN_TESTS): $(GENERATED_TEST_FILES)
 
-CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES) $(BITCOIN_TESTS:=.log)
+CLEAN_FREICOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES) $(FREICOIN_TESTS:=.log)
 
-CLEANFILES += $(CLEAN_BITCOIN_TEST)
+CLEANFILES += $(CLEAN_FREICOIN_TEST)
 
 if TARGET_WINDOWS
-bitcoin_test: $(TEST_BINARY)
+freicoin_test: $(TEST_BINARY)
 else
 if ENABLE_BENCH
-bitcoin_test: $(TEST_BINARY) $(BENCH_BINARY)
+freicoin_test: $(TEST_BINARY) $(BENCH_BINARY)
 else
-bitcoin_test: $(TEST_BINARY)
+freicoin_test: $(TEST_BINARY)
 endif
 endif
 
-bitcoin_test_check: $(TEST_BINARY) FORCE
+freicoin_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-bitcoin_test_clean : FORCE
-	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+freicoin_test_clean : FORCE
+	rm -f $(CLEAN_FREICOIN_TEST) $(test_test_freicoin_OBJECTS) $(TEST_BINARY)
 
-check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
-if BUILD_BITCOIN_TX
-	@echo "Running test/util/bitcoin-util-test.py..."
-	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
+check-local: $(FREICOIN_TESTS:.cpp=.cpp.test)
+if BUILD_FREICOIN_TX
+	@echo "Running test/util/freicoin-util-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/freicoin-util-test.py
 endif
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
 if TARGET_WINDOWS
 else
 if ENABLE_BENCH
-	@echo "Running bench/bench_bitcoin -evals=1 -scaling=0..."
+	@echo "Running bench/bench_freicoin -evals=1 -scaling=0..."
 	$(BENCH_BINARY) -evals=1 -scaling=0 > /dev/null
 endif
 endif

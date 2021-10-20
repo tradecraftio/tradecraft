@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Big number routines.
 
-This file is copied from python-bitcoinlib.
+This file is copied from python-freicoinlib.
 """
 
 import struct
@@ -59,7 +59,7 @@ def bn2mpi(v):
             v_bin[0] |= 0x80
     return s + ext + v_bin
 
-# bitcoin-specific little endian format, with implicit size
+# freicoin-specific little endian format, with implicit size
 def mpi2vch(s):
     r = s[4:]           # strip size
     r = r[::-1]         # reverse string, converting BE->LE

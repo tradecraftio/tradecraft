@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TXMEMPOOL_H
-#define BITCOIN_TXMEMPOOL_H
+#ifndef FREICOIN_TXMEMPOOL_H
+#define FREICOIN_TXMEMPOOL_H
 
 #include <memory>
 #include <set>
@@ -527,7 +527,7 @@ public:
      *
      * The second guarantee above is not currently enforced, but
      * https://github.com/bitcoin/bitcoin/pull/14193 will fix it. No known code
-     * in bitcoin currently depends on second guarantee, but it is important to
+     * in freicoin currently depends on second guarantee, but it is important to
      * fix for third party code that needs be able to frequently poll the
      * mempool without locking `cs_main` and without encountering missing
      * transactions during reorgs.
@@ -862,4 +862,4 @@ struct DisconnectedBlockTransactions {
     }
 };
 
-#endif // BITCOIN_TXMEMPOOL_H
+#endif // FREICOIN_TXMEMPOOL_H

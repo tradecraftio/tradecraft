@@ -172,8 +172,8 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
             return RPC_TRANSACTION_ALREADY_IN_CHAIN;
         case TransactionError::P2P_DISABLED:
             return RPC_CLIENT_P2P_DISABLED;
-        case TransactionError::INVALID_PSBT:
-        case TransactionError::PSBT_MISMATCH:
+        case TransactionError::INVALID_PST:
+        case TransactionError::PST_MISMATCH:
             return RPC_INVALID_PARAMETER;
         case TransactionError::SIGHASH_MISMATCH:
             return RPC_DESERIALIZATION_ERROR;

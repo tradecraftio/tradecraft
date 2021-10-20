@@ -13,24 +13,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <wallet/psbtwallet.h>
+#include <wallet/pstwallet.h>
 
-TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, bool& complete, int sighash_type, bool sign, bool bip32derivs)
+TransactionError FillPST(const CWallet* pwallet, PartiallySignedTransaction& pstx, bool& complete, int sighash_type, bool sign, bool bip32derivs)
 {
     LOCK(pwallet->cs_wallet);
     // Get all of the previous transactions
     complete = true;
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        const CTxIn& txin = pstx.tx->vin[i];
+        PSTInput& input = pstx.inputs.at(i);
 
-        if (PSBTInputSigned(input)) {
+        if (PSTInputSigned(input)) {
             continue;
         }
 
         // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
         if (!input.IsSane()) {
-            return TransactionError::INVALID_PSBT;
+            return TransactionError::INVALID_PST;
         }
 
         // If we have no utxo, grab it from the wallet.
@@ -50,21 +50,21 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
             return TransactionError::SIGHASH_MISMATCH;
         }
 
-        complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), psbtx, i, sighash_type);
+        complete &= SignPSTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), pstx, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
-    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        const CTxOut& out = psbtx.tx->vout.at(i);
-        PSBTOutput& psbt_out = psbtx.outputs.at(i);
+    for (unsigned int i = 0; i < pstx.tx->vout.size(); ++i) {
+        const CTxOut& out = pstx.tx->vout.at(i);
+        PSTOutput& pst_out = pstx.outputs.at(i);
 
         // Fill a SignatureData with output info
         SignatureData sigdata;
-        psbt_out.FillSignatureData(sigdata);
+        pst_out.FillSignatureData(sigdata);
 
-        MutableTransactionSignatureCreator creator(psbtx.tx.get_ptr(), 0, out.nValue, 1);
+        MutableTransactionSignatureCreator creator(pstx.tx.get_ptr(), 0, out.nValue, 1);
         ProduceSignature(HidingSigningProvider(pwallet, true, !bip32derivs), creator, out.scriptPubKey, sigdata);
-        psbt_out.FromSignatureData(sigdata);
+        pst_out.FromSignatureData(sigdata);
     }
 
     return TransactionError::OK;

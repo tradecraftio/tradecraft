@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_THREADSAFETY_H
-#define BITCOIN_THREADSAFETY_H
+#ifndef FREICOIN_THREADSAFETY_H
+#define FREICOIN_THREADSAFETY_H
 
 #ifdef __clang__
 // TL;DR Add GUARDED_BY(mutex) to member variables. The others are
@@ -76,4 +76,4 @@ struct SCOPED_LOCKABLE LockAnnotation
     ~LockAnnotation() UNLOCK_FUNCTION() {}
 };
 
-#endif // BITCOIN_THREADSAFETY_H
+#endif // FREICOIN_THREADSAFETY_H

@@ -15,7 +15,7 @@
 
 #include <chain.h>
 #include <util/system.h>
-#include <test/test_bitcoin.h>
+#include <test/test_freicoin.h>
 
 #include <vector>
 

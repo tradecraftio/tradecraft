@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_FUZZ_FUZZ_H
-#define BITCOIN_TEST_FUZZ_FUZZ_H
+#ifndef FREICOIN_TEST_FUZZ_FUZZ_H
+#define FREICOIN_TEST_FUZZ_FUZZ_H
 
 #include <functional>
 #include <stdint.h>
@@ -25,4 +25,4 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 void test_one_input(std::vector<uint8_t> buffer);
 
-#endif // BITCOIN_TEST_FUZZ_FUZZ_H
+#endif // FREICOIN_TEST_FUZZ_FUZZ_H

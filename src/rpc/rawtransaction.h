@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_RAWTRANSACTION_H
-#define BITCOIN_RPC_RAWTRANSACTION_H
+#ifndef FREICOIN_RPC_RAWTRANSACTION_H
+#define FREICOIN_RPC_RAWTRANSACTION_H
 
 class CBasicKeyStore;
 struct CMutableTransaction;
@@ -30,4 +30,4 @@ UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, con
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, bool rbf);
 
-#endif // BITCOIN_RPC_RAWTRANSACTION_H
+#endif // FREICOIN_RPC_RAWTRANSACTION_H

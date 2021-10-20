@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <test/test_bitcoin.h>
+#include <test/test_freicoin.h>
 #include <util/strencodings.h>
 #include <wallet/crypter.h>
 

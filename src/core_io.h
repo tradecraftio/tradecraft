@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CORE_IO_H
-#define BITCOIN_CORE_IO_H
+#ifndef FREICOIN_CORE_IO_H
+#define FREICOIN_CORE_IO_H
 
 #include <amount.h>
 #include <attributes.h>
@@ -49,10 +49,10 @@ bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 bool ParseHashStr(const std::string& strHex, uint256& result);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
 
-//! Decode a base64ed PSBT into a PartiallySignedTransaction
-NODISCARD bool DecodeBase64PSBT(PartiallySignedTransaction& decoded_psbt, const std::string& base64_psbt, std::string& error);
-//! Decode a raw (binary blob) PSBT into a PartiallySignedTransaction
-NODISCARD bool DecodeRawPSBT(PartiallySignedTransaction& decoded_psbt, const std::string& raw_psbt, std::string& error);
+//! Decode a base64ed PST into a PartiallySignedTransaction
+NODISCARD bool DecodeBase64PST(PartiallySignedTransaction& decoded_pst, const std::string& base64_pst, std::string& error);
+//! Decode a raw (binary blob) PST into a PartiallySignedTransaction
+NODISCARD bool DecodeRawPST(PartiallySignedTransaction& decoded_pst, const std::string& raw_pst, std::string& error);
 int ParseSighashString(const UniValue& sighash);
 
 // core_write.cpp
@@ -64,4 +64,4 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_address);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0);
 
-#endif // BITCOIN_CORE_IO_H
+#endif // FREICOIN_CORE_IO_H

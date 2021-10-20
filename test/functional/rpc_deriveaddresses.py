@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test the deriveaddresses rpc call."""
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
-class DeriveaddressesTest(BitcoinTestFramework):
+class DeriveaddressesTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.supports_cli = 1

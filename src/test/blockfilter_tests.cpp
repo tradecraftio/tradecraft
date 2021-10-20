@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <test/data/blockfilters.json.h>
-#include <test/test_bitcoin.h>
+#include <test/test_freicoin.h>
 
 #include <blockfilter.h>
 #include <core_io.h>
