@@ -273,7 +273,7 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
             result_stack.emplace_back(std::begin(script), std::end(script)); // Push the script
             result_stack.push_back(*control_blocks.begin()); // Push the smallest control block
             if (smallest_result_stack.size() == 0 ||
-                GetSerializeSize(result_stack, PROTOCOL_VERSION) < GetSerializeSize(smallest_result_stack, PROTOCOL_VERSION)) {
+                GetSerializeSize(result_stack, SER_NETWORK, PROTOCOL_VERSION) < GetSerializeSize(smallest_result_stack, SER_NETWORK, PROTOCOL_VERSION)) {
                 smallest_result_stack = std::move(result_stack);
             }
         }
