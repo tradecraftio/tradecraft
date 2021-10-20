@@ -100,7 +100,7 @@ struct PSBTProprietary
 template<typename Stream, typename... X>
 void SerializeToVector(Stream& s, const X&... args)
 {
-    WriteCompactSize(s, GetSerializeSizeMany(s.GetVersion(), args...));
+    WriteCompactSize(s, GetSerializeSizeMany(s.GetType(), s.GetVersion(), args...));
     SerializeMany(s, args...);
 }
 
