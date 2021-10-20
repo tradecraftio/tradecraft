@@ -640,7 +640,7 @@ bool CWallet::CreateTransactionInternal(
         CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
     }
     CTxOut change_prototype_txout(0, scriptChange);
-    coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
+    coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout, SER_NETWORK, PROTOCOL_VERSION);
 
     // Get size of spending the change output
     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
@@ -693,7 +693,7 @@ bool CWallet::CreateTransactionInternal(
 
         // Include the fee cost for outputs.
         if (!coin_selection_params.m_subtract_fee_outputs) {
-            coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
+            coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, SER_NETWORK, PROTOCOL_VERSION);
         }
 
         if (IsDust(txout, chain().relayDustFee()))

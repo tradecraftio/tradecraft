@@ -125,7 +125,7 @@ static bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const
     }
 
     // Write index header
-    unsigned int nSize = GetSerializeSize(blockundo, fileout.GetVersion());
+    unsigned int nSize = GetSerializeSize(blockundo, fileout.GetType(), fileout.GetVersion());
     fileout << messageStart << nSize;
 
     // Write undo data
@@ -330,7 +330,7 @@ static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessa
     }
 
     // Write index header
-    unsigned int nSize = GetSerializeSize(block, fileout.GetVersion());
+    unsigned int nSize = GetSerializeSize(block, fileout.GetType(), fileout.GetVersion());
     fileout << messageStart << nSize;
 
     // Write block
@@ -349,7 +349,7 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull()) {
         FlatFilePos _pos;
-        if (!FindUndoPos(state, pindex->nFile, _pos, ::GetSerializeSize(blockundo, CLIENT_VERSION) + 40)) {
+        if (!FindUndoPos(state, pindex->nFile, _pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40)) {
             return error("ConnectBlock(): FindUndoPos failed");
         }
         if (!UndoWriteToDisk(blockundo, _pos, pindex->pprev->GetBlockHash(), chainparams.MessageStart())) {
@@ -466,7 +466,7 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
 FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp)
 {
-    unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION);
+    unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
     FlatFilePos blockPos;
     if (dbp != nullptr) {
         blockPos = *dbp;
