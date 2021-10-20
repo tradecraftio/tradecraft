@@ -76,7 +76,7 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
     vPos.reserve(block.data->vtx.size());
     for (const auto& tx : block.data->vtx) {
         vPos.emplace_back(tx->GetHash(), pos);
-        pos.nTxOffset += ::GetSerializeSize(*tx, CLIENT_VERSION);
+        pos.nTxOffset += ::GetSerializeSize(*tx, SER_DISK, CLIENT_VERSION);
     }
     return m_db->WriteTxs(vPos);
 }
