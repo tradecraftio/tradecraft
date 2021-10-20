@@ -179,8 +179,8 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     assert(filter.GetFilterType() == GetFilterType());
 
     size_t data_size =
-        GetSerializeSize(filter.GetBlockHash(), CLIENT_VERSION) +
-        GetSerializeSize(filter.GetEncodedFilter(), CLIENT_VERSION);
+        GetSerializeSize(filter.GetBlockHash(), SER_DISK, CLIENT_VERSION) +
+        GetSerializeSize(filter.GetEncodedFilter(), SER_DISK, CLIENT_VERSION);
 
     // If writing the filter would overflow the file, flush and move to the next one.
     if (pos.nPos + data_size > MAX_FLTR_FILE_SIZE) {
