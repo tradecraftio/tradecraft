@@ -283,8 +283,6 @@ static std::string GetExtraNonceRequest(StratumClient& client, const uint256& jo
 
 std::string GetWorkUnit(StratumClient& client)
 {
-    LOCK(cs_main);
-
     if (!Params().MineBlocksOnDemand() && !g_connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
