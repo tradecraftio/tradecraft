@@ -1001,7 +1001,7 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     return true;
 }
 
-UniValue stratum_mining_extranonce_subscribe(StratumClient& client, const UniValue& params)
+UniValue stratum_mining_extranonce_subscribe(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     const std::string method("mining.extranonce.subscribe");
     BoundParams(method, params, 0, 0);
