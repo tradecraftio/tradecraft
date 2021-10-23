@@ -908,7 +908,7 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
     return true;
 }
 
-UniValue stratum_mining_configure(StratumClient& client, const UniValue& params)
+UniValue stratum_mining_configure(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     const std::string method("mining.configure");
     BoundParams(method, params, 2, 2);
