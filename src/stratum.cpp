@@ -163,7 +163,7 @@ void UpdateSegwitCommitment(const StratumWork& current_work, CMutableTransaction
 }
 
 //! Critical seciton guarding access to any of the stratum global state
-static CCriticalSection cs_stratum;
+static RecursiveMutex cs_stratum;
 
 //! List of subnets to allow stratum connections from
 static std::vector<CSubNet> stratum_allow_subnets;
@@ -281,7 +281,7 @@ static std::string GetExtraNonceRequest(StratumClient& client, const uint256& jo
     return ret;
 }
 
-std::string GetWorkUnit(StratumClient& client)
+std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     if (!Params().MineBlocksOnDemand() && !g_connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -560,7 +560,7 @@ std::string GetWorkUnit(StratumClient& client)
          + mining_notify.write()  + "\n";
 }
 
-bool SubmitBlock(StratumClient& client, const uint256& job_id, const uint256& mmroot, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion)
+bool SubmitBlock(StratumClient& client, const uint256& job_id, const uint256& mmroot, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     if (current_work.GetBlock().vtx.empty()) {
         const std::string msg("SubmitBlock: no transactions in block template; unable to submit work");
@@ -752,7 +752,7 @@ void BoundParams(const std::string& method, const UniValue& params, size_t min, 
     }
 }
 
-UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
+UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     const std::string method("mining.subscribe");
     BoundParams(method, params, 0, 2);
@@ -791,7 +791,7 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
     return ret;
 }
 
-UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
+UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     const std::string method("mining.authorize");
     BoundParams(method, params, 1, 2);
@@ -937,7 +937,7 @@ UniValue stratum_mining_configure(StratumClient& client, const UniValue& params)
     return res;
 }
 
-UniValue stratum_mining_submit(StratumClient& client, const UniValue& params)
+UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     const std::string method("mining.submit");
     BoundParams(method, params, 5, 6);
@@ -1162,7 +1162,7 @@ static void stratum_accept_conn_cb(evconnlistener *listener, evutil_socket_t fd,
 }
 
 /** Setup the stratum connection listening services */
-static bool StratumBindAddresses(event_base* base)
+static bool StratumBindAddresses(event_base* base) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     int defaultPort = gArgs.GetArg("-stratumport", BaseParams().StratumPort());
     std::vector<std::pair<std::string, uint16_t> > endpoints;
