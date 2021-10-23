@@ -561,7 +561,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
          + mining_notify.write()  + "\n";
 }
 
-bool SubmitBlock(StratumClient& client, const uint256& job_id, const uint256& mmroot, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion)
+bool SubmitBlock(StratumClient& client, const uint256& job_id, const uint256& mmroot, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     if (current_work.GetBlock().vtx.empty()) {
         const std::string msg("SubmitBlock: no transactions in block template; unable to submit work");
