@@ -3429,7 +3429,7 @@ static bool FindBlockPos(FlatFilePos &pos, unsigned int nAddSize, unsigned int n
         vinfoBlockFile.resize(nFile + 1);
     }
 
-    const bool size_expansion = IsSizeExpansionActive(Params().GetConsensus(), GetAdjustedTime());
+    const bool size_expansion = IsSizeExpansionActive(Params().GetConsensus(), nTime);
 
     bool finalize_undo = false;
     if (!fKnown) {
@@ -5006,7 +5006,7 @@ void LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
 
     // If the size expansion fork has activated, then we should
     // allow importing blocks larger than than the old MAX_BLOCK_SIZE.
-    const bool size_expansion = IsSizeExpansionActive(chainparams.GetConsensus(), GetAdjustedTime());
+    const bool size_expansion = IsSizeExpansionActive(chainparams.GetConsensus(), nStart / 1000);
 
     int nLoaded = 0;
     try {
