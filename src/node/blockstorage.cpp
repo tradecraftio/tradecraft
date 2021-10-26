@@ -633,7 +633,7 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
         m_blockfile_info.resize(nFile + 1);
     }
 
-    const bool size_expansion = IsSizeExpansionActive(Params().GetConsensus(), GetAdjustedTime());
+    const bool size_expansion = IsSizeExpansionActive(Params().GetConsensus(), nTime);
 
     bool finalize_undo = false;
     if (!fKnown) {
