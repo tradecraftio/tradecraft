@@ -254,7 +254,7 @@ bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight,
         vinfoBlockFile.resize(nFile + 1);
     }
 
-    const bool size_expansion = IsSizeExpansionActive(Params().GetConsensus(), GetAdjustedTime());
+    const bool size_expansion = IsSizeExpansionActive(Params().GetConsensus(), nTime);
 
     bool finalize_undo = false;
     if (!fKnown) {
