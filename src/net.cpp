@@ -692,6 +692,12 @@ void CNode::CopyStats(CNodeStats& stats)
  ** allowed peers on 32-bit hosts). */
 static std::size_t MaxProtocolMessageLength(const Consensus::Params &params, size_t max_untrusted_peers, int64_t time)
 {
+    if (IsSizeExpansionActive(params, time)) {
+        return SIZE_EXPANSION_MAX_BLOCK_SERIALIZED_SIZE + 24;
+    } else {
+        return MAX_PROTOCOL_MESSAGE_LENGTH;
+    }
+#if 0
     // Unconstraining the block size in the size expansion fork means that
     // network message size must also be unconstrained, which is a potential DoS
     // vector.  Unfortunately there is no easy way around this.  Until better
@@ -724,6 +730,7 @@ static std::size_t MaxProtocolMessageLength(const Consensus::Params &params, siz
         max_msg_size = std::min(max_data_per_peer, static_cast<std::size_t>(SIZE_EXPANSION_MAX_BLOCK_SERIALIZED_SIZE + 24));
     }
     return max_msg_size;
+#endif
 }
 
 bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)

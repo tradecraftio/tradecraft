@@ -4451,7 +4451,7 @@ void CChainState::LoadExternalBlockFile(FILE* fileIn, FlatFilePos* dbp)
 
     // If the size expansion fork has activated, then we should
     // allow importing blocks larger than than the old MAX_BLOCK_SIZE.
-    const bool size_expansion = IsSizeExpansionActive(m_params.GetConsensus(), GetAdjustedTime());
+    const bool size_expansion = IsSizeExpansionActive(m_params.GetConsensus(), nStart / 1000);
 
     int nLoaded = 0;
     try {
