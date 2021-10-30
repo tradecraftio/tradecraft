@@ -13,23 +13,15 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <key_io.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <timedata.h>
-#include <txmempool.h>
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/validation.h>
-#include <validationinterface.h>
-#ifdef ENABLE_WALLET
-#include <base58.h>
-#include <script/sign.h>
-#include <wallet/wallet.h>
-#endif
 
 #include <algorithm>
 #include <queue>
@@ -195,7 +187,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
 
-    initFinalTx(final_tx);
+    if (block_final_state & HAS_BLOCK_FINAL_TX)
+        initFinalTx(final_tx);
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
@@ -359,162 +352,42 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
     std::sort(sortedEntries.begin(), sortedEntries.end(), CompareTxIterByAncestorCount());
 }
 
-static std::shared_ptr<CWallet> GetWalletForBlockFinalTx()
-{
-    if (!HasWallets()) {
-        return nullptr;
-    }
-    // The user can configure which wallet to use for the block-final tx inputs
-    // with the '-walletblockfinaltx' option.  By default, the default wallet is
-    // used.
-    const std::string requestedwallet = gArgs.GetArg("-walletblockfinaltx", "");
-    std::shared_ptr<CWallet> ret = GetWallet(requestedwallet);
-    if (ret) {
-        return ret;
-    }
-    // If a wallet name was specified but not found, let's log that so the user
-    // knows they need to fix their configuration.
-    if (requestedwallet != "" && requestedwallet != "0") {
-        LogPrintf("Requested wallet \"%s\" be used to source block-final transaction inputs, but no such wallet found.\n", requestedwallet);
-    }
-    // The user can disable use of wallet inputs for the block-final tx by
-    // setting '-walletblockfinaltx' to 0 or false or '-nowalletblcokfinaltx=1'.
-    // Note that there must not be a wallet named "0" (or "false", etc.), or
-    // else that wallet will be selected above.
-    if (!gArgs.GetBoolArg("-walletblockfinaltx", true)) {
-        return nullptr;
-    }
-    // If we get this far, it is because the default wallet is requested.
-    std::vector<std::shared_ptr<CWallet>> wallets = GetWallets();
-    return !wallets.empty() ? wallets[0] : nullptr;
-}
-
 void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
 {
+    // Block-final transactions are only created after we have reached the final
+    // state of activation.
+    if (!(block_final_state & HAS_BLOCK_FINAL_TX)) {
+        return;
+    }
+
     // Create block-final tx
     CMutableTransaction txFinal;
     txFinal.nVersion = 2;
+    txFinal.vout.resize(1);
+    txFinal.vout[0].nValue = 0;
+    txFinal.vout[0].scriptPubKey = CScript() << OP_TRUE;
     txFinal.nLockTime = static_cast<uint32_t>(nMedianTimePast);
 
-    // Block-final transactions are only created from prior block-final outputs
-    // after we have reached the final state of activation.
-    if (block_final_state & HAS_BLOCK_FINAL_TX) {
-        // Add all outputs from the prior block-final transaction.  We do
-        // nothing here to prevent selected transactions from spending these
-        // same outputs out from underneath us; we depend insted on mempool
-        // protections that prevent such transactions from being considered in
-        // the first place.
-        for (uint32_t n = 0; n < final_tx.size; ++n) {
-            COutPoint prevout(final_tx.hash, n);
-            const Coin& coin = ::ChainstateActive().CoinsTip().AccessCoin(prevout);
-            if (IsTriviallySpendable(coin, prevout, MANDATORY_SCRIPT_VERIFY_FLAGS|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
-                txFinal.vin.push_back(CTxIn(prevout, CScript(), CTxIn::SEQUENCE_FINAL));
-            } else {
-                LogPrintf("WARNING: non-trivial output in block-final transaction record; this should never happen (%s:%n)\n", prevout.hash.ToString(), prevout.n);
-            }
+    // Add all outputs from the prior block-final transaction.  We do nothing
+    // here to prevent selected transactions from spending these same outputs
+    // out from underneath us; we depend insted on mempool protections that
+    // prevent such transactions from being considered in the first place.
+    for (uint32_t n = 0; n < final_tx.size; ++n) {
+        COutPoint prevout(final_tx.hash, n);
+        const Coin& coin = ::ChainstateActive().CoinsTip().AccessCoin(prevout);
+        if (IsTriviallySpendable(coin, prevout, MANDATORY_SCRIPT_VERIFY_FLAGS|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
+            txFinal.vin.push_back(CTxIn(prevout, CScript(), CTxIn::SEQUENCE_FINAL));
+        } else {
+            LogPrintf("WARNING: non-trivial output in block-final transaction record; this should never happen (%s:%n)\n", prevout.hash.ToString(), prevout.n);
         }
     }
 
-#ifdef ENABLE_WALLET
-    else {
-        if (!gArgs.GetBoolArg("-walletblockfinaltx", true)) {
-            // User has requested that block-final transactions only be present
-            // if the block-final rule change has activated.  The wallet will
-            // not be used to generate a block-final transaction prior to
-            // activation.
-            return;
-        }
-
-        std::shared_ptr<CWallet> pwallet = GetWalletForBlockFinalTx();
-        if (!pwallet) {
-            LogPrintf("No wallet; unable to fetch outputs for block-final transaction.\n");
-            return;
-        }
-
-        auto locked_chain = pwallet->chain().lock();
-        LOCK(pwallet->cs_wallet);
-
-        CTxDestination minesweep = DecodeDestination(gArgs.GetArg("-minesweepto", ""));
-        CTxDestination carryforward = DecodeDestination(gArgs.GetArg("-carryforward", ""));
-
-        // Get a vector of available outputs from the wallet.  This should not
-        // include any outputs spent in this block, because outputs in the
-        // mempool are excluded (and the transactions of the block were pulled
-        // from the mempool).
-        std::vector<COutput> outputs;
-        pwallet->AvailableCoins(*locked_chain, outputs, false, nullptr, 0);
-        if (outputs.empty()) {
-            LogPrintf("No available wallet outputs for block-final transaction.\n");
-            return;
-        }
-
-        // Gather inputs
-        CAmount totalin = 0;
-        for (const COutput& out : outputs) {
-            if (!out.tx || out.nDepth<=0) {
-                // Do not use unconfirmed outputs because we don't know if they
-                // will be included in the block or not.
-                continue;
-            }
-            txFinal.vin.emplace_back(COutPoint(out.tx->GetHash(), out.i));
-            totalin += out.tx->tx->vout[out.i].nValue;
-            if (!IsValidDestination(minesweep)) {
-                // If we're not sweeping the wallet, then we only need one.
-                break;
-            }
-        }
-        // Optional: sweep outputs
-        if (IsValidDestination(minesweep)) {
-            // The block-final transaction already includes all
-            // confirmed wallet outputs.  So we just have to add an
-            // output to the minesweep address claiming the funds.
-            txFinal.vout.emplace_back(totalin, GetScriptForDestination(minesweep));
-            totalin = 0;
-        }
-        // Optional: fixed carry-forward addr
-        if (IsValidDestination(carryforward)) {
-            // If a carry-forward address is specified, we make sure
-            // the tx includes an output to that address, to enable
-            // future blocks to be mined.
-            txFinal.vout.emplace_back(totalin, GetScriptForDestination(carryforward));
-            totalin = 0;
-        }
-        // Default: send funds to reserve address
-        if (totalin || !IsValidDestination(carryforward)) {
-            ReserveDestination reservedest(pwallet.get());
-            CTxDestination dest;
-            if (!reservedest.GetReservedDestination(OutputType::BECH32, dest, true)) {
-                LogPrintf("Keypool ran out while reserving script for block-final transaction, please call keypoolrefill\n");
-                return;
-            }
-            txFinal.vout.emplace_back(totalin, GetScriptForDestination(dest));
-            totalin = 0;
-            reservedest.KeepDestination();
-        }
-    }
-#endif // ENABLE_WALLET
-
-    // We should have input(s) for the block-final transaction either from the
-    // prior block-final transaction, or from the wallet.  If not, we cannot
-    // create a block-final transaction because any non-coinbase transaction
-    // must have valid inputs.
-    if (txFinal.vin.empty()) {
-        LogPrintf("Unable to create block-final transaction due to lack of inputs.\n");
-        return;
-    }
-
-    // Add commitment and sign block-final transaction.
-    if (!UpdateBlockFinalTransaction(txFinal, uint256())) {
-        LogPrintf("Error signing block-final transaction; cannot use invalid transaction.\n");
-        return;
-    }
-
-#ifdef ENABLE_WALLET
-    // If the block-final transaction was created via the wallet, then we need
-    // to update the state to indicate that the block-final transaction is
-    // present.
-    block_final_state |= HAS_BLOCK_FINAL_TX;
-#endif // ENABLE_WALLET
+    // The previous loop should have found and added at least one input from the
+    // prior block-final transaction, so this check should never pass.  The
+    // situation in which it would is if the fork is aborted after lock-in or
+    // activation, a truly abornmal circumstance in which this version of the
+    // client should stop generating blocks anyway.
+    assert(!txFinal.vin.empty());
 
     // Add block-final transaction to block template.
     pblock->vtx.emplace_back(MakeTransactionRef(std::move(txFinal)));
@@ -692,55 +565,4 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
-}
-
-bool UpdateBlockFinalTransaction(CMutableTransaction &ret, const uint256& hash)
-{
-    CMutableTransaction mtx(ret);
-
-    // Generate new commitment
-    std::vector<unsigned char> new_commitment(36, 0x00);
-    std::copy(hash.begin(), hash.end(),
-              new_commitment.begin());
-    new_commitment[32] = 0x4b;
-    new_commitment[33] = 0x4a;
-    new_commitment[34] = 0x49;
-    new_commitment[35] = 0x48;
-
-    // Find & update commitment
-    if (!mtx.vout.empty() && mtx.vout.back().scriptPubKey.size() == 37 && mtx.vout.back().scriptPubKey[0] == 36 && mtx.vout.back().scriptPubKey[33] == 0x4b && mtx.vout.back().scriptPubKey[34] == 0x4a && mtx.vout.back().scriptPubKey[35] == 0x49 && mtx.vout.back().scriptPubKey[36] == 0x48) {
-        mtx.vout.back().scriptPubKey = CScript() << new_commitment;
-    } else {
-        mtx.vout.emplace_back(0, CScript() << new_commitment);
-    }
-
-#ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> pwallet = GetWalletForBlockFinalTx();
-    if (pwallet) {
-        LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
-
-        // Sign transaction
-        CTransaction tx(mtx);
-        ScriptError serror = SCRIPT_ERR_OK;
-        for (size_t i = 0; i < tx.vin.size(); ++i) {
-            CTxIn& txin = mtx.vin[i];
-            const Coin& coin = ::ChainstateActive().CoinsTip().AccessCoin(txin.prevout);
-            if (coin.IsSpent()) {
-                LogPrintf("Unable to find UTXO for block-final transaction input hash %s; unable to sign block-final transaction.\n", txin.prevout.hash.ToString());
-                return false;
-            }
-            SignatureData sigdata;
-            ProduceSignature(*pwallet, MutableTransactionSignatureCreator(&mtx, i, coin.out.nValue, SIGHASH_NONE), coin.out.scriptPubKey, sigdata);
-            UpdateInput(mtx.vin.at(i), sigdata);
-            ScriptError serror = SCRIPT_ERR_OK;
-            if (!VerifyScript(txin.scriptSig, coin.out.scriptPubKey, &mtx.vin[i].scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&tx, i, coin.out.nValue), &serror)) {
-                LogPrintf("error creating signature for wallet input to block-final transaction: %s", ScriptErrorString(serror));
-                return false;
-            }
-        }
-    }
-#endif // ENABLE_WALLET
-
-    ret = mtx;
-    return true;
 }
