@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # These environment variables are set by the build process and read by
-# test/functional/test_runner.py and test/util/bitcoin-util-test.py
+# test/functional/test_runner.py and test/util/freicoin-util-test.py
 
 [environment]
 PACKAGE_NAME=@PACKAGE_NAME@
@@ -26,7 +26,7 @@ RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
 [components]
 # Which components are enabled. These are commented out by `configure` if they were disabled when running config.
 @ENABLE_WALLET_TRUE@ENABLE_WALLET=true
-@BUILD_BITCOIN_CLI_TRUE@ENABLE_CLI=true
-@BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=true
+@BUILD_FREICOIN_CLI_TRUE@ENABLE_CLI=true
+@BUILD_FREICOIND_TRUE@ENABLE_FREICOIND=true
 @ENABLE_FUZZ_TRUE@ENABLE_FUZZ=true
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=true

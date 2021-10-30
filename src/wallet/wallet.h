@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_WALLET_H
-#define BITCOIN_WALLET_WALLET_H
+#ifndef FREICOIN_WALLET_WALLET_H
+#define FREICOIN_WALLET_WALLET_H
 
 #include <amount.h>
 #include <interfaces/chain.h>
@@ -98,9 +98,9 @@ static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 //! -maxtxfee default
 constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
-//! Discourage users to set fees higher than this amount (in satoshis) per kB
+//! Discourage users to set fees higher than this amount (in kria) per kB
 constexpr CAmount HIGH_TX_FEE_PER_KB{COIN / 100};
-//! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
+//! -maxtxfee will warn if called with a higher fee than this amount (in kria)
 constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
 
 //! Pre-calculated constants for input size estimation in *virtual size*
@@ -161,7 +161,7 @@ enum WalletFlags : uint64_t {
     //! initialization that should only happen on first run.
     //!
     //! This flag is also a mandatory flag to prevent previous versions of
-    //! bitcoin from opening the wallet, thinking it was newly created, and
+    //! freicoin from opening the wallet, thinking it was newly created, and
     //! then improperly reinitializing it.
     WALLET_FLAG_BLANK_WALLET = (1ULL << 33),
 };
@@ -190,7 +190,7 @@ extern const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS;
  * are sets of keys that have not yet been used to provide addresses or receive
  * change.
  *
- * The Bitcoin Core wallet was originally a collection of unrelated private
+ * The Freicoin wallet was originally a collection of unrelated private
  * keys with their associated addresses. If a non-HD wallet generated a
  * key/address, gave that address out and then restored a backup from before
  * that key's generation, then any funds sent to that address would be
@@ -457,7 +457,7 @@ public:
     unsigned int nTimeSmart;
     /**
      * From me flag is set to 1 for transactions that were created by the wallet
-     * on this bitcoin node, and set to 0 for transactions that were created
+     * on this freicoin node, and set to 0 for transactions that were created
      * externally and came in through the network or sendrawtransaction RPC.
      */
     bool fFromMe;
@@ -1191,7 +1191,7 @@ public:
     CFeeRate m_discard_rate{DEFAULT_DISCARD_FEE};
     OutputType m_default_address_type{DEFAULT_ADDRESS_TYPE};
     OutputType m_default_change_type{DEFAULT_CHANGE_TYPE};
-    /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
+    /** Absolute maximum transaction fee (in kria) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
     bool NewKeyPool();
@@ -1478,4 +1478,4 @@ public:
 // be IsAllFromMe).
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
-#endif // BITCOIN_WALLET_WALLET_H
+#endif // FREICOIN_WALLET_WALLET_H

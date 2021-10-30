@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_COINSTATS_H
-#define BITCOIN_NODE_COINSTATS_H
+#ifndef FREICOIN_NODE_COINSTATS_H
+#define FREICOIN_NODE_COINSTATS_H
 
 #include <amount.h>
 #include <uint256.h>
@@ -41,4 +41,4 @@ struct CCoinsStats
 //! Calculate statistics about the unspent transaction output set
 bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats);
 
-#endif // BITCOIN_NODE_COINSTATS_H
+#endif // FREICOIN_NODE_COINSTATS_H

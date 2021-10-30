@@ -44,7 +44,7 @@
 #include <typeinfo>
 
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "Freicoin cannot be compiled without assertions."
 #endif
 
 /** Expiration time for orphan transactions in seconds */

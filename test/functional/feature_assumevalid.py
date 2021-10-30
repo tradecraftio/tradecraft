@@ -55,7 +55,7 @@ from test_framework.messages import (
 )
 from test_framework.mininode import P2PInterface
 from test_framework.script import (CScript, OP_TRUE)
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 class BaseNode(P2PInterface):
@@ -64,7 +64,7 @@ class BaseNode(P2PInterface):
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
         self.send_message(headers_message)
 
-class AssumeValidTest(BitcoinTestFramework):
+class AssumeValidTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3

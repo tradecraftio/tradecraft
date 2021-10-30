@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <psbt.h>
+#include <pst.h>
 #include <util/strencodings.h>
 
 #include <numeric>
@@ -29,55 +29,55 @@ bool PartiallySignedTransaction::IsNull() const
     return !tx && inputs.empty() && outputs.empty() && unknown.empty();
 }
 
-bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
+bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& pst)
 {
-    // Prohibited to merge two PSBTs over different transactions
-    if (tx->GetHash() != psbt.tx->GetHash()) {
+    // Prohibited to merge two PSTs over different transactions
+    if (tx->GetHash() != pst.tx->GetHash()) {
         return false;
     }
 
     for (unsigned int i = 0; i < inputs.size(); ++i) {
-        inputs[i].Merge(psbt.inputs[i]);
+        inputs[i].Merge(pst.inputs[i]);
     }
     for (unsigned int i = 0; i < outputs.size(); ++i) {
-        outputs[i].Merge(psbt.outputs[i]);
+        outputs[i].Merge(pst.outputs[i]);
     }
-    unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
+    unknown.insert(pst.unknown.begin(), pst.unknown.end());
 
     return true;
 }
 
 bool PartiallySignedTransaction::IsSane() const
 {
-    for (PSBTInput input : inputs) {
+    for (PSTInput input : inputs) {
         if (!input.IsSane()) return false;
     }
     return true;
 }
 
-bool PartiallySignedTransaction::AddInput(const CTxIn& txin, PSBTInput& psbtin)
+bool PartiallySignedTransaction::AddInput(const CTxIn& txin, PSTInput& pstin)
 {
     if (std::find(tx->vin.begin(), tx->vin.end(), txin) != tx->vin.end()) {
         return false;
     }
     tx->vin.push_back(txin);
-    psbtin.partial_sigs.clear();
-    psbtin.final_script_sig.clear();
-    psbtin.final_script_witness.SetNull();
-    inputs.push_back(psbtin);
+    pstin.partial_sigs.clear();
+    pstin.final_script_sig.clear();
+    pstin.final_script_witness.SetNull();
+    inputs.push_back(pstin);
     return true;
 }
 
-bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput& psbtout)
+bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSTOutput& pstout)
 {
     tx->vout.push_back(txout);
-    outputs.push_back(psbtout);
+    outputs.push_back(pstout);
     return true;
 }
 
 bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
 {
-    PSBTInput input = inputs[input_index];
+    PSTInput input = inputs[input_index];
     uint32_t prevout_index = tx->vin[input_index].prevout.n;
     if (input.non_witness_utxo) {
         if (prevout_index >= input.non_witness_utxo->vout.size()) {
@@ -92,12 +92,12 @@ bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) con
     return true;
 }
 
-bool PSBTInput::IsNull() const
+bool PSTInput::IsNull() const
 {
     return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
 }
 
-void PSBTInput::FillSignatureData(SignatureData& sigdata) const
+void PSTInput::FillSignatureData(SignatureData& sigdata) const
 {
     if (!final_script_sig.empty()) {
         sigdata.scriptSig = final_script_sig;
@@ -123,7 +123,7 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
     }
 }
 
-void PSBTInput::FromSignatureData(const SignatureData& sigdata)
+void PSTInput::FromSignatureData(const SignatureData& sigdata)
 {
     if (sigdata.complete) {
         partial_sigs.clear();
@@ -152,7 +152,7 @@ void PSBTInput::FromSignatureData(const SignatureData& sigdata)
     }
 }
 
-void PSBTInput::Merge(const PSBTInput& input)
+void PSTInput::Merge(const PSTInput& input)
 {
     if (!non_witness_utxo && input.non_witness_utxo) non_witness_utxo = input.non_witness_utxo;
     if (witness_utxo.IsNull() && !input.witness_utxo.IsNull()) {
@@ -170,7 +170,7 @@ void PSBTInput::Merge(const PSBTInput& input)
     if (final_script_witness.IsNull() && !input.final_script_witness.IsNull()) final_script_witness = input.final_script_witness;
 }
 
-bool PSBTInput::IsSane() const
+bool PSTInput::IsSane() const
 {
     // Cannot have both witness and non-witness utxos
     if (!witness_utxo.IsNull() && non_witness_utxo) return false;
@@ -182,7 +182,7 @@ bool PSBTInput::IsSane() const
     return true;
 }
 
-void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
+void PSTOutput::FillSignatureData(SignatureData& sigdata) const
 {
     if (!redeem_script.empty()) {
         sigdata.redeem_script = redeem_script;
@@ -195,7 +195,7 @@ void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
     }
 }
 
-void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
+void PSTOutput::FromSignatureData(const SignatureData& sigdata)
 {
     if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
         redeem_script = sigdata.redeem_script;
@@ -208,12 +208,12 @@ void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
     }
 }
 
-bool PSBTOutput::IsNull() const
+bool PSTOutput::IsNull() const
 {
     return redeem_script.empty() && witness_script.empty() && hd_keypaths.empty() && unknown.empty();
 }
 
-void PSBTOutput::Merge(const PSBTOutput& output)
+void PSTOutput::Merge(const PSTOutput& output)
 {
     hd_keypaths.insert(output.hd_keypaths.begin(), output.hd_keypaths.end());
     unknown.insert(output.unknown.begin(), output.unknown.end());
@@ -221,36 +221,36 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
     if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
 }
-bool PSBTInputSigned(const PSBTInput& input)
+bool PSTInputSigned(const PSTInput& input)
 {
     return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
 }
 
-void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
+void UpdatePSTOutput(const SigningProvider& provider, PartiallySignedTransaction& pst, int index)
 {
-    const CTxOut& out = psbt.tx->vout.at(index);
-    PSBTOutput& psbt_out = psbt.outputs.at(index);
+    const CTxOut& out = pst.tx->vout.at(index);
+    PSTOutput& pst_out = pst.outputs.at(index);
 
     // Fill a SignatureData with output info
     SignatureData sigdata;
-    psbt_out.FillSignatureData(sigdata);
+    pst_out.FillSignatureData(sigdata);
 
     // Construct a would-be spend of this output, to update sigdata with.
     // Note that ProduceSignature is used to fill in metadata (not actual signatures),
     // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
-    MutableTransactionSignatureCreator creator(psbt.tx.get_ptr(), /* index */ 0, out.nValue, SIGHASH_ALL);
+    MutableTransactionSignatureCreator creator(pst.tx.get_ptr(), /* index */ 0, out.nValue, SIGHASH_ALL);
     ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
 
-    // Put redeem_script, witness_script, key paths, into PSBTOutput.
-    psbt_out.FromSignatureData(sigdata);
+    // Put redeem_script, witness_script, key paths, into PSTOutput.
+    pst_out.FromSignatureData(sigdata);
 }
 
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash, SignatureData* out_sigdata, bool use_dummy)
+bool SignPSTInput(const SigningProvider& provider, PartiallySignedTransaction& pst, int index, int sighash, SignatureData* out_sigdata, bool use_dummy)
 {
-    PSBTInput& input = psbt.inputs.at(index);
-    const CMutableTransaction& tx = *psbt.tx;
+    PSTInput& input = pst.inputs.at(index);
+    const CMutableTransaction& tx = *pst.tx;
 
-    if (PSBTInputSigned(input)) {
+    if (PSTInputSigned(input)) {
         return true;
     }
 
@@ -317,66 +317,66 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     return sig_complete;
 }
 
-bool FinalizePSBT(PartiallySignedTransaction& psbtx)
+bool FinalizePST(PartiallySignedTransaction& pstx)
 {
     // Finalize input signatures -- in case we have partial signatures that add up to a complete
     //   signature, but have not combined them yet (e.g. because the combiner that created this
     //   PartiallySignedTransaction did not understand them), this will combine them into a final
     //   script.
     bool complete = true;
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, SIGHASH_ALL);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        complete &= SignPSTInput(DUMMY_SIGNING_PROVIDER, pstx, i, SIGHASH_ALL);
     }
 
     return complete;
 }
 
-bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransaction& result)
+bool FinalizeAndExtractPST(PartiallySignedTransaction& pstx, CMutableTransaction& result)
 {
-    // It's not safe to extract a PSBT that isn't finalized, and there's no easy way to check
-    //   whether a PSBT is finalized without finalizing it, so we just do this.
-    if (!FinalizePSBT(psbtx)) {
+    // It's not safe to extract a PST that isn't finalized, and there's no easy way to check
+    //   whether a PST is finalized without finalizing it, so we just do this.
+    if (!FinalizePST(pstx)) {
         return false;
     }
 
-    result = *psbtx.tx;
+    result = *pstx.tx;
     for (unsigned int i = 0; i < result.vin.size(); ++i) {
-        result.vin[i].scriptSig = psbtx.inputs[i].final_script_sig;
-        result.vin[i].scriptWitness = psbtx.inputs[i].final_script_witness;
+        result.vin[i].scriptSig = pstx.inputs[i].final_script_sig;
+        result.vin[i].scriptWitness = pstx.inputs[i].final_script_witness;
     }
     return true;
 }
 
-TransactionError CombinePSBTs(PartiallySignedTransaction& out, const std::vector<PartiallySignedTransaction>& psbtxs)
+TransactionError CombinePSTs(PartiallySignedTransaction& out, const std::vector<PartiallySignedTransaction>& pstxs)
 {
-    out = psbtxs[0]; // Copy the first one
+    out = pstxs[0]; // Copy the first one
 
     // Merge
-    for (auto it = std::next(psbtxs.begin()); it != psbtxs.end(); ++it) {
+    for (auto it = std::next(pstxs.begin()); it != pstxs.end(); ++it) {
         if (!out.Merge(*it)) {
-            return TransactionError::PSBT_MISMATCH;
+            return TransactionError::PST_MISMATCH;
         }
     }
     if (!out.IsSane()) {
-        return TransactionError::INVALID_PSBT;
+        return TransactionError::INVALID_PST;
     }
 
     return TransactionError::OK;
 }
 
-std::string PSBTRoleName(PSBTRole role) {
+std::string PSTRoleName(PSTRole role) {
     switch (role) {
-    case PSBTRole::CREATOR: return "creator";
-    case PSBTRole::UPDATER: return "updater";
-    case PSBTRole::SIGNER: return "signer";
-    case PSBTRole::FINALIZER: return "finalizer";
-    case PSBTRole::EXTRACTOR: return "extractor";
+    case PSTRole::CREATOR: return "creator";
+    case PSTRole::UPDATER: return "updater";
+    case PSTRole::SIGNER: return "signer";
+    case PSTRole::FINALIZER: return "finalizer";
+    case PSTRole::EXTRACTOR: return "extractor";
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);
 }
 
-bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error)
+bool DecodeBase64PST(PartiallySignedTransaction& pst, const std::string& base64_tx, std::string& error)
 {
     bool invalid;
     std::string tx_data = DecodeBase64(base64_tx, &invalid);
@@ -384,16 +384,16 @@ bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base6
         error = "invalid base64";
         return false;
     }
-    return DecodeRawPSBT(psbt, tx_data, error);
+    return DecodeRawPST(pst, tx_data, error);
 }
 
-bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data, std::string& error)
+bool DecodeRawPST(PartiallySignedTransaction& pst, const std::string& tx_data, std::string& error)
 {
     CDataStream ss_data(tx_data.data(), tx_data.data() + tx_data.size(), SER_NETWORK, PROTOCOL_VERSION);
     try {
-        ss_data >> psbt;
+        ss_data >> pst;
         if (!ss_data.empty()) {
-            error = "extra data after PSBT";
+            error = "extra data after PST";
             return false;
         }
     } catch (const std::exception& e) {

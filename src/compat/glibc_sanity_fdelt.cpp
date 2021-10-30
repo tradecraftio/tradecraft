@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #if defined(HAVE_SYS_SELECT_H)

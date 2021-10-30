@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Freicoin developers
 // Copyright (c) 2011-2021 The Freicoin Developers
 //
 // This program is free software: you can redistribute it and/or modify it under
@@ -80,7 +80,7 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
+const char * const FREICOIN_CONF_FILENAME = "freicoin.conf";
 
 ArgsManager gArgs;
 
@@ -230,7 +230,7 @@ public:
         std::pair<bool,std::string> found_result(false, std::string());
 
         // We pass "true" to GetArgHelper in order to return the last
-        // argument value seen from the command line (so "bitcoind -foo=bar
+        // argument value seen from the command line (so "freicoind -foo=bar
         // -foo=baz" gives GetArg(am,"foo")=={true,"baz"}
         found_result = GetArgHelper(am.m_override_args, arg, true);
         if (found_result.first) {
@@ -401,7 +401,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         if (key.substr(0, 5) == "-psn_") continue;
 #endif
 
-        if (key == "-") break; //bitcoin-tx using stdin
+        if (key == "-") break; //freicoin-tx using stdin
         std::string val;
         size_t is_index = key.find('=');
         if (is_index != std::string::npos) {
@@ -690,7 +690,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(nullptr, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "bitcoin";
+    const char* pszModule = "freicoin";
 #endif
     if (pex)
         return strprintf(
@@ -709,13 +709,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 
 fs::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
-    // Mac: ~/Library/Application Support/Bitcoin
-    // Unix: ~/.bitcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Freicoin
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Freicoin
+    // Mac: ~/Library/Application Support/Freicoin
+    // Unix: ~/.freicoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Freicoin";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -725,10 +725,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Bitcoin";
+    return pathRet / "Library/Application Support/Freicoin";
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    return pathRet / ".freicoin";
 #endif
 #endif
 }
@@ -902,7 +902,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         m_config_sections.clear();
     }
 
-    const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
+    const std::string confPath = GetArg("-conf", FREICOIN_CONF_FILENAME);
     fsbridge::ifstream stream(GetConfigFile(confPath));
 
     // ok to not have a config file
@@ -1225,9 +1225,9 @@ std::string CopyrightHolders(const std::string& strPrefix)
     const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
     std::string strCopyrightHolders = strPrefix + copyright_devs;
 
-    // Make sure Bitcoin Core copyright is not removed by accident
+    // Make sure Freicoin copyright is not removed by accident
     if (copyright_devs.find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+        strCopyrightHolders += "\n" + strPrefix + "The Freicoin developers";
     }
     return strCopyrightHolders;
 }

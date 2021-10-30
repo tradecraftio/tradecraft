@@ -51,16 +51,16 @@ before_build:
       }
 - cmd: python build_msvc\msvc-autogen.py
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false build_msvc\bitcoin.sln /m /v:q /nologo
+- cmd: msbuild /p:TrackFileAccess=false build_msvc\freicoin.sln /m /v:q /nologo
 after_build:
-#- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
+#- 7z a freicoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
-- cmd: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
-- cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
-- ps:  python test\util\bitcoin-util-test.py
+- cmd: src\test_freicoin.exe -k stdout -e stdout 2> NUL
+- cmd: src\bench_freicoin.exe -evals=1 -scaling=0 > NUL
+- ps:  python test\util\freicoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 # Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
 - cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
 artifacts:
-#- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
+#- path: freicoin-%APPVEYOR_BUILD_VERSION%.zip
 deploy: off

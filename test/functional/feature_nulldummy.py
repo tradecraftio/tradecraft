@@ -28,7 +28,7 @@ import time
 from test_framework.blocktools import create_coinbase, create_block, create_transaction, add_witness_commitment, get_final_tx_info, add_final_tx
 from test_framework.messages import CTransaction
 from test_framework.script import CScript
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero) (code 64)"
@@ -45,7 +45,7 @@ def trueDummy(tx):
     tx.vin[0].scriptSig = CScript(newscript)
     tx.rehash()
 
-class NULLDUMMYTest(BitcoinTestFramework):
+class NULLDUMMYTest(FreicoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1

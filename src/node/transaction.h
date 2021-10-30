@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_TRANSACTION_H
-#define BITCOIN_NODE_TRANSACTION_H
+#ifndef FREICOIN_NODE_TRANSACTION_H
+#define FREICOIN_NODE_TRANSACTION_H
 
 #include <attributes.h>
 #include <primitives/transaction.h>
@@ -39,4 +39,4 @@
  */
 NODISCARD TransactionError BroadcastTransaction(CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback);
 
-#endif // BITCOIN_NODE_TRANSACTION_H
+#endif // FREICOIN_NODE_TRANSACTION_H

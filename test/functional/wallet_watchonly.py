@@ -16,14 +16,14 @@
 """Test createwallet arguments.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error
 )
 
 
-class CreateWalletWatchonlyTest(BitcoinTestFramework):
+class CreateWalletWatchonlyTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
@@ -48,10 +48,10 @@ class CreateWalletWatchonlyTest(BitcoinTestFramework):
         wo_wallet.importpubkey(pubkey=def_wallet.getaddressinfo(wo_addr)['pubkey'])
         wo_wallet.importpubkey(pubkey=def_wallet.getaddressinfo(wo_change)['pubkey'])
 
-        # generate some btc for testing
+        # generate some frc for testing
         node.generatetoaddress(101, a1)
 
-        # send 1 btc to our watch-only address
+        # send 1 frc to our watch-only address
         txid = def_wallet.sendtoaddress(wo_addr, 1)
         self.nodes[0].generate(1)
 
@@ -96,15 +96,15 @@ class CreateWalletWatchonlyTest(BitcoinTestFramework):
         result = wo_wallet.gettransaction(txid=txid, include_watchonly=False)
         assert_equal(len(result["details"]), 0)
 
-        self.log.info('Testing walletcreatefundedpsbt watch-only defaults')
+        self.log.info('Testing walletcreatefundedpst watch-only defaults')
         inputs = []
         outputs = [{a1: 0.5}]
         options = {'changeAddress': wo_change}
         no_wo_options = {'changeAddress': wo_change, 'includeWatching': False}
 
-        result = wo_wallet.walletcreatefundedpsbt(inputs=inputs, outputs=outputs, options=options)
-        assert_equal("psbt" in result, True)
-        assert_raises_rpc_error(-4, "Insufficient funds", wo_wallet.walletcreatefundedpsbt, inputs, outputs, 0, no_wo_options)
+        result = wo_wallet.walletcreatefundedpst(inputs=inputs, outputs=outputs, options=options)
+        assert_equal("pst" in result, True)
+        assert_raises_rpc_error(-4, "Insufficient funds", wo_wallet.walletcreatefundedpst, inputs, outputs, 0, no_wo_options)
 
         self.log.info('Testing fundrawtransaction watch-only defaults')
         rawtx = wo_wallet.createrawtransaction(inputs=inputs, outputs=outputs)

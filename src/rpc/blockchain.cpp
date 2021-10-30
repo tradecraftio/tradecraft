@@ -384,7 +384,7 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
 static std::string EntryDescriptionString()
 {
     return "    \"vsize\" : n,            (numeric) virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted.\n"
-           "    \"size\" : n,             (numeric) (DEPRECATED) same as vsize. Only returned if bitcoind is started with -deprecatedrpc=size\n"
+           "    \"size\" : n,             (numeric) (DEPRECATED) same as vsize. Only returned if freicoind is started with -deprecatedrpc=size\n"
            "                              size will be completely removed in v20.\n"
            "    \"weight\" : n,           (numeric) transaction weight as defined in BIP 141.\n"
            "    \"fee\" : n,              (numeric) transaction fee in " + CURRENCY_UNIT + " (DEPRECATED)\n"
@@ -1041,8 +1041,8 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of bitcoin addresses\n"
-            "        \"address\"     (string) bitcoin address\n"
+            "     \"addresses\" : [          (array of string) array of freicoin addresses\n"
+            "        \"address\"     (string) freicoin address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"
@@ -1703,7 +1703,7 @@ static constexpr size_t PER_UTXO_OVERHEAD = sizeof(COutPoint) + sizeof(uint32_t)
 static UniValue getblockstats(const JSONRPCRequest& request)
 {
     RPCHelpMan{"getblockstats",
-                "\nCompute per block statistics for a given window. All amounts are in satoshis.\n"
+                "\nCompute per block statistics for a given window. All amounts are in kria.\n"
                 "It won't work for some heights with pruning.\n",
                 {
                     {"hash_or_height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block hash or height of the target block", "", {"", "string or numeric"}},
@@ -1717,10 +1717,10 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                 RPCResult{
             "{                           (json object)\n"
             "  \"avgfee\": xxxxx,          (numeric) Average fee in the block\n"
-            "  \"avgfeerate\": xxxxx,      (numeric) Average feerate (in satoshis per virtual byte)\n"
+            "  \"avgfeerate\": xxxxx,      (numeric) Average feerate (in kria per virtual byte)\n"
             "  \"avgtxsize\": xxxxx,       (numeric) Average transaction size\n"
             "  \"blockhash\": xxxxx,       (string) The block hash (to check for potential reorgs)\n"
-            "  \"feerate_percentiles\": [  (array of numeric) Feerates at the 10th, 25th, 50th, 75th, and 90th percentile weight unit (in satoshis per virtual byte)\n"
+            "  \"feerate_percentiles\": [  (array of numeric) Feerates at the 10th, 25th, 50th, 75th, and 90th percentile weight unit (in kria per virtual byte)\n"
             "      \"10th_percentile_feerate\",      (numeric) The 10th percentile feerate\n"
             "      \"25th_percentile_feerate\",      (numeric) The 25th percentile feerate\n"
             "      \"50th_percentile_feerate\",      (numeric) The 50th percentile feerate\n"
@@ -1730,13 +1730,13 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             "  \"height\": xxxxx,          (numeric) The height of the block\n"
             "  \"ins\": xxxxx,             (numeric) The number of inputs (including coinbase)\n"
             "  \"maxfee\": xxxxx,          (numeric) Maximum fee in the block\n"
-            "  \"maxfeerate\": xxxxx,      (numeric) Maximum feerate (in satoshis per virtual byte)\n"
+            "  \"maxfeerate\": xxxxx,      (numeric) Maximum feerate (in kria per virtual byte)\n"
             "  \"maxtxsize\": xxxxx,       (numeric) Maximum transaction size\n"
             "  \"medianfee\": xxxxx,       (numeric) Truncated median fee in the block\n"
             "  \"mediantime\": xxxxx,      (numeric) The block median time past\n"
             "  \"mediantxsize\": xxxxx,    (numeric) Truncated median transaction size\n"
             "  \"minfee\": xxxxx,          (numeric) Minimum fee in the block\n"
-            "  \"minfeerate\": xxxxx,      (numeric) Minimum feerate (in satoshis per virtual byte)\n"
+            "  \"minfeerate\": xxxxx,      (numeric) Minimum feerate (in kria per virtual byte)\n"
             "  \"mintxsize\": xxxxx,       (numeric) Minimum transaction size\n"
             "  \"outs\": xxxxx,            (numeric) The number of outputs\n"
             "  \"subsidy\": xxxxx,         (numeric) The block subsidy\n"
@@ -1892,7 +1892,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             minfee = std::min(minfee, txfee);
             totalfee += txfee;
 
-            // New feerate uses satoshis per virtual byte instead of per serialized byte
+            // New feerate uses kria per virtual byte instead of per serialized byte
             CAmount feerate = weight ? (txfee * WITNESS_SCALE_FACTOR) / weight : 0;
             if (do_feerate_percentiles) {
                 feerate_array.emplace_back(std::make_pair(feerate, weight));

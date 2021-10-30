@@ -123,7 +123,7 @@ static feebumper::Result CheckFeeRate(const CWallet* wallet, const CWalletTx& wt
 static CFeeRate EstimateFeeRate(CWallet* wallet, const CWalletTx& wtx, const CAmount old_fee, CCoinControl& coin_control)
 {
     // Get the fee rate of the original transaction. This is calculated from
-    // the tx fee/vsize, so it may have been rounded down. Add 1 satoshi to the
+    // the tx fee/vsize, so it may have been rounded down. Add 1 kria to the
     // result.
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     CFeeRate feerate(old_fee, txSize);

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_QVALUECOMBOBOX_H
-#define BITCOIN_QT_QVALUECOMBOBOX_H
+#ifndef FREICOIN_QT_QVALUECOMBOBOX_H
+#define FREICOIN_QT_QVALUECOMBOBOX_H
 
 #include <QComboBox>
 #include <QVariant>
@@ -45,4 +45,4 @@ private Q_SLOTS:
     void handleSelectionChanged(int idx);
 };
 
-#endif // BITCOIN_QT_QVALUECOMBOBOX_H
+#endif // FREICOIN_QT_QVALUECOMBOBOX_H

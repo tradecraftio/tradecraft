@@ -19,7 +19,7 @@ This module calls down into individual test cases via subprocess. It will
 forward all unrecognized arguments onto the individual test scripts.
 
 For a description of arguments recognized by test scripts, see
-`test/functional/test_framework/test_framework.py:BitcoinTestFramework.main`.
+`test/functional/test_framework/test_framework.py:FreicoinTestFramework.main`.
 
 """
 
@@ -123,7 +123,7 @@ BASE_SCRIPTS = [
     'wallet_keypool_topup.py',
     'feature_fee_estimation.py',
     'interface_zmq.py',
-    'interface_bitcoin_cli.py',
+    'interface_freicoin_cli.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
     'tool_wallet.py',
@@ -145,7 +145,7 @@ BASE_SCRIPTS = [
     'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
-    'rpc_psbt.py',
+    'rpc_pst.py',
     'rpc_users.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
@@ -288,9 +288,9 @@ def main():
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
-    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_freicoind = config["components"].getboolean("ENABLE_FREICOIND")
 
-    if not enable_bitcoind:
+    if not enable_freicoind:
         print("No functional tests to run.")
         print("Rerun ./configure with --with-daemon and then make")
         sys.exit(0)
@@ -372,11 +372,11 @@ def main():
 def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, runs_ci, use_term_control):
     args = args or []
 
-    # Warn if bitcoind is already running
-    # pidof might fail or return an empty string if bitcoind is not running
+    # Warn if freicoind is already running
+    # pidof might fail or return an empty string if freicoind is not running
     try:
-        if subprocess.check_output(["pidof", "bitcoind"]) not in [b'']:
-            print("%sWARNING!%s There is already a bitcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+        if subprocess.check_output(["pidof", "freicoind"]) not in [b'']:
+            print("%sWARNING!%s There is already a freicoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass
 
@@ -645,7 +645,7 @@ class RPCCoverage():
     Coverage calculation works by having each test script subprocess write
     coverage files into a particular directory. These files contain the RPC
     commands invoked during testing, as well as a complete listing of RPC
-    commands per `bitcoin-cli help` (`rpc_interface.txt`).
+    commands per `freicoin-cli help` (`rpc_interface.txt`).
 
     After all tests complete, the commands run are combined and diff'd against
     the complete list to calculate uncovered RPC commands.

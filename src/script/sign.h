@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCRIPT_SIGN_H
-#define BITCOIN_SCRIPT_SIGN_H
+#ifndef FREICOIN_SCRIPT_SIGN_H
+#define FREICOIN_SCRIPT_SIGN_H
 
 #include <boost/optional.hpp>
 #include <hash.h>
@@ -180,4 +180,4 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script);
 /** Check whether a scriptPubKey is known to be segwit. */
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);
 
-#endif // BITCOIN_SCRIPT_SIGN_H
+#endif // FREICOIN_SCRIPT_SIGN_H

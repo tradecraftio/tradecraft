@@ -95,10 +95,10 @@ bool static TestSplitHost(std::string test, std::string host, int port)
 
 BOOST_AUTO_TEST_CASE(netbase_splithost)
 {
-    BOOST_CHECK(TestSplitHost("www.bitcoincore.org", "www.bitcoincore.org", -1));
-    BOOST_CHECK(TestSplitHost("[www.bitcoincore.org]", "www.bitcoincore.org", -1));
-    BOOST_CHECK(TestSplitHost("www.bitcoincore.org:80", "www.bitcoincore.org", 80));
-    BOOST_CHECK(TestSplitHost("[www.bitcoincore.org]:80", "www.bitcoincore.org", 80));
+    BOOST_CHECK(TestSplitHost("www.freico.in", "www.freico.in", -1));
+    BOOST_CHECK(TestSplitHost("[www.freico.in]", "www.freico.in", -1));
+    BOOST_CHECK(TestSplitHost("www.freico.in:80", "www.freico.in", 80));
+    BOOST_CHECK(TestSplitHost("[www.freico.in]:80", "www.freico.in", 80));
     BOOST_CHECK(TestSplitHost("127.0.0.1", "127.0.0.1", -1));
     BOOST_CHECK(TestSplitHost("127.0.0.1:8333", "127.0.0.1", 8333));
     BOOST_CHECK(TestSplitHost("[127.0.0.1]", "127.0.0.1", -1));

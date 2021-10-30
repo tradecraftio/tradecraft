@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_LOGGING_H
-#define BITCOIN_LOGGING_H
+#ifndef FREICOIN_LOGGING_H
+#define FREICOIN_LOGGING_H
 
 #include <fs.h>
 #include <tinyformat.h>
@@ -175,4 +175,4 @@ static inline void LogPrint(const BCLog::LogFlags& category, const Args&... args
     }
 }
 
-#endif // BITCOIN_LOGGING_H
+#endif // FREICOIN_LOGGING_H

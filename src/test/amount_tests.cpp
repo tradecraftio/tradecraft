@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(-1), 1000) == CFeeRate(-1));
     BOOST_CHECK(CFeeRate(CAmount(0), 1000) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(1), 1000) == CFeeRate(1));
-    // lost precision (can only resolve satoshis per kB)
+    // lost precision (can only resolve kria per kB)
     BOOST_CHECK(CFeeRate(CAmount(1), 1001) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(2), 1001) == CFeeRate(1));
     // some more integer checks
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(BinaryOperatorTest)
     BOOST_CHECK(a <= a);
     BOOST_CHECK(b >= a);
     BOOST_CHECK(b >= b);
-    // a should be 0.00000002 BTC/kB now
+    // a should be 0.00000002 FRC/kB now
     a += a;
     BOOST_CHECK(a == b);
 }
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(ToStringTest)
 {
     CFeeRate feeRate;
     feeRate = CFeeRate(1);
-    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000001 BTC/kB");
+    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000001 FRC/kB");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

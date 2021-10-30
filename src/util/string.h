@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_STRING_H
-#define BITCOIN_UTIL_STRING_H
+#ifndef FREICOIN_UTIL_STRING_H
+#define FREICOIN_UTIL_STRING_H
 
 #include <functional>
 #include <string>
@@ -43,4 +43,4 @@ inline std::string Join(const std::vector<std::string>& list, const std::string&
     return Join(list, separator, [](const std::string& i) { return i; });
 }
 
-#endif // BITCOIN_UTIL_STRENCODINGS_H
+#endif // FREICOIN_UTIL_STRENCODINGS_H

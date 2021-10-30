@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef BITCOIN_BANMAN_H
-#define BITCOIN_BANMAN_H
+#ifndef FREICOIN_BANMAN_H
+#define FREICOIN_BANMAN_H
 
 #include <cstdint>
 #include <memory>

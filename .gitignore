@@ -2,14 +2,14 @@
 
 *.exe
 *.pdb
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/bitcoin-wallet
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/freicoin
+src/freicoind
+src/freicoin-cli
+src/freicoin-tx
+src/freicoin-wallet
+src/test/test_freicoin
+src/test/test_freicoin_fuzzy
+src/qt/test/test_freicoin-qt
 
 # autoreconf
 Makefile.in
@@ -32,8 +32,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/freicoin-config.h
+src/config/freicoin-config.h.in
 src/config/stamp-h1
 src/obj
 share/setup.nsi
@@ -47,11 +47,11 @@ src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
 
-src/qt/bitcoin-qt.config
-src/qt/bitcoin-qt.creator
-src/qt/bitcoin-qt.creator.user
-src/qt/bitcoin-qt.files
-src/qt/bitcoin-qt.includes
+src/qt/freicoin-qt.config
+src/qt/freicoin-qt.creator
+src/qt/freicoin-qt.creator.user
+src/qt/freicoin-qt.files
+src/qt/freicoin-qt.includes
 
 .deps
 .dirstamp
@@ -88,8 +88,8 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+freicoin-qt
+Freicoin-Qt.app
 background.tiff*
 
 # Qt Creator
@@ -97,7 +97,7 @@ Makefile.am.user
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+freicoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -110,7 +110,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_freicoin.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -127,7 +127,7 @@ src/wallet.backup
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libfreicoinconsensus.pc
 contrib/devtools/split-debug.sh
 
 # Output from running db4 installation

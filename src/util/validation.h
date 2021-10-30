@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_VALIDATION_H
-#define BITCOIN_UTIL_VALIDATION_H
+#ifndef FREICOIN_UTIL_VALIDATION_H
+#define FREICOIN_UTIL_VALIDATION_H
 
 #include <string>
 
@@ -26,4 +26,4 @@ std::string FormatStateMessage(const CValidationState &state);
 
 extern const std::string strMessageMagic;
 
-#endif // BITCOIN_UTIL_VALIDATION_H
+#endif // FREICOIN_UTIL_VALIDATION_H

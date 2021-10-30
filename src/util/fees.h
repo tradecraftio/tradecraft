@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef BITCOIN_UTIL_FEES_H
-#define BITCOIN_UTIL_FEES_H
+#ifndef FREICOIN_UTIL_FEES_H
+#define FREICOIN_UTIL_FEES_H
 
 #include <string>
 
@@ -24,4 +24,4 @@ enum class FeeReason;
 bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
 std::string StringForFeeReason(FeeReason reason);
 
-#endif // BITCOIN_UTIL_FEES_H
+#endif // FREICOIN_UTIL_FEES_H

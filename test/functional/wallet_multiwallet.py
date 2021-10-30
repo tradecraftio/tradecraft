@@ -15,13 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test multiwallet.
 
-Verify that a bitcoind node can load multiple wallet files
+Verify that a freicoind node can load multiple wallet files
 """
 import os
 import shutil
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
@@ -31,7 +31,7 @@ from test_framework.util import (
 FEATURE_LATEST = 169900
 
 
-class MultiWalletTest(BitcoinTestFramework):
+class MultiWalletTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -355,7 +355,7 @@ class MultiWalletTest(BitcoinTestFramework):
         )
         self.stop_node(
             i=0,
-            expected_stderr='Error: Error loading {}: Wallet requires newer version of Bitcoin Core'.format(
+            expected_stderr='Error: Error loading {}: Wallet requires newer version of Freicoin'.format(
                 wallet_dir('high_minversion', 'wallet.dat')),
         )
 

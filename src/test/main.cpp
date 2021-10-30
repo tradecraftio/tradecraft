@@ -13,6 +13,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#define BOOST_TEST_MODULE Bitcoin Core Test Suite
+#define BOOST_TEST_MODULE Freicoin Test Suite
 
 #include <boost/test/unit_test.hpp>

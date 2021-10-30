@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_COIN_H
-#define BITCOIN_NODE_COIN_H
+#ifndef FREICOIN_NODE_COIN_H
+#define FREICOIN_NODE_COIN_H
 
 #include <map>
 
@@ -30,4 +30,4 @@ class Coin;
  */
 void FindCoins(std::map<COutPoint, Coin>& coins);
 
-#endif // BITCOIN_NODE_COIN_H
+#endif // FREICOIN_NODE_COIN_H

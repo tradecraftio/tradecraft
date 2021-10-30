@@ -17,8 +17,8 @@
 #include <vector>
 #include <netaddress.h>
 
-#ifndef BITCOIN_NET_PERMISSIONS_H
-#define BITCOIN_NET_PERMISSIONS_H
+#ifndef FREICOIN_NET_PERMISSIONS_H
+#define FREICOIN_NET_PERMISSIONS_H
 enum NetPermissionFlags
 {
     PF_NONE = 0,
@@ -70,4 +70,4 @@ public:
     CSubNet m_subnet;
 };
 
-#endif // BITCOIN_NET_PERMISSIONS_H
+#endif // FREICOIN_NET_PERMISSIONS_H
