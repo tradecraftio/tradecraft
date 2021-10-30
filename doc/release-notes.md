@@ -1,37 +1,18 @@
-v0.19.2.1-21681 Release Notes
-=============================
+0.19.2 Release Notes
+===============================
 
-Bitcoin Core version v0.19.2.1-21681 is now available from:
+Bitcoin Core version 0.19.2 is now available from:
 
-  * [Linux i686 (Intel 32-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-i686-pc-linux-gnu.tar.gz)
-  * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-x86_64-linux-gnu.tar.gz)
-  * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-arm-linux-gnueabihf.tar.gz)
-  * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-aarch64-linux-gnu.tar.gz)
-  * [Linux RISC-V 64-bit (RV64GC)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-riscv64-linux-gnu.tar.gz)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-osx64.tar.gz)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v0.19.2.1-21681-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/bitcoin-v0.19.2.1-21681.zip)
+  <https://bitcoincore.org/bin/bitcoin-core-0.19.2/>
 
-This is the first release of the v0.19 stable branch of Bitcoin Core with the
-stratum mining server and Tradecraft/Freicoin merge-mining patches applied.
+This minor release includes various bug fixes and performance
+improvements, as well as updated translations.
 
-Please report bugs related to the stratum mining server implementation or
-Tradecraft/Freicoin merge-mining at the Tradecraft issue tracker on Github:
-
-  <https://github.com/tradecraftio/tradecraft/issues>
-
-Please report other bugs using Bitcoin the issue tracker at github:
+Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/bitcoin/bitcoin/issues>
 
-To receive security and update notifications for the stratum mining server and
-merge-mining patches, please subscribe to:
-
-  <https://tradecraft.groups.io/g/announce/>
-
-To receive security notifications for Bitcoin Core, please subscribe to:
+To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
 
@@ -40,22 +21,22 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac) or
-`bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
+or `bitcoind`/`bitcoin-qt` (on Linux).
 
 Upgrading directly from a version of Bitcoin Core that has reached its EOL is
 possible, but it might take some time if the datadir needs to be migrated. Old
 wallet versions of Bitcoin Core are generally supported.
 
 Compatibility
-=============
+==============
 
-Bitcoin Core is supported and extensively tested on operating systems using the
-Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not recommended to
-use Bitcoin Core on unsupported systems.
+Bitcoin Core is supported and extensively tested on operating systems using
+the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not recommended
+to use Bitcoin Core on unsupported systems.
 
-Bitcoin Core should also work on most other Unix-like systems but is not as
-frequently tested on them.
+Bitcoin Core should also work on most other Unix-like systems but is not
+as frequently tested on them.
 
 From Bitcoin Core 0.17.0 onwards, macOS versions earlier than 10.10 are no
 longer supported, as Bitcoin Core is now built using Qt 5.9.x which requires
@@ -65,20 +46,67 @@ macOS "dark mode" is activated.
 In addition to previously supported CPU platforms, this release's pre-compiled
 distribution provides binaries for the RISC-V platform.
 
-Notable changes
-===============
+0.19.2 change log
+=================
 
-There have been no notable changes in the stratum mining server or the
-Tradecraft/Freicoin merge-mining patches between v0.18.1.1-19960 and this
-release.  Please see the Bitcoin Core release notes for notable changes between
-the upstream versions upon which these releases are based.
+### Policy
+- #19620 Add txids with non-standard inputs to reject filter (sdaftuar)
+
+### Mining
+- #17946 Fix GBT: Restore "!segwit" and "csv" to "rules" key (luke-jr)
+
+### RPC and other APIs
+- #19836 Properly deserialize txs with witness before signing (MarcoFalke)
+
+### GUI
+- #18123 Fix race in WalletModel::pollBalanceChanged (ryanofsky)
+- #18160 Avoid Wallet::GetBalance in WalletModel::pollBalanceChanged (promag)
+- #19097 Add missing QPainterPath include (achow101)
+
+### Build system
+- #18004 don't embed a build-id when building libdmg-hfsplus (fanquake)
+- #18425 releases: Update with new Windows code signing certificate (achow101)
+- #18676 Check libevent minimum version in configure script (hebasto)
+- #19536 qt, build: Fix QFileDialog for static builds (hebasto)
+- #20142 build: set minimum required Boost to 1.48.0 (fanquake)
+
+### Tests and QA
+- #18001 Updated appveyor job to checkout a specific vcpkg commit ID (sipsorcery)
+- #19444 Remove cached directories and associated script blocks from appveyor config (sipsorcery)
+- #18640 appveyor: Remove clcache (MarcoFalke)
+- #20095 ci: Bump vcpkg commit id to get new msys mirror list (sipsorcery)
+
+### Miscellaneous
+- #19612 lint: fix shellcheck URL in CI install (fanquake)
+- #18284 scheduler: Workaround negative nsecs bug in boost's `wait_until` (luke-jr)
+- #19194 util: Don't reference errno when pthread fails (miztake)
+
+### Documentation
+- #19777 Correct description for getblockstats's txs field (shesek)
+
+### Refactoring
+- #20141 Avoid the use of abs64 in timedata (sipa)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Mark Friedenbach
+- Aaron Clauson
+- Andrew Chow
+- fanquake
+- Gregory Sanders
+- Hennadii Stepanov
+- Jonas Schnelli
+- João Barbosa
+- Luke Dashjr
+- MarcoFalke
+- MIZUTA Takeshi
+- Nadav Ivgi
+- Pieter Wuille
+- Russell Yanofsky
+- Suhas Daftuar
+- Wladimir J. van der Laan
 
 As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/tradecraft/freicoin-1/).
+[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
