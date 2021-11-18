@@ -33,9 +33,9 @@ struct DBVal {
     uint256 muhash;
     uint64_t transaction_output_count;
     uint64_t bogo_size;
-    CAmount total_amount;
+    CAmount total_value;
     CAmount total_subsidy;
-    CAmount block_unspendable_amount;
+    CAmount block_unspendable_value;
     CAmount block_prevout_spent_amount;
     CAmount block_new_outputs_ex_coinbase_amount;
     CAmount block_coinbase_amount;
@@ -49,9 +49,9 @@ struct DBVal {
         READWRITE(obj.muhash);
         READWRITE(obj.transaction_output_count);
         READWRITE(obj.bogo_size);
-        READWRITE(obj.total_amount);
+        READWRITE(obj.total_value);
         READWRITE(obj.total_subsidy);
-        READWRITE(obj.block_unspendable_amount);
+        READWRITE(obj.block_unspendable_value);
         READWRITE(obj.block_prevout_spent_amount);
         READWRITE(obj.block_new_outputs_ex_coinbase_amount);
         READWRITE(obj.block_coinbase_amount);
@@ -149,7 +149,7 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 
             // Skip duplicate txid coinbase transactions (BIP30).
             if (is_bip30_block && tx->IsCoinBase()) {
-                m_block_unspendable_amount += block_subsidy;
+                m_block_unspendable_value += block_subsidy;
                 m_unspendables_bip30 += block_subsidy;
                 continue;
             }
@@ -161,7 +161,7 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 
                 // Skip unspendable coins
                 if (coin.out.scriptPubKey.IsUnspendable()) {
-                    m_block_unspendable_amount += coin.out.nValue;
+                    m_block_unspendable_value += coin.out.nValue;
                     m_unspendables_scripts += coin.out.nValue;
                     continue;
                 }
@@ -175,7 +175,7 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
                 }
 
                 ++m_transaction_output_count;
-                m_total_amount += coin.out.nValue;
+                m_total_value += coin.out.nValue;
                 m_bogo_size += GetBogoSize(coin.out.scriptPubKey);
             }
 
@@ -192,14 +192,14 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
                     m_block_prevout_spent_amount += coin.out.nValue;
 
                     --m_transaction_output_count;
-                    m_total_amount -= coin.out.nValue;
+                    m_total_value -= coin.out.nValue;
                     m_bogo_size -= GetBogoSize(coin.out.scriptPubKey);
                 }
             }
         }
     } else {
         // genesis block
-        m_block_unspendable_amount += block_subsidy;
+        m_block_unspendable_value += block_subsidy;
         m_unspendables_genesis_block += block_subsidy;
     }
 
@@ -207,17 +207,17 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     // new outputs + coinbase + current unspendable amount this means
     // the miner did not claim the full block reward. Unclaimed block
     // rewards are also unspendable.
-    const CAmount unclaimed_rewards{(m_block_prevout_spent_amount + m_total_subsidy) - (m_block_new_outputs_ex_coinbase_amount + m_block_coinbase_amount + m_block_unspendable_amount)};
-    m_block_unspendable_amount += unclaimed_rewards;
+    const CAmount unclaimed_rewards{(m_block_prevout_spent_amount + m_total_subsidy) - (m_block_new_outputs_ex_coinbase_amount + m_block_coinbase_amount + m_block_unspendable_value)};
+    m_block_unspendable_value += unclaimed_rewards;
     m_unspendables_unclaimed_rewards += unclaimed_rewards;
 
     std::pair<uint256, DBVal> value;
     value.first = pindex->GetBlockHash();
     value.second.transaction_output_count = m_transaction_output_count;
     value.second.bogo_size = m_bogo_size;
-    value.second.total_amount = m_total_amount;
+    value.second.total_value = m_total_value;
     value.second.total_subsidy = m_total_subsidy;
-    value.second.block_unspendable_amount = m_block_unspendable_amount;
+    value.second.block_unspendable_value = m_block_unspendable_value;
     value.second.block_prevout_spent_amount = m_block_prevout_spent_amount;
     value.second.block_new_outputs_ex_coinbase_amount = m_block_new_outputs_ex_coinbase_amount;
     value.second.block_coinbase_amount = m_block_coinbase_amount;
@@ -326,9 +326,9 @@ bool CoinStatsIndex::LookUpStats(const CBlockIndex* block_index, CCoinsStats& co
     coins_stats.hashSerialized = entry.muhash;
     coins_stats.nTransactionOutputs = entry.transaction_output_count;
     coins_stats.nBogoSize = entry.bogo_size;
-    coins_stats.nTotalAmount = entry.total_amount;
+    coins_stats.nTotalValue = entry.total_value;
     coins_stats.total_subsidy = entry.total_subsidy;
-    coins_stats.block_unspendable_amount = entry.block_unspendable_amount;
+    coins_stats.block_unspendable_value = entry.block_unspendable_value;
     coins_stats.block_prevout_spent_amount = entry.block_prevout_spent_amount;
     coins_stats.block_new_outputs_ex_coinbase_amount = entry.block_new_outputs_ex_coinbase_amount;
     coins_stats.block_coinbase_amount = entry.block_coinbase_amount;
@@ -363,9 +363,9 @@ bool CoinStatsIndex::Init()
 
             m_transaction_output_count = entry.transaction_output_count;
             m_bogo_size = entry.bogo_size;
-            m_total_amount = entry.total_amount;
+            m_total_value = entry.total_value;
             m_total_subsidy = entry.total_subsidy;
-            m_block_unspendable_amount = entry.block_unspendable_amount;
+            m_block_unspendable_value = entry.block_unspendable_value;
             m_block_prevout_spent_amount = entry.block_prevout_spent_amount;
             m_block_new_outputs_ex_coinbase_amount = entry.block_new_outputs_ex_coinbase_amount;
             m_block_coinbase_amount = entry.block_coinbase_amount;
@@ -420,7 +420,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
 
             // Skip unspendable coins
             if (coin.out.scriptPubKey.IsUnspendable()) {
-                m_block_unspendable_amount -= coin.out.nValue;
+                m_block_unspendable_value -= coin.out.nValue;
                 m_unspendables_scripts -= coin.out.nValue;
                 continue;
             }
@@ -434,7 +434,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
             }
 
             --m_transaction_output_count;
-            m_total_amount -= coin.out.nValue;
+            m_total_value -= coin.out.nValue;
             m_bogo_size -= GetBogoSize(coin.out.scriptPubKey);
         }
 
@@ -451,14 +451,14 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 m_block_prevout_spent_amount -= coin.out.nValue;
 
                 m_transaction_output_count++;
-                m_total_amount += coin.out.nValue;
+                m_total_value += coin.out.nValue;
                 m_bogo_size += GetBogoSize(coin.out.scriptPubKey);
             }
         }
     }
 
-    const CAmount unclaimed_rewards{(m_block_new_outputs_ex_coinbase_amount + m_block_coinbase_amount + m_block_unspendable_amount) - (m_block_prevout_spent_amount + m_total_subsidy)};
-    m_block_unspendable_amount -= unclaimed_rewards;
+    const CAmount unclaimed_rewards{(m_block_new_outputs_ex_coinbase_amount + m_block_coinbase_amount + m_block_unspendable_value) - (m_block_prevout_spent_amount + m_total_subsidy)};
+    m_block_unspendable_value -= unclaimed_rewards;
     m_unspendables_unclaimed_rewards -= unclaimed_rewards;
 
     // Check that the rolled back internal values are consistent with the DB read out
@@ -467,10 +467,10 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
     Assert(read_out.second.muhash == out);
 
     Assert(m_transaction_output_count == read_out.second.transaction_output_count);
-    Assert(m_total_amount == read_out.second.total_amount);
+    Assert(m_total_value == read_out.second.total_value);
     Assert(m_bogo_size == read_out.second.bogo_size);
     Assert(m_total_subsidy == read_out.second.total_subsidy);
-    Assert(m_block_unspendable_amount == read_out.second.block_unspendable_amount);
+    Assert(m_block_unspendable_value == read_out.second.block_unspendable_value);
     Assert(m_block_prevout_spent_amount == read_out.second.block_prevout_spent_amount);
     Assert(m_block_new_outputs_ex_coinbase_amount == read_out.second.block_new_outputs_ex_coinbase_amount);
     Assert(m_block_coinbase_amount == read_out.second.block_coinbase_amount);

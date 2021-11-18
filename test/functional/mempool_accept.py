@@ -119,7 +119,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
             locktime=node.getblockcount() + 2000,  # Can be anything
         ))['hex']
         tx = tx_from_hex(raw_tx_final)
-        fee_expected = coin['amount'] - output_amount
+        fee_expected = coin['value'] - output_amount
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': fee_expected}}],
             rawtxs=[tx.serialize().hex()],

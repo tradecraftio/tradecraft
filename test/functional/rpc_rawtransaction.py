@@ -174,11 +174,11 @@ class RawTransactionsTest(FreicoinTestFramework):
             outputs = { self.nodes[0].getnewaddress() : 1 }
             rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
 
-            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, amount=1, refheight=1)
+            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, value=1, refheight=1)
             succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
             assert succ["complete"]
             if type == "legacy":
-                del prevtx["amount"]
+                del prevtx["value"]
                 succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
                 assert succ["complete"]
 
@@ -191,7 +191,7 @@ class RawTransactionsTest(FreicoinTestFramework):
                 ])
 
             if type != "legacy":
-                assert_raises_rpc_error(-3, "Missing amount", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+                assert_raises_rpc_error(-3, "Missing value", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                     {
                         "txid": txid,
                         "scriptPubKey": pubkey,
@@ -204,7 +204,7 @@ class RawTransactionsTest(FreicoinTestFramework):
                 {
                     "txid": txid,
                     "scriptPubKey": pubkey,
-                    "amount": 1,
+                    "value": 1,
                     "refheight": 1,
                 }
             ])
@@ -212,7 +212,7 @@ class RawTransactionsTest(FreicoinTestFramework):
                 {
                     "scriptPubKey": pubkey,
                     "vout": 3,
-                    "amount": 1,
+                    "value": 1,
                     "refheight": 1,
                 }
             ])
@@ -220,7 +220,7 @@ class RawTransactionsTest(FreicoinTestFramework):
                 {
                     "txid": txid,
                     "vout": 3,
-                    "amount": 1,
+                    "value": 1,
                     "refheight": 1,
                 }
             ])
@@ -328,7 +328,7 @@ class RawTransactionsTest(FreicoinTestFramework):
             vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('2.20000000'))
 
             bal = self.nodes[0].getbalance()
-            inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount" : vout['value'], "refheight": rawTx['lockheight']}]
+            inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "value" : vout['value'], "refheight": rawTx['lockheight']}]
             outputs = { self.nodes[0].getnewaddress() : 2.19 }
             rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
             rawTxPartialSigned = self.nodes[1].signrawtransactionwithwallet(rawTx, inputs)
@@ -369,7 +369,7 @@ class RawTransactionsTest(FreicoinTestFramework):
             vout = next(o for o in rawTx2['vout'] if o['value'] == Decimal('2.20000000'))
 
             bal = self.nodes[0].getbalance()
-            inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex'], "amount" : vout['value'], "refheight" : txDetails['refheight']}]
+            inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex'], "value" : vout['value'], "refheight" : txDetails['refheight']}]
             outputs = { self.nodes[0].getnewaddress() : 2.19 }
             rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs, 0, txDetails['refheight'])
             rawTxPartialSigned1 = self.nodes[1].signrawtransactionwithwallet(rawTx2, inputs)

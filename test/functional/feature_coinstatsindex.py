@@ -98,8 +98,8 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
         for hash_option in index_hash_options:
             res1 = index_node.gettxoutsetinfo(hash_option)
-            # The fields 'block_info' and 'total_unspendable_amount' only exist on the index
-            del res1['block_info'], res1['total_unspendable_amount']
+            # The fields 'block_info' and 'total_unspendable_value' only exist on the index
+            del res1['block_info'], res1['total_unspendable_value']
             res1.pop('muhash', None)
 
             # Everything left should be the same
@@ -114,13 +114,13 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         for hash_option in index_hash_options:
             # Fetch old stats by height
             res2 = index_node.gettxoutsetinfo(hash_option, 102)
-            del res2['block_info'], res2['total_unspendable_amount']
+            del res2['block_info'], res2['total_unspendable_value']
             res2.pop('muhash', None)
             assert_equal(res0, res2)
 
             # Fetch old stats by hash
             res3 = index_node.gettxoutsetinfo(hash_option, res0['bestblock'])
-            del res3['block_info'], res3['total_unspendable_amount']
+            del res3['block_info'], res3['total_unspendable_value']
             res3.pop('muhash', None)
             assert_equal(res0, res3)
 
@@ -132,7 +132,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         for hash_option in index_hash_options:
             # Genesis block is unspendable
             res4 = index_node.gettxoutsetinfo(hash_option, 0)
-            assert_equal(res4['total_unspendable_amount'], 50)
+            assert_equal(res4['total_unspendable_value'], 50)
             assert_equal(res4['block_info'], {
                 'unspendable': 50,
                 'prevout_spent': 0,
@@ -149,7 +149,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
 
             # Test an older block height that included a normal tx
             res5 = index_node.gettxoutsetinfo(hash_option, 102)
-            assert_equal(res5['total_unspendable_amount'], 50)
+            assert_equal(res5['total_unspendable_value'], 50)
             assert_equal(res5['block_info'], {
                 'unspendable': 0,
                 'prevout_spent': 50,
@@ -194,7 +194,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         for hash_option in index_hash_options:
             # Check all amounts were registered correctly
             res6 = index_node.gettxoutsetinfo(hash_option, 108)
-            assert_equal(res6['total_unspendable_amount'], Decimal('70.98999999'))
+            assert_equal(res6['total_unspendable_value'], Decimal('70.98999999'))
             assert_equal(res6['block_info'], {
                 'unspendable': Decimal('20.98999999'),
                 'prevout_spent': 111,
@@ -227,7 +227,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
         for hash_option in index_hash_options:
             res7 = index_node.gettxoutsetinfo(hash_option, 109)
-            assert_equal(res7['total_unspendable_amount'], Decimal('80.98999999'))
+            assert_equal(res7['total_unspendable_value'], Decimal('80.98999999'))
             assert_equal(res7['block_info'], {
                 'unspendable': 10,
                 'prevout_spent': 0,
