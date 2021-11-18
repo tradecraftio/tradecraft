@@ -43,7 +43,7 @@ ERR_NOT_ENOUGH_PRESET_INPUTS = "The preselected coins total amount does not cove
 
 def get_unspent(listunspent, amount):
     for utx in listunspent:
-        if utx['amount'] == amount:
+        if utx['value'] == amount:
             return utx
     raise AssertionError('Could not find unspent with amount={}'.format(amount))
 
@@ -240,7 +240,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         for out in dec_tx['vout']:
             totalOut += out['value']
 
-        assert_equal(fee + totalOut, utx['amount']) #compare vin total and totalout+fee
+        assert_equal(fee + totalOut, utx['value']) #compare vin total and totalout+fee
 
     def test_no_change(self):
         self.log.info("Test fundrawtxn not having a change output")
@@ -260,7 +260,7 @@ class RawTransactionsTest(FreicoinTestFramework):
             totalOut += out['value']
 
         assert_equal(rawtxfund['changepos'], -1)
-        assert_equal(fee + totalOut, utx['amount']) #compare vin total and totalout+fee
+        assert_equal(fee + totalOut, utx['value']) #compare vin total and totalout+fee
 
     def test_invalid_option(self):
         self.log.info("Test fundrawtxn with an invalid option")
@@ -1035,7 +1035,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         ext_utxo = self.nodes[0].listunspent(addresses=[addr])[0]
 
         # An external input without solving data should result in an error
-        raw_tx = wallet.createrawtransaction([ext_utxo], {self.nodes[0].getnewaddress(): ext_utxo["amount"] / 2})
+        raw_tx = wallet.createrawtransaction([ext_utxo], {self.nodes[0].getnewaddress(): ext_utxo["value"] / 2})
         assert_raises_rpc_error(-4, "Not solvable pre-selected input COutPoint(%s, %s)" % (ext_utxo["txid"][0:10], ext_utxo["vout"]), wallet.fundrawtransaction, raw_tx)
 
         # Error conditions

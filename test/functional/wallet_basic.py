@@ -233,7 +233,7 @@ class WalletTest(FreicoinTestFramework):
             inputs = []
             outputs = {}
             inputs.append({"txid": utxo["txid"], "vout": utxo["vout"], "refheight": utxo["refheight"]})
-            outputs[self.nodes[2].getnewaddress()] = utxo["amount"] - 3
+            outputs[self.nodes[2].getnewaddress()] = utxo["value"] - 3
             raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
             txns_to_send.append(self.nodes[0].signrawtransactionwithwallet(raw_tx))
 
@@ -381,7 +381,7 @@ class WalletTest(FreicoinTestFramework):
         for uTx in unspent_txs:
             if uTx['txid'] == zero_value_txid:
                 found = True
-                assert_equal(uTx['amount'], Decimal('0'))
+                assert_equal(uTx['value'], Decimal('0'))
         assert found
 
         self.log.info("Test -walletbroadcast")
@@ -778,7 +778,7 @@ class WalletTest(FreicoinTestFramework):
         # accounts for untrusted pending balance
         bal = zeroconf_wallet.getbalances()
         assert_equal(bal['mine']['trusted'], 0)
-        assert_equal(bal['mine']['untrusted_pending'], utxos[0]['amount'])
+        assert_equal(bal['mine']['untrusted_pending'], utxos[0]['value'])
 
         # spending an unconfirmed UTXO sent to ourselves should fail
         assert_raises_rpc_error(-6, "Insufficient funds", zeroconf_wallet.sendtoaddress, zeroconf_wallet.getnewaddress(), Decimal('0.5'))
@@ -791,7 +791,7 @@ class WalletTest(FreicoinTestFramework):
         assert_equal(utxos[0]['confirmations'], 0)
         # accounts for trusted balance
         bal = zeroconf_wallet.getbalances()
-        assert_equal(bal['mine']['trusted'], utxos[0]['amount'])
+        assert_equal(bal['mine']['trusted'], utxos[0]['value'])
         assert_equal(bal['mine']['untrusted_pending'], 0)
 
         zeroconf_wallet.sendtoaddress(zeroconf_wallet.getnewaddress(), Decimal('0.5'))
