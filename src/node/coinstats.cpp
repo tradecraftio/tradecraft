@@ -46,7 +46,7 @@ static void ApplyStats(CCoinsStats& stats, CHashWriter& ss, const uint256& hash,
         ss << output.second.out.scriptPubKey;
         ss << VARINT_MODE(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
+        stats.nTotalValue += output.second.out.nValue;
         stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
     }
     ss << VARINT(0u);
@@ -58,7 +58,7 @@ static void ApplyStats(CCoinsStats& stats, std::nullptr_t, const uint256& hash, 
     stats.nTransactions++;
     for (const auto& output : outputs) {
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
+        stats.nTotalValue += output.second.out.nValue;
         stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
     }
 }

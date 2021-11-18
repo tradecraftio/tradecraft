@@ -1048,7 +1048,7 @@ static RPCHelpMan gettxoutsetinfo()
                         {RPCResult::Type::NUM, "bogosize", "A meaningless metric for UTXO set size"},
                         {RPCResult::Type::STR_HEX, "hash_serialized_2", "The serialized hash (only present if 'hash_serialized_2' hash_type is chosen)"},
                         {RPCResult::Type::NUM, "disk_size", "The estimated size of the chainstate on disk"},
-                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount"},
+                        {RPCResult::Type::STR_AMOUNT, "total_value", "The total amount"},
                     }},
                 RPCExamples{
                     HelpExampleCli("gettxoutsetinfo", "")
@@ -1075,7 +1075,7 @@ static RPCHelpMan gettxoutsetinfo()
             ret.pushKV("hash_serialized_2", stats.hashSerialized.GetHex());
         }
         ret.pushKV("disk_size", stats.nDiskSize);
-        ret.pushKV("total_amount", ValueFromAmount(stats.nTotalAmount));
+        ret.pushKV("total_value", ValueFromAmount(stats.nTotalValue));
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
     }
@@ -2172,12 +2172,12 @@ static RPCHelpMan scantxoutset()
                                         {RPCResult::Type::NUM, "vout", "The vout value"},
                                         {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
                                         {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
-                                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                                        {RPCResult::Type::STR_AMOUNT, "value", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
                                         {RPCResult::Type::NUM, "refheight", "Reference height of the unspent transaction output"},
                                         {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
                                     }},
                             }},
-                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of all found unspent outputs in " + CURRENCY_UNIT},
+                        {RPCResult::Type::STR_AMOUNT, "total_value", "The total amount of all found unspent outputs in " + CURRENCY_UNIT},
                     }},
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
@@ -2262,14 +2262,14 @@ static RPCHelpMan scantxoutset()
             unspent.pushKV("vout", (int32_t)outpoint.n);
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey));
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
-            unspent.pushKV("amount", ValueFromAmount(txo.nValue));
+            unspent.pushKV("value", ValueFromAmount(txo.nValue));
             unspent.pushKV("refheight", (int64_t)coin.refheight);
             unspent.pushKV("height", (int32_t)coin.nHeight);
 
             unspents.push_back(unspent);
         }
         result.pushKV("unspents", unspents);
-        result.pushKV("total_amount", ValueFromAmount(total_in));
+        result.pushKV("total_value", ValueFromAmount(total_in));
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid command");
     }
