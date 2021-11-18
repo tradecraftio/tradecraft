@@ -235,7 +235,7 @@ class PSTTest(FreicoinTestFramework):
         # have the correct sequence numbers based on
         block_height = self.nodes[0].getblockcount()
         unspent = self.nodes[0].listunspent()[0]
-        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height+2, unspent["refheight"], {}, False)
+        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["value"]+1}], block_height+2, unspent["refheight"], {}, False)
         decoded_pst = self.nodes[0].decodepst(pstx_info["pst"])
         for tx_in, pst_in in zip(decoded_pst["tx"]["vin"], decoded_pst["inputs"]):
             assert_equal(tx_in["sequence"], MAX_SEQUENCE_NUMBER)
@@ -243,7 +243,7 @@ class PSTTest(FreicoinTestFramework):
         assert_equal(decoded_pst["tx"]["locktime"], block_height+2)
 
         # Same construction with only locktime set
-        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height, unspent["refheight"], {}, True)
+        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["value"]+1}], block_height, unspent["refheight"], {}, True)
         decoded_pst = self.nodes[0].decodepst(pstx_info["pst"])
         for tx_in, pst_in in zip(decoded_pst["tx"]["vin"], decoded_pst["inputs"]):
             assert_equal(tx_in["sequence"], MAX_SEQUENCE_NUMBER)
@@ -251,7 +251,7 @@ class PSTTest(FreicoinTestFramework):
         assert_equal(decoded_pst["tx"]["locktime"], block_height)
 
         # Same construction without optional arguments
-        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}])
+        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["value"]+1}])
         decoded_pst = self.nodes[0].decodepst(pstx_info["pst"])
         for tx_in, pst_in in zip(decoded_pst["tx"]["vin"], decoded_pst["inputs"]):
             assert tx_in["sequence"] >= MAX_SEQUENCE_NUMBER
@@ -260,7 +260,7 @@ class PSTTest(FreicoinTestFramework):
 
         # Same construction without optional arguments
         unspent1 = self.nodes[1].listunspent()[0]
-        pstx_info = self.nodes[1].walletcreatefundedpst([{"txid":unspent1["txid"], "vout":unspent1["vout"]}], [{self.nodes[2].getnewaddress():unspent1["amount"]+1}], block_height)
+        pstx_info = self.nodes[1].walletcreatefundedpst([{"txid":unspent1["txid"], "vout":unspent1["vout"]}], [{self.nodes[2].getnewaddress():unspent1["value"]+1}], block_height)
         decoded_pst = self.nodes[1].decodepst(pstx_info["pst"])
         for tx_in, pst_in in zip(decoded_pst["tx"]["vin"], decoded_pst["inputs"]):
             assert_equal(tx_in["sequence"], MAX_SEQUENCE_NUMBER)
@@ -268,10 +268,10 @@ class PSTTest(FreicoinTestFramework):
 
         # Make sure change address wallet does not have P2SH innerscript access to results in success
         # when attempting BnB coin selection
-        self.nodes[0].walletcreatefundedpst([], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height+2, block_height+2, {"changeAddress":self.nodes[1].getnewaddress()}, False)
+        self.nodes[0].walletcreatefundedpst([], [{self.nodes[2].getnewaddress():unspent["value"]+1}], block_height+2, block_height+2, {"changeAddress":self.nodes[1].getnewaddress()}, False)
 
         # Regression test for 14473 (mishandling of already-signed witness transaction):
-        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}])
+        pstx_info = self.nodes[0].walletcreatefundedpst([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["value"]+1}])
         complete_pst = self.nodes[0].walletprocesspst(pstx_info["pst"])
         double_processed_pst = self.nodes[0].walletprocesspst(complete_pst["pst"])
         assert_equal(complete_pst, double_processed_pst)
