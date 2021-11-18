@@ -421,7 +421,7 @@ class WalletSendTest(FreicoinTestFramework):
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[], add_to_wallet=False)
         assert res["complete"]
         utxo1 = w0.listunspent()[0]
-        assert_equal(utxo1["amount"], 50)
+        assert_equal(utxo1["value"], 50)
         self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[utxo1],
                        expect_error=(-4, "Insufficient funds"))
         self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[utxo1], add_inputs=False,
@@ -467,7 +467,7 @@ class WalletSendTest(FreicoinTestFramework):
 
         self.log.info("Lock unspents...")
         utxo1 = w0.listunspent()[0]
-        assert_greater_than(utxo1["amount"], 1)
+        assert_greater_than(utxo1["value"], 1)
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, inputs=[utxo1], add_to_wallet=False, lock_unspents=True)
         assert res["complete"]
         locked_coins = w0.listlockunspent()

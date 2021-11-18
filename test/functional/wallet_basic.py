@@ -225,7 +225,7 @@ class WalletTest(FreicoinTestFramework):
             inputs = []
             outputs = {}
             inputs.append({"txid": utxo["txid"], "vout": utxo["vout"]})
-            outputs[self.nodes[2].getnewaddress()] = utxo["amount"] - 3
+            outputs[self.nodes[2].getnewaddress()] = utxo["value"] - 3
             raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
             txns_to_send.append(self.nodes[0].signrawtransactionwithwallet(raw_tx))
 
@@ -360,7 +360,7 @@ class WalletTest(FreicoinTestFramework):
         for uTx in unspent_txs:
             if uTx['txid'] == zero_value_txid:
                 found = True
-                assert_equal(uTx['amount'], Decimal('0'))
+                assert_equal(uTx['value'], Decimal('0'))
         assert found
 
         self.log.info("Test -walletbroadcast")

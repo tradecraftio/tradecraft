@@ -63,7 +63,7 @@ class MempoolPackagesTest(FreicoinTestFramework):
         utxo = self.nodes[0].listunspent(10)
         txid = utxo[0]['txid']
         vout = utxo[0]['vout']
-        value = utxo[0]['amount']
+        value = utxo[0]['value']
         assert 'ancestorcount' not in utxo[0]
         assert 'ancestorsize' not in utxo[0]
         assert 'ancestorfees' not in utxo[0]
@@ -241,7 +241,7 @@ class MempoolPackagesTest(FreicoinTestFramework):
 
         # Now test descendant chain limits
         txid = utxo[1]['txid']
-        value = utxo[1]['amount']
+        value = utxo[1]['value']
         vout = utxo[1]['vout']
 
         transaction_package = []
@@ -250,18 +250,18 @@ class MempoolPackagesTest(FreicoinTestFramework):
         (txid, sent_value) = chain_transaction(self.nodes[0], [txid], [vout], value, fee, 10)
         parent_transaction = txid
         for i in range(10):
-            transaction_package.append({'txid': txid, 'vout': i, 'amount': sent_value})
+            transaction_package.append({'txid': txid, 'vout': i, 'value': sent_value})
 
         # Sign and send up to MAX_DESCENDANT transactions chained off the parent tx
         chain = [] # save sent txs for the purpose of checking node1's mempool later (see below)
         for _ in range(DEFAULT_DESCENDANT_LIMIT - 1):
             utxo = transaction_package.pop(0)
-            (txid, sent_value) = chain_transaction(self.nodes[0], [utxo['txid']], [utxo['vout']], utxo['amount'], fee, 10)
+            (txid, sent_value) = chain_transaction(self.nodes[0], [utxo['txid']], [utxo['vout']], utxo['value'], fee, 10)
             chain.append(txid)
             if utxo['txid'] is parent_transaction:
                 tx_children.append(txid)
             for j in range(10):
-                transaction_package.append({'txid': txid, 'vout': j, 'amount': sent_value})
+                transaction_package.append({'txid': txid, 'vout': j, 'value': sent_value})
 
         mempool = self.nodes[0].getrawmempool(True)
         assert_equal(mempool[parent_transaction]['descendantcount'], DEFAULT_DESCENDANT_LIMIT)
@@ -272,7 +272,7 @@ class MempoolPackagesTest(FreicoinTestFramework):
 
         # Sending one more chained transaction will fail
         utxo = transaction_package.pop(0)
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", chain_transaction, self.nodes[0], [utxo['txid']], [utxo['vout']], utxo['amount'], fee, 10)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain", chain_transaction, self.nodes[0], [utxo['txid']], [utxo['vout']], utxo['value'], fee, 10)
 
         # Check that node1's mempool is as expected, containing:
         # - txs from previous ancestor test (-> custom ancestor limit)
@@ -314,7 +314,7 @@ class MempoolPackagesTest(FreicoinTestFramework):
         # Create tx0 with 2 outputs
         utxo = self.nodes[0].listunspent()
         txid = utxo[0]['txid']
-        value = utxo[0]['amount']
+        value = utxo[0]['value']
         vout = utxo[0]['vout']
 
         send_value = (value - fee) / 2
