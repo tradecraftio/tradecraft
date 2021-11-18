@@ -186,7 +186,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
                 "vout": 0,
                 "scriptPubKey": "A914AE44AB6E9AA0B71F1CD2B453B69340E9BFBAEF6087",
                 "redeemScript": "4F9C",
-                "amount": 1,
+                "value": 1,
                 "refheight": 1,
             }
         ]
@@ -209,7 +209,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
         utxo1 = self.create_outpoints(self.nodes[0], outputs=[{address: 1}])[0]
         self.generate(self.nodes[0], 1)
         utxo2 = self.nodes[0].listunspent()[0]
-        amt = Decimal(1) + utxo2["amount"] - Decimal(0.00001)
+        amt = Decimal(1) + utxo2["value"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(
             [{**utxo1, "sequence": 1},{"txid": utxo2["txid"], "vout": utxo2["vout"]}],
             [{self.nodes[0].getnewaddress(): amt}],
@@ -240,7 +240,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
         utxo1 = self.create_outpoints(self.nodes[0], outputs=[{address: 1}])[0]
         self.generate(self.nodes[0], 1)
         utxo2 = self.nodes[0].listunspent()[0]
-        amt = Decimal(1) + utxo2["amount"] - Decimal(0.00001)
+        amt = Decimal(1) + utxo2["value"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(
             [utxo1, {"txid": utxo2["txid"], "vout": utxo2["vout"]}],
             [{self.nodes[0].getnewaddress(): amt}],
@@ -269,16 +269,16 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
             outputs = {self.nodes[0].getnewaddress(): 1}
             rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
 
-            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, amount=1, refheight=1)
+            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, value=1, refheight=1)
             succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
             assert succ["complete"]
 
             if type == "legacy":
-                del prevtx["amount"]
+                del prevtx["value"]
                 succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
                 assert succ["complete"]
             else:
-                assert_raises_rpc_error(-3, "Missing amount", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+                assert_raises_rpc_error(-3, "Missing value", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                     {
                         "txid": txid,
                         "scriptPubKey": pubkey,
@@ -291,7 +291,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
                 {
                     "txid": txid,
                     "scriptPubKey": pubkey,
-                    "amount": 1,
+                    "value": 1,
                     "refheight": 1,
                 }
             ])
@@ -300,14 +300,14 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
                     "txid": txid,
                     "vout": 3,
                     "scriptPubKey": pubkey,
-                    "amount": 1,
+                    "value": 1,
                 }
             ])
             assert_raises_rpc_error(-3, "Missing txid", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                 {
                     "scriptPubKey": pubkey,
                     "vout": 3,
-                    "amount": 1,
+                    "value": 1,
                     "refheight": 1,
                 }
             ])
@@ -315,7 +315,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
                 {
                     "txid": txid,
                     "vout": 3,
-                    "amount": 1,
+                    "value": 1,
                     "refheight": 1,
                 }
             ])

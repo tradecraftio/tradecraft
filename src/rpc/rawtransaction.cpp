@@ -778,7 +778,7 @@ static RPCHelpMan signrawtransactionwithkey()
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "output script"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
-                                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
+                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
                                     {"refheight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The lockheight of the transaction output being spent"},
                                 },
                                 },
@@ -871,7 +871,7 @@ const RPCResult decodepst_inputs{
             }},
             {RPCResult::Type::OBJ, "witness_utxo", /*optional=*/true, "Transaction output for witness UTXOs",
             {
-                {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT},
+                {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT},
                 {RPCResult::Type::NUM, "refheight", "The lockheight of the transaction output being spent"},
                 {RPCResult::Type::OBJ, "scriptPubKey", "",
                 {
@@ -1174,7 +1174,7 @@ static RPCHelpMan decodepst()
             ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
 
             UniValue out(UniValue::VOBJ);
-            out.pushKV("amount", ValueFromAmount(txout.nValue));
+            out.pushKV("value", ValueFromAmount(txout.nValue));
             out.pushKV("refheight", (int64_t)input.witness_refheight);
             out.pushKV("scriptPubKey", std::move(o));
 
