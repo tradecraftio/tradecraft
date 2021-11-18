@@ -136,7 +136,7 @@ class MiniWallet:
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
-            self._utxos.append(self._create_utxo(txid=utxo["txid"], vout=utxo["vout"], value=utxo["amount"], refheight=utxo["refheight"], height=utxo["height"]))
+            self._utxos.append(self._create_utxo(txid=utxo["txid"], vout=utxo["vout"], value=utxo["value"], refheight=utxo["refheight"], height=utxo["height"]))
 
     def scan_tx(self, tx):
         """Scan the tx and adjust the internal list of owned utxos"""
@@ -418,7 +418,7 @@ def make_chain(node, address, privkeys, parent_txid, parent_value, parent_refhei
         "txid": parent_txid,
         "vout": n,
         "scriptPubKey": parent_locking_script,
-        "amount": parent_value,
+        "value": parent_value,
         "refheight": parent_refheight,
     }] if parent_locking_script else None
     signedtx = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=privkeys, prevtxs=prevtxs)
@@ -436,7 +436,7 @@ def create_child_with_parents(node, address, privkeys, parents_tx, values, locki
     refheight = 0
     for i in range(num_parents):
         refheight = max(refheight, parents_tx[i].lock_height)
-        prevtxs.append({"txid": parents_tx[i].rehash(), "vout": 0, "scriptPubKey": locking_scripts[i], "amount": values[i], "refheight": parents_tx[i].lock_height})
+        prevtxs.append({"txid": parents_tx[i].rehash(), "vout": 0, "scriptPubKey": locking_scripts[i], "value": values[i], "refheight": parents_tx[i].lock_height})
     rawtx_child = node.createrawtransaction(inputs, outputs, 0, refheight)
     signedtx_child = node.signrawtransactionwithkey(hexstring=rawtx_child, privkeys=privkeys, prevtxs=prevtxs)
     assert signedtx_child["complete"]
@@ -450,7 +450,7 @@ def create_raw_chain(node, first_coin, address, privkeys, chain_length=25):
     txid = first_coin["txid"]
     chain_hex = []
     chain_txns = []
-    value = first_coin["amount"]
+    value = first_coin["value"]
     refheight = first_coin["refheight"]
 
     for _ in range(chain_length):

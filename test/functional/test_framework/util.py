@@ -492,16 +492,16 @@ def check_node_connections(*, node, num_in, num_out):
 #############################
 
 
-def find_output(node, txid, amount, *, blockhash=None):
+def find_output(node, txid, value, *, blockhash=None):
     """
-    Return index to output of txid with value amount
+    Return index to output of txid with value value
     Raises exception if there is none.
     """
     txdata = node.getrawtransaction(txid, 1, blockhash)
     for i in range(len(txdata["vout"])):
-        if txdata["vout"][i]["value"] == amount:
+        if txdata["vout"][i]["value"] == value:
             return i
-    raise RuntimeError("find_output txid %s : %s not found" % (txid, str(amount)))
+    raise RuntimeError("find_output txid %s : %s not found" % (txid, str(value)))
 
 
 def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
