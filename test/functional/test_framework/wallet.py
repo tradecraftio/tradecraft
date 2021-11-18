@@ -157,7 +157,7 @@ class MiniWallet:
             self._utxos.append(
                 self._create_utxo(txid=utxo["txid"],
                                   vout=utxo["vout"],
-                                  value=utxo["amount"],
+                                  value=utxo["value"],
                                   refheight=utxo["refheight"],
                                   height=utxo["height"],
                                   coinbase=utxo["coinbase"],

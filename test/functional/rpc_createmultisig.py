@@ -168,7 +168,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         spk = address_to_scriptpubkey(madd)
         value = decimal.Decimal("0.00004000")
         tx = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=spk, amount=int(value * COIN))
-        prevtxs = [{"txid": tx["txid"], "vout": tx["sent_vout"], "scriptPubKey": spk.hex(), "redeemScript": mredeem, "amount": value, "refheight": tx["tx"].lock_height}]
+        prevtxs = [{"txid": tx["txid"], "vout": tx["sent_vout"], "scriptPubKey": spk.hex(), "redeemScript": mredeem, "value": value, "refheight": tx["tx"].lock_height}]
 
         self.generate(node0, 1)
 
