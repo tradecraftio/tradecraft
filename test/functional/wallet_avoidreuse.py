@@ -43,11 +43,11 @@ def count_unspent(node):
     supports_reused = True
     for utxo in node.listunspent(minconf=0):
         r["total"]["count"] += 1
-        r["total"]["sum"] += utxo["amount"]
+        r["total"]["sum"] += utxo["value"]
         if supports_reused and "reused" in utxo:
             if utxo["reused"]:
                 r["reused"]["count"] += 1
-                r["reused"]["sum"] += utxo["amount"]
+                r["reused"]["sum"] += utxo["value"]
         else:
             supports_reused = False
     r["reused"]["supported"] = supports_reused

@@ -213,7 +213,7 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     # Create a transaction with segwit output, then create an RBF transaction
     # which spends it, and make sure bumpfee can be called on it.
 
-    segwit_in = next(u for u in rbf_node.listunspent() if u["amount"] == Decimal("0.001"))
+    segwit_in = next(u for u in rbf_node.listunspent() if u["value"] == Decimal("0.001"))
     segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress(address_type='bech32'))
     segwitid = send_to_witness(
         use_p2wsh=False,
@@ -260,7 +260,7 @@ def test_notmine_bumpfee(self, rbf_node, peer_node, dest_address):
         "address": utxo["address"],
         "sequence": MAX_BIP125_RBF_SEQUENCE
     } for utxo in utxos]
-    output_val = sum(utxo["amount"] for utxo in utxos) - fee
+    output_val = sum(utxo["value"] for utxo in utxos) - fee
     rawtx = rbf_node.createrawtransaction(inputs, {dest_address: output_val})
     signedtx = rbf_node.signrawtransactionwithwallet(rawtx)
     signedtx = peer_node.signrawtransactionwithwallet(signedtx["hex"])
@@ -641,7 +641,7 @@ def test_change_script_match(self, rbf_node, dest_address):
 
 def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     tx_input = dict(
-        sequence=MAX_BIP125_RBF_SEQUENCE, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
+        sequence=MAX_BIP125_RBF_SEQUENCE, **next(u for u in node.listunspent() if u["value"] == Decimal("0.00100000")))
     destinations = {dest_address: Decimal("0.00050000")}
     if change_size > 0:
         destinations[node.getrawchangeaddress()] = change_size

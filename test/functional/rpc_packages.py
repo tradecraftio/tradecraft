@@ -70,7 +70,7 @@ class RPCPackagesTest(FreicoinTestFramework):
             coinbase = node.getblock(blockhash=b, verbosity=2)["tx"][0]
             self.coins.append({
                 "txid": coinbase["txid"],
-                "amount": coinbase["vout"][0]["value"],
+                "value": coinbase["vout"][0]["value"],
                 "refheight": coinbase["lockheight"],
                 "scriptPubKey": coinbase["vout"][0]["scriptPubKey"],
             })
@@ -81,7 +81,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         for _ in range(3):
             coin = self.coins.pop()
             rawtx = node.createrawtransaction([{"txid": coin["txid"], "vout": 0}],
-                {self.address : coin["amount"] - Decimal("0.0001")}, 0, coin["refheight"])
+                {self.address : coin["value"] - Decimal("0.0001")}, 0, coin["refheight"])
             signedtx = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
             assert signedtx["complete"]
             testres = node.testmempoolaccept([signedtx["hex"]])
@@ -119,7 +119,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         self.log.info("Check testmempoolaccept tells us when some transactions completed validation successfully")
         coin = self.coins.pop()
         tx_bad_sig_hex = node.createrawtransaction([{"txid": coin["txid"], "vout": 0}],
-                                           {self.address : coin["amount"] - Decimal("0.0001")}, 0, coin["refheight"])
+                                           {self.address : coin["value"] - Decimal("0.0001")}, 0, coin["refheight"])
         tx_bad_sig = tx_from_hex(tx_bad_sig_hex)
         testres_bad_sig = node.testmempoolaccept(self.independent_txns_hex + [tx_bad_sig_hex])
         # By the time the signature for the last transaction is checked, all the other transactions
@@ -134,7 +134,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         self.log.info("Check testmempoolaccept reports txns in packages that exceed max feerate")
         coin = self.coins.pop()
         tx_high_fee_raw = node.createrawtransaction([{"txid": coin["txid"], "vout": 0}],
-                                           {self.address : coin["amount"] - Decimal("0.999")}, 0, coin["refheight"])
+                                           {self.address : coin["value"] - Decimal("0.999")}, 0, coin["refheight"])
         tx_high_fee_signed = node.signrawtransactionwithkey(hexstring=tx_high_fee_raw, privkeys=self.privkeys)
         assert tx_high_fee_signed["complete"]
         tx_high_fee = tx_from_hex(tx_high_fee_signed["hex"])
@@ -173,7 +173,7 @@ class RPCPackagesTest(FreicoinTestFramework):
 
         self.log.info("Testmempoolaccept a package in which a transaction has two children within the package")
         first_coin = self.coins.pop()
-        value = (first_coin["amount"] - Decimal("0.0002")) / 2 # Deduct reasonable fee and make 2 outputs
+        value = (first_coin["value"] - Decimal("0.0002")) / 2 # Deduct reasonable fee and make 2 outputs
         inputs = [{"txid": first_coin["txid"], "vout": 0}]
         outputs = [{self.address : value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : value}]
         rawtx = node.createrawtransaction(inputs, outputs, 0, first_coin["refheight"])
@@ -227,7 +227,7 @@ class RPCPackagesTest(FreicoinTestFramework):
             parent_locking_scripts = []
             for _ in range(num_parents):
                 parent_coin = self.coins.pop()
-                value = parent_coin["amount"]
+                value = parent_coin["value"]
                 refheight = parent_coin["refheight"]
                 (tx, txhex, value, parent_locking_script) = make_chain(node, self.address, self.privkeys, parent_coin["txid"], value, refheight)
                 package_hex.append(txhex)
@@ -351,7 +351,7 @@ class RPCPackagesTest(FreicoinTestFramework):
         scripts = []
         for _ in range(num_parents):
             parent_coin = self.coins.pop()
-            value = parent_coin["amount"]
+            value = parent_coin["value"]
             refheight = parent_coin["refheight"]
             (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, parent_coin["txid"], value, refheight)
             package_hex.append(txhex)
@@ -403,8 +403,8 @@ class RPCPackagesTest(FreicoinTestFramework):
         # fee-bumped by the child.
         coin_rich = self.coins.pop()
         coin_poor = self.coins.pop()
-        tx_rich, hex_rich, value_rich, spk_rich = make_chain(node, self.address, self.privkeys, coin_rich["txid"], coin_rich["amount"], coin_rich["refheight"])
-        tx_poor, hex_poor, value_poor, spk_poor = make_chain(node, self.address, self.privkeys, coin_poor["txid"], coin_poor["amount"], coin_rich["refheight"], fee=0)
+        tx_rich, hex_rich, value_rich, spk_rich = make_chain(node, self.address, self.privkeys, coin_rich["txid"], coin_rich["value"], coin_rich["refheight"])
+        tx_poor, hex_poor, value_poor, spk_poor = make_chain(node, self.address, self.privkeys, coin_poor["txid"], coin_poor["value"], coin_rich["refheight"], fee=0)
         package_txns = [tx_rich, tx_poor]
         hex_child = create_child_with_parents(node, self.address, self.privkeys, package_txns, [value_rich, value_poor], [spk_rich, spk_poor])
         tx_child = tx_from_hex(hex_child)
