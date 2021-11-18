@@ -897,8 +897,8 @@ static RPCHelpMan gettxoutsetinfo()
                         {RPCResult::Type::STR_HEX, "muhash", /*optional=*/true, "The serialized hash (only present if 'muhash' hash_type is chosen)"},
                         {RPCResult::Type::NUM, "transactions", /*optional=*/true, "The number of transactions with unspent outputs (not available when coinstatsindex is used)"},
                         {RPCResult::Type::NUM, "disk_size", /*optional=*/true, "The estimated size of the chainstate on disk (not available when coinstatsindex is used)"},
-                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of coins in the UTXO set"},
-                        {RPCResult::Type::STR_AMOUNT, "total_unspendable_amount", /*optional=*/true, "The total amount of coins permanently excluded from the UTXO set (only available if coinstatsindex is used)"},
+                        {RPCResult::Type::STR_AMOUNT, "total_value", "The total value of coins in the UTXO set"},
+                        {RPCResult::Type::STR_AMOUNT, "total_unspendable_value", /*optional=*/true, "The total value of coins permanently excluded from the UTXO set (only available if coinstatsindex is used)"},
                         {RPCResult::Type::OBJ, "block_info", /*optional=*/true, "Info on amounts in the block at this block height (only available if coinstatsindex is used)",
                         {
                             {RPCResult::Type::STR_AMOUNT, "prevout_spent", "Total amount of all prevouts spent in this block"},
@@ -987,13 +987,13 @@ static RPCHelpMan gettxoutsetinfo()
         if (hash_type == CoinStatsHashType::MUHASH) {
             ret.pushKV("muhash", stats.hashSerialized.GetHex());
         }
-        CHECK_NONFATAL(stats.total_amount.has_value());
-        ret.pushKV("total_amount", ValueFromAmount(stats.total_amount.value()));
+        CHECK_NONFATAL(stats.total_value.has_value());
+        ret.pushKV("total_value", ValueFromAmount(stats.total_value.value()));
         if (!stats.index_used) {
             ret.pushKV("transactions", static_cast<int64_t>(stats.nTransactions));
             ret.pushKV("disk_size", stats.nDiskSize);
         } else {
-            ret.pushKV("total_unspendable_amount", ValueFromAmount(stats.total_unspendable_amount));
+            ret.pushKV("total_unspendable_value", ValueFromAmount(stats.total_unspendable_value));
 
             CCoinsStats prev_stats{};
             if (pindex->nHeight > 0) {
@@ -1008,7 +1008,7 @@ static RPCHelpMan gettxoutsetinfo()
             block_info.pushKV("prevout_spent", ValueFromAmount(stats.total_prevout_spent_amount - prev_stats.total_prevout_spent_amount));
             block_info.pushKV("coinbase", ValueFromAmount(stats.total_coinbase_amount - prev_stats.total_coinbase_amount));
             block_info.pushKV("new_outputs_ex_coinbase", ValueFromAmount(stats.total_new_outputs_ex_coinbase_amount - prev_stats.total_new_outputs_ex_coinbase_amount));
-            block_info.pushKV("unspendable", ValueFromAmount(stats.total_unspendable_amount - prev_stats.total_unspendable_amount));
+            block_info.pushKV("unspendable", ValueFromAmount(stats.total_unspendable_value - prev_stats.total_unspendable_value));
 
             UniValue unspendables(UniValue::VOBJ);
             unspendables.pushKV("genesis_block", ValueFromAmount(stats.total_unspendables_genesis_block - prev_stats.total_unspendables_genesis_block));
@@ -2143,7 +2143,7 @@ static RPCHelpMan scantxoutset()
                         {RPCResult::Type::NUM, "vout", "The vout value"},
                         {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
                         {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
-                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                        {RPCResult::Type::STR_AMOUNT, "value", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
                         {RPCResult::Type::BOOL, "coinbase", "Whether this is a coinbase output"},
                         {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
                         {RPCResult::Type::NUM, "refheight", "Reference height of the unspent transaction output"},
@@ -2243,7 +2243,7 @@ static RPCHelpMan scantxoutset()
             unspent.pushKV("vout", (int32_t)outpoint.n);
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey));
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
-            unspent.pushKV("amount", ValueFromAmount(txo.nValue));
+            unspent.pushKV("value", ValueFromAmount(txo.nValue));
             unspent.pushKV("refheight", (int64_t)coin.refheight);
             unspent.pushKV("coinbase", coin.IsCoinBase());
             unspent.pushKV("height", (int32_t)coin.nHeight);
