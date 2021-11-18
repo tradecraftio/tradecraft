@@ -810,7 +810,7 @@ static RPCHelpMan signrawtransactionwithkey()
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
-                                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
+                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
                                     {"refheight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The lockheight of the transaction output being spent"},
                                 },
                                 },
@@ -1143,7 +1143,7 @@ static RPCHelpMan decodepst()
                                 }},
                                 {RPCResult::Type::OBJ, "witness_utxo", /*optional=*/true, "Transaction output for witness UTXOs",
                                 {
-                                    {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT},
+                                    {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT},
                                     {RPCResult::Type::NUM, "refheight", "The lockheight of the transaction output being spent"},
                                     {RPCResult::Type::OBJ, "scriptPubKey", "",
                                     {
@@ -1342,7 +1342,7 @@ static RPCHelpMan decodepst()
             ScriptPubKeyToUniv(txout.scriptPubKey, o, /* include_hex */ true);
 
             UniValue out(UniValue::VOBJ);
-            out.pushKV("amount", ValueFromAmount(txout.nValue));
+            out.pushKV("value", ValueFromAmount(txout.nValue));
             out.pushKV("refheight", (int64_t)input.witness_refheight);
             out.pushKV("scriptPubKey", o);
 

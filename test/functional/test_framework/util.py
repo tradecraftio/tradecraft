@@ -509,7 +509,7 @@ def create_confirmed_utxos(test_framework, fee, node, count, **kwargs):
         inputs = []
         inputs.append({"txid": t["txid"], "vout": t["vout"]})
         outputs = {}
-        send_value = t['amount'] - fee
+        send_value = t['value'] - fee
         outputs[addr1] = kria_round(send_value / 2)
         outputs[addr2] = kria_round(send_value / 2)
         raw_tx = node.createrawtransaction(inputs, outputs)
@@ -576,7 +576,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         t = utxos.pop()
         inputs = [{"txid": t["txid"], "vout": t["vout"]}]
         outputs = {}
-        change = t['amount'] - fee
+        change = t['value'] - fee
         outputs[addr] = kria_round(change)
         rawtx = node.createrawtransaction(inputs, outputs)
         tx = tx_from_hex(rawtx)

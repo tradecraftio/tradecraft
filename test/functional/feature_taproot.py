@@ -1366,13 +1366,13 @@ class TaprootTest(FreicoinTestFramework):
             # Add the 50 highest-value inputs
             unspents = node.listunspent()
             random.shuffle(unspents)
-            unspents.sort(key=lambda x: int(x["amount"] * 100000000), reverse=True)
+            unspents.sort(key=lambda x: int(x["value"] * 100000000), reverse=True)
             if len(unspents) > 50:
                 unspents = unspents[:50]
             random.shuffle(unspents)
             balance = 0
             for unspent in unspents:
-                balance += int(unspent["amount"] * 100000000)
+                balance += int(unspent["value"] * 100000000)
                 txid = int(unspent["txid"], 16)
                 fund_tx.vin.append(CTxIn(COutPoint(txid, int(unspent["vout"])), CScript()))
                 fund_tx.lock_height = max(fund_tx.lock_height, unspent["refheight"])
@@ -1777,7 +1777,7 @@ class TaprootTest(FreicoinTestFramework):
         addr = self.nodes[0].getnewaddress()
 
         unsp = self.nodes[1].listunspent()
-        unsp = sorted(unsp, key=lambda i: i['amount'], reverse=True)
+        unsp = sorted(unsp, key=lambda i: i['value'], reverse=True)
         unsp = unsp[:500]
 
         rawtx = self.nodes[1].createrawtransaction(
@@ -1785,7 +1785,7 @@ class TaprootTest(FreicoinTestFramework):
                 'txid': i['txid'],
                 'vout': i['vout']
             } for i in unsp],
-            outputs={addr: sum(i['amount'] for i in unsp)}
+            outputs={addr: sum(i['value'] for i in unsp)}
         )
         rawtx = self.nodes[1].signrawtransactionwithwallet(rawtx)['hex']
 

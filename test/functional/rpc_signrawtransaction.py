@@ -252,7 +252,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         self.generate(self.nodes[0], 1)
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
-        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10, 'refheight': refheight}])
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'value': 10, 'refheight': refheight}])
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)
@@ -272,7 +272,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
                 "vout": 0,
                 "scriptPubKey": "A914AE44AB6E9AA0B71F1CD2B453B69340E9BFBAEF6087",
                 "redeemScript": "4F9C",
-                "amount": 1,
+                "value": 1,
                 "refheight": 1,
             }
         ]
@@ -296,7 +296,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         vout = find_vout_for_address(self.nodes[0], txid, address)
         self.generate(self.nodes[0], 1)
         utxo = self.nodes[0].listunspent()[0]
-        amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
+        amt = Decimal(1) + utxo["value"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(
             [{"txid": txid, "vout": vout, "sequence": 1},{"txid": utxo["txid"], "vout": utxo["vout"]}],
             [{self.nodes[0].getnewaddress(): amt}],
@@ -328,7 +328,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         vout = find_vout_for_address(self.nodes[0], txid, address)
         self.generate(self.nodes[0], 1)
         utxo = self.nodes[0].listunspent()[0]
-        amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
+        amt = Decimal(1) + utxo["value"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(
             [{"txid": txid, "vout": vout},{"txid": utxo["txid"], "vout": utxo["vout"]}],
             [{self.nodes[0].getnewaddress(): amt}],

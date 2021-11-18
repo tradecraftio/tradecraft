@@ -110,7 +110,7 @@ class MiniWallet:
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
-            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount'], 'refheight': utxo['refheight'], 'height': utxo['height']})
+            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['value'], 'refheight': utxo['refheight'], 'height': utxo['height']})
 
     def scan_tx(self, tx):
         """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
