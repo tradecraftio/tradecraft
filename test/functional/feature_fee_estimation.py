@@ -60,12 +60,12 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
         t = conflist.pop(0)
-        total_in += t["amount"]
+        total_in += t["value"]
         tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
     if total_in <= amount + fee:
         while total_in <= (amount + fee) and len(unconflist) > 0:
             t = unconflist.pop(0)
-            total_in += t["amount"]
+            total_in += t["value"]
             tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
         if total_in <= amount + fee:
             raise RuntimeError("Insufficient funds: need %d, have %d" % (amount + fee, total_in))
@@ -76,8 +76,8 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     for inp in tx.vin:
         inp.scriptSig = SCRIPT_SIG[inp.prevout.n]
     txid = from_node.sendrawtransaction(hexstring=ToHex(tx), maxfeerate=0)
-    unconflist.append({"txid": txid, "vout": 0, "amount": total_in - amount - fee})
-    unconflist.append({"txid": txid, "vout": 1, "amount": amount})
+    unconflist.append({"txid": txid, "vout": 0, "value": total_in - amount - fee})
+    unconflist.append({"txid": txid, "vout": 1, "value": amount})
 
     return (ToHex(tx), fee)
 
@@ -94,8 +94,8 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     tx = CTransaction()
     tx.vin.append(CTxIn(COutPoint(int(prevtxout["txid"], 16), prevtxout["vout"]), b""))
 
-    half_change = kria_round(prevtxout["amount"] / 2)
-    rem_change = prevtxout["amount"] - half_change - Decimal("0.00001000")
+    half_change = kria_round(prevtxout["value"] / 2)
+    rem_change = prevtxout["value"] - half_change - Decimal("0.00001000")
     tx.vout.append(CTxOut(int(half_change * COIN), P2SH_1))
     tx.vout.append(CTxOut(int(rem_change * COIN), P2SH_2))
 
@@ -107,8 +107,8 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
         tx.vin[0].scriptSig = SCRIPT_SIG[prevtxout["vout"]]
         completetx = ToHex(tx)
     txid = from_node.sendrawtransaction(hexstring=completetx, maxfeerate=0)
-    txouts.append({"txid": txid, "vout": 0, "amount": half_change})
-    txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
+    txouts.append({"txid": txid, "vout": 0, "value": half_change})
+    txouts.append({"txid": txid, "vout": 1, "value": rem_change})
 
 
 def check_estimates(node, fees_seen):

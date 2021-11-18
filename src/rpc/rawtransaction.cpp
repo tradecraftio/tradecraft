@@ -717,7 +717,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
-                                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
+                                    {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
                                     {"refheight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The lockheight of the transaction output being spent"},
                                 },
                                 },
@@ -978,7 +978,7 @@ UniValue decodepst(const JSONRPCRequest& request)
             "        ...\n"
             "      },\n"
             "      \"witness_utxo\" : {            (json object, optional) Transaction output for witness UTXOs\n"
-            "        \"amount\" : x.xxx,           (numeric) The value in " + CURRENCY_UNIT + "\n"
+            "        \"value\" : x.xxx,            (numeric) The value in " + CURRENCY_UNIT + " of the input at the source transaction's reference height\n"
             "        \"refheight\" : n,            (numeric) The reference height of the input (the lockheight of the transaction being spent)\n"
             "        \"scriptPubKey\" : {          (json object)\n"
             "          \"asm\" : \"asm\",            (string) The asm\n"
@@ -1093,7 +1093,7 @@ UniValue decodepst(const JSONRPCRequest& request)
 
             UniValue out(UniValue::VOBJ);
 
-            out.pushKV("amount", ValueFromAmount(txout.nValue));
+            out.pushKV("value", ValueFromAmount(txout.nValue));
             out.pushKV("refheight", (int64_t)input.witness_refheight);
             if (MoneyRange(txout.nValue) && MoneyRange(total_in + txout.nValue)) {
                 total_in += txout.nValue;

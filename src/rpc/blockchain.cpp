@@ -2074,7 +2074,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             "    \"vout\": n,                   (numeric) The vout value\n"
             "    \"scriptPubKey\": \"script\",    (string) The script key\n"
             "    \"desc\": \"descriptor\",        (string) A specialized descriptor for the matched scriptPubKey\n"
-            "    \"amount\": x.xxx,             (numeric) The total amount in " + CURRENCY_UNIT + " of the unspent output at its reference height\n"
+            "    \"value\": x.xxx,              (numeric) The total amount in " + CURRENCY_UNIT + " of the unspent output at its reference height\n"
             "    \"refheight\": n,              (numeric) Height of the unspent transaction output\n"
             "    \"height\": n,                 (numeric) Height of the unspent transaction output\n"
             "   }\n"
@@ -2165,7 +2165,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             unspent.pushKV("vout", (int32_t)outpoint.n);
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey.begin(), txo.scriptPubKey.end()));
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
-            unspent.pushKV("amount", ValueFromAmount(txo.nValue));
+            unspent.pushKV("value", ValueFromAmount(txo.nValue));
             unspent.pushKV("refheight", (int64_t)coin.refheight);
             unspent.pushKV("height", (int32_t)coin.nHeight);
 

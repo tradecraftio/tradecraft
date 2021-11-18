@@ -52,7 +52,7 @@ class BumpFeeWithTotalFeeArgumentDeprecationTest(FreicoinTestFramework):
 
 def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     tx_input = dict(sequence=MAX_SEQUENCE_NUMBER,
-                    **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
+                    **next(u for u in node.listunspent() if u["value"] == Decimal("0.00100000")))
     destinations = {dest_address: Decimal("0.00050000")}
     destinations[node.getrawchangeaddress()] = change_size
     rawtx = node.createrawtransaction([tx_input], destinations)
