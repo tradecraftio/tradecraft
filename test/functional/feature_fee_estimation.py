@@ -73,19 +73,19 @@ def small_txpuzzle_randfee(
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
         t = conflist.pop(0)
-        total_in += t["amount"]
+        total_in += t["value"]
         tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), REDEEM_SCRIPT))
     while total_in <= (amount + fee) and len(unconflist) > 0:
         t = unconflist.pop(0)
-        total_in += t["amount"]
+        total_in += t["value"]
         tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), REDEEM_SCRIPT))
     if total_in <= amount + fee:
         raise RuntimeError(f"Insufficient funds: need {amount + fee}, have {total_in}")
     tx.vout.append(CTxOut(int((total_in - amount - fee) * COIN), P2SH))
     tx.vout.append(CTxOut(int(amount * COIN), P2SH))
     txid = from_node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
-    unconflist.append({"txid": txid, "vout": 0, "amount": total_in - amount - fee})
-    unconflist.append({"txid": txid, "vout": 1, "amount": amount})
+    unconflist.append({"txid": txid, "vout": 0, "value": total_in - amount - fee})
+    unconflist.append({"txid": txid, "vout": 1, "value": amount})
 
     return (tx.serialize().hex(), fee)
 
@@ -144,7 +144,7 @@ def send_tx(node, utxo, feerate):
     """Broadcast a 1in-1out transaction with a specific input and feerate (sat/vb)."""
     tx = CTransaction()
     tx.vin = [CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), REDEEM_SCRIPT)]
-    tx.vout = [CTxOut(int(utxo["amount"] * COIN), P2SH)]
+    tx.vout = [CTxOut(int(utxo["value"] * COIN), P2SH)]
 
     # vbytes == bytes as we are using legacy transactions
     fee = tx.get_vsize() * feerate
@@ -231,7 +231,7 @@ class EstimateFeeTest(FreicoinTestFramework):
         txhex = node.signrawtransactionwithwallet(tx.serialize().hex())["hex"]
         txid = node.sendrawtransaction(txhex)
         self.confutxo = [
-            {"txid": txid, "vout": i, "amount": splitted_amount}
+            {"txid": txid, "vout": i, "value": splitted_amount}
             for i in range(utxo_count)
         ]
         while len(node.getrawmempool()) > 0:

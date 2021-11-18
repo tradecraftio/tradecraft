@@ -45,7 +45,7 @@ class MempoolPackagesTest(FreicoinTestFramework):
         utxo = self.nodes[0].listunspent(10)
         txid = utxo[0]['txid']
         vout = utxo[0]['vout']
-        value = utxo[0]['amount']
+        value = utxo[0]['value']
 
         fee = Decimal("0.0002")
         # MAX_ANCESTORS transactions off a confirmed tx should be fine
@@ -59,7 +59,7 @@ class MempoolPackagesTest(FreicoinTestFramework):
             (txid, sent_value) = chain_transaction(self.nodes[0], [txid], [0], value, fee, 1)
             value = sent_value
             chain.append([txid, value])
-        (second_chain, second_chain_value) = chain_transaction(self.nodes[0], [utxo[1]['txid']], [utxo[1]['vout']], utxo[1]['amount'], fee, 1)
+        (second_chain, second_chain_value) = chain_transaction(self.nodes[0], [utxo[1]['txid']], [utxo[1]['vout']], utxo[1]['value'], fee, 1)
 
         # Check mempool has MAX_ANCESTORS + 1 transactions in it
         assert_equal(len(self.nodes[0].getrawmempool()), MAX_ANCESTORS + 1)

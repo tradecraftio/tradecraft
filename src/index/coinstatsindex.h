@@ -34,9 +34,9 @@ private:
     MuHash3072 m_muhash;
     uint64_t m_transaction_output_count{0};
     uint64_t m_bogo_size{0};
-    CAmount m_total_amount{0};
+    CAmount m_total_value{0};
     CAmount m_total_subsidy{0};
-    CAmount m_total_unspendable_amount{0};
+    CAmount m_total_unspendable_value{0};
     CAmount m_total_prevout_spent_amount{0};
     CAmount m_total_new_outputs_ex_coinbase_amount{0};
     CAmount m_total_coinbase_amount{0};

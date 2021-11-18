@@ -37,7 +37,7 @@ def create_transactions(node, address, amt, fees):
     ins_total = 0
     for utxo in utxos:
         inputs.append({"txid": utxo["txid"], "vout": utxo["vout"]})
-        ins_total += utxo['amount']
+        ins_total += utxo['value']
         if ins_total >= amt + max(fees):
             break
     # make sure there was enough utxos
