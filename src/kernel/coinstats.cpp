@@ -118,8 +118,8 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
     stats.nTransactions++;
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         stats.nTransactionOutputs++;
-        if (stats.total_amount.has_value()) {
-            stats.total_amount = CheckedAdd(*stats.total_amount, it->second.out.nValue);
+        if (stats.total_value.has_value()) {
+            stats.total_value = CheckedAdd(*stats.total_value, it->second.out.nValue);
         }
         stats.nBogoSize += GetBogoSize(it->second.out.scriptPubKey);
     }

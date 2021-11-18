@@ -142,7 +142,7 @@ class NULLDUMMYTest(FreicoinTestFramework):
 
         self.log.info("Test 5: Non-NULLDUMMY P2WSH multisig transaction invalid after activation")
         test5tx = self.create_transaction(txid=txid3, input_details={"scriptPubKey": test1txs[2].vout[0].scriptPubKey.hex(),
-                                          "amount": 49, "refheight": test1txs[2].lock_height, "witnessScript": wms["redeemScript"]},
+                                          "value": 49, "refheight": test1txs[2].lock_height, "witnessScript": wms["redeemScript"]},
                                           addr=getnewdestination(address_type='p2sh-segwit')[2], amount=48,
                                           refheight=test1txs[2].lock_height,
                                           privkey=self.privkey)
