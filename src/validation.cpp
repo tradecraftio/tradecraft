@@ -2172,14 +2172,11 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
 {
     const Consensus::Params& consensusparams = chainman.GetConsensus();
 
-    // BIP16 didn't become active until Apr 1 2012 (on mainnet, and
-    // retroactively applied to testnet)
-    // However, only one historical block violated the P2SH rules (on both
-    // mainnet and testnet).
-    // Similarly, only one historical block violated the TAPROOT rules on
-    // mainnet.
-    // For simplicity, always leave P2SH+WITNESS+TAPROOT on except for the two
-    // violating blocks.
+    // BIP16 didn't become active immediately; a coinbase-signaling
+    // activation mechanism was borrowed from bitcoin.  But since no
+    // BIP16-violating blocks were generated, we can for simplicity
+    // enforce BIP16 rules retroactively for all blocks.
+    // WITNESS rules are enforced whenever P2SH is in effect.
     uint32_t flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
     const auto it{consensusparams.script_flag_exceptions.find(*Assert(block_index.phashBlock))};
     if (it != consensusparams.script_flag_exceptions.end()) {
