@@ -90,10 +90,6 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
-        consensus.script_flag_exceptions.emplace( // BIP16 exception
-            uint256S("0x00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22"), SCRIPT_VERIFY_NONE);
-        consensus.script_flag_exceptions.emplace( // Taproot exception
-            uint256S("0x0000000000000000000f14c35b2d841e986ab5441de8c585d5ffe55ea1e395ad"), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS);
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
@@ -225,8 +221,6 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
-        consensus.script_flag_exceptions.emplace( // BIP16 exception
-            uint256S("0x00000000dd30457c001f4095d208cc1296b0eed002427aa599874af7a432b105"), SCRIPT_VERIFY_NONE);
         consensus.BIP34Height = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
