@@ -80,8 +80,7 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
-        consensus.BIP34Height = 227931;
-        consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
+        consensus.BIP34Height = 1;
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.LockTimeHeight = 419328; // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
         consensus.SegwitHeight = 481824; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
@@ -211,8 +210,7 @@ public:
         consensus.equilibrium_height = 161280; // three years
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
-        consensus.BIP34Height = 21111;
-        consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
+        consensus.BIP34Height = std::numeric_limits<int>::max(); // BIP34 never activated on Freicoin's testnet
         consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
         consensus.LockTimeHeight = 770112; // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
         consensus.SegwitHeight = 834624; // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
@@ -367,7 +365,6 @@ public:
         consensus.equilibrium_monetary_base = 10000000000000000LL; // 100,000,000.0000,0000fc
         consensus.initial_excess_subsidy = 15916928404LL; // 1519.1692,8404fc
         consensus.BIP34Height = 1;
-        consensus.BIP34Hash = uint256{};
         consensus.BIP66Height = 1;
         consensus.LockTimeHeight = 1;
         consensus.SegwitHeight = 1;
@@ -443,7 +440,6 @@ public:
         consensus.equilibrium_monetary_base = 0;
         consensus.initial_excess_subsidy = 0;
         consensus.BIP34Height = 1; // Always active unless overridden
-        consensus.BIP34Hash = uint256();
         consensus.BIP66Height = 1;  // Always active unless overridden
         consensus.LockTimeHeight = 1; // Always active unless overridden
         consensus.SegwitHeight = 0; // Always active unless overridden
