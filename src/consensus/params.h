@@ -101,9 +101,8 @@ struct Params {
      * - fail if the default script verify flags are applied.
      */
     std::map<uint256, uint32_t> script_flag_exceptions;
-    /** Block height and hash at which BIP34 becomes active */
+    /** Block height at which BIP34 becomes active */
     int BIP34Height;
-    uint256 BIP34Hash;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
     /** Block height at which locktime restrictions (BIP68 and BIP113) become active */
