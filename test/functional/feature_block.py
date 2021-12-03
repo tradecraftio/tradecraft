@@ -864,14 +864,14 @@ class FullBlockTest(FreicoinTestFramework):
         # block b61, which would overwrite/shadow the coinbase of b_dup_cb.
         # However this is impossible to setup now that coinbases are required to
         # commit to their block height in the lock_height field, so this test is
-        # neutered.
+        # neutered.  Instead it fails because the coinbase lockheight of block
+        # b61 doesn't match its actual block height.
         assert duplicate_tx.serialize() != b61.vtx[0].serialize()
         b61.vtx[0].lock_height = duplicate_tx.lock_height
         b61.vtx[0].rehash()
         b61 = self.update_block(61, [])
         assert_equal(duplicate_tx.serialize(), b61.vtx[0].serialize())
-        # BIP30 is always checked on regtest, regardless of the BIP34 activation height
-        self.send_blocks([b61], success=False, reject_reason='bad-txns-BIP30', reconnect=True)
+        self.send_blocks([b61], success=False, reject_reason='bad-cb-lock-height', reconnect=True)
 
         # Test BIP30 (allow duplicate if spent)
         #
