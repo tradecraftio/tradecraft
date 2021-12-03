@@ -93,8 +93,8 @@ public:
         consensus.BIP34Height = 1;
         consensus.BIP66Height = 158425; // 0000000000000799b28bbc61b9a93770af898ffc621174e70480656f0382a020
         consensus.LockTimeHeight = 258048; // 000000000000002b7c1e4b345d09ed56475bd7e9d84f1bb43ea13195aa7719b6
-        consensus.SegwitHeight = 481824; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
-        consensus.MinBIP9WarningHeight = 483840; // segwit activation height + miner confirmation window
+        consensus.SegwitHeight = 278208; // 0000000000000050599fa4cae6de65d71a1d7d0d7dc2e9b19531b794c30458c0
+        consensus.MinBIP9WarningHeight = 280224; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -223,8 +223,8 @@ public:
         consensus.BIP34Height = std::numeric_limits<int>::max(); // BIP34 never activated on Freicoin's testnet
         consensus.BIP66Height = 1; // 0000000000002076358270b88c18cce6a0886c870e6167776e40d167bd01b49f
         consensus.LockTimeHeight = 1512; // 00000000000019f427d3b84e5d97485fa957deb7c5d7df6ca7a60f5739b91d3a
-        consensus.SegwitHeight = 834624; // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
-        consensus.MinBIP9WarningHeight = 836640; // segwit activation height + miner confirmation window
+        consensus.SegwitHeight = 2016; // 00000000000017c5d079dfbe901cb7d0fae2a8eafd91be4e98f23481c73921d5
+        consensus.MinBIP9WarningHeight = 4032; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
