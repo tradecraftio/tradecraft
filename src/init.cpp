@@ -24,7 +24,6 @@
 #include <index/txindex.h>
 #include <interfaces/chain.h>
 #include <key.h>
-#include <mergemine.h>
 #include <miner.h>
 #include <net.h>
 #include <net_permissions.h>
@@ -161,7 +160,6 @@ static boost::thread_group threadGroup;
 void Interrupt(NodeContext& node)
 {
     InterruptStratumServer();
-    InterruptMergeMining();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -195,7 +193,6 @@ void Shutdown(NodeContext& node)
     StopREST();
     StopRPC();
     StopStratumServer();
-    StopMergeMining();
     StopHTTPServer();
     for (const auto& client : node.chain_clients) {
         client->flush();
@@ -575,8 +572,6 @@ void SetupServerArgs()
     gArgs.AddArg("-stratumbind=<addr>", "Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::STRATUM);
     gArgs.AddArg("-stratumport=<port>", strprintf("Listen for Stratum work requests on <port> (default: %u or testnet: %u)", defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::STRATUM);
     gArgs.AddArg("-stratumallowip=<ip>", "Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
-    gArgs.AddArg("-mergemine=<addr>:<port>", "Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://<addr>:<port>", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
-    gArgs.AddArg("-mergeminename=<name>:<chainid>", "Use <name> as an alternative specifier for the given chainid.", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
 
 #if HAVE_DECL_DAEMON
     gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -780,8 +775,6 @@ static bool AppInitServers()
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
-        return false;
-    if (!InitMergeMining())
         return false;
     if (gArgs.GetBoolArg("-stratum", DEFAULT_STRATUM_ENABLE) && !InitStratumServer())
         return false;

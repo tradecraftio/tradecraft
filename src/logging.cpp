@@ -163,7 +163,6 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
     {BCLog::VALIDATION, "validation"},
-    {BCLog::MERGEMINE, "mergemine"},
     {BCLog::STRATUM, "stratum"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
