@@ -20,7 +20,7 @@ Tests correspond to code in rpc/net.cpp.
 
 from decimal import Decimal
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
@@ -51,7 +51,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
         servicesflag_generated |= getattr(test_framework.messages, 'NODE_' + servicename)
     assert servicesflag_generated == servicesflag
 
-class NetTest(BitcoinTestFramework):
+class NetTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

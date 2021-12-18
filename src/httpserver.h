@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_HTTPSERVER_H
-#define BITCOIN_HTTPSERVER_H
+#ifndef FREICOIN_HTTPSERVER_H
+#define FREICOIN_HTTPSERVER_H
 
 #include <string>
 #include <functional>
@@ -169,4 +169,4 @@ private:
     struct event* ev;
 };
 
-#endif // BITCOIN_HTTPSERVER_H
+#endif // FREICOIN_HTTPSERVER_H

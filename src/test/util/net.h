@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_NET_H
-#define BITCOIN_TEST_UTIL_NET_H
+#ifndef FREICOIN_TEST_UTIL_NET_H
+#define FREICOIN_TEST_UTIL_NET_H
 
 #include <net.h>
 
@@ -41,4 +41,4 @@ struct ConnmanTestMsg : public CConnman {
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
 };
 
-#endif // BITCOIN_TEST_UTIL_NET_H
+#endif // FREICOIN_TEST_UTIL_NET_H

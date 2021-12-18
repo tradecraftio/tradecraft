@@ -13,10 +13,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_MACROS_H
-#define BITCOIN_UTIL_MACROS_H
+#ifndef FREICOIN_UTIL_MACROS_H
+#define FREICOIN_UTIL_MACROS_H
 
 #define PASTE(x, y) x ## y
 #define PASTE2(x, y) PASTE(x, y)
 
-#endif // BITCOIN_UTIL_MACROS_H
+#endif // FREICOIN_UTIL_MACROS_H

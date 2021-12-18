@@ -16,8 +16,8 @@
 /**
  * Functionality for communicating with Tor.
  */
-#ifndef BITCOIN_TORCONTROL_H
-#define BITCOIN_TORCONTROL_H
+#ifndef FREICOIN_TORCONTROL_H
+#define FREICOIN_TORCONTROL_H
 
 
 extern const std::string DEFAULT_TOR_CONTROL;
@@ -27,4 +27,4 @@ void StartTorControl();
 void InterruptTorControl();
 void StopTorControl();
 
-#endif /* BITCOIN_TORCONTROL_H */
+#endif /* FREICOIN_TORCONTROL_H */

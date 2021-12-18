@@ -15,9 +15,9 @@
 
 #include <test/fuzz/fuzz.h>
 
-#include <node/psbt.h>
+#include <node/pst.h>
 #include <optional.h>
-#include <psbt.h>
+#include <pst.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <streams.h>
@@ -35,54 +35,54 @@ void initialize()
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
-    PartiallySignedTransaction psbt_mut;
-    const std::string raw_psbt{buffer.begin(), buffer.end()};
+    PartiallySignedTransaction pst_mut;
+    const std::string raw_pst{buffer.begin(), buffer.end()};
     std::string error;
-    if (!DecodeRawPSBT(psbt_mut, raw_psbt, error)) {
+    if (!DecodeRawPST(pst_mut, raw_pst, error)) {
         return;
     }
-    const PartiallySignedTransaction psbt = psbt_mut;
+    const PartiallySignedTransaction pst = pst_mut;
 
-    const PSBTAnalysis analysis = AnalyzePSBT(psbt);
-    (void)PSBTRoleName(analysis.next);
-    for (const PSBTInputAnalysis& input_analysis : analysis.inputs) {
-        (void)PSBTRoleName(input_analysis.next);
+    const PSTAnalysis analysis = AnalyzePST(pst);
+    (void)PSTRoleName(analysis.next);
+    for (const PSTInputAnalysis& input_analysis : analysis.inputs) {
+        (void)PSTRoleName(input_analysis.next);
     }
 
-    (void)psbt.IsNull();
+    (void)pst.IsNull();
 
-    Optional<CMutableTransaction> tx = psbt.tx;
+    Optional<CMutableTransaction> tx = pst.tx;
     if (tx) {
         const CMutableTransaction& mtx = *tx;
-        const PartiallySignedTransaction psbt_from_tx{mtx};
+        const PartiallySignedTransaction pst_from_tx{mtx};
     }
 
-    for (const PSBTInput& input : psbt.inputs) {
-        (void)PSBTInputSigned(input);
+    for (const PSTInput& input : pst.inputs) {
+        (void)PSTInputSigned(input);
         (void)input.IsNull();
     }
 
-    for (const PSBTOutput& output : psbt.outputs) {
+    for (const PSTOutput& output : pst.outputs) {
         (void)output.IsNull();
     }
 
-    for (size_t i = 0; i < psbt.tx->vin.size(); ++i) {
+    for (size_t i = 0; i < pst.tx->vin.size(); ++i) {
         CTxOut tx_out;
-        if (psbt.GetInputUTXO(tx_out, i)) {
+        if (pst.GetInputUTXO(tx_out, i)) {
             (void)tx_out.IsNull();
             (void)tx_out.ToString();
         }
     }
 
-    psbt_mut = psbt;
-    (void)FinalizePSBT(psbt_mut);
+    pst_mut = pst;
+    (void)FinalizePST(pst_mut);
 
-    psbt_mut = psbt;
+    pst_mut = pst;
     CMutableTransaction result;
-    if (FinalizeAndExtractPSBT(psbt_mut, result)) {
-        const PartiallySignedTransaction psbt_from_tx{result};
+    if (FinalizeAndExtractPST(pst_mut, result)) {
+        const PartiallySignedTransaction pst_from_tx{result};
     }
 
-    psbt_mut = psbt;
-    (void)psbt_mut.Merge(psbt);
+    pst_mut = pst;
+    (void)pst_mut.Merge(pst);
 }

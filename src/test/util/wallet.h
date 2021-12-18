@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_WALLET_H
-#define BITCOIN_TEST_UTIL_WALLET_H
+#ifndef FREICOIN_TEST_UTIL_WALLET_H
+#define FREICOIN_TEST_UTIL_WALLET_H
 
 #include <string>
 
@@ -32,4 +32,4 @@ void importaddress(CWallet& wallet, const std::string& address);
 std::string getnewaddress(CWallet& w);
 
 
-#endif // BITCOIN_TEST_UTIL_WALLET_H
+#endif // FREICOIN_TEST_UTIL_WALLET_H

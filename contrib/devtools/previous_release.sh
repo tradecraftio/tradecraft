@@ -109,7 +109,7 @@ pushd "$TARGET" || exit 1
           exit 1
         fi
 
-        git clone https://github.com/bitcoin/bitcoin "$tag"
+        git clone https://github.com/tradecraftio/tradecraft "$tag"
         pushd "$tag" || exit 1
         {
           git checkout "$tag"
@@ -131,9 +131,9 @@ pushd "$TARGET" || exit 1
           make
           # Move binaries, so they're in the same place as in the release download:
           mkdir bin
-          mv src/bitcoind src/bitcoin-cli src/bitcoin-tx bin
+          mv src/freicoind src/freicoin-cli src/freicoin-tx bin
           if [ "$FUNCTIONAL_TESTS" -eq "0" ]; then
-            mv src/qt/bitcoin-qt bin
+            mv src/qt/freicoin-qt bin
           fi
         }
         popd || exit 1
@@ -144,18 +144,18 @@ pushd "$TARGET" || exit 1
       else
         mkdir "$tag"
         if [[ "$tag" =~ v(.*)(rc[0-9]+)$ ]]; then
-            BIN_PATH="bin/bitcoin-core-${BASH_REMATCH[1]}/test.${BASH_REMATCH[2]}"
+            BIN_PATH="bin/freicoin-${BASH_REMATCH[1]}/test.${BASH_REMATCH[2]}"
         else
-            BIN_PATH="bin/bitcoin-core-${tag:1}"
+            BIN_PATH="bin/freicoin-${tag:1}"
         fi
-        URL="https://bitcoin.org/$BIN_PATH/bitcoin-${tag:1}-$PLATFORM.tar.gz"
+        URL="http://freico.in/$BIN_PATH/freicoin-${tag:1}-$PLATFORM.tar.gz"
         echo "Fetching: $URL"
         if ! curl -O -f $URL; then
             echo "Download failed."
             exit 1
         fi
-        tar -zxf "bitcoin-${tag:1}-$PLATFORM.tar.gz" -C "$tag" --strip-components=1 "bitcoin-${tag:1}"
-        rm "bitcoin-${tag:1}-$PLATFORM.tar.gz"
+        tar -zxf "freicoin-${tag:1}-$PLATFORM.tar.gz" -C "$tag" --strip-components=1 "freicoin-${tag:1}"
+        rm "freicoin-${tag:1}-$PLATFORM.tar.gz"
       fi
     fi
   done

@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_ASMAP_H
-#define BITCOIN_UTIL_ASMAP_H
+#ifndef FREICOIN_UTIL_ASMAP_H
+#define FREICOIN_UTIL_ASMAP_H
 
 uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip);
 
-#endif // BITCOIN_UTIL_ASMAP_H
+#endif // FREICOIN_UTIL_ASMAP_H

@@ -24,7 +24,7 @@ from test_framework.mininode import (
     mininode_lock,
     P2PInterface,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import wait_until
 
 class P2PStoreBlock(P2PInterface):
@@ -37,7 +37,7 @@ class P2PStoreBlock(P2PInterface):
         message.block.calc_sha256()
         self.blocks[message.block.sha256] += 1
 
-class GetdataTest(BitcoinTestFramework):
+class GetdataTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

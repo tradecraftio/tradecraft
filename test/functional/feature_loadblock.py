@@ -28,12 +28,12 @@ import tempfile
 import urllib
 
 from test_framework.test_framework import (
-    BitcoinTestFramework,
+    FreicoinTestFramework,
 )
 from test_framework.util import assert_equal, wait_until
 
 
-class LoadblockTest(BitcoinTestFramework):
+class LoadblockTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

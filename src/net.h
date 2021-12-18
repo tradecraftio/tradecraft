@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NET_H
-#define BITCOIN_NET_H
+#ifndef FREICOIN_NET_H
+#define FREICOIN_NET_H
 
 #include <addrdb.h>
 #include <addrman.h>
@@ -1030,4 +1030,4 @@ inline std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, 
     return std::chrono::microseconds{PoissonNextSend(now.count(), average_interval.count())};
 }
 
-#endif // BITCOIN_NET_H
+#endif // FREICOIN_NET_H

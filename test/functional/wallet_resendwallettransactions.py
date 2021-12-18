@@ -20,7 +20,7 @@ import time
 from test_framework.blocktools import add_final_tx, create_block, create_coinbase, get_final_tx_info
 from test_framework.messages import ToHex
 from test_framework.mininode import P2PInterface, mininode_lock
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, wait_until
 
 
@@ -37,7 +37,7 @@ class P2PStoreTxInvs(P2PInterface):
                 self.tx_invs_received[i.hash] += 1
 
 
-class ResendWalletTransactionsTest(BitcoinTestFramework):
+class ResendWalletTransactionsTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

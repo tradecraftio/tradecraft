@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INTERFACES_WALLET_H
-#define BITCOIN_INTERFACES_WALLET_H
+#ifndef FREICOIN_INTERFACES_WALLET_H
+#define FREICOIN_INTERFACES_WALLET_H
 
 #include <amount.h>                    // For CAmount
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
@@ -26,7 +26,7 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <psbt.h>
+#include <pst.h>
 #include <stdint.h>
 #include <string>
 #include <tuple>
@@ -202,11 +202,11 @@ public:
         bool& in_mempool,
         int& num_blocks) = 0;
 
-    //! Fill PSBT.
-    virtual TransactionError fillPSBT(int sighash_type,
+    //! Fill PST.
+    virtual TransactionError fillPST(int sighash_type,
         bool sign,
         bool bip32derivs,
-        PartiallySignedTransaction& psbtx,
+        PartiallySignedTransaction& pstx,
         bool& complete) = 0;
 
     //! Get balances.
@@ -390,4 +390,4 @@ std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_WALLET_H
+#endif // FREICOIN_INTERFACES_WALLET_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SETTINGS_H
-#define BITCOIN_UTIL_SETTINGS_H
+#ifndef FREICOIN_UTIL_SETTINGS_H
+#define FREICOIN_UTIL_SETTINGS_H
 
 #include <map>
 #include <string>
@@ -35,7 +35,7 @@ namespace util {
 //!       https://github.com/bitcoin/bitcoin/pull/15934/files#r337691812)
 using SettingsValue = UniValue;
 
-//! Stored bitcoin settings. This struct combines settings from the command line
+//! Stored freicoin settings. This struct combines settings from the command line
 //! and a read-only configuration file.
 struct Settings {
     //! Map of setting name to forced setting value.
@@ -102,4 +102,4 @@ auto FindKey(Map&& map, Key&& key) -> decltype(&map.at(key))
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_SETTINGS_H
+#endif // FREICOIN_UTIL_SETTINGS_H

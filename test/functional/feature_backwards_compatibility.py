@@ -29,7 +29,7 @@ needs an older patch version.
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import FreicoinTestFramework, SkipTest
 from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
@@ -38,7 +38,7 @@ from test_framework.util import (
     sync_mempools
 )
 
-class BackwardsCompatibilityTest(BitcoinTestFramework):
+class BackwardsCompatibilityTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 5
@@ -71,17 +71,17 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             180100,
             170100
         ], binary=[
-            self.options.bitcoind,
-            self.options.bitcoind,
-            releases_path + "/v0.19.0.1/bin/bitcoind",
-            releases_path + "/v0.18.1/bin/bitcoind",
-            releases_path + "/v0.17.1/bin/bitcoind"
+            self.options.freicoind,
+            self.options.freicoind,
+            releases_path + "/v0.19.0.1/bin/freicoind",
+            releases_path + "/v0.18.1/bin/freicoind",
+            releases_path + "/v0.17.1/bin/freicoind"
         ], binary_cli=[
-            self.options.bitcoincli,
-            self.options.bitcoincli,
-            releases_path + "/v0.19.0.1/bin/bitcoin-cli",
-            releases_path + "/v0.18.1/bin/bitcoin-cli",
-            releases_path + "/v0.17.1/bin/bitcoin-cli"
+            self.options.freicoincli,
+            self.options.freicoincli,
+            releases_path + "/v0.19.0.1/bin/freicoin-cli",
+            releases_path + "/v0.18.1/bin/freicoin-cli",
+            releases_path + "/v0.17.1/bin/freicoin-cli"
         ])
 
         self.start_nodes()
@@ -317,14 +317,14 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert info['private_keys_enabled'] == False
         assert info['keypoolsize'] == 0
 
-        # RPC loadwallet failure causes bitcoind to exit, in addition to the RPC
+        # RPC loadwallet failure causes freicoind to exit, in addition to the RPC
         # call failure, so the following test won't work:
         # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3_v18')
 
         # Instead, we stop node and try to launch it with the wallet:
         self.stop_node(self.num_nodes - 1)
-        node_v17.assert_start_raises_init_error(["-wallet=w3_v18"], "Error: Error loading w3_v18: Wallet requires newer version of Bitcoin Core")
-        node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
+        node_v17.assert_start_raises_init_error(["-wallet=w3_v18"], "Error: Error loading w3_v18: Wallet requires newer version of Freicoin")
+        node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Freicoin")
         self.start_node(self.num_nodes - 1)
 
         self.log.info("Test wallet upgrade path...")
@@ -336,7 +336,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         hdkeypath = info["hdkeypath"]
         pubkey = info["pubkey"]
 
-        # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
+        # Copy the 0.17 wallet to the last Freicoin version and open it:
         node_v17.unloadwallet("u1_v17")
         shutil.copytree(
             os.path.join(node_v17_wallets_dir, "u1_v17"),
@@ -348,7 +348,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + pubkey + ")"
         assert_equal(info["desc"], descsum_create(descriptor))
 
-        # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
+        # Copy the 0.19 wallet to the last Freicoin version and open it:
         shutil.copytree(
             os.path.join(node_v19_wallets_dir, "w1_v19"),
             os.path.join(node_master_wallets_dir, "w1_v19")

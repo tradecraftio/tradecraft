@@ -16,7 +16,7 @@
 /**
  * See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/link_references/link_boost_test_module_macro.html
  */
-#define BOOST_TEST_MODULE Bitcoin Core Test Suite
+#define BOOST_TEST_MODULE Freicoin Test Suite
 
 #include <boost/test/unit_test.hpp>
 

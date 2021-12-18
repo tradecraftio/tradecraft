@@ -19,12 +19,12 @@ containing a JSON object of `name` and purpose` key-value pairs. It now
 returns an array containing only the label name.
 
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 LABELS_TO_TEST = frozenset({"" , "New 𝅘𝅥𝅯 $<#>&!рыба Label"})
 
-class GetAddressInfoLabelsPurposeDeprecationTest(BitcoinTestFramework):
+class GetAddressInfoLabelsPurposeDeprecationTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = False

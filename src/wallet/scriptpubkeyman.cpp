@@ -537,13 +537,13 @@ SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, con
     return SigningResult::SIGNING_FAILED;
 }
 
-TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs) const
+TransactionError LegacyScriptPubKeyMan::FillPST(PartiallySignedTransaction& pstx, int sighash_type, bool sign, bool bip32derivs) const
 {
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        const CTxIn& txin = pstx.tx->vin[i];
+        PSTInput& input = pstx.inputs.at(i);
 
-        if (PSBTInputSigned(input)) {
+        if (PSTInputSigned(input)) {
             continue;
         }
 
@@ -563,12 +563,12 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
         }
         SignatureData sigdata;
         input.FillSignatureData(sigdata);
-        SignPSBTInput(HidingSigningProvider(this, !sign, !bip32derivs), psbtx, i, sighash_type);
+        SignPSTInput(HidingSigningProvider(this, !sign, !bip32derivs), pstx, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
-    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        UpdatePSBTOutput(HidingSigningProvider(this, true, !bip32derivs), psbtx, i);
+    for (unsigned int i = 0; i < pstx.tx->vout.size(); ++i) {
+        UpdatePSTOutput(HidingSigningProvider(this, true, !bip32derivs), pstx, i);
     }
 
     return TransactionError::OK;

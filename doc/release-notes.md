@@ -1,44 +1,44 @@
 0.20.1 Release Notes
 ====================
 
-Bitcoin Core version 0.20.1 is now available from:
+Freicoin version 0.20.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.20.1/>
+  <http://freico.in/bin/freicoin-0.20.1/>
 
 This minor release includes various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tradecraftio/tradecraft/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <http://freico.in/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Freicoin-Qt` (on Mac)
+or `freicoind`/`freicoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of Freicoin that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of Freicoin are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 10.12+, and Windows 7 and newer.  Bitcoin
+Freicoin is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.12+, and Windows 7 and newer.  Freicoin
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them.  It is not recommended to use Bitcoin Core on
+frequently tested on them.  It is not recommended to use Freicoin on
 unsupported systems.
 
-From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
-longer supported. Additionally, Bitcoin Core does not yet change appearance
+From Freicoin 0.20.0 onwards, macOS versions earlier than 10.12 are no
+longer supported. Additionally, Freicoin does not yet change appearance
 when macOS "dark mode" is activated.
 
 Known Bugs
@@ -53,7 +53,7 @@ this release:
   `./configure`. This is the same as when checking out from git.
 
 - Instead of running `make` simply, you should instead run
-  `BITCOIN_GENBUILD_NO_GIT=1 make`.
+  `FREICOIN_GENBUILD_NO_GIT=1 make`.
 
 Notable changes
 ===============
@@ -92,10 +92,10 @@ notifications were sent previously before the v0.19 release, but had been
 broken since that release (bug
 [#18325](https://github.com/bitcoin/bitcoin/issues/18325)).
 
-PSBT changes
+PST changes
 ------------
 
-PSBTs will contain both the non-witness utxo and the witness utxo for segwit
+PSTs will contain both the non-witness utxo and the witness utxo for segwit
 inputs in order to restore compatibility with wallet software that are now
 requiring the full previous transaction for segwit inputs. The witness utxo
 is still provided to maintain compatibility with software which relied on its
@@ -115,9 +115,9 @@ existence to determine whether an input was segwit.
 - #18982 Minimal fix to restore conflicted transaction notifications (ryanofsky)
 
 ### RPC and other APIs
-- #19524 Increment input value sum only once per UTXO in decodepsbt (fanquake)
-- #19517 psbt: Increment input value sum only once per UTXO in decodepsbt (achow101)
-- #19215 psbt: Include and allow both non_witness_utxo and witness_utxo for segwit inputs (achow101)
+- #19524 Increment input value sum only once per UTXO in decodepst (fanquake)
+- #19517 pst: Increment input value sum only once per UTXO in decodepst (achow101)
+- #19215 pst: Include and allow both non_witness_utxo and witness_utxo for segwit inputs (achow101)
 
 ### GUI
 - #19097 Add missing QPainterPath include (achow101)
@@ -155,4 +155,4 @@ Thanks to everyone who directly contributed to this release:
 - Wladimir J. van der Laan
 
 As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+[Transifex](https://www.transifex.com/freicoin/freicoin/).

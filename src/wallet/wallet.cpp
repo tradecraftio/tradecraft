@@ -896,7 +896,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
 void CWallet::LoadToWallet(CWalletTx& wtxIn)
 {
-    // If wallet doesn't have a chain (e.g bitcoin-wallet), lock can't be taken.
+    // If wallet doesn't have a chain (e.g freicoin-wallet), lock can't be taken.
     auto locked_chain = LockChain();
     if (locked_chain) {
         Optional<int> block_height = locked_chain->getBlockHeight(wtxIn.m_confirm.hashBlock);
@@ -1164,7 +1164,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         // when improving this code in the future. The wallet's heuristics for
         // distinguishing between conflicted and unconfirmed transactions are
         // imperfect, and could be improved in general, see
-        // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
+        // https://github.com/tradecraftio/tradecraft-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
         SyncTransaction(tx, {CWalletTx::Status::UNCONFIRMED, /* block height */ 0, /* block hash */ {}, /* index */ 0});
     }
 }
@@ -2498,15 +2498,15 @@ bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint,
     return false;
 }
 
-TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, int sighash_type, bool sign, bool bip32derivs) const
+TransactionError CWallet::FillPST(PartiallySignedTransaction& pstx, bool& complete, int sighash_type, bool sign, bool bip32derivs) const
 {
     LOCK(cs_wallet);
     // Get all of the previous transactions
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        const CTxIn& txin = pstx.tx->vin[i];
+        PSTInput& input = pstx.inputs.at(i);
 
-        if (PSBTInputSigned(input)) {
+        if (PSTInputSigned(input)) {
             continue;
         }
 
@@ -2524,15 +2524,15 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
     }
 
     // Fill in information from ScriptPubKeyMans
-    // Because each ScriptPubKeyMan may be able to fill more than one input, we need to keep track of each ScriptPubKeyMan that has filled this psbt.
+    // Because each ScriptPubKeyMan may be able to fill more than one input, we need to keep track of each ScriptPubKeyMan that has filled this pst.
     // Each iteration, we may fill more inputs than the input that is specified in that iteration.
     // We assume that each input is filled by only one ScriptPubKeyMan
     std::set<uint256> visited_spk_mans;
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        const CTxIn& txin = pstx.tx->vin[i];
+        PSTInput& input = pstx.inputs.at(i);
 
-        if (PSBTInputSigned(input)) {
+        if (PSTInputSigned(input)) {
             continue;
         }
 
@@ -2563,7 +2563,7 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
             }
 
             // Fill in the information from the spk_man
-            TransactionError res = spk_man->FillPSBT(psbtx, sighash_type, sign, bip32derivs);
+            TransactionError res = spk_man->FillPST(pstx, sighash_type, sign, bip32derivs);
             if (res != TransactionError::OK) {
                 return res;
             }
@@ -2575,8 +2575,8 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
 
     // Complete if every input is now signed
     complete = true;
-    for (const auto& input : psbtx.inputs) {
-        complete &= PSBTInputSigned(input);
+    for (const auto& input : pstx.inputs) {
+        complete &= PSTInputSigned(input);
     }
 
     return TransactionError::OK;
@@ -2777,7 +2777,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservedest so
-            // change transaction isn't always pay-to-bitcoin-address
+            // change transaction isn't always pay-to-freicoin-address
             CScript scriptChange;
 
             // coin control: send change to custom address
@@ -3128,7 +3128,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 {
     // Even if we don't use this lock in this function, we want to preserve
     // lock order in LoadToWallet if query of chain state is needed to know
-    // tx status. If lock can't be taken (e.g bitcoin-wallet), tx confirmation
+    // tx status. If lock can't be taken (e.g freicoin-wallet), tx confirmation
     // status may be not reliable.
     auto locked_chain = LockChain();
     LOCK(cs_wallet);

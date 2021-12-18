@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_CHECK_H
-#define BITCOIN_UTIL_CHECK_H
+#ifndef FREICOIN_UTIL_CHECK_H
+#define FREICOIN_UTIL_CHECK_H
 
 #include <tinyformat.h>
 
@@ -49,4 +49,4 @@ class NonFatalCheckError : public std::runtime_error
         }                                                         \
     } while (false)
 
-#endif // BITCOIN_UTIL_CHECK_H
+#endif // FREICOIN_UTIL_CHECK_H

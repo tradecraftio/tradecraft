@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Tests for test_framework.script."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.script import bn2vch
 from test_framework.util import assert_equal
 
@@ -41,7 +41,7 @@ def test_bn2vch():
     assert_equal(bn2vch(123456789), bytes([0x15, 0xCD, 0x5B, 0x07]))
     assert_equal(bn2vch(-54321), bytes([0x31, 0xD4, 0x80]))
 
-class FrameworkTestScript(BitcoinTestFramework):
+class FrameworkTestScript(FreicoinTestFramework):
     def setup_network(self):
         pass
 

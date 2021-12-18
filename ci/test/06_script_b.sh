@@ -42,7 +42,7 @@ fi
 
 if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
   BEGIN_FOLD unit-tests-seq
-  DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib "${BASE_ROOT_DIR}/build/bitcoin-*/src/test/test_bitcoin" --catch_system_errors=no -l test_suite
+  DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib "${BASE_ROOT_DIR}/build/freicoin-*/src/test/test_freicoin" --catch_system_errors=no -l test_suite
   END_FOLD
 fi
 
