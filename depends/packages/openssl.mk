@@ -3,7 +3,7 @@ $(package)_version=1.0.1k
 $(package)_download_path=https://www.openssl.org/source
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_sha256_hash=8f9faeaebad088e772f4ef5e38252d472be4d878c6b3a2718c10a4fcebe7a41c
-$(package)_patches=0001-Add-OpenSSL-termios-fix-for-musl-libc.patch
+$(package)_patches=0001-Add-OpenSSL-termios-fix-for-musl-libc.patch 0002-darwin64-arm-cc.patch
 
 define $(package)_set_vars
 $(package)_config_env=AR="$($(package)_ar)" RANLIB="$($(package)_ranlib)" CC="$($(package)_cc)"
@@ -56,12 +56,14 @@ $(package)_config_opts_powerpc_linux=linux-generic32
 $(package)_config_opts_riscv32_linux=linux-generic32
 $(package)_config_opts_riscv64_linux=linux-generic64
 $(package)_config_opts_x86_64_darwin=darwin64-x86_64-cc
+$(package)_config_opts_arm_darwin=darwin64-arm-cc
 $(package)_config_opts_x86_64_mingw32=mingw64
 $(package)_config_opts_i686_mingw32=mingw
 endef
 
 define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/0001-Add-OpenSSL-termios-fix-for-musl-libc.patch && \
+  patch -p1 < $($(package)_patch_dir)/0002-darwin64-arm-cc.patch && \
   sed -i.old "/define DATE/d" util/mkbuildinf.pl && \
   sed -i.old "s|engines apps test|engines|" Makefile.org
 endef
