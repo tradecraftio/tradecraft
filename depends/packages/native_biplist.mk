@@ -6,10 +6,10 @@ $(package)_sha256_hash=4c0549764c5fe50b28042ec21aa2e14fe1a2224e239a1dae77d9e7f39
 $(package)_install_libdir=$(build_prefix)/lib/python/dist-packages
 
 define $(package)_build_cmds
-    python setup.py build
+    python3 setup.py build
 endef
 
 define $(package)_stage_cmds
     mkdir -p $($(package)_install_libdir) && \
-    python setup.py install --root=$($(package)_staging_dir) --prefix=$(build_prefix) --install-lib=$($(package)_install_libdir)
+    python3 setup.py install --root=$($(package)_staging_dir) --prefix=$(build_prefix) --install-lib=$($(package)_install_libdir)
 endef
