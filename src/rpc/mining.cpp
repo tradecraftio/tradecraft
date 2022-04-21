@@ -358,6 +358,7 @@ static RPCHelpMan generateblock()
 
     CChainParams chainparams(Params());
     CBlock block;
+    bool has_block_final_tx = false;
 
     {
         LOCK(cs_main);
@@ -368,12 +369,13 @@ static RPCHelpMan generateblock()
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
         block = blocktemplate->block;
+        has_block_final_tx = blocktemplate->has_block_final_tx;
     }
 
-    CHECK_NONFATAL(block.vtx.size() == 1);
+    CHECK_NONFATAL(block.vtx.size() == (1 + !!has_block_final_tx));
 
     // Add transactions
-    block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
+    block.vtx.insert(block.vtx.end() - !!has_block_final_tx, txs.begin(), txs.end());
     RegenerateCommitments(block);
 
     {
