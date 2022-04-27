@@ -20,13 +20,13 @@
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
 
 /* Version base string */
-#define CLIENT_BASE_VERSION 22
+#define CLIENT_BASE_VERSION 22.1
 
 /* Release string */
-#define CLIENT_RELEASE_STRING 22
+#define CLIENT_RELEASE_STRING 22.1-30279
 
 /* Version Build */
-#define CLIENT_VERSION_BUILD 0
+#define CLIENT_VERSION_BUILD 30279
 
 /* Version is release */
 #define CLIENT_VERSION_IS_RELEASE true
@@ -35,7 +35,7 @@
 #define CLIENT_VERSION_MAJOR 22
 
 /* Minor version */
-#define CLIENT_VERSION_MINOR 0
+#define CLIENT_VERSION_MINOR 1
 
 /* Patch version */
 #define CLIENT_VERSION_PATCH 0
@@ -53,7 +53,7 @@
 #define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
 
 /* Copyright year */
-#define COPYRIGHT_YEAR 2021
+#define COPYRIGHT_YEAR 2023
 
 /* Define to 1 to enable wallet functions */
 #define ENABLE_WALLET 1
@@ -277,7 +277,7 @@
 #define PACKAGE_NAME "Freicoin"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Freicoin 22"
+#define PACKAGE_STRING "Freicoin 22.1-30279"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "freicoin"
@@ -286,7 +286,7 @@
 #define PACKAGE_URL "http://freico.in/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "22"
+#define PACKAGE_VERSION "22.1-30279"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
