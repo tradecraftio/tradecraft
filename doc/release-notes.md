@@ -6,6 +6,8 @@ Bitcoin Core version v22.0.0.1-30022 is now available from:
   * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-x86_64-linux-gnu.tar.gz)
   * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-arm-linux-gnueabihf.tar.gz)
   * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-aarch64-linux-gnu.tar.gz)
+  * [Linux PowerPC (64-bit, big endian)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-powerpc64-linux-gnu.tar.gz)
+  * [Linux PowerPC (64-bit, little endian)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-powerpc64le-linux-gnu.tar.gz)
   * [Linux RISC-V 64-bit (RV64GC)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-riscv64-linux-gnu.tar.gz)
   * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-osx.dmg)
   * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-osx64.tar.gz)
