@@ -15,7 +15,7 @@ Bitcoin Core version v22.0.0.1-30022 is now available from:
   * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v22.0.0.1-30022-win64.zip)
   * [Source](https://github.com/tradecraftio/tradecraft/archive/bitcoin-v22.0.0.1-30022.zip)
 
-This is a new minor release of the v0.21 stable branch of Bitcoin Core with the
+This is a new minor release of the v22 stable branch of Bitcoin Core with the
 stratum mining server and Tradecraft/Freicoin merge-mining patches applied.  It
 includes various bug fixes and performance improvements, as well as updated
 translations.
@@ -25,7 +25,7 @@ Tradecraft/Freicoin merge-mining at the Tradecraft issue tracker on GitHub:
 
   <https://github.com/tradecraftio/tradecraft/issues>
 
-Please report other bugs using Bitcoin the issue tracker at GitHub:
+Please report other bugs regarding Bitcoin Core at the issue tracker on GitHub:
 
   <https://github.com/bitcoin/bitcoin/issues>
 
