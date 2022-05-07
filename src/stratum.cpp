@@ -438,10 +438,12 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
 
     // Update the block template if the tip has changed or it's been more than 5
     // seconds and there are new transactions.
+    Chainstate *chainstate = nullptr;
     CBlockIndex *tip_new = tip;
     {
         LOCK(g_context->chainman->GetMutex());
-        tip_new = g_context->chainman->ActiveChainstate().m_chain.Tip();
+        chainstate = &g_context->chainman->ActiveChainstate();
+        tip_new = chainstate->m_chain.Tip();
     }
     if (tip != tip_new || (mempool.GetTransactionsUpdated() != transactions_updated_last && (GetTime() - last_update_time) > 5) || !work_templates.count(job_id))
     {
@@ -459,6 +461,15 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
         }
         transactions_updated_last = mempool.GetTransactionsUpdated();
         last_update_time = GetTime();
+
+        // Use the wallet to add a block-final transaction,
+        // if there isn't one there already.
+        if (!new_work->has_block_final_tx) {
+            bilingual_str error;
+            if (!wallet::AddBlockFinalTransaction(*g_context, *chainstate, *new_work, error)) {
+                LogPrint(BCLog::STRATUM, "Error adding block final transaction: %s\n", error.translated);
+            }
+        }
 
         // So that block.GetHash() is correct
         new_work->block.hashMerkleRoot = BlockMerkleRoot(new_work->block);
@@ -1227,6 +1238,8 @@ void StopStratumServer()
         block_watcher_thread.join();
     }
     LOCK(cs_stratum);
+    /* Release the wallet pointer used for block-final transactions. */
+    wallet::ReleaseBlockFinalWallet();
     /* Release any reserved keys back to the pool. */
     wallet::ReleaseMiningDestinations();
     /* Tear-down active connections. */
