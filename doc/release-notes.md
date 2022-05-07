@@ -12,7 +12,7 @@ Bitcoin Core version v23.0.0.1-32930 is now available from:
   * [macOS (Apple Silicon, app)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v23.0.0.1-32930-arm64-apple-darwin.dmg)
   * [macOS (Apple Silicon, server)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v23.0.0.1-32930-arm64-apple-darwin.tar.gz)
   * [macOS (Intel, app)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v23.0.0.1-32930-x86_64-apple-darwin.dmg)
-  * [macOS (Intel, server)](https://s3.amazonaws.sscom/in.freico.stable/bitcoin-v23.0.0.1-32930-x86_64-apple-darwin.tar.gz)
+  * [macOS (Intel, server)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v23.0.0.1-32930-x86_64-apple-darwin.tar.gz)
   * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v23.0.0.1-32930-win64-setup.exe)
   * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v23.0.0.1-32930-win64.zip)
   * [Source](https://github.com/tradecraftio/tradecraft/archive/bitcoin-v23.0.0.1-32930.zip)
