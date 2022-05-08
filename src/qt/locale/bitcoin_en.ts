@@ -1907,7 +1907,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+191"/>
+        <location filename="../overviewpage.cpp" line="+190"/>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2110,7 +2110,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     </message>
     <message>
         <location line="-20"/>
-        <source>Invalid payment address %1</source>
+        <source>Invalid payment address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2170,7 +2170,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+652"/>
+        <location line="+655"/>
         <source>%1 d</source>
         <translation type="unfinished"></translation>
     </message>
