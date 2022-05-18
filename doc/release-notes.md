@@ -65,9 +65,9 @@ Notable changes
 New user documentation
 ----------------------
 
-- [Reduce memory](https://github.com/bitcoin/bitcoin/blob/master/doc/reduce-memory.md)
+- [Reduce memory](https://github.com/freicoin/freicoin/blob/master/doc/reduce-memory.md)
   suggests configuration tweaks for running Freicoin on systems with limited
-  memory. (#16339)
+  memory.  (#16339)
 
 New RPCs
 --------
@@ -76,7 +76,7 @@ New RPCs
   and `immature`).  Please refer to the RPC help of `getbalances` for details.
   The new RPC is intended to replace `getbalance`, `getunconfirmedbalance`, and
   the balance fields in `getwalletinfo`.  These old calls and fields may be
-  removed in a future version. (#15930, #16239)
+  removed in a future version.  (#15930, #16239)
 
 - `setwalletflag` sets and unsets wallet flags that enable or disable features
   specific to that existing wallet, such as the new `avoid_reuse` feature
@@ -84,7 +84,7 @@ New RPCs
 
 - `getblockfilter` gets the BIP158 filter for the specified block.  This
   RPC is only enabled if block filters have been created using the
-  `-blockfilterindex` configuration option. (#14121)
+  `-blockfilterindex` configuration option.  (#14121)
 
 New settings
 ------------
@@ -111,7 +111,6 @@ Updated settings
   the use of memory before).  For example, if you set a value of "450" before,
   you may now set a value of "500" to use about the same real amount of memory.
   (#16957)
-
 
 Updated RPCs
 ------------
@@ -150,7 +149,7 @@ Low-level Changes section below.
 - `utxoupdatepsbt` now accepts a `descriptors` parameter that will fill out
   input and output scripts and keys when known.  P2SH-witness inputs will be
   filled in from the UTXO set when a descriptor is provided that shows they're
-  spending segwit outputs.  See the RPC help text for full details. (#15427)
+  spending segwit outputs.  See the RPC help text for full details.  (#15427)
 
 - `sendrawtransaction` and `testmempoolaccept` no longer accept a
   `allowhighfees` parameter to fail mempool acceptance if the transaction fee
@@ -220,7 +219,7 @@ Deprecated or removed RPCs
   `totalFee`.  (#16727)
 
 - `generate` is now removed after being deprecated in Freicoin v18.  Use the
-  `generatetoaddress` RPC instead. (#15492)
+  `generatetoaddress` RPC instead.  (#15492)
 
 P2P changes
 -----------
@@ -296,7 +295,7 @@ Configuration
 
 - On platforms supporting `thread_local`, log lines can be prefixed with the
   name of the thread that caused the log.  To enable this behavior, use
-  `-logthreadnames=1`. (#15849)
+  `-logthreadnames=1`.  (#15849)
 
 Network
 -------
@@ -334,7 +333,7 @@ Mempool and transaction relay
   to spend those outputs remains forbidden by policy ("non-standard").  When
   this change has been widely deployed, wallets and services can accept any
   valid bech32 Freicoin address without concern that transactions paying future
-  segwit versions will become stuck in an unconfirmed state. (#15846)
+  segwit versions will become stuck in an unconfirmed state.  (#15846)
 
 - Legacy transactions (transactions with no segwit inputs) must now be sent
   using the legacy encoding format, enforcing the rule specified in BIP144.
@@ -353,7 +352,7 @@ Wallet
 - When creating a transaction with a fee above `-maxtxfee` (default 0.1 FRC),
   the RPC commands `walletcreatefundedpsbt` and `fundrawtransaction` will now
   fail instead of rounding down the fee.  Be aware that the `feeRate` argument
-  is specified in FRC per 1,000 vbytes, not kria per vbyte. (#16257)
+  is specified in FRC per 1,000 vbytes, not kria per vbyte.  (#16257)
 
 - A new wallet flag `avoid_reuse` has been added (default off).  When enabled, a
   wallet will distinguish between used and unused addresses, and default to not
