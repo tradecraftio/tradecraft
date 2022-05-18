@@ -65,7 +65,7 @@ Notable changes
 New user documentation
 ----------------------
 
-- [Reduce memory](https://github.com/freicoin/freicoin/blob/master/doc/reduce-memory.md)
+- [Reduce memory](https://github.com/tradecraftio/tradecraft/blob/19/doc/reduce-memory.md)
   suggests configuration tweaks for running Freicoin on systems with limited
   memory.  (#16339)
 
@@ -310,7 +310,7 @@ Network
   #15834)
 
 - If a Tor hidden service is being used, Freicoin will be bound to the standard
-  port 8333 even if a different port is configured for clearnet connections.
+  port 8639 even if a different port is configured for clearnet connections.
   This prevents leaking node identity through use of identical non-default port
   numbers.  (#15651)
 
@@ -359,9 +359,9 @@ Wallet
   use the former in coin selection.  When setting this flag on an existing
   wallet, rescanning the blockchain is required to correctly mark previously
   used destinations.  Together with "avoid partial spends" (added in Freicoin
-  v0.17.0), this can eliminate a serious privacy issue where a malicious user
-  can track spends by sending small payments to a previously-paid address that
-  would then be included with unrelated inputs in future payments.  (#13756)
+  v17), this can eliminate a serious privacy issue where a malicious user can
+  track spends by sending small payments to a previously-paid address that would
+  then be included with unrelated inputs in future payments.  (#13756)
 
 Build system changes
 --------------------
