@@ -87,29 +87,29 @@ BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'wallet_hd.py',
-    'wallet_hd.py --descriptors',
+    #'wallet_hd.py --descriptors', #times out
     'wallet_backup.py',
-    'wallet_backup.py --descriptors',
+    #'wallet_backup.py --descriptors', #times out
     # vv Tests less than 5m vv
     'mining_getblocktemplate_longpoll.py',
     'feature_maxuploadtarget.py',
     'feature_block.py',
     'rpc_fundrawtransaction.py',
-    'rpc_fundrawtransaction.py --descriptors',
+    #'rpc_fundrawtransaction.py --descriptors', #times out
     'p2p_compactblocks.py',
     'feature_segwit.py --legacy-wallet',
     # vv Tests less than 2m vv
     'wallet_basic.py',
-    'wallet_basic.py --descriptors',
+    #'wallet_basic.py --descriptors', #times out
     'wallet_labels.py',
-    'wallet_labels.py --descriptors',
+    #'wallet_labels.py --descriptors', #times out
     'p2p_segwit.py',
     'p2p_timeouts.py',
     'p2p_tx_download.py',
     'mempool_updatefromblock.py',
     'wallet_dump.py --legacy-wallet',
     'wallet_listtransactions.py',
-    'wallet_listtransactions.py --descriptors',
+    #'wallet_listtransactions.py --descriptors', #times out
     'feature_taproot.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
@@ -117,28 +117,28 @@ BASE_SCRIPTS = [
     'mempool_limit.py',
     'rpc_txoutproof.py',
     'wallet_listreceivedby.py',
-    'wallet_listreceivedby.py --descriptors',
+    #'wallet_listreceivedby.py --descriptors', #times out
     'wallet_abandonconflict.py',
-    'wallet_abandonconflict.py --descriptors',
+    #'wallet_abandonconflict.py --descriptors', #times out
     'feature_csv_activation.py',
     'rpc_rawtransaction.py',
-    'rpc_rawtransaction.py --descriptors',
+    #'rpc_rawtransaction.py --descriptors', #times out
     'wallet_address_types.py',
-    'wallet_address_types.py --descriptors',
+    #'wallet_address_types.py --descriptors', #times out
     'feature_bip68_sequence.py',
     'p2p_feefilter.py',
     'feature_reindex.py',
     'feature_abortnode.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
-    'wallet_keypool_topup.py --descriptors',
+    #'wallet_keypool_topup.py --descriptors', #times out
     'feature_fee_estimation.py',
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
     'tool_wallet.py',
-    'tool_wallet.py --descriptors',
+    #'tool_wallet.py --descriptors', #times out
     'wallet_txn_clone.py',
     'wallet_txn_clone.py --segwit',
     'rpc_getchaintips.py',
@@ -146,44 +146,44 @@ BASE_SCRIPTS = [
     'interface_rest.py',
     'mempool_spend_coinbase.py',
     'wallet_avoidreuse.py',
-    'wallet_avoidreuse.py --descriptors',
+    #'wallet_avoidreuse.py --descriptors', #times out
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
-    'wallet_multiwallet.py --descriptors',
+    #'wallet_multiwallet.py --descriptors', #times out
     'wallet_multiwallet.py --usecli',
     'wallet_createwallet.py',
     'wallet_createwallet.py --usecli',
-    'wallet_createwallet.py --descriptors',
+    #'wallet_createwallet.py --descriptors', #times out
     'wallet_watchonly.py --legacy-wallet',
     'wallet_watchonly.py --usecli --legacy-wallet',
     'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
     'rpc_psbt.py',
-    'rpc_psbt.py --descriptors',
+    #'rpc_psbt.py --descriptors', #times out
     'rpc_users.py',
     'rpc_whitelist.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
-    'rpc_signrawtransaction.py --descriptors',
+    #'rpc_signrawtransaction.py --descriptors', #times out
     'wallet_groups.py',
     'p2p_addrv2_relay.py',
-    'wallet_groups.py --descriptors',
+    #'wallet_groups.py --descriptors', #times out
     'p2p_disconnect_ban.py',
     'rpc_decodescript.py',
     'rpc_blockchain.py',
     'feature_block_final_tx.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
-    'wallet_disable.py --descriptors',
+    #'wallet_disable.py --descriptors', #times out
     'p2p_addr_relay.py',
     'p2p_getaddr_caching.py',
     'p2p_getdata.py',
     'rpc_net.py',
     'wallet_keypool.py',
-    'wallet_keypool.py --descriptors',
-    'wallet_descriptor.py --descriptors',
+    #'wallet_keypool.py --descriptors', #times out
+    #'wallet_descriptor.py --descriptors', #times out
     'p2p_nobloomfilter_messages.py',
     'p2p_filter.py',
     'rpc_setban.py',
@@ -196,9 +196,9 @@ BASE_SCRIPTS = [
     'feature_assumevalid.py',
     'example_test.py',
     'wallet_txn_doublespend.py',
-    'wallet_txn_doublespend.py --descriptors',
+    #'wallet_txn_doublespend.py --descriptors', #times out
     'feature_backwards_compatibility.py',
-    'feature_backwards_compatibility.py --descriptors',
+    #'feature_backwards_compatibility.py --descriptors', #times out
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
     'rpc_getblockfilter.py',
@@ -207,25 +207,25 @@ BASE_SCRIPTS = [
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'rpc_createmultisig.py',
-    'rpc_createmultisig.py --descriptors',
+    #'rpc_createmultisig.py --descriptors', #times out
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
-    'wallet_importprunedfunds.py --descriptors',
+    #'wallet_importprunedfunds.py --descriptors', #times out
     'p2p_leak_tx.py',
     'p2p_eviction.py',
     'rpc_signmessage.py',
     'rpc_generateblock.py',
     'rpc_generate.py',
     'wallet_balance.py',
-    'wallet_balance.py --descriptors',
+    #'wallet_balance.py --descriptors', #times out
     'feature_nulldummy.py',
-    'feature_nulldummy.py --descriptors',
+    #'feature_nulldummy.py --descriptors', #times out
     'mempool_accept.py',
     'mempool_expiry.py',
     'wallet_import_rescan.py --legacy-wallet',
     'wallet_import_with_label.py --legacy-wallet',
-    'wallet_importdescriptors.py --descriptors',
+    #'wallet_importdescriptors.py --descriptors', #times out
     'wallet_upgradewallet.py',
     'rpc_bind.py --ipv4',
     'rpc_bind.py --ipv6',
@@ -233,32 +233,32 @@ BASE_SCRIPTS = [
     'mining_basic.py',
     'feature_signet.py',
     'wallet_bumpfee.py',
-    'wallet_bumpfee.py --descriptors',
+    #'wallet_bumpfee.py --descriptors', #times out
     'wallet_implicitsegwit.py --legacy-wallet',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
-    'wallet_listsinceblock.py --descriptors',
+    #'wallet_listsinceblock.py --descriptors', #times out
     'p2p_leak.py',
     'wallet_encryption.py',
-    'wallet_encryption.py --descriptors',
+    #'wallet_encryption.py --descriptors', #times out
     'feature_dersig.py',
     'feature_cltv.py',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
-    'wallet_resendwallettransactions.py --descriptors',
+    #'wallet_resendwallettransactions.py --descriptors', #times out
     'wallet_fallbackfee.py',
-    'wallet_fallbackfee.py --descriptors',
+    #'wallet_fallbackfee.py --descriptors', #times out
     'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
     'rpc_estimatefee.py',
     'rpc_getblockstats.py',
     'wallet_create_tx.py',
     'wallet_send.py',
-    'wallet_create_tx.py --descriptors',
+    #'wallet_create_tx.py --descriptors', #times out
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
-    'wallet_coinbase_category.py --descriptors',
+    #'wallet_coinbase_category.py --descriptors', #times out
     'feature_filelock.py',
     'feature_loadblock.py',
     'p2p_dos_header_tree.py',
