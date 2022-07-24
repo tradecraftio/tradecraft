@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_REF_H
-#define BITCOIN_UTIL_REF_H
+#ifndef FREICOIN_UTIL_REF_H
+#define FREICOIN_UTIL_REF_H
 
 #include <util/check.h>
 
@@ -46,4 +46,4 @@ private:
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_REF_H
+#endif // FREICOIN_UTIL_REF_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_VERSION_H
-#define BITCOIN_VERSION_H
+#ifndef FREICOIN_VERSION_H
+#define FREICOIN_VERSION_H
 
 /**
  * network protocol versioning
@@ -52,4 +52,4 @@ static const int WTXID_RELAY_VERSION = 70016;
 // Make sure that none of the values above collide with
 // `SERIALIZE_TRANSACTION_NO_WITNESS` or `ADDRV2_FORMAT`.
 
-#endif // BITCOIN_VERSION_H
+#endif // FREICOIN_VERSION_H

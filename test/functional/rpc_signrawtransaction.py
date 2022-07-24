@@ -17,7 +17,7 @@
 
 from test_framework.address import check_script, script_to_p2sh, script_to_p2wsh
 from test_framework.key import ECKey
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, hex_str_to_bytes
 from test_framework.messages import sha256, CTransaction, CTxInWitness
 from test_framework.script import CScript, OP_0, OP_CHECKSIG, OP_CHECKSEQUENCEVERIFY, OP_CHECKLOCKTIMEVERIFY, OP_DROP, OP_TRUE
@@ -27,7 +27,7 @@ from test_framework.wallet_util import bytes_to_wif
 from decimal import Decimal, getcontext
 from io import BytesIO
 
-class SignRawTransactionsTest(BitcoinTestFramework):
+class SignRawTransactionsTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

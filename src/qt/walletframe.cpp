@@ -15,7 +15,7 @@
 
 #include <qt/walletframe.h>
 
-#include <qt/bitcoingui.h>
+#include <qt/freicoingui.h>
 #include <qt/createwalletdialog.h>
 #include <qt/overviewpage.h>
 #include <qt/walletcontroller.h>
@@ -30,7 +30,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, BitcoinGUI* _gui)
+WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, FreicoinGUI* _gui)
     : QFrame(_gui),
       gui(_gui),
       platformStyle(_platformStyle),
@@ -100,15 +100,15 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
     mapWalletViews[walletModel] = walletView;
 
     connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
-    connect(walletView, &WalletView::transactionClicked, gui, &BitcoinGUI::gotoHistoryPage);
-    connect(walletView, &WalletView::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
+    connect(walletView, &WalletView::transactionClicked, gui, &FreicoinGUI::gotoHistoryPage);
+    connect(walletView, &WalletView::coinsSent, gui, &FreicoinGUI::gotoHistoryPage);
     connect(walletView, &WalletView::message, [this](const QString& title, const QString& message, unsigned int style) {
         gui->message(title, message, style);
     });
-    connect(walletView, &WalletView::encryptionStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-    connect(walletView, &WalletView::incomingTransaction, gui, &BitcoinGUI::incomingTransaction);
-    connect(walletView, &WalletView::hdEnabledStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-    connect(gui, &BitcoinGUI::setPrivacy, walletView, &WalletView::setPrivacy);
+    connect(walletView, &WalletView::encryptionStatusChanged, gui, &FreicoinGUI::updateWalletStatus);
+    connect(walletView, &WalletView::incomingTransaction, gui, &FreicoinGUI::incomingTransaction);
+    connect(walletView, &WalletView::hdEnabledStatusChanged, gui, &FreicoinGUI::updateWalletStatus);
+    connect(gui, &FreicoinGUI::setPrivacy, walletView, &WalletView::setPrivacy);
 
     return true;
 }
@@ -214,11 +214,11 @@ void WalletFrame::gotoVerifyMessageTab(QString addr)
         walletView->gotoVerifyMessageTab(addr);
 }
 
-void WalletFrame::gotoLoadPSBT(bool from_clipboard)
+void WalletFrame::gotoLoadPST(bool from_clipboard)
 {
     WalletView *walletView = currentWalletView();
     if (walletView) {
-        walletView->gotoLoadPSBT(from_clipboard);
+        walletView->gotoLoadPST(from_clipboard);
     }
 }
 

@@ -15,10 +15,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test deprecation of getpeerinfo RPC fields."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 
 
-class GetpeerinfoDeprecationTest(BitcoinTestFramework):
+class GetpeerinfoDeprecationTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[], ["-deprecatedrpc=banscore"]]

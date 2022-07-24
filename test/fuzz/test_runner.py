@@ -132,7 +132,7 @@ def main():
                     " ".join(test_list_seedless)
                 )
             )
-            logging.info("Please consider adding a fuzz seed corpus at https://github.com/bitcoin-core/qa-assets")
+            logging.info("Please consider adding a fuzz seed corpus at https://github.com/freicoin/qa-assets")
 
     try:
         help_output = subprocess.run(

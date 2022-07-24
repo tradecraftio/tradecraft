@@ -16,8 +16,8 @@
 /**
  * Functionality for communicating with Tor.
  */
-#ifndef BITCOIN_TORCONTROL_H
-#define BITCOIN_TORCONTROL_H
+#ifndef FREICOIN_TORCONTROL_H
+#define FREICOIN_TORCONTROL_H
 
 #include <string>
 
@@ -32,4 +32,4 @@ void StopTorControl();
 
 CService DefaultOnionServiceTarget();
 
-#endif /* BITCOIN_TORCONTROL_H */
+#endif /* FREICOIN_TORCONTROL_H */

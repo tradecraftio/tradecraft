@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_WALLETUTIL_H
-#define BITCOIN_WALLET_WALLETUTIL_H
+#ifndef FREICOIN_WALLET_WALLETUTIL_H
+#define FREICOIN_WALLET_WALLETUTIL_H
 
 #include <fs.h>
 #include <script/descriptor.h>
@@ -65,7 +65,7 @@ enum WalletFlags : uint64_t {
     //! initialization that should only happen on first run.
     //!
     //! This flag is also a mandatory flag to prevent previous versions of
-    //! bitcoin from opening the wallet, thinking it was newly created, and
+    //! freicoin from opening the wallet, thinking it was newly created, and
     //! then improperly reinitializing it.
     WALLET_FLAG_BLANK_WALLET = (1ULL << 33),
 
@@ -112,4 +112,4 @@ public:
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) {}
 };
 
-#endif // BITCOIN_WALLET_WALLETUTIL_H
+#endif // FREICOIN_WALLET_WALLETUTIL_H

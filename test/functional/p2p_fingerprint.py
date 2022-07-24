@@ -30,13 +30,13 @@ from test_framework.p2p import (
     msg_getdata,
     msg_getheaders,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
 
 
-class P2PFingerprintTest(BitcoinTestFramework):
+class P2PFingerprintTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

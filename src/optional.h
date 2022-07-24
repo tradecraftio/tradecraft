@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_OPTIONAL_H
-#define BITCOIN_OPTIONAL_H
+#ifndef FREICOIN_OPTIONAL_H
+#define FREICOIN_OPTIONAL_H
 
 #include <utility>
 
@@ -34,4 +34,4 @@ Optional<T> MakeOptional(bool condition, T&& value)
 //! Substitute for C++17 std::nullopt
 static auto& nullopt = boost::none;
 
-#endif // BITCOIN_OPTIONAL_H
+#endif // FREICOIN_OPTIONAL_H

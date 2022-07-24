@@ -19,7 +19,7 @@
 #include <qt/askpassphrasedialog.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
-#include <qt/psbtoperationsdialog.h>
+#include <qt/pstoperationsdialog.h>
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
 #include <qt/platformstyle.h>
@@ -32,7 +32,7 @@
 
 #include <interfaces/node.h>
 #include <node/ui_interface.h>
-#include <psbt.h>
+#include <pst.h>
 #include <util/strencodings.h>
 
 #include <QAction>
@@ -216,7 +216,7 @@ void WalletView::gotoVerifyMessageTab(QString addr)
         signVerifyMessageDialog->setAddress_VM(addr);
 }
 
-void WalletView::gotoLoadPSBT(bool from_clipboard)
+void WalletView::gotoLoadPST(bool from_clipboard)
 {
     std::string data;
 
@@ -225,16 +225,16 @@ void WalletView::gotoLoadPSBT(bool from_clipboard)
         bool invalid;
         data = DecodeBase64(raw, &invalid);
         if (invalid) {
-            Q_EMIT message(tr("Error"), tr("Unable to decode PSBT from clipboard (invalid base64)"), CClientUIInterface::MSG_ERROR);
+            Q_EMIT message(tr("Error"), tr("Unable to decode PST from clipboard (invalid base64)"), CClientUIInterface::MSG_ERROR);
             return;
         }
     } else {
         QString filename = GUIUtil::getOpenFileName(this,
             tr("Load Transaction Data"), QString(),
-            tr("Partially Signed Transaction (*.psbt)"), nullptr);
+            tr("Partially Signed Transaction (*.pst)"), nullptr);
         if (filename.isEmpty()) return;
-        if (GetFileSize(filename.toLocal8Bit().data(), MAX_FILE_SIZE_PSBT) == MAX_FILE_SIZE_PSBT) {
-            Q_EMIT message(tr("Error"), tr("PSBT file must be smaller than 100 MiB"), CClientUIInterface::MSG_ERROR);
+        if (GetFileSize(filename.toLocal8Bit().data(), MAX_FILE_SIZE_PST) == MAX_FILE_SIZE_PST) {
+            Q_EMIT message(tr("Error"), tr("PST file must be smaller than 100 MiB"), CClientUIInterface::MSG_ERROR);
             return;
         }
         std::ifstream in(filename.toLocal8Bit().data(), std::ios::binary);
@@ -242,14 +242,14 @@ void WalletView::gotoLoadPSBT(bool from_clipboard)
     }
 
     std::string error;
-    PartiallySignedTransaction psbtx;
-    if (!DecodeRawPSBT(psbtx, data, error)) {
-        Q_EMIT message(tr("Error"), tr("Unable to decode PSBT") + "\n" + QString::fromStdString(error), CClientUIInterface::MSG_ERROR);
+    PartiallySignedTransaction pstx;
+    if (!DecodeRawPST(pstx, data, error)) {
+        Q_EMIT message(tr("Error"), tr("Unable to decode PST") + "\n" + QString::fromStdString(error), CClientUIInterface::MSG_ERROR);
         return;
     }
 
-    PSBTOperationsDialog* dlg = new PSBTOperationsDialog(this, walletModel, clientModel);
-    dlg->openWithPSBT(psbtx);
+    PSTOperationsDialog* dlg = new PSTOperationsDialog(this, walletModel, clientModel);
+    dlg->openWithPST(pstx);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->exec();
 }

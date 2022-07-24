@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_UTXO_SNAPSHOT_H
-#define BITCOIN_NODE_UTXO_SNAPSHOT_H
+#ifndef FREICOIN_NODE_UTXO_SNAPSHOT_H
+#define FREICOIN_NODE_UTXO_SNAPSHOT_H
 
 #include <uint256.h>
 #include <serialize.h>
@@ -49,4 +49,4 @@ public:
     SERIALIZE_METHODS(SnapshotMetadata, obj) { READWRITE(obj.m_base_blockhash, obj.m_coins_count, obj.m_nchaintx); }
 };
 
-#endif // BITCOIN_NODE_UTXO_SNAPSHOT_H
+#endif // FREICOIN_NODE_UTXO_SNAPSHOT_H

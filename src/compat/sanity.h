@@ -13,10 +13,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COMPAT_SANITY_H
-#define BITCOIN_COMPAT_SANITY_H
+#ifndef FREICOIN_COMPAT_SANITY_H
+#define FREICOIN_COMPAT_SANITY_H
 
 bool glibc_sanity_test();
 bool glibcxx_sanity_test();
 
-#endif // BITCOIN_COMPAT_SANITY_H
+#endif // FREICOIN_COMPAT_SANITY_H

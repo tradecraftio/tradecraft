@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_MESSAGE_H
-#define BITCOIN_UTIL_MESSAGE_H
+#ifndef FREICOIN_UTIL_MESSAGE_H
+#define FREICOIN_UTIL_MESSAGE_H
 
 #include <key.h> // For CKey
 #include <uint256.h>
@@ -57,7 +57,7 @@ enum class SigningResult {
 };
 
 /** Verify a signed message.
- * @param[in] address Signer's bitcoin address, it must refer to a public key.
+ * @param[in] address Signer's freicoin address, it must refer to a public key.
  * @param[in] signature The signature in base64 format.
  * @param[in] message The message that was signed.
  * @return result code */
@@ -84,4 +84,4 @@ uint256 MessageHash(const std::string& message);
 
 std::string SigningResultString(const SigningResult res);
 
-#endif // BITCOIN_UTIL_MESSAGE_H
+#endif // FREICOIN_UTIL_MESSAGE_H

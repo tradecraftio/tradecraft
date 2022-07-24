@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_STRING_H
-#define BITCOIN_UTIL_STRING_H
+#ifndef FREICOIN_UTIL_STRING_H
+#define FREICOIN_UTIL_STRING_H
 
 #include <attributes.h>
 
@@ -98,4 +98,4 @@ NODISCARD inline bool HasPrefix(const T1& obj,
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 
-#endif // BITCOIN_UTIL_STRENCODINGS_H
+#endif // FREICOIN_UTIL_STRENCODINGS_H

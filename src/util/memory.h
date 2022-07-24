@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_MEMORY_H
-#define BITCOIN_UTIL_MEMORY_H
+#ifndef FREICOIN_UTIL_MEMORY_H
+#define FREICOIN_UTIL_MEMORY_H
 
 #include <memory>
 #include <utility>

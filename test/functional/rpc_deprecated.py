@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test deprecation of RPC calls."""
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_raises_rpc_error, find_vout_for_address
 
-class DeprecatedRpcTest(BitcoinTestFramework):
+class DeprecatedRpcTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -61,9 +61,9 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             txid = w0.sendrawtransaction(signed_tx)
             self.sync_all()
 
-            assert_raises_rpc_error(-32, 'Using bumpfee with wallets that have private keys disabled is deprecated. Use psbtbumpfee instead or restart bitcoind with -deprecatedrpc=bumpfee. This functionality will be removed in v22', noprivs0.bumpfee, txid)
-            bumped_psbt = noprivs1.bumpfee(txid)
-            assert 'psbt' in bumped_psbt
+            assert_raises_rpc_error(-32, 'Using bumpfee with wallets that have private keys disabled is deprecated. Use pstbumpfee instead or restart freicoind with -deprecatedrpc=bumpfee. This functionality will be removed in v22', noprivs0.bumpfee, txid)
+            bumped_pst = noprivs1.bumpfee(txid)
+            assert 'pst' in bumped_pst
         else:
             self.log.info("No tested deprecated RPC methods")
 

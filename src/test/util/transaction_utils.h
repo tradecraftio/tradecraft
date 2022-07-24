@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
-#define BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
+#ifndef FREICOIN_TEST_UTIL_TRANSACTION_UTILS_H
+#define FREICOIN_TEST_UTIL_TRANSACTION_UTILS_H
 
 #include <primitives/transaction.h>
 
@@ -37,4 +37,4 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CSc
 // the second nValues[2] and nValues[3] outputs paid to a TxoutType::PUBKEYHASH.
 std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet, const std::array<CAmount,4>& nValues);
 
-#endif // BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
+#endif // FREICOIN_TEST_UTIL_TRANSACTION_UTILS_H

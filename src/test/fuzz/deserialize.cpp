@@ -29,7 +29,7 @@
 #include <optional.h>
 #include <primitives/block.h>
 #include <protocol.h>
-#include <psbt.h>
+#include <pst.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <streams.h>
@@ -168,12 +168,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 #elif PREFILLED_TRANSACTION_DESERIALIZE
         PrefilledTransaction prefilled_transaction;
         DeserializeFromFuzzingInput(buffer, prefilled_transaction);
-#elif PSBT_INPUT_DESERIALIZE
-        PSBTInput psbt_input;
-        DeserializeFromFuzzingInput(buffer, psbt_input);
-#elif PSBT_OUTPUT_DESERIALIZE
-        PSBTOutput psbt_output;
-        DeserializeFromFuzzingInput(buffer, psbt_output);
+#elif PST_INPUT_DESERIALIZE
+        PSTInput pst_input;
+        DeserializeFromFuzzingInput(buffer, pst_input);
+#elif PST_OUTPUT_DESERIALIZE
+        PSTOutput pst_output;
+        DeserializeFromFuzzingInput(buffer, pst_output);
 #elif BLOCK_DESERIALIZE
         CBlock block;
         DeserializeFromFuzzingInput(buffer, block);

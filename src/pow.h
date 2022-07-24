@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POW_H
-#define BITCOIN_POW_H
+#ifndef FREICOIN_POW_H
+#define FREICOIN_POW_H
 
 #include <consensus/params.h>
 
@@ -31,4 +31,4 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned char bias, const Consensus::Params&);
 
-#endif // BITCOIN_POW_H
+#endif // FREICOIN_POW_H

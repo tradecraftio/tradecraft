@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_BIP32_H
-#define BITCOIN_UTIL_BIP32_H
+#ifndef FREICOIN_UTIL_BIP32_H
+#define FREICOIN_UTIL_BIP32_H
 
 #include <attributes.h>
 #include <string>
@@ -27,4 +27,4 @@ NODISCARD bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32
 std::string WriteHDKeypath(const std::vector<uint32_t>& keypath);
 std::string FormatHDKeypath(const std::vector<uint32_t>& path);
 
-#endif // BITCOIN_UTIL_BIP32_H
+#endif // FREICOIN_UTIL_BIP32_H

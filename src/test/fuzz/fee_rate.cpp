@@ -27,20 +27,20 @@
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const CAmount satoshis_per_k = ConsumeMoney(fuzzed_data_provider);
-    const CFeeRate fee_rate{satoshis_per_k};
+    const CAmount kria_per_k = ConsumeMoney(fuzzed_data_provider);
+    const CFeeRate fee_rate{kria_per_k};
 
     (void)fee_rate.GetFeePerK();
     const size_t bytes = fuzzed_data_provider.ConsumeIntegral<size_t>();
-    if (!MultiplicationOverflow(static_cast<int64_t>(bytes), satoshis_per_k) && bytes <= static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
+    if (!MultiplicationOverflow(static_cast<int64_t>(bytes), kria_per_k) && bytes <= static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
         (void)fee_rate.GetFee(bytes);
     }
     (void)fee_rate.ToString();
 
-    const CAmount another_satoshis_per_k = ConsumeMoney(fuzzed_data_provider);
-    CFeeRate larger_fee_rate{another_satoshis_per_k};
+    const CAmount another_kria_per_k = ConsumeMoney(fuzzed_data_provider);
+    CFeeRate larger_fee_rate{another_kria_per_k};
     larger_fee_rate += fee_rate;
-    if (satoshis_per_k != 0 && another_satoshis_per_k != 0) {
+    if (kria_per_k != 0 && another_kria_per_k != 0) {
         assert(fee_rate < larger_fee_rate);
         assert(!(fee_rate > larger_fee_rate));
         assert(!(fee_rate == larger_fee_rate));

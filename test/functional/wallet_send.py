@@ -19,7 +19,7 @@ from decimal import Decimal, getcontext
 from itertools import product
 
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
@@ -27,7 +27,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-class WalletSendTest(BitcoinTestFramework):
+class WalletSendTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         # whitelist all peers to speed up tx relay / mempool sync
@@ -42,7 +42,7 @@ class WalletSendTest(BitcoinTestFramework):
 
     def test_send(self, from_wallet, to_wallet=None, amount=None, data=None,
                   arg_conf_target=None, arg_estimate_mode=None, arg_fee_rate=None,
-                  conf_target=None, estimate_mode=None, fee_rate=None, add_to_wallet=None, psbt=None,
+                  conf_target=None, estimate_mode=None, fee_rate=None, add_to_wallet=None, pst=None,
                   inputs=None, add_inputs=None, change_address=None, change_position=None, change_type=None,
                   include_watching=None, locktime=None, lock_unspents=None, replaceable=None, subtract_fee_from_outputs=None,
                   expect_error=None):
@@ -65,12 +65,12 @@ class WalletSendTest(BitcoinTestFramework):
         if add_to_wallet is not None:
             options["add_to_wallet"] = add_to_wallet
         else:
-            if psbt:
+            if pst:
                 add_to_wallet = False
             else:
                 add_to_wallet = from_wallet.getwalletinfo()["private_keys_enabled"] # Default value
-        if psbt is not None:
-            options["psbt"] = psbt
+        if pst is not None:
+            options["pst"] = pst
         if conf_target is not None:
             options["conf_target"] = conf_target
         if estimate_mode is not None:
@@ -141,7 +141,7 @@ class WalletSendTest(BitcoinTestFramework):
         else:
             assert_equal(res["complete"], False)
             assert not "txid" in res
-            assert "psbt" in res
+            assert "pst" in res
 
         if add_to_wallet and not include_watching:
             # Ensure transaction exists in the wallet:
@@ -230,32 +230,32 @@ class WalletSendTest(BitcoinTestFramework):
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False)
         assert(res["hex"])
 
-        self.log.info("Return PSBT...")
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, psbt=True)
-        assert(res["psbt"])
+        self.log.info("Return PST...")
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, pst=True)
+        assert(res["pst"])
 
         self.log.info("Create transaction that spends to address, but don't broadcast...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False)
         # conf_target & estimate_mode can be set as argument or option
         res1 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=1, arg_estimate_mode="economical", add_to_wallet=False)
         res2 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=1, estimate_mode="economical", add_to_wallet=False)
-        assert_equal(self.nodes[1].decodepsbt(res1["psbt"])["fee"],
-                     self.nodes[1].decodepsbt(res2["psbt"])["fee"])
+        assert_equal(self.nodes[1].decodepst(res1["pst"])["fee"],
+                     self.nodes[1].decodepst(res2["pst"])["fee"])
         # but not at the same time
         for mode in ["unset", "economical", "conservative"]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=1, arg_estimate_mode="economical",
                 conf_target=1, estimate_mode=mode, add_to_wallet=False,
                 expect_error=(-8, "Pass conf_target and estimate_mode either as arguments or in the options object, but not both"))
 
-        self.log.info("Create PSBT from watch-only wallet w3, sign with w2...")
+        self.log.info("Create PST from watch-only wallet w3, sign with w2...")
         res = self.test_send(from_wallet=w3, to_wallet=w1, amount=1)
-        res = w2.walletprocesspsbt(res["psbt"])
+        res = w2.walletprocesspst(res["pst"])
         assert res["complete"]
 
-        self.log.info("Create PSBT from wallet w4 with watch-only keys, sign with w2...")
+        self.log.info("Create PST from wallet w4 with watch-only keys, sign with w2...")
         self.test_send(from_wallet=w4, to_wallet=w1, amount=1, expect_error=(-4, "Insufficient funds"))
         res = self.test_send(from_wallet=w4, to_wallet=w1, amount=1, include_watching=True, add_to_wallet=False)
-        res = w2.walletprocesspsbt(res["psbt"])
+        res = w2.walletprocesspst(res["pst"])
         assert res["complete"]
 
         self.log.info("Create OP_RETURN...")
@@ -263,29 +263,29 @@ class WalletSendTest(BitcoinTestFramework):
         self.test_send(from_wallet=w0, data="Hello World", expect_error=(-8, "Data must be hexadecimal string (not 'Hello World')"))
         self.test_send(from_wallet=w0, data="23")
         res = self.test_send(from_wallet=w3, data="23")
-        res = w2.walletprocesspsbt(res["psbt"])
+        res = w2.walletprocesspst(res["pst"])
         assert res["complete"]
 
         self.log.info("Test setting explicit fee rate")
         res1 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate="1", add_to_wallet=False)
         res2 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate="1", add_to_wallet=False)
-        assert_equal(self.nodes[1].decodepsbt(res1["psbt"])["fee"], self.nodes[1].decodepsbt(res2["psbt"])["fee"])
+        assert_equal(self.nodes[1].decodepst(res1["pst"])["fee"], self.nodes[1].decodepst(res2["pst"])["fee"])
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=7, add_to_wallet=False)
-        fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
+        fee = self.nodes[1].decodepst(res["pst"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00007"))
 
         # "unset" and None are treated the same for estimate_mode
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=2, estimate_mode="unset", add_to_wallet=False)
-        fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
+        fee = self.nodes[1].decodepst(res["pst"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00002"))
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=4.531, add_to_wallet=False)
-        fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
+        fee = self.nodes[1].decodepst(res["pst"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00004531"))
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=3, add_to_wallet=False)
-        fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
+        fee = self.nodes[1].decodepst(res["pst"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00003"))
 
         # Test that passing fee_rate as both an argument and an option raises.
@@ -300,14 +300,14 @@ class WalletSendTest(BitcoinTestFramework):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
                 expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees.h
         msg = 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"'
-        for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
+        for target, mode in product([-1, 0], ["frc/kb", "sat/b"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode, expect_error=(-8, msg))
         for mode in ["", "foo", Decimal("3.141592")]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode, expect_error=(-8, msg))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode, expect_error=(-8, msg))
             assert_raises_rpc_error(-8, msg, w0.send, {w1.getnewaddress(): 1}, 0.1, mode)
 
-        for mode in ["economical", "conservative", "btc/kb", "sat/b"]:
+        for mode in ["economical", "conservative", "frc/kb", "sat/b"]:
             self.log.debug("{}".format(mode))
             for k, v in {"string": "true", "object": {"foo": "bar"}}.items():
                 self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=v, estimate_mode=mode,
@@ -347,16 +347,16 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.log.info("Manual change address and position...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, change_address="not an address",
-                       expect_error=(-5, "Change address must be a valid bitcoin address"))
+                       expect_error=(-5, "Change address must be a valid freicoin address"))
         change_address = w0.getnewaddress()
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_address=change_address)
         assert res["complete"]
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_address=change_address, change_position=0)
         assert res["complete"]
-        assert_equal(self.nodes[0].decodepsbt(res["psbt"])["tx"]["vout"][0]["scriptPubKey"]["addresses"], [change_address])
+        assert_equal(self.nodes[0].decodepst(res["pst"])["tx"]["vout"][0]["scriptPubKey"]["addresses"], [change_address])
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_type="legacy", change_position=0)
         assert res["complete"]
-        change_address = self.nodes[0].decodepsbt(res["psbt"])["tx"]["vout"][0]["scriptPubKey"]["addresses"][0]
+        change_address = self.nodes[0].decodepst(res["pst"])["tx"]["vout"][0]["scriptPubKey"]["addresses"][0]
         assert change_address[0] == "m" or change_address[0] == "n"
 
         self.log.info("Set lock time...")

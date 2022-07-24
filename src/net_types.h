@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NET_TYPES_H
-#define BITCOIN_NET_TYPES_H
+#ifndef FREICOIN_NET_TYPES_H
+#define FREICOIN_NET_TYPES_H
 
 #include <map>
 
@@ -23,4 +23,4 @@ class CSubNet;
 
 using banmap_t = std::map<CSubNet, CBanEntry>;
 
-#endif // BITCOIN_NET_TYPES_H
+#endif // FREICOIN_NET_TYPES_H

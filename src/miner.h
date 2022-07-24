@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_MINER_H
-#define BITCOIN_MINER_H
+#ifndef FREICOIN_MINER_H
+#define FREICOIN_MINER_H
 
 #include <optional.h>
 #include <primitives/block.h>
@@ -229,4 +229,4 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block);
 
-#endif // BITCOIN_MINER_H
+#endif // FREICOIN_MINER_H

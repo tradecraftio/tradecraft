@@ -19,11 +19,11 @@ from decimal import Decimal
 
 from test_framework.messages import COIN
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    satoshi_round,
+    kria_round,
 )
 
 # default limits
@@ -34,7 +34,7 @@ MAX_ANCESTORS_CUSTOM = 5
 MAX_DESCENDANTS_CUSTOM = 10
 assert MAX_DESCENDANTS_CUSTOM >= MAX_ANCESTORS_CUSTOM
 
-class MempoolPackagesTest(BitcoinTestFramework):
+class MempoolPackagesTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [
@@ -55,7 +55,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
     # Build a transaction that spends parent_txid:vout
     # Return amount sent
     def chain_transaction(self, node, parent_txid, vout, value, fee, num_outputs):
-        send_value = satoshi_round((value - fee)/num_outputs)
+        send_value = kria_round((value - fee)/num_outputs)
         inputs = [ {'txid' : parent_txid, 'vout' : vout} ]
         outputs = {}
         for _ in range(num_outputs):
@@ -220,10 +220,10 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for x in reversed(chain):
             descendant_fees += mempool[x]['fee']
             if (x == chain[-1]):
-                assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee']+satoshi_round(0.00002))
-                assert_equal(mempool[x]['fees']['modified'], mempool[x]['fee']+satoshi_round(0.00002))
+                assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee']+kria_round(0.00002))
+                assert_equal(mempool[x]['fees']['modified'], mempool[x]['fee']+kria_round(0.00002))
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 2000)
-            assert_equal(mempool[x]['fees']['descendant'], descendant_fees+satoshi_round(0.00002))
+            assert_equal(mempool[x]['fees']['descendant'], descendant_fees+kria_round(0.00002))
 
         # Check that node1's mempool is as expected (-> custom ancestor limit)
         mempool0 = self.nodes[0].getrawmempool(False)
@@ -319,7 +319,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         value = utxo[0]['amount']
         vout = utxo[0]['vout']
 
-        send_value = satoshi_round((value - fee)/2)
+        send_value = kria_round((value - fee)/2)
         inputs = [ {'txid' : txid, 'vout' : vout} ]
         outputs = {}
         for _ in range(2):

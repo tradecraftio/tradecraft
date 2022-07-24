@@ -30,7 +30,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    const TransactionError transaction_error = fuzzed_data_provider.PickValueInArray<TransactionError>({TransactionError::OK, TransactionError::MISSING_INPUTS, TransactionError::ALREADY_IN_CHAIN, TransactionError::P2P_DISABLED, TransactionError::MEMPOOL_REJECTED, TransactionError::MEMPOOL_ERROR, TransactionError::INVALID_PSBT, TransactionError::PSBT_MISMATCH, TransactionError::SIGHASH_MISMATCH, TransactionError::MAX_FEE_EXCEEDED});
+    const TransactionError transaction_error = fuzzed_data_provider.PickValueInArray<TransactionError>({TransactionError::OK, TransactionError::MISSING_INPUTS, TransactionError::ALREADY_IN_CHAIN, TransactionError::P2P_DISABLED, TransactionError::MEMPOOL_REJECTED, TransactionError::MEMPOOL_ERROR, TransactionError::INVALID_PST, TransactionError::PST_MISMATCH, TransactionError::SIGHASH_MISMATCH, TransactionError::MAX_FEE_EXCEEDED});
     (void)JSONRPCTransactionError(transaction_error);
     (void)RPCErrorFromTransactionError(transaction_error);
     (void)TransactionErrorString(transaction_error);
