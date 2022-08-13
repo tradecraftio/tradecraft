@@ -1,0 +1,12 @@
+diff --color -rupN a/qtbase/src/corelib/tools/qbytearraymatcher.h b/qtbase/src/corelib/tools/qbytearraymatcher.h
+--- a/qtbase/src/corelib/tools/qbytearraymatcher.h	2018-10-16 01:37:05.000000000 -0700
++++ b/qtbase/src/corelib/tools/qbytearraymatcher.h	2022-08-12 19:26:52.306070467 -0700
+@@ -40,6 +40,8 @@
+ #ifndef QBYTEARRAYMATCHER_H
+ #define QBYTEARRAYMATCHER_H
+ 
++#include <limits>
++
+ #include <QtCore/qbytearray.h>
+ 
+ QT_BEGIN_NAMESPACE
