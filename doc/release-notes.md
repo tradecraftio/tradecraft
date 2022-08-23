@@ -3,7 +3,6 @@ v20.2-23909 Release Notes
 
 Freicoin version v20.2-23909 is now available from:
 
-  * [Linux i686 (Intel 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v20.2-23909-i686-pc-linux-gnu.tar.gz)
   * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v20.2-23909-x86_64-linux-gnu.tar.gz)
   * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v20.2-23909-arm-linux-gnueabihf.tar.gz)
   * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v20.2-23909-aarch64-linux-gnu.tar.gz)
