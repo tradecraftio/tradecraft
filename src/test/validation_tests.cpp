@@ -94,6 +94,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test_bitcoin_mode)
     disable_time_adjust = old_disable_time_adjust;
 }
 
+#if 0 // disable signet
 BOOST_AUTO_TEST_CASE(signet_parse_tests)
 {
     ArgsManager signet_argsman;
@@ -154,6 +155,7 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
     BOOST_CHECK(!SignetTxs::Create(block, challenge));
     BOOST_CHECK(!CheckSignetBlockSolution(block, signet_params->GetConsensus()));
 }
+#endif // disable signet
 
 //! Test retrieval of valid assumeutxo values.
 BOOST_AUTO_TEST_CASE(test_assumeutxo)
