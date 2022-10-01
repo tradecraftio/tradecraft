@@ -38,6 +38,7 @@ from .messages import (
 from .ripemd160 import ripemd160
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
+MAX_STACK_SIZE = 1000
 LOCKTIME_THRESHOLD = 500000000
 ANNEX_TAG = 0x50
 
