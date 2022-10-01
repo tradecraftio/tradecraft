@@ -49,6 +49,7 @@ from test_framework.script import (
     LegacySignatureMsg,
     LOCKTIME_THRESHOLD,
     MAX_SCRIPT_ELEMENT_SIZE,
+    MAX_STACK_SIZE,
     OP_0,
     OP_1,
     OP_2,
@@ -915,7 +916,7 @@ def spenders_taproot_active():
 
     big_choices = []
     big_scriptops = []
-    for i in range(1000):
+    for i in range(MAX_STACK_SIZE):
         r = random.randrange(len(pubs))
         big_choices.append(r)
         big_scriptops += [pubs[r], OP_CHECKSIGVERIFY]
@@ -923,7 +924,7 @@ def spenders_taproot_active():
 
     def big_spend_inputs(ctx):
         """Helper function to construct the script input for t33/t34 below."""
-        # Instead of signing 999 times, precompute signatures for every (key, hashtype) combination
+        # Instead of signing MAX_STACK_SIZE - 1 times, precompute signatures for every (key, hashtype) combination
         sigs = {}
         for ht in VALID_SIGHASHES_TAPROOT:
             for k in range(len(pubs)):
@@ -975,14 +976,14 @@ def spenders_taproot_active():
         ("t19", CScript([OP_0, OP_0, OP_2DROP] * 10001 + [pubs[1], OP_CHECKSIG])),
         # 20) OP_CHECKSIGVERIFY with empty key
         ("t20", CScript([pubs[1], OP_CHECKSIGVERIFY, OP_0, OP_0, OP_CHECKSIGVERIFY, OP_1])),
-        # 21) Script that grows the stack to 1000 elements
-        ("t21", CScript([pubs[1], OP_CHECKSIGVERIFY, OP_1] + [OP_DUP] * 999 + [OP_DROP] * 999)),
-        # 22) Script that grows the stack to 1001 elements
-        ("t22", CScript([pubs[1], OP_CHECKSIGVERIFY, OP_1] + [OP_DUP] * 1000 + [OP_DROP] * 1000)),
-        # 23) Script that expects an input stack of 1000 elements
-        ("t23", CScript([OP_DROP] * 999 + [pubs[1], OP_CHECKSIG])),
-        # 24) Script that expects an input stack of 1001 elements
-        ("t24", CScript([OP_DROP] * 1000 + [pubs[1], OP_CHECKSIG])),
+        # 21) Script that grows the stack to MAX_STACK_SIZE elements
+        ("t21", CScript([pubs[1], OP_CHECKSIGVERIFY, OP_1] + [OP_DUP] * (MAX_STACK_SIZE - 1) + [OP_DROP] * (MAX_STACK_SIZE - 1))),
+        # 22) Script that grows the stack to MAX_STACK_SIZE + 1 elements
+        ("t22", CScript([pubs[1], OP_CHECKSIGVERIFY, OP_1] + [OP_DUP] * MAX_STACK_SIZE + [OP_DROP] * MAX_STACK_SIZE)),
+        # 23) Script that expects an input stack of MAX_STACK_SIZE elements
+        ("t23", CScript([OP_DROP] * (MAX_STACK_SIZE - 1) + [pubs[1], OP_CHECKSIG])),
+        # 24) Script that expects an input stack of MAX_STACK_SIZE + 1 elements
+        ("t24", CScript([OP_DROP] * MAX_STACK_SIZE + [pubs[1], OP_CHECKSIG])),
         # 25) Script that pushes a MAX_SCRIPT_ELEMENT_SIZE-bytes element
         ("t25", CScript([random_bytes(MAX_SCRIPT_ELEMENT_SIZE), OP_DROP, pubs[1], OP_CHECKSIG])),
         # 26) Script that pushes a (MAX_SCRIPT_ELEMENT_SIZE+1)-bytes element
@@ -999,10 +1000,10 @@ def spenders_taproot_active():
         ("t31", CScript([b'\x02' + pubs[1], OP_CHECKSIGVERIFY, OP_1])),
         # 32) Variant of t28 with "normal" 33-byte pubkey
         ("t32", CScript([csa_high_val, b'\x03' + pubs[1], OP_CHECKSIGADD, csa_high_result, OP_EQUAL])),
-        # 33) 999-of-999 multisig
-        ("t33", CScript(big_scriptops[:1998] + [OP_1])),
-        # 34) 1000-of-1000 multisig
-        ("t34", CScript(big_scriptops[:2000] + [OP_1])),
+        # 33) (MAX_STACK_SIZE-1)-of-(MAX_STACK_SIZE-1) multisig
+        ("t33", CScript(big_scriptops[:2*(MAX_STACK_SIZE-1)] + [OP_1])),
+        # 34) MAX_STACK_SIZE-of-MAX_STACK_SIZE multisig
+        ("t34", CScript(big_scriptops[:2*MAX_STACK_SIZE] + [OP_1])),
         # 35) Variant of t9 that uses a non-minimally encoded input arg
         ("t35", CScript([bytes([csa_low_val]), pubs[1], OP_CHECKSIGADD, csa_low_result, OP_EQUAL])),
         # 36) Empty script
@@ -1054,14 +1055,14 @@ def spenders_taproot_active():
     add_spender(spenders, "tapscript/emptysigs/checksigadd", leaf="t14", **common, inputs=[b'', getter("sign")], failure={"leaf": "t15"}, **ERR_UNKNOWN_PUBKEY)
     # Test that scripts over 10000 bytes (and over 201 non-push ops) are acceptable.
     add_spender(spenders, "tapscript/no10000limit", leaf="t19", **SINGLE_SIG, **common)
-    # Test that a stack size of 1000 elements is permitted, but 1001 isn't.
-    add_spender(spenders, "tapscript/1000stack", leaf="t21", **SINGLE_SIG, **common, failure={"leaf": "t22"}, **ERR_STACK_SIZE)
-    # Test that an input stack size of 1000 elements is permitted, but 1001 isn't.
-    add_spender(spenders, "tapscript/1000inputs", leaf="t23", **common, inputs=[getter("sign")] + [b'' for _ in range(999)], failure={"leaf": "t24", "inputs": [getter("sign")] + [b'' for _ in range(1000)]}, **ERR_STACK_SIZE)
+    # Test that a stack size of MAX_STACK_SIZE elements is permitted, but MAX_STACK_SIZE + 1 isn't.
+    add_spender(spenders, "tapscript/maxstack", leaf="t21", **SINGLE_SIG, **common, failure={"leaf": "t22"}, **ERR_STACK_SIZE)
+    # Test that an input stack size of MAX_STACK_SIZE elements is permitted, but MAX_STACK_SIZE + 1 isn't.
+    add_spender(spenders, "tapscript/maxinputs", leaf="t23", **common, inputs=[getter("sign")] + [b'' for _ in range(MAX_STACK_SIZE-1)], failure={"leaf": "t24", "inputs": [getter("sign")] + [b'' for _ in range(MAX_STACK_SIZE)]}, **ERR_STACK_SIZE)
     # Test that pushing a MAX_SCRIPT_ELEMENT_SIZE byte stack element is valid, but one longer is not.
     add_spender(spenders, "tapscript/pushmaxlimit", leaf="t25", **common, **SINGLE_SIG)
-    # Test that 999-of-999 multisig works (but 1000-of-1000 triggers stack size limits)
-    add_spender(spenders, "tapscript/bigmulti", leaf="t33", **common, inputs=big_spend_inputs, num=999, failure={"leaf": "t34", "num": 1000}, **ERR_STACK_SIZE)
+    # Test that (MAX_STACK_SIZE-1)-of-(MAX_STACK_SIZE-1) multisig works (but MAX_STACK_SIZE-of-MAX_STACK_SIZE triggers stack size limits)
+    add_spender(spenders, "tapscript/bigmulti", leaf="t33", **common, inputs=big_spend_inputs, num=MAX_STACK_SIZE - 1, failure={"leaf": "t34", "num": MAX_STACK_SIZE}, **ERR_STACK_SIZE)
     # Test that the CLEANSTACK rule is consensus critical in tapscript
     add_spender(spenders, "tapscript/cleanstack", leaf="t36", tap=tap, inputs=[b'\x01'], failure={"inputs": [b'\x01', b'\x01']}, **ERR_CLEANSTACK)
 
@@ -1139,8 +1140,8 @@ def spenders_taproot_active():
             ("undecodable_unkver", CScript([OP_PUSHDATA1]), leafver),
             ("bigpush_c0", CScript([random_bytes(MAX_SCRIPT_ELEMENT_SIZE+1), OP_DROP])),
             ("bigpush_unkver", CScript([random_bytes(MAX_SCRIPT_ELEMENT_SIZE+1), OP_DROP]), leafver),
-            ("1001push_c0", CScript([OP_0] * 1001)),
-            ("1001push_unkver", CScript([OP_0] * 1001), leafver),
+            ("maxpushes_c0", CScript([OP_0] * (MAX_STACK_SIZE + 1))),
+            ("maxpushes_unkver", CScript([OP_0] * (MAX_STACK_SIZE + 1)), leafver),
         ]
         random.shuffle(scripts)
         tap = taproot_construct(pubs[0], scripts)
@@ -1148,8 +1149,8 @@ def spenders_taproot_active():
         add_spender(spenders, "unkver/return", standard=False, tap=tap, leaf="return_unkver", failure={"leaf": "return_c0"}, **ERR_OP_RETURN)
         add_spender(spenders, "unkver/undecodable", standard=False, tap=tap, leaf="undecodable_unkver", failure={"leaf": "undecodable_c0"}, **ERR_UNDECODABLE)
         add_spender(spenders, "unkver/bigpush", standard=False, tap=tap, leaf="bigpush_unkver")
-        add_spender(spenders, "unkver/1001push", standard=False, tap=tap, leaf="1001push_unkver", failure={"leaf": "1001push_c0"}, **ERR_STACK_SIZE)
-        add_spender(spenders, "unkver/1001inputs", standard=False, tap=tap, leaf="bare_unkver", inputs=[b'']*1001, failure={"leaf": "bare_c0"}, **ERR_STACK_SIZE)
+        add_spender(spenders, "unkver/maxpushes", standard=False, tap=tap, leaf="maxpushes_unkver", failure={"leaf": "maxpushes_c0"}, **ERR_STACK_SIZE)
+        add_spender(spenders, "unkver/maxinputs", standard=False, tap=tap, leaf="bare_unkver", inputs=[b'']*(MAX_STACK_SIZE + 1), failure={"leaf": "bare_c0"}, **ERR_STACK_SIZE)
 
     # OP_SUCCESSx tests.
     hashtype = lambda _: random.choice(VALID_SIGHASHES_TAPROOT)
@@ -1169,8 +1170,8 @@ def spenders_taproot_active():
             ("undecodable_bypassed_success", CScript([OP_PUSHDATA1, OP_2, opcode])),
             ("bigpush_success", CScript([random_bytes(MAX_SCRIPT_ELEMENT_SIZE+1), OP_DROP, opcode])),
             ("bigpush_nop", CScript([random_bytes(MAX_SCRIPT_ELEMENT_SIZE+1), OP_DROP, OP_NOP])),
-            ("1001push_success", CScript([OP_0] * 1001 + [opcode])),
-            ("1001push_nop", CScript([OP_0] * 1001 + [OP_NOP])),
+            ("maxpushes_success", CScript([OP_0] * (MAX_STACK_SIZE + 1) + [opcode])),
+            ("maxpushes_nop", CScript([OP_0] * (MAX_STACK_SIZE + 1) + [OP_NOP])),
         ]
         random.shuffle(scripts)
         tap = taproot_construct(pubs[0], scripts)
@@ -1180,8 +1181,8 @@ def spenders_taproot_active():
         add_spender(spenders, "opsuccess/undecodable", standard=False, tap=tap, leaf="undecodable_success", failure={"leaf": "undecodable_nop"}, **ERR_UNDECODABLE)
         add_spender(spenders, "opsuccess/undecodable_bypass", standard=False, tap=tap, leaf="undecodable_success", failure={"leaf": "undecodable_bypassed_success"}, **ERR_UNDECODABLE)
         add_spender(spenders, "opsuccess/bigpush", standard=False, tap=tap, leaf="bigpush_success")
-        add_spender(spenders, "opsuccess/1001push", standard=False, tap=tap, leaf="1001push_success", failure={"leaf": "1001push_nop"}, **ERR_STACK_SIZE)
-        add_spender(spenders, "opsuccess/1001inputs", standard=False, tap=tap, leaf="bare_success", inputs=[b'']*1001, failure={"leaf": "bare_nop"}, **ERR_STACK_SIZE)
+        add_spender(spenders, "opsuccess/maxpushes", standard=False, tap=tap, leaf="maxpushes_success", failure={"leaf": "maxpushes_nop"}, **ERR_STACK_SIZE)
+        add_spender(spenders, "opsuccess/maxinputs", standard=False, tap=tap, leaf="bare_success", inputs=[b'']*(MAX_STACK_SIZE+1), failure={"leaf": "bare_nop"}, **ERR_STACK_SIZE)
 
     # Non-OP_SUCCESSx (verify that those aren't accidentally treated as OP_SUCCESSx)
     for opval in range(0, 0x100):
