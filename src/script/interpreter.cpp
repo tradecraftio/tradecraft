@@ -1956,11 +1956,6 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
     // Enforce inintial stack size limits (altstack is empty here)
     if (stack.size() > MAX_WITNESS_STACK_SIZE) return set_error(serror, SCRIPT_ERR_STACK_SIZE);
 
-    // Disallow stack item size > MAX_SCRIPT_ELEMENT_SIZE in witness stack
-    for (const valtype& elem : stack) {
-        if (elem.size() > MAX_SCRIPT_ELEMENT_SIZE) return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-    }
-
     // Run the script interpreter.
     if (!EvalScript(stack, exec_script, flags, checker, sigversion, execdata, serror)) return false;
 
