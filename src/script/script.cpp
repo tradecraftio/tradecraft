@@ -228,7 +228,7 @@ bool CScript::IsPayToWitnessScriptHash() const
 
 // A witness program is any valid CScript that consists of a 1-byte push opcode
 // followed by a data push between 2 and 75 bytes.
-bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program) const
+bool CScript::IsWitnessProgram(int* version, std::vector<unsigned char>* program) const
 {
     // Early-out based on the minimum and maximum sizes.
     if (this->size() < 4 || this->size() > 77) {
@@ -247,13 +247,17 @@ bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program
     // support other single-byte opcode prefixes.
     switch ((*this)[0]) {
         case OP_0:
-            version = 0;
+            if (version) {
+                *version = 0;
+            }
             break;
         case OP_1:  case OP_2:  case OP_3:  case OP_4:
         case OP_5:  case OP_6:  case OP_7:  case OP_8:
         case OP_9:  case OP_10: case OP_11: case OP_12:
         case OP_13: case OP_14: case OP_15: case OP_16:
-            version = 1 + (*this)[0] - OP_1;
+            if (version) {
+                *version = 1 + (*this)[0] - OP_1;
+            }
             break;
         default:
             // Not one of the 17 single-byte opcodes which can start a script
@@ -261,7 +265,9 @@ bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program
             return false;
     }
     // The witness program is the push which follows the outer version byte.
-    program = std::vector<unsigned char>(this->begin() + 2, this->begin() + 2 + (*this)[1]);
+    if (program) {
+        *program = std::vector<unsigned char>(this->begin() + 2, this->begin() + 2 + (*this)[1]);
+    }
     return true;
 }
 

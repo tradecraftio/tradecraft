@@ -1746,8 +1746,7 @@ const std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScr
             }
             // For segwit scripts, we only consider them spendable if we have the segwit spk
             int wit_ver = -1;
-            std::vector<unsigned char> witprog;
-            if (script.IsWitnessProgram(wit_ver, witprog) && wit_ver == 0) {
+            if (script.IsWitnessProgram(&wit_ver) && wit_ver == 0) {
                 spks.insert(script);
             }
         } else {
