@@ -473,7 +473,7 @@ void RemoveUnnecessaryTransactions(PartiallySignedTransaction& pstx, const int& 
             const auto& input = pstx.inputs.at(i);
             int wit_ver;
             std::vector<unsigned char> wit_prog;
-            if (input.witness_utxo.IsNull() || !input.witness_utxo.scriptPubKey.IsWitnessProgram(wit_ver, wit_prog)) {
+            if (input.witness_utxo.IsNull() || !input.witness_utxo.scriptPubKey.IsWitnessProgram(&wit_ver, &wit_prog)) {
                 // There's a non-segwit input or Segwit v0, so we cannot drop any witness_utxos
                 to_drop.clear();
                 break;
