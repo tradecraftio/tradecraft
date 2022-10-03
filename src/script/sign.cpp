@@ -819,9 +819,7 @@ const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR = DummySignatureCrea
 
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
 {
-    int version;
-    valtype program;
-    if (script.IsWitnessProgram(version, program)) return true;
+    if (script.IsWitnessProgram()) return true;
     if (script.IsPayToScriptHash()) {
         std::vector<valtype> solutions;
         auto whichtype = Solver(script, solutions);
@@ -829,7 +827,7 @@ bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
             auto h160 = uint160(solutions[0]);
             CScript subscript;
             if (provider.GetCScript(CScriptID{h160}, subscript)) {
-                if (subscript.IsWitnessProgram(version, program)) return true;
+                if (subscript.IsWitnessProgram()) return true;
             }
         }
     }
