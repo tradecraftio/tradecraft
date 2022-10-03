@@ -378,9 +378,7 @@ public:
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(script);
             CScript subscript;
             if (provider && provider->GetCScript(CScriptID(scripthash), subscript)) {
-                int witnessversion;
-                std::vector<unsigned char> witprog;
-                if (subscript.IsWitnessProgram(witnessversion, witprog)) {
+                if (subscript.IsWitnessProgram()) {
                     ExtractDestination(subscript, result);
                     already_witness = true;
                     return true;
