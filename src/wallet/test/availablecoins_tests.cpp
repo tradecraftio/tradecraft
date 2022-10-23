@@ -74,13 +74,6 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, AvailableCoinsTestingSetup)
     //   1. One UTXO as the recipient
     //   2. One UTXO from the change, due to payment address matching logic
 
-    // Bech32m
-    dest = wallet->GetNewDestination(OutputType::BECH32M, "");
-    BOOST_ASSERT(dest);
-    AddTx(CRecipient{{GetScriptForDestination(*dest)}, 1 * COIN, /*fSubtractFeeFromAmount=*/true});
-    available_coins = AvailableCoins(*wallet, /*atheight=*/0);
-    BOOST_CHECK_EQUAL(available_coins.coins[OutputType::BECH32M].size(), 2U);
-
     // Bech32
     dest = wallet->GetNewDestination(OutputType::BECH32, "");
     BOOST_ASSERT(dest);
