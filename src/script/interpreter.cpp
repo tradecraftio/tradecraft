@@ -2204,20 +2204,6 @@ uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint25
     return k;
 }
 
-static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const uint256& tapleaf_hash)
-{
-    assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
-    assert(program.size() >= uint256::size());
-    //! The internal pubkey (x-only, so no Y coordinate parity).
-    const XOnlyPubKey p{Span{control}.subspan(1, TAPROOT_CONTROL_BASE_SIZE - 1)};
-    //! The output pubkey (taken from the scriptPubKey).
-    const XOnlyPubKey q{program};
-    // Compute the Merkle root from the leaf and the provided path.
-    const uint256 merkle_root = ComputeTaprootMerkleRoot(control, tapleaf_hash);
-    // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.
-    return q.CheckTapTweak(p, merkle_root, control[0] & 1);
-}
-
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
     CScript exec_script; //!< Actually executed script (second to last stack item in P2WSH or P2WPK; leaf script in P2TR)
@@ -2288,49 +2274,6 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
         } else {
             // Unrecognized payload lengths return true for future softfork compatibility
-            return set_success(serror);
-        }
-    } else if (witversion == 1 && program.size() == WITNESS_V1_TAPROOT_SIZE) {
-        // BIP341 Taproot: 32-byte non-P2SH witness v1 program (which encodes a P2C-tweaked pubkey)
-        if (!(flags & SCRIPT_VERIFY_TAPROOT)) return set_success(serror);
-        if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
-        if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
-            // Drop annex (this is non-standard; see IsWitnessStandard)
-            const valtype& annex = SpanPopBack(stack);
-            execdata.m_annex_hash = (HashWriter{} << annex).GetSHA256();
-            execdata.m_annex_present = true;
-        } else {
-            execdata.m_annex_present = false;
-        }
-        execdata.m_annex_init = true;
-        if (stack.size() == 1) {
-            // Key path spending (stack size is 1 after removing optional annex)
-            if (!checker.CheckSchnorrSignature(stack.front(), program, SigVersion::TAPROOT, execdata, serror)) {
-                return false; // serror is set
-            }
-            return set_success(serror);
-        } else {
-            // Script path spending (stack size is >1 after removing optional annex)
-            const valtype& control = SpanPopBack(stack);
-            const valtype& script = SpanPopBack(stack);
-            if (control.size() < TAPROOT_CONTROL_BASE_SIZE || control.size() > TAPROOT_CONTROL_MAX_SIZE || ((control.size() - TAPROOT_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) {
-                return set_error(serror, SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
-            }
-            execdata.m_tapleaf_hash = ComputeTapleafHash(control[0] & TAPROOT_LEAF_MASK, script);
-            if (!VerifyTaprootCommitment(control, program, execdata.m_tapleaf_hash)) {
-                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
-            }
-            execdata.m_tapleaf_hash_init = true;
-            if ((control[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
-                // Tapscript (leaf version 0xc0)
-                exec_script = CScript(script.begin(), script.end());
-                execdata.m_validation_weight_left = ::GetSerializeSize(witness.stack) + VALIDATION_WEIGHT_OFFSET;
-                execdata.m_validation_weight_left_init = true;
-                return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::TAPSCRIPT, checker, execdata, serror);
-            }
-            if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION) {
-                return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION);
-            }
             return set_success(serror);
         }
     } else {

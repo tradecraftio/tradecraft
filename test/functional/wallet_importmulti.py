@@ -758,9 +758,7 @@ class ImportMultiTest(FreicoinTestFramework):
                 "scriptPubKey": {"address": "fcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqnw8tmd"},
                 "timestamp": "now",
             },
-            success=False,
-            error_code=-5,
-            error_message="Bech32m addresses cannot be imported into legacy wallets",
+            success=True,
         )
         self.test_importmulti(
             {
@@ -769,7 +767,7 @@ class ImportMultiTest(FreicoinTestFramework):
             },
             success=False,
             error_code=-5,
-            error_message="Bech32m descriptors cannot be imported into legacy wallets",
+            error_message=f"'tr({pub})' is not a valid descriptor function",
         )
 
         # Import some public keys to the keypool of a no privkey wallet
