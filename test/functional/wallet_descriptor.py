@@ -53,8 +53,8 @@ class WalletDescriptorTest(FreicoinTestFramework):
         self.log.info("Checking wallet info")
         wallet_info = self.nodes[0].getwalletinfo()
         assert_equal(wallet_info['format'], 'sqlite')
-        assert_equal(wallet_info['keypoolsize'], 300)
-        assert_equal(wallet_info['keypoolsize_hd_internal'], 300)
+        assert_equal(wallet_info['keypoolsize'], 200)
+        assert_equal(wallet_info['keypoolsize_hd_internal'], 200)
         assert 'keypoololdest' not in wallet_info
 
         # Check that getnewaddress works

@@ -5,7 +5,7 @@
             "asm": "-1 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
             "address": "fcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqfnuueq",
             "desc": "addr(fcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqfnuueq)#hzlst3vw",
-            "type": "witness_v1_taproot"
+            "type": "witness_unknown"
         }
     ],
     [

@@ -38,7 +38,6 @@ bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestinat
         error = _("Error: Legacy wallets only support the \"legacy\" or \"bech32\" address types");
         return false;
     }
-    assert(type != OutputType::BECH32M);
 
     LOCK(cs_KeyStore);
     error.clear();
@@ -305,7 +304,6 @@ bool LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool i
         error = _("Error: Legacy wallets only support the \"legacy\" or \"bech32\" address types");
         return false;
     }
-    assert(type != OutputType::BECH32M);
 
     LOCK(cs_KeyStore);
     if (!CanGetAddresses(internal)) {
@@ -1357,7 +1355,6 @@ void LegacyScriptPubKeyMan::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const 
 
 void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex, const OutputType& type)
 {
-    assert(type != OutputType::BECH32M);
     // Remove from key pool
     WalletBatch batch(m_storage.GetDatabase());
     batch.ErasePool(nIndex);
@@ -1391,7 +1388,6 @@ void LegacyScriptPubKeyMan::ReturnDestination(int64_t nIndex, bool fInternal, co
 
 bool LegacyScriptPubKeyMan::GetKeyFromPool(CPubKey& result, const OutputType type, bool internal)
 {
-    assert(type != OutputType::BECH32M);
     if (!CanGetAddresses(internal)) {
         return false;
     }
@@ -1460,7 +1456,6 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
 
 void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
-    assert(type != OutputType::BECH32M);
     if (key.IsCompressed() && type == OutputType::BECH32) {
         CScript p2pk = GetScriptForRawPubKey(key);
         WitnessV0ScriptEntry entry(0 /* version */, p2pk);
@@ -2004,10 +1999,6 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     }
     case OutputType::BECH32: {
         desc_prefix = "wpk(" + xpub + "/84'";
-        break;
-    }
-    case OutputType::BECH32M: {
-        desc_prefix = "tr(" + xpub  + "/86'";
         break;
     }
     } // no default case, so the compiler can warn about missing cases
