@@ -851,51 +851,6 @@ class PSTTest(FreicoinTestFramework):
         pst = self.nodes[0].walletprocesspst(pst)["pst"]
         self.nodes[0].sendrawtransaction(self.nodes[0].finalizepst(pst)["hex"])
 
-        # Same test but for taproot
-        if self.options.descriptors:
-            eckey = ECKey()
-            eckey.generate()
-            privkey = bytes_to_wif(eckey.get_bytes())
-
-            desc = descsum_create("tr({},pk({}))".format(H_POINT, eckey.get_pubkey().get_bytes().hex()))
-            res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
-            assert res[0]["success"]
-            addr = self.nodes[0].deriveaddresses(desc)[0]
-            self.nodes[0].sendtoaddress(addr, 10)
-            self.generate(self.nodes[0], 1)
-            self.nodes[0].importdescriptors([{"desc": descsum_create("tr({})".format(privkey)), "timestamp":"now"}])
-
-            pst = watchonly.sendall([wallet.getnewaddress(), addr])["pst"]
-            pst = self.nodes[0].walletprocesspst(pst)["pst"]
-            txid = self.nodes[0].sendrawtransaction(self.nodes[0].finalizepst(pst)["hex"])
-            vout = find_vout_for_address(self.nodes[0], txid, addr)
-
-            # Make sure tap tree is in pst
-            parsed_pst = PST.fromhex(pst)
-            assert_greater_than(len(parsed_pst.o[vout].map[PST_OUT_TAP_TREE]), 0)
-            assert "taproot_tree" in self.nodes[0].decodepst(pst)["outputs"][vout]
-            parsed_pst.make_blank()
-            comb_pst = self.nodes[0].combinepst([pst, parsed_pst.hex()])
-            assert_equal(comb_pst, pst)
-
-            self.log.info("Test that walletprocesspst both updates and signs a non-updated pst containing Taproot inputs")
-            addr = self.nodes[0].getnewaddress("", "bech32m")
-            txid = self.nodes[0].sendtoaddress(addr, 1)
-            vout = find_vout_for_address(self.nodes[0], txid, addr)
-            pst = self.nodes[0].createpst([{"txid": txid, "vout": vout}], [{self.nodes[0].getnewaddress(): 0.9999}])
-            signed = self.nodes[0].walletprocesspst(pst)
-            rawtx = self.nodes[0].finalizepst(signed["pst"])["hex"]
-            self.nodes[0].sendrawtransaction(rawtx)
-            self.generate(self.nodes[0], 1)
-
-            # Make sure tap tree is not in pst
-            parsed_pst = PST.fromhex(pst)
-            assert PST_OUT_TAP_TREE not in parsed_pst.o[0].map
-            assert "taproot_tree" not in self.nodes[0].decodepst(pst)["outputs"][0]
-            parsed_pst.make_blank()
-            comb_pst = self.nodes[0].combinepst([pst, parsed_pst.hex()])
-            assert_equal(comb_pst, pst)
-
         self.log.info("Test decoding PST with per-input preimage types")
         # note that the decodepst RPC doesn't check whether preimages and hashes match
         hash_ripemd160, preimage_ripemd160 = random_bytes(20), random_bytes(50)

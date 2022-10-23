@@ -2308,9 +2308,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     for (const auto& recipient : vecSend) {
         std::vector<std::vector<uint8_t>> dummy;
         const TxoutType type{Solver(recipient.scriptPubKey, dummy)};
-        if (type == TxoutType::WITNESS_V1_TAPROOT) {
-            any_tr = true;
-        } else if (type == TxoutType::WITNESS_V0_SHORTHASH) {
+        if (type == TxoutType::WITNESS_V0_SHORTHASH) {
             any_wpk = true;
         } else if (type == TxoutType::SCRIPTHASH) {
             any_sh = true;
@@ -2319,11 +2317,6 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         }
     }
 
-    const bool has_bech32m_spkman(GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/true));
-    if (has_bech32m_spkman && any_tr) {
-        // Currently tr is the only type supported by the BECH32M spkman
-        return OutputType::BECH32M;
-    }
     const bool has_bech32_spkman(GetScriptPubKeyMan(OutputType::BECH32, /*internal=*/true));
     if (has_bech32_spkman && any_wpk) {
         // Currently wpk is the only type supported by the BECH32 spkman
@@ -2335,9 +2328,6 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         return OutputType::LEGACY;
     }
 
-    if (has_bech32m_spkman) {
-        return OutputType::BECH32M;
-    }
     if (has_bech32_spkman) {
         return OutputType::BECH32;
     }

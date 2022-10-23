@@ -102,8 +102,8 @@ class KeyPoolTest(FreicoinTestFramework):
         nodes[0].walletlock()
         wi = nodes[0].getwalletinfo()
         if self.options.descriptors:
-            assert_equal(wi['keypoolsize_hd_internal'], 18)
-            assert_equal(wi['keypoolsize'], 18)
+            assert_equal(wi['keypoolsize_hd_internal'], 12)
+            assert_equal(wi['keypoolsize'], 12)
         else:
             assert_equal(wi['keypoolsize_hd_internal'], 6)
             assert_equal(wi['keypoolsize'], 6)
@@ -147,8 +147,8 @@ class KeyPoolTest(FreicoinTestFramework):
         nodes[0].keypoolrefill(100)
         wi = nodes[0].getwalletinfo()
         if self.options.descriptors:
-            assert_equal(wi['keypoolsize_hd_internal'], 300)
-            assert_equal(wi['keypoolsize'], 300)
+            assert_equal(wi['keypoolsize_hd_internal'], 200)
+            assert_equal(wi['keypoolsize'], 200)
         else:
             assert_equal(wi['keypoolsize_hd_internal'], 100)
             assert_equal(wi['keypoolsize'], 100)
