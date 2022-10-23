@@ -1270,11 +1270,11 @@ class TaprootTest(FreicoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         # Node 0 has Taproot inactive, Node 1 active.
-        self.extra_args = [["-par=1"], ["-par=1"]]
+        self.extra_args = [["-par=1", "-vbparams=taproot:-1:0"], ["-par=1", "-vbparams=taproot:-1:0"]]
         if self.options.previous_release:
             self.wallet_names = [None, self.default_wallet_name]
         else:
-            self.extra_args[0].append("-vbparams=taproot:1:1")
+            self.extra_args[0][-1] = "-vbparams=taproot:1:1"
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args, versions=[
