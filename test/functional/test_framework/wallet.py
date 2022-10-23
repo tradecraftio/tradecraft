@@ -419,10 +419,10 @@ class MiniWallet:
         return chain
 
 
-def getnewdestination(address_type='bech32m'):
+def getnewdestination(address_type='bech32'):
     """Generate a random destination of the specified type and return the
        corresponding public key, scriptPubKey and address. Supported types are
-       'legacy', 'bech32', or 'bech32m'. Can be used when a random
+       'legacy' or 'bech32'. Can be used when a random
        destination is needed, but no compiled wallet is available (e.g. as
        replacement to the getnewaddress/getaddressinfo RPCs)."""
     key, pubkey = generate_keypair()
@@ -432,11 +432,6 @@ def getnewdestination(address_type='bech32m'):
     elif address_type == 'bech32':
         scriptpubkey = key_to_p2wpk_script(pubkey)
         address = key_to_p2wpk(pubkey)
-    elif address_type == 'bech32m':
-        tap = taproot_construct(compute_xonly_pubkey(key.get_bytes())[0])
-        pubkey = tap.output_pubkey
-        scriptpubkey = tap.scriptPubKey
-        address = output_key_to_p2tr(pubkey)
     else:
         assert False
     return pubkey, scriptpubkey, address

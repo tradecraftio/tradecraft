@@ -205,9 +205,6 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = WitnessV0ShortHash{ConsumeUInt160(fuzzed_data_provider)};
         },
         [&] {
-            tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
-        },
-        [&] {
             std::vector<unsigned char> program{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/40)};
             if (program.size() < 2) {
                 program = {0, 0};

@@ -35,7 +35,7 @@ RPCHelpMan getnewaddress()
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\" or \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The new freicoin address"
@@ -63,8 +63,6 @@ RPCHelpMan getnewaddress()
         std::optional<OutputType> parsed = ParseOutputType(request.params[1].get_str());
         if (!parsed) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
-        } else if (parsed.value() == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
         }
         output_type = parsed.value();
     }
@@ -85,7 +83,7 @@ RPCHelpMan getrawchangeaddress()
                 "\nReturns a new Freicoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\" or \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The address"
@@ -110,8 +108,6 @@ RPCHelpMan getrawchangeaddress()
         std::optional<OutputType> parsed = ParseOutputType(request.params[0].get_str());
         if (!parsed) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[0].get_str()));
-        } else if (parsed.value() == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
         }
         output_type = parsed.value();
     }
@@ -290,8 +286,6 @@ RPCHelpMan addmultisigaddress()
         std::optional<OutputType> parsed = ParseOutputType(request.params[3].get_str());
         if (!parsed) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[3].get_str()));
-        } else if (parsed.value() == OutputType::BECH32M) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m multisig addresses cannot be created with legacy wallets");
         }
         output_type = parsed.value();
     }
@@ -687,7 +681,6 @@ public:
         return (*this)(WitnessV0ShortHash(id));
     }
 
-    UniValue operator()(const WitnessV1Taproot& id) const { return UniValue(UniValue::VOBJ); }
     UniValue operator()(const WitnessUnknown& id) const { return UniValue(UniValue::VOBJ); }
 };
 
@@ -721,7 +714,7 @@ RPCHelpMan getaddressinfo()
                         {RPCResult::Type::BOOL, "solvable", "If we know how to spend coins sent to this address, ignoring the possible lack of private keys."},
                         {RPCResult::Type::STR, "desc", /*optional=*/true, "A descriptor for spending coins sent to this address (only when solvable)."},
                         {RPCResult::Type::STR, "parent_desc", /*optional=*/true, "The descriptor used to derive this address if this is a descriptor wallet"},
-                        {RPCResult::Type::BOOL, "isscript", "If the key is a script."},
+                        {RPCResult::Type::BOOL, "isscript", /*optional=*/true, "If the key is a script."},
                         {RPCResult::Type::BOOL, "ischange", "If the address was used for change output."},
                         {RPCResult::Type::BOOL, "iswitness", "If the address is a witness address."},
                         {RPCResult::Type::NUM, "witness_version", /*optional=*/true, "The version number of the witness program."},

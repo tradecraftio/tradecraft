@@ -39,7 +39,6 @@ util::Result<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination(const Outp
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
         return util::Error{_("Error: Legacy wallets only support the \"legacy\" or \"bech32\" address types")};
     }
-    assert(type != OutputType::BECH32M);
 
     // Fill-up keypool if needed
     TopUp();
@@ -120,7 +119,6 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
     case TxoutType::NULL_DATA:
     case TxoutType::UNSPENDABLE:
     case TxoutType::WITNESS_UNKNOWN:
-    case TxoutType::WITNESS_V1_TAPROOT:
         break;
     case TxoutType::PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
@@ -306,7 +304,6 @@ util::Result<CTxDestination> LegacyScriptPubKeyMan::GetReservedDestination(const
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
         return util::Error{_("Error: Legacy wallets only support the \"legacy\" or \"bech32\" address types")};
     }
-    assert(type != OutputType::BECH32M);
 
     LOCK(cs_KeyStore);
     if (!CanGetAddresses(internal)) {
@@ -1368,7 +1365,6 @@ void LegacyScriptPubKeyMan::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const 
 
 void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex, const OutputType& type)
 {
-    assert(type != OutputType::BECH32M);
     // Remove from key pool
     WalletBatch batch(m_storage.GetDatabase());
     batch.ErasePool(nIndex);
@@ -1402,7 +1398,6 @@ void LegacyScriptPubKeyMan::ReturnDestination(int64_t nIndex, bool fInternal, co
 
 bool LegacyScriptPubKeyMan::GetKeyFromPool(CPubKey& result, const OutputType type)
 {
-    assert(type != OutputType::BECH32M);
     if (!CanGetAddresses(/*internal=*/ false)) {
         return false;
     }
@@ -1471,7 +1466,6 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
 
 void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
-    assert(type != OutputType::BECH32M);
     if (key.IsCompressed() && type == OutputType::BECH32) {
         WitnessV0ScriptEntry entry(0 /* version */, GetScriptForRawPubKey(key));
         AddWitnessV0Script(entry);
@@ -2361,10 +2355,6 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         desc_prefix = "wpk(" + xpub + "/84h";
         break;
     }
-    case OutputType::BECH32M: {
-        desc_prefix = "tr(" + xpub + "/86h";
-        break;
-    }
     case OutputType::UNKNOWN: {
         // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN OutputType,
         // so if we get to this point something is wrong
@@ -2592,27 +2582,6 @@ TransactionError DescriptorScriptPubKeyMan::FillPST(PartiallySignedTransaction& 
             // ECDSA Pubkeys
             for (const auto& [pk, _] : input.hd_keypaths) {
                 pubkeys.push_back(pk);
-            }
-
-            // Taproot output pubkey
-            std::vector<std::vector<unsigned char>> sols;
-            if (Solver(script, sols) == TxoutType::WITNESS_V1_TAPROOT) {
-                sols[0].insert(sols[0].begin(), 0x02);
-                pubkeys.emplace_back(sols[0]);
-                sols[0][0] = 0x03;
-                pubkeys.emplace_back(sols[0]);
-            }
-
-            // Taproot pubkeys
-            for (const auto& pk_pair : input.m_tap_bip32_paths) {
-                const XOnlyPubKey& pubkey = pk_pair.first;
-                for (unsigned char prefix : {0x02, 0x03}) {
-                    unsigned char b[33] = {prefix};
-                    std::copy(pubkey.begin(), pubkey.end(), b + 1);
-                    CPubKey fullpubkey;
-                    fullpubkey.Set(b, b + 33);
-                    pubkeys.push_back(fullpubkey);
-                }
             }
 
             for (const auto& pubkey : pubkeys) {

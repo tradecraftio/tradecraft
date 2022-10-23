@@ -87,12 +87,6 @@ struct WitnessV0ShortHash : public BaseHash<uint160>
     WitnessV0ShortHash(unsigned char version, const CPubKey& pubkey);
 };
 
-struct WitnessV1Taproot : public XOnlyPubKey
-{
-    WitnessV1Taproot() : XOnlyPubKey() {}
-    explicit WitnessV1Taproot(const XOnlyPubKey& xpk) : XOnlyPubKey(xpk) {}
-};
-
 //! CTxDestination subtype to encode any future Witness version
 struct WitnessUnknown
 {
@@ -176,11 +170,10 @@ inline void swap(WitnessV0ScriptEntry& lhs, WitnessV0ScriptEntry& rhs) noexcept 
  *  * ScriptHash: TxoutType::SCRIPTHASH destination (P2SH address)
  *  * WitnessV0LongHash: TxoutType::WITNESS_V0_LONGHASH destination (P2WSH address)
  *  * WitnessV0ShortHash: TxoutType::WITNESS_V0_SHORTHASH destination (P2WPK address)
- *  * WitnessV1Taproot: TxoutType::WITNESS_V1_TAPROOT destination (P2TR address)
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W??? address)
  *  A CTxDestination is the internal data type encoded in a freicoin address
  */
-using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0LongHash, WitnessV0ShortHash, WitnessV1Taproot, WitnessUnknown>;
+using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0LongHash, WitnessV0ShortHash, WitnessUnknown>;
 
 /** Check whether a CTxDestination corresponds to one with an address. */
 bool IsValidDestination(const CTxDestination& dest);

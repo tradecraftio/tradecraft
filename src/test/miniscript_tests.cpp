@@ -148,21 +148,12 @@ struct KeyConverter {
 
     //! Convert a public key to bytes.
     std::vector<unsigned char> ToPKBytes(const CPubKey& key) const {
-        if (!miniscript::IsTapscript(m_script_ctx)) {
-            return {key.begin(), key.end()};
-        }
-        const XOnlyPubKey xonly_pubkey{key};
-        return {xonly_pubkey.begin(), xonly_pubkey.end()};
+        return {key.begin(), key.end()};
     }
 
     //! Convert a public key to its Hash160 bytes (precomputed).
     std::vector<unsigned char> ToPKHBytes(const CPubKey& key) const {
-        if (!miniscript::IsTapscript(m_script_ctx)) {
-            auto hash = g_testdata->pkhashes.at(key);
-            return {hash.begin(), hash.end()};
-        }
-        const XOnlyPubKey xonly_key{key};
-        auto hash = g_testdata->xonly_pkhashes.at(xonly_key);
+        auto hash = g_testdata->pkhashes.at(key);
         return {hash.begin(), hash.end()};
     }
 
@@ -177,15 +168,9 @@ struct KeyConverter {
 
     template<typename I>
     std::optional<Key> FromPKBytes(I first, I last) const {
-        if (!miniscript::IsTapscript(m_script_ctx)) {
-            Key key{first, last};
-            if (key.IsValid()) return key;
-            return {};
-        }
-        if (last - first != 32) return {};
-        XOnlyPubKey xonly_pubkey;
-        std::copy(first, last, xonly_pubkey.begin());
-        return xonly_pubkey.GetEvenCorrespondingCPubKey();
+        Key key{first, last};
+        if (key.IsValid()) return key;
+        return {};
     }
 
     template<typename I>
@@ -226,15 +211,9 @@ struct Satisfier : public KeyConverter {
     //! Produce a signature for the given key.
     miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
         if (supported.count(Challenge(ChallengeType::PK, ChallengeNumber(key)))) {
-            if (!miniscript::IsTapscript(m_script_ctx)) {
-                auto it = g_testdata->signatures.find(key);
-                if (it == g_testdata->signatures.end()) return miniscript::Availability::NO;
-                sig = it->second;
-            } else {
-                auto it = g_testdata->schnorr_signatures.find(XOnlyPubKey{key});
-                if (it == g_testdata->schnorr_signatures.end()) return miniscript::Availability::NO;
-                sig = it->second;
-            }
+            auto it = g_testdata->signatures.find(key);
+            if (it == g_testdata->signatures.end()) return miniscript::Availability::NO;
+            sig = it->second;
             return miniscript::Availability::YES;
         }
         return miniscript::Availability::NO;
@@ -299,9 +278,6 @@ public:
     }
 };
 
-//! Public key to be used as internal key for dummy Taproot spends.
-const std::vector<unsigned char> NUMS_PK{ParseHex("50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0")};
-
 using Fragment = miniscript::Fragment;
 using NodeRef = miniscript::NodeRef<CPubKey>;
 using miniscript::operator"" _mst;
@@ -333,29 +309,17 @@ std::set<Challenge> FindChallenges(const NodeRef& ref) {
     return chal;
 }
 
-//! The spk for this script under the given context. If it's a Taproot output also record the spend data.
-CScript ScriptPubKey(miniscript::MiniscriptContext ctx, const CScript& script, TaprootBuilder& builder)
+//! The spk for this script under the given context.
+CScript ScriptPubKey(miniscript::MiniscriptContext ctx, const CScript& script)
 {
-    if (!miniscript::IsTapscript(ctx)) return CScript() << OP_0 << WitnessV0LongHash(/*version=*/0, script);
-
-    // For Taproot outputs we always use a tree with a single script and a dummy internal key.
-    builder.Add(0, script, TAPROOT_LEAF_TAPSCRIPT);
-    builder.Finalize(XOnlyPubKey{NUMS_PK});
-    return GetScriptForDestination(builder.GetOutput());
+    return CScript() << OP_0 << WitnessV0LongHash(/*version=*/0, script);
 }
 
 //! Fill the witness with the data additional to the script satisfaction.
-void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& witness, const CScript& script, TaprootBuilder& builder) {
-    // For P2WSH, it's only the witness script.
-    if (!miniscript::IsTapscript(ctx)) {
-        WitnessV0ScriptEntry entry(/*version=*/0, script);
-        witness.stack.push_back(entry.m_script);
-        witness.stack.emplace_back();
-        return;
-    }
-    // For Tapscript we also need the control block.
-    witness.stack.emplace_back(script.begin(), script.end());
-    witness.stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
+void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& witness, const CScript& script) {
+    WitnessV0ScriptEntry entry(/*version=*/0, script);
+    witness.stack.push_back(entry.m_script);
+    witness.stack.emplace_back();
 }
 
 /** Run random satisfaction tests. */
@@ -372,26 +336,24 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
         for (int add = -1; add < (int)challist.size(); ++add) {
             if (add >= 0) satisfier.supported.insert(challist[add]); // The first iteration does not add anything
 
-            // Get the ScriptPubKey for this script, filling spend data if it's Taproot.
-            TaprootBuilder builder;
-            const CScript script_pubkey{ScriptPubKey(converter.MsContext(), script, builder)};
+            // Get the ScriptPubKey for this script.
+            const CScript script_pubkey{ScriptPubKey(converter.MsContext(), script)};
 
             // Run malleable satisfaction algorithm.
             CScriptWitness witness_mal;
             const bool mal_success = node->Satisfy(satisfier, witness_mal.stack, false) == miniscript::Availability::YES;
-            SatisfactionToWitness(converter.MsContext(), witness_mal, script, builder);
+            SatisfactionToWitness(converter.MsContext(), witness_mal, script);
 
             // Run non-malleable satisfaction algorithm.
             CScriptWitness witness_nonmal;
             const bool nonmal_success = node->Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
             // Compute witness size (excluding script push, control block, and witness count encoding).
             const size_t wit_size = GetSerializeSize(witness_nonmal.stack, SER_NETWORK, PROTOCOL_VERSION) - GetSizeOfCompactSize(witness_nonmal.stack.size());
-            SatisfactionToWitness(converter.MsContext(), witness_nonmal, script, builder);
+            SatisfactionToWitness(converter.MsContext(), witness_nonmal, script);
 
             if (nonmal_success) {
                 // Non-malleable satisfactions are bounded by the satisfaction size plus:
                 // - For P2WSH spends, the witness script and the path two it
-                // - For Tapscript spends, both the witness script and the control block
                 const size_t max_stack_size{*node->GetStackSize() + 2};
                 BOOST_CHECK(witness_nonmal.stack.size() <= max_stack_size);
                 // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
@@ -456,8 +418,6 @@ enum TestMode : int {
     TESTMODE_TIMELOCKMIX = 8,
     //! Invalid only under P2WSH context
     TESTMODE_P2WSH_INVALID = 16,
-    //! Invalid only under Tapscript context
-    TESTMODE_TAPSCRIPT_INVALID = 32,
 };
 
 void Test(const std::string& ms, const std::string& hexscript, int mode, const KeyConverter& converter,
@@ -465,8 +425,7 @@ void Test(const std::string& ms, const std::string& hexscript, int mode, const K
           std::optional<uint32_t> stack_exec = {})
 {
     auto node = miniscript::FromString(ms, converter);
-    const bool is_tapscript{miniscript::IsTapscript(converter.MsContext())};
-    if (mode == TESTMODE_INVALID || ((mode & TESTMODE_P2WSH_INVALID) && !is_tapscript) || ((mode & TESTMODE_TAPSCRIPT_INVALID) && is_tapscript)) {
+    if (mode == TESTMODE_INVALID || ((mode & TESTMODE_P2WSH_INVALID))) {
         BOOST_CHECK_MESSAGE(!node || !node->IsValid(), "Unexpectedly valid: " + ms);
     } else {
         BOOST_CHECK_MESSAGE(node, "Unparseable: " + ms);
@@ -489,22 +448,19 @@ void Test(const std::string& ms, const std::string& hexscript, int mode, const K
     }
 }
 
-void Test(const std::string& ms, const std::string& hexscript, const std::string& hextapscript, int mode,
+void Test(const std::string& ms, const std::string& hexscript, int mode,
           int opslimit, int stacklimit, std::optional<uint32_t> max_wit_size,
-          std::optional<uint32_t> max_tap_wit_size,
           std::optional<uint32_t> stack_exec)
 {
     KeyConverter wsh_converter(miniscript::MiniscriptContext::P2WSH);
     Test(ms, hexscript, mode, wsh_converter, opslimit, stacklimit, max_wit_size, stack_exec);
-    KeyConverter tap_converter(miniscript::MiniscriptContext::TAPSCRIPT);
-    Test(ms, hextapscript == "=" ? hexscript : hextapscript, mode, tap_converter, opslimit, stacklimit, max_tap_wit_size, stack_exec);
 }
 
-void Test(const std::string& ms, const std::string& hexscript, const std::string& hextapscript, int mode)
+void Test(const std::string& ms, const std::string& hexscript, int mode)
 {
-    Test(ms, hexscript, hextapscript, mode,
+    Test(ms, hexscript, mode,
          /*opslimit=*/-1, /*stacklimit=*/-1,
-         /*max_wit_size=*/std::nullopt, /*max_tap_wit_size=*/std::nullopt, /*stack_exec=*/std::nullopt);
+         /*max_wit_size=*/std::nullopt, /*stack_exec=*/std::nullopt);
 }
 
 } // namespace
@@ -516,60 +472,60 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     g_testdata.reset(new TestData());
 
     // Validity rules
-    Test("t:older(1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // older(1): valid
-    Test("t:older(0)", "?", "?", TESTMODE_INVALID); // older(0): k must be at least 1
-    Test("t:older(2147483647)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // older(2147483647): valid
-    Test("t:older(2147483648)", "?", "?", TESTMODE_INVALID); // older(2147483648): k must be below 2^31
-    Test("t:after(1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // after(1): valid
-    Test("t:after(0)", "?", "?", TESTMODE_INVALID); // after(0): k must be at least 1
-    Test("t:after(2147483647)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // after(2147483647): valid
-    Test("t:after(2147483648)", "?", "?", TESTMODE_INVALID); // after(2147483648): k must be below 2^31
-    Test("andor(0,1,1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // andor(Bdu,B,B): valid
-    Test("andor(a:0,1,1)", "?", "?", TESTMODE_INVALID); // andor(Wdu,B,B): X must be B
-    Test("andor(0,a:1,a:1)", "?", "?", TESTMODE_INVALID); // andor(Bdu,W,W): Y and Z must be B/V/K
-    Test("andor(1,1,1)", "?", "?", TESTMODE_INVALID); // andor(Bu,B,B): X must be d
-    Test("andor(n:or_i(0,d:after(1)),1,1)", "?", "?", TESTMODE_VALID); // andor(Bdu,B,B): valid
-    Test("andor(or_i(0,dv:after(1)),1,1)", "?", "?", TESTMODE_INVALID); // andor(Bd,B,B): X must be u
-    Test("c:andor(0,pk_k(03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7),pk_k(036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00))", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // andor(Bdu,K,K): valid
-    Test("t:andor(0,v:1,v:1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // andor(Bdu,V,V): valid
-    Test("and_v(v:1,1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // and_v(V,B): valid
-    Test("t:and_v(v:1,v:1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // and_v(V,V): valid
-    Test("c:and_v(v:1,pk_k(036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00))", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // and_v(V,K): valid
-    Test("and_v(1,1)", "?", "?", TESTMODE_INVALID); // and_v(B,B): X must be V
-    Test("and_v(pk_k(02352bbf4a4cdd12564f93fa332ce333301d9ad40271f8107181340aef25be59d5),1)", "?", "?", TESTMODE_INVALID); // and_v(K,B): X must be V
-    Test("and_v(v:1,a:1)", "?", "?", TESTMODE_INVALID); // and_v(K,W): Y must be B/V/K
-    Test("and_b(1,a:1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // and_b(B,W): valid
-    Test("and_b(1,1)", "?", "?", TESTMODE_INVALID); // and_b(B,B): Y must W
-    Test("and_b(v:1,a:1)", "?", "?", TESTMODE_INVALID); // and_b(V,W): X must be B
-    Test("and_b(a:1,a:1)", "?", "?", TESTMODE_INVALID); // and_b(W,W): X must be B
-    Test("and_b(pk_k(025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),a:1)", "?", "?", TESTMODE_INVALID); // and_b(K,W): X must be B
-    Test("or_b(0,a:0)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // or_b(Bd,Wd): valid
-    Test("or_b(1,a:0)", "?", "?", TESTMODE_INVALID); // or_b(B,Wd): X must be d
-    Test("or_b(0,a:1)", "?", "?", TESTMODE_INVALID); // or_b(Bd,W): Y must be d
-    Test("or_b(0,0)", "?", "?", TESTMODE_INVALID); // or_b(Bd,Bd): Y must W
-    Test("or_b(v:0,a:0)", "?", "?", TESTMODE_INVALID); // or_b(V,Wd): X must be B
-    Test("or_b(a:0,a:0)", "?", "?", TESTMODE_INVALID); // or_b(Wd,Wd): X must be B
-    Test("or_b(pk_k(025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),a:0)", "?", "?", TESTMODE_INVALID); // or_b(Kd,Wd): X must be B
-    Test("t:or_c(0,v:1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // or_c(Bdu,V): valid
-    Test("t:or_c(a:0,v:1)", "?", "?", TESTMODE_INVALID); // or_c(Wdu,V): X must be B
-    Test("t:or_c(1,v:1)", "?", "?", TESTMODE_INVALID); // or_c(Bu,V): X must be d
-    Test("t:or_c(n:or_i(0,d:after(1)),v:1)", "?", "?", TESTMODE_VALID); // or_c(Bdu,V): valid
-    Test("t:or_c(or_i(0,dv:after(1)),v:1)", "?", "?", TESTMODE_INVALID); // or_c(Bd,V): X must be u
-    Test("t:or_c(0,1)", "?", "?", TESTMODE_INVALID); // or_c(Bdu,B): Y must be V
-    Test("or_d(0,1)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // or_d(Bdu,B): valid
-    Test("or_d(a:0,1)", "?", "?", TESTMODE_INVALID); // or_d(Wdu,B): X must be B
-    Test("or_d(1,1)", "?", "?", TESTMODE_INVALID); // or_d(Bu,B): X must be d
-    Test("or_d(n:or_i(0,d:after(1)),1)", "?", "?", TESTMODE_VALID); // or_d(Bdu,B): valid
-    Test("or_d(or_i(0,dv:after(1)),1)", "?", "?", TESTMODE_INVALID); // or_d(Bd,B): X must be u
-    Test("or_d(0,v:1)", "?", "?", TESTMODE_INVALID); // or_d(Bdu,V): Y must be B
-    Test("or_i(1,1)", "?", "?", TESTMODE_VALID); // or_i(B,B): valid
-    Test("t:or_i(v:1,v:1)", "?", "?", TESTMODE_VALID); // or_i(V,V): valid
-    Test("c:or_i(pk_k(03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7),pk_k(036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00))", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // or_i(K,K): valid
-    Test("or_i(a:1,a:1)", "?", "?", TESTMODE_INVALID); // or_i(W,W): X and Y must be B/V/K
-    Test("or_b(ld:after(100),ald:after(1000000000))", "?", "?", TESTMODE_VALID); // or_b(timelock, heighlock) valid
-    Test("and_b(d:after(100),ad:after(1000000000))", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX); // and_b(timelock, heighlock) invalid
-    Test("pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac", "20d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // alias to c:pk_k
-    Test("pkh(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)", "76a914fcd35ddacad9f2d5be5e464639441c6065e6955d88ac", "76a914fd1690c37fa3b0f04395ddc9415b220ab1ccc59588ac", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // alias to c:pk_h
+    Test("t:older(1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // older(1): valid
+    Test("t:older(0)", "?", TESTMODE_INVALID); // older(0): k must be at least 1
+    Test("t:older(2147483647)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // older(2147483647): valid
+    Test("t:older(2147483648)", "?", TESTMODE_INVALID); // older(2147483648): k must be below 2^31
+    Test("t:after(1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // after(1): valid
+    Test("t:after(0)", "?", TESTMODE_INVALID); // after(0): k must be at least 1
+    Test("t:after(2147483647)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // after(2147483647): valid
+    Test("t:after(2147483648)", "?", TESTMODE_INVALID); // after(2147483648): k must be below 2^31
+    Test("andor(0,1,1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // andor(Bdu,B,B): valid
+    Test("andor(a:0,1,1)", "?", TESTMODE_INVALID); // andor(Wdu,B,B): X must be B
+    Test("andor(0,a:1,a:1)", "?", TESTMODE_INVALID); // andor(Bdu,W,W): Y and Z must be B/V/K
+    Test("andor(1,1,1)", "?", TESTMODE_INVALID); // andor(Bu,B,B): X must be d
+    Test("andor(n:or_i(0,d:after(1)),1,1)", "?", TESTMODE_VALID); // andor(Bdu,B,B): valid
+    Test("andor(or_i(0,dv:after(1)),1,1)", "?", TESTMODE_INVALID); // andor(Bd,B,B): X must be u
+    Test("c:andor(0,pk_k(03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7),pk_k(036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // andor(Bdu,K,K): valid
+    Test("t:andor(0,v:1,v:1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // andor(Bdu,V,V): valid
+    Test("and_v(v:1,1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // and_v(V,B): valid
+    Test("t:and_v(v:1,v:1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // and_v(V,V): valid
+    Test("c:and_v(v:1,pk_k(036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // and_v(V,K): valid
+    Test("and_v(1,1)", "?", TESTMODE_INVALID); // and_v(B,B): X must be V
+    Test("and_v(pk_k(02352bbf4a4cdd12564f93fa332ce333301d9ad40271f8107181340aef25be59d5),1)", "?", TESTMODE_INVALID); // and_v(K,B): X must be V
+    Test("and_v(v:1,a:1)", "?", TESTMODE_INVALID); // and_v(K,W): Y must be B/V/K
+    Test("and_b(1,a:1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // and_b(B,W): valid
+    Test("and_b(1,1)", "?", TESTMODE_INVALID); // and_b(B,B): Y must W
+    Test("and_b(v:1,a:1)", "?", TESTMODE_INVALID); // and_b(V,W): X must be B
+    Test("and_b(a:1,a:1)", "?", TESTMODE_INVALID); // and_b(W,W): X must be B
+    Test("and_b(pk_k(025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),a:1)", "?", TESTMODE_INVALID); // and_b(K,W): X must be B
+    Test("or_b(0,a:0)", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // or_b(Bd,Wd): valid
+    Test("or_b(1,a:0)", "?", TESTMODE_INVALID); // or_b(B,Wd): X must be d
+    Test("or_b(0,a:1)", "?", TESTMODE_INVALID); // or_b(Bd,W): Y must be d
+    Test("or_b(0,0)", "?", TESTMODE_INVALID); // or_b(Bd,Bd): Y must W
+    Test("or_b(v:0,a:0)", "?", TESTMODE_INVALID); // or_b(V,Wd): X must be B
+    Test("or_b(a:0,a:0)", "?", TESTMODE_INVALID); // or_b(Wd,Wd): X must be B
+    Test("or_b(pk_k(025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),a:0)", "?", TESTMODE_INVALID); // or_b(Kd,Wd): X must be B
+    Test("t:or_c(0,v:1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // or_c(Bdu,V): valid
+    Test("t:or_c(a:0,v:1)", "?", TESTMODE_INVALID); // or_c(Wdu,V): X must be B
+    Test("t:or_c(1,v:1)", "?", TESTMODE_INVALID); // or_c(Bu,V): X must be d
+    Test("t:or_c(n:or_i(0,d:after(1)),v:1)", "?", TESTMODE_VALID); // or_c(Bdu,V): valid
+    Test("t:or_c(or_i(0,dv:after(1)),v:1)", "?", TESTMODE_INVALID); // or_c(Bd,V): X must be u
+    Test("t:or_c(0,1)", "?", TESTMODE_INVALID); // or_c(Bdu,B): Y must be V
+    Test("or_d(0,1)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // or_d(Bdu,B): valid
+    Test("or_d(a:0,1)", "?", TESTMODE_INVALID); // or_d(Wdu,B): X must be B
+    Test("or_d(1,1)", "?", TESTMODE_INVALID); // or_d(Bu,B): X must be d
+    Test("or_d(n:or_i(0,d:after(1)),1)", "?", TESTMODE_VALID); // or_d(Bdu,B): valid
+    Test("or_d(or_i(0,dv:after(1)),1)", "?", TESTMODE_INVALID); // or_d(Bd,B): X must be u
+    Test("or_d(0,v:1)", "?", TESTMODE_INVALID); // or_d(Bdu,V): Y must be B
+    Test("or_i(1,1)", "?", TESTMODE_VALID); // or_i(B,B): valid
+    Test("t:or_i(v:1,v:1)", "?", TESTMODE_VALID); // or_i(V,V): valid
+    Test("c:or_i(pk_k(03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7),pk_k(036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // or_i(K,K): valid
+    Test("or_i(a:1,a:1)", "?", TESTMODE_INVALID); // or_i(W,W): X and Y must be B/V/K
+    Test("or_b(ld:after(100),ald:after(1000000000))", "?", TESTMODE_VALID); // or_b(timelock, heighlock) valid
+    Test("and_b(d:after(100),ad:after(1000000000))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX); // and_b(timelock, heighlock) invalid
+    Test("pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // alias to c:pk_k
+    Test("pkh(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)", "76a914fcd35ddacad9f2d5be5e464639441c6065e6955d88ac", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG); // alias to c:pk_h
 
     // Randomly generated test set that covers the majority of type and node type combinations
 #if 0 // RANDOM TESTS?!?  Hell no, I ain't supporting this shit.
@@ -606,79 +562,25 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),ac:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),altv:after(1000000000),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac6c936b6300670400ca9a3bb16951686c936b6300670164b16951686c935287", "20d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b20fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac6c936b6300670400ca9a3bb16951686c936b6300670164b16951686c935287", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX, 22, 4, 73 + 73 + 2 + 2, 66 + 66 + 2 + 2, 5);
 #endif
 
-    // Additional Tapscript-related tests
-    // Edge cases when parsing multi_a from script:
-    //  - no pubkey at all
-    //  - no pubkey before a CHECKSIGADD
-    //  - no pubkey before the CHECKSIG
-    constexpr KeyConverter tap_converter{miniscript::MiniscriptContext::TAPSCRIPT};
     constexpr KeyConverter wsh_converter{miniscript::MiniscriptContext::P2WSH};
-    const auto no_pubkey{ParseHex("ac519c")};
-    BOOST_CHECK(miniscript::FromScript({no_pubkey.begin(), no_pubkey.end()}, tap_converter) == nullptr);
-    const auto incomplete_multi_a{ParseHex("ba20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c")};
-    BOOST_CHECK(miniscript::FromScript({incomplete_multi_a.begin(), incomplete_multi_a.end()}, tap_converter) == nullptr);
-    const auto incomplete_multi_a_2{ParseHex("ac2079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c")};
-    BOOST_CHECK(miniscript::FromScript({incomplete_multi_a_2.begin(), incomplete_multi_a_2.end()}, tap_converter) == nullptr);
-    // Can use multi_a under Tapscript but not P2WSH.
-    Test("and_v(v:multi_a(2,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a,025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),t:after(1231488000))", "?", "20d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85aac205601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7ccba529d0400046749b151", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 4, 2, {}, {}, 3);
-    // Can use more than 20 keys in a multi_a.
-    std::string ms_str_multi_a{"multi_a(1,"};
-    for (size_t i = 0; i < 21; ++i) {
-        ms_str_multi_a += HexStr(g_testdata->pubkeys[i]);
-        if (i < 20) ms_str_multi_a += ",";
-    }
-    ms_str_multi_a += ")";
-    Test(ms_str_multi_a, "?", "2079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba20f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9ba20e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13ba202f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4ba20fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ba205cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bcba202f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01ba20acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbeba20a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ba20774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cbba20d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85aba20f28773c2d975288bc7d1d205c3748651b075fbc6610e58cddeeddf8f19405aa8ba20499fdf9e895e719cfd64e67f07d38e3226aa7b63678949e6e49b241a60e823e4ba20d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080eba20e60fce93b59e9ec53011aabc21c23e97b2a31369b87a5ae9c44ee89e2a6dec0aba20defdea4cdb677750a420fee807eacf21eb9898ae79b9768766e4faa04a2d4a34ba205601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7ccba202b4ea0a797a443d293ef5cff444f4979f06acfebd7e86d277475656138385b6cba204ce119c96e2fa357200b559b2f7dd5a5f02d5290aff74b03f3e471b273211c97ba20352bbf4a4cdd12564f93fa332ce333301d9ad40271f8107181340aef25be59d5ba519c", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 22, 21, {}, {}, 22);
-    // Since 'd:' is 'u' we can use it directly inside a thresh. But we can't under P2WSH.
-    Test("thresh(2,d:older(42),s:pk(025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc),s:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", "?", "7663012ab2687c205cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bcac937c20d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac935287", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 11, 3, {}, {}, 4);
-    // We can have a script that has more than 201 ops (n = 99), that needs a stack size > 100 (n = 110), or has a
-    // script that is larger than 3600 bytes (n = 200). All that can't be under P2WSH.
-    for (const auto pk_count: {99, 110, 200}) {
-        std::string ms_str_large;
-        for (auto i = 0; i < pk_count - 1; ++i) {
-            ms_str_large += "and_b(pk(" + HexStr(g_testdata->pubkeys[i]) + "),a:";
-        }
-        ms_str_large += "pk(" + HexStr(g_testdata->pubkeys[pk_count - 1]) + ")";
-        ms_str_large.insert(ms_str_large.end(), pk_count - 1, ')');
-        Test(ms_str_large, "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, pk_count + (pk_count - 1) * 3, pk_count, {}, {}, pk_count + 1);
-    }
-    // We can have a script that reaches a stack size of 1000 during execution.
-    std::string ms_stack_limit;
-    auto count{998};
-    for (auto i = 0; i < count; ++i) {
-        ms_stack_limit += "and_b(t:older(1),a:";
-    }
-    ms_stack_limit += "pk(" + HexStr(g_testdata->pubkeys[0]) + ")";
-    ms_stack_limit.insert(ms_stack_limit.end(), count, ')');
-    const auto ms_stack_ok{miniscript::FromString(ms_stack_limit, tap_converter)};
-    BOOST_CHECK(ms_stack_ok && ms_stack_ok->CheckStackSize());
-    Test(ms_stack_limit, "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 4 * count + 1, 1, {}, {}, 1 + count + 1);
-    // But one more element on the stack during execution will make it fail. And we'd detect that.
-    count++;
-    ms_stack_limit = "and_b(t:older(1),a:" + ms_stack_limit + ")";
-    const auto ms_stack_nok{miniscript::FromString(ms_stack_limit, tap_converter)};
-    BOOST_CHECK(ms_stack_nok && !ms_stack_nok->CheckStackSize());
-    Test(ms_stack_limit, "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 4 * count + 1, 1, {}, {}, 1 + count + 1);
 
     // Misc unit tests
     // A Script with a non minimal push is invalid
     std::vector<unsigned char> nonminpush = ParseHex("0000210232780000feff00ffffffffffff21ff005f00ae21ae00000000060602060406564c2102320000060900fe00005f00ae21ae00100000060606060606000000000000000000000000000000000000000000000000000000000000000000");
     const CScript nonminpush_script(nonminpush.begin(), nonminpush.end());
     BOOST_CHECK(miniscript::FromScript(nonminpush_script, wsh_converter) == nullptr);
-    BOOST_CHECK(miniscript::FromScript(nonminpush_script, tap_converter) == nullptr);
     // A non-minimal VERIFY (<key> CHECKSIG VERIFY 1)
     std::vector<unsigned char> nonminverify = ParseHex("2103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ac6951");
     const CScript nonminverify_script(nonminverify.begin(), nonminverify.end());
     BOOST_CHECK(miniscript::FromScript(nonminverify_script, wsh_converter) == nullptr);
-    BOOST_CHECK(miniscript::FromScript(nonminverify_script, tap_converter) == nullptr);
     // A threshold as large as the number of subs is valid.
-    Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),alt:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b151686c935287", "20d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b151686c935287", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
+    Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),alt:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b151686c935287", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
     // A threshold of 1 is valid.
-    Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", "20d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c20fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
+    Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
     // A threshold with a k larger than the number of subs is invalid
-    Test("thresh(3,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", "=", TESTMODE_INVALID);
+    Test("thresh(3,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", TESTMODE_INVALID);
     // A threshold with a k null is invalid
-    Test("thresh(0,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", "=", TESTMODE_INVALID);
+    Test("thresh(0,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", TESTMODE_INVALID);
     // For CHECKMULTISIG the OP cost is the number of keys, but the stack size is the number of sigs (+1)
     const auto ms_multi = miniscript::FromString("multi(1,03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65,03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556,0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)", wsh_converter);
     BOOST_CHECK(ms_multi);
@@ -688,7 +590,7 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     // Since it contains an OP_IF just after on the same element, we can make sure that the element
     // in question must be OP_1 if OP_IF enforces that its argument must only be OP_1 or the empty
     // vector (since otherwise the execution would immediately fail). This is the MINIMALIF rule.
-    // Unfortunately, this rule is consensus for Taproot but only policy for P2WSH. Therefore we can't
+    // Unfortunately, this rule is only policy for P2WSH. Therefore we can't
     // (for now) have 'd:' be 'u'. This tests we can't use a 'd:' wrapper for a thresh, which requires
     // its subs to all be 'u' (taken from https://github.com/rust-freicoin/rust-miniscript/discussions/341).
     const auto ms_minimalif = miniscript::FromString("thresh(3,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),sc:pk_k(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798),sd:older(32))", wsh_converter);
@@ -720,17 +622,17 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     BOOST_CHECK(insane_sub && *insane_sub->ToString(wsh_converter) == "and_v(after(1),after(1000000000))");
 
     // Timelock tests
-    Test("t:after(100)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock
-    Test("t:after(1000000000)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only timelock
-    Test("or_b(d:after(100),ad:after(1000000000))", "?", "?", TESTMODE_VALID); // or_b(timelock, heighlock) valid
-    Test("and_b(d:after(100),ad:after(1000000000))", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX); // and_b(timelock, heighlock) invalid
+    Test("t:after(100)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock
+    Test("t:after(1000000000)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only timelock
+    Test("or_b(d:after(100),ad:after(1000000000))", "?", TESTMODE_VALID); // or_b(timelock, heighlock) valid
+    Test("and_b(d:after(100),ad:after(1000000000))", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX); // and_b(timelock, heighlock) invalid
     /* This is correctly detected as non-malleable but for the wrong reason. The type system assumes that branches 1 and 2
        can be spent together to create a non-malleble witness, but because of mixing of timelocks they cannot be spent together.
        But since exactly one of the two after's can be satisfied, the witness involving the key cannot be malleated.
     */
-    Test("thresh(2,lt:after(1000000000),alt:after(100),a:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", "?", "?", TESTMODE_VALID | TESTMODE_TIMELOCKMIX | TESTMODE_NONMAL); // thresh with k = 2
+    Test("thresh(2,lt:after(1000000000),alt:after(100),a:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", "?", TESTMODE_VALID | TESTMODE_TIMELOCKMIX | TESTMODE_NONMAL); // thresh with k = 2
     // This is actually non-malleable in practice, but we cannot detect it in type system. See above rationale
-    Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),alt:after(1000000000),alt:after(100))", "?", "?", TESTMODE_VALID); // thresh with k = 1
+    Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),alt:after(1000000000),alt:after(100))", "?", TESTMODE_VALID); // thresh with k = 1
 
     g_testdata.reset();
 }

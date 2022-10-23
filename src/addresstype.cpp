@@ -116,12 +116,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = hash;
         return true;
     }
-    case TxoutType::WITNESS_V1_TAPROOT: {
-        WitnessV1Taproot tap;
-        std::copy(vSolutions[0].begin(), vSolutions[0].end(), tap.begin());
-        addressRet = tap;
-        return true;
-    }
     case TxoutType::WITNESS_UNKNOWN: {
         addressRet = WitnessUnknown{vSolutions[0][0], vSolutions[1]};
         return true;
@@ -168,11 +162,6 @@ public:
     CScript operator()(const WitnessV0LongHash& id) const
     {
         return CScript() << OP_0 << ToByteVector(id);
-    }
-
-    CScript operator()(const WitnessV1Taproot& tap) const
-    {
-        return CScript() << OP_1NEGATE << ToByteVector(tap);
     }
 
     CScript operator()(const WitnessUnknown& id) const
@@ -223,7 +212,6 @@ public:
     bool operator()(const ScriptHash& dest) const { return true; }
     bool operator()(const WitnessV0ShortHash& dest) const { return true; }
     bool operator()(const WitnessV0LongHash& dest) const { return true; }
-    bool operator()(const WitnessV1Taproot& dest) const { return true; }
     bool operator()(const WitnessUnknown& dest) const { return true; }
 };
 } // namespace
