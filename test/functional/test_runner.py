@@ -122,8 +122,8 @@ BASE_SCRIPTS = [
     'wallet_dump.py --legacy-wallet',
     'wallet_listtransactions.py --legacy-wallet',
     'wallet_listtransactions.py --descriptors',
-    'feature_taproot.py --previous_release --bitcoin-mode',
-    'feature_taproot.py --bitcoin-mode',
+    #'feature_taproot.py --previous_release --bitcoin-mode', # Disabled by removal of taproot
+    #'feature_taproot.py --bitcoin-mode', # Disabled by removal of taproot
     'rpc_signer.py',
     'wallet_signer.py --descriptors',
     # vv Tests less than 60s vv
@@ -275,7 +275,7 @@ BASE_SCRIPTS = [
     'wallet_send.py --legacy-wallet',
     'wallet_send.py --descriptors',
     'wallet_create_tx.py --descriptors',
-    'wallet_taproot.py',
+    #'wallet_taproot.py', # Disabled by removal of taproot
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py --legacy-wallet',
