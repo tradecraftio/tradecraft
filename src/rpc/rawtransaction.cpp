@@ -581,7 +581,6 @@ static RPCHelpMan decodescript()
         case TxoutType::WITNESS_UNKNOWN:
         case TxoutType::WITNESS_V0_SHORTHASH:
         case TxoutType::WITNESS_V0_LONGHASH:
-        case TxoutType::WITNESS_V1_TAPROOT:
         case TxoutType::ANCHOR:
             // Should not be wrapped
             return false;
@@ -629,7 +628,6 @@ static RPCHelpMan decodescript()
             case TxoutType::WITNESS_UNKNOWN:
             case TxoutType::WITNESS_V0_SHORTHASH:
             case TxoutType::WITNESS_V0_LONGHASH:
-            case TxoutType::WITNESS_V1_TAPROOT:
             case TxoutType::ANCHOR:
                 // Should not be wrapped
                 return false;
@@ -786,7 +784,7 @@ static RPCHelpMan signrawtransactionwithkey()
                                 },
                         },
                         },
-                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type. Must be one of:\n"
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"ALL"}, "The signature hash type. Must be one of:\n"
             "       \"DEFAULT\"\n"
             "       \"ALL\"\n"
             "       \"NONE\"\n"
@@ -942,43 +940,6 @@ const RPCResult decodepst_inputs{
             {
                 {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
             }},
-            {RPCResult::Type::STR_HEX, "taproot_key_path_sig", /*optional=*/ true, "hex-encoded signature for the Taproot key path spend"},
-            {RPCResult::Type::ARR, "taproot_script_path_sigs", /*optional=*/ true, "",
-            {
-                {RPCResult::Type::OBJ, "signature", /*optional=*/ true, "The signature for the pubkey and leaf hash combination",
-                {
-                    {RPCResult::Type::STR, "pubkey", "The x-only pubkey for this signature"},
-                    {RPCResult::Type::STR, "leaf_hash", "The leaf hash for this signature"},
-                    {RPCResult::Type::STR, "sig", "The signature itself"},
-                }},
-            }},
-            {RPCResult::Type::ARR, "taproot_scripts", /*optional=*/ true, "",
-            {
-                {RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::STR_HEX, "script", "A leaf script"},
-                    {RPCResult::Type::NUM, "leaf_ver", "The version number for the leaf script"},
-                    {RPCResult::Type::ARR, "control_blocks", "The control blocks for this script",
-                    {
-                        {RPCResult::Type::STR_HEX, "control_block", "A hex-encoded control block for this script"},
-                    }},
-                }},
-            }},
-            {RPCResult::Type::ARR, "taproot_bip32_derivs", /*optional=*/ true, "",
-            {
-                {RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::STR, "pubkey", "The x-only public key this path corresponds to"},
-                    {RPCResult::Type::STR, "master_fingerprint", "The fingerprint of the master key"},
-                    {RPCResult::Type::STR, "path", "The path"},
-                    {RPCResult::Type::ARR, "leaf_hashes", "The hashes of the leaves this pubkey appears in",
-                    {
-                        {RPCResult::Type::STR_HEX, "hash", "The hash of a leaf this pubkey appears in"},
-                    }},
-                }},
-            }},
-            {RPCResult::Type::STR_HEX, "taproot_internal_key", /*optional=*/ true, "The hex-encoded Taproot x-only internal key"},
-            {RPCResult::Type::STR_HEX, "taproot_merkle_root", /*optional=*/ true, "The hex-encoded Taproot merkle root"},
             {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/ true, "The unknown input fields",
             {
                 {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
@@ -1027,29 +988,6 @@ const RPCResult decodepst_outputs{
                     {RPCResult::Type::STR, "pubkey", "The public key this path corresponds to"},
                     {RPCResult::Type::STR, "master_fingerprint", "The fingerprint of the master key"},
                     {RPCResult::Type::STR, "path", "The path"},
-                }},
-            }},
-            {RPCResult::Type::STR_HEX, "taproot_internal_key", /*optional=*/ true, "The hex-encoded Taproot x-only internal key"},
-            {RPCResult::Type::ARR, "taproot_tree", /*optional=*/ true, "The tuples that make up the Taproot tree, in depth first search order",
-            {
-                {RPCResult::Type::OBJ, "tuple", /*optional=*/ true, "A single leaf script in the taproot tree",
-                {
-                    {RPCResult::Type::NUM, "depth", "The depth of this element in the tree"},
-                    {RPCResult::Type::NUM, "leaf_ver", "The version of this leaf"},
-                    {RPCResult::Type::STR, "script", "The hex-encoded script itself"},
-                }},
-            }},
-            {RPCResult::Type::ARR, "taproot_bip32_derivs", /*optional=*/ true, "",
-            {
-                {RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::STR, "pubkey", "The x-only public key this path corresponds to"},
-                    {RPCResult::Type::STR, "master_fingerprint", "The fingerprint of the master key"},
-                    {RPCResult::Type::STR, "path", "The path"},
-                    {RPCResult::Type::ARR, "leaf_hashes", "The hashes of the leaves this pubkey appears in",
-                    {
-                        {RPCResult::Type::STR_HEX, "hash", "The hash of a leaf this pubkey appears in"},
-                    }},
                 }},
             }},
             {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/true, "The unknown output fields",
@@ -1327,72 +1265,6 @@ static RPCHelpMan decodepst()
             in.pushKV("hash256_preimages", std::move(hash256_preimages));
         }
 
-        // Taproot key path signature
-        if (!input.m_tap_key_sig.empty()) {
-            in.pushKV("taproot_key_path_sig", HexStr(input.m_tap_key_sig));
-        }
-
-        // Taproot script path signatures
-        if (!input.m_tap_script_sigs.empty()) {
-            UniValue script_sigs(UniValue::VARR);
-            for (const auto& [pubkey_leaf, sig] : input.m_tap_script_sigs) {
-                const auto& [xonly, leaf_hash] = pubkey_leaf;
-                UniValue sigobj(UniValue::VOBJ);
-                sigobj.pushKV("pubkey", HexStr(xonly));
-                sigobj.pushKV("leaf_hash", HexStr(leaf_hash));
-                sigobj.pushKV("sig", HexStr(sig));
-                script_sigs.push_back(std::move(sigobj));
-            }
-            in.pushKV("taproot_script_path_sigs", std::move(script_sigs));
-        }
-
-        // Taproot leaf scripts
-        if (!input.m_tap_scripts.empty()) {
-            UniValue tap_scripts(UniValue::VARR);
-            for (const auto& [leaf, control_blocks] : input.m_tap_scripts) {
-                const auto& [script, leaf_ver] = leaf;
-                UniValue script_info(UniValue::VOBJ);
-                script_info.pushKV("script", HexStr(script));
-                script_info.pushKV("leaf_ver", leaf_ver);
-                UniValue control_blocks_univ(UniValue::VARR);
-                for (const auto& control_block : control_blocks) {
-                    control_blocks_univ.push_back(HexStr(control_block));
-                }
-                script_info.pushKV("control_blocks", std::move(control_blocks_univ));
-                tap_scripts.push_back(std::move(script_info));
-            }
-            in.pushKV("taproot_scripts", std::move(tap_scripts));
-        }
-
-        // Taproot bip32 keypaths
-        if (!input.m_tap_bip32_paths.empty()) {
-            UniValue keypaths(UniValue::VARR);
-            for (const auto& [xonly, leaf_origin] : input.m_tap_bip32_paths) {
-                const auto& [leaf_hashes, origin] = leaf_origin;
-                UniValue path_obj(UniValue::VOBJ);
-                path_obj.pushKV("pubkey", HexStr(xonly));
-                path_obj.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(origin.fingerprint)));
-                path_obj.pushKV("path", WriteHDKeypath(origin.path));
-                UniValue leaf_hashes_arr(UniValue::VARR);
-                for (const auto& leaf_hash : leaf_hashes) {
-                    leaf_hashes_arr.push_back(HexStr(leaf_hash));
-                }
-                path_obj.pushKV("leaf_hashes", std::move(leaf_hashes_arr));
-                keypaths.push_back(std::move(path_obj));
-            }
-            in.pushKV("taproot_bip32_derivs", std::move(keypaths));
-        }
-
-        // Taproot internal key
-        if (!input.m_tap_internal_key.IsNull()) {
-            in.pushKV("taproot_internal_key", HexStr(input.m_tap_internal_key));
-        }
-
-        // Write taproot merkle root
-        if (!input.m_tap_merkle_root.IsNull()) {
-            in.pushKV("taproot_merkle_root", HexStr(input.m_tap_merkle_root));
-        }
-
         // Proprietary
         if (!input.m_proprietary.empty()) {
             UniValue proprietary(UniValue::VARR);
@@ -1461,43 +1333,6 @@ static RPCHelpMan decodepst()
                 keypaths.push_back(std::move(keypath));
             }
             out.pushKV("bip32_derivs", std::move(keypaths));
-        }
-
-        // Taproot internal key
-        if (!output.m_tap_internal_key.IsNull()) {
-            out.pushKV("taproot_internal_key", HexStr(output.m_tap_internal_key));
-        }
-
-        // Taproot tree
-        if (!output.m_tap_tree.empty()) {
-            UniValue tree(UniValue::VARR);
-            for (const auto& [depth, leaf_ver, script] : output.m_tap_tree) {
-                UniValue elem(UniValue::VOBJ);
-                elem.pushKV("depth", (int)depth);
-                elem.pushKV("leaf_ver", (int)leaf_ver);
-                elem.pushKV("script", HexStr(script));
-                tree.push_back(std::move(elem));
-            }
-            out.pushKV("taproot_tree", std::move(tree));
-        }
-
-        // Taproot bip32 keypaths
-        if (!output.m_tap_bip32_paths.empty()) {
-            UniValue keypaths(UniValue::VARR);
-            for (const auto& [xonly, leaf_origin] : output.m_tap_bip32_paths) {
-                const auto& [leaf_hashes, origin] = leaf_origin;
-                UniValue path_obj(UniValue::VOBJ);
-                path_obj.pushKV("pubkey", HexStr(xonly));
-                path_obj.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(origin.fingerprint)));
-                path_obj.pushKV("path", WriteHDKeypath(origin.path));
-                UniValue leaf_hashes_arr(UniValue::VARR);
-                for (const auto& leaf_hash : leaf_hashes) {
-                    leaf_hashes_arr.push_back(HexStr(leaf_hash));
-                }
-                path_obj.pushKV("leaf_hashes", std::move(leaf_hashes_arr));
-                keypaths.push_back(std::move(path_obj));
-            }
-            out.pushKV("taproot_bip32_derivs", std::move(keypaths));
         }
 
         // Proprietary

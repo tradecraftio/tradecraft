@@ -57,8 +57,6 @@ class KeypoolRestoreTest(FreicoinTestFramework):
             self.connect_nodes(0, i)
 
         output_types = ["legacy", "bech32"]
-        if self.options.descriptors:
-            output_types.append("bech32m")
         for i, output_type in enumerate(output_types):
             self.log.info("Generate keys for wallet with address type: {}".format(output_type))
             idx = i+1
@@ -96,8 +94,6 @@ class KeypoolRestoreTest(FreicoinTestFramework):
                     assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress(address_type=output_type))['hdkeypath'], "m/44h/1h/0h/0/110")
                 elif output_type == 'bech32':
                     assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress(address_type=output_type))['hdkeypath'], "m/84h/1h/0h/0/110")
-                elif output_type == 'bech32m':
-                    assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress(address_type=output_type))['hdkeypath'], "m/86h/1h/0h/0/110")
             else:
                 assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress(address_type=output_type))['hdkeypath'], "m/0'/0'/110'")
 
