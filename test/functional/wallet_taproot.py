@@ -191,7 +191,7 @@ class WalletTaprootTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.setup_clean_chain = True
-        self.extra_args = [['-keypool=100'], ['-keypool=100'], ["-vbparams=taproot:1:1"]]
+        self.extra_args = [['-keypool=100', '-vbparams=taproot:-1:0'], ['-keypool=100', '-vbparams=taproot:-1:0'], ["-vbparams=taproot:1:1"]]
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
