@@ -79,7 +79,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         self.test_sortedmulti_descriptors_bip67()
 
         # Check that bech32m is currently not allowed
-        assert_raises_rpc_error(-5, "createmultisig cannot create bech32m multisig addresses", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
+        assert_raises_rpc_error(-5, "Unknown address type 'bech32m'", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
 
         self.log.info('Check correct encoding of multisig script for all n (1..20)')
         for nkeys in range(1, 20+1):
@@ -104,7 +104,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
 
         # Bech32m address type is disallowed for legacy wallets
         pubs = [self.nodes[1].getaddressinfo(addr)["pubkey"] for addr in addresses]
-        assert_raises_rpc_error(-5, "Bech32m multisig addresses cannot be created with legacy wallets", self.nodes[0].addmultisigaddress, 2, pubs, "", "bech32m")
+        assert_raises_rpc_error(-5, "Unknown address type 'bech32m'", self.nodes[0].addmultisigaddress, 2, pubs, "", "bech32m")
 
     def test_multisig_script_limit(self, wallet_multi):
         node1 = self.nodes[1]

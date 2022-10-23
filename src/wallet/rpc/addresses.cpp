@@ -37,7 +37,7 @@ RPCHelpMan getnewaddress()
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\" or \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The new freicoin address"
@@ -65,8 +65,6 @@ RPCHelpMan getnewaddress()
         std::optional<OutputType> parsed = ParseOutputType(request.params[1].get_str());
         if (!parsed) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
-        } else if (parsed.value() == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
         }
         output_type = parsed.value();
     }
@@ -87,7 +85,7 @@ RPCHelpMan getrawchangeaddress()
                 "\nReturns a new Freicoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\" or \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The address"
@@ -112,8 +110,6 @@ RPCHelpMan getrawchangeaddress()
         std::optional<OutputType> parsed = ParseOutputType(request.params[0].get_str());
         if (!parsed) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[0].get_str()));
-        } else if (parsed.value() == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
         }
         output_type = parsed.value();
     }
@@ -292,8 +288,6 @@ RPCHelpMan addmultisigaddress()
         std::optional<OutputType> parsed = ParseOutputType(request.params[3].get_str());
         if (!parsed) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[3].get_str()));
-        } else if (parsed.value() == OutputType::BECH32M) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m multisig addresses cannot be created with legacy wallets");
         }
         output_type = parsed.value();
     }
@@ -724,7 +718,6 @@ public:
         return (*this)(WitnessV0ShortHash(id));
     }
 
-    UniValue operator()(const WitnessV1Taproot& id) const { return UniValue(UniValue::VOBJ); }
     UniValue operator()(const PayToAnchor& id) const { return UniValue(UniValue::VOBJ); }
     UniValue operator()(const WitnessUnknown& id) const { return UniValue(UniValue::VOBJ); }
 };

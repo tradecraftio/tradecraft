@@ -480,8 +480,10 @@ class WalletTest(FreicoinTestFramework):
             not_on_curve_pubkey = bytes([4] + [0]*64).hex()  # pubkey with coordinates (0,0) is not on curve
             assert_raises_rpc_error(-5, f'Pubkey "{not_on_curve_pubkey}" must be cryptographically valid', self.nodes[0].importpubkey, not_on_curve_pubkey)
 
-            # Bech32m addresses cannot be imported into a legacy wallet
-            assert_raises_rpc_error(-5, "Bech32m addresses cannot be imported into legacy wallets", self.nodes[0].importaddress, "fcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqnw8tmd")
+            # Taproot addresses can be imported into a legacy wallet as unknown witness versions
+            address_to_import = "fcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqnw8tmd"
+            self.nodes[1].importaddress(address_to_import)
+            assert_equal(True, self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"])
 
             # Import address and private key to check correct behavior of spendable unspents
             # 1. Send some coins to generate new UTXO
