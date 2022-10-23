@@ -898,59 +898,6 @@ public:
     bool IsSingleType() const final { return true; }
 };
 
-/** A parsed tr(...) descriptor. */
-class TRDescriptor final : public DescriptorImpl
-{
-    std::vector<int> m_depths;
-protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts, FlatSigningProvider& out) const override
-    {
-        TaprootBuilder builder;
-        assert(m_depths.size() == scripts.size());
-        for (size_t pos = 0; pos < m_depths.size(); ++pos) {
-            builder.Add(m_depths[pos], scripts[pos], TAPROOT_LEAF_TAPSCRIPT);
-        }
-        if (!builder.IsComplete()) return {};
-        assert(keys.size() == 1);
-        XOnlyPubKey xpk(keys[0]);
-        if (!xpk.IsFullyValid()) return {};
-        builder.Finalize(xpk);
-        WitnessV1Taproot output = builder.GetOutput();
-        out.tr_trees[output] = builder;
-        out.pubkeys.emplace(keys[0].GetID(), keys[0]);
-        return Vector(GetScriptForDestination(output));
-    }
-    bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const override
-    {
-        if (m_depths.empty()) return true;
-        std::vector<bool> path;
-        for (size_t pos = 0; pos < m_depths.size(); ++pos) {
-            if (pos) ret += ',';
-            while ((int)path.size() <= m_depths[pos]) {
-                if (path.size()) ret += '{';
-                path.push_back(false);
-            }
-            std::string tmp;
-            if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache)) return false;
-            ret += tmp;
-            while (!path.empty() && path.back()) {
-                if (path.size() > 1) ret += '}';
-                path.pop_back();
-            }
-            if (!path.empty()) path.back() = true;
-        }
-        return true;
-    }
-public:
-    TRDescriptor(std::unique_ptr<PubkeyProvider> internal_key, std::vector<std::unique_ptr<DescriptorImpl>> descs, std::vector<int> depths) :
-        DescriptorImpl(Vector(std::move(internal_key)), std::move(descs), "tr"), m_depths(std::move(depths))
-    {
-        assert(m_subdescriptor_args.size() == m_depths.size());
-    }
-    std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
-    bool IsSingleType() const final { return true; }
-};
-
 /* We instantiate Miniscript here with a simple integer as key type.
  * The value of these key integers are an index in the
  * DescriptorImpl::m_pubkey_args vector.
@@ -1034,24 +981,6 @@ public:
     bool IsSingleType() const final { return true; }
 };
 
-/** A parsed rawtr(...) descriptor. */
-class RawTRDescriptor final : public DescriptorImpl
-{
-protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts, FlatSigningProvider& out) const override
-    {
-        assert(keys.size() == 1);
-        XOnlyPubKey xpk(keys[0]);
-        if (!xpk.IsFullyValid()) return {};
-        WitnessV1Taproot output{xpk};
-        return Vector(GetScriptForDestination(output));
-    }
-public:
-    RawTRDescriptor(std::unique_ptr<PubkeyProvider> output_key) : DescriptorImpl(Vector(std::move(output_key)), "rawtr") {}
-    std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
-    bool IsSingleType() const final { return true; }
-};
-
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
 ////////////////////////////////////////////////////////////////////////////
@@ -1061,7 +990,6 @@ enum class ParseScriptContext {
     P2SH,    //!< Inside sh() (script becomes P2SH redeemScript)
     P2WPK,   //!< Inside wpk() (no script, pubkey only)
     P2WSH,   //!< Inside wsh() (script becomes v0 witness script)
-    P2TR,    //!< Inside tr() (either internal key, or BIP342 script leaf)
 };
 
 /** Parse a key path, being passed a split list of elements (the first element is ignored). */
@@ -1110,13 +1038,6 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
                     error = "Uncompressed keys are not allowed";
                     return nullptr;
                 }
-            } else if (data.size() == 32 && ctx == ParseScriptContext::P2TR) {
-                unsigned char fullkey[33] = {0x02};
-                std::copy(data.begin(), data.end(), fullkey + 1);
-                pubkey.Set(std::begin(fullkey), std::end(fullkey));
-                if (pubkey.IsFullyValid()) {
-                    return std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, true);
-                }
             }
             error = strprintf("Pubkey '%s' is invalid", str);
             return nullptr;
@@ -1126,7 +1047,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
             if (permit_uncompressed || key.IsCompressed()) {
                 CPubKey pubkey = key.GetPubKey();
                 out.keys.emplace(pubkey.GetID(), key);
-                return std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, ctx == ParseScriptContext::P2TR);
+                return std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, false);
             } else {
                 error = "Uncompressed keys are not allowed";
                 return nullptr;
@@ -1294,7 +1215,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
             return nullptr;
         }
         ++key_exp_index;
-        return std::make_unique<PKDescriptor>(std::move(pubkey), ctx == ParseScriptContext::P2TR);
+        return std::make_unique<PKDescriptor>(std::move(pubkey), false);
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && Func("pkh", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx, out, error);
@@ -1324,8 +1245,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     const bool sortedmulti = !multi && Func("sortedmulti", expr);
     const bool multi_a = !(multi || sortedmulti) && Func("multi_a", expr);
     const bool sortedmulti_a = !(multi || sortedmulti || multi_a) && Func("sortedmulti_a", expr);
-    if (((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && (multi || sortedmulti)) ||
-        (ctx == ParseScriptContext::P2TR && (multi_a || sortedmulti_a))) {
+    if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && (multi || sortedmulti)) {
         auto threshold = Expr(expr);
         uint32_t thres;
         std::vector<std::unique_ptr<PubkeyProvider>> providers;
@@ -1426,84 +1346,6 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "Can only have addr() at top level";
         return nullptr;
     }
-    if (ctx == ParseScriptContext::TOP && Func("tr", expr)) {
-        auto arg = Expr(expr);
-        auto internal_key = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out, error);
-        if (!internal_key) {
-            error = strprintf("tr(): %s", error);
-            return nullptr;
-        }
-        ++key_exp_index;
-        std::vector<std::unique_ptr<DescriptorImpl>> subscripts; //!< list of script subexpressions
-        std::vector<int> depths; //!< depth in the tree of each subexpression (same length subscripts)
-        if (expr.size()) {
-            if (!Const(",", expr)) {
-                error = strprintf("tr: expected ',', got '%c'", expr[0]);
-                return nullptr;
-            }
-            /** The path from the top of the tree to what we're currently processing.
-             * branches[i] == false: left branch in the i'th step from the top; true: right branch.
-             */
-            std::vector<bool> branches;
-            // Loop over all provided scripts. In every iteration exactly one script will be processed.
-            // Use a do-loop because inside this if-branch we expect at least one script.
-            do {
-                // First process all open braces.
-                while (Const("{", expr)) {
-                    branches.push_back(false); // new left branch
-                    if (branches.size() > TAPROOT_CONTROL_MAX_NODE_COUNT) {
-                        error = strprintf("tr() supports at most %i nesting levels", TAPROOT_CONTROL_MAX_NODE_COUNT);
-                        return nullptr;
-                    }
-                }
-                // Process the actual script expression.
-                auto sarg = Expr(expr);
-                subscripts.emplace_back(ParseScript(key_exp_index, sarg, ParseScriptContext::P2TR, out, error));
-                if (!subscripts.back()) return nullptr;
-                depths.push_back(branches.size());
-                // Process closing braces; one is expected for every right branch we were in.
-                while (branches.size() && branches.back()) {
-                    if (!Const("}", expr)) {
-                        error = strprintf("tr(): expected '}' after script expression");
-                        return nullptr;
-                    }
-                    branches.pop_back(); // move up one level after encountering '}'
-                }
-                // If after that, we're at the end of a left branch, expect a comma.
-                if (branches.size() && !branches.back()) {
-                    if (!Const(",", expr)) {
-                        error = strprintf("tr(): expected ',' after script expression");
-                        return nullptr;
-                    }
-                    branches.back() = true; // And now we're in a right branch.
-                }
-            } while (branches.size());
-            // After we've explored a whole tree, we must be at the end of the expression.
-            if (expr.size()) {
-                error = strprintf("tr(): expected ')' after script expression");
-                return nullptr;
-            }
-        }
-        assert(TaprootBuilder::ValidDepths(depths));
-        return std::make_unique<TRDescriptor>(std::move(internal_key), std::move(subscripts), std::move(depths));
-    } else if (Func("tr", expr)) {
-        error = "Can only have tr at top level";
-        return nullptr;
-    }
-    if (ctx == ParseScriptContext::TOP && Func("rawtr", expr)) {
-        auto arg = Expr(expr);
-        if (expr.size()) {
-            error = strprintf("rawtr(): only one key expected.");
-            return nullptr;
-        }
-        auto output_key = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out, error);
-        if (!output_key) return nullptr;
-        ++key_exp_index;
-        return std::make_unique<RawTRDescriptor>(std::move(output_key));
-    } else if (Func("rawtr", expr)) {
-        error = "Can only have rawtr at top level";
-        return nullptr;
-    }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
         std::string str(expr.begin(), expr.end());
         if (!IsHex(str)) {
@@ -1583,16 +1425,6 @@ std::unique_ptr<DescriptorImpl> InferMultiA(const CScript& script, ParseScriptCo
 
 std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
 {
-    if (ctx == ParseScriptContext::P2TR && script.size() == 34 && script[0] == 32 && script[33] == OP_CHECKSIG) {
-        XOnlyPubKey key{Span{script}.subspan(1, 32)};
-        return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider), true);
-    }
-
-    if (ctx == ParseScriptContext::P2TR) {
-        auto ret = InferMultiA(script, ctx, provider);
-        if (ret) return ret;
-    }
-
     std::vector<std::vector<unsigned char>> data;
     TxoutType txntype = Solver(script, data);
 
@@ -1651,47 +1483,6 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
                         return std::make_unique<WSHDescriptor>(std::move(sub));
                     }
                 }
-            }
-        }
-    }
-    if (txntype == TxoutType::WITNESS_V1_TAPROOT && ctx == ParseScriptContext::TOP) {
-        // Extract x-only pubkey from output.
-        XOnlyPubKey pubkey;
-        std::copy(data[0].begin(), data[0].end(), pubkey.begin());
-        // Request spending data.
-        TaprootSpendData tap;
-        if (provider.GetTaprootSpendData(pubkey, tap)) {
-            // If found, convert it back to tree form.
-            auto tree = InferTaprootTree(tap, pubkey);
-            if (tree) {
-                // If that works, try to infer subdescriptors for all leaves.
-                bool ok = true;
-                std::vector<std::unique_ptr<DescriptorImpl>> subscripts; //!< list of script subexpressions
-                std::vector<int> depths; //!< depth in the tree of each subexpression (same length subscripts)
-                for (const auto& [depth, script, leaf_ver] : *tree) {
-                    std::unique_ptr<DescriptorImpl> subdesc;
-                    if (leaf_ver == TAPROOT_LEAF_TAPSCRIPT) {
-                        subdesc = InferScript(CScript(script.begin(), script.end()), ParseScriptContext::P2TR, provider);
-                    }
-                    if (!subdesc) {
-                        ok = false;
-                        break;
-                    } else {
-                        subscripts.push_back(std::move(subdesc));
-                        depths.push_back(depth);
-                    }
-                }
-                if (ok) {
-                    auto key = InferXOnlyPubkey(tap.internal_key, ParseScriptContext::P2TR, provider);
-                    return std::make_unique<TRDescriptor>(std::move(key), std::move(subscripts), std::move(depths));
-                }
-            }
-        }
-        // If the above doesn't work, construct a rawtr() descriptor with just the encoded x-only pubkey.
-        if (pubkey.IsFullyValid()) {
-            auto key = InferXOnlyPubkey(pubkey, ParseScriptContext::P2TR, provider);
-            if (key) {
-                return std::make_unique<RawTRDescriptor>(std::move(key));
             }
         }
     }
