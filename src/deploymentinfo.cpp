@@ -25,10 +25,6 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.gbt_force =*/ true,
     },
     {
-        /*.name =*/ "taproot",
-        /*.gbt_force =*/ true,
-    },
-    {
         /*.name =*/ "finaltx",
         /*.gbt_force =*/ false,
     },

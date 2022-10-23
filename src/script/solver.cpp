@@ -38,7 +38,6 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::UNSPENDABLE: return "unspendable";
     case TxoutType::WITNESS_V0_SHORTHASH: return "witness_v0_shorthash";
     case TxoutType::WITNESS_V0_LONGHASH: return "witness_v0_longhash";
-    case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -172,10 +171,6 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_LONGHASH_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V0_LONGHASH;
-        }
-        if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE) {
-            vSolutionsRet.push_back(std::move(witnessprogram));
-            return TxoutType::WITNESS_V1_TAPROOT;
         }
         vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
         vSolutionsRet.push_back(std::move(witnessprogram));
