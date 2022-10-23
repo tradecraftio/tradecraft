@@ -185,137 +185,6 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
     return false;
 }
 
-static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, SignatureData& sigdata, const SigningProvider& provider, std::vector<unsigned char>& sig_out, const XOnlyPubKey& pubkey, const uint256& leaf_hash, SigVersion sigversion)
-{
-    KeyOriginInfo info;
-    if (provider.GetKeyOriginByXOnly(pubkey, info)) {
-        auto it = sigdata.taproot_misc_pubkeys.find(pubkey);
-        if (it == sigdata.taproot_misc_pubkeys.end()) {
-            sigdata.taproot_misc_pubkeys.emplace(pubkey, std::make_pair(std::set<uint256>({leaf_hash}), info));
-        } else {
-            it->second.first.insert(leaf_hash);
-        }
-    }
-
-    auto lookup_key = std::make_pair(pubkey, leaf_hash);
-    auto it = sigdata.taproot_script_sigs.find(lookup_key);
-    if (it != sigdata.taproot_script_sigs.end()) {
-        sig_out = it->second;
-        return true;
-    }
-    if (creator.CreateSchnorrSig(provider, sig_out, pubkey, &leaf_hash, nullptr, sigversion)) {
-        sigdata.taproot_script_sigs[lookup_key] = sig_out;
-        return true;
-    }
-    return false;
-}
-
-static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatureCreator& creator, SignatureData& sigdata, int leaf_version, const CScript& script, std::vector<valtype>& result)
-{
-    // Only BIP342 tapscript signing is supported for now.
-    if (leaf_version != TAPROOT_LEAF_TAPSCRIPT) return false;
-    SigVersion sigversion = SigVersion::TAPSCRIPT;
-
-    uint256 leaf_hash = (HashWriter{HASHER_TAPLEAF} << uint8_t(leaf_version) << script).GetSHA256();
-
-    // <xonly pubkey> OP_CHECKSIG
-    if (script.size() == 34 && script[33] == OP_CHECKSIG && script[0] == 0x20) {
-        XOnlyPubKey pubkey{Span{script}.subspan(1, 32)};
-        std::vector<unsigned char> sig;
-        if (CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion)) {
-            result = Vector(std::move(sig));
-            return true;
-        }
-        return false;
-    }
-
-    // multi_a scripts (<key> OP_CHECKSIG <key> OP_CHECKSIGADD <key> OP_CHECKSIGADD <k> OP_NUMEQUAL)
-    if (auto match = MatchMultiA(script)) {
-        std::vector<std::vector<unsigned char>> sigs;
-        int good_sigs = 0;
-        for (size_t i = 0; i < match->second.size(); ++i) {
-            XOnlyPubKey pubkey{*(match->second.rbegin() + i)};
-            std::vector<unsigned char> sig;
-            bool good_sig = CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion);
-            if (good_sig && good_sigs < match->first) {
-                ++good_sigs;
-                sigs.push_back(std::move(sig));
-            } else {
-                sigs.emplace_back();
-            }
-        }
-        if (good_sigs == match->first) {
-            result = std::move(sigs);
-            return true;
-        }
-        return false;
-    }
-
-    return false;
-}
-
-static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCreator& creator, const WitnessV1Taproot& output, SignatureData& sigdata, std::vector<valtype>& result)
-{
-    TaprootSpendData spenddata;
-    TaprootBuilder builder;
-
-    // Gather information about this output.
-    if (provider.GetTaprootSpendData(output, spenddata)) {
-        sigdata.tr_spenddata.Merge(spenddata);
-    }
-    if (provider.GetTaprootBuilder(output, builder)) {
-        sigdata.tr_builder = builder;
-    }
-
-    // Try key path spending.
-    {
-        KeyOriginInfo info;
-        if (provider.GetKeyOriginByXOnly(sigdata.tr_spenddata.internal_key, info)) {
-            auto it = sigdata.taproot_misc_pubkeys.find(sigdata.tr_spenddata.internal_key);
-            if (it == sigdata.taproot_misc_pubkeys.end()) {
-                sigdata.taproot_misc_pubkeys.emplace(sigdata.tr_spenddata.internal_key, std::make_pair(std::set<uint256>(), info));
-            }
-        }
-
-        std::vector<unsigned char> sig;
-        if (sigdata.taproot_key_path_sig.size() == 0) {
-            if (creator.CreateSchnorrSig(provider, sig, sigdata.tr_spenddata.internal_key, nullptr, &sigdata.tr_spenddata.merkle_root, SigVersion::TAPROOT)) {
-                sigdata.taproot_key_path_sig = sig;
-            }
-        }
-        if (sigdata.taproot_key_path_sig.size() == 0) {
-            if (creator.CreateSchnorrSig(provider, sig, output, nullptr, nullptr, SigVersion::TAPROOT)) {
-                sigdata.taproot_key_path_sig = sig;
-            }
-        }
-        if (sigdata.taproot_key_path_sig.size()) {
-            result = Vector(sigdata.taproot_key_path_sig);
-            return true;
-        }
-    }
-
-    // Try script path spending.
-    std::vector<std::vector<unsigned char>> smallest_result_stack;
-    for (const auto& [key, control_blocks] : sigdata.tr_spenddata.scripts) {
-        const auto& [script, leaf_ver] = key;
-        std::vector<std::vector<unsigned char>> result_stack;
-        if (SignTaprootScript(provider, creator, sigdata, leaf_ver, script, result_stack)) {
-            result_stack.emplace_back(std::begin(script), std::end(script)); // Push the script
-            result_stack.push_back(*control_blocks.begin()); // Push the smallest control block
-            if (smallest_result_stack.size() == 0 ||
-                GetSerializeSize(result_stack, SER_NETWORK, PROTOCOL_VERSION) < GetSerializeSize(smallest_result_stack, SER_NETWORK, PROTOCOL_VERSION)) {
-                smallest_result_stack = std::move(result_stack);
-            }
-        }
-    }
-    if (smallest_result_stack.size() != 0) {
-        result = std::move(smallest_result_stack);
-        return true;
-    }
-
-    return false;
-}
-
 /**
  * Sign scriptPubKey using signature made with creator.
  * Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
@@ -420,9 +289,6 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         }
         return false;
     }
-
-    case TxoutType::WITNESS_V1_TAPROOT:
-        return SignTaproot(provider, creator, WitnessV1Taproot(XOnlyPubKey{vSolutions[0]}), sigdata, ret);
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -495,12 +361,6 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         }
         sigdata.scriptWitness.stack = result;
         sigdata.witness = true;
-        result.clear();
-    } else if (whichType == TxoutType::WITNESS_V1_TAPROOT && !P2SH) {
-        sigdata.witness = true;
-        if (solved) {
-            sigdata.scriptWitness.stack = std::move(result);
-        }
         result.clear();
     } else if (solved && whichType == TxoutType::WITNESS_UNKNOWN) {
         sigdata.witness = true;

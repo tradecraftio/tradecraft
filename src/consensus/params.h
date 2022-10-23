@@ -58,7 +58,6 @@ constexpr bool ValidDeployment(BuriedDeployment dep) { return dep <= DEPLOYMENT_
 
 enum DeploymentPos : uint16_t {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
     DEPLOYMENT_FINALTX, // Deployment of block-final miner commitment transaction.
     DEPLOYMENT_AUXPOW, // Deployment of merge mining.
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp

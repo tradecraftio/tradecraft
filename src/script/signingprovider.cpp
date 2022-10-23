@@ -65,15 +65,6 @@ bool HidingSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& inf
     return m_provider->GetKeyOrigin(keyid, info);
 }
 
-bool HidingSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
-{
-    return m_provider->GetTaprootSpendData(output_key, spenddata);
-}
-bool HidingSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const
-{
-    return m_provider->GetTaprootBuilder(output_key, builder);
-}
-
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetWitnessV0Script(const WitnessV0ShortHash& id, WitnessV0ScriptEntry& entry) const { return LookupHelper(witscripts, id, entry); }
 bool FlatSigningProvider::GetWitnessV0Script(const WitnessV0LongHash& id, WitnessV0ScriptEntry& entry) const { return GetWitnessV0Script(WitnessV0ShortHash(id), entry); }
@@ -86,19 +77,6 @@ bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info)
     return ret;
 }
 bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
-bool FlatSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
-{
-    TaprootBuilder builder;
-    if (LookupHelper(tr_trees, output_key, builder)) {
-        spenddata = builder.GetSpendData();
-        return true;
-    }
-    return false;
-}
-bool FlatSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const
-{
-    return LookupHelper(tr_trees, output_key, builder);
-}
 
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
@@ -107,7 +85,6 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
     pubkeys.merge(b.pubkeys);
     keys.merge(b.keys);
     origins.merge(b.origins);
-    tr_trees.merge(b.tr_trees);
     return *this;
 }
 
@@ -304,16 +281,6 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
             if (auto id = std::get_if<PKHash>(&dest)) {
                 return ToKeyID(*id);
             }
-        }
-    }
-    if (auto output_key = std::get_if<WitnessV1Taproot>(&dest)) {
-        TaprootSpendData spenddata;
-        CPubKey pub;
-        if (store.GetTaprootSpendData(*output_key, spenddata)
-            && !spenddata.internal_key.IsNull()
-            && spenddata.merkle_root.IsNull()
-            && store.GetPubKeyByXOnly(spenddata.internal_key, pub)) {
-            return pub.GetID();
         }
     }
     return CKeyID();
