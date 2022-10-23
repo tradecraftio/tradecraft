@@ -174,11 +174,6 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
             vSolutionsRet.push_back(witnessprogram);
             return TxoutType::WITNESS_V0_LONGHASH;
         }
-        if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE) {
-            vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
-            vSolutionsRet.push_back(std::move(witnessprogram));
-            return TxoutType::WITNESS_V1_TAPROOT;
-        }
         vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
         vSolutionsRet.push_back(std::move(witnessprogram));
         return TxoutType::WITNESS_UNKNOWN;
