@@ -58,14 +58,6 @@ P2WSH_MINISCRIPTS = [
 
 DESCS = [
     *[f"wsh({ms})" for ms in P2WSH_MINISCRIPTS],
-    # A Taproot with one of the above scripts as the single script path.
-    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{P2WSH_MINISCRIPTS[0]})",
-    # A Taproot with two script paths among the above scripts.
-    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}})",
-    # A Taproot with three script paths among the above scripts.
-    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')}}})",
-    # A Taproot with all above scripts in its tree.
-    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{{{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')},{P2WSH_MINISCRIPTS[3]}}}}})",
 ]
 
 DESCS_PRIV = [
@@ -160,56 +152,6 @@ DESCS_PRIV = [
         "sigs_count": 2,
         "stack_size": 9,
     },
-    # Each leaf needs two sigs. We've got one key on each. Will sign both but can't finalize.
-    {
-        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pk({TPRVS[1]}/*),pk({TPUBS[2]}))}})",
-        "sequence": None,
-        "locktime": None,
-        "sigs_count": 2,
-        "stack_size": None,
-    },
-    # The same but now the two leaves are identical. Will add a single sig that is valid for both. Can't finalize.
-    {
-        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]}))}})",
-        "sequence": None,
-        "locktime": None,
-        "sigs_count": 1,
-        "stack_size": None,
-    },
-    # The same but we have the two necessary privkeys on one of the leaves. Also it uses a pubkey hash.
-    {
-        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pkh({TPRVS[1]}/*),pk({TPRVS[2]}))}})",
-        "sequence": None,
-        "locktime": None,
-        "sigs_count": 3,
-        "stack_size": 5,
-    },
-    # A key immediately or one of two keys after a timelock. If both paths are available it'll use the
-    # non-timelocked path because it's a smaller witness.
-    {
-        "desc": f"tr({TPUBS[0]}/*,{{pk({TPRVS[0]}/*),and_v(older(42),multi_a(1,{TPRVS[1]},{TPRVS[2]}))}})",
-        "sequence": 42,
-        "locktime": None,
-        "sigs_count": 3,
-        "stack_size": 3,
-    },
-    # A key immediately or one of two keys after a timelock. If the "primary" key isn't available though it'll
-    # use the timelocked path. Same remark for multi_a.
-    {
-        "desc": f"tr({TPUBS[0]}/*,{{pk({TPUBS[1]}/*),and_v(older(42),multi_a(1,{TPRVS[0]},{TPRVS[1]}))}})",
-        "sequence": 42,
-        "locktime": None,
-        "sigs_count": 2,
-        "stack_size": 4,
-    },
-    # Liquid-like federated pegin with emergency recovery privkeys, but in a Taproot.
-    {
-        "desc": f"tr({TPUBS[1]}/*,{{and_b(pk({TPUBS[2]}/*),a:and_b(pk({TPUBS[3]}),a:and_b(pk({TPUBS[4]}),a:and_b(pk({TPUBS[5]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[6]})),t:older(42))}})",
-        "sequence": 42,
-        "locktime": None,
-        "sigs_count": 2,
-        "stack_size": 8,
-    },
 ]
 
 
@@ -241,7 +183,7 @@ class WalletMiniscriptTest(FreicoinTestFramework):
         )[0]["success"]
 
         self.log.info("Testing we derive new addresses for it")
-        addr_type = "bech32m" if desc.startswith("tr(") else "bech32"
+        addr_type = "bech32"
         assert_equal(
             self.ms_wo_wallet.getnewaddress(address_type=addr_type),
             self.funder.deriveaddresses(desc, 0)[0],
@@ -264,7 +206,6 @@ class WalletMiniscriptTest(FreicoinTestFramework):
         self, desc, sequence, locktime, sigs_count, stack_size, sha256_preimages
     ):
         self.log.info(f"Importing private Miniscript descriptor '{desc}'")
-        is_taproot = desc.startswith("tr(")
         desc = descsum_create(desc)
         res = self.ms_sig_wallet.importdescriptors(
             [
@@ -280,7 +221,7 @@ class WalletMiniscriptTest(FreicoinTestFramework):
         assert res[0]["success"], res
 
         self.log.info("Generating an address for it and testing it detects funds")
-        addr_type = "bech32m" if is_taproot else "bech32"
+        addr_type = "bech32"
         addr = self.ms_sig_wallet.getnewaddress(address_type=addr_type)
         txid = self.funder.sendtoaddress(addr, 0.01)
         self.wait_until(lambda: txid in self.funder.getrawmempool())
@@ -313,7 +254,7 @@ class WalletMiniscriptTest(FreicoinTestFramework):
             pst = pst.hex()
         res = self.ms_sig_wallet.walletprocesspst(pst=pst, finalize=False)
         pstin = self.nodes[0].rpc.decodepst(res["pst"])["inputs"][0]
-        sigs_field_name = "taproot_script_path_sigs" if is_taproot else "partial_signatures"
+        sigs_field_name = "partial_signatures"
         assert len(pstin[sigs_field_name]) == sigs_count
         res = self.ms_sig_wallet.finalizepst(res["pst"])
         assert res["complete"] == (stack_size is not None)
@@ -384,31 +325,6 @@ class WalletMiniscriptTest(FreicoinTestFramework):
                 desc["stack_size"],
                 desc.get("sha256_preimages"),
             )
-
-        # Test we can sign for a max-size TapMiniscript. Recompute the maximum accepted size
-        # for a TapMiniscript (see cpp file for details). Then pad a simple pubkey check up
-        # to the maximum size. Make sure we can import and spend this script.
-        leeway_weight = (4 + 4 + 1 + 36 + 4 + 1 + 1 + 8 + 1 + 1 + 33) * 4 + 2
-        max_tapmini_size = 400_000 - 3 - (1 + 65) * 1_000 - 3 - (33 + 32 * 128) - leeway_weight - 5
-        padding = max_tapmini_size - 33 - 1
-        ms = f"pk({TPRVS[0]}/*)"
-        ms = "n" * padding + ":" + ms
-        desc = f"tr({PUBKEYS[0]},{ms})"
-        self.signing_test(desc, None, None, 1, 3, None)
-        # This was really the maximum size, one more byte and we can't import it.
-        ms = "n" + ms
-        desc = f"tr({PUBKEYS[0]},{ms})"
-        res = self.ms_wo_wallet.importdescriptors(
-            [
-                {
-                    "desc": descsum_create(desc),
-                    "active": False,
-                    "timestamp": "now",
-                }
-            ]
-        )[0]
-        assert not res["success"]
-        assert "is not a valid descriptor function" in res["error"]["message"]
 
 
 if __name__ == "__main__":
