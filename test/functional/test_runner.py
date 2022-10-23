@@ -108,7 +108,6 @@ BASE_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     # vv Tests less than 5m vv
     'feature_fee_estimation.py --bitcoin-mode',
-    'feature_taproot.py --bitcoin-mode',
     'feature_block.py --bitcoin-mode',
     # vv Tests less than 2m vv
     'mining_getblocktemplate_longpoll.py --bitcoin-mode',
@@ -148,7 +147,6 @@ BASE_SCRIPTS = [
     'wallet_groups.py --descriptors',
     'p2p_blockfilters.py',
     'feature_assumevalid.py --bitcoin-mode',
-    'wallet_taproot.py --descriptors',
     'feature_bip68_sequence.py --bitcoin-mode',
     'rpc_packages.py --bitcoin-mode',
     'rpc_bind.py --ipv4',

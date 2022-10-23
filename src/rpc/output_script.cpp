@@ -148,8 +148,6 @@ static RPCHelpMan createmultisig()
                 std::optional<OutputType> parsed = ParseOutputType(request.params[2].get_str());
                 if (!parsed) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));
-                } else if (parsed.value() == OutputType::BECH32M) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "createmultisig cannot create bech32m multisig addresses");
                 }
                 output_type = parsed.value();
             }

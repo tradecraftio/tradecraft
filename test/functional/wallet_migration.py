@@ -127,10 +127,9 @@ class WalletMigrationTest(FreicoinTestFramework):
         # * BIP32 descriptors in the form of "0h/0h/*" and "0h/1h/*" (2 descriptors)
         # * BIP44 descriptors in the form of "44h/1h/0h/0/*" and "44h/1h/0h/1/*" (2 descriptors)
         # * BIP84 descriptors, P2WPK, in the form of "84h/1h/0h/1/*" and "84h/1h/0h/1/*" (2 descriptors)
-        # * BIP86 descriptors, P2TR, in the form of "86h/1h/0h/0/*" and "86h/1h/0h/1/*" (2 descriptors)
         # * A combo(PK) descriptor for the wallet master key.
-        # So, should have a total of 9 descriptors on it.
-        assert_equal(len(basic0.listdescriptors()["descriptors"]), 9)
+        # So, should have a total of 7 descriptors on it.
+        assert_equal(len(basic0.listdescriptors()["descriptors"]), 7)
 
         # Compare addresses info
         addr_info = basic0.getaddressinfo(addr)
