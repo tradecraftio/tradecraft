@@ -472,9 +472,6 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = WitnessV0ShortHash{ConsumeUInt160(fuzzed_data_provider)};
         },
         [&] {
-            tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
-        },
-        [&] {
             WitnessUnknown witness_unknown{};
             witness_unknown.version = fuzzed_data_provider.ConsumeIntegralInRange(2, 16);
             std::vector<uint8_t> witness_unknown_program_1{fuzzed_data_provider.ConsumeBytes<uint8_t>(40)};

@@ -28,14 +28,12 @@
 enum class OutputType {
     LEGACY,
     BECH32,
-    BECH32M,
     UNKNOWN,
 };
 
 static constexpr auto OUTPUT_TYPES = std::array{
     OutputType::LEGACY,
     OutputType::BECH32,
-    OutputType::BECH32M,
 };
 
 std::optional<OutputType> ParseOutputType(const std::string& str);

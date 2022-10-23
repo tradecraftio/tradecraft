@@ -938,7 +938,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     }
 
     // Add tx to wallet
-    const auto& op_dest = wallet.GetNewDestination(OutputType::BECH32M, "");
+    const auto& op_dest = wallet.GetNewDestination(OutputType::BECH32, "");
     BOOST_ASSERT(op_dest);
 
     CMutableTransaction mtx;
