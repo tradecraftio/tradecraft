@@ -1390,4 +1390,4 @@ Thanks to everyone who directly contributed to this release:
 - Wladimir J. van der Laan
 
 As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+[Transifex](https://www.transifex.com/tradecraft/freicoin-1/).
