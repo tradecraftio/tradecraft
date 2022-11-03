@@ -270,6 +270,8 @@ struct InputStack {
     size_t size = 0;
     //! Data elements.
     std::vector<std::vector<unsigned char>> stack;
+    //! Used for internal algorithms
+    bool m_left_or_right = false;
     //! Construct an empty stack (valid).
     InputStack() {}
     //! Construct a valid single-element stack (with an element up to 75 bytes).
@@ -879,27 +881,45 @@ private:
                     // sats[j] represents the best stack containing j valid signatures (out of the first i keys).
                     // In the loop below, these stacks are built up using a dynamic programming approach.
                     // sats[0] starts off being {0}, due to the CHECKMULTISIG bug that pops off one element too many.
-                    std::vector<InputStack> sats = Vector(ZERO);
+                    const size_t num_keys = node.keys.size();
+                    MultiSigHint hint(num_keys, (1 << num_keys) - 1); // no keys used
+                    InputStack nosigs = EMPTY;
+                    std::vector<std::pair<MultiSigHint, InputStack>> sats = Vector(std::make_pair(std::move(hint), std::move(nosigs)));
                     for (size_t i = 0; i < node.keys.size(); ++i) {
                         std::vector<unsigned char> sig;
                         Availability avail = ctx.Sign(node.keys[i], sig);
+                        bool have_sig = (avail == Availability::YES) && !sig.empty();
                         // Compute signature stack for just the i'th key.
                         auto sat = InputStack(std::move(sig)).SetWithSig().SetAvailable(avail);
                         // Compute the next sats vector: next_sats[0] is a copy of sats[0] (no signatures). All further
                         // next_sats[j] are equal to either the existing sats[j], or sats[j-1] plus a signature for the
                         // current (i'th) key. The very last element needs all signatures filled.
-                        std::vector<InputStack> next_sats;
+                        std::vector<std::pair<MultiSigHint, InputStack>> next_sats;
                         next_sats.push_back(sats[0]);
-                        for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back(sats[j] | (std::move(sats[j - 1]) + sat));
-                        next_sats.push_back(std::move(sats[sats.size() - 1]) + std::move(sat));
+                        for (size_t j = 1; j < sats.size(); ++j) {
+                            InputStack left = sats[j].second;
+                            InputStack right = std::move(sats[j - 1].second) + sat;
+                            left.m_left_or_right = false;
+                            right.m_left_or_right = true;
+                            next_sats.emplace_back(std::move(sats[j - 1].first), std::move(left | right));
+                            if (next_sats.back().second.m_left_or_right == false) {
+                                next_sats.back().first = sats[j].first;
+                            } else if (have_sig) {
+                                next_sats.back().first.use_key(num_keys - i - 1);
+                            }
+                        }
+                        next_sats.emplace_back(std::move(sats[sats.size() - 1].first), std::move(sats[sats.size() - 1].second) + std::move(sat));
+                        if (have_sig) {
+                            next_sats.back().first.use_key(num_keys - i - 1);
+                        }
                         // Switch over.
                         sats = std::move(next_sats);
                     }
                     // The dissatisfaction consists of k+1 stack elements all equal to 0.
-                    InputStack nsat = ZERO;
+                    InputStack nsat(sats[0].first.getvch());
                     for (size_t i = 0; i < node.k; ++i) nsat = std::move(nsat) + ZERO;
                     assert(node.k <= sats.size());
-                    return {std::move(nsat), std::move(sats[node.k])};
+                    return {std::move(nsat), InputStack(sats[node.k].first.getvch()) + std::move(sats[node.k].second)};
                 }
                 case Fragment::THRESH: {
                     // sats[k] represents the best stack that satisfies k out of the *last* i subexpressions.

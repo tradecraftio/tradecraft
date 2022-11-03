@@ -23,6 +23,8 @@
 #include <script/script.h>
 #include <uint256.h>
 
+#include <bitset>
+
 typedef std::vector<unsigned char> valtype;
 
 namespace {
@@ -1155,6 +1157,10 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     CScript scriptCode(pbegincodehash, pend);
 
                     // Drop the signature in pre-segwit scripts but not segwit scripts
+                    // While we are iterating through the signatures, we record whether
+                    // any of the signatures are empty, as this determines the allowed
+                    // values for the MULTISIG_HINT field.
+                    bool empty_sigs = false;
                     for (int k = 0; k < nSigsCount; k++)
                     {
                         valtype& vchSig = stacktop(-isig-k);
@@ -1162,6 +1168,39 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                             int found = FindAndDelete(scriptCode, CScript() << vchSig);
                             if (found > 0 && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
                                 return set_error(serror, SCRIPT_ERR_SIG_FINDANDDELETE);
+                        }
+                        empty_sigs = empty_sigs || vchSig.empty();
+                    }
+
+                    // A bug in the original CHECKMULTISIG implementation caused an
+                    // extra item to be popped off the stack upon completion. When
+                    // SCRIPT_VERIFY_MULTISIG_HINT is in effect, this otherwise unused
+                    // parameter is a bitfield indicating which keys are NOT used. With
+                    // this hint we can avoid expensive signature validation checks that
+                    // might fail.
+                    MultiSigHint hint(nKeysCount); // defaults to no-skipped-keys
+                    if (flags & SCRIPT_VERIFY_MULTISIG_HINT) {
+                        // There cannot be more than 20 keys, so our serialized
+                        // hint cannot be more than 20 unsigned bits, which fits
+                        // fine inside a 3-byte signed CScriptNum.
+                        CScriptNum ser_hint(stacktop(-i), true, 3);
+                        // Make sure that bits is within the numeric range of integers
+                        // corresponding to our bitfield length, so that we don't risk
+                        // any malleability or implementation / platform-defined
+                        // behavior.
+                        if ((ser_hint < 0) || (ser_hint >= (1 << nKeysCount))) {
+                            return set_error(serror, SCRIPT_ERR_MULTISIG_HINT);
+                        }
+                        // Fill the skip-bitfield of our MultiSigHint object
+                        hint << ser_hint;
+                        // For a k-of-n multisig, there must be k signatures present and
+                        // (n-k) keys marked unused. We require that the skip-bits for
+                        // these keys be set in the hint's skipped_keys field. Note in
+                        // particular that the corresponding bits must be set for keys
+                        // in the final positions, if unused, even though the signature
+                        // verification loop below terminates early in that situation.
+                        if (hint.count_sigs() != (empty_sigs ? 0 : nSigsCount)) {
+                            return set_error(serror, SCRIPT_ERR_MULTISIG_HINT);
                         }
                     }
 
@@ -1179,8 +1218,18 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                             return false;
                         }
 
+                        // The first pubkey is at position (-ikey == -2),
+                        // which is bit index 0 of hint's skipped_keys.
+                        bool have_sig = hint.have_sig_for_key(ikey-2);
+
                         // Check signature
-                        bool fOk = checker.CheckECDSASignature(vchSig, vchPubKey, scriptCode, sigversion);
+                        bool fOk = have_sig && checker.CheckECDSASignature(vchSig, vchPubKey, scriptCode, sigversion);
+
+                        // Skipped keys MUST be reported in the hint if
+                        // SCRIPT_VERIFY_MULTISIG_HINT is in effect.
+                        if (!fOk && (flags & SCRIPT_VERIFY_MULTISIG_HINT) && have_sig) {
+                            return set_error(serror, SCRIPT_ERR_FAILED_SIGNATURE_CHECK);
+                        }
 
                         if (fOk) {
                             isig++;
@@ -1206,8 +1255,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         popstack(stack);
                     }
 
-                    // A bug causes CHECKMULTISIG to consume one extra argument
-                    // whose contents were not checked in any way.
+                    // Remove the MultiSigHint
                     if (stack.size() < 1)
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                     popstack(stack);
