@@ -476,7 +476,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         tx_spend.vout.append(CTxOut(tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
         tx_spend.rehash()
         sign_input_legacy(tx_spend, 0, tx.vout[0].scriptPubKey, privkey, sighash_type=SIGHASH_ALL)
-        tx_spend.vin[0].scriptSig = bytes(CScript([OP_0])) + tx_spend.vin[0].scriptSig
+        tx_spend.vin[0].scriptSig = bytes(CScript([3])) + tx_spend.vin[0].scriptSig
         self.check_mempool_result(
             result_expected=[{'txid': tx_spend.rehash(), 'allowed': True, 'vsize': tx_spend.get_vsize(), 'fees': { 'base': Decimal('0.00000700')}}],
             rawtxs=[tx_spend.serialize().hex()],

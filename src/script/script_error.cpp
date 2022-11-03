@@ -78,6 +78,10 @@ std::string ScriptErrorString(const ScriptError serror)
             return "OP_IF/NOTIF argument must be minimal";
         case SCRIPT_ERR_SIG_NULLFAIL:
             return "Signature must be zero for failed CHECK(MULTI)SIG operation";
+        case SCRIPT_ERR_MULTISIG_HINT:
+            return "Incorrect or invalid hint provided in CHECKMULTISIG's last argument";
+        case SCRIPT_ERR_FAILED_SIGNATURE_CHECK:
+            return "Failed signature check with non-empty signature argument";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS:
             return "NOPx reserved for soft-fork upgrades";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM:
