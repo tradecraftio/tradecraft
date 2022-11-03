@@ -92,6 +92,10 @@ typedef enum ScriptError_t
     SCRIPT_ERR_OP_CODESEPARATOR,
     SCRIPT_ERR_SIG_FINDANDDELETE,
 
+    /* require valid signatures */
+    SCRIPT_ERR_MULTISIG_HINT,
+    SCRIPT_ERR_FAILED_SIGNATURE_CHECK,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 

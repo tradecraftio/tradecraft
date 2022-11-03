@@ -21,6 +21,7 @@
 #include <core_io.h>
 #include <fs.h>
 #include <key.h>
+#include <policy/policy.h>
 #include <rpc/util.h>
 #include <script/script.h>
 #include <script/script_error.h>
@@ -104,6 +105,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_CLEANSTACK, "CLEANSTACK"},
     {SCRIPT_ERR_MINIMALIF, "MINIMALIF"},
     {SCRIPT_ERR_SIG_NULLFAIL, "NULLFAIL"},
+    {SCRIPT_ERR_MULTISIG_HINT, "MULTISIG_HINT"},
     {SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS, "DISCOURAGE_UPGRADABLE_NOPS"},
     {SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM, "DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"},
     {SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH, "WITNESS_PROGRAM_WRONG_LENGTH"},
@@ -1254,16 +1256,31 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     sig3.push_back(SIGHASH_SINGLE);
 
     // Not fussy about order (or even existence) of placeholders or signatures:
-    CScript partial1a = CScript() << OP_0 << sig1 << OP_0;
-    CScript partial1b = CScript() << OP_0 << OP_0 << sig1;
-    CScript partial2a = CScript() << OP_0 << sig2;
-    CScript partial2b = CScript() << sig2 << OP_0;
-    CScript partial3a = CScript() << sig3;
-    CScript partial3b = CScript() << OP_0 << OP_0 << sig3;
-    CScript partial3c = CScript() << OP_0 << sig3 << OP_0;
-    CScript complete12 = CScript() << OP_0 << sig1 << sig2;
-    CScript complete13 = CScript() << OP_0 << sig1 << sig3;
-    CScript complete23 = CScript() << OP_0 << sig2 << sig3;
+    static const CScript expected[1 << 3] = {
+        CScript() << OP_7 << OP_0,
+        CScript() << OP_3 << sig1 << OP_0,
+        CScript() << OP_5 << sig2 << OP_0,
+        CScript() << OP_1 << sig1 << sig2,
+        CScript() << OP_6 << sig3 << OP_0,
+        CScript() << OP_2 << sig1 << sig3,
+        CScript() << OP_4 << sig2 << sig3,
+        CScript() << OP_1 << sig1 << sig2,
+    };
+
+    ScriptError err;
+    for (std::size_t i = 0; i < 3; ++i) {
+        for (std::size_t j = 0; j < 3; ++j) {
+            int which = (1 << i) | (1 << j);
+            if (i == j) {
+                BOOST_CHECK(!VerifyScript(expected[which], scriptPubKey, NULL, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue, txFrom.lock_height, MissingDataBehavior::ASSERT_FAIL), &err));
+                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_MULTISIG_HINT, ScriptErrorString(err));
+            } else {
+                BOOST_CHECK(VerifyScript(expected[which], scriptPubKey, NULL, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue, txFrom.lock_height, MissingDataBehavior::ASSERT_FAIL), &err));
+                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+            }
+        }
+    }
+
     SignatureData partial1_sigs;
     partial1_sigs.signatures.emplace(keys[0].GetPubKey().GetID(), SigPair(keys[0].GetPubKey(), sig1));
     SignatureData partial2_sigs;
@@ -1271,22 +1288,27 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     SignatureData partial3_sigs;
     partial3_sigs.signatures.emplace(keys[2].GetPubKey().GetID(), SigPair(keys[2].GetPubKey(), sig3));
 
-    combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partial1_sigs, partial1_sigs);
-    BOOST_CHECK(combined.scriptSig == partial1a);
-    combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partial1_sigs, partial2_sigs);
-    BOOST_CHECK(combined.scriptSig == complete12);
-    combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partial2_sigs, partial1_sigs);
-    BOOST_CHECK(combined.scriptSig == complete12);
-    combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partial1_sigs, partial2_sigs);
-    BOOST_CHECK(combined.scriptSig == complete12);
-    combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partial3_sigs, partial1_sigs);
-    BOOST_CHECK(combined.scriptSig == complete13);
-    combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partial2_sigs, partial3_sigs);
-    BOOST_CHECK(combined.scriptSig == complete23);
-    combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partial3_sigs, partial2_sigs);
-    BOOST_CHECK(combined.scriptSig == complete23);
-    combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partial3_sigs, partial3_sigs);
-    BOOST_CHECK(combined.scriptSig == partial3c);
+    std::array<SignatureData, 8> partials;
+    for (int i = 0; i < partials.size(); ++i) {
+        if (i & 1) {
+            partials[i].signatures.emplace(keys[0].GetPubKey().GetID(), SigPair(keys[0].GetPubKey(), sig1));
+        }
+        if (i & 2) {
+            partials[i].signatures.emplace(keys[1].GetPubKey().GetID(), SigPair(keys[1].GetPubKey(), sig2));
+        }
+        if (i & 4) {
+            partials[i].signatures.emplace(keys[2].GetPubKey().GetID(), SigPair(keys[2].GetPubKey(), sig3));
+        }
+    }
+
+    for (std::size_t i = 0; i < partials.size(); ++i) {
+        for (std::size_t j = 0; j < partials.size(); ++j) {
+            combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partials[i], partials[j]);
+            BOOST_CHECK(combined.scriptSig == expected[i|j]);
+            combined = CombineSignatures(txFrom.vout[0], txFrom.lock_height, txTo, partials[j], partials[i]);
+            BOOST_CHECK(combined.scriptSig == expected[i|j]);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_push)
