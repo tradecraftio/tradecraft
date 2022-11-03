@@ -338,7 +338,9 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
 
     case TxoutType::MULTISIG: {
         size_t required = vSolutions.front()[0];
-        ret.push_back(valtype()); // workaround CHECKMULTISIG bug
+        int nKeysCount = vSolutions.size() - 2;
+        MultiSigHint hint(nKeysCount, (1 << nKeysCount) - 1);
+        ret.push_back(valtype()); // hint
         for (size_t i = 1; i < vSolutions.size() - 1; ++i) {
             CPubKey pubkey = CPubKey(vSolutions[i]);
             // We need to always call CreateSig in order to fill sigdata with all
@@ -346,10 +348,12 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
             // processing to work as it needs all possible signature and pubkey pairs
             if (CreateSig(creator, sigdata, provider, sig, pubkey, scriptPubKey, sigversion)) {
                 if (ret.size() < required + 1) {
+                    hint.use_key(nKeysCount - i);
                     ret.push_back(std::move(sig));
                 }
             }
         }
+        ret[0] = hint.getvch();
         bool ok = ret.size() == required + 1;
         for (size_t i = 0; i + ret.size() < required + 1; ++i) {
             ret.push_back(valtype());
