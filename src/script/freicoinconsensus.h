@@ -60,9 +60,11 @@ enum
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_NONE                = 0,
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH                = (1U << 0), // evaluate P2SH (BIP16) subscripts
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG              = (1U << 2), // enforce strict DER (BIP66) compliance
+    freicoinconsensus_SCRIPT_FLAGS_VERIFY_MULTISIG_HINT       = (1U << 4), // require hint field in CHECKMULTISIG which indicates which keys to skip
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
     freicoinconsensus_SCRIPT_FLAGS_VERIFY_ALL                 = freicoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH |
                                                                freicoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG |
+                                                               freicoinconsensus_SCRIPT_FLAGS_VERIFY_MULTISIG_HINT |
                                                                freicoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS
 };
 
