@@ -82,6 +82,10 @@ unsigned int ParseScriptFlags(std::string strFlags)
     return flags;
 }
 
+// Contained in script_tests.cpp
+extern std::string FormatScriptError(ScriptError err);
+extern ScriptError ParseScriptError(const std::string& name);
+
 // Check that all flags in STANDARD_SCRIPT_VERIFY_FLAGS are present in mapFlagNames.
 bool CheckMapFlagNames()
 {
@@ -113,7 +117,7 @@ std::string FormatScriptFlags(unsigned int flags)
 */
 bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& map_prevout_scriptPubKeys,
     const std::map<COutPoint, int64_t>& map_prevout_values, unsigned int flags,
-    const PrecomputedTransactionData& txdata, const std::string& strTest, bool expect_valid)
+    const PrecomputedTransactionData& txdata, const std::string& strTest, bool expect_valid, std::optional<ScriptError> expected_err = std::nullopt)
 {
     bool tx_valid = true;
     ScriptError err = expect_valid ? SCRIPT_ERR_UNKNOWN_ERROR : SCRIPT_ERR_OK;
@@ -135,7 +139,11 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
     }
     if (!expect_valid) {
         BOOST_CHECK_MESSAGE(!tx_valid, strTest);
-        BOOST_CHECK_MESSAGE((err != SCRIPT_ERR_OK), ScriptErrorString(err));
+        if (expected_err) {
+            BOOST_CHECK_MESSAGE(err == expected_err.value(), FormatScriptError(err) + " where " + FormatScriptError(expected_err.value()) + " expected: " + strTest);
+        } else {
+            BOOST_CHECK_MESSAGE((err != SCRIPT_ERR_OK), ScriptErrorString(err));
+        }
     }
     return (tx_valid == expect_valid);
 }
@@ -285,7 +293,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
         std::string strTest = test.write();
         if (test[0].isArray())
         {
-            if (test.size() != 3 || !test[1].isStr() || !test[2].isStr())
+            if ((test.size() != 3 && test.size() != 4) || !test[1].isStr() || !test[2].isStr())
             {
                 BOOST_ERROR("Bad test: " << strTest);
                 continue;
@@ -338,8 +346,13 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                 BOOST_ERROR("Bad test flags: " << strTest);
             }
 
+            ScriptError expected_err = SCRIPT_ERR_OK;
+            if (test.size() == 4) {
+                expected_err = ParseScriptError(test[3].get_str());
+            }
+
             // Not using FillFlags() in the main test, in order to detect invalid verifyFlags combination
-            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, verify_flags, txdata, strTest, /*expect_valid=*/false),
+            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, verify_flags, txdata, strTest, /*expect_valid=*/false, expected_err),
                                 "Tx unexpectedly passed: " << strTest);
 
             // Backwards compatibility of script verification flags: Adding any flag(s) should not validate an invalid transaction
