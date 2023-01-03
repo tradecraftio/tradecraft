@@ -267,7 +267,6 @@ FREICOIN_CORE_H = \
   util/moneystr.h \
   util/overflow.h \
   util/overloaded.h \
-  util/rbf.h \
   util/readwritefile.h \
   util/serfloat.h \
   util/settings.h \
@@ -635,7 +634,6 @@ libfreicoin_util_a_SOURCES = \
   util/system.cpp \
   util/message.cpp \
   util/moneystr.cpp \
-  util/rbf.cpp \
   util/readwritefile.cpp \
   util/settings.cpp \
   util/thread.cpp \

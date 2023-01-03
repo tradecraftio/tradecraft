@@ -19,7 +19,7 @@ from copy import deepcopy
 from decimal import Decimal
 
 from test_framework.messages import (
-    BIP125_SEQUENCE_NUMBER,
+    MAX_SEQUENCE_NONFINAL,
     COIN,
     COutPoint,
     CTransaction,
@@ -412,45 +412,21 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         """Replacing should only work if orig tx opted in"""
         tx0_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
 
-        # Create a non-opting in transaction
         tx1a = CTransaction()
         tx1a.vin = [CTxIn(tx0_outpoint, nSequence=SEQUENCE_FINAL)]
         tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
         tx1a_hex = tx1a.serialize().hex()
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
 
-        # This transaction isn't shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['bip125-replaceable'], False)
-
-        # Shouldn't be able to double-spend
-        tx1b = CTransaction()
-        tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1b.vout = [CTxOut(int(0.9 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        tx1b_hex = tx1b.serialize().hex()
-
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
-
         tx1_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
 
-        # Create a different non-opting in transaction
         tx2a = CTransaction()
         tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0xfffffffe)]
         tx2a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
         tx2a_hex = tx2a.serialize().hex()
         tx2a_txid = self.nodes[0].sendrawtransaction(tx2a_hex, 0)
 
-        # Still shouldn't be able to double-spend
-        tx2b = CTransaction()
-        tx2b.vin = [CTxIn(tx1_outpoint, nSequence=0)]
-        tx2b.vout = [CTxOut(int(0.9 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        tx2b_hex = tx2b.serialize().hex()
-
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx2b_hex, 0)
-
         # Now create a new transaction that spends from tx1a and tx2a
-        # opt-in on one of the inputs
         # Transaction should be replaceable on either input
 
         tx1a_txid = int(tx1a_txid, 16)
@@ -463,9 +439,6 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         tx3a_hex = tx3a.serialize().hex()
 
         tx3a_txid = self.nodes[0].sendrawtransaction(tx3a_hex, 0)
-
-        # This transaction is shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['bip125-replaceable'], True)
 
         tx3b = CTransaction()
         tx3b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]
@@ -543,23 +516,19 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         us0 = self.wallet.get_utxo()
         ins = [us0]
         outs = {ADDRESS_BCRT1_UNSPENDABLE: Decimal(1.0000000)}
-        rawtx0 = self.nodes[0].createrawtransaction(ins, outs, 0, True)
-        rawtx1 = self.nodes[0].createrawtransaction(ins, outs, 0, False)
+        rawtx0 = self.nodes[0].createrawtransaction(ins, outs, 1)
+        rawtx1 = self.nodes[0].createrawtransaction(ins, outs, 0)
         json0 = self.nodes[0].decoderawtransaction(rawtx0)
         json1 = self.nodes[0].decoderawtransaction(rawtx1)
-        assert_equal(json0["vin"][0]["sequence"], 4294967293)
+        assert_equal(json0["vin"][0]["sequence"], 4294967294)
         assert_equal(json1["vin"][0]["sequence"], 4294967295)
 
         if self.is_specified_wallet_compiled():
             self.init_wallet(node=0)
             rawtx2 = self.nodes[0].createrawtransaction([], outs)
-            frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": True})
-            frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": False})
-
+            frawtx2a = self.nodes[0].fundrawtransaction(rawtx2)
             json0 = self.nodes[0].decoderawtransaction(frawtx2a['hex'])
-            json1 = self.nodes[0].decoderawtransaction(frawtx2b['hex'])
-            assert_equal(json0["vin"][0]["sequence"], 4294967293)
-            assert_equal(json1["vin"][0]["sequence"], 4294967294)
+            assert_equal(json0["vin"][0]["sequence"], 4294967294)
 
     def test_no_inherited_signaling(self):
         confirmed_utxo = self.wallet.get_utxo()
@@ -568,14 +537,14 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         optin_parent_tx = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
-            sequence=BIP125_SEQUENCE_NUMBER,
+            sequence=MAX_SEQUENCE_NONFINAL,
             fee_rate=Decimal('0.01'),
         )
-        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
+        assert('bip125-replaceable' not in self.nodes[0].getmempoolentry(optin_parent_tx['txid']))
 
         replacement_parent_tx = self.wallet.create_self_transfer(
             utxo_to_spend=confirmed_utxo,
-            sequence=BIP125_SEQUENCE_NUMBER,
+            sequence=MAX_SEQUENCE_NONFINAL,
             fee_rate=Decimal('0.02'),
         )
 
@@ -595,13 +564,13 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         )
 
         # Reports true due to inheritance
-        assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
+        assert('bip125-replaceable' not in self.nodes[0].getmempoolentry(optout_child_tx['txid']))
 
         replacement_child_tx = self.wallet.create_self_transfer(
             utxo_to_spend=parent_utxo,
             sequence=SEQUENCE_FINAL,
             fee_rate=Decimal('0.02'),
-            mempool_valid=False,
+            mempool_valid=True,
         )
 
         # Broadcast replacement child tx
@@ -611,15 +580,16 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         # The original transaction (`optout_child_tx`) doesn't signal RBF but its parent (`optin_parent_tx`) does.
         # The replacement transaction (`replacement_child_tx`) should be able to replace the original transaction.
         # See CVE-2021-31876 for further explanations.
-        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
-        assert_raises_rpc_error(-26, 'txn-mempool-conflict', self.nodes[0].sendrawtransaction, replacement_child_tx["hex"], 0)
+        assert('bip125-replaceable' not in self.nodes[0].getmempoolentry(optin_parent_tx['txid']))
+        txid = self.nodes[0].sendrawtransaction(replacement_child_tx["hex"], 0)
+        assert txid in self.nodes[0].getrawmempool()
 
         self.log.info('Check that the child tx can still be replaced (via a tx that also replaces the parent)')
         replacement_parent_tx = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
             sequence=SEQUENCE_FINAL,
-            fee_rate=Decimal('0.03'),
+            fee_rate=Decimal('0.04'),
         )
         # Check that child is removed and update wallet utxo state
         assert_raises_rpc_error(-5, 'Transaction not in mempool', self.nodes[0].getmempoolentry, optout_child_tx['txid'])

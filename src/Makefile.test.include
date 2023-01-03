@@ -297,7 +297,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/protocol.cpp \
  test/fuzz/pst.cpp \
  test/fuzz/random.cpp \
- test/fuzz/rbf.cpp \
  test/fuzz/rolling_bloom_filter.cpp \
  test/fuzz/rpc.cpp \
  test/fuzz/script.cpp \

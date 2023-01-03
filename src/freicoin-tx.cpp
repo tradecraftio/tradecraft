@@ -25,14 +25,12 @@
 #include <key_io.h>
 #include <fs.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <univalue.h>
 #include <util/moneystr.h>
-#include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -76,7 +74,6 @@ static void SetupFreicoinTxArgs(ArgsManager &argsman)
     argsman.AddArg("outscript=VALUE:SCRIPT[:FLAGS]", "Add raw script output to TX. "
         "Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output. "
         "Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("replaceable(=N)", "Set RBF opt-in sequence number for input N (if not provided, opt-in all available inputs)", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("sign=SIGHASH-FLAGS", "Add zero or more signatures to transaction. "
         "This command requires JSON registers:"
         "prevtxs=JSON object, "
@@ -228,26 +225,6 @@ static void MutateTxLocktime(CMutableTransaction& tx, const std::string& cmdVal)
         throw std::runtime_error("Invalid TX locktime requested: '" + cmdVal + "'");
 
     tx.nLockTime = (unsigned int) newLocktime;
-}
-
-static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInIdx)
-{
-    // parse requested index
-    int64_t inIdx;
-    if (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size())) {
-        throw std::runtime_error("Invalid TX input index '" + strInIdx + "'");
-    }
-
-    // set the nSequence to MAX_INT - 2 (= RBF opt in flag)
-    int cnt = 0;
-    for (CTxIn& txin : tx.vin) {
-        if (strInIdx == "" || cnt == inIdx) {
-            if (txin.nSequence > MAX_BIP125_RBF_SEQUENCE) {
-                txin.nSequence = MAX_BIP125_RBF_SEQUENCE;
-            }
-        }
-        ++cnt;
-    }
 }
 
 template <typename T>
@@ -695,9 +672,6 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxVersion(tx, commandVal);
     else if (command == "locktime")
         MutateTxLocktime(tx, commandVal);
-    else if (command == "replaceable") {
-        MutateTxRBFOptIn(tx, commandVal);
-    }
 
     else if (command == "delin")
         MutateTxDelInput(tx, commandVal);
