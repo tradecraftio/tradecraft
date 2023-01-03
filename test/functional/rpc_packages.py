@@ -21,7 +21,7 @@ import random
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.messages import (
-    BIP125_SEQUENCE_NUMBER,
+    MAX_SEQUENCE_NONFINAL,
     COIN,
     CTxInWitness,
     tx_from_hex,
@@ -281,7 +281,7 @@ class RPCPackagesTest(FreicoinTestFramework):
     def test_rbf(self):
         node = self.nodes[0]
         coin = self.coins.pop()
-        inputs = [{"txid": coin["txid"], "vout": 0, "sequence": BIP125_SEQUENCE_NUMBER}]
+        inputs = [{"txid": coin["txid"], "vout": 0, "sequence": MAX_SEQUENCE_NONFINAL}]
         fee = Decimal('0.00125000')
         output = {node.get_deterministic_priv_key().address: 50 - fee}
         raw_replaceable_tx = node.createrawtransaction(inputs, output)

@@ -159,15 +159,6 @@
   { "exec": "./freicoin-tx",
     "args":
     ["-create",
-     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
-     "replaceable=0foo"],
-    "return_code": 1,
-    "error_txt": "error: Invalid TX input index",
-    "description": "Tests the check for an invalid input index with replaceable"
-  },
-  { "exec": "./freicoin-tx",
-    "args":
-    ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0x"],
     "return_code": 1,
     "error_txt": "error: invalid TX input vout",

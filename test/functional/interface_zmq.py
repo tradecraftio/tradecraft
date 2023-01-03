@@ -365,7 +365,7 @@ class ZMQTest (FreicoinTestFramework):
         # Rest of test requires wallet functionality
         if self.is_wallet_compiled():
             self.log.info("Wait for tx from second node")
-            payment_txid = self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=5.0, replaceable=True)
+            payment_txid = self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=5.0)
             self.sync_all()
             self.log.info("Testing sequence notifications with mempool sequence values")
 
@@ -428,7 +428,7 @@ class ZMQTest (FreicoinTestFramework):
             self.generatetoaddress(self.nodes[1], 1, ADDRESS_BCRT1_UNSPENDABLE)
 
             self.log.info("Evict mempool transaction by block conflict")
-            orig_txid = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0, replaceable=True)
+            orig_txid = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0)
 
             # More to be simply mined
             more_tx = []
@@ -446,7 +446,7 @@ class ZMQTest (FreicoinTestFramework):
             assert_equal(self.nodes[0].submitblock(block.serialize().hex()), None)
             tip = self.nodes[0].getbestblockhash()
             assert_equal(int(tip, 16), block.sha256)
-            orig_txid_2 = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0, replaceable=True)
+            orig_txid_2 = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0)
 
             # Flush old notifications until evicted tx original entry
             (hash_str, label, mempool_seq) = seq.receive_sequence()
@@ -496,7 +496,7 @@ class ZMQTest (FreicoinTestFramework):
         txids = []
         num_txs = 5
         for _ in range(num_txs):
-            txids.append(self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0, replaceable=True))
+            txids.append(self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0))
         self.sync_all()
 
         # 1) Consume backlog until we get a mempool sequence number
@@ -522,11 +522,11 @@ class ZMQTest (FreicoinTestFramework):
         # Things continue to happen in the "interim" while waiting for snapshot results
         # We have node 0 do all these to avoid p2p races with RBF announcements
         for _ in range(num_txs):
-            txids.append(self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=0.1, replaceable=True))
+            txids.append(self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=0.1))
         self.nodes[0].bumpfee(txids[-1])
         self.sync_all()
         self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
-        final_txid = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=0.1, replaceable=True)
+        final_txid = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=0.1)
 
         # 3) Consume ZMQ backlog until we get to "now" for the mempool snapshot
         while True:

@@ -18,45 +18,6 @@
 #include <policy/settings.h>
 #include <tinyformat.h>
 #include <util/moneystr.h>
-#include <util/rbf.h>
-
-RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
-{
-    AssertLockHeld(pool.cs);
-
-    CTxMemPool::setEntries ancestors;
-
-    // First check the transaction itself.
-    if (SignalsOptInRBF(tx)) {
-        return RBFTransactionState::REPLACEABLE_BIP125;
-    }
-
-    // If this transaction is not in our mempool, then we can't be sure
-    // we will know about all its inputs.
-    if (!pool.exists(GenTxid::Txid(tx.GetHash()))) {
-        return RBFTransactionState::UNKNOWN;
-    }
-
-    // If all the inputs have nSequence >= maxint-1, it still might be
-    // signaled for RBF if any unconfirmed parents have signaled.
-    uint64_t noLimit = std::numeric_limits<uint64_t>::max();
-    std::string dummy;
-    CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
-    pool.CalculateMemPoolAncestors(entry, ancestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
-
-    for (CTxMemPool::txiter it : ancestors) {
-        if (SignalsOptInRBF(it->GetTx())) {
-            return RBFTransactionState::REPLACEABLE_BIP125;
-        }
-    }
-    return RBFTransactionState::FINAL;
-}
-
-RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
-{
-    // If we don't have a local mempool we can only check the transaction itself.
-    return SignalsOptInRBF(tx) ? RBFTransactionState::REPLACEABLE_BIP125 : RBFTransactionState::UNKNOWN;
-}
 
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
                                                   CTxMemPool& pool,

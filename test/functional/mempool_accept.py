@@ -22,7 +22,7 @@ import math
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.key import ECKey
 from test_framework.messages import (
-    BIP125_SEQUENCE_NUMBER,
+    MAX_SEQUENCE_NONFINAL,
     COIN,
     COutPoint,
     CTxIn,
@@ -99,7 +99,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         self.log.info('A transaction not in the mempool')
         fee = Decimal('0.000007')
         utxo_to_spend = self.wallet.get_utxo(txid=txid_in_block)  # use 0.3 FRC UTXO
-        tx = self.wallet.create_self_transfer(utxo_to_spend=utxo_to_spend, sequence=BIP125_SEQUENCE_NUMBER)['tx']
+        tx = self.wallet.create_self_transfer(utxo_to_spend=utxo_to_spend, sequence=MAX_SEQUENCE_NONFINAL)['tx']
         tx.vout[0].nValue = int((Decimal('0.3') - fee) * COIN)
         raw_tx_0 = tx.serialize().hex()
         txid_0 = tx.rehash()
@@ -137,7 +137,6 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         self.log.info('A transaction that replaces a mempool transaction')
         tx = tx_from_hex(raw_tx_0)
         tx.vout[0].nValue -= int(fee * COIN)  # Double the fee
-        tx.vin[0].nSequence = BIP125_SEQUENCE_NUMBER + 1  # Now, opt out of RBF
         raw_tx_0 = tx.serialize().hex()
         txid_0 = tx.rehash()
         self.check_mempool_result(
@@ -145,17 +144,8 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
             rawtxs=[raw_tx_0],
         )
 
-        self.log.info('A transaction that conflicts with an unconfirmed tx')
-        # Send the transaction that replaces the mempool transaction and opts out of replaceability
+        # Send the transaction that replaces the mempool transaction
         node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
-        # take original raw_tx_0
-        tx = tx_from_hex(raw_tx_0)
-        tx.vout[0].nValue -= int(4 * fee * COIN)  # Set more fee
-        self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'txn-mempool-conflict'}],
-            rawtxs=[tx.serialize().hex()],
-            maxfeerate=0,
-        )
 
         self.log.info('A transaction with missing inputs, that never existed')
         tx = tx_from_hex(raw_tx_0)

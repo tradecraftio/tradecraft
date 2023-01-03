@@ -20,7 +20,6 @@
 #include <test/fuzz/util.h>
 #include <test/util/script.h>
 #include <util/overflow.h>
-#include <util/rbf.h>
 #include <util/time.h>
 #include <version.h>
 
@@ -420,7 +419,6 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
                fuzzed_data_provider.PickValueInArray({
                    CTxIn::SEQUENCE_FINAL,
                    CTxIn::MAX_SEQUENCE_NONFINAL,
-                   MAX_BIP125_RBF_SEQUENCE,
                }) :
                fuzzed_data_provider.ConsumeIntegral<uint32_t>();
 }

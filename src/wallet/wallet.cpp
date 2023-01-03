@@ -41,7 +41,6 @@
 #include <util/error.h>
 #include <util/fees.h>
 #include <util/moneystr.h>
-#include <util/rbf.h>
 #include <util/string.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
@@ -2910,7 +2909,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
     walletInstance->m_confirm_target = args.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
     walletInstance->m_spend_zero_conf_change = args.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
-    walletInstance->m_signal_rbf = args.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
     walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", GetTimeMillis() - nStart);
 
