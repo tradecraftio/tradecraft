@@ -18,7 +18,7 @@
                 "desc": "addr(bc1qfmwaw92egxe9mqqa5h6kmsr7jks00az0yv97usksyhlygrx2ya2qmnr780)#xd0e3wsq",
                 "hex": "00204eddd7155941b25d801da5f56dc07e95a0f7f44f230bee42d025fe440cca2754",
                 "address": "bc1qfmwaw92egxe9mqqa5h6kmsr7jks00az0yv97usksyhlygrx2ya2qmnr780",
-                "type": "witness_v0_scripthash"
+                "type": "witness_v0_longhash"
             }
         }
     ],

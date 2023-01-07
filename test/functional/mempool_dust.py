@@ -29,7 +29,7 @@ from test_framework.script import (
 from test_framework.script_util import (
     key_to_p2pk_script,
     key_to_p2pkh_script,
-    key_to_p2wpkh_script,
+    key_to_p2wpk_script,
     keys_to_multisig_script,
     output_key_to_p2tr_script,
     program_to_witness_script,
@@ -99,7 +99,7 @@ class DustRelayFeeTest(FreicoinTestFramework):
             (key_to_p2pk_script(pubkey),                       "P2PK (compressed)"),
             (key_to_p2pkh_script(pubkey),                      "P2PKH"),
             (script_to_p2sh_script(CScript([OP_TRUE])),        "P2SH"),
-            (key_to_p2wpkh_script(pubkey),                     "P2WPKH"),
+            (key_to_p2wpk_script(pubkey),                      "P2WPK"),
             (script_to_p2wsh_script(CScript([OP_TRUE])),       "P2WSH"),
             (output_key_to_p2tr_script(pubkey[1:]),            "P2TR"),
             # witness programs for segwitv2+ can be between 2 and 40 bytes

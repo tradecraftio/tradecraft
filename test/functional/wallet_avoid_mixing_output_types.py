@@ -42,7 +42,7 @@ ADDRESS_TYPES = [
 def is_bech32_address(node, addr):
     """Check if an address contains a bech32 output."""
     addr_info = node.getaddressinfo(addr)
-    return addr_info['desc'].startswith('wpkh(')
+    return addr_info['desc'].startswith('wpk(')
 
 
 def is_bech32m_address(node, addr):
@@ -58,7 +58,7 @@ def is_p2sh_segwit_address(node, addr):
        we are only generating P2SH-Segwit outputs.
     """
     addr_info = node.getaddressinfo(addr)
-    return addr_info['desc'].startswith('sh(wpkh(')
+    return addr_info['desc'].startswith('sh(wpk(')
 
 
 def is_legacy_address(node, addr):

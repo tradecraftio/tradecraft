@@ -16,7 +16,7 @@
 """Encode and decode Freicoin addresses.
 
 - base58 P2PKH and P2SH addresses.
-- bech32 segwit v0 P2WPKH and P2WSH addresses.
+- bech32 segwit v0 P2WPK and P2WSH addresses.
 - bech32m segwit v1 P2TR addresses."""
 
 import enum
@@ -26,8 +26,10 @@ from .script import (
     CScript,
     OP_0,
     OP_TRUE,
+    OP_CHECKSIG,
     hash160,
     hash256,
+    ripemd160,
     taproot_construct,
 )
 from .util import assert_equal
@@ -133,9 +135,9 @@ def script_to_p2sh(script, main=False):
     script = check_script(script)
     return scripthash_to_p2sh(hash160(script), main)
 
-def key_to_p2sh_p2wpkh(key, main=False):
+def key_to_p2sh_p2wpk(key, main=False):
     key = check_key(key)
-    p2shscript = CScript([OP_0, hash160(key)])
+    p2shscript = CScript([OP_0, ripemd160(hash256(bytes([0]) + CScript([key, OP_CHECKSIG])))])
     return script_to_p2sh(p2shscript, main)
 
 def program_to_witness(version, program, main=False):
@@ -152,9 +154,9 @@ def script_to_p2wsh(script, main=False):
     script = check_script(script)
     return program_to_witness(0, hash256(script_to_witscript(script)), main)
 
-def key_to_p2wpkh(key, main=False):
+def key_to_p2wpk(key, main=False):
     key = check_key(key)
-    return program_to_witness(0, hash160(key), main)
+    return program_to_witness(0, ripemd160(hash256(b'\x00' + CScript([key, OP_CHECKSIG]))), main)
 
 def script_to_p2sh_p2wsh(script, main=False):
     script = check_script(script)

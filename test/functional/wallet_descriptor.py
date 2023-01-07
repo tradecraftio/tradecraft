@@ -22,6 +22,7 @@ except ImportError:
     pass
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -75,12 +76,12 @@ class WalletDescriptorTest(FreicoinTestFramework):
 
         addr = self.nodes[0].getnewaddress("", "p2sh-segwit")
         addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('sh(wpkh(')
+        assert addr_info['desc'].startswith('sh(wpk(')
         assert_equal(addr_info['hdkeypath'], 'm/49\'/1\'/0\'/0/0')
 
         addr = self.nodes[0].getnewaddress("", "bech32")
         addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('wpkh(')
+        assert addr_info['desc'].startswith('wpk(')
         assert_equal(addr_info['hdkeypath'], 'm/84\'/1\'/0\'/0/0')
 
         addr = self.nodes[0].getnewaddress("", "bech32m")
@@ -96,12 +97,12 @@ class WalletDescriptorTest(FreicoinTestFramework):
 
         addr = self.nodes[0].getrawchangeaddress("p2sh-segwit")
         addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('sh(wpkh(')
+        assert addr_info['desc'].startswith('sh(wpk(')
         assert_equal(addr_info['hdkeypath'], 'm/49\'/1\'/0\'/1/0')
 
         addr = self.nodes[0].getrawchangeaddress("bech32")
         addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('wpkh(')
+        assert addr_info['desc'].startswith('wpk(')
         assert_equal(addr_info['hdkeypath'], 'm/84\'/1\'/0\'/1/0')
 
         addr = self.nodes[0].getrawchangeaddress("bech32m")
@@ -156,7 +157,7 @@ class WalletDescriptorTest(FreicoinTestFramework):
         self.log.info("Test that unlock is needed when deriving only hardened keys in an encrypted wallet")
         send_wrpc.walletpassphrase('pass', 10)
         send_wrpc.importdescriptors([{
-            "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
+            "desc": descsum_create("wpk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)"),
             "timestamp": "now",
             "range": [0,10],
             "active": True
@@ -190,12 +191,12 @@ class WalletDescriptorTest(FreicoinTestFramework):
         imp_rpc = self.nodes[0].get_wallet_rpc('desc_import')
 
         addr_types = [('legacy', False, 'pkh(', '44\'/1\'/0\'', -13),
-                      ('p2sh-segwit', False, 'sh(wpkh(', '49\'/1\'/0\'', -14),
-                      ('bech32', False, 'wpkh(', '84\'/1\'/0\'', -13),
+                      ('p2sh-segwit', False, 'sh(wpk(', '49\'/1\'/0\'', -14),
+                      ('bech32', False, 'wpk(', '84\'/1\'/0\'', -13),
                       ('bech32m', False, 'tr(', '86\'/1\'/0\'', -13),
                       ('legacy', True, 'pkh(', '44\'/1\'/0\'', -13),
-                      ('p2sh-segwit', True, 'sh(wpkh(', '49\'/1\'/0\'', -14),
-                      ('bech32', True, 'wpkh(', '84\'/1\'/0\'', -13),
+                      ('p2sh-segwit', True, 'sh(wpk(', '49\'/1\'/0\'', -14),
+                      ('bech32', True, 'wpk(', '84\'/1\'/0\'', -13),
                       ('bech32m', True, 'tr(', '86\'/1\'/0\'', -13)]
 
         for addr_type, internal, desc_prefix, deriv_path, int_idx in addr_types:
