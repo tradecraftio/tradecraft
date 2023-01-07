@@ -812,6 +812,11 @@ const RPCResult decodepst_inputs{
                 {RPCResult::Type::STR_HEX, "hex", "The raw witness script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
+            {RPCResult::Type::ARR, "witness_branch", /*optional=*/true, "The hex-encoded hashes of the Merkle branch proof",
+            {
+                {RPCResult::Type::STR_HEX, "hash", "The hex-encoded branch skip hash"},
+            }},
+            {RPCResult::Type::NUM, "witness_path", /*optional=*/true, "The left/right branching information for the Merkle branch proof"},
             {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
             {
                 {RPCResult::Type::OBJ, "", "",
@@ -832,7 +837,7 @@ const RPCResult decodepst_inputs{
             }},
             {RPCResult::Type::OBJ_DYN, "ripemd160_preimages", /*optional=*/ true, "",
             {
-                {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                {RPCResult::Type::STR_HEX, "hash", "The hash and preimage that corresponds to it."},
             }},
             {RPCResult::Type::OBJ_DYN, "sha256_preimages", /*optional=*/ true, "",
             {
@@ -919,6 +924,11 @@ const RPCResult decodepst_outputs{
                 {RPCResult::Type::STR_HEX, "hex", "The raw witness script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
+            {RPCResult::Type::ARR, "witness_branch", /*optional=*/true, "The hex-encoded hashes of the Merkle branch proof",
+            {
+                {RPCResult::Type::STR, "hash", "The hex-encoded branch skip hash"},
+            }},
+            {RPCResult::Type::NUM, "witness_path", /*optional=*/true, "The left/right branching information for the Merkle branch proof"},
             {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
             {
                 {RPCResult::Type::OBJ, "", "",
@@ -1153,6 +1163,12 @@ static RPCHelpMan decodepst()
                 r.pushKV("type", "unknown");
             }
             in.pushKV("witness_script", r);
+            UniValue branch(UniValue::VARR);
+            for (const auto& hash : input.witness_entry.m_branch) {
+                branch.push_back(HexStr(hash));
+            }
+            in.pushKV("witness_branch", branch);
+            in.pushKV("witness_path", (int64_t)input.witness_entry.m_path);
         }
 
         // keypaths
@@ -1335,6 +1351,12 @@ static RPCHelpMan decodepst()
                 r.pushKV("type", "unknown");
             }
             out.pushKV("witness_script", r);
+            UniValue branch(UniValue::VARR);
+            for (const auto& hash : output.witness_entry.m_branch) {
+                branch.push_back(HexStr(hash));
+            }
+            out.pushKV("witness_branch", branch);
+            out.pushKV("witness_path", (int64_t)output.witness_entry.m_path);
         }
 
         // keypaths

@@ -1770,6 +1770,18 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScriptPub
         }
     }
 
+    // Add each witness script
+    for (const auto& wit_pair : mapWitnessV0Scripts) {
+        const CScript& p2wsh = GetScriptForDestination(wit_pair.second.GetScriptHash());
+        if (IsMine(p2wsh) != ISMINE_NO && mapScripts.count(CScriptID(p2wsh)) != 0) {
+            spks.insert(p2wsh);
+            CScript p2sh = GetScriptForDestination(ScriptHash(p2wsh));
+            if (mapScripts.count(CScriptID(p2sh)) != 0) {
+                spks.insert(p2sh);
+            }
+        }
+    }
+
     // All watchonly scripts are raw
     for (const CScript& script : setWatchOnly) {
         // As the legacy wallet allowed to import any script, we need to verify the validity here.
