@@ -104,6 +104,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM, "DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"},
     {SCRIPT_ERR_DISCOURAGE_OP_SUCCESS, "DISCOURAGE_OP_SUCCESS"},
     {SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY, "WITNESS_PROGRAM_WITNESS_EMPTY"},
+    {SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF, "WITNESS_PROGRAM_INVALID_PROOF"},
     {SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH, "WITNESS_PROGRAM_MISMATCH"},
     {SCRIPT_ERR_WITNESS_MALLEATED, "WITNESS_MALLEATED"},
     {SCRIPT_ERR_WITNESS_MALLEATED_P2SH, "WITNESS_MALLEATED_P2SH"},
@@ -302,7 +303,7 @@ public:
             witscript.push_back(0x00);
             witscript.insert(witscript.end(), scriptPubKey.begin(), scriptPubKey.end());
             uint256 hash;
-            CSHA256().Write(witscript.data(), witscript.size()).Finalize(hash.begin());
+            CHash256().Write(witscript).Finalize(hash);
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
         }
         if (P2SH) {
@@ -387,6 +388,8 @@ public:
     TestBuilder& PushWitRedeem()
     {
         DoPush(witscript);
+        AsWit();
+        DoPush(ToByteVector(CScript()));
         return AsWit();
     }
 
@@ -782,7 +785,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     {
         CScript witscript = CScript() << ToByteVector(keys.pubkey0);
         uint256 hash;
-        CSHA256().Write(witscript.data(), witscript.size()).Finalize(hash.begin());
+        CHash256().Write(witscript).Finalize(hash);
         std::vector<unsigned char> hashBytes = ToByteVector(hash);
         hashBytes.pop_back();
         tests.push_back(TestBuilder(CScript() << OP_0 << hashBytes,
@@ -796,7 +799,7 @@ BOOST_AUTO_TEST_CASE(script_build)
         CScript witscript = CScript() << ToByteVector(keys.pubkey0) << OP_CHECKSIG;
         tests.push_back(TestBuilder(witscript,
                                     "P2WSH with witness program mismatch", SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false, WitnessMode::SH
-                                   ).PushWitSig(keys.key0).Push(witscript).DamagePush(0).AsWit().ScriptError(SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH));
+                                   ).PushWitSig(keys.key0).Push(witscript).DamagePush(0).AsWit().Push(CScript()).AsWit().ScriptError(SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH));
     }
     tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey0),
                                 "P2WPKH with witness program mismatch", SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false, WitnessMode::PKH
@@ -1031,6 +1034,7 @@ BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_SIZE)
     std::vector<unsigned char> vch = { 0 /* version */ };
     vch.insert(vch.end(), raw_script.begin(), raw_script.end());
     witness.stack.push_back(vch);
+    witness.stack.push_back(ToByteVector(CScript()));
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_SIZE for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
@@ -1056,6 +1060,7 @@ BOOST_AUTO_TEST_CASE(script_MAX_SCRIPT_ELEMENT_SIZE)
     std::vector<unsigned char> vch = { 0 /* version */ };
     vch.insert(vch.end(), raw_script.begin(), raw_script.end());
     witness.stack.push_back(vch);
+    witness.stack.push_back(ToByteVector(CScript()));
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_SCRIPT_ELEMENT_SIZE for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
@@ -1084,6 +1089,7 @@ BOOST_AUTO_TEST_CASE(script_MAX_OPS_PER_SCRIPT)
     std::vector<unsigned char> vch = { 0 /* version */ };
     vch.insert(vch.end(), raw_script.begin(), raw_script.end());
     witness.stack.push_back(vch);
+    witness.stack.push_back(ToByteVector(CScript()));
     DoTest(scriptPubKey, scriptSig, witness, SCRIPT_VERIFY_P2SH|SCRIPT_VERIFY_WITNESS, "MAX_OPS_PER_SCRIPT for P2WSH", SCRIPT_ERR_OK, 0);
     scriptSig = CScript() << ToByteVector(scriptPubKey);
     scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));

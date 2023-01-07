@@ -82,7 +82,7 @@ struct SignatureData {
     bool witness = false; ///< Stores whether the input this SigData corresponds to is a witness input
     CScript scriptSig; ///< The scriptSig of an input. Contains complete signatures or the traditional partial signatures format
     CScript redeem_script; ///< The redeemScript (if any) for the input
-    WitnessV0ScriptEntry witness_entry; ///< The witnessScript (if any) for the input. witnessScripts are used in P2WSH outputs.
+    WitnessV0ScriptEntry witness_entry; ///< The witnessScript (if any) and associated Merkle proof for the input. witnessScripts are used in P2WSH outputs.
     CScriptWitness scriptWitness; ///< The scriptWitness of an input. Contains complete signatures or the traditional partial signatures format. scriptWitness is part of a transaction input per BIP 144.
     TaprootSpendData tr_spenddata; ///< Taproot spending data.
     std::optional<TaprootBuilder> tr_builder; ///< Taproot tree used to build tr_spenddata.
@@ -94,7 +94,7 @@ struct SignatureData {
     std::vector<CKeyID> missing_pubkeys; ///< KeyIDs of pubkeys which could not be found
     std::vector<CKeyID> missing_sigs; ///< KeyIDs of pubkeys for signatures which could not be found
     uint160 missing_redeem_script; ///< ScriptID of the missing redeemScript (if any)
-    WitnessV0ScriptHash missing_witness_script; ///< SHA256 of the missing witnessScript (if any)
+    WitnessV0ScriptHash missing_witness_script; ///< Hash of the missing witnessScript (if any)
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> sha256_preimages; ///< Mapping from a SHA256 hash to its preimage provided to solve a Script
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> hash256_preimages; ///< Mapping from a HASH256 hash to its preimage provided to solve a Script
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> ripemd160_preimages; ///< Mapping from a RIPEMD160 hash to its preimage provided to solve a Script

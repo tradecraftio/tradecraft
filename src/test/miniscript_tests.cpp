@@ -301,11 +301,13 @@ void TestSatisfy(const std::string& testcase, const NodeRef& node) {
             CScriptWitness witness_mal;
             const bool mal_success = node->Satisfy(satisfier, witness_mal.stack, false) == miniscript::Availability::YES;
             witness_mal.stack.push_back(std::vector<unsigned char>(entry.m_script.begin(), entry.m_script.end()));
+            witness_mal.stack.emplace_back();
 
             // Run non-malleable satisfaction algorithm.
             CScriptWitness witness_nonmal;
             const bool nonmal_success = node->Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
             witness_nonmal.stack.push_back(std::vector<unsigned char>(entry.m_script.begin(), entry.m_script.end()));
+            witness_nonmal.stack.emplace_back();
 
             if (nonmal_success) {
                 // Non-malleable satisfactions are bounded by GetStackSize().
@@ -514,7 +516,7 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     const auto ms_multi = miniscript::FromString("multi(1,03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65,03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556,0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)", CONVERTER);
     BOOST_CHECK(ms_multi);
     BOOST_CHECK_EQUAL(ms_multi->GetOps(), 4); // 3 pubkeys + CMS
-    BOOST_CHECK_EQUAL(ms_multi->GetStackSize(), 3); // 1 sig + dummy elem + script push
+    BOOST_CHECK_EQUAL(ms_multi->GetStackSize(), 4); // 1 sig + dummy elem + script push + merkle proof
     // The 'd:' wrapper leaves on the stack what was DUP'ed at the beginning of its execution.
     // Since it contains an OP_IF just after on the same element, we can make sure that the element
     // in question must be OP_1 if OP_IF enforces that its argument must only be OP_1 or the empty

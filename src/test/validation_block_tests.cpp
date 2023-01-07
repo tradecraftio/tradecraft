@@ -328,6 +328,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             CMutableTransaction mtx;
             mtx.vin.push_back(CTxIn{COutPoint{last_mined->vtx[0]->GetHash(), 1}, CScript{}});
             mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+            mtx.vin[0].scriptWitness.stack.emplace_back();
             mtx.vout.push_back(last_mined->vtx[0]->vout[1]);
             mtx.vout[0].nValue -= 1000;
             mtx.lock_height = last_mined->vtx[0]->lock_height;
