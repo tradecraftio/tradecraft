@@ -52,14 +52,12 @@ struct PKHash : public BaseHash<uint160>
 };
 CKeyID ToKeyID(const PKHash& key_hash);
 
-struct WitnessV0KeyHash;
 
 struct ScriptHash : public BaseHash<uint160>
 {
     ScriptHash() : BaseHash() {}
     // These don't do what you'd expect.
     // Use ScriptHash(GetScriptForDestination(...)) instead.
-    explicit ScriptHash(const WitnessV0KeyHash& hash) = delete;
     explicit ScriptHash(const PKHash& hash) = delete;
 
     explicit ScriptHash(const uint160& hash) : BaseHash(hash) {}
@@ -68,21 +66,26 @@ struct ScriptHash : public BaseHash<uint160>
 };
 CScriptID ToScriptID(const ScriptHash& script_hash);
 
-struct WitnessV0ScriptHash : public BaseHash<uint256>
+struct WitnessV0LongHash : public BaseHash<uint256>
 {
-    WitnessV0ScriptHash() : BaseHash() {}
-    explicit WitnessV0ScriptHash(const uint256& hash) : BaseHash(hash) {}
-    WitnessV0ScriptHash(unsigned char version, const CScript& innerscript);
+    WitnessV0LongHash() : BaseHash() {}
+    explicit WitnessV0LongHash(const uint256& hash) : BaseHash(hash) {}
+    WitnessV0LongHash(unsigned char version, const CScript& innerscript);
 };
 
-struct WitnessV0KeyHash : public BaseHash<uint160>
+struct WitnessV0ShortHash : public BaseHash<uint160>
 {
-    WitnessV0KeyHash() : BaseHash() {}
-    explicit WitnessV0KeyHash(const uint160& hash) : BaseHash(hash) {}
-    explicit WitnessV0KeyHash(const CPubKey& pubkey);
-    explicit WitnessV0KeyHash(const PKHash& pubkey_hash);
+    WitnessV0ShortHash() : BaseHash() {}
+    explicit WitnessV0ShortHash(const uint160& hash) : BaseHash(hash) {}
+    explicit WitnessV0ShortHash(const WitnessV0LongHash &longid) {
+        CRIPEMD160().Write(longid.begin(), 32).Finalize(begin());
+    }
+    WitnessV0ShortHash(unsigned char version, const CScript& innerscript) {
+        WitnessV0LongHash longid(version, innerscript);
+        CRIPEMD160().Write(longid.begin(), 32).Finalize(begin());
+    }
+    WitnessV0ShortHash(unsigned char version, const CPubKey& pubkey);
 };
-CKeyID ToKeyID(const WitnessV0KeyHash& key_hash);
 
 struct WitnessV1Taproot : public XOnlyPubKey
 {
@@ -154,7 +157,8 @@ public:
         return std::tie(m_script, m_branch, m_path) < std::tie(rhs.m_script, rhs.m_branch, rhs.m_path);
     }
 
-    WitnessV0ScriptHash GetScriptHash() const;
+    WitnessV0LongHash GetLongHash() const;
+    WitnessV0ShortHash GetShortHash() const;
 };
 
 inline void swap(WitnessV0ScriptEntry& lhs, WitnessV0ScriptEntry& rhs) noexcept {
@@ -170,13 +174,13 @@ inline void swap(WitnessV0ScriptEntry& lhs, WitnessV0ScriptEntry& rhs) noexcept 
  *  * PubKeyDestination: TxoutType::PUBKEY (P2PK), no corresponding address
  *  * PKHash: TxoutType::PUBKEYHASH destination (P2PKH address)
  *  * ScriptHash: TxoutType::SCRIPTHASH destination (P2SH address)
- *  * WitnessV0ScriptHash: TxoutType::WITNESS_V0_SCRIPTHASH destination (P2WSH address)
- *  * WitnessV0KeyHash: TxoutType::WITNESS_V0_KEYHASH destination (P2WPKH address)
+ *  * WitnessV0LongHash: TxoutType::WITNESS_V0_LONGHASH destination (P2WSH address)
+ *  * WitnessV0ShortHash: TxoutType::WITNESS_V0_SHORTHASH destination (P2WPK address)
  *  * WitnessV1Taproot: TxoutType::WITNESS_V1_TAPROOT destination (P2TR address)
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W??? address)
  *  A CTxDestination is the internal data type encoded in a freicoin address
  */
-using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, WitnessUnknown>;
+using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0LongHash, WitnessV0ShortHash, WitnessV1Taproot, WitnessUnknown>;
 
 /** Check whether a CTxDestination corresponds to one with an address. */
 bool IsValidDestination(const CTxDestination& dest);
@@ -188,7 +192,7 @@ bool IsValidDestination(const CTxDestination& dest);
  * is assigned to addressRet.
  * For all other scripts. addressRet is assigned as a CNoDestination containing the scriptPubKey.
  *
- * Returns true for standard destinations with addresses - P2PKH, P2SH, P2WPKH, P2WSH, P2TR and P2W??? scripts.
+ * Returns true for standard destinations with addresses - P2PKH, P2SH, P2WPK, P2WSH, P2TR and P2W??? scripts.
  * Returns false for non-standard destinations and those without addresses - P2PK, bare multisig, null data, and nonstandard scripts.
  */
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);

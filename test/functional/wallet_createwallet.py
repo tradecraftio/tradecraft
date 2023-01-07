@@ -16,7 +16,7 @@
 """Test createwallet arguments.
 """
 
-from test_framework.address import key_to_p2wpkh
+from test_framework.address import key_to_p2wpk
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
@@ -64,9 +64,9 @@ class CreateWalletTest(FreicoinTestFramework):
         privkey, pubkey = generate_keypair(wif=True)
         assert_raises_rpc_error(-4, 'Cannot import private keys to a wallet with private keys disabled', w1.importprivkey, privkey)
         if self.options.descriptors:
-            result = w1.importdescriptors([{'desc': descsum_create('wpkh(' + privkey + ')'), 'timestamp': 'now'}])
+            result = w1.importdescriptors([{'desc': descsum_create('wpk(' + privkey + ')'), 'timestamp': 'now'}])
         else:
-            result = w1.importmulti([{'scriptPubKey': {'address': key_to_p2wpkh(pubkey)}, 'timestamp': 'now', 'keys': [privkey]}])
+            result = w1.importmulti([{'scriptPubKey': {'address': key_to_p2wpk(pubkey)}, 'timestamp': 'now', 'keys': [privkey]}])
         assert not result[0]['success']
         assert 'warnings' not in result[0]
         assert_equal(result[0]['error']['code'], -4)
@@ -93,12 +93,12 @@ class CreateWalletTest(FreicoinTestFramework):
         # Set the seed
         if self.options.descriptors:
             w3.importdescriptors([{
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/0h/*)'),
+                'desc': descsum_create('wpk(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/0h/*)'),
                 'timestamp': 'now',
                 'active': True
             },
             {
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/1h/*)'),
+                'desc': descsum_create('wpk(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/1h/*)'),
                 'timestamp': 'now',
                 'active': True,
                 'internal': True
@@ -123,12 +123,12 @@ class CreateWalletTest(FreicoinTestFramework):
             # Now set a seed and it should work. Wallet should also be encrypted
             if self.options.descriptors:
                 w4.importdescriptors([{
-                    'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/0h/*)'),
+                    'desc': descsum_create('wpk(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/0h/*)'),
                     'timestamp': 'now',
                     'active': True
                 },
                 {
-                    'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/1h/*)'),
+                    'desc': descsum_create('wpk(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/1h/*)'),
                     'timestamp': 'now',
                     'active': True,
                     'internal': True

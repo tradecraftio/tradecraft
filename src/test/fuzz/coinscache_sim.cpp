@@ -81,7 +81,7 @@ struct PrecomputedData
                 std::copy(hash.begin(), hash.begin() + 20, coins[i].out.scriptPubKey.begin() + 2);
                 coins[i].out.scriptPubKey[12] = OP_EQUAL;
                 break;
-            case 2: /* P2WPKH */
+            case 2: /* P2WPK */
                 coins[i].out.scriptPubKey.resize(22);
                 coins[i].out.scriptPubKey[0] = OP_0;
                 coins[i].out.scriptPubKey[1] = 20;

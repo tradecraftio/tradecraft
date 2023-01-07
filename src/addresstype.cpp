@@ -24,15 +24,7 @@ ScriptHash::ScriptHash(const CScriptID& in) : BaseHash{in} {}
 PKHash::PKHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
 PKHash::PKHash(const CKeyID& pubkey_id) : BaseHash(pubkey_id) {}
 
-WitnessV0KeyHash::WitnessV0KeyHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
-WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : BaseHash{pubkey_hash} {}
-
 CKeyID ToKeyID(const PKHash& key_hash)
-{
-    return CKeyID{uint160{key_hash}};
-}
-
-CKeyID ToKeyID(const WitnessV0KeyHash& key_hash)
 {
     return CKeyID{uint160{key_hash}};
 }
@@ -42,9 +34,16 @@ CScriptID ToScriptID(const ScriptHash& script_hash)
     return CScriptID{uint160{script_hash}};
 }
 
-WitnessV0ScriptHash::WitnessV0ScriptHash(unsigned char version, const CScript& innerscript)
+WitnessV0LongHash::WitnessV0LongHash(unsigned char version, const CScript& innerscript)
 {
-    CHash256().Write({&version, 1}).Write(innerscript).Finalize(*this);
+    CHash256().Write({&version, 1}).Write(innerscript).Finalize(m_hash);
+}
+
+WitnessV0ShortHash::WitnessV0ShortHash(unsigned char version, const CPubKey& pubkey) {
+    assert(pubkey.IsCompressed());
+    CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    WitnessV0LongHash longid(version, p2pk);
+    CRIPEMD160().Write(longid.begin(), 32).Finalize(m_hash.begin());
 }
 
 WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript) : m_path(0)
@@ -65,7 +64,7 @@ WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript&
     m_script.insert(m_script.end(), innerscript.begin(), innerscript.end());
 }
 
-WitnessV0ScriptHash WitnessV0ScriptEntry::GetScriptHash() const
+WitnessV0LongHash WitnessV0ScriptEntry::GetLongHash() const
 {
     uint256 leaf;
     CHash256().Write(m_script).Finalize(leaf);
@@ -74,7 +73,12 @@ WitnessV0ScriptHash WitnessV0ScriptEntry::GetScriptHash() const
     if (invalid) {
         throw std::runtime_error("invalid Merkle proof");
     }
-    return WitnessV0ScriptHash(hash);
+    return WitnessV0LongHash(hash);
+}
+
+WitnessV0ShortHash WitnessV0ScriptEntry::GetShortHash() const
+{
+    return WitnessV0ShortHash(GetLongHash());
 }
 
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
@@ -100,14 +104,14 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = ScriptHash(uint160(vSolutions[0]));
         return true;
     }
-    case TxoutType::WITNESS_V0_KEYHASH: {
-        WitnessV0KeyHash hash;
+    case TxoutType::WITNESS_V0_SHORTHASH: {
+        WitnessV0ShortHash hash;
         std::copy(vSolutions[0].begin(), vSolutions[0].end(), hash.begin());
         addressRet = hash;
         return true;
     }
-    case TxoutType::WITNESS_V0_SCRIPTHASH: {
-        WitnessV0ScriptHash hash;
+    case TxoutType::WITNESS_V0_LONGHASH: {
+        WitnessV0LongHash hash;
         std::copy(vSolutions[0].begin(), vSolutions[0].end(), hash.begin());
         addressRet = hash;
         return true;
@@ -156,12 +160,12 @@ public:
         return CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
     }
 
-    CScript operator()(const WitnessV0KeyHash& id) const
+    CScript operator()(const WitnessV0ShortHash& id) const
     {
         return CScript() << OP_0 << ToByteVector(id);
     }
 
-    CScript operator()(const WitnessV0ScriptHash& id) const
+    CScript operator()(const WitnessV0LongHash& id) const
     {
         return CScript() << OP_0 << ToByteVector(id);
     }
@@ -217,8 +221,8 @@ public:
     bool operator()(const PubKeyDestination& dest) const { return false; }
     bool operator()(const PKHash& dest) const { return true; }
     bool operator()(const ScriptHash& dest) const { return true; }
-    bool operator()(const WitnessV0KeyHash& dest) const { return true; }
-    bool operator()(const WitnessV0ScriptHash& dest) const { return true; }
+    bool operator()(const WitnessV0ShortHash& dest) const { return true; }
+    bool operator()(const WitnessV0LongHash& dest) const { return true; }
     bool operator()(const WitnessV1Taproot& dest) const { return true; }
     bool operator()(const WitnessUnknown& dest) const { return true; }
 };

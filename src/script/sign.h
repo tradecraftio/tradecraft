@@ -95,7 +95,7 @@ struct SignatureData {
     std::vector<CKeyID> missing_pubkeys; ///< KeyIDs of pubkeys which could not be found
     std::vector<CKeyID> missing_sigs; ///< KeyIDs of pubkeys for signatures which could not be found
     uint160 missing_redeem_script; ///< ScriptID of the missing redeemScript (if any)
-    WitnessV0ScriptHash missing_witness_script; ///< Hash of the missing witnessScript (if any)
+    WitnessV0ShortHash missing_witness_script; ///< Hash of the missing witnessScript (if any)
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> sha256_preimages; ///< Mapping from a SHA256 hash to its preimage provided to solve a Script
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> hash256_preimages; ///< Mapping from a HASH256 hash to its preimage provided to solve a Script
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> ripemd160_preimages; ///< Mapping from a RIPEMD160 hash to its preimage provided to solve a Script

@@ -57,6 +57,7 @@ from test_framework.script import (
     OP_RETURN,
     hash160,
     hash256,
+    ripemd160,
 )
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
@@ -106,6 +107,11 @@ def scripthash_to_p2sh_script(hash):
     return CScript([OP_HASH160, hash, OP_EQUAL])
 
 
+def key_to_p2pk_script(key):
+    key = check_key(key)
+    return CScript([key, OP_CHECKSIG])
+
+
 def key_to_p2pkh_script(key):
     key = check_key(key)
     return keyhash_to_p2pkh_script(hash160(key))
@@ -116,9 +122,8 @@ def script_to_p2sh_script(script):
     return scripthash_to_p2sh_script(hash160(script))
 
 
-def key_to_p2sh_p2wpkh_script(key):
-    key = check_key(key)
-    p2shscript = CScript([OP_0, hash160(key)])
+def key_to_p2sh_p2wpk_script(key):
+    p2shscript = key_to_p2wpk_script(key)
     return script_to_p2sh_script(p2shscript)
 
 
@@ -172,9 +177,14 @@ def script_to_p2wsh_script(script):
     return program_to_witness_script(0, hash256(script_to_witness(script)))
 
 
-def key_to_p2wpkh_script(key):
+def script_to_p2wpk_script(script):
+    script = check_script(script)
+    return program_to_witness_script(0, ripemd160(hash256(script_to_witness(script))))
+
+
+def key_to_p2wpk_script(key):
     key = check_key(key)
-    return program_to_witness_script(0, hash160(key))
+    return script_to_p2wpk_script(CScript([key, OP_CHECKSIG]))
 
 
 def script_to_p2sh_p2wsh_script(script):

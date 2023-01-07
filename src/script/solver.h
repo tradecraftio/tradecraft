@@ -39,8 +39,8 @@ enum class TxoutType {
     MULTISIG,
     NULL_DATA, //!< unspendable OP_RETURN script that carries data
     UNSPENDABLE, //!< unspendable, minimal (no-data) OP_RETURN script
-    WITNESS_V0_SCRIPTHASH,
-    WITNESS_V0_KEYHASH,
+    WITNESS_V0_LONGHASH,
+    WITNESS_V0_SHORTHASH,
     WITNESS_V1_TAPROOT,
     WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
 };

@@ -36,8 +36,8 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::MULTISIG: return "multisig";
     case TxoutType::NULL_DATA: return "nulldata";
     case TxoutType::UNSPENDABLE: return "unspendable";
-    case TxoutType::WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
-    case TxoutType::WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
+    case TxoutType::WITNESS_V0_SHORTHASH: return "witness_v0_shorthash";
+    case TxoutType::WITNESS_V0_LONGHASH: return "witness_v0_longhash";
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
@@ -165,13 +165,13 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(&witnessversion, &witnessprogram)) {
-        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) {
+        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SHORTHASH_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));
-            return TxoutType::WITNESS_V0_KEYHASH;
+            return TxoutType::WITNESS_V0_SHORTHASH;
         }
-        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_LONGHASH_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));
-            return TxoutType::WITNESS_V0_SCRIPTHASH;
+            return TxoutType::WITNESS_V0_LONGHASH;
         }
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));

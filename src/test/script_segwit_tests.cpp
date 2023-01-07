@@ -42,9 +42,10 @@ BOOST_AUTO_TEST_CASE(IsPayToWitnessScriptHash_Invalid_NotOp0)
 
 BOOST_AUTO_TEST_CASE(IsPayToWitnessScriptHash_Invalid_Size)
 {
-    uint160 dummy;
+    std::vector<unsigned char> dummy;
+    dummy.resize(17);
     CScript notp2wsh;
-    notp2wsh << OP_0 << ToByteVector(dummy);
+    notp2wsh << OP_0 << dummy;
     BOOST_CHECK(!notp2wsh.IsPayToWitnessScriptHash());
 }
 

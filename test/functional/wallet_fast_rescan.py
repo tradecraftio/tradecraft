@@ -57,7 +57,7 @@ class WalletFastRescanTest(FreicoinTestFramework):
         node.createwallet(wallet_name='topup_test', descriptors=True)
         w = node.get_wallet_rpc('topup_test')
         fixed_key = get_generate_key()
-        print(w.importdescriptors([{"desc": descsum_create(f"wpkh({fixed_key.privkey})"), "timestamp": "now"}]))
+        print(w.importdescriptors([{"desc": descsum_create(f"wpk({fixed_key.privkey})"), "timestamp": "now"}]))
         descriptors = w.listdescriptors()['descriptors']
         assert_equal(len(descriptors), NUM_DESCRIPTORS)
         w.backupwallet(WALLET_BACKUP_FILENAME)
@@ -72,8 +72,8 @@ class WalletFastRescanTest(FreicoinTestFramework):
                     spk = address_to_scriptpubkey(addr)
                     self.log.info(f"-> range [{start_range},{end_range}], last address {addr}")
                 else:
-                    spk = bytes.fromhex(fixed_key.p2wpkh_script)
-                    self.log.info(f"-> fixed non-range descriptor address {fixed_key.p2wpkh_addr}")
+                    spk = bytes.fromhex(fixed_key.p2wpk_script)
+                    self.log.info(f"-> fixed non-range descriptor address {fixed_key.p2wpk_addr}")
                 wallet.send_to(from_node=node, scriptPubKey=spk, amount=10000)
             self.generate(node, 1)
 
