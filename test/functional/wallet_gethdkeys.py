@@ -123,7 +123,7 @@ class WalletGetHDKeyTest(FreicoinTestFramework):
         wallet = self.nodes[0].get_wallet_rpc("lonekey")
 
         assert_equal(wallet.gethdkeys(), [])
-        wallet.importdescriptors([{"desc": descsum_create("wpkh(cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh)"), "timestamp": "now"}])
+        wallet.importdescriptors([{"desc": descsum_create("wpk(cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh)"), "timestamp": "now"}])
         assert_equal(wallet.gethdkeys(), [])
 
         self.log.info("HD keys of non-ranged descriptors should appear in gethdkeys")
@@ -131,8 +131,8 @@ class WalletGetHDKeyTest(FreicoinTestFramework):
         xpub_info = def_wallet.gethdkeys(private=True)
         xpub = xpub_info[0]["xpub"]
         xprv = xpub_info[0]["xprv"]
-        prv_desc = descsum_create(f"wpkh({xprv})")
-        pub_desc = descsum_create(f"wpkh({xpub})")
+        prv_desc = descsum_create(f"wpk({xprv})")
+        pub_desc = descsum_create(f"wpk({xpub})")
         assert_equal(wallet.importdescriptors([{"desc": prv_desc, "timestamp": "now"}])[0]["success"], True)
         xpub_info = wallet.gethdkeys()
         assert_equal(len(xpub_info), 1)

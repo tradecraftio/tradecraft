@@ -76,7 +76,7 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
     tx.vout[0].nValue = CENT;
     tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
     tx.vout[1].nValue = 3 * CENT;
-    tx.vout[1].scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(key.GetPubKey()));
+    tx.vout[1].scriptPubKey = GetScriptForDestination(WitnessV0ShortHash(/*version=*/0, key.GetPubKey()));
     return MakeTransactionRef(tx);
 }
 

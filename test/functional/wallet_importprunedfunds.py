@@ -16,7 +16,7 @@
 """Test the importprunedfunds and removeprunedfunds RPCs."""
 from decimal import Decimal
 
-from test_framework.address import key_to_p2wpkh
+from test_framework.address import key_to_p2wpk
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
     CMerkleBlock,
@@ -51,7 +51,7 @@ class ImportPrunedFundsTest(FreicoinTestFramework):
         address2 = self.nodes[0].getnewaddress()
         # privkey
         address3_privkey, address3_pubkey = generate_keypair(wif=True)
-        address3 = key_to_p2wpkh(address3_pubkey)
+        address3 = key_to_p2wpk(address3_pubkey)
         self.nodes[0].importprivkey(address3_privkey)
 
         # Check only one address

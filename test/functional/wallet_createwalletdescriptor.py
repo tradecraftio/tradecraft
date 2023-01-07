@@ -50,7 +50,7 @@ class WalletCreateDescriptorTest(FreicoinTestFramework):
         xprv = xpub_info[0]["xprv"]
         expected_descs = []
         for desc in def_wallet.listdescriptors()["descriptors"]:
-            if desc["desc"].startswith("wpkh("):
+            if desc["desc"].startswith("wpk("):
                 expected_descs.append(desc["desc"])
 
         assert_raises_rpc_error(-5, "Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'", wallet.createwalletdescriptor, "bech32")
@@ -100,7 +100,7 @@ class WalletCreateDescriptorTest(FreicoinTestFramework):
         xpub = xpub_info[0]["xpub"]
         xprv = xpub_info[0]["xprv"]
 
-        assert_equal(wallet.importdescriptors([{"desc": descsum_create(f"wpkh({xprv}/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"], True)
+        assert_equal(wallet.importdescriptors([{"desc": descsum_create(f"wpk({xprv}/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"], True)
         assert_equal(len(wallet.gethdkeys()), 2)
 
         assert_raises_rpc_error(-5, "Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'", wallet.createwalletdescriptor, "bech32")
@@ -120,7 +120,7 @@ class WalletCreateDescriptorTest(FreicoinTestFramework):
         xprv = xpub_info[0]["xprv"]
 
         with WalletUnlock(wallet, "pass"):
-            assert_equal(wallet.importdescriptors([{"desc": descsum_create(f"wpkh({xprv}/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"], True)
+            assert_equal(wallet.importdescriptors([{"desc": descsum_create(f"wpk({xprv}/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"], True)
         assert_equal(len(wallet.gethdkeys()), 1)
 
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", wallet.createwalletdescriptor, type="bech32m")

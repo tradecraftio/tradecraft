@@ -22,6 +22,7 @@
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <script/sign.h>
+#include <script/solver.h>
 #include <uint256.h>
 #include <test/util/random.h>
 #include <util/translation.h>
@@ -45,11 +46,13 @@ static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_
         CKeyID key_id = pubkey.GetID();
         keystore.keys.emplace(key_id, privkey);
         keystore.pubkeys.emplace(key_id, pubkey);
+        WitnessV0ScriptEntry entry(/*version=*/0, GetScriptForRawPubKey(pubkey));
+        keystore.witscripts.emplace(entry.GetShortHash(), entry);
 
         // Create specified locking script type
         CScript prev_spk;
         switch (input_type) {
-        case InputType::P2WPKH: prev_spk = GetScriptForDestination(WitnessV0KeyHash(pubkey)); break;
+        case InputType::P2WPKH: prev_spk = GetScriptForDestination(WitnessV0ShortHash(/*version=*/0, pubkey)); break;
         case InputType::P2TR:   prev_spk = GetScriptForDestination(WitnessV1Taproot(XOnlyPubKey{pubkey})); break;
         default: assert(false);
         }
