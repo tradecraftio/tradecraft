@@ -564,7 +564,7 @@ class WalletSendTest(FreicoinTestFramework):
         len_scriptsig = len(pst_in["final_scriptSig"]["hex"]) // 2 if "final_scriptSig" in pst_in else 0
         len_scriptsig += len(ser_compact_size(len_scriptsig)) + 1
         len_scriptwitness = (sum([(len(x) // 2) + len(ser_compact_size(len(x) // 2)) for x in pst_in["final_scriptwitness"]]) + len(pst_in["final_scriptwitness"]) + 1) if "final_scriptwitness" in pst_in else 0
-        input_weight = ((40 + len_scriptsig) * WITNESS_SCALE_FACTOR) + len_scriptwitness
+        input_weight = ((37 + len_scriptsig) * WITNESS_SCALE_FACTOR) + len_scriptwitness
 
         # Input weight error conditions
         assert_raises_rpc_error(

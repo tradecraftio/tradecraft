@@ -62,7 +62,7 @@ MINISCRIPTS_PRIV = [
         "sequence": None,
         "locktime": None,
         "sigs_count": 1,
-        "stack_size": 3,
+        "stack_size": 4,
     },
     # A more complex policy, that can't be satisfied through the first branch (need for a preimage)
     {
@@ -70,7 +70,7 @@ MINISCRIPTS_PRIV = [
         "sequence": 2,
         "locktime": None,
         "sigs_count": 3,
-        "stack_size": 5,
+        "stack_size": 6,
     },
     # The same policy but we provide the preimage. This path will be chosen as it's a smaller witness.
     {
@@ -78,7 +78,7 @@ MINISCRIPTS_PRIV = [
         "sequence": 2,
         "locktime": None,
         "sigs_count": 3,
-        "stack_size": 4,
+        "stack_size": 5,
         "sha256_preimages": {
             "61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12": "e8774f330f5f330c23e8bbefc5595cb87009ddb7ac3b8deaaa8e9e41702d919c"
         },
@@ -89,7 +89,7 @@ MINISCRIPTS_PRIV = [
         "sequence": 2,
         "locktime": None,
         "sigs_count": 1,
-        "stack_size": 2,
+        "stack_size": 3,
     },
     # Signature with an absolute timelock
     {
@@ -97,7 +97,7 @@ MINISCRIPTS_PRIV = [
         "sequence": None,
         "locktime": 20,
         "sigs_count": 1,
-        "stack_size": 2,
+        "stack_size": 3,
     },
     # Signature with both
     {
@@ -105,7 +105,7 @@ MINISCRIPTS_PRIV = [
         "sequence": 4,
         "locktime": 30,
         "sigs_count": 1,
-        "stack_size": 2,
+        "stack_size": 3,
     },
     # We have one key on each branch; Core signs both (can't finalize)
     {
@@ -121,7 +121,7 @@ MINISCRIPTS_PRIV = [
         "sequence": 10,
         "locktime": None,
         "sigs_count": 3,
-        "stack_size": 3,
+        "stack_size": 4,
     },
     # We have all the keys, wallet selects the primary path to sign unconditionally since nsequence wasn't set to be valid for timeout path
     {
@@ -129,7 +129,7 @@ MINISCRIPTS_PRIV = [
         "sequence": None,
         "locktime": None,
         "sigs_count": 3,
-        "stack_size": 3,
+        "stack_size": 4,
     },
     # Finalizes to the smallest valid witness, regardless of sequence
     {
@@ -137,7 +137,7 @@ MINISCRIPTS_PRIV = [
         "sequence": 12,
         "locktime": None,
         "sigs_count": 3,
-        "stack_size": 2,
+        "stack_size": 3,
     },
     # Liquid-like federated pegin with emergency recovery privkeys
     {
@@ -145,7 +145,7 @@ MINISCRIPTS_PRIV = [
         "sequence": 42,
         "locktime": None,
         "sigs_count": 2,
-        "stack_size": 8,
+        "stack_size": 9,
     },
 ]
 
