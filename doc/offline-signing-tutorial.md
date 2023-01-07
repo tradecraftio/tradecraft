@@ -132,9 +132,9 @@ tb1qtu5qgc6ddhmqm5yqjvhg83qgk2t4ewajg0h6yh
     "confirmations": 4,
     "spendable": true,
     "solvable": true,
-    "desc": "wpkh([306c734f/84h/1h/0h/0/0]025932ccee7590158f7e08bb36290d135d30a0b045163da896e1cd7645ec4223a9)#xytvyr4a",
+    "desc": "wpk([306c734f/84h/1h/0h/0/0]025932ccee7590158f7e08bb36290d135d30a0b045163da896e1cd7645ec4223a9)#xytvyr4a",
     "parent_descs": [
-      "wpkh([306c734f/84h/1h/0h]tpubDCJnY92ib4Zu3qd6wrBXEjG436tQdA2tDiJU2iSJYjkNS1darssPWKaBfojhjUF5vMLBcxbN2r93pmFMz2zyTEZuNx9JDo9rWqoHhATW3Uz/0/*)#7mh08dkg"
+      "wpk([306c734f/84h/1h/0h]tpubDCJnY92ib4Zu3qd6wrBXEjG436tQdA2tDiJU2iSJYjkNS1darssPWKaBfojhjUF5vMLBcxbN2r93pmFMz2zyTEZuNx9JDo9rWqoHhATW3Uz/0/*)#7mh08dkg"
     ],
     "safe": true
   }

@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test the listsinceblock RPC."""
 
-from test_framework.address import key_to_p2wpkh
+from test_framework.address import key_to_p2wpk
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import FreicoinTestFramework
@@ -213,7 +213,7 @@ class ListSinceBlockTest(FreicoinTestFramework):
 
         # share utxo between nodes[1] and nodes[2]
         privkey, pubkey = generate_keypair(wif=True)
-        address = key_to_p2wpkh(pubkey)
+        address = key_to_p2wpk(pubkey)
         self.nodes[2].sendtoaddress(address, 10)
         self.generate(self.nodes[2], 6)
         self.nodes[2].importprivkey(privkey)
