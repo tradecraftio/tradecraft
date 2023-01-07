@@ -176,7 +176,7 @@ static bool getScriptFromDescriptor(const std::string& descriptor, CScript& scri
         if (scripts.size() == 1) {
             script = scripts.at(0);
         } else if (scripts.size() == 4) {
-            // For uncompressed keys, take the 3rd script, since it is p2wpkh
+            // For uncompressed keys, take the 3rd script, since it is p2wpk
             script = scripts.at(2);
         } else {
             // Else take the 2nd script, since it is p2pkh

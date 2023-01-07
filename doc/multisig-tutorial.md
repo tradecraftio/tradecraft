@@ -12,7 +12,7 @@ Before starting this tutorial, start the freicoin node on the signet network.
 ./src/freicoind -signet -daemon
 ```
 
-This tutorial also uses the default WPKH derivation path to get the xpubs and does not conform to [BIP 45](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki) or [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki).
+This tutorial also uses the default WPK derivation path to get the xpubs and does not conform to [BIP 45](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki) or [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki).
 
 At the time of writing, there is no way to extract a specific path from wallets in Freicoin. For this, an external signer/xpub can be used.
 
@@ -33,12 +33,12 @@ do
 done
 ```
 
-Extract the xpub of each wallet. To do this, the `listdescriptors` RPC is used. By default, Freicoin single-sig wallets are created using path `m/44'/1'/0'` for PKH, `m/84'/1'/0'` for WPKH, `m/49'/1'/0'` for P2WPKH-nested-in-P2SH and `m/86'/1'/0'` for P2TR based accounts. Each of them uses the chain 0 for external addresses and chain 1 for internal ones, as shown in the example below.
+Extract the xpub of each wallet. To do this, the `listdescriptors` RPC is used. By default, Freicoin single-sig wallets are created using path `m/44'/1'/0'` for PKH, `m/84'/1'/0'` for WPK, `m/49'/1'/0'` for P2WPK-nested-in-P2SH and `m/86'/1'/0'` for P2TR based accounts. Each of them uses the chain 0 for external addresses and chain 1 for internal ones, as shown in the example below.
 
 ```
-wpkh([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/0/*)#g8l47ngv
+wpk([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/0/*)#g8l47ngv
 
-wpkh([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/1/*)#en65rxc5
+wpk([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/1/*)#en65rxc5
 ```
 
 The suffix (after #) is the checksum. Descriptors can optionally be suffixed with a checksum to protect against typos or copy-paste errors.
@@ -49,13 +49,13 @@ declare -A xpubs
 
 for ((n=1;n<=3;n++))
 do
- xpubs["internal_xpub_${n}"]=$(./src/freicoin-cli -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpkh") and contains("/1/*"))][0] | .desc' | grep -Po '(?<=\().*(?=\))')
+ xpubs["internal_xpub_${n}"]=$(./src/freicoin-cli -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpk") and contains("/1/*"))][0] | .desc' | grep -Po '(?<=\().*(?=\))')
 
- xpubs["external_xpub_${n}"]=$(./src/freicoin-cli -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpkh") and contains("/0/*") )][0] | .desc' | grep -Po '(?<=\().*(?=\))')
+ xpubs["external_xpub_${n}"]=$(./src/freicoin-cli -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpk") and contains("/0/*") )][0] | .desc' | grep -Po '(?<=\().*(?=\))')
 done
 ```
 
-`jq` is used to extract the xpub from the `wpkh` descriptor.
+`jq` is used to extract the xpub from the `wpk` descriptor.
 
 The following command can be used to verify if the xpub was generated correctly.
 

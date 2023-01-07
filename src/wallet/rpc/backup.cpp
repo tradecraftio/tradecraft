@@ -193,9 +193,10 @@ RPCHelpMan importprivkey()
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
 
-            // Add the wpkh script for this key if possible
+            // Add the wpk and wsh scripts for this key if possible
             if (pubkey.IsCompressed()) {
-                pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))}, 0 /* timestamp */);
+                CScript p2pk = GetScriptForRawPubKey(pubkey);
+                pwallet->ImportScripts({GetScriptForDestination(WitnessV0ShortHash(0 /* version */, p2pk)), GetScriptForDestination(WitnessV0LongHash(0 /* version */, p2pk))}, 0 /* timestamp */);
             }
         }
     }
@@ -799,7 +800,7 @@ RPCHelpMan dumpwallet()
 
     const std::map<CKeyID, int64_t>& mapKeyPool = spk_man.GetAllReserveKeys();
     std::set<CScriptID> scripts = spk_man.GetCScripts();
-    std::set<WitnessV0ScriptHash> witscripts = spk_man.GetWitnessV0Scripts();
+    std::set<WitnessV0ShortHash> witscripts = spk_man.GetWitnessV0Scripts();
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
@@ -869,7 +870,7 @@ RPCHelpMan dumpwallet()
         }
     }
     file << "\n";
-    for (const WitnessV0ScriptHash& shortid : witscripts) {
+    for (const WitnessV0ShortHash& shortid : witscripts) {
         WitnessV0ScriptEntry entry;
         std::string create_time = "0";
         std::string address = EncodeDestination(shortid);
@@ -951,17 +952,27 @@ static std::string RecurseImportData(const CScript& script, ImportData& import_d
         }
         return "";
     }
-    case TxoutType::WITNESS_V0_SCRIPTHASH: {
+    case TxoutType::WITNESS_V0_LONGHASH:
+    case TxoutType::WITNESS_V0_SHORTHASH: {
         if (script_ctx == ScriptContext::WITNESS_V0) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Trying to nest P2WSH inside another P2WSH");
-        WitnessV0ScriptHash longid(uint256{solverdata[0]});
+        WitnessV0ShortHash id;
+        if (script_type == TxoutType::WITNESS_V0_LONGHASH) {
+            id = WitnessV0ShortHash(WitnessV0LongHash(uint256{solverdata[0]}));
+        } else if (script_type == TxoutType::WITNESS_V0_SHORTHASH) {
+            id = WitnessV0ShortHash(uint160{solverdata[0]});
+        }
         auto witscript = std::move(import_data.witnessscript); // Remove redeemscript from import_data to check for superfluous script later.
         if (!witscript) return "missing witnessscript";
-        if (witscript->GetScriptHash() != longid) return "witnessScript does not match the scriptPubKey or redeemScript";
+        if (witscript->GetShortHash() != id) return "witnessScript does not match the scriptPubKey or redeemScript";
         if (script_ctx == ScriptContext::TOP) {
             import_data.import_scripts.emplace(script); // Special rule for IsMine: native P2WSH requires the TOP script imported (see script/ismine.cpp)
         }
         import_data.import_witscripts.emplace(*witscript);
-        import_data.import_scripts.emplace(CScript() << OP_0 << ToByteVector(longid));
+        if (script_type == TxoutType::WITNESS_V0_LONGHASH) {
+            import_data.import_scripts.emplace(CScript() << OP_0 << ToByteVector(witscript->GetLongHash()));
+        } else if (script_type == TxoutType::WITNESS_V0_SHORTHASH) {
+            import_data.import_scripts.emplace(CScript() << OP_0 << ToByteVector(witscript->GetShortHash()));
+        }
         if (!witscript->m_script.empty() && witscript->m_script[0] == 0x00) {
             CScript subscript(witscript->m_script.begin() + 1, witscript->m_script.end());
             import_data.import_scripts.insert(subscript);
@@ -969,15 +980,6 @@ static std::string RecurseImportData(const CScript& script, ImportData& import_d
         } else {
             return "";
         }
-    }
-    case TxoutType::WITNESS_V0_KEYHASH: {
-        if (script_ctx == ScriptContext::WITNESS_V0) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Trying to nest P2WPKH inside P2WSH");
-        CKeyID id = CKeyID(uint160(solverdata[0]));
-        import_data.used_keys[id] = true;
-        if (script_ctx == ScriptContext::TOP) {
-            import_data.import_scripts.emplace(script); // Special rule for IsMine: native P2WPKH requires the TOP script imported (see script/ismine.cpp)
-        }
-        return "";
     }
     case TxoutType::NULL_DATA:
     case TxoutType::UNSPENDABLE:
@@ -1066,6 +1068,18 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         }
         pubkey_map.emplace(pubkey.GetID(), pubkey);
         ordered_pubkeys.push_back(pubkey.GetID());
+        if (!import_data.witnessscript) {
+            CScript p2pk = GetScriptForRawPubKey(pubkey);
+            WitnessV0ScriptEntry entry(0 /* version */, p2pk);
+            CScript p2wsh = GetScriptForDestination(entry.GetLongHash());
+            CScript p2sh_p2wsh = GetScriptForDestination(ScriptHash(p2wsh));
+            CScript p2wpk = GetScriptForDestination(entry.GetShortHash());
+            CScript p2sh_p2wpk = GetScriptForDestination(ScriptHash(p2wpk));
+            if (script == p2wpk || script == p2sh_p2wpk || script == p2wsh || script == p2sh_p2wsh) {
+                import_data.witnessscript = std::make_unique<WitnessV0ScriptEntry>(entry);
+                import_data.used_keys[pubkey.GetID()] = true;
+            }
+        }
     }
     for (size_t i = 0; i < keys.size(); ++i) {
         const auto& str = keys[i].get_str();
@@ -1079,6 +1093,17 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
             pubkey_map.erase(id);
         }
         privkey_map.emplace(id, key);
+        if (!import_data.witnessscript) {
+            CScript p2pk = GetScriptForRawPubKey(pubkey);
+            WitnessV0ScriptEntry entry(0 /* version */, p2pk);
+            CScript p2wsh = GetScriptForDestination(entry.GetLongHash());
+            CScript p2sh_p2wsh = GetScriptForDestination(ScriptHash(p2wsh));
+            CScript p2wpk = GetScriptForDestination(entry.GetShortHash());
+            CScript p2sh_p2wpk = GetScriptForDestination(ScriptHash(p2wpk));
+            if (script == p2wpk || script == p2sh_p2wpk || script == p2wsh || script == p2sh_p2wsh) {
+                import_data.witnessscript = std::make_unique<WitnessV0ScriptEntry>(entry);
+            }
+        }
     }
 
 
@@ -1116,7 +1141,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         } else {
             // RecurseImportData() removes any relevant redeemscript/witnessscript from import_data, so we can use that to discover if a superfluous one was provided.
             if (import_data.redeemscript) warnings.push_back("Ignoring redeemscript as this is not a P2SH script.");
-            if (import_data.witnessscript) warnings.push_back("Ignoring witnessscript as this is not a (P2SH-)P2WSH script.");
+            if (import_data.witnessscript) warnings.push_back("Ignoring witnessscript as this is not a (P2SH-)P2WSH or (P2SH-)P2WPK script.");
             for (auto it = privkey_map.begin(); it != privkey_map.end(); ) {
                 auto oldit = it++;
                 if (import_data.used_keys.count(oldit->first) == 0) {
@@ -1128,7 +1153,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
                 auto oldit = it++;
                 auto key_data_it = import_data.used_keys.find(oldit->first);
                 if (key_data_it == import_data.used_keys.end() || !key_data_it->second) {
-                    warnings.push_back("Ignoring public key \"" + HexStr(oldit->first) + "\" as it doesn't appear inside P2PKH or P2WPKH.");
+                    warnings.push_back("Ignoring public key \"" + HexStr(oldit->first) + "\" as it doesn't appear inside P2PKH.");
                     pubkey_map.erase(oldit);
                 }
             }
@@ -1353,8 +1378,8 @@ RPCHelpMan importmulti()
                                         /*oneline_description=*/"", {"timestamp | \"now\"", "integer / string"}
                                     },
                                     {"redeemscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a P2SH or P2SH-P2WSH address/scriptPubKey"},
-                                    {"witnessscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a P2SH-P2WSH or P2WSH address/scriptPubKey"},
-                                    {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Array of strings giving pubkeys to import. They must occur in P2PKH or P2WPKH scripts. They are not required when the private key is also provided (see the \"keys\" argument).",
+                                    {"witnessscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a (P2SH-)P2WSH or (P2SH-)P2WPK address/scriptPubKey"},
+                                    {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Array of strings giving pubkeys to import. They must occur in P2PKH scripts. They are not required when the private key is also provided (see the \"keys\" argument).",
                                         {
                                             {"pubKey", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
                                         }

@@ -206,12 +206,12 @@ class WalletSendTest(FreicoinTestFramework):
         xpub = "tpubD6NzVbkrYhZ4YkEfMbRJkQyZe7wTkbTNRECozCtJPtdLRn6cT1QKb8yHjwAPcAr26eHBFYs5iLiFFnCbwPRsncCKUKCfubHDMGKzMVcN1Jg"
         if self.options.descriptors:
             w2.importdescriptors([{
-                "desc": descsum_create("wpkh(" + xpriv + "/0/0/*)"),
+                "desc": descsum_create("wpk(" + xpriv + "/0/0/*)"),
                 "timestamp": "now",
                 "range": [0, 100],
                 "active": True
             },{
-                "desc": descsum_create("wpkh(" + xpriv + "/0/1/*)"),
+                "desc": descsum_create("wpk(" + xpriv + "/0/1/*)"),
                 "timestamp": "now",
                 "range": [0, 100],
                 "active": True,
@@ -226,14 +226,14 @@ class WalletSendTest(FreicoinTestFramework):
         if self.options.descriptors:
             # Match the privkeys in w2 for descriptors
             res = w3.importdescriptors([{
-                "desc": descsum_create("wpkh(" + xpub + "/0/0/*)"),
+                "desc": descsum_create("wpk(" + xpub + "/0/0/*)"),
                 "timestamp": "now",
                 "range": [0, 100],
                 "keypool": True,
                 "active": True,
                 "watchonly": True
             },{
-                "desc": descsum_create("wpkh(" + xpub + "/0/1/*)"),
+                "desc": descsum_create("wpk(" + xpub + "/0/1/*)"),
                 "timestamp": "now",
                 "range": [0, 100],
                 "keypool": True,

@@ -164,12 +164,15 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags), SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
 
-    // P2WPKH witness program
+    // P2WPK witness program
     {
-        CScript scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkey));
+        CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+        CScript scriptPubKey = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, pubkey));
         CScript scriptSig = CScript();
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));
+        scriptWitness.stack.push_back(std::vector<unsigned char>(1, 0x00));
+        scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), p2pk.begin(), p2pk.end());
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));
 
 
@@ -177,7 +180,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);
         // No signature operations if we don't verify the witness.
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS), 0);
-        BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags), SCRIPT_ERR_EQUALVERIFY);
+        BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags), SCRIPT_ERR_EVAL_FALSE);
 
         // The sig op cost for witness version != 0 is zero.
         BOOST_CHECK_EQUAL(scriptPubKey[0], 0x00);
@@ -192,24 +195,27 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);
     }
 
-    // P2WPKH nested in P2SH
+    // P2WPK nested in P2SH
     {
-        CScript scriptSig = GetScriptForDestination(WitnessV0KeyHash(pubkey));
+        CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+        CScript scriptSig = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, pubkey));
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(scriptSig));
         scriptSig = CScript() << ToByteVector(scriptSig);
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));
+        scriptWitness.stack.push_back(std::vector<unsigned char>(1, 0x00));
+        scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), p2pk.begin(), p2pk.end());
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
-        BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);
-        BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags), SCRIPT_ERR_EQUALVERIFY);
+        BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags),0);
+        BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags), SCRIPT_ERR_EVAL_FALSE);
     }
 
     // P2WSH witness program
     {
         CScript witnessScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
-        CScript scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, witnessScript));
+        CScript scriptPubKey = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessScript));
         CScript scriptSig = CScript();
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(std::vector<unsigned char>(1, 3)); // MultiSigHint
@@ -227,7 +233,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     // P2WSH nested in P2SH
     {
         CScript witnessScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
-        CScript redeemScript = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, witnessScript));
+        CScript redeemScript = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessScript));
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << ToByteVector(redeemScript);
         CScriptWitness scriptWitness;

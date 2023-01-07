@@ -179,11 +179,18 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     CScript p2pk_scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     CScript p2sh_scriptPubKey = GetScriptForDestination(ScriptHash(p2pk_scriptPubKey));
     CScript p2pkh_scriptPubKey = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
-    CScript p2wpkh_scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(coinbaseKey.GetPubKey()));
+    CScript p2wpk_scriptPubKey = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, coinbaseKey.GetPubKey()));
 
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(coinbaseKey));
     BOOST_CHECK(keystore.AddCScript(p2pk_scriptPubKey));
+
+    std::vector<unsigned char> vch;
+    vch.push_back(0x00);
+    vch.insert(vch.end(),
+               p2pkh_scriptPubKey.begin(),
+               p2pkh_scriptPubKey.end());
+    keystore.AddWitnessV0Script(WitnessV0ScriptEntry(vch));
 
     // flags to test: SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, SCRIPT_VERIFY_CHECKSEQUENCE_VERIFY, SCRIPT_VERIFY_NULLDUMMY, uncompressed pubkey thing
 
@@ -199,7 +206,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     spend_tx.vout[0].nValue = 11*CENT;
     spend_tx.vout[0].scriptPubKey = p2sh_scriptPubKey;
     spend_tx.vout[1].nValue = 11*CENT;
-    spend_tx.vout[1].scriptPubKey = p2wpkh_scriptPubKey;
+    spend_tx.vout[1].scriptPubKey = p2wpk_scriptPubKey;
     spend_tx.vout[2].nValue = 11*CENT;
     spend_tx.vout[2].scriptPubKey = CScript() << OP_CHECKLOCKTIMEVERIFY << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     spend_tx.vout[3].nValue = 11*CENT;

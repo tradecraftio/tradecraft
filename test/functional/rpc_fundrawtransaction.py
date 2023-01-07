@@ -71,10 +71,10 @@ class RawTransactionsTest(FreicoinTestFramework):
         """
         if outputtype in ["legacy", "p2pkh", "pkh"]:
             prefixes = ["pkh(", "sh(multi("]
-        elif outputtype in ["p2sh-segwit", "sh_wpkh"]:
-            prefixes = ["sh(wpkh(", "sh(wsh("]
-        elif outputtype in ["bech32", "wpkh"]:
-            prefixes = ["wpkh(", "wsh("]
+        elif outputtype in ["p2sh-segwit", "sh_wpk"]:
+            prefixes = ["sh(wpk(", "sh(wsh("]
+        elif outputtype in ["bech32", "wpk"]:
+            prefixes = ["wpk(", "wsh("]
         else:
             assert False, f"Unknown output type {outputtype}"
 
@@ -318,7 +318,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         assert_raises_rpc_error(-5, "Unknown change type ''", self.nodes[2].fundrawtransaction, rawtx, {'change_type': ''})
         rawtx = self.nodes[2].fundrawtransaction(rawtx, {'change_type': 'bech32'})
         dec_tx = self.nodes[2].decoderawtransaction(rawtx['hex'])
-        assert_equal('witness_v0_keyhash', dec_tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
+        assert_equal('witness_v0_shorthash', dec_tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
 
     def test_coin_selection(self):
         self.log.info("Test fundrawtxn with a vin < required amount")
@@ -590,12 +590,12 @@ class RawTransactionsTest(FreicoinTestFramework):
         if self.options.descriptors:
             self.nodes[1].walletpassphrase('test', 10)
             self.nodes[1].importdescriptors([{
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
+                'desc': descsum_create('wpk(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
                 'timestamp': 'now',
                 'active': True
             },
             {
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/1h/*h)'),
+                'desc': descsum_create('wpk(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/1h/*h)'),
                 'timestamp': 'now',
                 'active': True,
                 'internal': True
@@ -719,7 +719,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         wwatch = self.nodes[3].get_wallet_rpc('wwatch')
         # Setup change addresses for the watchonly wallet
         desc_import = [{
-            "desc": descsum_create("wpkh(tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H/1/*)"),
+            "desc": descsum_create("wpk(tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H/1/*)"),
             "timestamp": "now",
             "internal": True,
             "active": True,
@@ -797,11 +797,11 @@ class RawTransactionsTest(FreicoinTestFramework):
         for param, zero_value in product(["fee_rate", "feeRate"], [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]):
             assert_equal(self.nodes[3].fundrawtransaction(rawtx, {param: zero_value})["fee"], 0)
 
-        # With no arguments passed, expect fee of 141 kria.
-        assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000145, vspan=0.00000001)
+        # With no arguments passed, expect fee of 146 kria.
+        assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000146, vspan=0.00000001)
         # Expect fee to be 10,000x higher when an explicit fee rate 10,000x greater is specified.
         result = node.fundrawtransaction(rawtx, {"fee_rate": 10000})
-        assert_approx(result["fee"], vexp=0.0145, vspan=0.0001)
+        assert_approx(result["fee"], vexp=0.0146, vspan=0.0001)
 
         self.log.info("Test fundrawtxn with invalid estimate_mode settings")
         for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
@@ -1263,16 +1263,16 @@ class RawTransactionsTest(FreicoinTestFramework):
         rawtx = wallet.createrawtransaction([{'txid': txid, 'vout': vout}], [{self.nodes[0].getnewaddress(address_type="bech32"): 8}])
         fundedtx = wallet.fundrawtransaction(rawtx, {'fee_rate': 10, "change_type": "bech32"})
         # with 71-byte signatures we should expect following tx size
-        # tx overhead (14) + 2 inputs (41 each) + 2 p2wpkh (31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 byte sig witnesses (107 each)) / witness scaling factor (4)
-        tx_size = ceil(14 + 41*2 + 31*2 + (2 + 107*2)/4)
+        # tx overhead (14) + 2 inputs (41 each) + 2 p2wpk (31 each) + (segwit marker and flag (2) + 2 p2wpk 71 byte sig witnesses (111 each)) / witness scaling factor (4)
+        tx_size = ceil(14 + 41*2 + 31*2 + (2 + 111*2)/4)
         assert_equal(fundedtx['fee'] * COIN, tx_size * 10)
 
         # Using the other output should have 72 byte sigs
         rawtx = wallet.createrawtransaction([{'txid': txid, 'vout': ext_vout}], [{self.nodes[0].getnewaddress(): 13}])
         ext_desc = self.nodes[0].getaddressinfo(ext_addr)["desc"]
         fundedtx = wallet.fundrawtransaction(rawtx, {'fee_rate': 10, "change_type": "bech32", "solving_data": {"descriptors": [ext_desc]}})
-        # tx overhead (14) + 3 inputs (41 each) + 2 p2wpkh(31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 bytes sig witnesses (107 each) + p2wpkh 72 byte sig witness (108)) / witness scaling factor (4)
-        tx_size = ceil(14 + 41*3 + 31*2 + (2 + 107*2 + 108)/4)
+        # tx overhead (14) + 3 inputs (41 each) + 2 p2wpk(31 each) + (segwit marker and flag (2) + 2 p2wpk 71 bytes sig witnesses (111 each) + p2wpk 72 byte sig witness (112)) / witness scaling factor (4)
+        tx_size = ceil(14 + 41*3 + 31*2 + (2 + 111*2 + 112)/4)
         assert_equal(fundedtx['fee'] * COIN, tx_size * 10)
 
         self.nodes[2].unloadwallet("test_weight_calculation")
@@ -1382,7 +1382,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         self.nodes[0].sendtoaddress(addr, 1)
         self.generate(self.nodes[0], 1)
 
-        # A P2WPKH input costs 68 vbytes; With a single P2WPKH output, the rest of the tx is 42 vbytes for a total of 110 vbytes.
+        # A P2WPK input costs 68 vbytes; With a single P2WPK output, the rest of the tx is 42 vbytes for a total of 110 vbytes.
         # At a feerate of 1.85 sat/vb, the input will need a fee of 125.8 sats and the rest 77.7 sats
         # The entire tx fee should be 203.5 sats.
         # Coin selection rounds the fee individually instead of at the end (due to how CFeeRate::GetFee works).
