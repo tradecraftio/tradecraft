@@ -32,7 +32,7 @@ struct PSTInputAnalysis {
     std::vector<CKeyID> missing_pubkeys; //!< Pubkeys whose BIP32 derivation path is missing
     std::vector<CKeyID> missing_sigs;    //!< Pubkeys whose signatures are missing
     uint160 missing_redeem_script;       //!< Hash160 of redeem script, if missing
-    WitnessV0ScriptHash missing_witness_script;      //!< SHA256 of witness script, if missing
+    WitnessV0ShortHash missing_witness_script; //!< Hash of witness script, if missing
 };
 
 /**

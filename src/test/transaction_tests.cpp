@@ -560,8 +560,11 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     key.MakeNewKey(true); // Need to use compressed keys in segwit or the signing will fail
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKeyPubKey(key, key.GetPubKey()));
-    CKeyID hash = key.GetPubKey().GetID();
-    CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
+    CScript witscript = CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG;
+    std::vector<unsigned char> innerscript(1, 0x00);
+    innerscript.insert(innerscript.end(), witscript.begin(), witscript.end());
+    keystore.AddWitnessV0Script(WitnessV0ScriptEntry(innerscript));
+    CScript scriptPubKey = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, witscript));
 
     std::vector<int> sigHashes;
     sigHashes.push_back(SIGHASH_NONE | SIGHASH_ANYONECANPAY);
@@ -684,11 +687,11 @@ BOOST_AUTO_TEST_CASE(test_witness)
     vch.insert(vch.end(), scriptMulti.begin(), scriptMulti.end());
     BOOST_CHECK(keystore.AddWitnessV0Script(WitnessV0ScriptEntry(vch)));
     CScript destination_script_1, destination_script_2, destination_script_1L, destination_script_2L, destination_script_multi;
-    destination_script_1 = GetScriptForDestination(WitnessV0KeyHash(pubkey1));
-    destination_script_2 = GetScriptForDestination(WitnessV0KeyHash(pubkey2));
-    destination_script_1L = GetScriptForDestination(WitnessV0KeyHash(pubkey1L));
-    destination_script_2L = GetScriptForDestination(WitnessV0KeyHash(pubkey2L));
-    destination_script_multi = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, scriptMulti));
+    destination_script_1 = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, pubkey1));
+    destination_script_2 = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, pubkey2));
+    destination_script_1L = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, CScript() << ToByteVector(pubkey1L) << OP_CHECKSIG));
+    destination_script_2L = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, CScript() << ToByteVector(pubkey2L) << OP_CHECKSIG));
+    destination_script_multi = GetScriptForDestination(WitnessV0LongHash(0 /* version */, scriptMulti));
     BOOST_CHECK(keystore.AddCScript(destination_script_1));
     BOOST_CHECK(keystore.AddCScript(destination_script_2));
     BOOST_CHECK(keystore.AddCScript(destination_script_1L));
@@ -1050,7 +1053,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].nValue = 539;
     CheckIsNotStandard(t, "dust");
 
-    // Check P2WPKH outputs dust threshold
+    // Check P2WPK outputs dust threshold
     t.vout[0].scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(20, 0);
     t.vout[0].nValue = 294;
     CheckIsStandard(t);

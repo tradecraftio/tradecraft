@@ -47,11 +47,11 @@ class DescriptorTest(FreicoinTestFramework):
         self.test_desc('pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)', isrange=False, issolvable=True, hasprivatekeys=False)
         # P2PKH output with the specified public key.
         self.test_desc('pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)', isrange=False, issolvable=True, hasprivatekeys=False)
-        # P2WPKH output with the specified public key.
-        self.test_desc('wpkh(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9)', isrange=False, issolvable=True, hasprivatekeys=False)
-        # P2SH-P2WPKH output with the specified public key.
-        self.test_desc('sh(wpkh(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))', isrange=False, issolvable=True, hasprivatekeys=False)
-        # Any P2PK, P2PKH, P2WPKH, or P2SH-P2WPKH output with the specified public key.
+        # P2WPK output with the specified public key.
+        self.test_desc('wpk(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9)', isrange=False, issolvable=True, hasprivatekeys=False)
+        # P2SH-P2WPK output with the specified public key.
+        self.test_desc('sh(wpk(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))', isrange=False, issolvable=True, hasprivatekeys=False)
+        # Any P2PK, P2PKH, P2WPK, or P2SH-P2WPK output with the specified public key.
         self.test_desc('combo(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)', isrange=False, issolvable=True, hasprivatekeys=False)
         # An (overly complicated) P2SH-P2WSH-P2PKH output with the specified public key.
         self.test_desc('sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))', isrange=False, issolvable=True, hasprivatekeys=False)
