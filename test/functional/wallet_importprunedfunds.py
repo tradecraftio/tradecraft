@@ -16,7 +16,7 @@
 """Test the importprunedfunds and removeprunedfunds RPCs."""
 from decimal import Decimal
 
-from test_framework.address import key_to_p2wpkh
+from test_framework.address import key_to_p2wpk
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.key import ECKey
 from test_framework.messages import (
@@ -51,7 +51,7 @@ class ImportPrunedFundsTest(FreicoinTestFramework):
         eckey = ECKey()
         eckey.generate()
         address3_privkey = bytes_to_wif(eckey.get_bytes())
-        address3 = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
+        address3 = key_to_p2wpk(eckey.get_pubkey().get_bytes())
         self.nodes[0].importprivkey(address3_privkey)
 
         # Check only one address

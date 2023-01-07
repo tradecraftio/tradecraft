@@ -484,7 +484,7 @@ class WalletTest(FreicoinTestFramework):
 
             prebalance = self.nodes[2].getbalance()
             amount = Decimal("0.001")
-            fee_rate_sat_vb = 1.23
+            fee_rate_sat_vb = 1.24
             fee_rate_frc_kvb = fee_rate_sat_vb * 1e3 / 1e8
             # Test passing fee_rate as a string
             txid = self.nodes[2].sendtoaddress(address=address, amount=amount, fee_rate=str(fee_rate_sat_vb))

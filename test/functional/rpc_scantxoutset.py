@@ -77,8 +77,8 @@ class ScantxoutsetTest(FreicoinTestFramework):
 
         self.log.info("Test if we have found the non HD unspent outputs.")
         assert_equal(self.nodes[0].scantxoutset("start", ["pkh(" + pubk1.hex() + ")", "pkh(" + pubk2.hex() + ")", "pkh(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.002"))
-        assert_equal(self.nodes[0].scantxoutset("start", ["wpkh(" + pubk1.hex() + ")", "wpkh(" + pubk2.hex() + ")", "wpkh(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.004"))
-        assert_equal(self.nodes[0].scantxoutset("start", ["sh(wpkh(" + pubk1.hex() + "))", "sh(wpkh(" + pubk2.hex() + "))", "sh(wpkh(" + pubk3.hex() + "))"])['total_amount'], Decimal("0.001"))
+        assert_equal(self.nodes[0].scantxoutset("start", ["wpk(" + pubk1.hex() + ")", "wpk(" + pubk2.hex() + ")", "wpk(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.004"))
+        assert_equal(self.nodes[0].scantxoutset("start", ["sh(wpk(" + pubk1.hex() + "))", "sh(wpk(" + pubk2.hex() + "))", "sh(wpk(" + pubk3.hex() + "))"])['total_amount'], Decimal("0.001"))
         assert_equal(self.nodes[0].scantxoutset("start", ["combo(" + pubk1.hex() + ")", "combo(" + pubk2.hex() + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "addr(" + addr_BECH32 + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))

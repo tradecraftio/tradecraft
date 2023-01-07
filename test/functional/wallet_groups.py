@@ -34,8 +34,8 @@ class WalletGroupTest(FreicoinTestFramework):
             [],
             [],
             ["-avoidpartialspends"],
-            ["-maxapsfee=0.00002719"],
-            ["-maxapsfee=0.00002720"],
+            ["-maxapsfee=0.00002749"],
+            ["-maxapsfee=0.00002760"],
         ]
 
         for args in self.extra_args:
@@ -124,10 +124,10 @@ class WalletGroupTest(FreicoinTestFramework):
         assert_equal(input_addrs[0], input_addrs[1])
         # Node 2 enforces avoidpartialspends so needs no checking here
 
-        tx4_ungrouped_fee = 2900
-        tx4_grouped_fee = 4240
-        tx5_6_ungrouped_fee = 5600
-        tx5_6_grouped_fee = 8320
+        tx4_ungrouped_fee = 2920
+        tx4_grouped_fee = 4280
+        tx5_6_ungrouped_fee = 5660
+        tx5_6_grouped_fee = 8420
 
         self.log.info("Test wallet option maxapsfee")
         addr_aps = self.nodes[3].getnewaddress()

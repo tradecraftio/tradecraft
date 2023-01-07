@@ -21,6 +21,7 @@ See also rpc_signer.py for tests without wallet context.
 import os
 import platform
 
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -112,14 +113,14 @@ class WalletSignerTest(FreicoinTestFramework):
         assert_equal(hww.getwalletinfo()["keypoolsize"], 30)
 
         address1 = hww.getnewaddress(address_type="bech32")
-        assert_equal(address1, "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g")
+        assert_equal(address1, "bcrt1q55f34cyg0hy9w4ka6pnlf6h5za68jccjex27gc")
         address_info = hww.getaddressinfo(address1)
         assert_equal(address_info['solvable'], True)
         assert_equal(address_info['ismine'], True)
         assert_equal(address_info['hdkeypath'], "m/84'/1'/0'/0/0")
 
         address2 = hww.getnewaddress(address_type="p2sh-segwit")
-        assert_equal(address2, "2N2gQKzjUe47gM8p1JZxaAkTcoHPXV6YyVp")
+        assert_equal(address2, "2NCWdX9n9Vz7dng75KNNSziiRiRaH5mzeon")
         address_info = hww.getaddressinfo(address2)
         assert_equal(address_info['solvable'], True)
         assert_equal(address_info['ismine'], True)
@@ -153,14 +154,14 @@ class WalletSignerTest(FreicoinTestFramework):
         assert mock_wallet.getwalletinfo()['private_keys_enabled']
 
         result = mock_wallet.importdescriptors([{
-            "desc": "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#rweraev0",
+            "desc": descsum_create("wpk([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)"),
             "timestamp": 0,
             "range": [0,1],
             "internal": False,
             "active": True
         },
         {
-            "desc": "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#j6uzqvuh",
+            "desc": descsum_create("wpk([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)"),
             "timestamp": 0,
             "range": [0, 0],
             "internal": True,
@@ -182,7 +183,7 @@ class WalletSignerTest(FreicoinTestFramework):
         # hww4 = self.nodes[1].get_wallet_rpc("hww4")
         #
         # descriptors = [{
-        #     "desc": "wpkh([00000001/84'/1'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)#x30uthjs",
+        #     "desc": descsum_create("wpk([00000001/84'/1'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)"),
         #     "timestamp": "now",
         #     "range": [0, 1],
         #     "internal": False,
@@ -190,7 +191,7 @@ class WalletSignerTest(FreicoinTestFramework):
         #     "active": True
         # },
         # {
-        #     "desc": "wpkh([00000001/84'/1'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)#h92akzzg",
+        #     "desc": descsum_create("wpk([00000001/84'/1'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)"),
         #     "timestamp": "now",
         #     "range": [0, 0],
         #     "internal": True,
