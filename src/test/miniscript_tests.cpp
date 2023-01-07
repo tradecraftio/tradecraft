@@ -297,7 +297,7 @@ void TestSatisfy(const std::string& testcase, const NodeRef& node) {
 
             // Run malleable satisfaction algorithm.
             WitnessV0ScriptEntry entry(0 /* version */, script);
-            const CScript script_pubkey = CScript() << OP_0 << entry.GetScriptHash();
+            const CScript script_pubkey = CScript() << OP_0 << entry.GetLongHash();
             CScriptWitness witness_mal;
             const bool mal_success = node->Satisfy(satisfier, witness_mal.stack, false) == miniscript::Availability::YES;
             witness_mal.stack.push_back(std::vector<unsigned char>(entry.m_script.begin(), entry.m_script.end()));

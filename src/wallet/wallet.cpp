@@ -1002,13 +1002,25 @@ bool CWallet::IsSpentKey(const CScript& scriptPubKey) const
         LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
         assert(spk_man != nullptr);
         for (const auto& keyid : GetAffectedKeys(scriptPubKey, *spk_man)) {
-            WitnessV0KeyHash wpkh_dest(keyid);
-            if (IsAddressUsed(wpkh_dest)) {
-                return true;
-            }
-            ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-            if (IsAddressUsed(sh_wpkh_dest)) {
-                return true;
+            CPubKey pubkey;
+            if (spk_man->GetPubKey(keyid, pubkey)) {
+                CScript p2pk = GetScriptForRawPubKey(pubkey);
+                WitnessV0LongHash wsh_dest(0 /* version */, p2pk);
+                if (IsAddressUsed(wsh_dest)) {
+                    return true;
+                }
+                ScriptHash sh_wsh_dest(GetScriptForDestination(wsh_dest));
+                if (IsAddressUsed(sh_wsh_dest)) {
+                    return true;
+                }
+                WitnessV0ShortHash wpk_dest(0 /* version */, p2pk);
+                if (IsAddressUsed(wpk_dest)) {
+                    return true;
+                }
+                ScriptHash sh_wpk_dest(GetScriptForDestination(wpk_dest));
+                if (IsAddressUsed(sh_wpk_dest)) {
+                    return true;
+                }
             }
             PKHash pkh_dest(keyid);
             if (IsAddressUsed(pkh_dest)) {
@@ -2292,7 +2304,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     }
 
     bool any_tr{false};
-    bool any_wpkh{false};
+    bool any_wpk{false};
     bool any_sh{false};
     bool any_pkh{false};
 
@@ -2301,8 +2313,8 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         const TxoutType type{Solver(recipient.scriptPubKey, dummy)};
         if (type == TxoutType::WITNESS_V1_TAPROOT) {
             any_tr = true;
-        } else if (type == TxoutType::WITNESS_V0_KEYHASH) {
-            any_wpkh = true;
+        } else if (type == TxoutType::WITNESS_V0_SHORTHASH) {
+            any_wpk = true;
         } else if (type == TxoutType::SCRIPTHASH) {
             any_sh = true;
         } else if (type == TxoutType::PUBKEYHASH) {
@@ -2316,14 +2328,14 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         return OutputType::BECH32M;
     }
     const bool has_bech32_spkman(GetScriptPubKeyMan(OutputType::BECH32, /*internal=*/true));
-    if (has_bech32_spkman && any_wpkh) {
-        // Currently wpkh is the only type supported by the BECH32 spkman
+    if (has_bech32_spkman && any_wpk) {
+        // Currently wpk is the only type supported by the BECH32 spkman
         return OutputType::BECH32;
     }
     const bool has_p2sh_segwit_spkman(GetScriptPubKeyMan(OutputType::P2SH_SEGWIT, /*internal=*/true));
     if (has_p2sh_segwit_spkman && any_sh) {
-        // Currently sh_wpkh is the only type supported by the P2SH_SEGWIT spkman
-        // As of 2021 about 80% of all SH are wrapping WPKH, so use that
+        // Currently sh_wpk is the only type supported by the P2SH_SEGWIT spkman
+        // As of 2021 about 80% of all SH are wrapping WPK, so use that
         return OutputType::P2SH_SEGWIT;
     }
     const bool has_legacy_spkman(GetScriptPubKeyMan(OutputType::LEGACY, /*internal=*/true));

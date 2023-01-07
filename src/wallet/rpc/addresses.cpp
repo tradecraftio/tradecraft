@@ -349,16 +349,25 @@ public:
     bool operator()(const PKHash &pkhash) {
         if (pwallet) {
             CScript script = GetScriptForDestination(pkhash);
-            WitnessV0ScriptEntry other(0 /* version */, script);
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(script);
+            if (!provider) {
+                return false;
+            }
+            CPubKey pubkey;
+            CKeyID keyID{ToKeyID(pkhash)};
+            if (!provider->GetPubKey(keyID, pubkey)) {
+                return false;
+            }
+            CScript basescript = GetScriptForRawPubKey(pubkey);
+            WitnessV0ScriptEntry other(0 /* version */, basescript);
             entry.m_script = std::move(other.m_script);
             LegacyScriptPubKeyMan* spkm = pwallet->GetLegacyScriptPubKeyMan();
             if (!spkm) {
                 return false;
             }
             spkm->AddWitnessV0Script(entry);
-            CScript witscript = GetScriptForDestination(WitnessV0KeyHash(pkhash));
-            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(witscript);
-            if (!provider || !InferDescriptor(witscript, *provider)->IsSolvable()) {
+            CScript witscript = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, basescript));
+            if (!InferDescriptor(witscript, *provider)->IsSolvable()) {
                 return false;
             }
             return ExtractDestination(witscript, result);
@@ -379,16 +388,28 @@ public:
                 }
                 std::vector<std::vector<unsigned char>> vSolutions;
                 TxoutType typ = Solver(subscript, vSolutions);
-                CScript witscript;
+                bool allow_short = false;
                 if (typ == TxoutType::PUBKEY) {
-                    witscript = GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0])));
+                    WitnessV0ScriptEntry other(0 /* version */, GetScriptForRawPubKey(CPubKey(vSolutions[0])));
+                    entry.m_script = std::move(other.m_script);
+                    allow_short = true;
                 } else if (typ == TxoutType::PUBKEYHASH) {
-                    witscript = GetScriptForDestination(WitnessV0KeyHash(uint160{vSolutions[0]}));
+                    CKeyID keyID = ToKeyID(PKHash{uint160{vSolutions[0]}});
+                    CPubKey pubkey;
+                    if (!provider || !provider->GetPubKey(keyID, pubkey)) {
+                        // The witness version of this script has the pubkey
+                        // explicitly in it.  If we can't lookup the pubkey, we
+                        // can't witnessify this script.
+                        return false;
+                    }
+                    WitnessV0ScriptEntry other(0 /* version */, GetScriptForRawPubKey(pubkey));
+                    entry.m_script = std::move(other.m_script);
+                    allow_short = true;
                 } else {
-                    witscript = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, subscript));
+                    WitnessV0ScriptEntry other(0 /* version */, subscript);
+                    entry.m_script = std::move(other.m_script);
                 }
-                WitnessV0ScriptEntry other(0 /* version */, subscript);
-                entry.m_script = std::move(other.m_script);
+                CScript witscript = GetScriptForDestination((allow_short && entry.m_branch.empty()) ? CTxDestination(entry.GetShortHash()) : CTxDestination(entry.GetLongHash()));
                 LegacyScriptPubKeyMan* spkm = pwallet->GetLegacyScriptPubKeyMan();
                 if (!spkm) {
                     return false;
@@ -403,14 +424,14 @@ public:
         return false;
     }
 
-    bool operator()(const WitnessV0KeyHash& id)
+    bool operator()(const WitnessV0ShortHash& id)
     {
         already_witness = true;
         result = id;
         return true;
     }
 
-    bool operator()(const WitnessV0ScriptHash& id)
+    bool operator()(const WitnessV0LongHash& id)
     {
         already_witness = true;
         result = id;
@@ -479,7 +500,10 @@ RPCHelpMan addwitnessaddress()
         if (!spk_man) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet does not have a legacy script pubkey manager");
         }
-        spk_man->AddCScript(witprogram); // Implicit for single-key now, but necessary for multisig and for compatibility with older software
+        // Implicit for single-key now, but necessary for multisig and for
+        // compatibility with older software.
+        spk_man->AddCScript(GetScriptForDestination(w.entry.GetLongHash()));
+        spk_man->AddCScript(GetScriptForDestination(w.entry.GetShortHash()));
         pwallet->SetAddressBook(w.result, label, AddressPurpose::RECEIVE);
     }
 
@@ -629,17 +653,7 @@ public:
         return obj;
     }
 
-    UniValue operator()(const WitnessV0KeyHash& id) const
-    {
-        UniValue obj(UniValue::VOBJ);
-        CPubKey pubkey;
-        if (provider && provider->GetPubKey(ToKeyID(id), pubkey)) {
-            obj.pushKV("pubkey", HexStr(pubkey));
-        }
-        return obj;
-    }
-
-    UniValue operator()(const WitnessV0ScriptHash& id) const
+    UniValue operator()(const WitnessV0ShortHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
         WitnessV0ScriptEntry entry;
@@ -659,6 +673,11 @@ public:
             }
         }
         return obj;
+    }
+
+    UniValue operator()(const WitnessV0LongHash& id) const
+    {
+        return (*this)(WitnessV0ShortHash(id));
     }
 
     UniValue operator()(const WitnessV1Taproot& id) const { return UniValue(UniValue::VOBJ); }

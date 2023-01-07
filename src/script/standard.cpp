@@ -37,22 +37,21 @@ ScriptHash::ScriptHash(const CScriptID& in) : BaseHash(static_cast<uint160>(in))
 PKHash::PKHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
 PKHash::PKHash(const CKeyID& pubkey_id) : BaseHash(pubkey_id) {}
 
-WitnessV0KeyHash::WitnessV0KeyHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
-WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : BaseHash(static_cast<uint160>(pubkey_hash)) {}
-
 CKeyID ToKeyID(const PKHash& key_hash)
 {
     return CKeyID{static_cast<uint160>(key_hash)};
 }
 
-CKeyID ToKeyID(const WitnessV0KeyHash& key_hash)
+WitnessV0LongHash::WitnessV0LongHash(unsigned char version, const CScript& innerscript)
 {
-    return CKeyID{static_cast<uint160>(key_hash)};
+    CHash256().Write({&version, 1}).Write(innerscript).Finalize(m_hash);
 }
 
-WitnessV0ScriptHash::WitnessV0ScriptHash(unsigned char version, const CScript& innerscript)
-{
-    CHash256().Write({&version, 1}).Write(innerscript).Finalize(*this);
+WitnessV0ShortHash::WitnessV0ShortHash(unsigned char version, const CPubKey& pubkey) {
+    assert(pubkey.IsCompressed());
+    CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    WitnessV0LongHash longid(version, p2pk);
+    CRIPEMD160().Write(longid.begin(), 32).Finalize(m_hash.begin());
 }
 
 WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript) : m_path(0)
@@ -73,7 +72,7 @@ WitnessV0ScriptEntry::WitnessV0ScriptEntry(unsigned char version, const CScript&
     m_script.insert(m_script.end(), innerscript.begin(), innerscript.end());
 }
 
-WitnessV0ScriptHash WitnessV0ScriptEntry::GetScriptHash() const
+WitnessV0LongHash WitnessV0ScriptEntry::GetLongHash() const
 {
     uint256 leaf;
     CHash256().Write(m_script).Finalize(leaf);
@@ -82,7 +81,12 @@ WitnessV0ScriptHash WitnessV0ScriptEntry::GetScriptHash() const
     if (invalid) {
         std::runtime_error("invalid Merkle proof");
     }
-    return WitnessV0ScriptHash(hash);
+    return WitnessV0LongHash(hash);
+}
+
+WitnessV0ShortHash WitnessV0ScriptEntry::GetShortHash() const
+{
+    return WitnessV0ShortHash(GetLongHash());
 }
 
 std::string GetTxnOutputType(TxoutType t)
@@ -95,8 +99,8 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::MULTISIG: return "multisig";
     case TxoutType::NULL_DATA: return "nulldata";
     case TxoutType::UNSPENDABLE: return "unspendable";
-    case TxoutType::WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
-    case TxoutType::WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
+    case TxoutType::WITNESS_V0_SHORTHASH: return "witness_v0_shorthash";
+    case TxoutType::WITNESS_V0_LONGHASH: return "witness_v0_longhash";
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
@@ -224,13 +228,13 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(&witnessversion, &witnessprogram)) {
-        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) {
+        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SHORTHASH_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));
-            return TxoutType::WITNESS_V0_KEYHASH;
+            return TxoutType::WITNESS_V0_SHORTHASH;
         }
-        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_LONGHASH_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));
-            return TxoutType::WITNESS_V0_SCRIPTHASH;
+            return TxoutType::WITNESS_V0_LONGHASH;
         }
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));
@@ -300,14 +304,14 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = ScriptHash(uint160(vSolutions[0]));
         return true;
     }
-    case TxoutType::WITNESS_V0_KEYHASH: {
-        WitnessV0KeyHash hash;
+    case TxoutType::WITNESS_V0_SHORTHASH: {
+        WitnessV0ShortHash hash;
         std::copy(vSolutions[0].begin(), vSolutions[0].end(), hash.begin());
         addressRet = hash;
         return true;
     }
-    case TxoutType::WITNESS_V0_SCRIPTHASH: {
-        WitnessV0ScriptHash hash;
+    case TxoutType::WITNESS_V0_LONGHASH: {
+        WitnessV0LongHash hash;
         std::copy(vSolutions[0].begin(), vSolutions[0].end(), hash.begin());
         addressRet = hash;
         return true;
@@ -354,12 +358,12 @@ public:
         return CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
     }
 
-    CScript operator()(const WitnessV0KeyHash& id) const
+    CScript operator()(const WitnessV0ShortHash& id) const
     {
         return CScript() << OP_0 << ToByteVector(id);
     }
 
-    CScript operator()(const WitnessV0ScriptHash& id) const
+    CScript operator()(const WitnessV0LongHash& id) const
     {
         return CScript() << OP_0 << ToByteVector(id);
     }

@@ -390,7 +390,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     // and the mempool entry's wtxid returned.
     CScript witnessScript = CScript() << OP_DROP << OP_TRUE;
     WitnessV0ScriptEntry entry(/*version=*/ 0, witnessScript);
-    CScript scriptPubKey = GetScriptForDestination(entry.GetScriptHash());
+    CScript scriptPubKey = GetScriptForDestination(entry.GetLongHash());
     auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
                                                     /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
                                                     /*output_destination=*/scriptPubKey,
@@ -410,7 +410,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
 
     CKey child_key;
     child_key.MakeNewKey(true);
-    CScript child_locking_script = GetScriptForDestination(WitnessV0KeyHash(child_key.GetPubKey()));
+    CScript child_locking_script = GetScriptForDestination(WitnessV0ShortHash(/*version=*/ 0, child_key.GetPubKey()));
     CMutableTransaction mtx_child1;
     mtx_child1.nVersion = 1;
     mtx_child1.vin.resize(1);
@@ -493,7 +493,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     // that we don't allow witness replacement.
     CKey grandchild_key;
     grandchild_key.MakeNewKey(true);
-    CScript grandchild_locking_script = GetScriptForDestination(WitnessV0KeyHash(grandchild_key.GetPubKey()));
+    CScript grandchild_locking_script = GetScriptForDestination(WitnessV0ShortHash(/*version=*/0, grandchild_key.GetPubKey()));
     auto mtx_grandchild = CreateValidMempoolTransaction(/*input_transaction=*/ptx_child2, /*input_vout=*/0,
                                                         /*input_height=*/0, /*input_signing_key=*/child_key,
                                                         /*output_destination=*/grandchild_locking_script,
@@ -526,7 +526,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     // Give all the parents anyone-can-spend scripts so we don't have to deal with signing the child.
     CScript acs_script = CScript() << OP_TRUE;
     WitnessV0ScriptEntry acs_entry(/*version=*/ 0, acs_script);
-    CScript acs_spk = GetScriptForDestination(acs_entry.GetScriptHash());
+    CScript acs_spk = GetScriptForDestination(acs_entry.GetLongHash());
     CScriptWitness acs_witness;
     acs_witness.stack.push_back(acs_entry.m_script);
     acs_witness.stack.emplace_back();
@@ -542,7 +542,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     // parent2 will have a same-txid-different-witness tx already in the mempool
     CScript grandparent2_script = CScript() << OP_DROP << OP_TRUE;
     WitnessV0ScriptEntry grandparent2_entry(/*version=*/ 0, grandparent2_script);
-    CScript grandparent2_spk = GetScriptForDestination(grandparent2_entry.GetScriptHash());
+    CScript grandparent2_spk = GetScriptForDestination(grandparent2_entry.GetLongHash());
     CScriptWitness parent2_witness1;
     parent2_witness1.stack.push_back(std::vector<unsigned char>(1));
     parent2_witness1.stack.push_back(grandparent2_entry.m_script);
@@ -592,7 +592,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     // child spends parent1, parent2, and parent3
     CKey mixed_grandchild_key;
     mixed_grandchild_key.MakeNewKey(true);
-    CScript mixed_child_spk = GetScriptForDestination(WitnessV0KeyHash(mixed_grandchild_key.GetPubKey()));
+    CScript mixed_child_spk = GetScriptForDestination(WitnessV0ShortHash(/*version=*/ 0, mixed_grandchild_key.GetPubKey()));
 
     CMutableTransaction mtx_mixed_child;
     mtx_mixed_child.vin.push_back(CTxIn(COutPoint(ptx_parent1->GetHash(), 0)));
@@ -657,10 +657,10 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     size_t expected_pool_size = m_node.mempool->size();
     CKey child_key;
     child_key.MakeNewKey(true);
-    CScript parent_spk = GetScriptForDestination(WitnessV0KeyHash(child_key.GetPubKey()));
+    CScript parent_spk = GetScriptForDestination(WitnessV0ShortHash(/*version=*/0, child_key.GetPubKey()));
     CKey grandchild_key;
     grandchild_key.MakeNewKey(true);
-    CScript child_spk = GetScriptForDestination(WitnessV0KeyHash(grandchild_key.GetPubKey()));
+    CScript child_spk = GetScriptForDestination(WitnessV0ShortHash(/*version=*/0, grandchild_key.GetPubKey()));
 
     // zero-fee parent and high-fee child package
     const CAmount coinbase_value{50 * COIN};

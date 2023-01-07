@@ -971,7 +971,7 @@ void TestNode(const NodeRef& node, FuzzedDataProvider& provider)
     }
 
     // Run malleable satisfaction algorithm.
-    const CScript script_pubkey = CScript() << OP_0 << WitnessV0ScriptHash(0 /* version */, script);
+    const CScript script_pubkey = CScript() << OP_0 << WitnessV0LongHash(0 /* version */, script);
     CScriptWitness witness_mal;
     const bool mal_success = node->Satisfy(SATISFIER_CTX, witness_mal.stack, false) == miniscript::Availability::YES;
     witness_mal.stack.push_back(std::vector<unsigned char>(script.begin(), script.end()));

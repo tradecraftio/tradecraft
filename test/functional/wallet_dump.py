@@ -18,6 +18,8 @@ import datetime
 import os
 import time
 
+from test_framework import segwit_addr
+from test_framework.script import ripemd160
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -147,6 +149,10 @@ class WalletDumpTest(FreicoinTestFramework):
         p2wsh_addr = self.nodes[0].addwitnessaddress(multisig_addr, p2sh=False)
         p2sh_p2wsh_addr = self.nodes[0].addwitnessaddress(multisig_addr, p2sh=True)
 
+        # Construct the P2WPK address from our generated P2WSH address
+        addr_info = self.nodes[0].getaddressinfo(p2wsh_addr)
+        p2wpk_addr = segwit_addr.encode_segwit_address(p2wsh_addr.split('1')[0], addr_info['witness_version'], ripemd160(bytes.fromhex(addr_info['witness_program'])))
+
         # Refill the keypool. getnewaddress() refills the keypool *before* taking a key from
         # the keypool, so the final call to getnewaddress leaves the keypool with one key below
         # its capacity
@@ -177,7 +183,7 @@ class WalletDumpTest(FreicoinTestFramework):
         assert_equal(result['filename'], wallet_unenc_dump)
 
         found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_witscript_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
-            read_dump(wallet_unenc_dump, addrs, [multisig_addr, p2sh_p2wsh_addr], [p2wsh_addr], None)
+            read_dump(wallet_unenc_dump, addrs, [multisig_addr, p2sh_p2wsh_addr], [p2wpk_addr], None)
         assert '# End of dump' in found_comments  # Check that file is not corrupt
         assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
         assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
@@ -198,7 +204,7 @@ class WalletDumpTest(FreicoinTestFramework):
         self.nodes[0].dumpwallet(wallet_enc_dump)
 
         found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_witscript_addr, found_addr_chg, found_addr_rsv, _ = \
-            read_dump(wallet_enc_dump, addrs, [multisig_addr, p2sh_p2wsh_addr], [p2wsh_addr], hd_master_addr_unenc)
+            read_dump(wallet_enc_dump, addrs, [multisig_addr, p2sh_p2wsh_addr], [p2wpk_addr], hd_master_addr_unenc)
         assert '# End of dump' in found_comments  # Check that file is not corrupt
         assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
         assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))

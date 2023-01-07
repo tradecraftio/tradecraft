@@ -154,8 +154,8 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
     switch (type) {
         case TxoutType::WITNESS_V1_TAPROOT:
             return OutputType::BECH32M;
-        case TxoutType::WITNESS_V0_KEYHASH:
-        case TxoutType::WITNESS_V0_SCRIPTHASH:
+        case TxoutType::WITNESS_V0_SHORTHASH:
+        case TxoutType::WITNESS_V0_LONGHASH:
             if (is_from_p2sh) return OutputType::P2SH_SEGWIT;
             else return OutputType::BECH32;
         case TxoutType::SCRIPTHASH:
@@ -339,7 +339,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             TxoutType type = Solver(output.scriptPubKey, script_solutions);
 
             // If the output is P2SH and solvable, we want to know if it is
-            // a P2SH (legacy) or one of P2SH-P2WPKH, P2SH-P2WSH (P2SH-Segwit). We can determine
+            // a P2SH (legacy) or one of P2SH-P2WPK, P2SH-P2WSH (P2SH-Segwit). We can determine
             // this from the redeemScript. If the output is not solvable, it will be classified
             // as a P2SH (legacy), since we have no way of knowing otherwise without the redeemScript
             bool is_from_p2sh{false};
@@ -914,10 +914,10 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     // Get size of spending the change output
     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, &wallet, /*coin_control=*/nullptr);
-    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
+    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpk
     // as lower-bound to allow BnB to do it's thing
     if (change_spend_size == -1) {
-        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
+        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPK_INPUT_SIZE;
     } else {
         coin_selection_params.change_spend_size = (size_t)change_spend_size;
     }

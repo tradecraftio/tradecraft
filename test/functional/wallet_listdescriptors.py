@@ -79,13 +79,13 @@ class ListDescriptorsTest(FreicoinTestFramework):
         hardened_path = '/84\'/1\'/0\''
         wallet = node.get_wallet_rpc('w2')
         wallet.importdescriptors([{
-            'desc': descsum_create('wpkh(' + xprv + hardened_path + '/0/*)'),
+            'desc': descsum_create('wpk(' + xprv + hardened_path + '/0/*)'),
             'timestamp': TIME_GENESIS_BLOCK,
         }])
         expected = {
             'wallet_name': 'w2',
             'descriptors': [
-                {'desc': descsum_create('wpkh([80002067' + hardened_path + ']' + xpub_acc + '/0/*)'),
+                {'desc': descsum_create('wpk([80002067' + hardened_path + ']' + xpub_acc + '/0/*)'),
                  'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
@@ -100,7 +100,7 @@ class ListDescriptorsTest(FreicoinTestFramework):
         expected_private = {
             'wallet_name': 'w2',
             'descriptors': [
-                {'desc': descsum_create('wpkh(' + xprv + hardened_path + '/0/*)'),
+                {'desc': descsum_create('wpk(' + xprv + hardened_path + '/0/*)'),
                  'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
@@ -123,7 +123,7 @@ class ListDescriptorsTest(FreicoinTestFramework):
         node.createwallet(wallet_name='watch-only', descriptors=True, disable_private_keys=True)
         watch_only_wallet = node.get_wallet_rpc('watch-only')
         watch_only_wallet.importdescriptors([{
-            'desc': descsum_create('wpkh(' + xpub_acc + ')'),
+            'desc': descsum_create('wpk(' + xpub_acc + ')'),
             'timestamp': TIME_GENESIS_BLOCK,
         }])
         assert_raises_rpc_error(-4, 'Can\'t get descriptor string', watch_only_wallet.listdescriptors, True)
