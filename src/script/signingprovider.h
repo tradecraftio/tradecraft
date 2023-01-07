@@ -31,8 +31,10 @@ public:
     virtual ~SigningProvider() {}
     virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
     virtual bool HaveCScript(const CScriptID &scriptid) const { return false; }
-    virtual bool GetWitnessV0Script(const WitnessV0ScriptHash& witnesshash, WitnessV0ScriptEntry& entryOut) const { return false; }
-    virtual bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnesshash) const { return false; }
+    virtual bool GetWitnessV0Script(const WitnessV0ShortHash& witnesshash, WitnessV0ScriptEntry& entryOut) const { return false; }
+    virtual bool GetWitnessV0Script(const WitnessV0LongHash& witnesshash, WitnessV0ScriptEntry& entryOut) const { return false; }
+    virtual bool HaveWitnessV0Script(const WitnessV0ShortHash& witnesshash) const { return false; }
+    virtual bool HaveWitnessV0Script(const WitnessV0LongHash& witnesshash) const { return false; }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
     virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
     virtual bool HaveKey(const CKeyID &address) const { return false; }
@@ -76,7 +78,8 @@ private:
 public:
     HidingSigningProvider(const SigningProvider* provider, bool hide_secret, bool hide_origin) : m_hide_secret(hide_secret), m_hide_origin(hide_origin), m_provider(provider) {}
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
+    bool GetWitnessV0Script(const WitnessV0ShortHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
+    bool GetWitnessV0Script(const WitnessV0LongHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
@@ -86,14 +89,15 @@ public:
 struct FlatSigningProvider final : public SigningProvider
 {
     std::map<CScriptID, CScript> scripts;
-    std::map<WitnessV0ScriptHash, WitnessV0ScriptEntry> witscripts;
+    std::map<WitnessV0ShortHash, WitnessV0ScriptEntry> witscripts;
     std::map<CKeyID, CPubKey> pubkeys;
     std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> origins;
     std::map<CKeyID, CKey> keys;
     std::map<XOnlyPubKey, TaprootSpendData> tr_spenddata; /** Map from output key to spend data. */
 
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
+    bool GetWitnessV0Script(const WitnessV0ShortHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
+    bool GetWitnessV0Script(const WitnessV0LongHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
@@ -108,7 +112,7 @@ class FillableSigningProvider : public SigningProvider
 protected:
     using KeyMap = std::map<CKeyID, CKey>;
     using ScriptMap = std::map<CScriptID, CScript>;
-    using WitnessV0ScriptMap = std::map<WitnessV0ScriptHash, WitnessV0ScriptEntry>;
+    using WitnessV0ScriptMap = std::map<WitnessV0ShortHash, WitnessV0ScriptEntry>;
 
     /**
      * Map of key id to unencrypted private keys known by the signing provider.
@@ -176,9 +180,11 @@ public:
     virtual std::set<CScriptID> GetCScripts() const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
     virtual bool AddWitnessV0Script(const WitnessV0ScriptEntry& entry);
-    virtual bool HaveWitnessV0Script(const WitnessV0ScriptHash& witnessprogram) const override;
-    virtual std::set<WitnessV0ScriptHash> GetWitnessV0Scripts() const;
-    virtual bool GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
+    virtual bool HaveWitnessV0Script(const WitnessV0ShortHash& witnessprogram) const override;
+    virtual bool HaveWitnessV0Script(const WitnessV0LongHash& witnessprogram) const override;
+    virtual std::set<WitnessV0ShortHash> GetWitnessV0Scripts() const;
+    virtual bool GetWitnessV0Script(const WitnessV0LongHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
+    virtual bool GetWitnessV0Script(const WitnessV0ShortHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const override;
 };
 
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */

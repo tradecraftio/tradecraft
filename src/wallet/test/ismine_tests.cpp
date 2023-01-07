@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
         CScript redeemscript = GetScriptForDestination(PKHash(pubkeys[0]));
         CScript witnessscript = GetScriptForDestination(ScriptHash(redeemscript));
-        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, witnessscript));
+        scriptPubKey = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessscript));
 
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessscript));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(redeemscript));
@@ -170,20 +170,43 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, witnessscript));
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
     }
 
-    // P2WPKH inside P2WSH (invalid)
+    // P2WPK inside P2WSH (invalid)
     {
         CWallet keystore(chain.get(), "", m_args, CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
-        CScript witnessscript = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
-        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, witnessscript));
+        CScript p2pk = GetScriptForRawPubKey(pubkeys[0]);
+        CScript witnessscript = GetScriptForDestination(WitnessV0LongHash(0 /* version */, p2pk));
+        scriptPubKey = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessscript));
 
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessscript));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessscript));
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        witnessscript = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, p2pk));
+        scriptPubKey = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessscript));
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessscript);
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, witnessscript));
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
     }
@@ -194,9 +217,9 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
-        CScript witnessscript_inner = GetScriptForDestination(PKHash(pubkeys[0]));
-        CScript witnessscript = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, witnessscript_inner));
-        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, witnessscript));
+        CScript witnessscript_inner = GetScriptForRawPubKey(pubkeys[0]);
+        CScript witnessscript = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessscript_inner));
+        scriptPubKey = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessscript));
 
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessscript_inner));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessscript));
@@ -204,38 +227,110 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey = GetScriptForDestination(WitnessV0ShortHash((unsigned char)0, witnessscript));
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        witnessscript = GetScriptForDestination(WitnessV0ShortHash((unsigned char)0, witnessscript_inner));
+        scriptPubKey = GetScriptForDestination(WitnessV0LongHash((unsigned char)0, witnessscript));
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessscript);
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey = GetScriptForDestination(WitnessV0ShortHash((unsigned char)0, witnessscript));
+        keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
     }
 
-    // P2WPKH compressed
+    // P2WSH w/ P2PK compressed
     {
         CWallet keystore(chain.get(), "", m_args, CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
 
-        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
+        CScript witscript_inner;
+        witscript_inner << ToByteVector(pubkeys[0]) << OP_CHECKSIG;
 
-        // Keystore implicitly has key and P2SH redeemScript
+        std::vector<unsigned char> witscript;
+        witscript.push_back(0x00);
+        witscript.insert(witscript.end(),
+                         witscript_inner.begin(),
+                         witscript_inner.end());
+
+        uint256 long_hash;
+        CHash256()
+            .Write(witscript)
+            .Finalize(long_hash);
+        uint160 short_hash;
+        CRIPEMD160()
+            .Write(long_hash.begin(), 32)
+            .Finalize(short_hash.begin());
+
+        // Keystore has key and witness script
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
-    // P2WPKH uncompressed
+    // P2WSH w/ P2PK uncompressed
     {
         CWallet keystore(chain.get(), "", m_args, CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
 
-        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uncompressedPubkey));
+        CScript witscript_inner;
+        witscript_inner << ToByteVector(uncompressedPubkey) << OP_CHECKSIG;
 
-        // Keystore has key, but no P2SH redeemScript
+        std::vector<unsigned char> witscript;
+        witscript.push_back(0x00);
+        witscript.insert(witscript.end(),
+                         witscript_inner.begin(),
+                         witscript_inner.end());
+
+        uint256 long_hash;
+        CHash256()
+            .Write(witscript)
+            .Finalize(long_hash);
+        uint160 short_hash;
+        CRIPEMD160()
+            .Write(long_hash.begin(), 32)
+            .Finalize(short_hash.begin());
+
+        // Keystore has key, but no witness script
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
-        // Keystore has key and P2SH redeemScript
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        // Keystore has key and witness script
+        WitnessV0ScriptEntry entry(witscript);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddWitnessV0Script(entry));
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
     }
@@ -308,24 +403,50 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
                              witnessScript_inner.begin(),
                              witnessScript_inner.end());
 
-        uint256 scriptHash;
-        CHash256().Write(witnessScript).Finalize(scriptHash);
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(scriptHash);
+        uint256 long_hash;
+        CHash256()
+            .Write(witnessScript)
+            .Finalize(long_hash);
+        uint160 short_hash;
+        CRIPEMD160()
+            .Write(long_hash.begin(), 32)
+            .Finalize(short_hash.begin());
 
         // Keystore has keys, but no witnessScript
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
         // Knowing the inner witness script is insufficient
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessScript_inner));
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
         // Keystore has keys & witnessScript
         WitnessV0ScriptEntry entry(std::move(witnessScript));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddWitnessV0Script(entry));
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
@@ -346,24 +467,50 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
                              witnessScript_inner.begin(),
                              witnessScript_inner.end());
 
-        uint256 scriptHash;
-        CHash256().Write(witnessScript).Finalize(scriptHash);
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(scriptHash);
+        uint256 long_hash;
+        CHash256()
+            .Write(witnessScript)
+            .Finalize(long_hash);
+        uint160 short_hash;
+        CRIPEMD160()
+            .Write(long_hash.begin(), 32)
+            .Finalize(short_hash.begin());
 
         // Keystore has keys, but no witnessScript
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
         // Knowing the inner witness script is insufficient
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessScript_inner));
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
         // Keystore has keys & witnessScript
         WitnessV0ScriptEntry entry(std::move(witnessScript));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddWitnessV0Script(entry));
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(long_hash);
+        result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(short_hash);
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
     }
@@ -382,15 +529,21 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
                              witnessScript_inner.begin(),
                              witnessScript_inner.end());
 
-        uint256 scriptHash;
-        CHash256().Write(witnessScript).Finalize(scriptHash);
+        uint256 long_hash;
+        CHash256()
+            .Write(witnessScript)
+            .Finalize(long_hash);
+        uint160 short_hash;
+        CRIPEMD160()
+            .Write(long_hash.begin(), 32)
+            .Finalize(short_hash.begin());
 
         CScript redeemScript;
-        redeemScript << OP_0 << ToByteVector(scriptHash);
-
-        scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
+        redeemScript << OP_0 << ToByteVector(long_hash);
 
         // Keystore has no witnessScript, P2SH redeemScript, or keys
+        scriptPubKey.clear();
+        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
@@ -398,12 +551,18 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(redeemScript));
         WitnessV0ScriptEntry entry(std::move(witnessScript));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddWitnessV0Script(entry));
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
         // Keystore has keys, witnessScript, P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[1]));
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }

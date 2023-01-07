@@ -438,10 +438,10 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = ScriptHash{ConsumeUInt160(fuzzed_data_provider)};
         },
         [&] {
-            tx_destination = WitnessV0ScriptHash{ConsumeUInt256(fuzzed_data_provider)};
+            tx_destination = WitnessV0LongHash{ConsumeUInt256(fuzzed_data_provider)};
         },
         [&] {
-            tx_destination = WitnessV0KeyHash{ConsumeUInt160(fuzzed_data_provider)};
+            tx_destination = WitnessV0ShortHash{ConsumeUInt160(fuzzed_data_provider)};
         },
         [&] {
             tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};

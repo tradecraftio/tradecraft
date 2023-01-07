@@ -371,8 +371,8 @@ class WalletTaprootTest(FreicoinTestFramework):
             1
         )
         self.do_test(
-            "wpkh(XPRV)",
-            "wpkh($1/*)",
+            "wpk(XPRV)",
+            "wpk($1/*)",
             [True],
             None,
             1

@@ -34,8 +34,8 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.script_util import (
-    DUMMY_P2WPKH_SCRIPT,
-    DUMMY_2_P2WPKH_SCRIPT,
+    DUMMY_P2WPK_SCRIPT,
+    DUMMY_2_P2WPK_SCRIPT,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
@@ -101,7 +101,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         self.log.info("Passed")
 
-    def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
+    def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPK_SCRIPT):
         """Create a txout with a given amount and scriptPubKey
 
         confirmed - txouts created will be confirmed in the blockchain;
@@ -129,13 +129,13 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         tx_template = self.wallet.create_self_transfer()['tx']
 
         tx1a = deepcopy(tx_template)
-        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPK_SCRIPT)]
         tx1a_hex = tx1a.serialize().hex()
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
 
         # Should fail because we haven't changed the fee
         tx1b = deepcopy(tx_template)
-        tx1b.vout = [CTxOut(1 * COIN, DUMMY_2_P2WPKH_SCRIPT)]
+        tx1b.vout = [CTxOut(1 * COIN, DUMMY_2_P2WPK_SCRIPT)]
         tx1b_hex = tx1b.serialize().hex()
 
         # This will raise an exception due to insufficient fee
@@ -177,7 +177,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         # child fees - 4 FRC - so this attempt is rejected.
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - 3 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(initial_nValue - 3 * COIN, DUMMY_P2WPK_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
 
         # This will raise an exception due to insufficient fee
@@ -186,7 +186,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         # Accepted with sufficient fee
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(int(0.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(int(0.1 * COIN), DUMMY_P2WPK_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
@@ -239,7 +239,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         # Attempt double-spend, will fail because too little fee paid
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - fee * n, DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(initial_nValue - fee * n, DUMMY_P2WPK_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
@@ -247,7 +247,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         # 0.1 FRC fee is enough
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - fee * n - int(0.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(initial_nValue - fee * n - int(0.1 * COIN), DUMMY_P2WPK_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
@@ -267,7 +267,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
             dbl_tx = CTransaction()
             dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-            dbl_tx.vout = [CTxOut(initial_nValue - 2 * fee * n, DUMMY_P2WPKH_SCRIPT)]
+            dbl_tx.vout = [CTxOut(initial_nValue - 2 * fee * n, DUMMY_P2WPK_SCRIPT)]
             dbl_tx_hex = dbl_tx.serialize().hex()
             # This will raise an exception
             assert_raises_rpc_error(-26, "too many potential replacements", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
@@ -282,7 +282,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         tx1a = CTransaction()
         tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPK_SCRIPT)]
         tx1a_hex = tx1a.serialize().hex()
         self.nodes[0].sendrawtransaction(tx1a_hex, 0)
 
@@ -303,7 +303,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         tx1a = CTransaction()
         tx1a.vin = [CTxIn(utxo1, nSequence=0)]
-        tx1a.vout = [CTxOut(int(1.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
+        tx1a.vout = [CTxOut(int(1.1 * COIN), DUMMY_P2WPK_SCRIPT)]
         tx1a_hex = tx1a.serialize().hex()
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
 
@@ -322,7 +322,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         # Spend tx1a's output to test the indirect case.
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]
-        tx1b.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        tx1b.vout = [CTxOut(1 * COIN, DUMMY_P2WPK_SCRIPT)]
         tx1b_hex = tx1b.serialize().hex()
         tx1b_txid = self.nodes[0].sendrawtransaction(tx1b_hex, 0)
         tx1b_txid = int(tx1b_txid, 16)
@@ -343,7 +343,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         tx1 = CTransaction()
         tx1.vin = [CTxIn(confirmed_utxo)]
-        tx1.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        tx1.vout = [CTxOut(1 * COIN, DUMMY_P2WPK_SCRIPT)]
         tx1_hex = tx1.serialize().hex()
         self.nodes[0].sendrawtransaction(tx1_hex, 0)
 
@@ -382,7 +382,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
         for i in range(MAX_REPLACEMENT_LIMIT + 1):
             tx_i = CTransaction()
             tx_i.vin = [CTxIn(COutPoint(txid, i), nSequence=0)]
-            tx_i.vout = [CTxOut(split_value - fee, DUMMY_P2WPKH_SCRIPT)]
+            tx_i.vout = [CTxOut(split_value - fee, DUMMY_P2WPK_SCRIPT)]
             tx_i_hex = tx_i.serialize().hex()
             self.nodes[0].sendrawtransaction(tx_i_hex, 0)
 
@@ -414,7 +414,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         tx1a = CTransaction()
         tx1a.vin = [CTxIn(tx0_outpoint, nSequence=SEQUENCE_FINAL)]
-        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPK_SCRIPT)]
         tx1a_hex = tx1a.serialize().hex()
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
 
@@ -422,7 +422,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         tx2a = CTransaction()
         tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0xfffffffe)]
-        tx2a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        tx2a.vout = [CTxOut(1 * COIN, DUMMY_P2WPK_SCRIPT)]
         tx2a_hex = tx2a.serialize().hex()
         tx2a_txid = self.nodes[0].sendrawtransaction(tx2a_hex, 0)
 
@@ -442,12 +442,12 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         tx3b = CTransaction()
         tx3b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]
-        tx3b.vout = [CTxOut(int(0.5 * COIN), DUMMY_P2WPKH_SCRIPT)]
+        tx3b.vout = [CTxOut(int(0.5 * COIN), DUMMY_P2WPK_SCRIPT)]
         tx3b_hex = tx3b.serialize().hex()
 
         tx3c = CTransaction()
         tx3c.vin = [CTxIn(COutPoint(tx2a_txid, 0), nSequence=0)]
-        tx3c.vout = [CTxOut(int(0.5 * COIN), DUMMY_P2WPKH_SCRIPT)]
+        tx3c.vout = [CTxOut(int(0.5 * COIN), DUMMY_P2WPK_SCRIPT)]
         tx3c_hex = tx3c.serialize().hex()
 
         self.nodes[0].sendrawtransaction(tx3b_hex, 0)
@@ -464,7 +464,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         tx1a = CTransaction()
         tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPK_SCRIPT)]
         tx1a_hex = tx1a.serialize().hex()
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
 
@@ -490,14 +490,14 @@ class ReplaceByFeeTest(FreicoinTestFramework):
 
         tx2a = CTransaction()
         tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0)]
-        tx2a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        tx2a.vout = [CTxOut(1 * COIN, DUMMY_P2WPK_SCRIPT)]
         tx2a_hex = tx2a.serialize().hex()
         self.nodes[0].sendrawtransaction(tx2a_hex, 0)
 
         # Lower fee, but we'll prioritise it
         tx2b = CTransaction()
         tx2b.vin = [CTxIn(tx1_outpoint, nSequence=0)]
-        tx2b.vout = [CTxOut(int(1.01 * COIN), DUMMY_P2WPKH_SCRIPT)]
+        tx2b.vout = [CTxOut(int(1.01 * COIN), DUMMY_P2WPK_SCRIPT)]
         tx2b.rehash()
         tx2b_hex = tx2b.serialize().hex()
 

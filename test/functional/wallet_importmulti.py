@@ -448,39 +448,39 @@ class ImportMultiTest(FreicoinTestFramework):
                                     "timestamp": ""
                                 }])
 
-        # Import P2WPKH address as watch only
-        self.log.info("Should import a P2WPKH address as watch only")
+        # Import P2WPK address as watch only
+        self.log.info("Should import a P2WPK address as watch only")
         key = get_key(self.nodes[0])
-        self.test_importmulti({"scriptPubKey": {"address": key.p2wpkh_addr},
+        self.test_importmulti({"scriptPubKey": {"address": key.p2wpk_addr},
                                "timestamp": "now"},
                               success=True)
         test_address(self.nodes[1],
-                     key.p2wpkh_addr,
+                     key.p2wpk_addr,
                      iswatchonly=True,
                      solvable=False)
 
-        # Import P2WPKH address with public key but no private key
-        self.log.info("Should import a P2WPKH address and public key as solvable but not spendable")
+        # Import P2WPK address with public key but no private key
+        self.log.info("Should import a P2WPK address and public key as solvable but not spendable")
         key = get_key(self.nodes[0])
-        self.test_importmulti({"scriptPubKey": {"address": key.p2wpkh_addr},
+        self.test_importmulti({"scriptPubKey": {"address": key.p2wpk_addr},
                                "timestamp": "now",
                                "pubkeys": [key.pubkey]},
                               success=True,
                               warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         test_address(self.nodes[1],
-                     key.p2wpkh_addr,
+                     key.p2wpk_addr,
                      ismine=False,
                      solvable=True)
 
-        # Import P2WPKH address with key and check it is spendable
-        self.log.info("Should import a P2WPKH address with key")
+        # Import P2WPK address with key and check it is spendable
+        self.log.info("Should import a P2WPK address with key")
         key = get_key(self.nodes[0])
-        self.test_importmulti({"scriptPubKey": {"address": key.p2wpkh_addr},
+        self.test_importmulti({"scriptPubKey": {"address": key.p2wpk_addr},
                                "timestamp": "now",
                                "keys": [key.privkey]},
                               success=True)
         test_address(self.nodes[1],
-                     key.p2wpkh_addr,
+                     key.p2wpk_addr,
                      iswatchonly=False,
                      ismine=True)
 
@@ -507,40 +507,40 @@ class ImportMultiTest(FreicoinTestFramework):
                      ismine=True,
                      sigsrequired=2)
 
-        # P2SH-P2WPKH address with no redeemscript or public or private key
+        # P2SH-P2WPK address with no redeemscript or public or private key
         key = get_key(self.nodes[0])
-        self.log.info("Should import a p2sh-p2wpkh without redeem script or keys")
-        self.test_importmulti({"scriptPubKey": {"address": key.p2sh_p2wpkh_addr},
+        self.log.info("Should import a p2sh-p2wpk without redeem script or keys")
+        self.test_importmulti({"scriptPubKey": {"address": key.p2sh_p2wpk_addr},
                                "timestamp": "now"},
                               success=True)
         test_address(self.nodes[1],
-                     key.p2sh_p2wpkh_addr,
+                     key.p2sh_p2wpk_addr,
                      solvable=False,
                      ismine=False)
 
-        # P2SH-P2WPKH address + redeemscript + public key with no private key
-        self.log.info("Should import a p2sh-p2wpkh with respective redeem script and pubkey as solvable")
-        self.test_importmulti({"scriptPubKey": {"address": key.p2sh_p2wpkh_addr},
+        # P2SH-P2WPK address + redeemscript + public key with no private key
+        self.log.info("Should import a p2sh-p2wpk with respective redeem script and pubkey as solvable")
+        self.test_importmulti({"scriptPubKey": {"address": key.p2sh_p2wpk_addr},
                                "timestamp": "now",
-                               "redeemscript": key.p2sh_p2wpkh_redeem_script,
+                               "redeemscript": key.p2sh_p2wpk_redeem_script,
                                "pubkeys": [key.pubkey]},
                               success=True,
                               warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         test_address(self.nodes[1],
-                     key.p2sh_p2wpkh_addr,
+                     key.p2sh_p2wpk_addr,
                      solvable=True,
                      ismine=False)
 
-        # P2SH-P2WPKH address + redeemscript + private key
+        # P2SH-P2WPK address + redeemscript + private key
         key = get_key(self.nodes[0])
-        self.log.info("Should import a p2sh-p2wpkh with respective redeem script and private keys")
-        self.test_importmulti({"scriptPubKey": {"address": key.p2sh_p2wpkh_addr},
+        self.log.info("Should import a p2sh-p2wpk with respective redeem script and private keys")
+        self.test_importmulti({"scriptPubKey": {"address": key.p2sh_p2wpk_addr},
                                "timestamp": "now",
-                               "redeemscript": key.p2sh_p2wpkh_redeem_script,
+                               "redeemscript": key.p2sh_p2wpk_redeem_script,
                                "keys": [key.privkey]},
                               success=True)
         test_address(self.nodes[1],
-                     key.p2sh_p2wpkh_addr,
+                     key.p2sh_p2wpk_addr,
                      solvable=True,
                      ismine=True)
 
@@ -558,37 +558,37 @@ class ImportMultiTest(FreicoinTestFramework):
                      solvable=True,
                      ismine=False)
 
-        # Test importing of a P2SH-P2WPKH address via descriptor + private key
+        # Test importing of a P2SH-P2WPK address via descriptor + private key
         key = get_key(self.nodes[0])
-        self.log.info("Should not import a p2sh-p2wpkh address from descriptor without checksum and private key")
-        self.test_importmulti({"desc": "sh(wpkh(" + key.pubkey + "))",
+        self.log.info("Should not import a p2sh-p2wpk address from descriptor without checksum and private key")
+        self.test_importmulti({"desc": "sh(wpk(" + key.pubkey + "))",
                                "timestamp": "now",
-                               "label": "Unsuccessful P2SH-P2WPKH descriptor import",
+                               "label": "Unsuccessful P2SH-P2WPK descriptor import",
                                "keys": [key.privkey]},
                               success=False,
                               error_code=-5,
                               error_message="Missing checksum")
 
-        # Test importing of a P2SH-P2WPKH address via descriptor + private key
+        # Test importing of a P2SH-P2WPK address via descriptor + private key
         key = get_key(self.nodes[0])
-        p2sh_p2wpkh_label = "Successful P2SH-P2WPKH descriptor import"
-        self.log.info("Should import a p2sh-p2wpkh address from descriptor and private key")
-        self.test_importmulti({"desc": descsum_create("sh(wpkh(" + key.pubkey + "))"),
+        p2sh_p2wpk_label = "Successful P2SH-P2WPK descriptor import"
+        self.log.info("Should import a p2sh-p2wpk address from descriptor and private key")
+        self.test_importmulti({"desc": descsum_create("sh(wpk(" + key.pubkey + "))"),
                                "timestamp": "now",
-                               "label": p2sh_p2wpkh_label,
+                               "label": p2sh_p2wpk_label,
                                "keys": [key.privkey]},
                               success=True)
         test_address(self.nodes[1],
-                     key.p2sh_p2wpkh_addr,
+                     key.p2sh_p2wpk_addr,
                      solvable=True,
                      ismine=True,
-                     labels=[p2sh_p2wpkh_label])
+                     labels=[p2sh_p2wpk_label])
 
         # Test ranged descriptor fails if range is not specified
         xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
-        addresses = ["2N7yv4p8G8yEaPddJxY41kPihnWvs39qCMf", "2MsHxyb2JS3pAySeNUsJ7mNnurtpeenDzLA"] # hdkeypath=m/0'/0'/0' and 1'
-        addresses += ["bcrt1qrd3n235cj2czsfmsuvqqpr3lu6lg0ju7scl8gn", "bcrt1qfqeppuvj0ww98r6qghmdkj70tv8qpchehegrg8"] # wpkh subscripts corresponding to the above addresses
-        desc = "sh(wpkh(" + xpriv + "/0'/0'/*'" + "))"
+        addresses = ["2NDLXtQJmnSnbwUZFWypKAwgsmmzuPpb2ue", "2N8qZjf8YFkyXsrZbAA1Pd7rWHNzYKEYRMz"] # hdkeypath=m/0'/0'/0' and 1'
+        addresses += ["bcrt1qqled64ja2uzm22tuljxgrkt6wxarefplunk52t", "bcrt1qwc7hkenmn2zrjx7zgcna7k5cfwwlgx32czdzsj"] # wpk subscripts corresponding to the above addresses
+        desc = "sh(wpk(" + xpriv + "/0'/0'/*'" + "))"
         self.log.info("Ranged descriptor import should fail without a specified range")
         self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now"},
@@ -625,8 +625,8 @@ class ImportMultiTest(FreicoinTestFramework):
 
         # Test importing a descriptor containing a WIF private key
         wif_priv = "cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh"
-        address = "2MuhcG52uHPknxDgmGPsV18jSHFBnnRgjPg"
-        desc = "sh(wpkh(" + wif_priv + "))"
+        address = "2ND15xBwCC1VC7Gf2fghCN6vwu8babD77xs"
+        desc = "sh(wpk(" + wif_priv + "))"
         self.log.info("Should import a descriptor with a WIF private key as spendable")
         self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now"},
@@ -697,7 +697,7 @@ class ImportMultiTest(FreicoinTestFramework):
         pub_fpr = info['hdmasterfingerprint']
         result = self.nodes[0].importmulti(
             [{
-                'desc' : descsum_create("wpkh([" + pub_fpr + pub_keypath[1:] +"]" + pub + ")"),
+                'desc' : descsum_create("wpk([" + pub_fpr + pub_keypath[1:] +"]" + pub + ")"),
                 "timestamp": "now",
             }]
         )
@@ -715,7 +715,7 @@ class ImportMultiTest(FreicoinTestFramework):
         priv_fpr = info['hdmasterfingerprint']
         result = self.nodes[0].importmulti(
             [{
-                'desc' : descsum_create("wpkh([" + priv_fpr + priv_keypath[1:] + "]" + priv + ")"),
+                'desc' : descsum_create("wpk([" + priv_fpr + priv_keypath[1:] + "]" + priv + ")"),
                 "timestamp": "now",
             }]
         )
@@ -784,12 +784,12 @@ class ImportMultiTest(FreicoinTestFramework):
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
             [{
-                'desc': descsum_create('wpkh(' + pub1 + ')'),
+                'desc': descsum_create('wpk(' + pub1 + ')'),
                 'keypool': True,
                 "timestamp": "now",
             },
             {
-                'desc': descsum_create('wpkh(' + pub2 + ')'),
+                'desc': descsum_create('wpk(' + pub2 + ')'),
                 'keypool': True,
                 "timestamp": "now",
             }]
@@ -810,13 +810,13 @@ class ImportMultiTest(FreicoinTestFramework):
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
             [{
-                'desc': descsum_create('wpkh(' + pub1 + ')'),
+                'desc': descsum_create('wpk(' + pub1 + ')'),
                 'keypool': True,
                 'internal': True,
                 "timestamp": "now",
             },
             {
-                'desc': descsum_create('wpkh(' + pub2 + ')'),
+                'desc': descsum_create('wpk(' + pub2 + ')'),
                 'keypool': True,
                 'internal': True,
                 "timestamp": "now",
@@ -852,7 +852,7 @@ class ImportMultiTest(FreicoinTestFramework):
         assert wrpc.getwalletinfo()['private_keys_enabled']
         result = wrpc.importmulti(
             [{
-                'desc': descsum_create('wpkh(' + pub1 + ')'),
+                'desc': descsum_create('wpk(' + pub1 + ')'),
                 'keypool': True,
                 "timestamp": "now",
             }]
@@ -867,15 +867,15 @@ class ImportMultiTest(FreicoinTestFramework):
         assert_equal(wrpc.getwalletinfo()["private_keys_enabled"], False)
         xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
         addresses = [
-            'bcrt1qtmp74ayg7p24uslctssvjm06q5phz4yrxucgnv', # m/0'/0'/0
-            'bcrt1q8vprchan07gzagd5e6v9wd7azyucksq2xc76k8', # m/0'/0'/1
-            'bcrt1qtuqdtha7zmqgcrr26n2rqxztv5y8rafjp9lulu', # m/0'/0'/2
-            'bcrt1qau64272ymawq26t90md6an0ps99qkrse58m640', # m/0'/0'/3
-            'bcrt1qsg97266hrh6cpmutqen8s4s962aryy77jp0fg0', # m/0'/0'/4
+            'bcrt1qpjdewptcahxy8vpnvr7ukevzx4a7zyhp664v9x', # m/0'/0'/0
+            'bcrt1qq5m59csrvle2us5lj9c59etglje69yuaxn5wqj', # m/0'/0'/1
+            'bcrt1qjxc9np7uux87shxkzgqy23ek8eap52xfa5hmuc', # m/0'/0'/2
+            'bcrt1qa5pwzv5wsxgddqltx77ljlfrsnf9rs5nhazwtv', # m/0'/0'/3
+            'bcrt1qg3zm4zh6prq45r6hduznyl63f2upm5mjmtgtq3', # m/0'/0'/4
         ]
         result = wrpc.importmulti(
             [{
-                'desc': descsum_create('wpkh([80002067/0h/0h]' + xpub + '/*)'),
+                'desc': descsum_create('wpk([80002067/0h/0h]' + xpub + '/*)'),
                 'keypool': True,
                 'timestamp': 'now',
                 'range' : [0, 4],

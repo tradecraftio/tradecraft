@@ -221,7 +221,10 @@ bool CScript::IsPayToScriptHash() const
 bool CScript::IsPayToWitnessScriptHash() const
 {
     // Extra-fast test for pay-to-witness-script-hash CScripts:
-    return (this->size() == 34 &&
+    return (this->size() == 22 && // WITNESS_V0_SHORTHASH
+            (*this)[0] == OP_0 &&
+            (*this)[1] == 0x14) ||
+           (this->size() == 34 && // WITNESS_V0_LONGHASH
             (*this)[0] == OP_0 &&
             (*this)[1] == 0x20);
 }

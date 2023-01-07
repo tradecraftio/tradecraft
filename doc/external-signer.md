@@ -88,7 +88,7 @@ $ <cmd> enumerate
 
 The command MUST return an (empty) array with at least a `fingerprint` field.
 
-A future extension could add an optional return field with device capabilities. Perhaps a descriptor with wildcards. For example: `["pkh("44'/0'/$'/{0,1}/*"), sh(wpkh("49'/0'/$'/{0,1}/*")), wpkh("84'/0'/$'/{0,1}/*")]`. This would indicate the device supports legacy, wrapped SegWit and native SegWit. In addition it restricts the derivation paths that can used for those, to maintain compatibility with other wallet software. It also indicates the device, or the driver, doesn't support multisig.
+A future extension could add an optional return field with device capabilities. Perhaps a descriptor with wildcards. For example: `["pkh("44'/0'/$'/{0,1}/*"), sh(wpk("49'/0'/$'/{0,1}/*")), wpk("84'/0'/$'/{0,1}/*")]`. This would indicate the device supports legacy, wrapped SegWit and native SegWit. In addition it restricts the derivation paths that can used for those, to maintain compatibility with other wallet software. It also indicates the device, or the driver, doesn't support multisig.
 
 A future extension could add an optional return field `reachable`, in case `<cmd>` knows a signer exists but can't currently reach it.
 
@@ -124,13 +124,13 @@ $ <cmd> --fingerprint=00000000 --testnet getdescriptors
 {
   "receive": [
     "pkh([00000000/44h/0h/0h]xpub6C.../0/*)#fn95jwmg",
-    "sh(wpkh([00000000/49h/0h/0h]xpub6B..../0/*))#j4r9hntt",
-    "wpkh([00000000/84h/0h/0h]xpub6C.../0/*)#qw72dxa9"
+    "sh(wpk([00000000/49h/0h/0h]xpub6B..../0/*))#j4r9hntt",
+    "wpk([00000000/84h/0h/0h]xpub6C.../0/*)#qw72dxa9"
   ],
   "internal": [
     "pkh([00000000/44h/0h/0h]xpub6C.../1/*)#c8q40mts",
-    "sh(wpkh([00000000/49h/0h/0h]xpub6B..../1/*))#85dn0v75",
-    "wpkh([00000000/84h/0h/0h]xpub6C..../1/*)#36mtsnda"
+    "sh(wpk([00000000/49h/0h/0h]xpub6B..../1/*))#85dn0v75",
+    "wpk([00000000/84h/0h/0h]xpub6C..../1/*)#36mtsnda"
   ]
 }
 ```
@@ -145,7 +145,7 @@ Usage:
 Example, display the first native SegWit receive address on Testnet:
 
 ```
-<cmd> --fingerprint=00000000 --testnet displayaddress --desc "wpkh([00000000/84h/1h/0h]tpubDDUZ..../0/0)"
+<cmd> --fingerprint=00000000 --testnet displayaddress --desc "wpk([00000000/84h/1h/0h]tpubDDUZ..../0/0)"
 ```
 
 The command MUST be able to figure out the address type from the descriptor.

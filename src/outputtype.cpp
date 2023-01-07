@@ -64,7 +64,7 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
         if (!key.IsCompressed()) return PKHash(key);
-        CTxDestination witdest = WitnessV0KeyHash(key);
+        CTxDestination witdest = WitnessV0ShortHash(0 /* version */, key);
         CScript witprog = GetScriptForDestination(witdest);
         if (type == OutputType::P2SH_SEGWIT) {
             return ScriptHash(witprog);
@@ -82,7 +82,7 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
     PKHash keyid(key);
     CTxDestination p2pkh{keyid};
     if (key.IsCompressed()) {
-        CTxDestination segwit = WitnessV0KeyHash(keyid);
+        CTxDestination segwit = WitnessV0ShortHash(0 /* version */, key);
         CTxDestination p2sh = ScriptHash(GetScriptForDestination(segwit));
         return Vector(std::move(p2pkh), std::move(p2sh), std::move(segwit));
     } else {
@@ -100,7 +100,7 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
         return ScriptHash(script);
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
-        CTxDestination witdest = WitnessV0ScriptHash(0 /* version */, script);
+        CTxDestination witdest = WitnessV0LongHash(0 /* version */, script);
         CScript witprog = GetScriptForDestination(witdest);
         WitnessV0ScriptEntry entry(0 /* version */, script);
         keystore.AddWitnessV0Script(entry);
@@ -124,8 +124,8 @@ std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest) 
         std::holds_alternative<ScriptHash>(dest)) {
         return OutputType::LEGACY;
     }
-    if (std::holds_alternative<WitnessV0KeyHash>(dest) ||
-        std::holds_alternative<WitnessV0ScriptHash>(dest)) {
+    if (std::holds_alternative<WitnessV0ShortHash>(dest) ||
+        std::holds_alternative<WitnessV0LongHash>(dest)) {
         return OutputType::BECH32;
     }
     if (std::holds_alternative<WitnessV1Taproot>(dest) ||

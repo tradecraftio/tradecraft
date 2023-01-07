@@ -612,8 +612,8 @@ static RPCHelpMan decodescript()
         case TxoutType::NONSTANDARD:
         case TxoutType::PUBKEY:
         case TxoutType::PUBKEYHASH:
-        case TxoutType::WITNESS_V0_KEYHASH:
-        case TxoutType::WITNESS_V0_SCRIPTHASH:
+        case TxoutType::WITNESS_V0_SHORTHASH:
+        case TxoutType::WITNESS_V0_LONGHASH:
             // Can be wrapped if the checks below pass
             break;
         case TxoutType::UNSPENDABLE:
@@ -652,15 +652,19 @@ static RPCHelpMan decodescript()
                     }
                 }
                 return true;
-            case TxoutType::NONSTANDARD:
             case TxoutType::PUBKEYHASH:
+            // If the script is P2PKH, we have no way of checking if the
+            // corresponding pubkey is compressed or not.  And even if we did,
+            // "P2WPKH" scripts aren't recognized by default.
+                return false;
+            case TxoutType::NONSTANDARD:
                 // Can be P2WSH wrapped
                 return true;
             case TxoutType::UNSPENDABLE:
             case TxoutType::SCRIPTHASH:
             case TxoutType::WITNESS_UNKNOWN:
-            case TxoutType::WITNESS_V0_KEYHASH:
-            case TxoutType::WITNESS_V0_SCRIPTHASH:
+            case TxoutType::WITNESS_V0_SHORTHASH:
+            case TxoutType::WITNESS_V0_LONGHASH:
             case TxoutType::WITNESS_V1_TAPROOT:
                 // Should not be wrapped
                 return false;
@@ -671,12 +675,10 @@ static RPCHelpMan decodescript()
             UniValue sr(UniValue::VOBJ);
             CScript segwitScr;
             if (which_type == TxoutType::PUBKEY) {
-                segwitScr = GetScriptForDestination(WitnessV0KeyHash(Hash160(solutions_data[0])));
-            } else if (which_type == TxoutType::PUBKEYHASH) {
-                segwitScr = GetScriptForDestination(WitnessV0KeyHash(uint160{solutions_data[0]}));
+                segwitScr = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, CPubKey(solutions_data[0])));
             } else {
-                // Scripts that are not fit for P2WPKH are encoded as P2WSH.
-                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(0 /* version */, script));
+                // Scripts that are not fit for P2WPK are encoded as P2WSH.
+                segwitScr = GetScriptForDestination(WitnessV0LongHash(0 /* version */, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, /* include_hex */ true);
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));

@@ -195,8 +195,8 @@ class CoinStatsIndexTest(FreicoinTestFramework):
                 'demurrage': 0,
                 'unspendable': Decimal('20.99000000'),
                 'prevout_spent': 111,
-                'new_outputs_ex_coinbase': Decimal('89.99993540'),
-                'coinbase': Decimal('50.01006460'),
+                'new_outputs_ex_coinbase': Decimal('89.99993520'),
+                'coinbase': Decimal('50.01006480'),
                 'unspendables': {
                     'genesis_block': 0,
                     'bip30': 0,
