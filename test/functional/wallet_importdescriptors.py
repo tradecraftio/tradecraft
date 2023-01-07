@@ -459,15 +459,15 @@ class ImportDescriptorsTest(FreicoinTestFramework):
 
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1001) # Range end (1000) is inclusive, so 1001 addresses generated
         addr = wmulti_priv.getnewaddress('', 'bech32')
-        assert_equal(addr, 'bcrt1qfefzz76e9888vq69drt6hr2tjxmpnkmmq6kxxjjlaj5n4s0d0teqewqm6x') # Derived at m/84'/0'/0'/0
+        assert_equal(addr, 'bcrt1qkhstg8fm7ngqxnh076musrw844vjtl27s3yuvjkt5nfvz043gs2qv474ee') # Derived at m/84'/0'/0'/0
         change_addr = wmulti_priv.getrawchangeaddress('bech32')
-        assert_equal(change_addr, 'bcrt1qw6mpuxzj66nxs24lrq6s9ynvhj2nhf5uej5fq2ryj87phmecmcgs24xl2v')
+        assert_equal(change_addr, 'bcrt1qrk995famq96k2m32gz2lh4cv2mh4n4r8dj4w78kc5qel00zer9uqx8l5wx')
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1000)
         txid = w0.sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 6)
         send_txid = wmulti_priv.sendtoaddress(w0.getnewaddress(), 8)
         decoded = wmulti_priv.gettransaction(txid=send_txid, verbose=True)['decoded']
-        assert_equal(len(decoded['vin'][0]['txinwitness']), 4)
+        assert_equal(len(decoded['vin'][0]['txinwitness']), 5)
         self.sync_all()
 
         self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True, descriptors=True)
@@ -492,9 +492,9 @@ class ImportDescriptorsTest(FreicoinTestFramework):
 
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 1000) # The first one was already consumed by previous import and is detected as used
         addr = wmulti_pub.getnewaddress('', 'bech32')
-        assert_equal(addr, 'bcrt1qyk8g9tzva2dm26mqgg5crhjz73cx9kw7xjsf6lgzelhtq5jfw9ms6r8zx0') # Derived at m/84'/0'/0'/1
+        assert_equal(addr, 'bcrt1q4gzj9trudwwcjuu6aj54mflqmc6exgr8hwx6m6v2edj6p696l2cqpqxfgj') # Derived at m/84'/0'/0'/1
         change_addr = wmulti_pub.getrawchangeaddress('bech32')
-        assert_equal(change_addr, 'bcrt1q3p0qtzzj08emql6hsl9jpjtm39kjj3uwzf0dtc2pg67ds3lsawrq2jk9vl')
+        assert_equal(change_addr, 'bcrt1q8ypfwq37snawnzs7au4k3cu6efceyuengh6w02ek5fjntlzh22uqu3lm88')
         assert(send_txid in self.nodes[0].getrawmempool(True))
         assert(send_txid in (x['txid'] for x in wmulti_pub.listunspent(0)))
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 999)
@@ -599,7 +599,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         txid = wmulti_priv_big.sendtoaddress(w0.getnewaddress(), 9.999)
         decoded = wmulti_priv_big.gettransaction(txid=txid, verbose=True)['decoded']
         # 20 sigs + dummy + witness script
-        assert_equal(len(decoded['vin'][0]['txinwitness']), 22)
+        assert_equal(len(decoded['vin'][0]['txinwitness']), 23)
 
 
         self.log.info("Under P2SH, multisig are standard with up to 15 "
