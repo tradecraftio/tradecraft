@@ -1021,7 +1021,7 @@ NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_val
 //! The spk for this script under the given context. If it's a Taproot output also record the spend data.
 CScript ScriptPubKey(MsCtx ctx, const CScript& script, TaprootBuilder& builder)
 {
-    if (!miniscript::IsTapscript(ctx)) return CScript() << OP_0 << WitnessV0ScriptHash(/*version=*/0, script);
+    if (!miniscript::IsTapscript(ctx)) return CScript() << OP_0 << WitnessV0LongHash(/*version=*/0, script);
 
     // For Taproot outputs we always use a tree with a single script and a dummy internal key.
     builder.Add(0, script, TAPROOT_LEAF_TAPSCRIPT);

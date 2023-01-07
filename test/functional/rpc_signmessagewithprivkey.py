@@ -32,8 +32,8 @@ class SignMessagesWithPrivTest(FreicoinTestFramework):
 
     def addresses_from_privkey(self, priv_key):
         '''Return addresses for a given WIF private key in legacy (P2PKH),
-           nested segwit (P2SH-P2WPKH) and native segwit (P2WPKH) formats.'''
-        descriptors = f'pkh({priv_key})', f'sh(wpkh({priv_key}))', f'wpkh({priv_key})'
+           nested segwit (P2SH-P2WPK) and native segwit (P2WPK) formats.'''
+        descriptors = f'pkh({priv_key})', f'sh(wpk({priv_key}))', f'wpk({priv_key})'
         return [self.nodes[0].deriveaddresses(descsum_create(desc))[0] for desc in descriptors]
 
     def run_test(self):

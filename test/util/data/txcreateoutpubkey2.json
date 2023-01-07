@@ -1,6 +1,6 @@
 {
-    "txid": "e770c62ad9118b06227fb389dd3ddf6bd0c3933105c5e528932f21d96ba94948",
-    "hash": "e770c62ad9118b06227fb389dd3ddf6bd0c3933105c5e528932f21d96ba94948",
+    "txid": "9d8739b2f361baf8b2a96a8c78621cf7a889e2f1de10b0a0ca42bb5a98829e18",
+    "hash": "9d8739b2f361baf8b2a96a8c78621cf7a889e2f1de10b0a0ca42bb5a98829e18",
     "version": 1,
     "size": 45,
     "vsize": 45,
@@ -14,13 +14,13 @@
             "value": 0.00000000,
             "n": 0,
             "scriptPubKey": {
-                "asm": "0 a2516e770582864a6a56ed21a102044e388c62e3",
-                "desc": "addr(bc1q5fgkuac9s2ry56jka5s6zqsyfcugcchry5cwu0)#gm7zhxq2",
-                "hex": "0014a2516e770582864a6a56ed21a102044e388c62e3",
-                "address": "bc1q5fgkuac9s2ry56jka5s6zqsyfcugcchry5cwu0",
-                "type": "witness_v0_keyhash"
+                "asm": "0 d3b3d521266a3ddfc04d4c11108ad74f29883984",
+                "desc": "addr(bc1q6wea2gfxdg7alszdfsg3pzkhfu5cswvyl0r5nd)#eqza2vs2",
+                "hex": "0014d3b3d521266a3ddfc04d4c11108ad74f29883984",
+                "address": "bc1q6wea2gfxdg7alszdfsg3pzkhfu5cswvyl0r5nd",
+                "type": "witness_v0_shorthash"
             }
         }
     ],
-    "hex": "0100000000010000000000000000160014a2516e770582864a6a56ed21a102044e388c62e30000000000000000"
+    "hex": "0100000000010000000000000000160014d3b3d521266a3ddfc04d4c11108ad74f298839840000000000000000"
 }

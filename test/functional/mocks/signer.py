@@ -37,14 +37,14 @@ def getdescriptors(args):
     sys.stdout.write(json.dumps({
         "receive": [
             "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/0/*)#vt6w3l3j",
-            "sh(wpkh([00000001/49'/1'/" + args.account + "']" + xpub + "/0/*))#r0grqw5x",
-            "wpkh([00000001/84'/1'/" + args.account + "']" + xpub + "/0/*)#x30uthjs",
+            "sh(wpk([00000001/49'/1'/" + args.account + "']" + xpub + "/0/*))#cu68sapn",
+            "wpk([00000001/84'/1'/" + args.account + "']" + xpub + "/0/*)#5zw5r7xs",
             "tr([00000001/86'/1'/" + args.account + "']" + xpub + "/0/*)#sng9rd4t"
         ],
         "internal": [
             "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/1/*)#all0v2p2",
-            "sh(wpkh([00000001/49'/1'/" + args.account + "']" + xpub + "/1/*))#kwx4c3pe",
-            "wpkh([00000001/84'/1'/" + args.account + "']" + xpub + "/1/*)#h92akzzg",
+            "sh(wpk([00000001/49'/1'/" + args.account + "']" + xpub + "/1/*))#7ljzts28",
+            "wpk([00000001/84'/1'/" + args.account + "']" + xpub + "/1/*)#9kt47tkg",
             "tr([00000001/86'/1'/" + args.account + "']" + xpub + "/1/*)#p8dy7c9n"
 
         ]
@@ -58,7 +58,7 @@ def displayaddress(args):
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
     expected_desc = [
-        "wpkh([00000001/84'/1'/0'/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#0yneg42r",
+        "wpk([00000001/84'/1'/0'/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#0yneg42r",
         "tr([00000001/86'/1'/0'/0/0]c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#4vdj9jqk",
     ]
     if args.desc not in expected_desc:

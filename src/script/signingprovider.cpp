@@ -17,6 +17,7 @@
 #include <script/keyorigin.h>
 #include <script/interpreter.h>
 #include <script/signingprovider.h>
+#include <script/solver.h> // for GetScriptForRawPubKey
 
 #include <logging.h>
 
@@ -38,9 +39,14 @@ bool HidingSigningProvider::GetCScript(const CScriptID& scriptid, CScript& scrip
     return m_provider->GetCScript(scriptid, script);
 }
 
-bool HidingSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const
+bool HidingSigningProvider::GetWitnessV0Script(const WitnessV0ShortHash& id, WitnessV0ScriptEntry& entry) const
 {
     return m_provider->GetWitnessV0Script(id, entry);
+}
+
+bool HidingSigningProvider::GetWitnessV0Script(const WitnessV0LongHash& id, WitnessV0ScriptEntry& entry) const
+{
+    return GetWitnessV0Script(WitnessV0ShortHash(id), entry);
 }
 
 bool HidingSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
@@ -70,7 +76,8 @@ bool HidingSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tap
 }
 
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
-bool FlatSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const { return LookupHelper(witscripts, id, entry); }
+bool FlatSigningProvider::GetWitnessV0Script(const WitnessV0ShortHash& id, WitnessV0ScriptEntry& entry) const { return LookupHelper(witscripts, id, entry); }
+bool FlatSigningProvider::GetWitnessV0Script(const WitnessV0LongHash& id, WitnessV0ScriptEntry& entry) const { return GetWitnessV0Script(WitnessV0ShortHash(id), entry); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
 bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
 {
@@ -108,12 +115,11 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
 {
     AssertLockHeld(cs_KeyStore);
-    CKeyID key_id = pubkey.GetID();
-    // This adds the redeemscripts necessary to detect P2WPKH and P2SH-P2WPKH
-    // outputs. Technically P2WPKH outputs don't have a redeemscript to be
+    // This adds the redeemscripts necessary to detect P2WPK and P2SH-P2WPK
+    // outputs. Technically P2WPK outputs don't have a redeemscript to be
     // spent. However, our current IsMine logic requires the corresponding
-    // P2SH-P2WPKH redeemscript to be present in the wallet in order to accept
-    // payment even to P2WPKH outputs.
+    // P2SH-P2WPK redeemscript to be present in the wallet in order to accept
+    // payment even to P2WPK outputs.
     // Also note that having superfluous scripts in the keystore never hurts.
     // They're only used to guide recursion in signing and IsMine logic - if
     // a script is present but we can't do anything with it, it has no effect.
@@ -121,10 +127,13 @@ void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pu
     // existing keys, and are present in memory, even without being explicitly
     // loaded (e.g. from a file).
     if (pubkey.IsCompressed()) {
-        CScript script = GetScriptForDestination(WitnessV0KeyHash(key_id));
+        WitnessV0ScriptEntry entry(/*version=*/0, GetScriptForRawPubKey(pubkey));
+        WitnessV0ShortHash shortid = entry.GetShortHash();
         // This does not use AddCScript, as it may be overridden.
-        CScriptID id(script);
-        mapScripts[id] = std::move(script);
+        CScript p2wpk = GetScriptForDestination(shortid);
+        mapScripts[CScriptID(p2wpk)] = std::move(p2wpk);
+        // This does not use AddWitnessV0Script, as it may be overridden.
+        mapWitnessV0Scripts[shortid] = std::move(entry);
     }
 }
 
@@ -214,27 +223,32 @@ bool FillableSigningProvider::GetCScript(const CScriptID &hash, CScript& redeemS
 bool FillableSigningProvider::AddWitnessV0Script(const WitnessV0ScriptEntry& entry)
 {
     LOCK(cs_KeyStore);
-    mapWitnessV0Scripts[entry.GetScriptHash()] = entry;
+    mapWitnessV0Scripts[entry.GetShortHash()] = entry;
     return true;
 }
 
-bool FillableSigningProvider::HaveWitnessV0Script(const WitnessV0ScriptHash& witnessprogram) const
+bool FillableSigningProvider::HaveWitnessV0Script(const WitnessV0ShortHash& witnessprogram) const
 {
     LOCK(cs_KeyStore);
     return mapWitnessV0Scripts.count(witnessprogram) > 0;
 }
 
-std::set<WitnessV0ScriptHash> FillableSigningProvider::GetWitnessV0Scripts() const
+bool FillableSigningProvider::HaveWitnessV0Script(const WitnessV0LongHash& witnessprogram) const
+{
+    return HaveWitnessV0Script(WitnessV0ShortHash(witnessprogram));
+}
+
+std::set<WitnessV0ShortHash> FillableSigningProvider::GetWitnessV0Scripts() const
 {
     LOCK(cs_KeyStore);
-    std::set<WitnessV0ScriptHash> ret;
+    std::set<WitnessV0ShortHash> ret;
     for (const auto& mi : mapWitnessV0Scripts) {
         ret.insert(mi.first);
     }
     return ret;
 }
 
-bool FillableSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
+bool FillableSigningProvider::GetWitnessV0Script(const WitnessV0ShortHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
 {
     LOCK(cs_KeyStore);
     auto mi = mapWitnessV0Scripts.find(witnessprogram);
@@ -246,23 +260,63 @@ bool FillableSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& witn
     return false;
 }
 
+bool FillableSigningProvider::GetWitnessV0Script(const WitnessV0LongHash& witnessprogram, WitnessV0ScriptEntry& entryOut) const
+{
+    return GetWitnessV0Script(WitnessV0ShortHash(witnessprogram), entryOut);
+}
+
+static CKeyID GetKeyForWitnessV0Script(const SigningProvider& store, WitnessV0ScriptEntry& entry)
+{
+    if (!entry.m_script.empty() && entry.m_script[0] == 0x00) {
+        CScript script(entry.m_script.begin() + 1, entry.m_script.end());
+        CTxDestination dest;
+        ExtractDestination(script, dest); // PubKeyDestination returns false
+        if (auto pk = std::get_if<PubKeyDestination>(&dest)) {
+            return pk->GetPubKey().GetID();
+        }
+        if (auto id = std::get_if<PKHash>(&dest)) {
+            return ToKeyID(*id);
+        }
+    }
+
+    return CKeyID();
+}
+
 CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest)
 {
     // Only supports destinations which map to single public keys:
-    // P2PKH, P2WPKH, P2SH-P2WPKH, P2TR
+    // P2PKH, P2WPK, P2SH-P2WPK, P2TR
     if (auto id = std::get_if<PKHash>(&dest)) {
         return ToKeyID(*id);
     }
-    if (auto witness_id = std::get_if<WitnessV0KeyHash>(&dest)) {
-        return ToKeyID(*witness_id);
+    if (auto shortid = std::get_if<WitnessV0ShortHash>(&dest)) {
+        WitnessV0ScriptEntry entry;
+        if (store.GetWitnessV0Script(*shortid, entry)) {
+            return GetKeyForWitnessV0Script(store, entry);
+        }
+    }
+    if (auto longid = std::get_if<WitnessV0LongHash>(&dest)) {
+        WitnessV0ScriptEntry entry;
+        if (store.GetWitnessV0Script(*longid, entry)) {
+            return GetKeyForWitnessV0Script(store, entry);
+        }
     }
     if (auto script_hash = std::get_if<ScriptHash>(&dest)) {
         CScript script;
         CScriptID script_id = ToScriptID(*script_hash);
         CTxDestination inner_dest;
         if (store.GetCScript(script_id, script) && ExtractDestination(script, inner_dest)) {
-            if (auto inner_witness_id = std::get_if<WitnessV0KeyHash>(&inner_dest)) {
-                return ToKeyID(*inner_witness_id);
+            if (auto shortid = std::get_if<WitnessV0ShortHash>(&inner_dest)) {
+                WitnessV0ScriptEntry entry;
+                if (store.GetWitnessV0Script(*shortid, entry)) {
+                    return GetKeyForWitnessV0Script(store, entry);
+                }
+            }
+            if (auto longid = std::get_if<WitnessV0LongHash>(&inner_dest)) {
+                WitnessV0ScriptEntry entry;
+                if (store.GetWitnessV0Script(*longid, entry)) {
+                    return GetKeyForWitnessV0Script(store, entry);
+                }
             }
         }
     }
@@ -292,12 +346,17 @@ bool MultiSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script
     return false;
 }
 
-bool MultiSigningProvider::GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const
+bool MultiSigningProvider::GetWitnessV0Script(const WitnessV0ShortHash& shortid, WitnessV0ScriptEntry& entry) const
 {
     for (const auto& provider: m_providers) {
-        if (provider->GetWitnessV0Script(id, entry)) return true;
+        if (provider->GetWitnessV0Script(shortid, entry)) return true;
     }
     return false;
+}
+
+bool MultiSigningProvider::GetWitnessV0Script(const WitnessV0LongHash& longid, WitnessV0ScriptEntry& entry) const
+{
+    return GetWitnessV0Script(WitnessV0ShortHash(longid), entry);
 }
 
 bool MultiSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const

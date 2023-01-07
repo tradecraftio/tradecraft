@@ -717,7 +717,7 @@ def sign_input_legacy(tx, input_index, input_scriptpubkey, privkey, sighash_type
 def sign_input_segwitv0(tx, input_index, input_scriptpubkey, input_amount, input_refheight, privkey, sighash_type=SIGHASH_ALL):
     """Add segwitv0 ECDSA signature for a given transaction input. Note that the signature
        is inserted at the bottom of the witness stack, i.e. additional witness data
-       needed (e.g. pubkey for P2WPKH) can already be set before."""
+       needed (e.g. raw pubkey script for P2WPK) can already be set before."""
     sighash = SegwitV0SignatureHash(input_scriptpubkey, tx, input_index, sighash_type, input_amount, input_refheight)
     der_sig = privkey.sign_ecdsa(sighash)
     tx.wit.vtxinwit[input_index].scriptWitness.stack.insert(0, der_sig + bytes([sighash_type]))

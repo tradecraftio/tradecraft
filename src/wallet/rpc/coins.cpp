@@ -711,18 +711,32 @@ RPCHelpMan listunspent()
                             bool extracted = ExtractDestination(redeemScript, witness_destination);
                             CHECK_NONFATAL(extracted);
                             // Also return the witness script
-                            const WitnessV0ScriptHash& whash = std::get<WitnessV0ScriptHash>(witness_destination);
                             WitnessV0ScriptEntry witentry;
-                            if (provider->GetWitnessV0Script(whash, witentry)) {
-                                entry.pushKV("witnessScript", HexStr(witentry.m_script));
+                            if (redeemScript.size() == 2 + WITNESS_V0_LONGHASH_SIZE) {
+                                const WitnessV0LongHash* whash = std::get_if<WitnessV0LongHash>(&witness_destination);
+                                if (whash && provider->GetWitnessV0Script(*whash, witentry)) {
+                                    entry.pushKV("witnessScript", HexStr(witentry.m_script));
+                                }
+                            } else if (redeemScript.size() == 2 + WITNESS_V0_SHORTHASH_SIZE) {
+                                const WitnessV0ShortHash* whash = std::get_if<WitnessV0ShortHash>(&witness_destination);
+                                if (whash && provider->GetWitnessV0Script(*whash, witentry)) {
+                                    entry.pushKV("witnessScript", HexStr(witentry.m_script));
+                                }
                             }
                         }
                     }
                 } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
-                    const WitnessV0ScriptHash& whash = std::get<WitnessV0ScriptHash>(address);
                     WitnessV0ScriptEntry witentry;
-                    if (provider->GetWitnessV0Script(whash, witentry)) {
-                        entry.pushKV("witnessScript", HexStr(witentry.m_script));
+                    if (scriptPubKey.size() == 2 + WITNESS_V0_LONGHASH_SIZE) {
+                        const WitnessV0LongHash* whash = std::get_if<WitnessV0LongHash>(&address);
+                        if (whash && provider->GetWitnessV0Script(*whash, witentry)) {
+                            entry.pushKV("witnessScript", HexStr(witentry.m_script));
+                        }
+                    } else if (scriptPubKey.size() == 2 + WITNESS_V0_SHORTHASH_SIZE) {
+                        const WitnessV0ShortHash* whash = std::get_if<WitnessV0ShortHash>(&address);
+                        if (whash && provider->GetWitnessV0Script(*whash, witentry)) {
+                            entry.pushKV("witnessScript", HexStr(witentry.m_script));
+                        }
                     }
                 }
             }

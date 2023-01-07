@@ -45,7 +45,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     // so dust is a spendable txout less than
     // 182*dustRelayFee/1000 (in kria).
     // 546 kria at the default rate of 3000 sat/kvB.
-    // A typical spendable segwit P2WPKH txout is 31 bytes big, and will
+    // A typical spendable segwit P2WPK txout is 31 bytes big, and will
     // need a CTxIn of at least 67 bytes to spend:
     // so dust is a spendable txout less than
     // 98*dustRelayFee/1000 (in kria).
@@ -57,7 +57,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
 
-    // Note this computation is for spending a Segwit v0 P2WPKH output (a 33 bytes
+    // Note this computation is for spending a Segwit v0 P2WPK output (a 33 bytes
     // public key + an ECDSA signature). For Segwit v1 Taproot outputs the minimum
     // satisfaction is lower (a single BIP340 signature) but this computation was
     // kept to not further reduce the dust level.
@@ -258,7 +258,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             return false;
 
         // Check P2WSH standard limits
-        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+        if (witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_LONGHASH_SIZE || witnessprogram.size() == WITNESS_V0_SHORTHASH_SIZE)) {
             if ((tx.vin[i].scriptWitness.stack.end() - 2)->size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
                 return false;
             size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 2;

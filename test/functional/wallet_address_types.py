@@ -123,14 +123,20 @@ class AddressTypeTest(FreicoinTestFramework):
             assert not info['iswitness']
             assert 'pubkey' in info
         elif not multisig and typ == 'p2sh-segwit':
-            # P2SH-P2WPKH
+            # P2SH-P2WPK
             assert info['isscript']
             assert not info['iswitness']
-            assert_equal(info['script'], 'witness_v0_keyhash')
-            assert 'pubkey' in info
+            assert_equal(info['script'], 'witness_v0_shorthash')
+            assert info['embedded']['isscript']
+            assert_equal(info['embedded']['script'], 'pubkey')
+            assert info['embedded']['iswitness']
+            assert_equal(info['embedded']['witness_version'], 0)
+            assert_equal(len(info['embedded']['witness_program']), 40)
+            assert 'pubkey' in info['embedded']
         elif not multisig and typ == 'bech32':
-            # P2WPKH
-            assert not info['isscript']
+            # P2WPK
+            assert info['isscript']
+            assert_equal(info['script'], 'pubkey')
             assert info['iswitness']
             assert_equal(info['witness_version'], 0)
             assert_equal(len(info['witness_program']), 40)
@@ -150,7 +156,7 @@ class AddressTypeTest(FreicoinTestFramework):
         elif typ == 'p2sh-segwit':
             # P2SH-P2WSH-multisig
             assert info['isscript']
-            assert_equal(info['script'], 'witness_v0_scripthash')
+            assert_equal(info['script'], 'witness_v0_longhash')
             assert not info['iswitness']
             assert info['embedded']['isscript']
             assert_equal(info['embedded']['script'], 'multisig')
@@ -204,11 +210,11 @@ class AddressTypeTest(FreicoinTestFramework):
             # P2PKH
             assert_equal(info['desc'], descsum_create("pkh(%s)" % key_descs[info['pubkey']]))
         elif not multisig and typ == 'p2sh-segwit':
-            # P2SH-P2WPKH
-            assert_equal(info['desc'], descsum_create("sh(wpkh(%s))" % key_descs[info['pubkey']]))
+            # P2SH-P2WPK
+            assert_equal(info['desc'], descsum_create("sh(wpk(%s))" % key_descs[info['pubkey']]))
         elif not multisig and typ == 'bech32':
-            # P2WPKH
-            assert_equal(info['desc'], descsum_create("wpkh(%s)" % key_descs[info['pubkey']]))
+            # P2WPK
+            assert_equal(info['desc'], descsum_create("wpk(%s)" % key_descs[info['pubkey']]))
         elif typ == 'legacy':
             # P2SH-multisig
             assert_equal(info['desc'], descsum_create("sh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]])))
@@ -356,7 +362,7 @@ class AddressTypeTest(FreicoinTestFramework):
         self.generate(self.nodes[5], 1)
         assert_equal(self.nodes[4].getbalance(), 1)
 
-        self.log.info("Nodes with addresstype=legacy never use a P2WPKH change output (unless changetype is set otherwise):")
+        self.log.info("Nodes with addresstype=legacy never use a P2WPK change output (unless changetype is set otherwise):")
         self.test_change_output_type(0, [to_address_bech32_1], 'legacy')
 
         self.log.info("Nodes with addresstype=p2sh-segwit match the change output")
@@ -365,7 +371,7 @@ class AddressTypeTest(FreicoinTestFramework):
         self.test_change_output_type(1, [to_address_p2sh, to_address_bech32_1], 'bech32')
         self.test_change_output_type(1, [to_address_bech32_1, to_address_bech32_2], 'bech32')
 
-        self.log.info("Nodes with change_type=bech32 always use a P2WPKH change output:")
+        self.log.info("Nodes with change_type=bech32 always use a P2WPK change output:")
         self.test_change_output_type(2, [to_address_bech32_1], 'bech32')
         self.test_change_output_type(2, [to_address_p2sh], 'bech32')
 
@@ -382,7 +388,7 @@ class AddressTypeTest(FreicoinTestFramework):
         assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getrawchangeaddress, '')
         assert_raises_rpc_error(-5, "Unknown address type 'bech23'", self.nodes[3].getrawchangeaddress, 'bech23')
 
-        self.log.info("Nodes with changetype=p2sh-segwit never use a P2WPKH change output")
+        self.log.info("Nodes with changetype=p2sh-segwit never use a P2WPK change output")
         self.test_change_output_type(4, [to_address_bech32_1], 'p2sh-segwit')
         self.test_address(4, self.nodes[4].getrawchangeaddress(), multisig=False, typ='p2sh-segwit')
         self.log.info("Except for getrawchangeaddress if specified:")

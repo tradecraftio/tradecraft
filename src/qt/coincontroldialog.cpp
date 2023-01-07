@@ -433,9 +433,9 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
             // add input skeleton bytes (outpoint, scriptSig size, nSequence)
             nBytesInputs += (32 + 4 + 1 + 4);
 
-            if (witnessversion == 0) { // P2WPKH
-                // 1 WU (witness item count) + 72 WU (ECDSA signature with len byte) + 34 WU (pubkey with len byte)
-                nBytesInputs += 107 / WITNESS_SCALE_FACTOR;
+            if (witnessversion == 0) { // P2WPK
+                // 1 WU (witness item count) + 72 WU (ECDSA signature with len byte) + 36 WU (raw pubkey script with len byte)
+                nBytesInputs += 109 / WITNESS_SCALE_FACTOR;
             } else if (witnessversion == 1) { // P2TR key-path spend
                 // 1 WU (witness item count) + 65 WU (Schnorr signature with len byte)
                 nBytesInputs += 66 / WITNESS_SCALE_FACTOR;
