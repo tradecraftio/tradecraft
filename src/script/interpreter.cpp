@@ -16,6 +16,7 @@
 
 #include <script/interpreter.h>
 
+#include <consensus/merkle.h>
 #include <consensus/merkleproof.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
@@ -2217,13 +2218,49 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
 
     if (witversion == 0) {
         if (program.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            // BIP141 P2WSH: 32-byte witness v0 program (which encodes SHA256(script))
-            if (stack.size() == 0) {
+            // BIP141 P2WSH: 32-byte witness v0 program: Merkle root inside the program, Merkle proof + CScript + inputs in witness
+            if (stack.size() <= 1) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
+            }
+            // The Merkle proof is a minimally-serialized Merkle branch
+            // consisting of a bitfield N bits long (the path) and 32*N hashes.
+            // The maximum supported depth of the tree is 33 layers, including
+            // the root.
+            const valtype& proof_bytes = SpanPopBack(stack);
+            if (proof_bytes.size() > 1028) { // 1028 = 32*32 + (32/8)
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            const int bytes_in_path = proof_bytes.size() % 32;
+            const int max_bytes_in_path = ((proof_bytes.size() / 32) + 7) / 8;
+            if (bytes_in_path > max_bytes_in_path) {
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            if (bytes_in_path && (proof_bytes[bytes_in_path-1] == 0)) {
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            uint32_t path = 0;
+            switch (bytes_in_path) {
+                case 4: path |= (static_cast<uint32_t>(proof_bytes[3]) << 24);
+                case 3: path |= (static_cast<uint32_t>(proof_bytes[2]) << 16);
+                case 2: path |= (static_cast<uint32_t>(proof_bytes[1]) <<  8);
+                case 1: path |=  static_cast<uint32_t>(proof_bytes[0]);
+                case 0: break;
+                default:
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
+            std::vector<uint256> branch;
+            branch.reserve(proof_bytes.size() / 32);
+            for (auto ptr = proof_bytes.begin() + bytes_in_path; ptr != proof_bytes.end(); ptr += 32) {
+                branch.emplace_back(std::vector<unsigned char>(ptr, ptr + 32));
             }
             const valtype& script_bytes = SpanPopBack(stack);
             uint256 hash_exec_script;
-            CSHA256().Write(script_bytes.data(), script_bytes.size()).Finalize(hash_exec_script.begin());
+            CHash256().Write(script_bytes).Finalize(hash_exec_script);
+            bool invalid = false;
+            hash_exec_script = ComputeFastMerkleRootFromBranch(hash_exec_script, branch, path, &invalid);
+            if (invalid) {
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
+            }
             if (memcmp(hash_exec_script.begin(), program.data(), 32)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }

@@ -130,7 +130,7 @@ class P2PPermissionsTests(FreicoinTestFramework):
                 replaceable=False),
         )
         tx.wit.vtxinwit = [CTxInWitness()]
-        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_0] + [OP_TRUE])]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_0] + [OP_TRUE]), b'']
         txid = tx.rehash()
 
         self.log.debug("Wait until tx is in node[1]'s mempool")
