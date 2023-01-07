@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
 
         // Add selectable outputs, increasing their raw amounts by their input fee to make the effective value equal to the raw amount
-        CAmount input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/68); // bech32 input size (default test output type)
+        CAmount input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/69); // bech32 input size (default test output type)
         add_coin(available_coins, *wallet, 10 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 9 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 1 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_selection_params_bnb.m_long_term_feerate = CFeeRate(5000);
 
         // Add selectable outputs, increasing their raw amounts by their input fee to make the effective value equal to the raw amount
-        input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/68); // bech32 input size (default test output type)
+        input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/69); // bech32 input size (default test output type)
         add_coin(available_coins, *wallet, 10 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 9 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 1 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
 
         // Add selectable outputs, increasing their raw amounts by their input fee to make the effective value equal to the raw amount
-        input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/68); // bech32 input size (default test output type)
+        input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/69); // bech32 input size (default test output type)
         add_coin(available_coins, *wallet, 10 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 9 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 1 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
@@ -1203,7 +1203,7 @@ static util::Result<SelectionResult> select_coins(const CAmount& target, const C
     LOCK(wallet->cs_wallet);
     auto result = SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/ {}, target, cc, cs_params);
     if (result) {
-        const auto signedTxSize = 10 + 34 + 68 * result->GetInputSet().size(); // static header size + output size + inputs size (P2WPKH)
+        const auto signedTxSize = 10 + 34 + 68 * result->GetInputSet().size(); // static header size + output size + inputs size (P2WPK)
         BOOST_CHECK_LE(signedTxSize * WITNESS_SCALE_FACTOR, MAX_STANDARD_TX_WEIGHT);
 
         BOOST_CHECK_GE(result->GetSelectedValue(), target);

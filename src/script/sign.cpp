@@ -123,24 +123,28 @@ static bool GetCScript(const SigningProvider& provider, const SignatureData& sig
     return false;
 }
 
-static bool GetWitnessV0Script(const SigningProvider& provider, const SignatureData& sigdata, const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry)
+static bool GetWitnessV0Script(const SigningProvider& provider, const SignatureData& sigdata, const WitnessV0ShortHash& id, WitnessV0ScriptEntry& entry)
 {
     if (provider.GetWitnessV0Script(id, entry)) {
         return true;
     }
     // Look for witscripts in SignatureData
     WitnessV0ScriptEntry redeem_entry(0 /* version */, sigdata.redeem_script);
-    if (redeem_entry.GetScriptHash() == id) {
+    if (redeem_entry.GetShortHash() == id) {
         entry = std::move(redeem_entry);
         return true;
     }
     if (!sigdata.witness_entry.IsNull()) {
-        if (sigdata.witness_entry.GetScriptHash() == id) {
+        if (sigdata.witness_entry.GetShortHash() == id) {
             entry = sigdata.witness_entry;
             return true;
         }
     }
     return false;
+}
+
+static bool GetWitnessV0Script(const SigningProvider& provider, const SignatureData& sigdata, const WitnessV0LongHash& id, WitnessV0ScriptEntry& entry) {
+    return GetWitnessV0Script(provider, sigdata, WitnessV0ShortHash(id), entry);
 }
 
 static bool GetPubKey(const SigningProvider& provider, const SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
@@ -502,14 +506,18 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         }
         return ok;
     }
-    case TxoutType::WITNESS_V0_KEYHASH:
-        ret.push_back(vSolutions[0]);
-        return true;
-
-    case TxoutType::WITNESS_V0_SCRIPTHASH: {
-        WitnessV0ScriptHash withash{uint256{vSolutions[0]}};
+    case TxoutType::WITNESS_V0_SHORTHASH:
+    case TxoutType::WITNESS_V0_LONGHASH:
+    {
+        bool found = false;
         WitnessV0ScriptEntry entry;
-        if (GetWitnessV0Script(provider, sigdata, withash, entry)) {
+        if (whichTypeRet == TxoutType::WITNESS_V0_SHORTHASH) {
+            found = GetWitnessV0Script(provider, sigdata, WitnessV0ShortHash{uint160{vSolutions[0]}}, entry);
+        }
+        else if (whichTypeRet == TxoutType::WITNESS_V0_LONGHASH) {
+            found = GetWitnessV0Script(provider, sigdata, WitnessV0LongHash{uint256{vSolutions[0]}}, entry);
+        }
+        if (found) {
             if (!entry.m_script.empty() && (entry.m_script[0] == 0x00)) {
                 // Return the WitnessV0ScriptEntry field in its entirety, so it
                 // can be put into the SignatureData structure.
@@ -520,7 +528,11 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
             }
         }
         // Could not find witnessScript, add to missing
-        sigdata.missing_witness_script = withash;
+        if (whichTypeRet == TxoutType::WITNESS_V0_SHORTHASH) {
+            sigdata.missing_witness_script = WitnessV0ShortHash(uint160{vSolutions[0]});
+        } else if (whichTypeRet == TxoutType::WITNESS_V0_LONGHASH) {
+            sigdata.missing_witness_script = WitnessV0ShortHash(WitnessV0LongHash(uint256{vSolutions[0]}));
+        }
         return false;
     }
 
@@ -568,17 +580,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         P2SH = true;
     }
 
-    if (solved && whichType == TxoutType::WITNESS_V0_KEYHASH)
-    {
-        CScript witnessscript;
-        witnessscript << OP_DUP << OP_HASH160 << ToByteVector(result[0]) << OP_EQUALVERIFY << OP_CHECKSIG;
-        TxoutType subType;
-        solved = solved && SignStep(provider, creator, witnessscript, result, subType, SigVersion::WITNESS_V0, sigdata);
-        sigdata.scriptWitness.stack = result;
-        sigdata.witness = true;
-        result.clear();
-    }
-    else if (solved && whichType == TxoutType::WITNESS_V0_SCRIPTHASH)
+    if (solved && (whichType == TxoutType::WITNESS_V0_SHORTHASH || whichType == TxoutType::WITNESS_V0_LONGHASH))
     {
         CDataStream ss(result[0], SER_NETWORK, PROTOCOL_VERSION);
         ss >> sigdata.witness_entry;
@@ -586,7 +588,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         CScript witnessscript(sigdata.witness_entry.m_script.begin() + 1, sigdata.witness_entry.m_script.end());
 
         TxoutType subType{TxoutType::NONSTANDARD};
-        solved = solved && SignStep(provider, creator, witnessscript, result, subType, SigVersion::WITNESS_V0, sigdata) && subType != TxoutType::SCRIPTHASH && subType != TxoutType::WITNESS_V0_SCRIPTHASH && subType != TxoutType::WITNESS_V0_KEYHASH;
+        solved = solved && SignStep(provider, creator, witnessscript, result, subType, SigVersion::WITNESS_V0, sigdata) && subType != TxoutType::SCRIPTHASH && subType != TxoutType::WITNESS_V0_LONGHASH && subType != TxoutType::WITNESS_V0_SHORTHASH;
 
         // If we couldn't find a solution with the legacy satisfier, try satisfying the script using Miniscript.
         // Note we need to check if the result stack is empty before, because it might be used even if the Script
@@ -711,7 +713,7 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
         script_type = Solver(next_script, solutions);
         stack.script.pop_back();
     }
-    if (script_type == TxoutType::WITNESS_V0_SCRIPTHASH && !(stack.witness.size() <= 1) && !(stack.witness.end() - 2)->empty() && ((stack.witness.end() - 2)->front() == 0x00)) {
+    if ((script_type == TxoutType::WITNESS_V0_LONGHASH || script_type == TxoutType::WITNESS_V0_SHORTHASH) && !(stack.witness.size() <= 1) && !(stack.witness.end() - 2)->empty() && ((stack.witness.end() - 2)->front() == 0x00)) {
         // Get the Merkle proof
         data.witness_entry.SetNull();
         size_t i = 0;

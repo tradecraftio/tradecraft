@@ -44,7 +44,7 @@ pubkey_prefix = (OP_DUP, OP_HASH160, 20)
 pubkey_suffix = (OP_EQUALVERIFY, OP_CHECKSIG)
 script_prefix = (OP_HASH160, 20)
 script_suffix = (OP_EQUAL,)
-p2wpkh_prefix = (OP_0, 20)
+p2wpk_prefix = (OP_0, 20)
 p2wsh_prefix = (OP_0, 32)
 p2tr_prefix = (OP_1NEGATE, 32)
 
@@ -73,20 +73,20 @@ templates = [
 # templates for valid bech32 sequences
 bech32_templates = [
   # hrp, version, witprog_size, metadata, encoding, output_prefix
-  ('bc',    0, 20, (False, 'main',    None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('bc',    0, 20, (False, 'main',    None, True), Encoding.BECH32,  p2wpk_prefix),
   ('bc',    0, 32, (False, 'main',    None, True), Encoding.BECH32,  p2wsh_prefix),
   ('bc',    1, 32, (False, 'main',    None, True), Encoding.BECH32M, p2tr_prefix),
   ('bc',    2,  2, (False, 'main',    None, True), Encoding.BECH32M, (OP_1, 2)),
-  ('tb',    0, 20, (False, 'test',    None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('tb',    0, 20, (False, 'test',    None, True), Encoding.BECH32,  p2wpk_prefix),
   ('tb',    0, 32, (False, 'test',    None, True), Encoding.BECH32,  p2wsh_prefix),
   ('tb',    1, 32, (False, 'test',    None, True), Encoding.BECH32M, p2tr_prefix),
   ('tb',    3, 16, (False, 'test',    None, True), Encoding.BECH32M, (OP_2, 16)),
   ('tb',   17, 32, (False, 'test',    None, True), Encoding.BECH32M, (OP_16, 32)),
-  ('tb',    0, 20, (False, 'signet',  None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('tb',    0, 20, (False, 'signet',  None, True), Encoding.BECH32,  p2wpk_prefix),
   ('tb',    0, 32, (False, 'signet',  None, True), Encoding.BECH32,  p2wsh_prefix),
   ('tb',    1, 32, (False, 'signet',  None, True), Encoding.BECH32M, p2tr_prefix),
   ('tb',    3, 32, (False, 'signet',  None, True), Encoding.BECH32M, (OP_2, 32)),
-  ('bcrt',  0, 20, (False, 'regtest', None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('bcrt',  0, 20, (False, 'regtest', None, True), Encoding.BECH32,  p2wpk_prefix),
   ('bcrt',  0, 32, (False, 'regtest', None, True), Encoding.BECH32,  p2wsh_prefix),
   ('bcrt',  1, 32, (False, 'regtest', None, True), Encoding.BECH32M, p2tr_prefix),
   ('bcrt', 16, 40, (False, 'regtest', None, True), Encoding.BECH32M, (OP_15, 40)),

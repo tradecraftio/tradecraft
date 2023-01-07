@@ -482,7 +482,7 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     // achieve the exact target feerate.
     CMutableTransaction mtx = CMutableTransaction();
     mtx.vin.emplace_back(COutPoint{g_insecure_rand_ctx.rand256(), 0});
-    mtx.vout.emplace_back(1 * COIN, GetScriptForDestination(WitnessV0ScriptHash(/*version=*/0, CScript() << OP_TRUE)));
+    mtx.vout.emplace_back(1 * COIN, GetScriptForDestination(WitnessV0LongHash(/*version=*/0, CScript() << OP_TRUE)));
     const auto tx{MakeTransactionRef(mtx)};
     LockPoints lp;
     // The new mempool min feerate is equal to the removed package's feerate + incremental feerate.

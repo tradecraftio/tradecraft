@@ -13,26 +13,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <addresstype.h>
 #include <bench/bench.h>
 #include <key.h>
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/freicoinconsensus.h>
 #endif
 #include <script/script.h>
+#include <script/solver.h>
 #include <script/interpreter.h>
 #include <streams.h>
 #include <test/util/transaction_utils.h>
 
 #include <array>
 
-// Microbenchmark for verification of a basic P2WPKH script. Can be easily
+// Microbenchmark for verification of a basic P2WPK script. Can be easily
 // modified to measure performance of other types of scripts.
 static void VerifyScriptBench(benchmark::Bench& bench)
 {
     ECC_Start();
 
     const uint32_t flags{SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH};
-    const int witnessversion = 0;
 
     // Key pair.
     CKey key;
@@ -43,20 +44,20 @@ static void VerifyScriptBench(benchmark::Bench& bench)
     };
     key.Set(vchKey.begin(), vchKey.end(), false);
     CPubKey pubkey = key.GetPubKey();
-    uint160 pubkeyHash;
-    CHash160().Write(pubkey).Finalize(pubkeyHash);
 
     // Script.
-    CScript scriptPubKey = CScript() << witnessversion << ToByteVector(pubkeyHash);
+    CScript p2pk = GetScriptForRawPubKey(pubkey);
+    CScript scriptPubKey = GetScriptForDestination(WitnessV0ShortHash(0 /* version */, p2pk));
     CScript scriptSig;
-    CScript witScriptPubkey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkeyHash) << OP_EQUALVERIFY << OP_CHECKSIG;
     const CMutableTransaction& txCredit = BuildCreditingTransaction(scriptPubKey, 1);
     CMutableTransaction txSpend = BuildSpendingTransaction(scriptSig, CScriptWitness(), CTransaction(txCredit));
     CScriptWitness& witness = txSpend.vin[0].scriptWitness;
     witness.stack.emplace_back();
-    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].GetReferenceValue(), txCredit.lock_height, SigVersion::WITNESS_V0), witness.stack.back());
+    key.Sign(SignatureHash(p2pk, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].GetReferenceValue(), txCredit.lock_height, SigVersion::WITNESS_V0), witness.stack.back());
     witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
-    witness.stack.push_back(ToByteVector(pubkey));
+    WitnessV0ScriptEntry entry(0 /* version */, p2pk);
+    witness.stack.push_back(entry.m_script);
+    witness.stack.emplace_back();
 
     // Benchmark.
     bench.run([&] {

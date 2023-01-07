@@ -266,7 +266,10 @@ public:
 
     UniValue operator()(const PubKeyDestination& dest) const
     {
-        return UniValue(UniValue::VOBJ);
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", false);
+        obj.pushKV("iswitness", false);
+        return obj;
     }
 
     UniValue operator()(const PKHash& keyID) const
@@ -285,17 +288,17 @@ public:
         return obj;
     }
 
-    UniValue operator()(const WitnessV0KeyHash& id) const
+    UniValue operator()(const WitnessV0ShortHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("isscript", false);
+        obj.pushKV("isscript", true);
         obj.pushKV("iswitness", true);
         obj.pushKV("witness_version", 0);
         obj.pushKV("witness_program", HexStr(id));
         return obj;
     }
 
-    UniValue operator()(const WitnessV0ScriptHash& id) const
+    UniValue operator()(const WitnessV0LongHash& id) const
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", true);
