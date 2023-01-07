@@ -350,7 +350,7 @@ def default_witness_witv0(ctx):
     if script is None:
         return inputs
     else:
-        return inputs + [b'\x00' + script]
+        return inputs + [b'\x00' + script, b'']
 
 def default_witness(ctx):
     """Default expression for "witness", delegating to "witness_taproot" or "witness_witv0" as needed."""

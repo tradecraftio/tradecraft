@@ -305,7 +305,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         # Set the witness script
         ctx = tx_from_hex(tx)
         ctx.wit.vtxinwit.append(CTxInWitness())
-        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script]
+        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script, b'']
         tx = ctx.serialize_with_witness().hex()
 
         # Sign and send the transaction
@@ -337,7 +337,7 @@ class SignRawTransactionsTest(FreicoinTestFramework):
         # Set the witness script
         ctx = tx_from_hex(tx)
         ctx.wit.vtxinwit.append(CTxInWitness())
-        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script]
+        ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'\x00' + script, b'']
         tx = ctx.serialize_with_witness().hex()
 
         # Sign and send the transaction
