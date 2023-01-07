@@ -19,8 +19,8 @@ from collections import namedtuple
 from test_framework.address import (
     byte_to_base58,
     key_to_p2pkh,
-    key_to_p2sh_p2wpkh,
-    key_to_p2wpkh,
+    key_to_p2sh_p2wpk,
+    key_to_p2wpk,
     script_to_p2sh,
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
@@ -29,7 +29,7 @@ from test_framework.address import (
 from test_framework.key import ECKey
 from test_framework.script_util import (
     key_to_p2pkh_script,
-    key_to_p2wpkh_script,
+    key_to_p2wpk_script,
     keys_to_multisig_script,
     script_to_p2sh_script,
     script_to_p2wsh_script,
@@ -39,11 +39,11 @@ Key = namedtuple('Key', ['privkey',
                          'pubkey',
                          'p2pkh_script',
                          'p2pkh_addr',
-                         'p2wpkh_script',
-                         'p2wpkh_addr',
-                         'p2sh_p2wpkh_script',
-                         'p2sh_p2wpkh_redeem_script',
-                         'p2sh_p2wpkh_addr'])
+                         'p2wpk_script',
+                         'p2wpk_addr',
+                         'p2sh_p2wpk_script',
+                         'p2sh_p2wpk_redeem_script',
+                         'p2sh_p2wpk_addr'])
 
 Multisig = namedtuple('Multisig', ['privkeys',
                                    'pubkeys',
@@ -66,11 +66,11 @@ def get_key(node):
                pubkey=pubkey,
                p2pkh_script=key_to_p2pkh_script(pubkey).hex(),
                p2pkh_addr=key_to_p2pkh(pubkey),
-               p2wpkh_script=key_to_p2wpkh_script(pubkey).hex(),
-               p2wpkh_addr=key_to_p2wpkh(pubkey),
-               p2sh_p2wpkh_script=script_to_p2sh_script(key_to_p2wpkh_script(pubkey)).hex(),
-               p2sh_p2wpkh_redeem_script=key_to_p2wpkh_script(pubkey).hex(),
-               p2sh_p2wpkh_addr=key_to_p2sh_p2wpkh(pubkey))
+               p2wpk_script=key_to_p2wpk_script(pubkey).hex(),
+               p2wpk_addr=key_to_p2wpk(pubkey),
+               p2sh_p2wpk_script=script_to_p2sh_script(key_to_p2wpk_script(pubkey)).hex(),
+               p2sh_p2wpk_redeem_script=key_to_p2wpk_script(pubkey).hex(),
+               p2sh_p2wpk_addr=key_to_p2sh_p2wpk(pubkey))
 
 def get_generate_key():
     """Generate a fresh key
@@ -84,11 +84,11 @@ def get_generate_key():
                pubkey=pubkey,
                p2pkh_script=key_to_p2pkh_script(pubkey).hex(),
                p2pkh_addr=key_to_p2pkh(pubkey),
-               p2wpkh_script=key_to_p2wpkh_script(pubkey).hex(),
-               p2wpkh_addr=key_to_p2wpkh(pubkey),
-               p2sh_p2wpkh_script=script_to_p2sh_script(key_to_p2wpkh_script(pubkey)).hex(),
-               p2sh_p2wpkh_redeem_script=key_to_p2wpkh_script(pubkey).hex(),
-               p2sh_p2wpkh_addr=key_to_p2sh_p2wpkh(pubkey))
+               p2wpk_script=key_to_p2wpk_script(pubkey).hex(),
+               p2wpk_addr=key_to_p2wpk(pubkey),
+               p2sh_p2wpk_script=script_to_p2sh_script(key_to_p2wpk_script(pubkey)).hex(),
+               p2sh_p2wpk_redeem_script=key_to_p2wpk_script(pubkey).hex(),
+               p2sh_p2wpk_addr=key_to_p2sh_p2wpk(pubkey))
 
 def get_multisig(node):
     """Generate a fresh 2-of-3 multisig on node

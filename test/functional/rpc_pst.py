@@ -26,6 +26,7 @@ from test_framework.messages import (
     ser_compact_size,
     WITNESS_SCALE_FACTOR,
 )
+from test_framework.script import hash160
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -149,7 +150,7 @@ class PSTTest(FreicoinTestFramework):
         # Locks are ignored for manually selected inputs
         self.nodes[0].walletcreatefundedpst([{"txid": utxo1['txid'], "vout": utxo1['vout']}], {self.nodes[2].getnewaddress():1}, 0, utxo1['refheight'])
 
-        # Create p2sh, p2wpkh, and p2wsh addresses
+        # Create p2sh, p2wpk, and p2wsh addresses
         pubkey0 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['pubkey']
         pubkey1 = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
         pubkey2 = self.nodes[2].getaddressinfo(self.nodes[2].getnewaddress())['pubkey']
@@ -166,12 +167,12 @@ class PSTTest(FreicoinTestFramework):
             wmulti.importaddress(p2sh)
             wmulti.importaddress(p2wsh)
             wmulti.importaddress(p2sh_p2wsh)
-        p2wpkh = self.nodes[1].getnewaddress("", "bech32")
+        p2wpk = self.nodes[1].getnewaddress("", "bech32")
         p2pkh = self.nodes[1].getnewaddress("", "legacy")
-        p2sh_p2wpkh = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        p2sh_p2wpk = self.nodes[1].getnewaddress("", "p2sh-segwit")
 
         # fund those addresses
-        rawtx = self.nodes[0].createrawtransaction([], {p2sh:10, p2wsh:10, p2wpkh:10, p2sh_p2wsh:10, p2sh_p2wpkh:10, p2pkh:10})
+        rawtx = self.nodes[0].createrawtransaction([], {p2sh:10, p2wsh:10, p2wpk:10, p2sh_p2wsh:10, p2sh_p2wpk:10, p2pkh:10})
         rawtx = self.nodes[0].fundrawtransaction(rawtx, {"changePosition":3})
         signed_tx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])['hex']
         txid = self.nodes[0].sendrawtransaction(signed_tx)
@@ -180,26 +181,26 @@ class PSTTest(FreicoinTestFramework):
         # Find the output pos
         p2sh_pos = -1
         p2wsh_pos = -1
-        p2wpkh_pos = -1
+        p2wpk_pos = -1
         p2pkh_pos = -1
         p2sh_p2wsh_pos = -1
-        p2sh_p2wpkh_pos = -1
+        p2sh_p2wpk_pos = -1
         decoded = self.nodes[0].decoderawtransaction(signed_tx)
         for out in decoded['vout']:
             if out['scriptPubKey']['address'] == p2sh:
                 p2sh_pos = out['n']
             elif out['scriptPubKey']['address'] == p2wsh:
                 p2wsh_pos = out['n']
-            elif out['scriptPubKey']['address'] == p2wpkh:
-                p2wpkh_pos = out['n']
+            elif out['scriptPubKey']['address'] == p2wpk:
+                p2wpk_pos = out['n']
             elif out['scriptPubKey']['address'] == p2sh_p2wsh:
                 p2sh_p2wsh_pos = out['n']
-            elif out['scriptPubKey']['address'] == p2sh_p2wpkh:
-                p2sh_p2wpkh_pos = out['n']
+            elif out['scriptPubKey']['address'] == p2sh_p2wpk:
+                p2sh_p2wpk_pos = out['n']
             elif out['scriptPubKey']['address'] == p2pkh:
                 p2pkh_pos = out['n']
 
-        inputs = [{"txid": txid, "vout": p2wpkh_pos}, {"txid": txid, "vout": p2sh_p2wpkh_pos}, {"txid": txid, "vout": p2pkh_pos}]
+        inputs = [{"txid": txid, "vout": p2wpk_pos}, {"txid": txid, "vout": p2sh_p2wpk_pos}, {"txid": txid, "vout": p2pkh_pos}]
         outputs = [{self.nodes[1].getnewaddress(): 29.99}]
         refheight = decoded['lockheight']
 
@@ -307,7 +308,7 @@ class PSTTest(FreicoinTestFramework):
         self.nodes[2].sendrawtransaction(self.nodes[2].finalizepst(walletprocesspst_out['pst'])['hex'])
 
         # check that walletprocesspst fails to decode a non-pst
-        rawtx = self.nodes[1].createrawtransaction([{"txid":txid,"vout":p2wpkh_pos}], {self.nodes[1].getnewaddress():9.99})
+        rawtx = self.nodes[1].createrawtransaction([{"txid":txid,"vout":p2wpk_pos}], {self.nodes[1].getnewaddress():9.99})
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[1].walletprocesspst, rawtx)
 
         # Convert a non-pst to pst and make sure we can decode it
@@ -406,7 +407,7 @@ class PSTTest(FreicoinTestFramework):
         # Make sure the wallet's change type is respected by default
         small_output = {self.nodes[0].getnewaddress():0.1}
         pstx_native = self.nodes[0].walletcreatefundedpst([], [small_output])
-        self.assert_change_type(pstx_native, "witness_v0_keyhash")
+        self.assert_change_type(pstx_native, "witness_v0_shorthash")
         pstx_legacy = self.nodes[1].walletcreatefundedpst([], [small_output])
         self.assert_change_type(pstx_legacy, "pubkeyhash")
 
@@ -547,9 +548,9 @@ class PSTTest(FreicoinTestFramework):
         descs = [self.nodes[1].getaddressinfo(addr)['desc'] for addr in [addr1,addr2,addr3]]
         updated = self.nodes[1].utxoupdatepst(pst=pst, descriptors=descs)
         decoded = self.nodes[1].decodepst(updated)
-        test_pst_input_keys(decoded['inputs'][0], ['witness_utxo', 'bip32_derivs'])
+        test_pst_input_keys(decoded['inputs'][0], ['witness_utxo', 'bip32_derivs', 'witness_path', 'witness_branch', 'script_version', 'witness_script'])
         test_pst_input_keys(decoded['inputs'][1], [])
-        test_pst_input_keys(decoded['inputs'][2], ['witness_utxo', 'bip32_derivs', 'redeem_script'])
+        test_pst_input_keys(decoded['inputs'][2], ['witness_utxo', 'bip32_derivs', 'witness_path', 'witness_branch', 'script_version', 'witness_script', 'redeem_script'])
 
         # Two PSTs with a common input should not be joinable
         pst1 = self.nodes[1].createpst([{"txid":txid1, "vout":vout1}], {self.nodes[0].getnewaddress():Decimal('10.999')})
@@ -591,12 +592,12 @@ class PSTTest(FreicoinTestFramework):
         # After update with wallet, only needs signing
         updated = self.nodes[1].walletprocesspst(pst, False, 'ALL', True)['pst']
         analyzed = self.nodes[0].analyzepst(updated)
-        assert analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'signer' and analyzed['next'] == 'signer' and analyzed['inputs'][0]['missing']['signatures'][0] == addrinfo['embedded']['witness_program']
+        assert analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'signer' and analyzed['next'] == 'signer' and analyzed['inputs'][0]['missing']['signatures'][0] == hash160(bytes.fromhex(addrinfo['embedded']['pubkey'])).hex()
 
         # Check fee and size things
         assert_equal(analyzed['fee'], Decimal('0.001'))
-        assert_equal(analyzed['estimated_vsize'], 138)
-        assert_equal(analyzed['estimated_feerate'], Decimal('0.00724637'))
+        assert_equal(analyzed['estimated_vsize'], 139)
+        assert_equal(analyzed['estimated_feerate'], Decimal('0.00719424'))
 
         # After signing and finalizing, needs extracting
         signed = self.nodes[1].walletprocesspst(updated)['pst']

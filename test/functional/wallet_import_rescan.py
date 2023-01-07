@@ -55,11 +55,14 @@ class Variant(collections.namedtuple("Variant", "call data address_type rescan p
         rescan = self.rescan == Rescan.yes
 
         assert_equal(self.address["solvable"], True)
-        assert_equal(self.address["isscript"], self.address_type == AddressType.p2sh_segwit)
+        assert_equal(self.address["isscript"], self.address_type == AddressType.p2sh_segwit or self.address_type == AddressType.bech32)
         assert_equal(self.address["iswitness"], self.address_type == AddressType.bech32)
-        if self.address["isscript"]:
-            assert_equal(self.address["embedded"]["isscript"], False)
+        if self.address["isscript"] and self.address_type == AddressType.p2sh_segwit:
+            assert_equal(self.address["embedded"]["isscript"], True)
             assert_equal(self.address["embedded"]["iswitness"], True)
+        if self.address["isscript"] and self.address_type == AddressType.bech32:
+            assert_equal(self.address["embedded"]["isscript"], False)
+            assert_equal(self.address["embedded"]["iswitness"], False)
 
         if self.call == Call.single:
             if self.data == Data.address:

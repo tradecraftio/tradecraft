@@ -24,8 +24,8 @@ from test_framework.address import (
     base58_to_byte,
     create_deterministic_address_bcrt1_p2tr_op_true,
     key_to_p2pkh,
-    key_to_p2sh_p2wpkh,
-    key_to_p2wpkh,
+    key_to_p2sh_p2wpk,
+    key_to_p2wpk,
     script_to_witscript,
 )
 from test_framework.descriptors import descsum_create
@@ -50,8 +50,8 @@ from test_framework.script import (
 from test_framework.script_util import (
     key_to_p2pk_script,
     key_to_p2pkh_script,
-    key_to_p2sh_p2wpkh_script,
-    key_to_p2wpkh_script,
+    key_to_p2sh_p2wpk_script,
+    key_to_p2wpk_script,
     keyhash_to_p2pkh_script,
     scripthash_to_p2sh_script,
 )
@@ -248,11 +248,11 @@ def getnewdestination(address_type='bech32'):
         scriptpubkey = key_to_p2pkh_script(pubkey)
         address = key_to_p2pkh(pubkey)
     elif address_type == 'p2sh-segwit':
-        scriptpubkey = key_to_p2sh_p2wpkh_script(pubkey)
-        address = key_to_p2sh_p2wpkh(pubkey)
+        scriptpubkey = key_to_p2sh_p2wpk_script(pubkey)
+        address = key_to_p2sh_p2wpk(pubkey)
     elif address_type == 'bech32':
-        scriptpubkey = key_to_p2wpkh_script(pubkey)
-        address = key_to_p2wpkh(pubkey)
+        scriptpubkey = key_to_p2wpk_script(pubkey)
+        address = key_to_p2wpk(pubkey)
     # TODO: also support bech32m (need to generate x-only-pubkey)
     else:
         assert False

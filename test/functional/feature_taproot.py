@@ -116,7 +116,7 @@ from test_framework.script import (
 from test_framework.script_util import (
     key_to_p2pk_script,
     key_to_p2pkh_script,
-    key_to_p2wpkh_script,
+    key_to_p2wpk_script,
     keyhash_to_p2pkh_script,
     script_to_p2sh_script,
     script_to_p2wsh_script,
@@ -384,7 +384,7 @@ DEFAULT_CONTEXT = {
     # == Expressions you'll generally only override for intentionally invalid spends. ==
     # The witness stack for spending a taproot output.
     "witness_taproot": default_witness_taproot,
-    # The witness stack for spending a P2WPKH/P2WSH output.
+    # The witness stack for spending a P2WPK/P2WSH output.
     "witness_witv0": default_witness_witv0,
     # The script inputs for a taproot key path spend.
     "inputs_keypath": default_inputs_keypath,
@@ -432,7 +432,7 @@ DEFAULT_CONTEXT = {
     "codeseppos": -1,
     # The redeemscript to add to the scriptSig (if P2SH; None implies not P2SH).
     "script_p2sh": None,
-    # The script to add to the witness in (if P2WSH; None implies P2WPKH)
+    # The script to add to the witness in (if P2WSH; None implies P2WPK)
     "script_witv0": None,
     # The leaf to use in taproot spends (if script path spend; None implies key path spend).
     "leaf": None,
@@ -507,13 +507,13 @@ Spender = namedtuple("Spender", "script,comment,is_standard,sat_function,err_msg
 Standard = Enum('Standard', 'ALL V23 NONE')
 
 
-def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=False, spk_mutate_pre_p2sh=None, failure=None, standard=Standard.ALL, err_msg=None, sigops_weight=0, need_vin_vout_mismatch=False, **kwargs):
+def make_spender(comment, *, tap=None, witv0=False, script=None, pk=None, p2sh=False, spk_mutate_pre_p2sh=None, failure=None, standard=Standard.ALL, err_msg=None, sigops_weight=0, need_vin_vout_mismatch=False, **kwargs):
     """Helper for constructing Spender objects using the context signing framework.
 
-    * tap: a TaprootInfo object (see taproot_construct), for Taproot spends (cannot be combined with pkh, witv0, or script)
-    * witv0: boolean indicating the use of witness v0 spending (needs one of script or pkh)
+    * tap: a TaprootInfo object (see taproot_construct), for Taproot spends (cannot be combined with pk, witv0, or script)
+    * witv0: boolean indicating the use of witness v0 spending (needs one of script or pk)
     * script: the actual script executed (for bare/P2WSH/P2SH spending)
-    * pkh: the public key for P2PKH or P2WPKH spending
+    * pk: the public key for P2PKH or P2WPK spending
     * p2sh: whether the output is P2SH wrapper (this is supported even for Taproot, where it makes the output unencumbered)
     * spk_mutate_pre_psh: a callable to be applied to the script (before potentially P2SH-wrapping it)
     * failure: a dict of entries to override in the context when intentionally failing to spend (if None, no_fail will be set)
@@ -535,14 +535,14 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
     if witv0:
         assert tap is None
         conf["mode"] = "witv0"
-        if pkh is not None:
-            # P2WPKH
+        if pk is not None:
+            # P2WPK
             assert script is None
-            pubkeyhash = hash160(pkh)
-            spk = key_to_p2wpkh_script(pkh)
-            conf["scriptcode"] = keyhash_to_p2pkh_script(pubkeyhash)
-            conf["script_witv0"] = None
-            conf["inputs"] = [getter("sign"), pkh]
+            script = key_to_p2pk_script(pk)
+            spk = key_to_p2wpk_script(pk)
+            conf["scriptcode"] = script
+            conf["script_witv0"] = script
+            conf["inputs"] = [getter("sign")]
         elif script is not None:
             # P2WSH
             spk = script_to_p2wsh_script(script)
@@ -552,13 +552,13 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
             assert False
     elif tap is None:
         conf["mode"] = "legacy"
-        if pkh is not None:
+        if pk is not None:
             # P2PKH
             assert script is None
-            pubkeyhash = hash160(pkh)
+            pubkeyhash = hash160(pk)
             spk = keyhash_to_p2pkh_script(pubkeyhash)
             conf["scriptcode"] = spk
-            conf["inputs"] = [getter("sign"), pkh]
+            conf["inputs"] = [getter("sign"), pk]
         elif script is not None:
             # bare
             spk = script
@@ -1208,7 +1208,7 @@ def spenders_taproot_active():
                 for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:
                     standard = (hashtype in VALID_SIGHASHES_ECDSA) and (compressed or not witv0)
                     add_spender(spenders, "legacy/pk-wrongkey", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, script=key_to_p2pk_script(pubkey1), **SINGLE_SIG, key=eckey1, failure={"key": eckey2}, sigops_weight=4-3*witv0, **(witv0 and ERR_NULLFAIL or ERR_NO_SUCCESS))
-                    add_spender(spenders, "legacy/pkh-sighashflip", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, pkh=pubkey1, key=eckey1, **SIGHASH_BITFLIP, sigops_weight=4-3*witv0, **(witv0 and ERR_NULLFAIL or ERR_NO_SUCCESS))
+                    add_spender(spenders, "legacy/pk-sighashflip", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, pk=pubkey1, key=eckey1, **SIGHASH_BITFLIP, sigops_weight=4-3*witv0, **(witv0 and ERR_NULLFAIL or ERR_NO_SUCCESS))
 
     # Verify that OP_CHECKSIGADD wasn't accidentally added to pre-taproot validation logic.
     for p2sh in [False, True]:
@@ -1363,7 +1363,7 @@ class TaprootTest(FreicoinTestFramework):
 
         Steps:
             1) Generate an appropriate UTXO for each spender to test spend conditions
-            2) Generate 100 random addresses of all wallet types: pkh/sh_wpkh/wpkh
+            2) Generate 100 random addresses of all wallet types: pkh/sh_wpk/wpk
             3) Select random number of inputs from (1)
             4) Select random number of addresses from (2) as outputs
 
@@ -1635,22 +1635,26 @@ class TaprootTest(FreicoinTestFramework):
             tap_spks.append(tap.scriptPubKey)
             d = {'key': prvs[i], 'tap': tap, 'mode': 'taproot'}
             spend_info[tap.scriptPubKey] = d
-        # Then, a number of deterministically generated (keys 0x1,0x2,0x3) with 2x P2PKH, 1x P2WPKH spks.
+        # Then, a number of deterministically generated (keys 0x1,0x2,0x3) with 2x P2PKH, 1x P2WPK spks.
         for i in range(1, 4):
             prv = ECKey()
             prv.set(i.to_bytes(32, 'big'), True)
             pub = prv.get_pubkey().get_bytes()
             d = {"key": prv}
             d["scriptcode"] = key_to_p2pkh_script(pub)
-            d["inputs"] = [getter("sign"), pub]
             if i < 3:
                 # P2PKH
                 d['spk'] = key_to_p2pkh_script(pub)
                 d['mode'] = 'legacy'
+                d['inputs'] = [getter("sign"), pub]
             else:
-                # P2WPKH
-                d['spk'] = key_to_p2wpkh_script(pub)
+                # P2WPK
+                d['spk'] = key_to_p2wpk_script(pub)
                 d['mode'] = 'witv0'
+                script = key_to_p2pk_script(pub)
+                d['scriptcode'] = script
+                d['script_witv0'] = script
+                d['inputs'] = [getter("sign")]
             old_spks.append(d['spk'])
             spend_info[d['spk']] = d
 
@@ -1792,7 +1796,7 @@ class TaprootTest(FreicoinTestFramework):
         aux = tx_test.setdefault("auxiliary", {})
         aux['fullySignedTx'] = tx.serialize().hex()
         keypath_tests.append(tx_test)
-        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "d4a20b242f8680b6c747bbb30b7d2e45898e8ac249db35f3e7394428c477bbb0")
+        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "09e1979b8df80bda590c6bead5e82b6e2d8e18796964f89c6bc2893d96d3221c")
         # Mine the spending transaction
         self.block_submit(self.nodes[1], [tx], "Spending txn", None, sigops_weight=10000, accept=True, witness=True)
 
