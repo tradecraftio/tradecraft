@@ -656,7 +656,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 }
                 coinControl.m_external_provider.pubkeys.emplace(pubkey.GetID(), pubkey);
                 // Add witness script for pubkeys
-                const CScript wit_script = GetScriptForDestination(WitnessV0KeyHash(pubkey));
+                const CScript wit_script = GetScriptForDestination(WitnessV0ShortHash(/*version=*/ 0, pubkey));
                 coinControl.m_external_provider.scripts.emplace(CScriptID(wit_script), wit_script);
             }
         }
@@ -684,7 +684,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "witscript cannot be empty");
                 }
                 WitnessV0ScriptEntry entry(witscript_data[0], CScript(witscript_data.begin() + 1, witscript_data.end()));
-                coinControl.m_external_provider.witscripts.emplace(entry.GetScriptHash(), entry);
+                coinControl.m_external_provider.witscripts.emplace(entry.GetShortHash(), entry);
             }
         }
 

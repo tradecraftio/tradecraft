@@ -21,8 +21,8 @@ import unittest
 
 from .address import (
     address_to_scriptpubkey,
-    key_to_p2sh_p2wpkh,
-    key_to_p2wpkh,
+    key_to_p2sh_p2wpk,
+    key_to_p2wpk,
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
@@ -50,7 +50,7 @@ from .script import (
 )
 from .script_util import (
     key_to_p2pk_script,
-    key_to_p2wpkh_script,
+    key_to_p2wpk_script,
     keys_to_multisig_script,
     script_to_p2wsh_script,
 )
@@ -240,14 +240,15 @@ def get_legacy_sigopcount_tx(tx, accurate=True):
 def witness_script(use_p2wsh, pubkey):
     """Create a scriptPubKey for a pay-to-witness TxOut.
 
-    This is either a P2WPKH output for the given pubkey, or a P2WSH output of a
-    1-of-1 multisig for the given pubkey. Returns the hex encoding of the
-    scriptPubKey."""
+    This is either a short P2WSH output for the given pubkey, or a
+    long P2WSH output of a 1-of-1 multisig for the given pubkey.
+    Returns the hex encoding of the scriptPubKey.
+    """
     if not use_p2wsh:
-        # P2WPKH instead
-        pkscript = key_to_p2wpkh_script(pubkey)
+        # P2WPK instead
+        pkscript = key_to_p2wpk_script(pubkey)
     else:
-        # 1-of-1 multisig
+        # long P2WSH w/ 1-of-1 multisig
         witness_script = keys_to_multisig_script([pubkey])
         pkscript = script_to_p2wsh_script(witness_script)
     return pkscript.hex()
@@ -260,7 +261,7 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
         program = keys_to_multisig_script([pubkey])
         addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
     else:
-        addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
+        addr = key_to_p2sh_p2wpk(pubkey) if encode_p2sh else key_to_p2wpk(pubkey)
     if not encode_p2sh:
         assert_equal(address_to_scriptpubkey(addr).hex(), witness_script(use_p2wsh, pubkey))
     return node.createrawtransaction([utxo], {addr: amount})
@@ -269,7 +270,7 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
     """Create a transaction spending a given utxo to a segwit output.
 
     The output corresponds to the given pubkey: use_p2wsh determines whether to
-    use P2WPKH or P2WSH; encode_p2sh determines whether to wrap in P2SH.
+    use P2WPK or P2WSH; encode_p2sh determines whether to wrap in P2SH.
     sign=True will have the given node sign the transaction.
     insert_redeem_script will be added to the scriptSig, if given."""
     tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
