@@ -126,21 +126,6 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
             ret = std::max(ret, IsMineResult::SPENDABLE);
         }
         break;
-    case TxoutType::WITNESS_V0_KEYHASH:
-    {
-        if (sigversion == IsMineSigVersion::WITNESS_V0) {
-            // P2WPKH inside P2WSH is invalid.
-            return IsMineResult::INVALID;
-        }
-        if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
-            // We do not support bare witness outputs unless the P2SH version of it would be
-            // acceptable as well. This protects against matching before segwit activates.
-            // This also applies to the P2WSH case.
-            break;
-        }
-        ret = std::max(ret, IsMineInner(keystore, GetScriptForDestination(PKHash(uint160(vSolutions[0]))), IsMineSigVersion::WITNESS_V0));
-        break;
-    }
     case TxoutType::PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
         if (!PermitsUncompressed(sigversion)) {
@@ -166,15 +151,22 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
         }
         break;
     }
-    case TxoutType::WITNESS_V0_SCRIPTHASH:
+    case TxoutType::WITNESS_V0_SHORTHASH:
+    case TxoutType::WITNESS_V0_LONGHASH:
     {
         if (sigversion == IsMineSigVersion::WITNESS_V0) {
             // P2WSH inside P2WSH is invalid.
             return IsMineResult::INVALID;
         }
-        WitnessV0ScriptHash withash(uint256{vSolutions[0]});
+        bool found = false;
         WitnessV0ScriptEntry entry;
-        if (!keystore.GetWitnessV0Script(withash, entry)) {
+        if (whichType == TxoutType::WITNESS_V0_SHORTHASH) {
+            found = keystore.GetWitnessV0Script(WitnessV0ShortHash(uint160{vSolutions[0]}), entry);
+        }
+        else if (whichType == TxoutType::WITNESS_V0_LONGHASH) {
+            found = keystore.GetWitnessV0Script(WitnessV0LongHash(uint256{vSolutions[0]}), entry);
+        }
+        if (!found) {
             break;
         }
         if (entry.m_script.empty() || (entry.m_script[0] != 0x00)) {
@@ -1471,8 +1463,9 @@ void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType t
 {
     assert(type != OutputType::BECH32M);
     if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
-        CTxDestination witdest = WitnessV0KeyHash(key.GetID());
-        CScript witprog = GetScriptForDestination(witdest);
+        WitnessV0ScriptEntry entry(0 /* version */, GetScriptForRawPubKey(key));
+        AddWitnessV0Script(entry);
+        CScript witprog = GetScriptForDestination(entry.GetShortHash());
         // Make sure the resulting program is solvable.
         const auto desc = InferDescriptor(witprog, *this);
         assert(desc && desc->IsSolvable());
@@ -1571,10 +1564,7 @@ bool LegacyScriptPubKeyMan::AddWitnessV0ScriptWithDB(WalletBatch& batch, const W
 {
     if (!FillableSigningProvider::AddWitnessV0Script(entry))
         return false;
-    WitnessV0ScriptHash longid = entry.GetScriptHash();
-    uint160 shortid;
-    CRIPEMD160().Write(longid.begin(), 32).Finalize(shortid.begin());
-    if (batch.WriteWitnessV0Script(shortid, entry)) {
+    if (batch.WriteWitnessV0Script(entry.GetShortHash(), entry)) {
         m_storage.UnsetBlankWalletFlag(batch);
         return true;
     }
@@ -1619,11 +1609,11 @@ bool LegacyScriptPubKeyMan::ImportWitnessV0Scripts(const std::set<WitnessV0Scrip
 {
     WalletBatch batch(m_storage.GetDatabase());
     for (const auto& entry : witscripts) {
-        if (HaveWitnessV0Script(entry.GetScriptHash())) {
+        if (HaveWitnessV0Script(entry.GetShortHash())) {
             WalletLogPrintf("Already have witscript %s, skipping\n", HexStr(entry.m_script));
             continue;
         }
-        if (!AddWitnessV0Script(entry)) {
+        if (!AddWitnessV0ScriptWithDB(batch, entry)) {
             return false;
         }
 
@@ -1765,10 +1755,18 @@ const std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScr
 
     // Add each witness script
     for (const auto& wit_pair : mapWitnessV0Scripts) {
-        const CScript& p2wsh = GetScriptForDestination(wit_pair.second.GetScriptHash());
-        if (IsMine(p2wsh) != ISMINE_NO && mapScripts.count(CScriptID(p2wsh)) != 0) {
-            spks.insert(p2wsh);
-            CScript p2sh = GetScriptForDestination(ScriptHash(p2wsh));
+        const CScript& p2wsh_long = GetScriptForDestination(wit_pair.second.GetLongHash());
+        if (IsMine(p2wsh_long) != ISMINE_NO && mapScripts.count(CScriptID(p2wsh_long)) != 0) {
+            spks.insert(p2wsh_long);
+            CScript p2sh = GetScriptForDestination(ScriptHash(p2wsh_long));
+            if (mapScripts.count(CScriptID(p2sh)) != 0) {
+                spks.insert(p2sh);
+            }
+        }
+        const CScript& p2wsh_short = GetScriptForDestination(wit_pair.second.GetShortHash());
+        if (IsMine(p2wsh_short) != ISMINE_NO && mapScripts.count(CScriptID(p2wsh_short)) != 0) {
+            spks.insert(p2wsh_short);
+            CScript p2sh = GetScriptForDestination(ScriptHash(p2wsh_short));
             if (mapScripts.count(CScriptID(p2sh)) != 0) {
                 spks.insert(p2sh);
             }
@@ -1995,7 +1993,7 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
         TxoutType type = Solver(script, sols);
         if (type == TxoutType::MULTISIG) {
             CScript sh_spk = GetScriptForDestination(ScriptHash(script));
-            CTxDestination witdest = WitnessV0ScriptHash(/*version=*/0, script);
+            CTxDestination witdest = WitnessV0LongHash(/*version=*/0, script);
             CScript witprog = GetScriptForDestination(witdest);
             CScript sh_wsh_spk = GetScriptForDestination(ScriptHash(witprog));
 
@@ -2335,12 +2333,12 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         break;
     }
     case OutputType::P2SH_SEGWIT: {
-        desc_prefix = "sh(wpkh(" + xpub + "/49'";
+        desc_prefix = "sh(wpk(" + xpub + "/49'";
         desc_suffix += ")";
         break;
     }
     case OutputType::BECH32: {
-        desc_prefix = "wpkh(" + xpub + "/84'";
+        desc_prefix = "wpk(" + xpub + "/84'";
         break;
     }
     case OutputType::BECH32M: {

@@ -2212,13 +2212,13 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
 
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
 {
-    CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH; leaf script in P2TR)
+    CScript exec_script; //!< Actually executed script (second to last stack item in P2WSH or P2WPK; leaf script in P2TR)
     Span stack{witness.stack};
     ScriptExecutionData execdata;
 
     if (witversion == 0) {
-        if (program.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            // BIP141 P2WSH: 32-byte witness v0 program: Merkle root inside the program, Merkle proof + CScript + inputs in witness
+        if (program.size() == WITNESS_V0_SHORTHASH_SIZE || program.size() == WITNESS_V0_LONGHASH_SIZE) {
+            // 20-byte or 32-byte witness v0 program: Merkle root inside the program, Merkle proof + CScript + inputs in witness
             if (stack.size() <= 1) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
             }
@@ -2261,7 +2261,10 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             if (invalid) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
             }
-            if (memcmp(hash_exec_script.begin(), program.data(), 32)) {
+            if (program.size() == WITNESS_V0_SHORTHASH_SIZE) {
+                CRIPEMD160().Write(hash_exec_script.begin(), 32).Finalize(hash_exec_script.begin());
+            }
+            if (memcmp(hash_exec_script.begin(), program.data(), program.size())) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
             if (!script_bytes.empty() && script_bytes[0] == 0x00) {
@@ -2273,13 +2276,6 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
                 // Unrecognized inner-version returns true for future softfork compatibility
                 return set_success(serror);
             }
-        } else if (program.size() == WITNESS_V0_KEYHASH_SIZE) {
-            // BIP141 P2WPKH: 20-byte witness v0 program (which encodes Hash160(pubkey))
-            if (stack.size() != 2) {
-                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // 2 items in witness
-            }
-            exec_script << OP_DUP << OP_HASH160 << program << OP_EQUALVERIFY << OP_CHECKSIG;
-            return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
         } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
             return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
         } else {

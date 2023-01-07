@@ -348,7 +348,7 @@ class WalletTaprootTest(FreicoinTestFramework):
         result = pst_offline.importdescriptors([{"desc": desc_change, "active": True, "timestamp": "now", "internal": True}])
         assert(result[0]['success'])
         for key in keys_pay + keys_change:
-            result = key_only_wallet.importdescriptors([{"desc": descsum_create(f"wpkh({key['xprv']}/*)"), "timestamp":"now"}])
+            result = key_only_wallet.importdescriptors([{"desc": descsum_create(f"wpk({key['xprv']}/*)"), "timestamp":"now"}])
             assert(result[0]["success"])
         address_type = "bech32m" if "tr" in pattern else "bech32"
         for i in range(4):
@@ -427,8 +427,8 @@ class WalletTaprootTest(FreicoinTestFramework):
             lambda k1: (key(H_POINT), [pk(k1)])
         )
         self.do_test(
-            "wpkh(XPRV)",
-            "wpkh($1/*)",
+            "wpk(XPRV)",
+            "wpk($1/*)",
             [True],
             None
         )
