@@ -34,6 +34,7 @@ static void AssembleBlock(benchmark::Bench& bench)
 
     CScriptWitness witness;
     witness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    witness.stack.emplace_back();
 
     // Collect some loose transactions that spend the coinbases of our mined blocks
     constexpr size_t NUM_BLOCKS{200};

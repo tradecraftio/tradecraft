@@ -345,5 +345,5 @@ def bulk_transaction(tx, node, target_weight, privkeys, prevtxs=None):
         return tx_from_hex(signed["hex"])
     # OP_TRUE
     tx_heavy.wit.vtxinwit = [CTxInWitness()]
-    tx_heavy.wit.vtxinwit[0].scriptWitness.stack = [b'\x00' + CScript([OP_TRUE])]
+    tx_heavy.wit.vtxinwit[0].scriptWitness.stack = [b'\x00' + CScript([OP_TRUE]), b'']
     return tx_heavy

@@ -19,7 +19,7 @@ import json
 import os
 
 from test_framework.messages import (
-    sha256,
+    hash256,
     tx_from_hex,
 )
 from test_framework.test_framework import FreicoinTestFramework
@@ -103,7 +103,7 @@ class DecodeScriptTest(FreicoinTestFramework):
         assert_equal('multisig', rpc_result['type'])
         assert_equal('2 ' + public_key + ' ' + public_key + ' ' + public_key +  ' 3 OP_CHECKMULTISIG', rpc_result['asm'])
         # multisig in P2WSH
-        multisig_script_hash = sha256(bytes.fromhex('00' + multisig_script)).hex()
+        multisig_script_hash = hash256(bytes.fromhex('00' + multisig_script)).hex()
         assert_equal('witness_v0_scripthash', rpc_result['segwit']['type'])
         assert_equal('0 ' + multisig_script_hash, rpc_result['segwit']['asm'])
 
@@ -146,7 +146,7 @@ class DecodeScriptTest(FreicoinTestFramework):
         assert_equal('nonstandard', rpc_result['type'])
         assert_equal('OP_IF ' + public_key + ' OP_CHECKSIGVERIFY OP_ELSE 500000 OP_CHECKLOCKTIMEVERIFY OP_ENDIF ' + public_key + ' OP_CHECKSIG', rpc_result['asm'])
         # CLTV script in P2WSH
-        cltv_script_hash = sha256(bytes.fromhex('00' + cltv_script)).hex()
+        cltv_script_hash = hash256(bytes.fromhex('00' + cltv_script)).hex()
         assert_equal('0 ' + cltv_script_hash, rpc_result['segwit']['asm'])
 
         self.log.info("- P2PK with uncompressed pubkey")
