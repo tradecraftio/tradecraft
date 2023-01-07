@@ -18,6 +18,7 @@
 
 #include <wallet/walletdb.h>
 
+#include <addresstype.h>
 #include <common/system.h>
 #include <key_io.h>
 #include <protocol.h>
@@ -171,7 +172,7 @@ bool WalletBatch::WriteCScript(const uint160& hash, const CScript& redeemScript)
     return WriteIC(std::make_pair(DBKeys::CSCRIPT, hash), redeemScript, false);
 }
 
-bool WalletBatch::WriteWitnessV0Script(const uint160& scriptid, const WitnessV0ScriptEntry& entry)
+bool WalletBatch::WriteWitnessV0Script(const WitnessV0ShortHash& scriptid, const WitnessV0ScriptEntry& entry)
 {
     return WriteIC(std::make_pair(DBKeys::WITNESS_V0, scriptid), entry, false);
 }
@@ -732,7 +733,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     // Load witnessv0 scripts
     LoadResult witnessv0_script_res = LoadRecords(pwallet, batch, DBKeys::WITNESS_V0,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
-        uint160 shorthash;
+        WitnessV0ShortHash shorthash;
         key >> shorthash;
         WitnessV0ScriptEntry entry;
         value >> entry;

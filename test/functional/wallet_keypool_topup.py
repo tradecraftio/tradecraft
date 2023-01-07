@@ -74,7 +74,7 @@ class KeypoolRestoreTest(FreicoinTestFramework):
             elif i == 1:
                 assert address_details["isscript"] and not address_details["iswitness"]
             elif i == 2:
-                assert not address_details["isscript"] and address_details["iswitness"]
+                assert address_details["isscript"] and address_details["iswitness"]
             elif i == 3:
                 assert address_details["isscript"] and address_details["iswitness"]
 

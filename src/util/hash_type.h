@@ -26,6 +26,10 @@ public:
     BaseHash() : m_hash() {}
     explicit BaseHash(const HashType& in) : m_hash(in) {}
 
+    SERIALIZE_METHODS(BaseHash, obj) {
+        READWRITE(obj.m_hash);
+    }
+
     bool IsNull() const
     {
         return m_hash.IsNull();
