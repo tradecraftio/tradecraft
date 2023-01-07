@@ -32,7 +32,7 @@ documentation for the functions mentioned above.
 Output descriptors currently support:
 - Pay-to-pubkey scripts (P2PK), through the `pk` function.
 - Pay-to-pubkey-hash scripts (P2PKH), through the `pkh` function.
-- Pay-to-witness-pubkey-hash scripts (P2WPKH), through the `wpkh` function.
+- Pay-to-witness-pubkey scripts (P2WPK), through the `wpk` function.
 - Pay-to-script-hash scripts (P2SH), through the `sh` function.
 - Pay-to-witness-script-hash scripts (P2WSH), through the `wsh` function.
 - Pay-to-taproot outputs (P2TR), through the `tr` function.
@@ -47,9 +47,9 @@ Output descriptors currently support:
 
 - `pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` describes a P2PK output with the specified public key.
 - `pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)` describes a P2PKH output with the specified public key.
-- `wpkh(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9)` describes a P2WPKH output with the specified public key.
-- `sh(wpkh(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))` describes a P2SH-P2WPKH output with the specified public key.
-- `combo(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` describes any P2PK, P2PKH, P2WPKH, or P2SH-P2WPKH output with the specified public key.
+- `wpk(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9)` describes a P2WPK output with the specified public key.
+- `sh(wpk(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))` describes a P2SH-P2WPK output with the specified public key.
+- `combo(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` describes any P2PK, P2PKH, P2WPK, or P2SH-P2WPK output with the specified public key.
 - `sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))` describes an (overly complicated) P2SH-P2WSH-P2PKH output with the specified public key.
 - `multi(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)` describes a bare *1-of-2* multisig output with keys in the specified order.
 - `sh(multi(2,022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01,03acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbe))` describes a P2SH *2-of-2* multisig output with keys in the specified order.
@@ -73,8 +73,8 @@ Descriptors consist of several types of expressions. The top level expression is
 - `wsh(SCRIPT)` (top level or inside `sh` only): P2WSH embed the argument.
 - `pk(KEY)` (anywhere): P2PK output for the given public key.
 - `pkh(KEY)` (not inside `tr`): P2PKH output for the given public key (use `addr` if you only know the pubkey hash).
-- `wpkh(KEY)` (top level or inside `sh` only): P2WPKH output for the given compressed pubkey.
-- `combo(KEY)` (top level only): an alias for the collection of `pk(KEY)` and `pkh(KEY)`. If the key is compressed, it also includes `wpkh(KEY)` and `sh(wpkh(KEY))`.
+- `wpk(KEY)` (top level or inside `sh` only): P2WPK output for the given compressed pubkey.
+- `combo(KEY)` (top level only): an alias for the collection of `pk(KEY)` and `pkh(KEY)`. If the key is compressed, it also includes `wpk(KEY)` and `sh(wpk(KEY))`.
 - `multi(k,KEY_1,KEY_2,...,KEY_n)` (not inside `tr`): k-of-n multisig script using OP_CHECKMULTISIG.
 - `sortedmulti(k,KEY_1,KEY_2,...,KEY_n)` (not inside `tr`): k-of-n multisig script with keys sorted lexicographically in the resulting script.
 - `multi_a(k,KEY_1,KEY_2,...,KEY_N)` (only inside `tr`): k-of-n multisig script using OP_CHECKSIG, OP_CHECKSIGADD, and OP_NUMEQUAL.
@@ -92,7 +92,7 @@ Descriptors consist of several types of expressions. The top level expression is
   - A closing bracket `]`
 - Followed by the actual key, which is either:
   - Hex encoded public keys (either 66 characters starting with `02` or `03` for a compressed pubkey, or 130 characters starting with `04` for an uncompressed pubkey).
-    - Inside `wpkh` and `wsh`, only compressed public keys are permitted.
+    - Inside `wpk` and `wsh`, only compressed public keys are permitted.
     - Inside `tr` and `rawtr`, x-only pubkeys are also permitted (64 hex characters).
   - [WIF](https://en.bitcoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
   - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)).
@@ -116,12 +116,12 @@ Descriptors consist of several types of expressions. The top level expression is
 ### Single-key scripts
 
 Many single-key constructions are used in practice, generally including
-P2PK, P2PKH, P2WPKH, and P2SH-P2WPKH. Many more combinations are
+P2PK, P2PKH, P2WPK, and P2SH-P2WPK. Many more combinations are
 imaginable, though they may not be optimal: P2SH-P2PK, P2SH-P2PKH,
 P2WSH-P2PK, P2WSH-P2PKH, P2SH-P2WSH-P2PK, P2SH-P2WSH-P2PKH.
 
 To describe these, we model these as functions. The functions `pk`
-(P2PK), `pkh` (P2PKH) and `wpkh` (P2WPKH) take as input a `KEY` expression, and return the
+(P2PK), `pkh` (P2PKH) and `wpk` (P2WPK) take as input a `KEY` expression, and return the
 corresponding *scriptPubKey*. The functions `sh` (P2SH) and `wsh` (P2WSH)
 take as input a `SCRIPT` expression, and return the script describing P2SH and P2WSH
 outputs with the input as embedded script. The names of the functions do
@@ -250,7 +250,7 @@ steps, or for dumping wallet descriptors including private key material.
 In order to easily represent the sets of scripts currently supported by
 existing Freicoin wallets, a convenience function `combo` is
 provided, which takes as input a public key, and describes a set of P2PK,
-P2PKH, P2WPKH, and P2SH-P2WPKH scripts for that key. In case the key is
+P2PKH, P2WPK, and P2SH-P2WPK scripts for that key. In case the key is
 uncompressed, the set only includes P2PK and P2PKH scripts.
 
 ### Checksums

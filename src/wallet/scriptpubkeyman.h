@@ -558,8 +558,10 @@ public:
 
     bool GetCScript(const CScriptID &scriptid, CScript& script) const override { return m_spk_man.GetCScript(scriptid, script); }
     bool HaveCScript(const CScriptID &scriptid) const override { return m_spk_man.HaveCScript(scriptid); }
-    bool GetWitnessV0Script(const WitnessV0ScriptHash& id, WitnessV0ScriptEntry& entry) const override { return m_spk_man.GetWitnessV0Script(id, entry); }
-    bool HaveWitnessV0Script(const WitnessV0ScriptHash& id) const override { return m_spk_man.HaveWitnessV0Script(id); }
+    bool GetWitnessV0Script(const WitnessV0ShortHash& id, WitnessV0ScriptEntry& entry) const override { return m_spk_man.GetWitnessV0Script(id, entry); }
+    bool GetWitnessV0Script(const WitnessV0LongHash& id, WitnessV0ScriptEntry& entry) const override { return m_spk_man.GetWitnessV0Script(id, entry); }
+    bool HaveWitnessV0Script(const WitnessV0ShortHash& id) const override { return m_spk_man.HaveWitnessV0Script(id); }
+    bool HaveWitnessV0Script(const WitnessV0LongHash& id) const override { return m_spk_man.HaveWitnessV0Script(id); }
     bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const override { return m_spk_man.GetPubKey(address, pubkey); }
     bool GetKey(const CKeyID &address, CKey& key) const override { return false; }
     bool HaveKey(const CKeyID &address) const override { return false; }

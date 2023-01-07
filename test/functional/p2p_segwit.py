@@ -88,10 +88,11 @@ from test_framework.script import (
     SegwitV0SignatureHash,
     LegacySignatureHash,
     hash160,
+    ripemd160,
 )
 from test_framework.script_util import (
     key_to_p2pk_script,
-    key_to_p2wpkh_script,
+    key_to_p2wpk_script,
     keyhash_to_p2pkh_script,
     script_to_p2sh_script,
     script_to_p2wsh_script,
@@ -1501,13 +1502,12 @@ class SegWitTest(FreicoinTestFramework):
 
         utxo = self.utxo.pop(0)
 
-        # Test 1: P2WPKH
-        # First create a P2WPKH output that uses an uncompressed pubkey
-        pubkeyhash = hash160(pubkey)
-        script_pkh = key_to_p2wpkh_script(pubkey)
+        # Test 1: P2WPK
+        # First create a P2WPK output that uses an uncompressed pubkey
+        script_wpk = key_to_p2wpk_script(pubkey)
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(utxo.sha256, utxo.n), b""))
-        tx.vout.append(CTxOut(utxo.nValue - 1000, script_pkh))
+        tx.vout.append(CTxOut(utxo.nValue - 1000, script_wpk))
         tx.rehash()
 
         # Confirm it in a block.
@@ -1523,11 +1523,11 @@ class SegWitTest(FreicoinTestFramework):
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, script_wsh))
-        script = keyhash_to_p2pkh_script(pubkeyhash)
+        script = key_to_p2pk_script(pubkey)
         sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue, tx.lock_height)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, pubkey]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, script_to_witness(witness_script), b'']
         tx2.rehash()
 
         # Should fail policy test.
@@ -1559,7 +1559,7 @@ class SegWitTest(FreicoinTestFramework):
         # Test 3: P2SH(P2WSH)
         # Try to spend the P2SH output created in the last test.
         # Send it to a P2PKH output, which we'll use in the next test.
-        script_pubkey = keyhash_to_p2pkh_script(pubkeyhash)
+        script_pubkey = keyhash_to_p2pkh_script(hash160(pubkey))
         tx4 = CTransaction()
         tx4.vin.append(CTxIn(COutPoint(tx3.sha256, 0), script_sig))
         tx4.vout.append(CTxOut(tx3.vout[0].nValue - 1000, script_pubkey))
@@ -1715,24 +1715,24 @@ class SegWitTest(FreicoinTestFramework):
             self.update_witness_block_with_transactions(block, [])
             test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
-        # Now test witness version 0 P2PKH transactions
+        # Now test witness version 0 P2PK transactions
         pubkeyhash = hash160(pubkey)
-        script_pkh = key_to_p2wpkh_script(pubkey)
+        script_pk = key_to_p2wpk_script(pubkey)
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(temp_utxos[0].sha256, temp_utxos[0].n), b""))
-        tx.vout.append(CTxOut(temp_utxos[0].nValue, script_pkh))
+        tx.vout.append(CTxOut(temp_utxos[0].nValue, script_pk))
         tx.wit.vtxinwit.append(CTxInWitness())
         sign_p2pk_witness_input(witness_script, tx, 0, SIGHASH_ALL, temp_utxos[0].nValue, 0, key)
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
 
-        script = keyhash_to_p2pkh_script(pubkeyhash)
+        script = key_to_p2pk_script(pubkey)
         sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue, tx.lock_height)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
 
         # Check that we can't have a scriptSig
-        tx2.vin[0].scriptSig = CScript([signature, pubkey])
+        tx2.vin[0].scriptSig = CScript([signature])
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx, tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
@@ -1741,7 +1741,7 @@ class SegWitTest(FreicoinTestFramework):
         # Move the signature to the witness.
         block.vtx.pop(-2)
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, pubkey]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, bytes([0]) + script, b'']
         tx2.vin[0].scriptSig = b""
         tx2.rehash()
 
