@@ -68,9 +68,9 @@ void ImportDescriptors(CWallet& wallet, const std::string& seed_insecure)
 {
     const std::vector<std::string> DESCS{
         "pkh(%s/%s/*)",
-        "sh(wpkh(%s/%s/*))",
+        "sh(wpk(%s/%s/*))",
         "tr(%s/%s/*)",
-        "wpkh(%s/%s/*)",
+        "wpk(%s/%s/*)",
     };
 
     for (const std::string& desc_fmt : DESCS) {

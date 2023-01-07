@@ -272,9 +272,9 @@ class AvoidReuseTest(FreicoinTestFramework):
             fund_spk = address_to_scriptpubkey(fundaddr).hex()
             fund_decoded = self.nodes[0].decodescript(fund_spk)
             if second_addr_type == "p2sh-segwit":
-                new_fundaddr = fund_decoded["segwit"]["p2sh-segwit"]
+                new_fundaddr = self.nodes[1].addwitnessaddress(fundaddr, p2sh=True)
             elif second_addr_type == "bech32":
-                new_fundaddr = fund_decoded["segwit"]["address"]
+                new_fundaddr = self.nodes[1].addwitnessaddress(fundaddr, p2sh=False)
             else:
                 new_fundaddr = fundaddr
                 assert_equal(second_addr_type, "legacy")
