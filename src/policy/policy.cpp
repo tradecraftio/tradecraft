@@ -220,18 +220,9 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // get the scriptPubKey corresponding to this input:
         CScript prevScript = prev.scriptPubKey;
 
-        bool p2sh = false;
         if (prevScript.IsPayToScriptHash()) {
-            std::vector <std::vector<unsigned char> > stack;
-            // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
-            // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
-            // If the check fails at this stage, we know that this txid must be a bad one.
-            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
-                return false;
-            if (stack.empty())
-                return false;
-            prevScript = CScript(stack.back().begin(), stack.back().end());
-            p2sh = true;
+            // P2Sh-wrapped segwit is not allowed.
+            return false;
         }
 
         int witnessversion = 0;
@@ -257,7 +248,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // Check policy limits for Taproot spends:
         // - MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE limit for stack item size
         // - No annexes
-        if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
+        if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE) {
             // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
             Span stack{tx.vin[i].scriptWitness.stack};
             if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {

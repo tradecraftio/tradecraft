@@ -91,11 +91,6 @@ def script_to_p2sh_script(script):
     return scripthash_to_p2sh_script(hash160(script))
 
 
-def key_to_p2sh_p2wpk_script(key):
-    p2shscript = key_to_p2wpk_script(key)
-    return script_to_p2sh_script(p2shscript)
-
-
 def program_to_witness_script(version, program):
     if isinstance(program, str):
         program = bytes.fromhex(program)
@@ -122,12 +117,6 @@ def script_to_p2wpk_script(script):
 def key_to_p2wpk_script(key):
     key = check_key(key)
     return script_to_p2wpk_script(CScript([key, OP_CHECKSIG]))
-
-
-def script_to_p2sh_p2wsh_script(script):
-    script = check_script(script)
-    p2shscript = CScript([OP_0, hash256(script_to_witness(script))])
-    return script_to_p2sh_script(p2shscript)
 
 
 def check_key(key):

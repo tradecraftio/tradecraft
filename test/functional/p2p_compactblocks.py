@@ -83,6 +83,11 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 
+def addlength(script):
+    scriptlen = format(len(script)//2, 'x')
+    assert(len(scriptlen) == 2)
+    return scriptlen + script
+
 # TestP2PConn: A peer we use to send messages to freicoind, and store responses.
 class TestP2PConn(P2PInterface):
     def __init__(self, cmpct_version):

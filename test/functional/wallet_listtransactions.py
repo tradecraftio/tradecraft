@@ -137,16 +137,11 @@ class ListTransactionsTest(FreicoinTestFramework):
         self.connect_nodes(2, 0)
 
         addr1 = self.nodes[0].getnewaddress("pizza1", 'legacy')
-        addr2 = self.nodes[0].getnewaddress("pizza2", 'p2sh-segwit')
         addr3 = self.nodes[0].getnewaddress("pizza3", 'bech32')
 
         self.log.info("Send to externally generated addresses")
         # send to an address beyond the next to be generated to test the keypool gap
         self.nodes[1].sendtoaddress(addr3, "0.001")
-        self.generate(self.nodes[1], 1)
-
-        # send to an address that is already marked as used due to the keypool gap mechanics
-        self.nodes[1].sendtoaddress(addr2, "0.001")
         self.generate(self.nodes[1], 1)
 
         # send to self transaction
@@ -171,7 +166,6 @@ class ListTransactionsTest(FreicoinTestFramework):
 
         self.log.info("Verify labels are persistent on the node that generated the addresses")
         assert_equal(['pizza1'], self.nodes[0].getaddressinfo(addr1)['labels'])
-        assert_equal(['pizza2'], self.nodes[0].getaddressinfo(addr2)['labels'])
         assert_equal(['pizza3'], self.nodes[0].getaddressinfo(addr3)['labels'])
 
     def run_invalid_parameters_test(self):

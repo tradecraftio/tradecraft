@@ -71,8 +71,8 @@ class PSTTest(FreicoinTestFramework):
         w2 = online_node.get_wallet_rpc('')
 
         # Mine a transaction that credits the offline address
-        offline_addr = offline_node.getnewaddress(address_type="p2sh-segwit")
-        online_addr = w2.getnewaddress(address_type="p2sh-segwit")
+        offline_addr = offline_node.getnewaddress(address_type="bech32")
+        online_addr = w2.getnewaddress(address_type="bech32")
         wonline.importaddress(offline_addr, "", False)
         mining_node.sendtoaddress(address=offline_addr, amount=1.0)
         self.generate(mining_node, nblocks=1)
@@ -162,17 +162,14 @@ class PSTTest(FreicoinTestFramework):
         # Create all the addresses
         p2sh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "legacy")['address']
         p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "bech32")['address']
-        p2sh_p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "p2sh-segwit")['address']
         if not self.options.descriptors:
             wmulti.importaddress(p2sh)
             wmulti.importaddress(p2wsh)
-            wmulti.importaddress(p2sh_p2wsh)
         p2wpk = self.nodes[1].getnewaddress("", "bech32")
         p2pkh = self.nodes[1].getnewaddress("", "legacy")
-        p2sh_p2wpk = self.nodes[1].getnewaddress("", "p2sh-segwit")
 
         # fund those addresses
-        rawtx = self.nodes[0].createrawtransaction([], {p2sh:10, p2wsh:10, p2wpk:10, p2sh_p2wsh:10, p2sh_p2wpk:10, p2pkh:10})
+        rawtx = self.nodes[0].createrawtransaction([], {p2sh:10, p2wsh:10, p2wpk:10, p2pkh:10})
         rawtx = self.nodes[0].fundrawtransaction(rawtx, {"changePosition":3})
         signed_tx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])['hex']
         txid = self.nodes[0].sendrawtransaction(signed_tx)
@@ -183,8 +180,6 @@ class PSTTest(FreicoinTestFramework):
         p2wsh_pos = -1
         p2wpk_pos = -1
         p2pkh_pos = -1
-        p2sh_p2wsh_pos = -1
-        p2sh_p2wpk_pos = -1
         decoded = self.nodes[0].decoderawtransaction(signed_tx)
         for out in decoded['vout']:
             if out['scriptPubKey']['address'] == p2sh:
@@ -193,15 +188,11 @@ class PSTTest(FreicoinTestFramework):
                 p2wsh_pos = out['n']
             elif out['scriptPubKey']['address'] == p2wpk:
                 p2wpk_pos = out['n']
-            elif out['scriptPubKey']['address'] == p2sh_p2wsh:
-                p2sh_p2wsh_pos = out['n']
-            elif out['scriptPubKey']['address'] == p2sh_p2wpk:
-                p2sh_p2wpk_pos = out['n']
             elif out['scriptPubKey']['address'] == p2pkh:
                 p2pkh_pos = out['n']
 
-        inputs = [{"txid": txid, "vout": p2wpk_pos}, {"txid": txid, "vout": p2sh_p2wpk_pos}, {"txid": txid, "vout": p2pkh_pos}]
-        outputs = [{self.nodes[1].getnewaddress(): 29.99}]
+        inputs = [{"txid": txid, "vout": p2wpk_pos}, {"txid": txid, "vout": p2pkh_pos}]
+        outputs = [{self.nodes[1].getnewaddress(): 19.99}]
         refheight = decoded['lockheight']
 
         # spend single key from node 1
@@ -218,15 +209,15 @@ class PSTTest(FreicoinTestFramework):
 
         self.log.info("Test walletcreatefundedpst fee rate of 10000 sat/vB and 0.1 FRC/kvB produces a total fee at or slightly below -maxtxfee (~0.05290000)")
         res1 = self.nodes[1].walletcreatefundedpst(inputs, outputs, 0, refheight, {"fee_rate": 10000, "add_inputs": True})
-        assert_approx(res1["fee"], 0.055, 0.005)
+        assert_approx(res1["fee"], 0.045, 0.005)
         res2 = self.nodes[1].walletcreatefundedpst(inputs, outputs, 0, refheight, {"feeRate": "0.1", "add_inputs": True})
-        assert_approx(res2["fee"], 0.055, 0.005)
+        assert_approx(res2["fee"], 0.045, 0.005)
 
         self.log.info("Test min fee rate checks with walletcreatefundedpst are bypassed, e.g. a fee_rate under 1 sat/vB is allowed")
         res3 = self.nodes[1].walletcreatefundedpst(inputs, outputs, 0, refheight, {"fee_rate": "0.999", "add_inputs": True})
-        assert_approx(res3["fee"], 0.00000381, 0.0000001)
+        assert_approx(res3["fee"], 0.00000295, 0.0000001)
         res4 = self.nodes[1].walletcreatefundedpst(inputs, outputs, 0, refheight, {"feeRate": 0.00000999, "add_inputs": True})
-        assert_approx(res4["fee"], 0.00000381, 0.0000001)
+        assert_approx(res4["fee"], 0.00000295, 0.0000001)
 
         self.log.info("Test min fee rate checks with walletcreatefundedpst are bypassed and that funding non-standard 'zero-fee' transactions is valid")
         for param, zero_value in product(["fee_rate", "feeRate"], [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]):
@@ -294,7 +285,7 @@ class PSTTest(FreicoinTestFramework):
 
         self.log.info("Test various PST operations")
         # partially sign multisig things with node 1
-        pstx = wmulti.walletcreatefundedpst(inputs=[{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2sh_p2wsh_pos}], outputs={self.nodes[1].getnewaddress():29.99}, lockheight=refheight, options={'changeAddress': self.nodes[1].getrawchangeaddress()})['pst']
+        pstx = wmulti.walletcreatefundedpst(inputs=[{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos}], outputs={self.nodes[1].getnewaddress():19.99}, lockheight=refheight, options={'changeAddress': self.nodes[1].getrawchangeaddress()})['pst']
         walletprocesspst_out = self.nodes[1].walletprocesspst(pstx)
         pstx = walletprocesspst_out['pst']
         assert_equal(walletprocesspst_out['complete'], False)
@@ -412,8 +403,8 @@ class PSTTest(FreicoinTestFramework):
         self.assert_change_type(pstx_legacy, "pubkeyhash")
 
         # Make sure the change type of the wallet can also be overwritten
-        pstx_np2wkh = self.nodes[1].walletcreatefundedpst([], [small_output], 0, 0, {"change_type":"p2sh-segwit"})
-        self.assert_change_type(pstx_np2wkh, "scripthash")
+        pstx_np2wkh = self.nodes[1].walletcreatefundedpst([], [small_output], 0, 0, {"change_type":"bech32"})
+        self.assert_change_type(pstx_np2wkh, "witness_v0_shorthash")
 
         # Make sure the change type cannot be specified if a change address is given
         invalid_options = {"change_type":"legacy","changeAddress":self.nodes[0].getnewaddress()}
@@ -520,9 +511,6 @@ class PSTTest(FreicoinTestFramework):
         addr2 = self.nodes[1].getnewaddress("", "legacy")
         txid2 = self.nodes[0].sendtoaddress(addr2, 11)
         vout2 = find_output(self.nodes[0], txid2, 11)
-        addr3 = self.nodes[1].getnewaddress("", "p2sh-segwit")
-        txid3 = self.nodes[0].sendtoaddress(addr3, 11)
-        vout3 = find_output(self.nodes[0], txid3, 11)
         self.sync_all()
 
         def test_pst_input_keys(pst_input, keys):
@@ -530,11 +518,10 @@ class PSTTest(FreicoinTestFramework):
             assert_equal(set(keys), set(pst_input.keys()))
 
         # Create a PST. None of the inputs are filled initially
-        pst = self.nodes[1].createpst([{"txid":txid1, "vout":vout1},{"txid":txid2, "vout":vout2},{"txid":txid3, "vout":vout3}], {self.nodes[0].getnewaddress():32.999})
+        pst = self.nodes[1].createpst([{"txid":txid1, "vout":vout1},{"txid":txid2, "vout":vout2}], {self.nodes[0].getnewaddress():32.999})
         decoded = self.nodes[1].decodepst(pst)
         test_pst_input_keys(decoded['inputs'][0], [])
         test_pst_input_keys(decoded['inputs'][1], [])
-        test_pst_input_keys(decoded['inputs'][2], [])
 
         # Update a PST with UTXOs from the node
         # Bech32 inputs should be filled with witness UTXO. Other inputs should not be filled because they are non-witness
@@ -542,32 +529,30 @@ class PSTTest(FreicoinTestFramework):
         decoded = self.nodes[1].decodepst(updated)
         test_pst_input_keys(decoded['inputs'][0], ['witness_utxo'])
         test_pst_input_keys(decoded['inputs'][1], [])
-        test_pst_input_keys(decoded['inputs'][2], [])
 
         # Try again, now while providing descriptors, making P2SH-segwit work, and causing bip32_derivs and redeem_script to be filled in
-        descs = [self.nodes[1].getaddressinfo(addr)['desc'] for addr in [addr1,addr2,addr3]]
+        descs = [self.nodes[1].getaddressinfo(addr)['desc'] for addr in [addr1,addr2]]
         updated = self.nodes[1].utxoupdatepst(pst=pst, descriptors=descs)
         decoded = self.nodes[1].decodepst(updated)
         test_pst_input_keys(decoded['inputs'][0], ['witness_utxo', 'bip32_derivs', 'witness_path', 'witness_branch', 'script_version', 'witness_script'])
         test_pst_input_keys(decoded['inputs'][1], [])
-        test_pst_input_keys(decoded['inputs'][2], ['witness_utxo', 'bip32_derivs', 'witness_path', 'witness_branch', 'script_version', 'witness_script', 'redeem_script'])
 
         # Two PSTs with a common input should not be joinable
         pst1 = self.nodes[1].createpst([{"txid":txid1, "vout":vout1}], {self.nodes[0].getnewaddress():Decimal('10.999')})
         assert_raises_rpc_error(-8, "exists in multiple PSTs", self.nodes[1].joinpsts, [pst1, updated])
 
         # Join two distinct PSTs
-        addr4 = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        addr4 = self.nodes[1].getnewaddress("", "bech32")
         txid4 = self.nodes[0].sendtoaddress(addr4, 5)
         vout4 = find_output(self.nodes[0], txid4, 5)
         self.generate(self.nodes[0], 6)
         pst2 = self.nodes[1].createpst([{"txid":txid4, "vout":vout4}], {self.nodes[0].getnewaddress():Decimal('4.999')})
         pst2 = self.nodes[1].walletprocesspst(pst2)['pst']
         pst2_decoded = self.nodes[0].decodepst(pst2)
-        assert "final_scriptwitness" in pst2_decoded['inputs'][0] and "final_scriptSig" in pst2_decoded['inputs'][0]
+        assert "final_scriptwitness" in pst2_decoded['inputs'][0] and "final_scriptSig" not in pst2_decoded['inputs'][0]
         joined = self.nodes[0].joinpsts([pst, pst2])
         joined_decoded = self.nodes[0].decodepst(joined)
-        assert len(joined_decoded['inputs']) == 4 and len(joined_decoded['outputs']) == 2 and "final_scriptwitness" not in joined_decoded['inputs'][3] and "final_scriptSig" not in joined_decoded['inputs'][3]
+        assert len(joined_decoded['inputs']) == 3 and len(joined_decoded['outputs']) == 2 and "final_scriptwitness" not in joined_decoded['inputs'][2] and "final_scriptSig" not in joined_decoded['inputs'][2]
 
         # Check that joining shuffles the inputs and outputs
         # 10 attempts should be enough to get a shuffled join
@@ -580,12 +565,12 @@ class PSTTest(FreicoinTestFramework):
         assert shuffled
 
         # Newly created PST needs UTXOs and updating
-        addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        addr = self.nodes[1].getnewaddress("", "bech32")
         txid = self.nodes[0].sendtoaddress(addr, 7)
         addrinfo = self.nodes[1].getaddressinfo(addr)
         blockhash = self.generate(self.nodes[0], 6)[0]
         vout = find_output(self.nodes[0], txid, 7, blockhash=blockhash)
-        pst = self.nodes[1].createpst([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress("", "p2sh-segwit"):Decimal('6.999')})
+        pst = self.nodes[1].createpst([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress("", "bech32"):Decimal('6.999')})
         analyzed = self.nodes[0].analyzepst(pst)
         assert not analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'updater' and analyzed['next'] == 'updater'
 
@@ -596,8 +581,8 @@ class PSTTest(FreicoinTestFramework):
 
         # Check fee and size things
         assert_equal(analyzed['fee'], Decimal('0.001'))
-        assert_equal(analyzed['estimated_vsize'], 139)
-        assert_equal(analyzed['estimated_feerate'], Decimal('0.00719424'))
+        assert_equal(analyzed['estimated_vsize'], 115)
+        assert_equal(analyzed['estimated_feerate'], Decimal('0.00869565'))
 
         # After signing and finalizing, needs extracting
         signed = self.nodes[1].walletprocesspst(updated)['pst']
@@ -640,8 +625,8 @@ class PSTTest(FreicoinTestFramework):
         self.nodes[1].createwallet("extfund")
         wallet = self.nodes[1].get_wallet_rpc("extfund")
 
-        # Make a weird but signable script. sh(wsh(pkh())) descriptor accomplishes this
-        desc = descsum_create("sh(wsh(pkh({})))".format(privkey))
+        # Make a weird but signable script. wsh(pkh()) descriptor accomplishes this
+        desc = descsum_create("wsh(pkh({}))".format(privkey))
         if self.options.descriptors:
             res = self.nodes[0].importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
@@ -659,7 +644,7 @@ class PSTTest(FreicoinTestFramework):
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpst, [ext_utxo], {self.nodes[0].getnewaddress(): 15})
 
         # But funding should work when the solving data is provided
-        pst = wallet.walletcreatefundedpst([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, 0, {"add_inputs": True, "solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"]], "witscripts": [bytes([addr_info["embedded"]["witscript_version"]]).hex() + addr_info["embedded"]["embedded"]["scriptPubKey"]]}})
+        pst = wallet.walletcreatefundedpst([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, 0, {"add_inputs": True, "solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [], "witscripts": [bytes([addr_info["witscript_version"]]).hex() + addr_info["embedded"]["scriptPubKey"]]}})
         signed = wallet.walletprocesspst(pst['pst'])
         assert not signed['complete']
         signed = self.nodes[0].walletprocesspst(signed['pst'])
@@ -685,7 +670,7 @@ class PSTTest(FreicoinTestFramework):
         len_scriptsig += len(ser_compact_size(len_scriptsig)) + 1
         len_scriptwitness = (sum([(len(x) // 2) + len(ser_compact_size(len(x) // 2)) for x in pst_in["final_scriptwitness"]]) + len(pst_in["final_scriptwitness"]) + 1) if "final_scriptwitness" in pst_in else 0
         input_weight = ((40 + len_scriptsig) * WITNESS_SCALE_FACTOR) + len_scriptwitness
-        low_input_weight = input_weight // 2
+        low_input_weight = max(165, input_weight // 2)
         high_input_weight = input_weight * 2
 
         # Input weight error conditions

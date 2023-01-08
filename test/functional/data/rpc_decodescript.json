@@ -23,8 +23,7 @@
             "asm": "0 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
             "address": "bcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqgdn98t",
             "desc": "addr(bcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqgdn98t)#afaecevx",
-            "type": "witness_v0_longhash",
-            "p2sh": "2MwGk8mw1GBP6U9D5X8gTvgvXpuknmAK3fo"
+            "type": "witness_v0_longhash"
         }
     ],
     [
@@ -72,8 +71,7 @@
                 "desc": "addr(bcrt1qax3ye02y6dkl6yy06tnrgu3rq40hp53hh6evcsk9sfqztnhw3a9sthgefq)#r3ake4l4",
                 "hex": "0020e9a24cbd44d36dfd108fd2e6347223055f70d237beb2cc42c5824025ceee8f4b",
                 "address": "bcrt1qax3ye02y6dkl6yy06tnrgu3rq40hp53hh6evcsk9sfqztnhw3a9sthgefq",
-                "type": "witness_v0_longhash",
-                "p2sh-segwit": "2Mu3suXG1ZRpNGwma3FFDS1KF3bH32a8Wzf"
+                "type": "witness_v0_longhash"
             }
         }
     ],

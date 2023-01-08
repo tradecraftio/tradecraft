@@ -97,8 +97,6 @@ class AvoidReuseTest(FreicoinTestFramework):
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
         self.test_sending_from_reused_address_fails("legacy")
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
-        self.test_sending_from_reused_address_fails("p2sh-segwit")
-        reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
         self.test_sending_from_reused_address_fails("bech32")
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
         self.test_getbalances_used()
@@ -255,10 +253,8 @@ class AvoidReuseTest(FreicoinTestFramework):
             # to make sure it's also detected as re-use
             fund_spk = self.nodes[0].getaddressinfo(fundaddr)["scriptPubKey"]
             fund_decoded = self.nodes[0].decodescript(fund_spk)
-            if second_addr_type == "p2sh-segwit":
-                new_fundaddr = self.nodes[1].addwitnessaddress(fundaddr, True)
-            elif second_addr_type == "bech32":
-                new_fundaddr = self.nodes[1].addwitnessaddress(fundaddr, False)
+            if second_addr_type == "bech32":
+                new_fundaddr = self.nodes[1].addwitnessaddress(fundaddr)
             else:
                 new_fundaddr = fundaddr
                 assert_equal(second_addr_type, "legacy")
