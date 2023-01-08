@@ -16,8 +16,7 @@
 """Encode and decode Freicoin addresses.
 
 - base58 P2PKH and P2SH addresses.
-- bech32 segwit v0 P2WPK and P2WSH addresses.
-- bech32m segwit v1 P2TR addresses."""
+- bech32 segwit v0 P2WPKH and P2WSH addresses."""
 
 import enum
 import unittest
@@ -25,12 +24,10 @@ import unittest
 from .script import (
     CScript,
     OP_0,
-    OP_TRUE,
     OP_CHECKSIG,
     hash160,
     hash256,
     ripemd160,
-    taproot_construct,
 )
 from .util import assert_equal
 from test_framework.script_util import (
@@ -56,22 +53,6 @@ class AddressType(enum.Enum):
 
 
 b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-
-
-def create_deterministic_address_fcrt1_p2tr_op_true(explicit_internal_key=None):
-    """
-    Generates a deterministic bech32m address (segwit v1 output) that
-    can be spent with a witness stack of OP_TRUE and the control block
-    with internal public key (script-path spending).
-
-    Returns a tuple with the generated address and the TaprootInfo object.
-    """
-    internal_key = explicit_internal_key or (1).to_bytes(32, 'big')
-    taproot_info = taproot_construct(internal_key, [("only-path", CScript([OP_TRUE]))])
-    address = output_key_to_p2tr(taproot_info.output_pubkey)
-    if explicit_internal_key is None:
-        assert_equal(address, 'fcrt1p9yfmy5h72durp7zrhlw9lf7jpwjgvwdg0jr0lqmmjtgg83266lqsjljss2')
-    return (address, taproot_info)
 
 
 def byte_to_base58(b, version):

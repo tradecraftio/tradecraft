@@ -662,8 +662,9 @@ class PSTTest(FreicoinTestFramework):
             self.nodes[2].unloadwallet("wallet{}".format(i))
         """
 
-        if self.options.descriptors:
-            self.test_utxo_conversion()
+        # Disabled with removal of Taproot:
+        #if self.options.descriptors:
+        #    self.test_utxo_conversion()
         # FIXME: This test is disabled on Freicoin because after the commit
         #        '[Segwit] Change P2WPKH to be a 20-byte short script hash'
         #        the generated PST is not decodable by the test framework.
