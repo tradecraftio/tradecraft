@@ -104,8 +104,8 @@ class ImportWithLabel(FreicoinTestFramework):
             "Test importprivkey won't label new dests with the same "
             "label as others labeled dests for the same key."
         )
-        self.log.info("Import a watch-only p2sh-segwit address with a label.")
-        address4 = self.nodes[0].getnewaddress("", "p2sh-segwit")
+        self.log.info("Import a watch-only bech32 address with a label.")
+        address4 = self.nodes[0].getnewaddress("", "bech32")
         label4_addr = "Test Label 4 for importaddress"
         self.nodes[1].importaddress(address4, label4_addr)
         test_address(self.nodes[1],

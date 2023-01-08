@@ -581,7 +581,6 @@ static RPCHelpMan decodescript()
                      {RPCResult::Type::STR, "type", "The type of the script public key (e.g. witness_v0_keyhash or witness_v0_scripthash)"},
                      {RPCResult::Type::STR, "address", /*optional=*/true, "The Freicoin address (only if a well-defined address exists)"},
                      {RPCResult::Type::STR, "desc", "Inferred descriptor for the script"},
-                     {RPCResult::Type::STR, "p2sh-segwit", "address of the P2SH script wrapping this witness redeem script"},
                  }},
             },
         },
@@ -612,13 +611,13 @@ static RPCHelpMan decodescript()
         case TxoutType::NONSTANDARD:
         case TxoutType::PUBKEY:
         case TxoutType::PUBKEYHASH:
-        case TxoutType::WITNESS_V0_SHORTHASH:
-        case TxoutType::WITNESS_V0_LONGHASH:
             // Can be wrapped if the checks below pass
             break;
         case TxoutType::UNSPENDABLE:
         case TxoutType::SCRIPTHASH:
         case TxoutType::WITNESS_UNKNOWN:
+        case TxoutType::WITNESS_V0_SHORTHASH:
+        case TxoutType::WITNESS_V0_LONGHASH:
         case TxoutType::WITNESS_V1_TAPROOT:
             // Should not be wrapped
             return false;
@@ -681,7 +680,6 @@ static RPCHelpMan decodescript()
                 segwitScr = GetScriptForDestination(WitnessV0LongHash(0 /* version */, script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, /* include_hex */ true);
-            sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }
     }
@@ -811,7 +809,7 @@ static RPCHelpMan signrawtransactionwithkey()
                                     {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
-                                    {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
+                                    {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH) witness script"},
                                     {"value", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent at the reference height of the transaction being spent"},
                                     {"refheight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The lockheight of the transaction output being spent"},
                                 },

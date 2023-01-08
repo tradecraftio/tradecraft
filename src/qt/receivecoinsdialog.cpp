@@ -106,7 +106,6 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
             if (model->wallet().getDefaultAddressType() == type) ui->addressType->setCurrentIndex(index);
         };
         add_address_type(OutputType::LEGACY, "Base58 (Legacy)", "Not recommended due to higher fees and less protection against typos.");
-        add_address_type(OutputType::P2SH_SEGWIT, "Base58 (P2SH-SegWit)", "Generates an address compatible with older wallets.");
         add_address_type(OutputType::BECH32, "Bech32 (SegWit)", "Generates a native segwit address (BIP-173). Some old wallets don't support it.");
         if (model->wallet().taprootEnabled()) {
             add_address_type(OutputType::BECH32M, "Bech32m (Taproot)", "Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited.");

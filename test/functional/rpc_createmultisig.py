@@ -61,7 +61,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         self.moved = 0
         for self.nkeys in [3, 5]:
             for self.nsigs in [2, 3]:
-                for self.output_type in ["bech32", "p2sh-segwit", "legacy"]:
+                for self.output_type in ["bech32", "legacy"]:
                     self.get_keys()
                     self.do_multisig()
 
@@ -93,7 +93,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
             # Generate addresses with the segwit types. These should all make legacy addresses
             err_msg = ["Unable to make chosen address type, please ensure no uncompressed public keys are present."]
 
-            for addr_type in ['bech32', 'p2sh-segwit']:
+            for addr_type in ['bech32']:
                 result = wmulti0.createmultisig(nrequired=2, keys=keys, address_type=addr_type)
                 assert_equal(legacy_addr, result['address'])
                 assert_equal(result['warnings'], err_msg)
@@ -164,8 +164,6 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         desc = 'multi({},{})'.format(self.nsigs, ','.join(self.pub))
         if self.output_type == 'legacy':
             desc = 'sh({})'.format(desc)
-        elif self.output_type == 'p2sh-segwit':
-            desc = 'sh(wsh({}))'.format(desc)
         elif self.output_type == 'bech32':
             desc = 'wsh({})'.format(desc)
         desc = descsum_create(desc)

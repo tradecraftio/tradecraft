@@ -19,10 +19,8 @@ from collections import namedtuple
 from test_framework.address import (
     byte_to_base58,
     key_to_p2pkh,
-    key_to_p2sh_p2wpk,
     key_to_p2wpk,
     script_to_p2sh,
-    script_to_p2sh_p2wsh,
     script_to_p2wsh,
     script_to_witscript,
 )
@@ -40,10 +38,7 @@ Key = namedtuple('Key', ['privkey',
                          'p2pkh_script',
                          'p2pkh_addr',
                          'p2wpk_script',
-                         'p2wpk_addr',
-                         'p2sh_p2wpk_script',
-                         'p2sh_p2wpk_redeem_script',
-                         'p2sh_p2wpk_addr'])
+                         'p2wpk_addr'])
 
 Multisig = namedtuple('Multisig', ['privkeys',
                                    'pubkeys',
@@ -52,9 +47,7 @@ Multisig = namedtuple('Multisig', ['privkeys',
                                    'redeem_script',
                                    'p2wsh_script',
                                    'p2wsh_addr',
-                                   'witness_script',
-                                   'p2sh_p2wsh_script',
-                                   'p2sh_p2wsh_addr'])
+                                   'witness_script'])
 
 def get_key(node):
     """Generate a fresh key on node
@@ -67,10 +60,7 @@ def get_key(node):
                p2pkh_script=key_to_p2pkh_script(pubkey).hex(),
                p2pkh_addr=key_to_p2pkh(pubkey),
                p2wpk_script=key_to_p2wpk_script(pubkey).hex(),
-               p2wpk_addr=key_to_p2wpk(pubkey),
-               p2sh_p2wpk_script=script_to_p2sh_script(key_to_p2wpk_script(pubkey)).hex(),
-               p2sh_p2wpk_redeem_script=key_to_p2wpk_script(pubkey).hex(),
-               p2sh_p2wpk_addr=key_to_p2sh_p2wpk(pubkey))
+               p2wpk_addr=key_to_p2wpk(pubkey))
 
 def get_generate_key():
     """Generate a fresh key
@@ -85,10 +75,7 @@ def get_generate_key():
                p2pkh_script=key_to_p2pkh_script(pubkey).hex(),
                p2pkh_addr=key_to_p2pkh(pubkey),
                p2wpk_script=key_to_p2wpk_script(pubkey).hex(),
-               p2wpk_addr=key_to_p2wpk(pubkey),
-               p2sh_p2wpk_script=script_to_p2sh_script(key_to_p2wpk_script(pubkey)).hex(),
-               p2sh_p2wpk_redeem_script=key_to_p2wpk_script(pubkey).hex(),
-               p2sh_p2wpk_addr=key_to_p2sh_p2wpk(pubkey))
+               p2wpk_addr=key_to_p2wpk(pubkey))
 
 def get_multisig(node):
     """Generate a fresh 2-of-3 multisig on node
@@ -109,9 +96,7 @@ def get_multisig(node):
                     redeem_script=script_code.hex(),
                     p2wsh_script=witness_script.hex(),
                     p2wsh_addr=script_to_p2wsh(script_code),
-                    witness_script=script_to_witscript(script_code).hex(),
-                    p2sh_p2wsh_script=script_to_p2sh_script(witness_script).hex(),
-                    p2sh_p2wsh_addr=script_to_p2sh_p2wsh(script_code))
+                    witness_script=script_to_witscript(script_code).hex())
 
 def test_address(node, address, **kwargs):
     """Get address info for `address` and test whether the returned values are as expected."""

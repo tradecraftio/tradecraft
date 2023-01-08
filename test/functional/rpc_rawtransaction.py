@@ -268,7 +268,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         )
 
     def signrawtransactionwithwallet_tests(self):
-        for type in ["bech32", "p2sh-segwit", "legacy"]:
+        for type in ["bech32", "legacy"]:
             self.log.info(f"Test signrawtransactionwithwallet with missing prevtx info ({type})")
             addr = self.nodes[0].getnewaddress("", type)
             addrinfo = self.nodes[0].getaddressinfo(addr)
