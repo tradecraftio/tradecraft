@@ -589,8 +589,9 @@ class PSTTest(FreicoinTestFramework):
             self.nodes[2].unloadwallet("wallet{}".format(i))
         """
 
-        if self.options.descriptors:
-            self.test_utxo_conversion()
+        # Disabled with removal of Taproot:
+        #if self.options.descriptors:
+        #    self.test_utxo_conversion()
 
         self.test_input_confs_control()
 
