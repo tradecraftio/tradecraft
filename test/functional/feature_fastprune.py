@@ -14,7 +14,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test fastprune mode."""
+from test_framework.messages import (
+    CTxOut,
+)
 from test_framework.test_framework import FreicoinTestFramework
+from test_framework.script import (
+    CScript,
+    OP_RETURN,
+)
 from test_framework.util import (
     assert_equal
 )
@@ -30,8 +37,7 @@ class FeatureFastpruneTest(FreicoinTestFramework):
         self.log.info("ensure that large blocks don't crash or freeze in -fastprune")
         wallet = MiniWallet(self.nodes[0])
         tx = wallet.create_self_transfer()['tx']
-        annex = b"\x50" + b"\xff" * 0x10000
-        tx.wit.vtxinwit[0].scriptWitness.stack.append(annex)
+        tx.vout.append(CTxOut(0, CScript([OP_RETURN] + [b"\xff" * 0x10000])))
         self.generateblock(self.nodes[0], output="raw(55)", transactions=[tx.serialize().hex()])
         assert_equal(self.nodes[0].getblockcount(), 201)
 
