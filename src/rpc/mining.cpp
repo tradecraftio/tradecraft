@@ -170,12 +170,12 @@ static bool getScriptFromDescriptor(const std::string& descriptor, CScript& scri
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot derive script without private keys");
         }
 
-        // Combo descriptors can have 2 or 4 scripts, so we can't just check scripts.size() == 1
-        CHECK_NONFATAL(scripts.size() > 0 && scripts.size() <= 4);
+        // Combo descriptors can have 2 or 3 scripts, so we can't just check scripts.size() == 1
+        CHECK_NONFATAL(scripts.size() > 0 && scripts.size() <= 3);
 
         if (scripts.size() == 1) {
             script = scripts.at(0);
-        } else if (scripts.size() == 4) {
+        } else if (scripts.size() == 3) {
             // For uncompressed keys, take the 3rd script, since it is p2wpk
             script = scripts.at(2);
         } else {

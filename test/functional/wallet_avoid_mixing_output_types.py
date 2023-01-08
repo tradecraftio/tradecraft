@@ -8,7 +8,6 @@ A wallet may have different types of UTXOs to choose from during coin selection,
 where output type is one of the following:
     - BECH32M
     - BECH32
-    - P2SH-SEGWIT
     - LEGACY
 
 This test verifies that mixing different output types is avoided unless
@@ -34,7 +33,6 @@ from test_framework.blocktools import COINBASE_MATURITY
 ADDRESS_TYPES = [
     "bech32m",
     "bech32",
-    "p2sh-segwit",
     "legacy",
 ]
 
@@ -49,16 +47,6 @@ def is_bech32m_address(node, addr):
     """Check if an address contains a bech32m output."""
     addr_info = node.getaddressinfo(addr)
     return addr_info['desc'].startswith('tr(')
-
-
-def is_p2sh_segwit_address(node, addr):
-    """Check if an address contains a P2SH-Segwit output.
-       Note: this function does not actually determine the type
-       of P2SH output, but is sufficient for this test in that
-       we are only generating P2SH-Segwit outputs.
-    """
-    addr_info = node.getaddressinfo(addr)
-    return addr_info['desc'].startswith('sh(wpk(')
 
 
 def is_legacy_address(node, addr):
@@ -80,21 +68,18 @@ def is_same_type(node, tx):
             )['vout'][n]['scriptPubKey']['address']
         )
     has_legacy = False
-    has_p2sh = False
     has_bech32 = False
     has_bech32m = False
 
     for addr in inputs:
         if is_legacy_address(node, addr):
             has_legacy = True
-        if is_p2sh_segwit_address(node, addr):
-            has_p2sh = True
         if is_bech32_address(node, addr):
             has_bech32 = True
         if is_bech32m_address(node, addr):
             has_bech32m = True
 
-    return (sum([has_legacy, has_p2sh, has_bech32, has_bech32m]) == 1)
+    return (sum([has_legacy, has_bech32, has_bech32m]) == 1)
 
 
 def generate_payment_values(n, m):
@@ -116,7 +101,7 @@ class AddressInputTypeGrouping(FreicoinTestFramework):
                 "-txindex",
             ],
             [
-                "-addresstype=p2sh-segwit",
+                "-addresstype=legacy",
                 "-whitelist=noban@127.0.0.1",
                 "-txindex",
             ],
@@ -148,8 +133,8 @@ class AddressInputTypeGrouping(FreicoinTestFramework):
             A.sendtoaddress(B.getnewaddress(address_type="legacy"), v)
 
         for v in generate_payment_values(3, 10):
-            self.log.debug(f"Making payment of {v} FRC to p2sh")
-            A.sendtoaddress(B.getnewaddress(address_type="p2sh-segwit"), v)
+            self.log.debug(f"Making payment of {v} FRC to legacy")
+            A.sendtoaddress(B.getnewaddress(address_type="legacy"), v)
 
         for v in generate_payment_values(3, 10):
             self.log.debug(f"Making payment of {v} FRC to bech32")

@@ -2210,7 +2210,7 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
     return q.CheckTapTweak(p, merkle_root, control[0] & 1);
 }
 
-static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
+static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
     CScript exec_script; //!< Actually executed script (second to last stack item in P2WSH or P2WPK; leaf script in P2TR)
     Span stack{witness.stack};
@@ -2282,7 +2282,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             // Unrecognized payload lengths return true for future softfork compatibility
             return set_success(serror);
         }
-    } else if (witversion == 1 && program.size() == WITNESS_V1_TAPROOT_SIZE && !is_p2sh) {
+    } else if (witversion == 1 && program.size() == WITNESS_V1_TAPROOT_SIZE) {
         // BIP341 Taproot: 32-byte non-P2SH witness v1 program (which encodes a P2C-tweaked pubkey)
         if (!(flags & SCRIPT_VERIFY_TAPROOT)) return set_success(serror);
         if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
@@ -2375,7 +2375,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
                 // The scriptSig must be _exactly_ CScript(), otherwise we reintroduce malleability.
                 return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED);
             }
-            if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror, /*is_p2sh=*/false)) {
+            if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror)) {
                 return false;
             }
             // Bypass the cleanstack check at the end. The actual stack is obviously not clean
@@ -2410,24 +2410,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
             return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
         if (!CastToBool(stack.back()))
             return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-
-        // P2SH witness program
-        if (flags & SCRIPT_VERIFY_WITNESS) {
-            if (pubKey2.IsWitnessProgram(&witnessversion, &witnessprogram)) {
-                hadWitness = true;
-                if (scriptSig != CScript() << std::vector<unsigned char>(pubKey2.begin(), pubKey2.end())) {
-                    // The scriptSig must be _exactly_ a single push of the redeemScript. Otherwise we
-                    // reintroduce malleability.
-                    return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED_P2SH);
-                }
-                if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror, /*is_p2sh=*/true)) {
-                    return false;
-                }
-                // Bypass the cleanstack check at the end. The actual stack is obviously not clean
-                // for witness programs.
-                stack.resize(1);
-            }
-        }
     }
 
     if (flags & SCRIPT_VERIFY_WITNESS) {

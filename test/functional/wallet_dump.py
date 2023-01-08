@@ -129,13 +129,12 @@ class WalletDumpTest(FreicoinTestFramework):
         wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
         wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
 
-        # generate 30 addresses to compare against the dump
+        # generate 20 addresses to compare against the dump
         # - 10 legacy P2PKH
-        # - 10 P2SH-segwit
         # - 10 bech32
         test_addr_count = 10
         addrs = []
-        for address_type in ['legacy', 'p2sh-segwit', 'bech32']:
+        for address_type in ['legacy', 'bech32']:
             for _ in range(test_addr_count):
                 addr = self.nodes[0].getnewaddress(address_type=address_type)
                 vaddr = self.nodes[0].getaddressinfo(addr)  # required to get hd keypath
@@ -143,8 +142,7 @@ class WalletDumpTest(FreicoinTestFramework):
 
         # Test scripts dump by adding a 1-of-1 multisig address
         multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])["address"]
-        p2wsh_addr = self.nodes[0].addwitnessaddress(multisig_addr, False)
-        p2sh_p2wsh_addr = self.nodes[0].addwitnessaddress(multisig_addr, True)
+        p2wsh_addr = self.nodes[0].addwitnessaddress(multisig_addr)
 
         # Construct the P2WPK address from our generated P2WSH address
         addr_info = self.nodes[0].getaddressinfo(p2wsh_addr)
@@ -180,15 +178,15 @@ class WalletDumpTest(FreicoinTestFramework):
         assert_equal(result['filename'], wallet_unenc_dump)
 
         found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_witscript_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
-            read_dump(wallet_unenc_dump, addrs, [multisig_addr, p2sh_p2wsh_addr], [p2wpk_addr], None)
+            read_dump(wallet_unenc_dump, addrs, [multisig_addr], [p2wpk_addr], None)
         assert '# End of dump' in found_comments  # Check that file is not corrupt
         assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
         assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
         assert_equal(dump_best_block_2, next(c for c in found_comments if c.startswith('#   mined on')))
         assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
+        assert_equal(found_p2sh_segwit_addr, 0)  # p2sh-segwit has been removed
         assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_script_addr, 2)  # all scripts must be in the dump
+        assert_equal(found_script_addr, 1)  # all scripts must be in the dump
         assert_equal(found_witscript_addr, 1)  # all witscripts must be in the dump
         assert_equal(found_addr_chg, 0)  # 0 blocks where mined
         assert_equal(found_addr_rsv, 90 * 2)  # 90 keys plus 100% internal keys
@@ -201,15 +199,15 @@ class WalletDumpTest(FreicoinTestFramework):
         self.nodes[0].dumpwallet(wallet_enc_dump)
 
         found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_witscript_addr, found_addr_chg, found_addr_rsv, _ = \
-            read_dump(wallet_enc_dump, addrs, [multisig_addr, p2sh_p2wsh_addr], [p2wpk_addr], hd_master_addr_unenc)
+            read_dump(wallet_enc_dump, addrs, [multisig_addr], [p2wpk_addr], hd_master_addr_unenc)
         assert '# End of dump' in found_comments  # Check that file is not corrupt
         assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
         assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
         assert_equal(dump_best_block_2, next(c for c in found_comments if c.startswith('#   mined on')))
         assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
+        assert_equal(found_p2sh_segwit_addr, 0)  # p2sh-segwit has been removed
         assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_script_addr, 2)
+        assert_equal(found_script_addr, 1)
         assert_equal(found_witscript_addr, 1)
         assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
         assert_equal(found_addr_rsv, 90 * 2)

@@ -196,7 +196,7 @@ RPCHelpMan importprivkey()
             // Add the wpk and wsh scripts for this key if possible
             if (pubkey.IsCompressed()) {
                 CScript p2pk = GetScriptForRawPubKey(pubkey);
-                pwallet->ImportScripts({GetScriptForDestination(WitnessV0ShortHash(0 /* version */, p2pk)), GetScriptForDestination(WitnessV0LongHash(0 /* version */, p2pk))}, 0 /* timestamp */);
+                pwallet->ImportWitnessV0Scripts({WitnessV0ScriptEntry(0 /* version */, p2pk)}, 0 /* timestamp */);
             }
         }
     }
@@ -1072,10 +1072,8 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
             CScript p2pk = GetScriptForRawPubKey(pubkey);
             WitnessV0ScriptEntry entry(0 /* version */, p2pk);
             CScript p2wsh = GetScriptForDestination(entry.GetLongHash());
-            CScript p2sh_p2wsh = GetScriptForDestination(ScriptHash(p2wsh));
             CScript p2wpk = GetScriptForDestination(entry.GetShortHash());
-            CScript p2sh_p2wpk = GetScriptForDestination(ScriptHash(p2wpk));
-            if (script == p2wpk || script == p2sh_p2wpk || script == p2wsh || script == p2sh_p2wsh) {
+            if (script == p2wpk || script == p2wsh) {
                 import_data.witnessscript = std::make_unique<WitnessV0ScriptEntry>(entry);
                 import_data.used_keys[pubkey.GetID()] = true;
             }
@@ -1097,10 +1095,8 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
             CScript p2pk = GetScriptForRawPubKey(pubkey);
             WitnessV0ScriptEntry entry(0 /* version */, p2pk);
             CScript p2wsh = GetScriptForDestination(entry.GetLongHash());
-            CScript p2sh_p2wsh = GetScriptForDestination(ScriptHash(p2wsh));
             CScript p2wpk = GetScriptForDestination(entry.GetShortHash());
-            CScript p2sh_p2wpk = GetScriptForDestination(ScriptHash(p2wpk));
-            if (script == p2wpk || script == p2sh_p2wpk || script == p2wsh || script == p2sh_p2wsh) {
+            if (script == p2wpk || script == p2wsh) {
                 import_data.witnessscript = std::make_unique<WitnessV0ScriptEntry>(entry);
             }
         }
@@ -1141,7 +1137,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         } else {
             // RecurseImportData() removes any relevant redeemscript/witnessscript from import_data, so we can use that to discover if a superfluous one was provided.
             if (import_data.redeemscript) warnings.push_back("Ignoring redeemscript as this is not a P2SH script.");
-            if (import_data.witnessscript) warnings.push_back("Ignoring witnessscript as this is not a (P2SH-)P2WSH or (P2SH-)P2WPK script.");
+            if (import_data.witnessscript) warnings.push_back("Ignoring witnessscript as this is not a P2WSH or P2WPK script.");
             for (auto it = privkey_map.begin(); it != privkey_map.end(); ) {
                 auto oldit = it++;
                 if (import_data.used_keys.count(oldit->first) == 0) {
@@ -1377,8 +1373,8 @@ RPCHelpMan importmulti()
         "                                                              creation time of all keys being imported by the importmulti call will be scanned.",
                                         /*oneline_description=*/"", {"timestamp | \"now\"", "integer / string"}
                                     },
-                                    {"redeemscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a P2SH or P2SH-P2WSH address/scriptPubKey"},
-                                    {"witnessscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a (P2SH-)P2WSH or (P2SH-)P2WPK address/scriptPubKey"},
+                                    {"redeemscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a P2SH address/scriptPubKey"},
+                                    {"witnessscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a P2WSH or P2WPK address/scriptPubKey"},
                                     {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Array of strings giving pubkeys to import. They must occur in P2PKH scripts. They are not required when the private key is also provided (see the \"keys\" argument).",
                                         {
                                             {"pubKey", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
