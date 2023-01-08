@@ -31,6 +31,10 @@ from test_framework.messages import (
     msg_tx,
     tx_from_hex,
 )
+from test_framework.script import (
+    CScript,
+    OP_FALSE,
+)
 from test_framework.p2p import (
     P2PInterface,
 )
@@ -275,7 +279,7 @@ class PackageRelayTest(FreicoinTestFramework):
         # Create invalid version of parent with a bad signature.
         tx_parent_bad_wit = tx_from_hex(low_fee_parent["hex"])
         tx_parent_bad_wit.wit.vtxinwit.append(CTxInWitness())
-        tx_parent_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
+        tx_parent_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'\x00' + CScript([OP_FALSE]), b'']
 
         package_sender = node.add_p2p_connection(P2PInterface())
         fake_parent_sender = node.add_p2p_connection(P2PInterface())
