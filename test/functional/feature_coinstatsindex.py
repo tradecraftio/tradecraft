@@ -152,8 +152,8 @@ class CoinStatsIndexTest(FreicoinTestFramework):
                 'demurrage': 0,
                 'unspendable': 0,
                 'prevout_spent': 50,
-                'new_outputs_ex_coinbase': Decimal('49.99967600'),
-                'coinbase': Decimal('50.00032400'),
+                'new_outputs_ex_coinbase': Decimal('49.99970000'),
+                'coinbase': Decimal('50.00030000'),
                 'unspendables': {
                     'genesis_block': 0,
                     'bip30': 0,
@@ -176,7 +176,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
         # Generate and send another tx with an OP_RETURN output (which is unspendable)
         tx2 = self.wallet.create_self_transfer(utxo_to_spend=tx1_out_21)['tx']
         tx2_val = '20.99'
-        tx2.vout = [CTxOut(int(Decimal(tx2_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
+        tx2.vout = [CTxOut(int(Decimal(tx2_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 33))]
         tx2.lock_height = tx1_out_21["refheight"]
         tx2_hex = tx2.serialize().hex()
         self.nodes[0].sendrawtransaction(tx2_hex, 0, tx2_val)
