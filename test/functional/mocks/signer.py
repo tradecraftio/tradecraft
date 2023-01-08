@@ -37,13 +37,11 @@ def getdescriptors(args):
     sys.stdout.write(json.dumps({
         "receive": [
             "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/0/*)#vt6w3l3j",
-            "sh(wpk([00000001/49'/1'/" + args.account + "']" + xpub + "/0/*))#cu68sapn",
             "wpk([00000001/84'/1'/" + args.account + "']" + xpub + "/0/*)#5zw5r7xs",
             "tr([00000001/86'/1'/" + args.account + "']" + xpub + "/0/*)#sng9rd4t"
         ],
         "internal": [
             "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/1/*)#all0v2p2",
-            "sh(wpk([00000001/49'/1'/" + args.account + "']" + xpub + "/1/*))#7ljzts28",
             "wpk([00000001/84'/1'/" + args.account + "']" + xpub + "/1/*)#9kt47tkg",
             "tr([00000001/86'/1'/" + args.account + "']" + xpub + "/1/*)#p8dy7c9n"
 

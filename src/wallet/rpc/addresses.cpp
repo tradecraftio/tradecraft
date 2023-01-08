@@ -33,7 +33,7 @@ RPCHelpMan getnewaddress()
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"bech32\", and \"bech32m\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The new freicoin address"
@@ -83,7 +83,7 @@ RPCHelpMan getrawchangeaddress()
                 "\nReturns a new Freicoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"bech32\", and \"bech32m\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The address"
@@ -238,7 +238,7 @@ RPCHelpMan addmultisigaddress()
                         },
                         },
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A label to assign the addresses to."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\" or \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -311,8 +311,6 @@ RPCHelpMan addmultisigaddress()
     case OutputType::LEGACY:
         result.pushKV("redeemScript", HexStr(inner));
         break;
-    case OutputType::P2SH_SEGWIT:
-        result.pushKV("redeemScript", HexStr(GetScriptForWitness(inner)));
     case OutputType::BECH32:
         result.pushKV("witnessScript", "00" + HexStr(inner));
         break;
@@ -381,11 +379,6 @@ public:
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(script);
             CScript subscript;
             if (provider && provider->GetCScript(CScriptID(scripthash), subscript)) {
-                if (subscript.IsWitnessProgram()) {
-                    ExtractDestination(subscript, result);
-                    already_witness = true;
-                    return true;
-                }
                 std::vector<std::vector<unsigned char>> vSolutions;
                 TxoutType typ = Solver(subscript, vSolutions);
                 bool allow_short = false;
@@ -450,10 +443,9 @@ RPCHelpMan addwitnessaddress()
                       {
                           {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "A freicoin address known to the wallet."},
                           {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The label to assign to the address."},
-                          {"p2sh", RPCArg::Type::BOOL, RPCArg::Default{true}, "Embed inside P2SH."},
                       },
                       RPCResult{
-                          RPCResult::Type::STR, "witnessaddress", "The new witness address (P2SH or BIP173)."
+                          RPCResult::Type::STR, "witnessaddress", "The new witness address (BIP173)."
                       },
                       RPCExamples{
                           HelpExampleCli("addwitnessaddress", "1Q5GLnvfuTSppvWrxNJ81wc9dB8WXgYP6Y")
@@ -474,11 +466,6 @@ RPCHelpMan addwitnessaddress()
         label = LabelFromValue(request.params[2]);
     }
 
-    bool p2sh = true;
-    if (request.params.size() > 2 && !request.params[2].isNull()) {
-        p2sh = request.params[2].get_bool();
-    }
-
     Witnessifier w(pwallet);
     bool ret = std::visit(w, dest);
     if (!ret) {
@@ -486,10 +473,6 @@ RPCHelpMan addwitnessaddress()
     }
 
     CScript witprogram = GetScriptForDestination(w.result);
-
-    if (p2sh) {
-        w.result = ScriptHash(witprogram);
-    }
 
     if (w.already_witness) {
         if (!(dest == w.result)) {
@@ -500,10 +483,6 @@ RPCHelpMan addwitnessaddress()
         if (!spk_man) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet does not have a legacy script pubkey manager");
         }
-        // Implicit for single-key now, but necessary for multisig and for
-        // compatibility with older software.
-        spk_man->AddCScript(GetScriptForDestination(w.entry.GetLongHash()));
-        spk_man->AddCScript(GetScriptForDestination(w.entry.GetShortHash()));
         pwallet->SetAddressBook(w.result, label, AddressPurpose::RECEIVE);
     }
 

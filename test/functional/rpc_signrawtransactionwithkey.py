@@ -21,6 +21,7 @@ from test_framework.blocktools import (
 from test_framework.address import (
     address_to_scriptpubkey,
     script_to_p2sh,
+    script_to_p2wsh,
 )
 from test_framework.key import ECKey
 from test_framework.test_framework import FreicoinTestFramework
@@ -31,7 +32,6 @@ from test_framework.util import (
 from test_framework.script_util import (
     key_to_p2pk_script,
     key_to_p2pkh_script,
-    script_to_p2sh_p2wsh_script,
     script_to_p2wsh_script,
 )
 from test_framework.wallet_util import (
@@ -89,23 +89,23 @@ class SignRawTransactionWithKeyTest(FreicoinTestFramework):
         assert 'errors' not in rawTxSigned
 
     def witness_script_test(self):
-        self.log.info("Test signing transaction to P2SH-P2WSH addresses without wallet")
-        # Create a new P2SH-P2WSH 1-of-1 multisig address:
+        self.log.info("Test signing transaction to P2WSH addresses without wallet")
+        # Create a new P2WSH 1-of-1 multisig address:
         eckey = ECKey()
         eckey.generate()
         embedded_privkey = bytes_to_wif(eckey.get_bytes())
         embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
-        p2sh_p2wsh_address = self.nodes[1].createmultisig(1, [embedded_pubkey], "p2sh-segwit")
-        # send transaction to P2SH-P2WSH 1-of-1 multisig address
+        p2wsh_address = self.nodes[1].createmultisig(1, [embedded_pubkey], "bech32")
+        # send transaction to P2WSH 1-of-1 multisig address
         self.block_hash = self.generate(self.nodes[0], COINBASE_MATURITY + 2)
         self.blk_idx = 1
-        self.send_to_address(p2sh_p2wsh_address["address"], 49.999)
+        self.send_to_address(p2wsh_address["address"], 49.999)
         self.generate(self.nodes[0], 1)
         # Get the UTXO info from scantxoutset
-        unspent_output = self.nodes[1].scantxoutset('start', [p2sh_p2wsh_address['descriptor']])['unspents'][0]
-        spk = script_to_p2sh_p2wsh_script(p2sh_p2wsh_address['redeemScript']).hex()
-        unspent_output['witnessScript'] = '00' + p2sh_p2wsh_address['redeemScript']
-        unspent_output['redeemScript'] = script_to_p2wsh_script(p2sh_p2wsh_address['redeemScript']).hex()
+        unspent_output = self.nodes[1].scantxoutset('start', [p2wsh_address['descriptor']])['unspents'][0]
+        spk = script_to_p2wsh_script(p2wsh_address['redeemScript']).hex()
+        unspent_output['witnessScript'] = '00' + p2wsh_address['redeemScript']
+        unspent_output['redeemScript'] = script_to_p2wsh_script(p2wsh_address['redeemScript']).hex()
         assert_equal(spk, unspent_output['scriptPubKey'])
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {getnewdestination()[2]: Decimal("49.998")})
@@ -129,7 +129,7 @@ class SignRawTransactionWithKeyTest(FreicoinTestFramework):
             'P2PK': key_to_p2pk_script(embedded_pubkey).hex()
         }.get(tx_type, "Invalid tx_type")
         redeem_script = script_to_p2wsh_script(witness_script[2:]).hex()
-        addr = script_to_p2sh(redeem_script)
+        addr = self.nodes[1].decodescript(redeem_script)['address']
         script_pub_key = address_to_scriptpubkey(addr).hex()
         # Fund that address
         txid = self.send_to_address(addr, 10)
