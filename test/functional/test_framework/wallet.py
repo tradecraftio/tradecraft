@@ -24,8 +24,8 @@ from typing import (
     Optional,
 )
 from test_framework.address import (
+    ADDRESS_FCRT1_P2WSH_OP_TRUE,
     base58_to_byte,
-    create_deterministic_address_fcrt1_p2tr_op_true,
     key_to_p2pkh,
     key_to_p2wpk,
     output_key_to_p2tr,
@@ -47,10 +47,10 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     LegacySignatureHash,
-    LEAF_VERSION_TAPSCRIPT,
     OP_NOP,
     OP_RETURN,
     OP_TRUE,
+    OP_NOP,
     SIGHASH_ALL,
     taproot_construct,
 )
@@ -72,7 +72,7 @@ class MiniWalletMode(Enum):
     """Determines the transaction type the MiniWallet is creating and spending.
 
     For most purposes, the default mode ADDRESS_OP_TRUE should be sufficient;
-    it simply uses a fixed bech32m P2TR address whose coins are spent with a
+    it simply uses a fixed bech32 P2WSH address whose coins are spent with a
     witness stack of OP_TRUE, i.e. following an anyone-can-spend policy.
     However, if the transactions need to be modified by the user (e.g. prepending
     scriptSig for testing opcodes that are activated by a soft-fork), or the txs
@@ -82,7 +82,7 @@ class MiniWalletMode(Enum):
                     |      output       |           |  tx is   | can modify |  needs
          mode       |    description    |  address  | standard | scriptSig  | signing
     ----------------+-------------------+-----------+----------+------------+----------
-    ADDRESS_OP_TRUE | anyone-can-spend  |  bech32m  |   yes    |    no      |   no
+    ADDRESS_OP_TRUE | anyone-can-spend  |  bech32   |   yes    |    no      |   no
     RAW_OP_TRUE     | anyone-can-spend  |  - (raw)  |   no     |    yes     |   no
     RAW_P2PK        | pay-to-public-key |  - (raw)  |   yes    |    yes     |   yes
     """
@@ -107,7 +107,7 @@ class MiniWallet:
             pub_key = self._priv_key.get_pubkey()
             self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            self._address, self._internal_key = create_deterministic_address_fcrt1_p2tr_op_true()
+            self._address = ADDRESS_FCRT1_P2WSH_OP_TRUE
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
     def _create_utxo(self, *, txid, vout, value, refheight, height):
@@ -313,7 +313,7 @@ class MiniWallet:
         assert fee_rate >= 0
         assert fee >= 0
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
-            vsize = Decimal(108)  # anyone-can-spend
+            vsize = Decimal(100)  # anyone-can-spend
         elif self._mode == MiniWalletMode.RAW_P2PK:
             vsize = Decimal(172)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 64 bytes other)
         else:
@@ -329,17 +329,17 @@ class MiniWallet:
         if self._mode == MiniWalletMode.RAW_P2PK:
             self.sign_tx(tx)
         elif self._mode == MiniWalletMode.RAW_OP_TRUE:
-            tx.vin[0].scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
+            tx.vin[0].scriptSig = CScript([OP_NOP] * 12)  # pad to identical size
         elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
             tx.wit.vtxinwit = [CTxInWitness()]
-            tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
+            tx.wit.vtxinwit[0].scriptWitness.stack = [bytes([0]) + CScript([OP_TRUE]), b'']
         else:
             assert False
 
         assert_equal(tx.get_vsize(), vsize)
 
         if target_weight:
-            self._bulk_tx(tx, target_weight)
+            self._bulk_tx(tx, target_weight-16)
 
         tx_hex = tx.serialize().hex()
         new_utxo = self._create_utxo(txid=tx.rehash(), vout=0, value=send_value, refheight=tx.lock_height, height=0)
