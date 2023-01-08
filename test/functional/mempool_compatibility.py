@@ -18,17 +18,14 @@
 NOTE: The test is designed to prevent cases when compatibility is broken accidentally.
 In case we need to break mempool compatibility we can continue to use the test by just bumping the version number.
 
-The previous release v0.19.1 is required by this test, see test/README.md.
+The previous release v0.15.2 is required by this test, see test/README.md.
 """
 
 import os
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import FreicoinTestFramework
-from test_framework.wallet import (
-    MiniWallet,
-    MiniWalletMode,
-)
+from test_framework.wallet import MiniWallet
 
 
 class MempoolCompatibilityTest(FreicoinTestFramework):
@@ -51,7 +48,7 @@ class MempoolCompatibilityTest(FreicoinTestFramework):
         self.log.info("Test that mempool.dat is compatible between versions")
 
         old_node, new_node = self.nodes
-        new_wallet = MiniWallet(new_node, mode=MiniWalletMode.RAW_P2PK)
+        new_wallet = MiniWallet(new_node)
         self.generate(new_wallet, 1, sync_fun=self.no_op)
         self.generate(new_node, COINBASE_MATURITY, sync_fun=self.no_op)
         # Sync the nodes to ensure old_node has the block that contains the coinbase that new_wallet will spend.
