@@ -59,8 +59,8 @@ class ReplaceByFeeTest(FreicoinTestFramework):
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
         # the pre-mined test framework chain contains coinbase outputs to the
-        # MiniWallet's default address in blocks 76-100 (see method
-        # FreicoinTestFramework._initialize_chain())
+        # MiniWallet's default address ADDRESS_FCRT1_P2WSH_OP_TRUE in blocks
+        # 76-100 (see method FreicoinTestFramework._initialize_chain())
         self.wallet.rescan_utxos()
 
         self.log.info("Running test simple doublespend...")

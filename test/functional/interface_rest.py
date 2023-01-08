@@ -323,7 +323,7 @@ class RESTTest (FreicoinTestFramework):
         json_obj = self.test_rest_request("/mempool/info")
         assert_equal(json_obj['size'], 3)
         # the size of the memory pool should be greater than 3x ~100 bytes
-        assert_greater_than(json_obj['bytes'], 300)
+        assert_greater_than(json_obj['bytes'], 96 * 3)
 
         # Check that there are our submitted transactions in the TX memory pool
         json_obj = self.test_rest_request("/mempool/contents")
