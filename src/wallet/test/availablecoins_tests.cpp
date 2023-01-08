@@ -88,13 +88,6 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, AvailableCoinsTestingSetup)
     available_coins = AvailableCoins(*wallet, /*atheight=*/0);
     BOOST_CHECK_EQUAL(available_coins.coins[OutputType::BECH32].size(), 2U);
 
-    // P2SH-SEGWIT
-    dest = wallet->GetNewDestination(OutputType::P2SH_SEGWIT, "");
-    BOOST_ASSERT(dest);
-    AddTx(CRecipient{{GetScriptForDestination(*dest)}, 3 * COIN, /*fSubtractFeeFromAmount=*/true});
-    available_coins = AvailableCoins(*wallet, /*atheight=*/0);
-    BOOST_CHECK_EQUAL(available_coins.coins[OutputType::P2SH_SEGWIT].size(), 2U);
-
     // Legacy (P2PKH)
     dest = wallet->GetNewDestination(OutputType::LEGACY, "");
     BOOST_ASSERT(dest);

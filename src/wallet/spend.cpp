@@ -142,8 +142,8 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
             return OutputType::BECH32M;
         case TxoutType::WITNESS_V0_SHORTHASH:
         case TxoutType::WITNESS_V0_LONGHASH:
-            if (is_from_p2sh) return OutputType::P2SH_SEGWIT;
-            else return OutputType::BECH32;
+            CHECK_NONFATAL(!is_from_p2sh);
+            return OutputType::BECH32;
         case TxoutType::SCRIPTHASH:
         case TxoutType::PUBKEYHASH:
             return OutputType::LEGACY;
@@ -881,10 +881,10 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     // Get size of spending the change output
     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, &wallet);
-    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpk
+    // If the wallet doesn't know how to sign change output, assume p2wpk
     // as lower-bound to allow BnB to do it's thing
     if (change_spend_size == -1) {
-        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPK_INPUT_SIZE;
+        coin_selection_params.change_spend_size = DUMMY_P2WPK_INPUT_SIZE;
     } else {
         coin_selection_params.change_spend_size = (size_t)change_spend_size;
     }

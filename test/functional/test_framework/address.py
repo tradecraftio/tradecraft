@@ -43,7 +43,6 @@ ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qpfumrmcfcusnnjk4k6gfdpdh4940m0jlxh92kxnl6p4
 
 class AddressType(enum.Enum):
     bech32 = 'bech32'
-    p2sh_segwit = 'p2sh-segwit'
     legacy = 'legacy'  # P2PKH
 
 
@@ -126,11 +125,6 @@ def script_to_p2sh(script, main=False):
     script = check_script(script)
     return scripthash_to_p2sh(hash160(script), main)
 
-def key_to_p2sh_p2wpk(key, main=False):
-    key = check_key(key)
-    p2shscript = CScript([OP_0, ripemd160(hash256(bytes([0]) + CScript([key, OP_CHECKSIG])))])
-    return script_to_p2sh(p2shscript, main)
-
 def program_to_witness(version, program, main=False):
     if (type(program) is str):
         program = bytes.fromhex(program)
@@ -149,11 +143,6 @@ def script_to_p2wsh(script, main=False):
 def key_to_p2wpk(key, main=False):
     key = check_key(key)
     return program_to_witness(0, ripemd160(hash256(b'\x00' + CScript([key, OP_CHECKSIG]))), main)
-
-def script_to_p2sh_p2wsh(script, main=False):
-    script = check_script(script)
-    p2shscript = CScript([OP_0, hash256(script_to_witscript(script))])
-    return script_to_p2sh(p2shscript, main)
 
 def output_key_to_p2tr(key, main=False):
     assert len(key) == 32

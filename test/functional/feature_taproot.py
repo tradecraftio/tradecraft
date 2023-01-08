@@ -511,7 +511,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pk=None, p2sh=F
     * witv0: boolean indicating the use of witness v0 spending (needs one of script or pk)
     * script: the actual script executed (for bare/P2WSH/P2SH spending)
     * pk: the public key for P2PKH or P2WPK spending
-    * p2sh: whether the output is P2SH wrapper (this is supported even for Taproot, where it makes the output unencumbered)
+    * p2sh: whether the output is P2SH wrapper (this is supported even for Taproot and segwit, where it makes the output unencumbered)
     * spk_mutate_pre_psh: a callable to be applied to the script (before potentially P2SH-wrapping it)
     * failure: a dict of entries to override in the context when intentionally failing to spend (if None, no_fail will be set)
     * standard: whether the (valid version of) spending is expected to be standard
@@ -624,6 +624,7 @@ ERR_SIG_SCHNORR = {"err_msg": "Invalid Schnorr signature"}
 ERR_OP_RETURN = {"err_msg": "OP_RETURN was encountered"}
 ERR_CONTROLBLOCK_SIZE = {"err_msg": "Invalid Taproot control block size"}
 ERR_WITNESS_PROGRAM_MISMATCH = {"err_msg": "Witness program hash mismatch"}
+ERR_WITNESS_UNEXPECTED = {"err_msg": "Witness provided for non-witness script"}
 ERR_DISABLED_OPCODE = {"err_msg": "Attempted to use a disabled opcode"}
 ERR_TAPSCRIPT_CHECKMULTISIG = {"err_msg": "OP_CHECKMULTISIG(VERIFY) is not available in tapscript"}
 ERR_MINIMALDATA = {"err_msg": "Data push larger than necessary"}
@@ -795,7 +796,7 @@ def spenders_taproot_active():
 
     # == Test that BIP341 spending only applies to witness version 1, program length 32, no P2SH ==
 
-    for p2sh in [False, True]:
+    for p2sh in [False]:
         for witver in range(1, 31):
             for witlen in [20, 31, 32, 33]:
                 def mutate(spk):
@@ -1197,7 +1198,7 @@ def spenders_taproot_active():
         pubkey1 = eckey1.get_pubkey().get_bytes()
         eckey2 = ECKey()
         eckey2.set(generate_privkey(), compressed)
-        for p2sh in [False, True]:
+        for p2sh in [False]:
             for witv0 in [False, True]:
                 for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:
                     standard = (hashtype in VALID_SIGHASHES_ECDSA) and (compressed or not witv0)
@@ -1205,7 +1206,7 @@ def spenders_taproot_active():
                     add_spender(spenders, "legacy/pk-sighashflip", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, pk=pubkey1, key=eckey1, **SIGHASH_BITFLIP, sigops_weight=4-3*witv0, **(witv0 and ERR_NULLFAIL or ERR_NO_SUCCESS))
 
     # Verify that OP_CHECKSIGADD wasn't accidentally added to pre-taproot validation logic.
-    for p2sh in [False, True]:
+    for p2sh in [False]:
         for witv0 in [False, True]:
             for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:
                 standard = hashtype in VALID_SIGHASHES_ECDSA and (p2sh or witv0)
@@ -1347,7 +1348,7 @@ class TaprootTest(FreicoinTestFramework):
         host_spks = []
         host_pubkeys = []
         for i in range(16):
-            addr = node.getnewaddress(address_type=random.choice(["legacy", "p2sh-segwit", "bech32"]))
+            addr = node.getnewaddress(address_type=random.choice(["legacy", "bech32"]))
             info = node.getaddressinfo(addr)
             spk = bytes.fromhex(info['scriptPubKey'])
             host_spks.append(spk)
