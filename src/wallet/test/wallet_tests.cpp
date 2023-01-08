@@ -703,7 +703,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
 
 // Explicit calculation which is used to test the wallet constant
 // We get the same virtual size due to rounding(weight/4) for both use_max_sig values
-static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
+static size_t CalculateP2WPKInputSize(bool use_max_sig)
 {
     // Generate ephemeral valid pubkey
     CKey key;
@@ -715,15 +715,10 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
     WitnessV0ShortHash key_hash((unsigned char)0, p2pk);
 
     // Create inner-script to enter into keystore. Key hash can't be 0...
-    CScript inner_script = CScript() << OP_0 << std::vector<unsigned char>(key_hash.begin(), key_hash.end());
-
-    // Create outer P2SH script for the output
-    uint160 script_id(Hash160(inner_script));
-    CScript script_pubkey = CScript() << OP_HASH160 << std::vector<unsigned char>(script_id.begin(), script_id.end()) << OP_EQUAL;
+    CScript script_pubkey = CScript() << OP_0 << std::vector<unsigned char>(key_hash.begin(), key_hash.end());
 
     // Add inner-script to key store and key to watchonly
     FillableSigningProvider keystore;
-    keystore.AddCScript(inner_script);
     std::vector<unsigned char> witscript{0x00};
     witscript.insert(witscript.end(), p2pk.begin(), p2pk.end());
     keystore.AddWitnessV0Script(WitnessV0ScriptEntry(witscript));
@@ -744,8 +739,8 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
 
 BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
 {
-    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2WPK_INPUT_SIZE);
-    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPK_INPUT_SIZE);
+    BOOST_CHECK_EQUAL(CalculateP2WPKInputSize(false), DUMMY_P2WPK_INPUT_SIZE);
+    BOOST_CHECK_EQUAL(CalculateP2WPKInputSize(true), DUMMY_P2WPK_INPUT_SIZE);
 }
 
 bool malformed_descriptor(std::ios_base::failure e)

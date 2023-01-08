@@ -2329,12 +2329,6 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         // Currently wpk is the only type supported by the BECH32 spkman
         return OutputType::BECH32;
     }
-    const bool has_p2sh_segwit_spkman(GetScriptPubKeyMan(OutputType::P2SH_SEGWIT, /*internal=*/true));
-    if (has_p2sh_segwit_spkman && any_sh) {
-        // Currently sh_wpk is the only type supported by the P2SH_SEGWIT spkman
-        // As of 2021 about 80% of all SH are wrapping WPK, so use that
-        return OutputType::P2SH_SEGWIT;
-    }
     const bool has_legacy_spkman(GetScriptPubKeyMan(OutputType::LEGACY, /*internal=*/true));
     if (has_legacy_spkman && any_pkh) {
         // Currently pkh is the only type supported by the LEGACY spkman

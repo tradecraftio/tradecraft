@@ -57,7 +57,7 @@ class TxnMallTest(FreicoinTestFramework):
 
     def run_test(self):
         if self.options.segwit:
-            output_type = "p2sh-segwit"
+            output_type = "bech32"
         else:
             output_type = "legacy"
 

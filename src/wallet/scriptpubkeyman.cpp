@@ -35,7 +35,7 @@ const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 util::Result<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        return util::Error{_("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types")};
+        return util::Error{_("Error: Legacy wallets only support the \"legacy\" or \"bech32\" address types")};
     }
     assert(type != OutputType::BECH32M);
 
@@ -302,7 +302,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
 util::Result<CTxDestination> LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        return util::Error{_("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types")};
+        return util::Error{_("Error: Legacy wallets only support the \"legacy\" or \"bech32\" address types")};
     }
     assert(type != OutputType::BECH32M);
 
@@ -1468,21 +1468,20 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
 void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
     assert(type != OutputType::BECH32M);
-    if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
+    if (key.IsCompressed() && type == OutputType::BECH32) {
         WitnessV0ScriptEntry entry(0 /* version */, GetScriptForRawPubKey(key));
         AddWitnessV0Script(entry);
         CScript witprog = GetScriptForDestination(entry.GetShortHash());
         // Make sure the resulting program is solvable.
         const auto desc = InferDescriptor(witprog, *this);
         assert(desc && desc->IsSolvable());
-        AddCScript(witprog);
     }
 }
 
 void LegacyScriptPubKeyMan::LearnAllRelatedScripts(const CPubKey& key)
 {
-    // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
-    LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    // OutputType::BECH32 always adds all necessary scripts for all types.
+    LearnRelatedScripts(key, OutputType::BECH32);
 }
 
 std::vector<CKeyPool> LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
@@ -1760,22 +1759,29 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScriptPub
         }
     }
 
-    // Add each witness script
-    for (const auto& wit_pair : mapWitnessV0Scripts) {
-        const CScript& p2wsh_long = GetScriptForDestination(wit_pair.second.GetLongHash());
-        if (IsMine(p2wsh_long) != ISMINE_NO && mapScripts.count(CScriptID(p2wsh_long)) != 0) {
-            spks.insert(p2wsh_long);
-            CScript p2sh = GetScriptForDestination(ScriptHash(p2wsh_long));
-            if (mapScripts.count(CScriptID(p2sh)) != 0) {
-                spks.insert(p2sh);
+    // For every witness script in mapWitnessV0Scripts, only the ISMINE_SPENDABLE ones are being tracked.
+    for (const auto& x : mapWitnessV0Scripts) {
+        if (!x.second.m_script.empty() && x.second.m_script[0] == 0x00) {
+            CScript subscript(x.second.m_script.begin() + 1, x.second.m_script.end());
+            // P2PK outputs are shorthashes, other scripts are longhashes
+            std::vector<std::vector<unsigned char>> sols;
+            TxoutType type = Solver(subscript, sols);
+            CTxDestination witdest = CNoDestination();
+            if (type == TxoutType::PUBKEY) {
+                witdest = x.second.GetShortHash();
+            } else if (type == TxoutType::MULTISIG) {
+                witdest = x.second.GetLongHash();
             }
-        }
-        const CScript& p2wsh_short = GetScriptForDestination(wit_pair.second.GetShortHash());
-        if (IsMine(p2wsh_short) != ISMINE_NO && mapScripts.count(CScriptID(p2wsh_short)) != 0) {
-            spks.insert(p2wsh_short);
-            CScript p2sh = GetScriptForDestination(ScriptHash(p2wsh_short));
-            if (mapScripts.count(CScriptID(p2sh)) != 0) {
-                spks.insert(p2sh);
+            // Multisigs don't show up as ISMINE_SPENDABLE unless they are in wrapped in P2SH
+            isminetype ismine = ISMINE_NO;
+            if (type == TxoutType::MULTISIG) {
+                ismine = IsMine(GetScriptForDestination(ScriptHash(subscript)));
+            } else {
+                ismine = IsMine(subscript);
+            }
+            // Only report the script if it is solvable
+            if (ismine != ISMINE_NO) {
+                spks.insert(GetScriptForDestination(witdest));
             }
         }
     }
@@ -2002,23 +2008,21 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
             CScript sh_spk = GetScriptForDestination(ScriptHash(script));
             CTxDestination witdest = WitnessV0LongHash(/*version=*/0, script);
             CScript witprog = GetScriptForDestination(witdest);
-            CScript sh_wsh_spk = GetScriptForDestination(ScriptHash(witprog));
 
             // We only want the multisigs that we have not already seen, i.e. they are not watchonly and not spendable
             // For P2SH, a multisig is not ISMINE_NO when:
             // * All keys are in the wallet
             // * The multisig itself is watch only
             // * The P2SH is watch only
-            // For P2SH-P2WSH, if the script is in the wallet, then it will have the same conditions as P2SH.
             // For P2WSH, a multisig is not ISMINE_NO when, other than the P2SH conditions:
             // * The P2WSH script is in the wallet and it is being watched
             std::vector<std::vector<unsigned char>> keys(sols.begin() + 1, sols.begin() + sols.size() - 1);
-            if (HaveWatchOnly(sh_spk) || HaveWatchOnly(script) || HaveKeys(keys, *this) || (HaveCScript(CScriptID(witprog)) && HaveWatchOnly(witprog))) {
+            if (HaveWatchOnly(sh_spk) || HaveWatchOnly(script) || HaveKeys(keys, *this) || HaveWatchOnly(witprog)) {
                 // The above emulates IsMine for these 3 scriptPubKeys, so double check that by running IsMine
-                assert(IsMine(sh_spk) != ISMINE_NO || IsMine(witprog) != ISMINE_NO || IsMine(sh_wsh_spk) != ISMINE_NO);
+                assert(IsMine(sh_spk) != ISMINE_NO || IsMine(witprog) != ISMINE_NO);
                 continue;
             }
-            assert(IsMine(sh_spk) == ISMINE_NO && IsMine(witprog) == ISMINE_NO && IsMine(sh_wsh_spk) == ISMINE_NO);
+            assert(IsMine(sh_spk) == ISMINE_NO && IsMine(witprog) == ISMINE_NO);
 
             std::unique_ptr<Descriptor> sh_desc = InferDescriptor(sh_spk, *GetSolvingProvider(sh_spk));
             out.solvable_descs.push_back({sh_desc->ToString(), creation_time});
@@ -2027,8 +2031,6 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
             if (desc->IsSolvable()) {
                 std::unique_ptr<Descriptor> wsh_desc = InferDescriptor(witprog, *GetSolvingProvider(witprog));
                 out.solvable_descs.push_back({wsh_desc->ToString(), creation_time});
-                std::unique_ptr<Descriptor> sh_wsh_desc = InferDescriptor(sh_wsh_spk, *GetSolvingProvider(sh_wsh_spk));
-                out.solvable_descs.push_back({sh_wsh_desc->ToString(), creation_time});
             }
         }
     }
@@ -2334,11 +2336,6 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     switch (addr_type) {
     case OutputType::LEGACY: {
         desc_prefix = "pkh(" + xpub + "/44'";
-        break;
-    }
-    case OutputType::P2SH_SEGWIT: {
-        desc_prefix = "sh(wpk(" + xpub + "/49'";
-        desc_suffix += ")";
         break;
     }
     case OutputType::BECH32: {
