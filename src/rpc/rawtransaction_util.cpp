@@ -312,6 +312,11 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     keystore->AddWitnessV0Script(entry);
                     script = CScript(witnessScriptData.begin() + 1, witnessScriptData.end());
                     keystore->AddCScript(script);
+                    // We still add the (invalid!) P2SH-P2WPK and P2SH-P2WSH
+                    // scripts to the wallet because the IsMine logic currently
+                    // requires these redeem scripts to be present for the
+                    // output to be recognized, even if they are not actually
+                    // valid spend paths.
                     keystore->AddCScript(GetScriptForDestination(entry.GetLongHash()));
                     keystore->AddCScript(GetScriptForDestination(entry.GetShortHash()));
                 } else if (!rs.isNull()) {
@@ -321,7 +326,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     WitnessV0ScriptEntry entry(0 /* version */, script);
                     keystore->AddWitnessV0Script(entry);
                     // Automatically also add the P2WSH wrapped version of the
-                    // script (to deal with P2SH-P2WSH).
+                    // script (to deal with P2WSH).
                     // This is done for redeemScript only for compatibility, it
                     // is encouraged to use the explicit witnessScript field
                     // instead.
@@ -333,7 +338,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     // if both witnessScript and redeemScript are provided,
                     // they should either be the same (for backwards compat),
                     // or the redeemScript should be the encoded form of
-                    // the witnessScript (ie, for p2sh-p2wsh)
+                    // the witnessScript
                     std::vector<unsigned char> redeemScriptData = ParseHexV(rs, "redeemScript");
                     CScript redeem_script = CScript(redeemScriptData.begin(), redeemScriptData.end());
                     if (redeem_script != script) {
@@ -353,12 +358,6 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                         // that means the p2sh script was specified
                         // via witnessScript param, but for now
                         // we'll just quietly accept it
-                    } else if (scriptPubKey == GetScriptForDestination(p2sh_p2wsh_short) || scriptPubKey == GetScriptForDestination(p2sh_p2wsh_long)) {
-                        // p2wsh encoded as p2sh; ideally the witness
-                        // script was specified in the witnessScript
-                        // param, but also support specifying it via
-                        // redeemScript param for backwards compat
-                        // (in which case ws.IsNull() == true)
                     } else {
                         // otherwise, can't generate scriptPubKey from
                         // either script, so we got unusable parameters

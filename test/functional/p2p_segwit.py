@@ -304,7 +304,6 @@ class SegWitTest(FreicoinTestFramework):
 
         # Segwit status 'active'
 
-        self.test_p2sh_witness()
         self.test_witness_commitments()
         self.test_block_malleability()
         self.test_witness_block_size()
@@ -493,16 +492,15 @@ class SegWitTest(FreicoinTestFramework):
         witness, and so can't be spent before segwit activation (the point at which
         blocks are permitted to contain witnesses)."""
 
-        # Create two outputs, a p2wsh and p2sh-p2wsh
+        # Create a p2wsh otput
         witness_script = CScript([OP_TRUE])
         script_pubkey = script_to_p2wsh_script(witness_script)
-        p2sh_script_pubkey = script_to_p2sh_script(script_pubkey)
 
         value = self.utxo[0].nValue // 3
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b'')]
-        tx.vout = [CTxOut(value, script_pubkey), CTxOut(value, p2sh_script_pubkey)]
+        tx.vout = [CTxOut(value, script_pubkey)]
         tx.vout.append(CTxOut(value, CScript([OP_TRUE])))
         tx.rehash()
         txid = tx.sha256
@@ -524,14 +522,7 @@ class SegWitTest(FreicoinTestFramework):
         p2wsh_tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'']
         p2wsh_tx.rehash()
 
-        p2sh_p2wsh_tx = CTransaction()
-        p2sh_p2wsh_tx.vin = [CTxIn(COutPoint(txid, 1), CScript([script_pubkey]))]
-        p2sh_p2wsh_tx.vout = [CTxOut(value, CScript([OP_TRUE]))]
-        p2sh_p2wsh_tx.wit.vtxinwit.append(CTxInWitness())
-        p2sh_p2wsh_tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), b'']
-        p2sh_p2wsh_tx.rehash()
-
-        for tx in [p2wsh_tx, p2sh_p2wsh_tx]:
+        for tx in [p2wsh_tx]:
 
             block = self.build_next_block()
             self.update_witness_block_with_transactions(block, [tx])
@@ -551,7 +542,7 @@ class SegWitTest(FreicoinTestFramework):
                                reason='non-mandatory-script-verify-flag (Witness program was passed an empty witness)')
 
         self.utxo.pop(0)
-        self.utxo.append(UTXO(txid, 2, value))
+        self.utxo.append(UTXO(txid, 1, value))
 
     @subtest
     def test_witness_tx_relay_before_segwit_activation(self):
@@ -1563,11 +1554,9 @@ class SegWitTest(FreicoinTestFramework):
         tx4 = CTransaction()
         tx4.vin.append(CTxIn(COutPoint(tx3.sha256, 0), script_sig))
         tx4.vout.append(CTxOut(tx3.vout[0].nValue - 1000, script_pubkey))
-        tx4.wit.vtxinwit.append(CTxInWitness())
-        sign_p2pk_witness_input(witness_script, tx4, 0, SIGHASH_ALL, tx3.vout[0].nValue, tx3.lock_height, key)
 
         # Should fail policy test.
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx4, True, False, 'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
+        test_transaction_acceptance(self.nodes[0], self.test_node, tx4, True, False, 'non-mandatory-script-verify-flag (Stack size must be exactly one after execution)')
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx4])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -1855,7 +1844,6 @@ class SegWitTest(FreicoinTestFramework):
 
         # Creating transactions for tests
         p2wsh_txs = []
-        p2sh_txs = []
         for i in range(len(scripts)):
             p2wsh_tx = CTransaction()
             p2wsh_tx.vin.append(CTxIn(COutPoint(txid, i * 2)))
@@ -1863,12 +1851,6 @@ class SegWitTest(FreicoinTestFramework):
             p2wsh_tx.wit.vtxinwit.append(CTxInWitness())
             p2wsh_tx.rehash()
             p2wsh_txs.append(p2wsh_tx)
-            p2sh_tx = CTransaction()
-            p2sh_tx.vin.append(CTxIn(COutPoint(txid, i * 2 + 1), CScript([p2wsh_scripts[i]])))
-            p2sh_tx.vout.append(CTxOut(outputvalue - 5000, CScript([OP_0, hash160(b"")])))
-            p2sh_tx.wit.vtxinwit.append(CTxInWitness())
-            p2sh_tx.rehash()
-            p2sh_txs.append(p2sh_tx)
 
         # Testing native P2WSH
         # Witness stack size, excluding witnessScript, over 100 is non-standard
@@ -1896,22 +1878,6 @@ class SegWitTest(FreicoinTestFramework):
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[3], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[3], True, True)
-
-        # Repeating the same tests with P2SH-P2WSH
-        p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [script_to_witness(scripts[0]), b'']
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[0], True, False, 'bad-witness-nonstandard')
-        test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[0], True, True)
-        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [script_to_witness(scripts[1]), b'']
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, False, 'bad-witness-nonstandard')
-        test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[1], True, True)
-        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [script_to_witness(scripts[1]), b'']
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, True)
-        p2sh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, script_to_witness(scripts[2]), b'']
-        test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[2], True, True)
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[2], True, True)
-        p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, script_to_witness(scripts[3]), b'']
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, 'bad-witness-nonstandard')
-        test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[3], True, True)
 
         self.generate(self.nodes[0], 1)  # Mine and clean up the mempool of non-standard node
         # Valid but non-standard transactions in a block should be accepted by standard node

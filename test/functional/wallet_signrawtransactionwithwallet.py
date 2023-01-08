@@ -256,7 +256,7 @@ class SignRawTransactionWithWalletTest(FreicoinTestFramework):
 
     def test_signing_with_missing_prevtx_info(self):
         txid = "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000"
-        for type in ["bech32", "p2sh-segwit", "legacy"]:
+        for type in ["bech32", "legacy"]:
             self.log.info(f"Test signing with missing prevtx info ({type})")
             addr = self.nodes[0].getnewaddress("", type)
             addrinfo = self.nodes[0].getaddressinfo(addr)
