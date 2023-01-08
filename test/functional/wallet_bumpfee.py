@@ -220,7 +220,6 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
         node=rbf_node,
         utxo=segwit_in,
         pubkey=segwit_out["pubkey"],
-        encode_p2sh=False,
         amount=Decimal("0.0009"),
         sign=True)
 

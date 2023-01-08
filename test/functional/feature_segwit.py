@@ -20,9 +20,9 @@ import struct
 
 from test_framework.address import (
     key_to_p2pkh,
+    key_to_p2wpk,
     program_to_witness,
     script_to_p2sh,
-    script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
 from test_framework.blocktools import (
@@ -127,13 +127,13 @@ class SegWitTest(FreicoinTestFramework):
         self.sync_all()
 
     def success_mine(self, node, txid, sign, redeem_script=""):
-        send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
+        send_to_witness(1, node, getutxo(txid), self.pubkey[0], Decimal("49.998"), sign, redeem_script)
         block = self.generate(node, 1)
         assert_equal(len(node.getblock(block[0])["tx"]), 3)
         self.sync_blocks()
 
     def fail_accept(self, node, error_msg, txid, sign, redeem_script=""):
-        assert_raises_rpc_error(-26, error_msg, send_to_witness, use_p2wsh=1, node=node, utxo=getutxo(txid), pubkey=self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=sign, insert_redeem_script=redeem_script)
+        assert_raises_rpc_error(-26, error_msg, send_to_witness, use_p2wsh=1, node=node, utxo=getutxo(txid), pubkey=self.pubkey[0], amount=Decimal("49.998"), sign=sign, insert_redeem_script=redeem_script)
 
     def run_test(self):
         self.generate(self.nodes[0], 161)  # block 161
@@ -151,89 +151,66 @@ class SegWitTest(FreicoinTestFramework):
 
         balance_presetup = self.nodes[0].getbalance()
         self.pubkey = []
-        p2sh_ids = []  # p2sh_ids[NODE][TYPE] is an array of txids that spend to P2WPK (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE embedded in p2sh
         wit_ids = []  # wit_ids[NODE][TYPE] is an array of txids that spend to P2WPK (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE via bare witness
         for i in range(3):
             key = get_generate_key()
             self.pubkey.append(key.pubkey)
 
             multiscript = keys_to_multisig_script([self.pubkey[-1]])
-            p2sh_ms_addr = self.nodes[i].createmultisig(1, [self.pubkey[-1]], 'p2sh-segwit')['address']
             bip173_ms_addr = self.nodes[i].createmultisig(1, [self.pubkey[-1]], 'bech32')['address']
-            assert_equal(p2sh_ms_addr, script_to_p2sh_p2wsh(multiscript))
             assert_equal(bip173_ms_addr, script_to_p2wsh(multiscript))
 
-            p2sh_ms_desc = descsum_create(f"sh(wsh(multi(1,{key.privkey})))")
             bip173_ms_desc = descsum_create(f"wsh(multi(1,{key.privkey}))")
-            assert_equal(self.nodes[i].deriveaddresses(p2sh_ms_desc)[0], p2sh_ms_addr)
             assert_equal(self.nodes[i].deriveaddresses(bip173_ms_desc)[0], bip173_ms_addr)
 
-            sh_wpk_desc = descsum_create(f"sh(wpk({key.privkey}))")
             wpk_desc = descsum_create(f"wpk({key.privkey})")
-            assert_equal(self.nodes[i].deriveaddresses(sh_wpk_desc)[0], key.p2sh_p2wpk_addr)
             assert_equal(self.nodes[i].deriveaddresses(wpk_desc)[0], key.p2wpk_addr)
 
             if self.options.descriptors:
                 res = self.nodes[i].importdescriptors([
-                {"desc": p2sh_ms_desc, "timestamp": "now"},
                 {"desc": bip173_ms_desc, "timestamp": "now"},
-                {"desc": sh_wpk_desc, "timestamp": "now"},
                 {"desc": wpk_desc, "timestamp": "now"},
             ])
             else:
                 # The nature of the legacy wallet is that this import results in also adding all of the necessary scripts
                 res = self.nodes[i].importmulti([
-                    {"desc": p2sh_ms_desc, "timestamp": "now"},
+                    {"desc": bip173_ms_desc, "timestamp": "now"},
                 ])
             assert all([r["success"] for r in res])
 
-            p2sh_ids.append([])
             wit_ids.append([])
             for _ in range(2):
-                p2sh_ids[i].append([])
                 wit_ids[i].append([])
 
         for _ in range(5):
             for n in range(3):
                 for v in range(2):
-                    wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], False, Decimal("49.999")))
-                    p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
+                    wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], Decimal("49.999")))
 
         self.generate(self.nodes[0], 1)  # block 163
 
         # Make sure all nodes recognize the transactions as theirs
-        assert_equal(self.nodes[0].getbalance(), balance_presetup - 60 * 50 + 20 * Decimal("49.999") + 50)
-        assert_equal(self.nodes[1].getbalance(), 20 * Decimal("49.999"))
-        assert_equal(self.nodes[2].getbalance(), 20 * Decimal("49.999"))
-
-        self.log.info("Verify unsigned p2sh witness txs without a redeem script are invalid")
-        self.fail_accept(self.nodes[2], "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)", p2sh_ids[NODE_2][P2WPK][1], sign=False)
-        self.fail_accept(self.nodes[2], "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)", p2sh_ids[NODE_2][P2WSH][1], sign=False)
+        assert_equal(self.nodes[0].getbalance(), balance_presetup - 30 * 50 + 10 * Decimal("49.999") + 50)
+        assert_equal(self.nodes[1].getbalance(), 10 * Decimal("49.999"))
+        assert_equal(self.nodes[2].getbalance(), 10 * Decimal("49.999"))
 
         self.generate(self.nodes[0], 1)  # block 164
 
         self.log.info("Verify witness txs are mined as soon as segwit activates")
 
-        send_to_witness(1, self.nodes[2], getutxo(wit_ids[NODE_2][P2WPK][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
-        send_to_witness(1, self.nodes[2], getutxo(wit_ids[NODE_2][P2WSH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
-        send_to_witness(1, self.nodes[2], getutxo(p2sh_ids[NODE_2][P2WPK][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
-        send_to_witness(1, self.nodes[2], getutxo(p2sh_ids[NODE_2][P2WSH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+        send_to_witness(1, self.nodes[2], getutxo(wit_ids[NODE_2][P2WPK][0]), self.pubkey[0], amount=Decimal("49.998"), sign=True)
+        send_to_witness(1, self.nodes[2], getutxo(wit_ids[NODE_2][P2WSH][0]), self.pubkey[0], amount=Decimal("49.998"), sign=True)
 
-        assert_equal(len(self.nodes[2].getrawmempool()), 4)
+        assert_equal(len(self.nodes[2].getrawmempool()), 2)
         blockhash = self.generate(self.nodes[2], 1)[0]  # block 165 (first block with new rules)
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
         segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"][:-1]
-        assert_equal(len(segwit_tx_list), 5)
+        assert_equal(len(segwit_tx_list), 3)
 
         self.log.info("Verify default node can't accept txs with missing witness")
         # unsigned, no scriptsig
         self.fail_accept(self.nodes[0], "non-mandatory-script-verify-flag (Witness program was passed an empty witness)", wit_ids[NODE_0][P2WPK][0], sign=False)
         self.fail_accept(self.nodes[0], "non-mandatory-script-verify-flag (Witness program was passed an empty witness)", wit_ids[NODE_0][P2WSH][0], sign=False)
-        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)", p2sh_ids[NODE_0][P2WPK][0], sign=False)
-        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)", p2sh_ids[NODE_0][P2WSH][0], sign=False)
-        # unsigned with redeem script
-        self.fail_accept(self.nodes[0], "non-mandatory-script-verify-flag (Witness program was passed an empty witness)", p2sh_ids[NODE_0][P2WPK][0], sign=False, redeem_script=witness_script(False, self.pubkey[0]))
-        self.fail_accept(self.nodes[0], "non-mandatory-script-verify-flag (Witness program was passed an empty witness)", p2sh_ids[NODE_0][P2WSH][0], sign=False, redeem_script=witness_script(True, self.pubkey[0]))
 
         self.log.info("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
         assert self.nodes[2].getblock(blockhash, False) != self.nodes[0].getblock(blockhash, False)
@@ -257,14 +234,12 @@ class SegWitTest(FreicoinTestFramework):
         self.log.info("Verify witness txs without witness data are invalid after the fork")
         self.fail_accept(self.nodes[2], 'non-mandatory-script-verify-flag (Witness program was passed an empty witness)', wit_ids[NODE_2][P2WPK][2], sign=False)
         self.fail_accept(self.nodes[2], 'non-mandatory-script-verify-flag (Witness program was passed an empty witness)', wit_ids[NODE_2][P2WSH][2], sign=False)
-        self.fail_accept(self.nodes[2], 'non-mandatory-script-verify-flag (Witness program was passed an empty witness)', p2sh_ids[NODE_2][P2WPK][2], sign=False, redeem_script=witness_script(False, self.pubkey[2]))
-        self.fail_accept(self.nodes[2], 'non-mandatory-script-verify-flag (Witness program was passed an empty witness)', p2sh_ids[NODE_2][P2WSH][2], sign=False, redeem_script=witness_script(True, self.pubkey[2]))
 
         self.log.info("Verify default node can now use witness txs")
         self.success_mine(self.nodes[0], wit_ids[NODE_0][P2WPK][0], True)
         self.success_mine(self.nodes[0], wit_ids[NODE_0][P2WSH][0], True)
-        self.success_mine(self.nodes[0], p2sh_ids[NODE_0][P2WPK][0], True)
-        self.success_mine(self.nodes[0], p2sh_ids[NODE_0][P2WSH][0], True)
+        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1)
 
         self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
@@ -284,7 +259,7 @@ class SegWitTest(FreicoinTestFramework):
         #                      tx2 (segwit input, paying to a non-segwit output) ->
         #                      tx3 (non-segwit input, paying to a non-segwit output).
         # tx1 is allowed to appear in the block, but no others.
-        txid1 = send_to_witness(1, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.996"))
+        txid1 = send_to_witness(1, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[0], Decimal("49.996"))
         hex_tx = self.nodes[0].gettransaction(txid)['hex']
         tx = tx_from_hex(hex_tx)
         assert tx.wit.is_null()  # This should not be a segwit input
@@ -402,17 +377,19 @@ class SegWitTest(FreicoinTestFramework):
                     # bare multisig can be watched and signed, but is not treated as ours
                     solvable_after_importaddress.extend([bare])
                     # P2WSH and P2SH(P2WSH) multisig with compressed keys are spendable after direct importaddress
-                    spendable_after_importaddress.extend([p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short])
+                    spendable_after_importaddress.extend([p2wsh_long, p2wsh_short])
+                    # P2SH-wrapped witness is never seen
+                    unseen_anytime.extend([p2sh_p2wsh_long, p2sh_p2wsh_short])
                 else:
                     [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh, p2sh_p2pkh, p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh] = self.p2pkh_address_to_script(v)
                     # normal P2PKH and P2PK with compressed keys should always be spendable
                     spendable_anytime.extend([bare, p2pkh])
                     # witness with compressed keys should always be spendable
-                    spendable_anytime.extend([p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short])
+                    spendable_anytime.extend([p2wsh_long, p2wsh_short])
                     # P2SH of bare and P2SH_P2PKH are spendable after direct importaddress
                     spendable_after_importaddress.extend([p2sh, p2sh_p2pkh])
                     # Non-standard scripts won't be recognized
-                    unseen_anytime.extend([p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh])
+                    unseen_anytime.extend([p2sh_p2wsh_long, p2sh_p2wsh_short, p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh])
 
             for i in uncompressed_spendable_address:
                 v = self.nodes[0].getaddressinfo(i)
@@ -438,15 +415,17 @@ class SegWitTest(FreicoinTestFramework):
                 if v['isscript']:
                     # Multisig without private is not seen after addmultisigaddress, but seen after importaddress
                     [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short] = self.p2sh_address_to_script(v)
-                    solvable_after_importaddress.extend([bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short])
+                    solvable_after_importaddress.extend([bare, p2sh, p2wsh_long, p2wsh_short])
+                    # P2SH-wrapped witness is never seen
+                    unseen_anytime.extend([p2sh_p2wsh_long, p2sh_p2wsh_short])
                 else:
                     [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh, p2sh_p2pkh, p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh] = self.p2pkh_address_to_script(v)
                     # normal P2PKH and P2PK with compressed keys should always be seen
                     # P2SH_P2PK, P2SH_P2PKH, and witness with compressed keys should always be seen
-                    solvable_anytime.extend([bare, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh])
+                    solvable_anytime.extend([bare, p2wsh_long, p2wsh_short, p2pkh])
                     solvable_after_importaddress.extend([p2sh, p2sh_p2pkh])
                     # Non-standard scripts won't be recognized
-                    unseen_anytime.extend([p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh])
+                    unseen_anytime.extend([p2sh_p2wsh_long, p2sh_p2wsh_short, p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh])
 
             for i in uncompressed_solvable_address:
                 v = self.nodes[0].getaddressinfo(i)
@@ -509,7 +488,14 @@ class SegWitTest(FreicoinTestFramework):
                 # exceptions and continue.
                 try_rpc(-4, "The wallet already contains the private key for this address or script", self.nodes[0].importaddress, i, "", False, True)
             for i in compressed_spendable_address + compressed_solvable_address:
-                self.nodes[0].addwitnessaddress(i)
+                witaddress = self.nodes[0].addwitnessaddress(i)
+                v = self.nodes[0].getaddressinfo(i)
+                if v['isscript']:
+                    [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short] = self.p2sh_address_to_script(v)
+                    assert_equal(p2wsh_long.hex(), self.nodes[0].validateaddress(witaddress)['scriptPubKey'])
+                else:
+                    [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh, p2sh_p2pkh, p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh] = self.p2pkh_address_to_script(v)
+                    assert_equal(p2wsh_short.hex(), self.nodes[0].validateaddress(witaddress)['scriptPubKey'])
             for i in uncompressed_spendable_address + uncompressed_solvable_address:
                 try_rpc(-4, "Public key or redeemscript not known to wallet, or the key is uncompressed", self.nodes[0].addwitnessaddress, i)
 
@@ -555,12 +541,13 @@ class SegWitTest(FreicoinTestFramework):
                 if v['isscript']:
                     [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short] = self.p2sh_address_to_script(v)
                     # P2WSH and P2SH(P2WSH) multisig with compressed keys are spendable after addwitnessaddress
-                    spendable_after_importaddress.extend([p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short])
-                    premature_witaddress.extend([script_to_p2sh(x) for x in [p2wsh_long, p2wsh_short]])
+                    spendable_after_importaddress.extend([p2wsh_long, p2wsh_short])
+                    unseen_anytime.extend([p2sh_p2wsh_long, p2sh_p2wsh_short])
                 else:
                     [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh, p2sh_p2pkh, p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh] = self.p2pkh_address_to_script(v)
                     # P2WSH, P2SH(P2WSH) are spendable after addwitnessaddress
-                    spendable_anytime.extend([bare, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh])
+                    spendable_anytime.extend([bare, p2wsh_long, p2wsh_short, p2pkh])
+                    unseen_anytime.extend([p2sh_p2wsh_long, p2sh_p2wsh_short])
 
             for i in uncompressed_spendable_address + uncompressed_solvable_address:
                 v = self.nodes[0].getaddressinfo(i)
@@ -578,12 +565,13 @@ class SegWitTest(FreicoinTestFramework):
                 if v['isscript']:
                     [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short] = self.p2sh_address_to_script(v)
                     # P2WSH multisig without private key are seen after addwitnessaddress
-                    solvable_after_importaddress.extend([p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short])
-                    premature_witaddress.extend([script_to_p2sh(x) for x in [p2wsh_long, p2wsh_short]])
+                    solvable_after_importaddress.extend([p2wsh_long, p2wsh_short])
+                    unseen_anytime.extend([p2sh_p2wsh_long, p2sh_p2wsh_short])
                 else:
                     [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh, p2sh_p2pkh, p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh] = self.p2pkh_address_to_script(v)
                     # P2SH_P2PK, P2SH_P2PKH with compressed keys are seen after addwitnessaddress
-                    solvable_anytime.extend([bare, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh])
+                    solvable_anytime.extend([bare, p2wsh_long, p2wsh_short, p2pkh])
+                    unseen_anytime.extend([p2sh_p2wsh_long, p2sh_p2wsh_short])
 
             self.mine_and_test_listunspent(spendable_anytime, 2)
             self.mine_and_test_listunspent(solvable_anytime, 1)
@@ -598,6 +586,20 @@ class SegWitTest(FreicoinTestFramework):
 
             # Check that spendable outputs are really spendable
             self.create_and_mine_tx_from_txids(spendable_txid)
+
+            # after importaddress it should pass addwitnessaddress
+            v = self.nodes[0].getaddressinfo(compressed_solvable_address[1])
+            self.nodes[0].importaddress(v['hex'], "", False, True)
+            for i in compressed_spendable_address + compressed_solvable_address + premature_witaddress:
+                witaddress = self.nodes[0].addwitnessaddress(i)
+                assert_equal(witaddress, self.nodes[0].addwitnessaddress(witaddress))
+                v = self.nodes[0].getaddressinfo(i)
+                if v['isscript']:
+                    [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short] = self.p2sh_address_to_script(v)
+                    assert_equal(p2wsh_long.hex(), self.nodes[0].validateaddress(witaddress)['scriptPubKey'])
+                else:
+                    [bare, p2sh, p2wsh_long, p2sh_p2wsh_long, p2wsh_short, p2sh_p2wsh_short, p2pkh, p2sh_p2pkh, p2wsh_long_p2pkh, p2sh_p2wsh_long_p2pkh, p2wsh_short_p2pkh, p2sh_p2wsh_short_p2pkh] = self.p2pkh_address_to_script(v)
+                    assert_equal(p2wsh_short.hex(), self.nodes[0].validateaddress(witaddress)['scriptPubKey'])
 
             # import all the private keys so solvable addresses become spendable
             self.nodes[0].importprivkey("cPiM8Ub4heR9NBYmgVzJQiUH1if44GSBGiqaeJySuL2BKxubvgwb")

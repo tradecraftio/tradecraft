@@ -20,9 +20,7 @@ import time
 import unittest
 
 from .address import (
-    key_to_p2sh_p2wpk,
     key_to_p2wpk,
-    script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
 from .messages import (
@@ -249,27 +247,26 @@ def witness_script(use_p2wsh, pubkey):
         pkscript = script_to_p2wsh_script(witness_script)
     return pkscript.hex()
 
-def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
+def create_witness_tx(node, use_p2wsh, utxo, pubkey, amount):
     """Return a transaction (in hex) that spends the given utxo to a segwit output.
 
     Optionally wrap the segwit output using P2SH."""
     if use_p2wsh:
         program = keys_to_multisig_script([pubkey])
-        addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
+        addr = script_to_p2wsh(program)
     else:
-        addr = key_to_p2sh_p2wpk(pubkey) if encode_p2sh else key_to_p2wpk(pubkey)
-    if not encode_p2sh:
-        assert_equal(node.getaddressinfo(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
+        addr = key_to_p2wpk(pubkey)
+    assert_equal(node.getaddressinfo(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
     return node.createrawtransaction([utxo], {addr: amount})
 
-def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
+def send_to_witness(use_p2wsh, node, utxo, pubkey, amount, sign=True, insert_redeem_script=""):
     """Create a transaction spending a given utxo to a segwit output.
 
     The output corresponds to the given pubkey: use_p2wsh determines whether to
-    use P2WPK or P2WSH; encode_p2sh determines whether to wrap in P2SH.
+    use P2WPK or P2WSH.
     sign=True will have the given node sign the transaction.
     insert_redeem_script will be added to the scriptSig, if given."""
-    tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
+    tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, amount)
     if (sign):
         signed = node.signrawtransactionwithwallet(tx_to_witness)
         assert "errors" not in signed or len(["errors"]) == 0

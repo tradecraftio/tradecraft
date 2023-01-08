@@ -53,8 +53,8 @@ class WalletDescriptorTest(FreicoinTestFramework):
         self.log.info("Checking wallet info")
         wallet_info = self.nodes[0].getwalletinfo()
         assert_equal(wallet_info['format'], 'sqlite')
-        assert_equal(wallet_info['keypoolsize'], 400)
-        assert_equal(wallet_info['keypoolsize_hd_internal'], 400)
+        assert_equal(wallet_info['keypoolsize'], 300)
+        assert_equal(wallet_info['keypoolsize_hd_internal'], 300)
         assert 'keypoololdest' not in wallet_info
 
         # Check that getnewaddress works
@@ -63,11 +63,6 @@ class WalletDescriptorTest(FreicoinTestFramework):
         addr_info = self.nodes[0].getaddressinfo(addr)
         assert addr_info['desc'].startswith('pkh(')
         assert_equal(addr_info['hdkeypath'], 'm/44\'/1\'/0\'/0/0')
-
-        addr = self.nodes[0].getnewaddress("", "p2sh-segwit")
-        addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('sh(wpk(')
-        assert_equal(addr_info['hdkeypath'], 'm/49\'/1\'/0\'/0/0')
 
         addr = self.nodes[0].getnewaddress("", "bech32")
         addr_info = self.nodes[0].getaddressinfo(addr)
@@ -79,11 +74,6 @@ class WalletDescriptorTest(FreicoinTestFramework):
         addr_info = self.nodes[0].getaddressinfo(addr)
         assert addr_info['desc'].startswith('pkh(')
         assert_equal(addr_info['hdkeypath'], 'm/44\'/1\'/0\'/1/0')
-
-        addr = self.nodes[0].getrawchangeaddress("p2sh-segwit")
-        addr_info = self.nodes[0].getaddressinfo(addr)
-        assert addr_info['desc'].startswith('sh(wpk(')
-        assert_equal(addr_info['hdkeypath'], 'm/49\'/1\'/0\'/1/0')
 
         addr = self.nodes[0].getrawchangeaddress("bech32")
         addr_info = self.nodes[0].getaddressinfo(addr)
@@ -171,10 +161,8 @@ class WalletDescriptorTest(FreicoinTestFramework):
         imp_rpc = self.nodes[0].get_wallet_rpc('desc_import')
 
         addr_types = [('legacy', False, 'pkh(', '44\'/1\'/0\'', -13),
-                      ('p2sh-segwit', False, 'sh(wpk(', '49\'/1\'/0\'', -14),
                       ('bech32', False, 'wpk(', '84\'/1\'/0\'', -13),
                       ('legacy', True, 'pkh(', '44\'/1\'/0\'', -13),
-                      ('p2sh-segwit', True, 'sh(wpk(', '49\'/1\'/0\'', -14),
                       ('bech32', True, 'wpk(', '84\'/1\'/0\'', -13)]
 
         for addr_type, internal, desc_prefix, deriv_path, int_idx in addr_types:

@@ -806,7 +806,6 @@ protected:
             CScript p2wpk = GetScriptForDestination(entry.GetShortHash());
             out.scripts.emplace(CScriptID(p2wpk), p2wpk);
             ret.emplace_back(p2wpk);
-            ret.emplace_back(GetScriptForDestination(ScriptHash(p2wpk))); // P2SH-P2WPK
         }
         return ret;
     }
@@ -875,7 +874,6 @@ public:
     std::optional<OutputType> GetOutputType() const override
     {
         assert(m_subdescriptor_args.size() == 1);
-        if (m_subdescriptor_args[0]->GetOutputType() == OutputType::BECH32) return OutputType::P2SH_SEGWIT;
         return OutputType::LEGACY;
     }
     bool IsSingleType() const final { return true; }
@@ -1390,7 +1388,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "Can only have multi_a/sortedmulti_a inside tr()";
         return nullptr;
     }
-    if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wpk", expr)) {
+    if (ctx == ParseScriptContext::TOP && Func("wpk", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ParseScriptContext::P2WPK, out, error);
         if (!pubkey) {
             error = strprintf("wpk(): %s", error);
@@ -1399,7 +1397,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         key_exp_index++;
         return std::make_unique<WPKDescriptor>(std::move(pubkey));
     } else if (Func("wpk", expr)) {
-        error = "Can only have wpk() at top level or inside sh()";
+        error = "Can only have wpk() at top level";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
@@ -1410,12 +1408,12 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "Can only have sh() at top level";
         return nullptr;
     }
-    if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wsh", expr)) {
+    if (ctx == ParseScriptContext::TOP && Func("wsh", expr)) {
         auto desc = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error);
         if (!desc || expr.size()) return nullptr;
         return std::make_unique<WSHDescriptor>(std::move(desc));
     } else if (Func("wsh", expr)) {
-        error = "Can only have wsh() at top level or inside sh()";
+        error = "Can only have wsh() at top level";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("addr", expr)) {

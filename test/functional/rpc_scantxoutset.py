@@ -45,10 +45,8 @@ class ScantxoutsetTest(FreicoinTestFramework):
         self.wallet.rescan_utxos()
 
         self.log.info("Create UTXOs...")
-        pubk1, spk_P2SH_SEGWIT, addr_P2SH_SEGWIT = getnewdestination("p2sh-segwit")
         pubk2, spk_LEGACY, addr_LEGACY = getnewdestination("legacy")
         pubk3, spk_BECH32, addr_BECH32 = getnewdestination("bech32")
-        self.sendtodestination(spk_P2SH_SEGWIT, 0.001)
         self.sendtodestination(spk_LEGACY, 0.002)
         self.sendtodestination(spk_BECH32, 0.004)
 
@@ -76,12 +74,9 @@ class ScantxoutsetTest(FreicoinTestFramework):
         assert_equal(scan['bestblock'], info['bestblock'])
 
         self.log.info("Test if we have found the non HD unspent outputs.")
-        assert_equal(self.nodes[0].scantxoutset("start", ["pkh(" + pubk1.hex() + ")", "pkh(" + pubk2.hex() + ")", "pkh(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.002"))
-        assert_equal(self.nodes[0].scantxoutset("start", ["wpk(" + pubk1.hex() + ")", "wpk(" + pubk2.hex() + ")", "wpk(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.004"))
-        assert_equal(self.nodes[0].scantxoutset("start", ["sh(wpk(" + pubk1.hex() + "))", "sh(wpk(" + pubk2.hex() + "))", "sh(wpk(" + pubk3.hex() + "))"])['total_amount'], Decimal("0.001"))
-        assert_equal(self.nodes[0].scantxoutset("start", ["combo(" + pubk1.hex() + ")", "combo(" + pubk2.hex() + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
-        assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "addr(" + addr_BECH32 + ")"])['total_amount'], Decimal("0.007"))
-        assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
+        assert_equal(self.nodes[0].scantxoutset("start", ["pkh(" + pubk2.hex() + ")", "pkh(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.002"))
+        assert_equal(self.nodes[0].scantxoutset("start", ["wpk(" + pubk2.hex() + ")", "wpk(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.004"))
+        assert_equal(self.nodes[0].scantxoutset("start", ["combo(" + pubk2.hex() + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.006"))
 
         self.log.info("Test range validation.")
         assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": -1}])
