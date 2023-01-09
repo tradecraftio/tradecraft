@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SERFLOAT_H
-#define BITCOIN_UTIL_SERFLOAT_H
+#ifndef FREICOIN_UTIL_SERFLOAT_H
+#define FREICOIN_UTIL_SERFLOAT_H
 
 #include <stdint.h>
 
@@ -24,4 +24,4 @@ uint64_t EncodeDouble(double f) noexcept;
 /* Reverse operation of DecodeDouble. DecodeDouble(EncodeDouble(f))==f unless isnan(f). */
 double DecodeDouble(uint64_t v) noexcept;
 
-#endif // BITCOIN_UTIL_SERFLOAT_H
+#endif // FREICOIN_UTIL_SERFLOAT_H

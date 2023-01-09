@@ -16,7 +16,7 @@
 """Test deprecation of fee fields from top level mempool entry object"""
 
 from test_framework.blocktools import COIN
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
@@ -27,14 +27,14 @@ def assertions_helper(new_object, deprecated_object, deprecated_fields):
         assert field not in new_object
 
 
-class MempoolFeeFieldsDeprecationTest(BitcoinTestFramework):
+class MempoolFeeFieldsDeprecationTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[], ["-deprecatedrpc=fees"]]
 
     def run_test(self):
         # we get spendable outputs from the premined chain starting
-        # at block 76. see BitcoinTestFramework._initialize_chain() for details
+        # at block 76. see FreicoinTestFramework._initialize_chain() for details
         self.wallet = MiniWallet(self.nodes[0])
         self.wallet.rescan_utxos()
 

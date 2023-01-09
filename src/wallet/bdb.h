@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_BDB_H
-#define BITCOIN_WALLET_BDB_H
+#ifndef FREICOIN_WALLET_BDB_H
+#define FREICOIN_WALLET_BDB_H
 
 #include <clientversion.h>
 #include <fs.h>
@@ -243,4 +243,4 @@ bool BerkeleyDatabaseSanityCheck();
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_BDB_H
+#endif // FREICOIN_WALLET_BDB_H

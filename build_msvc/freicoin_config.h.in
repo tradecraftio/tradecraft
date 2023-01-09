@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Freicoin developers
 // Copyright (c) 2011-2023 The Freicoin Developers
 //
 // This program is free software: you can redistribute it and/or modify it under
@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_BITCOIN_CONFIG_H
-#define BITCOIN_BITCOIN_CONFIG_H
+#ifndef FREICOIN_FREICOIN_CONFIG_H
+#define FREICOIN_FREICOIN_CONFIG_H
 
 /* Version Build */
 #define CLIENT_VERSION_BUILD $
@@ -38,7 +38,7 @@
 #define COPYRIGHT_HOLDERS "The %s developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The Bitcoin Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "The Freicoin developers"
 
 /* Replacement for %s in copyright holders string */
 #define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
@@ -186,16 +186,16 @@
 #define HAVE_SYS_TYPES_H 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/bitcoin/bitcoin/issues"
+#define PACKAGE_BUGREPORT "https://github.com/tradecraftio/tradecraft/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Bitcoin Core"
+#define PACKAGE_NAME "Freicoin"
 
 /* Define to the full name and version of this package. */
 #define PACKAGE_STRING $
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://bitcoincore.org/"
+#define PACKAGE_URL "http://freico.in/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION $
@@ -219,4 +219,4 @@
 
 #endif // !WINAPI_FAMILY || WINAPI_FAMILY_DESKTOP_APP
 
-#endif //BITCOIN_BITCOIN_CONFIG_H
+#endif //FREICOIN_FREICOIN_CONFIG_H

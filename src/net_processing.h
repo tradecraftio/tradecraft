@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NET_PROCESSING_H
-#define BITCOIN_NET_PROCESSING_H
+#ifndef FREICOIN_NET_PROCESSING_H
+#define FREICOIN_NET_PROCESSING_H
 
 #include <net.h>
 #include <validationinterface.h>
@@ -98,4 +98,4 @@ public:
                                 const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
 };
 
-#endif // BITCOIN_NET_PROCESSING_H
+#endif // FREICOIN_NET_PROCESSING_H

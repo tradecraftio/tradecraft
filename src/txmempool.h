@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TXMEMPOOL_H
-#define BITCOIN_TXMEMPOOL_H
+#ifndef FREICOIN_TXMEMPOOL_H
+#define FREICOIN_TXMEMPOOL_H
 
 #include <atomic>
 #include <map>
@@ -1009,4 +1009,4 @@ struct DisconnectedBlockTransactions {
     }
 };
 
-#endif // BITCOIN_TXMEMPOOL_H
+#endif // FREICOIN_TXMEMPOOL_H

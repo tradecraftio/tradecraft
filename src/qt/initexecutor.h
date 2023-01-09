@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_INITEXECUTOR_H
-#define BITCOIN_QT_INITEXECUTOR_H
+#ifndef FREICOIN_QT_INITEXECUTOR_H
+#define FREICOIN_QT_INITEXECUTOR_H
 
 #include <interfaces/node.h>
 
@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 class QString;
 QT_END_NAMESPACE
 
-/** Class encapsulating Bitcoin Core startup and shutdown.
+/** Class encapsulating Freicoin startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
 class InitExecutor : public QObject
@@ -55,4 +55,4 @@ private:
     QThread m_thread;
 };
 
-#endif // BITCOIN_QT_INITEXECUTOR_H
+#endif // FREICOIN_QT_INITEXECUTOR_H

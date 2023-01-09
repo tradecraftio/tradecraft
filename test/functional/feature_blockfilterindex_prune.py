@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test blockfilterindex in conjunction with prune."""
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -22,7 +22,7 @@ from test_framework.util import (
 )
 
 
-class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
+class FeatureBlockfilterindexPruneTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-fastprune", "-prune=1", "-blockfilterindex=1"]]

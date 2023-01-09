@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_MINISKETCHWRAPPER_H
-#define BITCOIN_NODE_MINISKETCHWRAPPER_H
+#ifndef FREICOIN_NODE_MINISKETCHWRAPPER_H
+#define FREICOIN_NODE_MINISKETCHWRAPPER_H
 
 #include <minisketch.h>
 
@@ -28,4 +28,4 @@ Minisketch MakeMinisketch32(size_t capacity);
 Minisketch MakeMinisketch32FP(size_t max_elements, uint32_t fpbits);
 } // namespace node
 
-#endif // BITCOIN_NODE_MINISKETCHWRAPPER_H
+#endif // FREICOIN_NODE_MINISKETCHWRAPPER_H

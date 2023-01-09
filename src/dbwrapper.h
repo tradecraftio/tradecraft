@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_DBWRAPPER_H
-#define BITCOIN_DBWRAPPER_H
+#ifndef FREICOIN_DBWRAPPER_H
+#define FREICOIN_DBWRAPPER_H
 
 #include <clientversion.h>
 #include <fs.h>
@@ -347,4 +347,4 @@ public:
     }
 };
 
-#endif // BITCOIN_DBWRAPPER_H
+#endif // FREICOIN_DBWRAPPER_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_HKDF_SHA256_32_H
-#define BITCOIN_CRYPTO_HKDF_SHA256_32_H
+#ifndef FREICOIN_CRYPTO_HKDF_SHA256_32_H
+#define FREICOIN_CRYPTO_HKDF_SHA256_32_H
 
 #include <crypto/hmac_sha256.h>
 
@@ -33,4 +33,4 @@ public:
     void Expand32(const std::string& info, unsigned char hash[OUTPUT_SIZE]);
 };
 
-#endif // BITCOIN_CRYPTO_HKDF_SHA256_32_H
+#endif // FREICOIN_CRYPTO_HKDF_SHA256_32_H

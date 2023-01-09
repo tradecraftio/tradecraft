@@ -18,7 +18,7 @@
 import random
 
 from decimal import Decimal
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.descriptors import descsum_create
 from test_framework.script import (
@@ -185,7 +185,7 @@ def compute_taproot_address(pubkey, scripts):
     assert tap.scriptPubKey[1] == 0x20
     return encode_segwit_address("bcrt", 1, tap.scriptPubKey[2:])
 
-class WalletTaprootTest(BitcoinTestFramework):
+class WalletTaprootTest(FreicoinTestFramework):
     """Test generation and spending of P2TR address outputs."""
 
     def set_test_params(self):
@@ -290,24 +290,24 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert(self.rpc_online.gettransaction(res)["confirmations"] > 0)
 
-    def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
-        self.log.info("Testing %s through PSBT" % comment)
+    def do_test_pst(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
+        self.log.info("Testing %s through PST" % comment)
         desc_pay = self.make_desc(pattern, privmap, keys_pay, False)
         desc_change = self.make_desc(pattern, privmap, keys_change, False)
         desc_pay_pub = self.make_desc(pattern, privmap, keys_pay, True)
         desc_change_pub = self.make_desc(pattern, privmap, keys_change, True)
         assert_equal(self.nodes[0].getdescriptorinfo(desc_pay)['descriptor'], desc_pay_pub)
         assert_equal(self.nodes[0].getdescriptorinfo(desc_change)['descriptor'], desc_change_pub)
-        result = self.psbt_online.importdescriptors([{"desc": desc_pay_pub, "active": True, "timestamp": "now"}])
+        result = self.pst_online.importdescriptors([{"desc": desc_pay_pub, "active": True, "timestamp": "now"}])
         assert(result[0]['success'])
-        result = self.psbt_online.importdescriptors([{"desc": desc_change_pub, "active": True, "timestamp": "now", "internal": True}])
+        result = self.pst_online.importdescriptors([{"desc": desc_change_pub, "active": True, "timestamp": "now", "internal": True}])
         assert(result[0]['success'])
-        result = self.psbt_offline.importdescriptors([{"desc": desc_pay, "active": True, "timestamp": "now"}])
+        result = self.pst_offline.importdescriptors([{"desc": desc_pay, "active": True, "timestamp": "now"}])
         assert(result[0]['success'])
-        result = self.psbt_offline.importdescriptors([{"desc": desc_change, "active": True, "timestamp": "now", "internal": True}])
+        result = self.pst_offline.importdescriptors([{"desc": desc_change, "active": True, "timestamp": "now", "internal": True}])
         assert(result[0]['success'])
         for i in range(4):
-            addr_g = self.psbt_online.getnewaddress(address_type='bech32m')
+            addr_g = self.pst_online.getnewaddress(address_type='bech32m')
             if treefn is not None:
                 addr_r = self.make_addr(treefn, keys_pay, i)
                 assert_equal(addr_g, addr_r)
@@ -315,21 +315,21 @@ class WalletTaprootTest(BitcoinTestFramework):
             to_amnt = random.randrange(1000000, boring_balance)
             self.boring.sendtoaddress(address=addr_g, amount=Decimal(to_amnt) / 100000000, subtractfeefromamount=True)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-            test_balance = int(self.psbt_online.getbalance() * 100000000)
+            test_balance = int(self.pst_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
-            psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0]})['psbt']
-            res = self.psbt_offline.walletprocesspsbt(psbt)
+            pst = self.pst_online.walletcreatefundedpst([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0]})['pst']
+            res = self.pst_offline.walletprocesspst(pst)
             assert(res['complete'])
-            rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
+            rawtx = self.nodes[0].finalizepst(res['pst'])['hex']
             txid = self.nodes[0].sendrawtransaction(rawtx)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-            assert(self.psbt_online.gettransaction(txid)['confirmations'] > 0)
+            assert(self.pst_online.gettransaction(txid)['confirmations'] > 0)
 
     def do_test(self, comment, pattern, privmap, treefn, nkeys):
         keys = self.rand_keys(nkeys * 4)
         self.do_test_addr(comment, pattern, privmap, treefn, keys[0:nkeys])
         self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys])
-        self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys])
+        self.do_test_pst(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys])
 
     def run_test(self):
         self.log.info("Creating wallets...")
@@ -344,13 +344,13 @@ class WalletTaprootTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="boring")
         self.nodes[0].createwallet(wallet_name="addr_gen", descriptors=True, disable_private_keys=True, blank=True)
         self.nodes[0].createwallet(wallet_name="rpc_online", descriptors=True, blank=True)
-        self.nodes[0].createwallet(wallet_name="psbt_online", descriptors=True, disable_private_keys=True, blank=True)
-        self.nodes[1].createwallet(wallet_name="psbt_offline", descriptors=True, blank=True)
+        self.nodes[0].createwallet(wallet_name="pst_online", descriptors=True, disable_private_keys=True, blank=True)
+        self.nodes[1].createwallet(wallet_name="pst_offline", descriptors=True, blank=True)
         self.boring = self.nodes[0].get_wallet_rpc("boring")
         self.addr_gen = self.nodes[0].get_wallet_rpc("addr_gen")
         self.rpc_online = self.nodes[0].get_wallet_rpc("rpc_online")
-        self.psbt_online = self.nodes[0].get_wallet_rpc("psbt_online")
-        self.psbt_offline = self.nodes[1].get_wallet_rpc("psbt_offline")
+        self.pst_online = self.nodes[0].get_wallet_rpc("pst_online")
+        self.pst_offline = self.nodes[1].get_wallet_rpc("pst_offline")
 
         self.log.info("Mining blocks...")
         gen_addr = self.boring.getnewaddress()
@@ -426,13 +426,13 @@ class WalletTaprootTest(BitcoinTestFramework):
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
         assert(self.rpc_online.gettransaction(txid)["confirmations"] > 0)
 
-        psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): self.psbt_online.getbalance()}], None, {"subtractFeeFromOutputs": [0]})['psbt']
-        res = self.psbt_offline.walletprocesspsbt(psbt)
+        pst = self.pst_online.walletcreatefundedpst([], [{self.boring.getnewaddress(): self.pst_online.getbalance()}], None, {"subtractFeeFromOutputs": [0]})['pst']
+        res = self.pst_offline.walletprocesspst(pst)
         assert(res['complete'])
-        rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
+        rawtx = self.nodes[0].finalizepst(res['pst'])['hex']
         txid = self.nodes[0].sendrawtransaction(rawtx)
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-        assert(self.psbt_online.gettransaction(txid)['confirmations'] > 0)
+        assert(self.pst_online.gettransaction(txid)['confirmations'] > 0)
 
 if __name__ == '__main__':
     WalletTaprootTest().main()

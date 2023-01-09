@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POLICY_PACKAGES_H
-#define BITCOIN_POLICY_PACKAGES_H
+#ifndef FREICOIN_POLICY_PACKAGES_H
+#define FREICOIN_POLICY_PACKAGES_H
 
 #include <consensus/validation.h>
 #include <policy/policy.h>
@@ -59,4 +59,4 @@ bool CheckPackage(const Package& txns, PackageValidationState& state);
  */
 bool IsChildWithParents(const Package& package);
 
-#endif // BITCOIN_POLICY_PACKAGES_H
+#endif // FREICOIN_POLICY_PACKAGES_H

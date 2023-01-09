@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_OVERVIEWPAGE_H
-#define BITCOIN_QT_OVERVIEWPAGE_H
+#ifndef FREICOIN_QT_OVERVIEWPAGE_H
+#define FREICOIN_QT_OVERVIEWPAGE_H
 
 #include <interfaces/wallet.h>
 
@@ -79,4 +79,4 @@ private Q_SLOTS:
     void setMonospacedFont(bool use_embedded_font);
 };
 
-#endif // BITCOIN_QT_OVERVIEWPAGE_H
+#endif // FREICOIN_QT_OVERVIEWPAGE_H

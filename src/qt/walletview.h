@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_WALLETVIEW_H
-#define BITCOIN_QT_WALLETVIEW_H
+#ifndef FREICOIN_QT_WALLETVIEW_H
+#define FREICOIN_QT_WALLETVIEW_H
 
 #include <consensus/amount.h>
 
@@ -63,7 +63,7 @@ private:
     ClientModel *clientModel;
 
     //!
-    //! The wallet model represents a bitcoin wallet, and offers access to
+    //! The wallet model represents a freicoin wallet, and offers access to
     //! the list of transactions, address book and sending functionality.
     //!
     WalletModel* const walletModel;
@@ -131,4 +131,4 @@ Q_SIGNALS:
     void outOfSyncWarningClicked();
 };
 
-#endif // BITCOIN_QT_WALLETVIEW_H
+#endif // FREICOIN_QT_WALLETVIEW_H

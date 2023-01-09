@@ -221,15 +221,15 @@ def create_raw_transaction(node, txid, to_address, *, amount):
             break
         except:
             continue
-    psbt = node.createpsbt(inputs=inputs, outputs={to_address: amount})
+    pst = node.createpst(inputs=inputs, outputs={to_address: amount})
     for _ in range(2):
         for w in node.listwallets():
             wrpc = node.get_wallet_rpc(w)
-            signed_psbt = wrpc.walletprocesspsbt(psbt)
-            psbt = signed_psbt['psbt']
-    final_psbt = node.finalizepsbt(psbt)
-    assert_equal(final_psbt["complete"], True)
-    return final_psbt['hex']
+            signed_pst = wrpc.walletprocesspst(pst)
+            pst = signed_pst['pst']
+    final_pst = node.finalizepst(pst)
+    assert_equal(final_pst["complete"], True)
+    return final_pst['hex']
 
 def get_legacy_sigopcount_block(block, accurate=True):
     count = 0

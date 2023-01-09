@@ -61,13 +61,13 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
     fs::path tmpfile2 = tmpfolder / "fs_tests_₿_🏃";
     {
         std::ofstream file{tmpfile1};
-        file << "bitcoin";
+        file << "freicoin";
     }
     {
         std::ifstream file{tmpfile2};
         std::string input_buffer;
         file >> input_buffer;
-        BOOST_CHECK_EQUAL(input_buffer, "bitcoin");
+        BOOST_CHECK_EQUAL(input_buffer, "freicoin");
     }
     {
         std::ifstream file{tmpfile1, std::ios_base::in | std::ios_base::ate};
@@ -83,17 +83,17 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
         std::ifstream file{tmpfile1};
         std::string input_buffer;
         file >> input_buffer;
-        BOOST_CHECK_EQUAL(input_buffer, "bitcointests");
+        BOOST_CHECK_EQUAL(input_buffer, "freicointests");
     }
     {
         std::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::trunc};
-        file << "bitcoin";
+        file << "freicoin";
     }
     {
         std::ifstream file{tmpfile1};
         std::string input_buffer;
         file >> input_buffer;
-        BOOST_CHECK_EQUAL(input_buffer, "bitcoin");
+        BOOST_CHECK_EQUAL(input_buffer, "freicoin");
     }
     {
         // Join an absolute path and a relative path.

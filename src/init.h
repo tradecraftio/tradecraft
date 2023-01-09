@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INIT_H
-#define BITCOIN_INIT_H
+#ifndef FREICOIN_INIT_H
+#define FREICOIN_INIT_H
 
 #include <any>
 #include <memory>
@@ -42,7 +42,7 @@ void InitLogging(const ArgsManager& args);
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction(ArgsManager& args);
 
-/** Initialize bitcoin core: Basic context setup.
+/** Initialize freicoin: Basic context setup.
  *  @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -60,7 +60,7 @@ bool AppInitParameterInteraction(const ArgsManager& args);
  */
 bool AppInitSanityChecks();
 /**
- * Lock bitcoin core data directory.
+ * Lock freicoin data directory.
  * @note This should only be done after daemonization. Do not call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitSanityChecks should have been called.
  */
@@ -70,7 +70,7 @@ bool AppInitLockDataDirectory();
  */
 bool AppInitInterfaces(node::NodeContext& node);
 /**
- * Bitcoin core main initialization.
+ * Freicoin main initialization.
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
@@ -81,4 +81,4 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
  */
 void SetupServerArgs(ArgsManager& argsman);
 
-#endif // BITCOIN_INIT_H
+#endif // FREICOIN_INIT_H

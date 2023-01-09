@@ -28,7 +28,7 @@ variants.
 
 from test_framework.address import key_to_p2pkh
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
@@ -40,7 +40,7 @@ from test_framework.wallet_util import (
     test_address,
 )
 
-class ImportDescriptorsTest(BitcoinTestFramework):
+class ImportDescriptorsTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-addresstype=legacy"],

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CONSENSUS_PARAMS_H
-#define BITCOIN_CONSENSUS_PARAMS_H
+#ifndef FREICOIN_CONSENSUS_PARAMS_H
+#define FREICOIN_CONSENSUS_PARAMS_H
 
 #include <uint256.h>
 #include <limits>
@@ -118,7 +118,7 @@ struct Params {
     uint256 defaultAssumeValid;
 
     /**
-     * If true, witness commitments contain a payload equal to a Bitcoin Script solution
+     * If true, witness commitments contain a payload equal to a Freicoin Script solution
      * to the signet challenge. See BIP325.
      */
     bool signet_blocks{false};
@@ -142,4 +142,4 @@ struct Params {
 
 } // namespace Consensus
 
-#endif // BITCOIN_CONSENSUS_PARAMS_H
+#endif // FREICOIN_CONSENSUS_PARAMS_H

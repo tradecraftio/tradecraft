@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCRIPT_SIGNINGPROVIDER_H
-#define BITCOIN_SCRIPT_SIGNINGPROVIDER_H
+#ifndef FREICOIN_SCRIPT_SIGNINGPROVIDER_H
+#define FREICOIN_SCRIPT_SIGNINGPROVIDER_H
 
 #include <key.h>
 #include <pubkey.h>
@@ -173,4 +173,4 @@ public:
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */
 CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest);
 
-#endif // BITCOIN_SCRIPT_SIGNINGPROVIDER_H
+#endif // FREICOIN_SCRIPT_SIGNINGPROVIDER_H

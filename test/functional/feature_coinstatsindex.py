@@ -41,13 +41,13 @@ from test_framework.script import (
     OP_FALSE,
     OP_RETURN,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
-class CoinStatsIndexTest(BitcoinTestFramework):
+class CoinStatsIndexTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -168,7 +168,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         signed_tx1 = self.nodes[0].signrawtransactionwithwallet(funded_tx1['hex'])
         tx1_txid = self.nodes[0].sendrawtransaction(signed_tx1['hex'])
 
-        # Find the right position of the 21 BTC output
+        # Find the right position of the 21 FRC output
         tx1_final = self.nodes[0].gettransaction(tx1_txid)
         for output in tx1_final['details']:
             if output['amount'] == Decimal('21.00000000') and output['category'] == 'receive':

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_CACHES_H
-#define BITCOIN_NODE_CACHES_H
+#ifndef FREICOIN_NODE_CACHES_H
+#define FREICOIN_NODE_CACHES_H
 
 #include <cstddef>
 #include <cstdint>
@@ -32,4 +32,4 @@ struct CacheSizes {
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes = 0);
 } // namespace node
 
-#endif // BITCOIN_NODE_CACHES_H
+#endif // FREICOIN_NODE_CACHES_H

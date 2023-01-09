@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CORE_IO_H
-#define BITCOIN_CORE_IO_H
+#ifndef FREICOIN_CORE_IO_H
+#define FREICOIN_CORE_IO_H
 
 #include <consensus/amount.h>
 #include <attributes.h>
@@ -68,4 +68,4 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool include
 void ScriptToUniv(const CScript& script, UniValue& out);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS);
 
-#endif // BITCOIN_CORE_IO_H
+#endif // FREICOIN_CORE_IO_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_OPTIONSMODEL_H
-#define BITCOIN_QT_OPTIONSMODEL_H
+#ifndef FREICOIN_QT_OPTIONSMODEL_H
+#define FREICOIN_QT_OPTIONSMODEL_H
 
 #include <cstdint>
 #include <qt/guiconstants.h>
@@ -40,7 +40,7 @@ static inline int PruneMiBtoGB(int64_t mib) { return (mib * 1024 * 1024 + GB_BYT
  */
 static inline int64_t PruneGBtoMiB(int gb) { return gb * GB_BYTES / 1024 / 1024; }
 
-/** Interface from Qt to configuration data structure for Bitcoin client.
+/** Interface from Qt to configuration data structure for Freicoin client.
    To Qt, the options are presented as a list with the different options
    laid out vertically.
    This can be changed to a tree once the settings become sufficiently
@@ -66,7 +66,7 @@ public:
         ProxyUseTor,            // bool
         ProxyIPTor,             // QString
         ProxyPortTor,           // int
-        DisplayUnit,            // BitcoinUnits::Unit
+        DisplayUnit,            // FreicoinUnits::Unit
         ThirdPartyTxUrls,       // QString
         Language,               // QString
         UseEmbeddedMonospacedFont, // bool
@@ -80,7 +80,7 @@ public:
         SpendZeroConfChange,    // bool
         Listen,                 // bool
         Server,                 // bool
-        EnablePSBTControls,     // bool
+        EnablePSFRControls,     // bool
         OptionIDRowCount,
     };
 
@@ -102,7 +102,7 @@ public:
     bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
-    bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
+    bool getEnablePSFRControls() const { return m_enable_pst_controls; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
@@ -128,7 +128,7 @@ private:
     bool m_use_embedded_monospaced_font;
     bool fCoinControlFeatures;
     bool m_sub_fee_from_amount;
-    bool m_enable_psbt_controls;
+    bool m_enable_pst_controls;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 
@@ -144,4 +144,4 @@ Q_SIGNALS:
     void useEmbeddedMonospacedFontChanged(bool);
 };
 
-#endif // BITCOIN_QT_OPTIONSMODEL_H
+#endif // FREICOIN_QT_OPTIONSMODEL_H

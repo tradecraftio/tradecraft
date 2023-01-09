@@ -19,12 +19,12 @@ import time
 
 from test_framework.messages import msg_tx, msg_inv, CInv, MSG_WTX
 from test_framework.p2p import P2PInterface, P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
 
-class P2PBlocksOnly(BitcoinTestFramework):
+class P2PBlocksOnly(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-blocksonly"]]
@@ -76,7 +76,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(["received getdata"]):
             # Note that normally, first_peer would never send us transactions since we're a blocksonly node.
             # By activating blocksonly, we explicitly tell our peers that they should not send us transactions,
-            # and Bitcoin Core respects that choice and will not send transactions.
+            # and Freicoin respects that choice and will not send transactions.
             # But if, for some reason, first_peer decides to relay transactions to us anyway, we should relay them to
             # second_peer since we gave relay permission to first_peer.
             # See https://github.com/bitcoin/bitcoin/issues/19943 for details.

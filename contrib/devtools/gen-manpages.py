@@ -19,12 +19,12 @@ import sys
 import tempfile
 
 BINARIES = [
-'src/bitcoind',
-'src/bitcoin-cli',
-'src/bitcoin-tx',
-'src/bitcoin-wallet',
-'src/bitcoin-util',
-'src/qt/bitcoin-qt',
+'src/freicoind',
+'src/freicoin-cli',
+'src/freicoin-tx',
+'src/freicoin-wallet',
+'src/freicoin-util',
+'src/qt/freicoin-qt',
 ]
 
 # Paths to external utilities.

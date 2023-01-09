@@ -13,10 +13,10 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Script for verifying Bitcoin Core release binaries
+"""Script for verifying Freicoin release binaries
 
 This script attempts to download the signature file SHA256SUMS.asc from
-bitcoincore.org and bitcoin.org and compares them.
+freico.in and freico.in and compares them.
 It first checks if the signature passes, and then downloads the files
 specified in the file, and checks if the hashes of these files match those
 that are specified in the signature file.
@@ -30,11 +30,11 @@ import subprocess
 import sys
 from textwrap import indent
 
-WORKINGDIR = "/tmp/bitcoin_verify_binaries"
+WORKINGDIR = "/tmp/freicoin_verify_binaries"
 HASHFILE = "hashes.tmp"
-HOST1 = "https://bitcoincore.org"
-HOST2 = "https://bitcoin.org"
-VERSIONPREFIX = "bitcoin-core-"
+HOST1 = "http://freico.in"
+HOST2 = "http://freico.in"
+VERSIONPREFIX = "freicoin-"
 SIGNATUREFILENAME = "SHA256SUMS.asc"
 
 
@@ -123,8 +123,8 @@ def main(args):
     sigfile2 = SIGNATUREFILENAME + ".2"
     success, output = download_with_wget(HOST2 + remote_sigfile, sigfile2)
     if not success:
-        print("bitcoin.org failed to provide signature file, "
-              "but bitcoincore.org did?")
+        print("freico.in failed to provide signature file, "
+              "but freico.in did?")
         print("wget output:")
         print(indent(output, '\t'))
         remove_files([sigfile1])
@@ -132,7 +132,7 @@ def main(args):
 
     # ensure that both signature files are equal
     if not files_are_equal(sigfile1, sigfile2):
-        print("bitcoin.org and bitcoincore.org signature files were not equal?")
+        print("freico.in and freico.in signature files were not equal?")
         print(f"See files {WORKINGDIR}/{sigfile1} and {WORKINGDIR}/{sigfile2}")
         return 6
 
@@ -142,7 +142,7 @@ def main(args):
         if retval == 1:
             print("Bad signature.")
         elif retval == 2:
-            print("gpg error. Do you have the Bitcoin Core binary release "
+            print("gpg error. Do you have the Freicoin binary release "
                   "signing key installed?")
         print("gpg output:")
         print(indent(output, '\t'))

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INDIRECTMAP_H
-#define BITCOIN_INDIRECTMAP_H
+#ifndef FREICOIN_INDIRECTMAP_H
+#define FREICOIN_INDIRECTMAP_H
 
 #include <map>
 
@@ -66,4 +66,4 @@ public:
     const_iterator cend() const     { return m.cend(); }
 };
 
-#endif // BITCOIN_INDIRECTMAP_H
+#endif // FREICOIN_INDIRECTMAP_H

@@ -102,7 +102,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         }
 
         // While the utxo-set database can be upgraded in-place using
-        // upstream code from Bitcoin, the block-final transaction
+        // upstream code from Freicoin, the block-final transaction
         // record cannot, as it depends on data that is not presently
         // contained in the utxo-set, and requires rewriting the undo
         // files.  The user will get a notification that they need to

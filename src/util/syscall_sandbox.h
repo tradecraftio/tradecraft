@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SYSCALL_SANDBOX_H
-#define BITCOIN_UTIL_SYSCALL_SANDBOX_H
+#ifndef FREICOIN_UTIL_SYSCALL_SANDBOX_H
+#define FREICOIN_UTIL_SYSCALL_SANDBOX_H
 
 enum class SyscallSandboxPolicy {
     // 1. Initialization
@@ -47,9 +47,9 @@ enum class SyscallSandboxPolicy {
 //!
 //! This function is a no-op unless SetupSyscallSandbox(...) has been called.
 //!
-//! SetupSyscallSandbox(...) is called during bitcoind initialization if Bitcoin Core was compiled
+//! SetupSyscallSandbox(...) is called during freicoind initialization if Freicoin was compiled
 //! with seccomp-bpf support (--with-seccomp) *and* the parameter -sandbox=<mode> was passed to
-//! bitcoind.
+//! freicoind.
 //!
 //! This experimental feature is available under Linux x86_64 only.
 void SetSyscallSandboxPolicy(SyscallSandboxPolicy syscall_policy);
@@ -65,4 +65,4 @@ void SetSyscallSandboxPolicy(SyscallSandboxPolicy syscall_policy);
 void TestDisallowedSandboxCall();
 #endif // defined(USE_SYSCALL_SANDBOX)
 
-#endif // BITCOIN_UTIL_SYSCALL_SANDBOX_H
+#endif // FREICOIN_UTIL_SYSCALL_SANDBOX_H

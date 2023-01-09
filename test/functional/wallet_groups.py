@@ -16,7 +16,7 @@
 """Test wallet group functionality."""
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.messages import (
     tx_from_hex,
 )
@@ -26,7 +26,7 @@ from test_framework.util import (
 )
 
 
-class WalletGroupTest(BitcoinTestFramework):
+class WalletGroupTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 5
@@ -98,7 +98,7 @@ class WalletGroupTest(BitcoinTestFramework):
         # - D ~0.3
         assert_approx(self.nodes[1].getbalance(), vexp=4.3, vspan=0.0001)
         assert_approx(self.nodes[2].getbalance(), vexp=4.3, vspan=0.0001)
-        # Sending 1.4 btc should pick one 1.0 + one more. For node #1,
+        # Sending 1.4 frc should pick one 1.0 + one more. For node #1,
         # this could be (A / B0 / C0) + (B1 / C1 / D). We ensure that it is
         # B0 + B1 or C0 + C1, because this avoids partial spends while not being
         # detrimental to transaction cost

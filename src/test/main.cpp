@@ -16,7 +16,7 @@
 /**
  * See https://www.boost.org/doc/libs/1_78_0/libs/test/doc/html/boost_test/adv_scenarios/single_header_customizations/multiple_translation_units.html
  */
-#define BOOST_TEST_MODULE Bitcoin Core Test Suite
+#define BOOST_TEST_MODULE Freicoin Test Suite
 
 #include <boost/test/included/unit_test.hpp>
 
@@ -40,7 +40,7 @@ const std::function<void(const std::string&)> G_TEST_LOG_FUN = [](const std::str
 /**
  * Retrieve the command line arguments from boost.
  * Allows usage like:
- * `test_bitcoin --run_test="net_tests/cnode_listen_port" -- -checkaddrman=1 -printtoconsole=1`
+ * `test_freicoin --run_test="net_tests/cnode_listen_port" -- -checkaddrman=1 -printtoconsole=1`
  * which would return `["-checkaddrman=1", "-printtoconsole=1"]`.
  */
 const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = []() {

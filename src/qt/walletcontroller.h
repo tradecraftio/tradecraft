@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_WALLETCONTROLLER_H
-#define BITCOIN_QT_WALLETCONTROLLER_H
+#ifndef FREICOIN_QT_WALLETCONTROLLER_H
+#define FREICOIN_QT_WALLETCONTROLLER_H
 
 #include <qt/sendcoinsrecipient.h>
 #include <support/allocators/secure.h>
@@ -166,4 +166,4 @@ public:
     void load();
 };
 
-#endif // BITCOIN_QT_WALLETCONTROLLER_H
+#endif // FREICOIN_QT_WALLETCONTROLLER_H
