@@ -122,8 +122,6 @@ public:
     const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
 
     const ChainTxData& TxData() const { return chainTxData; }
-    /** Default merge-mine chain if chain id isn't specified */
-    const uint256& DefaultAuxPowPath() const { return default_aux_pow_path; }
 protected:
     CChainParams() {}
 
@@ -146,7 +144,6 @@ protected:
     CCheckpointData checkpointData;
     MapAssumeutxo m_assumeutxo_data;
     ChainTxData chainTxData;
-    uint256 default_aux_pow_path;
 };
 
 /**
