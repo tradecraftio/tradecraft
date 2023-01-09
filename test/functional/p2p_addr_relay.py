@@ -28,7 +28,7 @@ from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 import random
 import time
@@ -75,7 +75,7 @@ class AddrReceiver(P2PInterface):
         return self.message_count['getaddr'] > 0
 
 
-class AddrTest(BitcoinTestFramework):
+class AddrTest(FreicoinTestFramework):
     counter = 0
     mocktime = int(time.time())
 

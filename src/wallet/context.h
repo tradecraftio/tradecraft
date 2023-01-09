@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_CONTEXT_H
-#define BITCOIN_WALLET_CONTEXT_H
+#ifndef FREICOIN_WALLET_CONTEXT_H
+#define FREICOIN_WALLET_CONTEXT_H
 
 class ArgsManager;
 namespace interfaces {
@@ -42,4 +42,4 @@ struct WalletContext {
     ~WalletContext();
 };
 
-#endif // BITCOIN_WALLET_CONTEXT_H
+#endif // FREICOIN_WALLET_CONTEXT_H

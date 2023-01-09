@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POLICY_SETTINGS_H
-#define BITCOIN_POLICY_SETTINGS_H
+#ifndef FREICOIN_POLICY_SETTINGS_H
+#define FREICOIN_POLICY_SETTINGS_H
 
 #include <policy/policy.h>
 
@@ -43,4 +43,4 @@ static inline int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t 
     return GetVirtualTransactionSize(tx, sigop_cost, ::nBytesPerSigOp);
 }
 
-#endif // BITCOIN_POLICY_SETTINGS_H
+#endif // FREICOIN_POLICY_SETTINGS_H

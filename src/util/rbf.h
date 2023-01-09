@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_RBF_H
-#define BITCOIN_UTIL_RBF_H
+#ifndef FREICOIN_UTIL_RBF_H
+#define FREICOIN_UTIL_RBF_H
 
 #include <cstdint>
 
@@ -26,4 +26,4 @@ static const uint32_t MAX_BIP125_RBF_SEQUENCE = 0xfffffffd;
 // opt-in to replace-by-fee, according to BIP 125
 bool SignalsOptInRBF(const CTransaction &tx);
 
-#endif // BITCOIN_UTIL_RBF_H
+#endif // FREICOIN_UTIL_RBF_H

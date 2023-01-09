@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CHAINPARAMS_H
-#define BITCOIN_CHAINPARAMS_H
+#ifndef FREICOIN_CHAINPARAMS_H
+#define FREICOIN_CHAINPARAMS_H
 
 #include <chainparamsbase.h>
 #include <consensus/params.h>
@@ -75,7 +75,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system.
+ * Freicoin system.
  */
 class CChainParams
 {
@@ -176,4 +176,4 @@ const CChainParams &Params();
  */
 void SelectParams(const std::string& chain);
 
-#endif // BITCOIN_CHAINPARAMS_H
+#endif // FREICOIN_CHAINPARAMS_H

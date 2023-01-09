@@ -51,7 +51,7 @@ bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> 
 
 ExternalSigner ExternalSignerScriptPubKeyMan::GetExternalSigner() {
     const std::string command = gArgs.GetArg("-signer", "");
-    if (command == "") throw std::runtime_error(std::string(__func__) + ": restart bitcoind with -signer=<cmd>");
+    if (command == "") throw std::runtime_error(std::string(__func__) + ": restart freicoind with -signer=<cmd>");
     std::vector<ExternalSigner> signers;
     ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
     if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
@@ -71,25 +71,25 @@ bool ExternalSignerScriptPubKeyMan::DisplayAddress(const CScript scriptPubKey, c
 }
 
 // If sign is true, transaction must previously have been filled
-TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed) const
+TransactionError ExternalSignerScriptPubKeyMan::FillPST(PartiallySignedTransaction& pst, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed) const
 {
     if (!sign) {
-        return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, sighash_type, false, bip32derivs, n_signed);
+        return DescriptorScriptPubKeyMan::FillPST(pst, txdata, sighash_type, false, bip32derivs, n_signed);
     }
 
     // Already complete if every input is now signed
     bool complete = true;
-    for (const auto& input : psbt.inputs) {
+    for (const auto& input : pst.inputs) {
         // TODO: for multisig wallets, we should only care if all _our_ inputs are signed
-        complete &= PSBTInputSigned(input);
+        complete &= PSTInputSigned(input);
     }
     if (complete) return TransactionError::OK;
 
     std::string strFailReason;
-    if(!GetExternalSigner().SignTransaction(psbt, strFailReason)) {
+    if(!GetExternalSigner().SignTransaction(pst, strFailReason)) {
         tfm::format(std::cerr, "Failed to sign: %s\n", strFailReason);
         return TransactionError::EXTERNAL_SIGNER_FAILED;
     }
-    FinalizePSBT(psbt); // This won't work in a multisig setup
+    FinalizePST(pst); // This won't work in a multisig setup
     return TransactionError::OK;
 }

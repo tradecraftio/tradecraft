@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_FUZZ_UTIL_H
-#define BITCOIN_TEST_FUZZ_UTIL_H
+#ifndef FREICOIN_TEST_FUZZ_UTIL_H
+#define FREICOIN_TEST_FUZZ_UTIL_H
 
 #include <amount.h>
 #include <arith_uint256.h>
@@ -433,4 +433,4 @@ public:
     return FuzzedSock{fuzzed_data_provider};
 }
 
-#endif // BITCOIN_TEST_FUZZ_UTIL_H
+#endif // FREICOIN_TEST_FUZZ_UTIL_H

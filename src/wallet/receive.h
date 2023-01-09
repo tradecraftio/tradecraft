@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_RECEIVE_H
-#define BITCOIN_WALLET_RECEIVE_H
+#ifndef FREICOIN_WALLET_RECEIVE_H
+#define FREICOIN_WALLET_RECEIVE_H
 
 #include <amount.h>
 #include <wallet/ismine.h>
@@ -28,4 +28,4 @@ struct COutputEntry
     int vout;
 };
 
-#endif // BITCOIN_WALLET_RECEIVE_H
+#endif // FREICOIN_WALLET_RECEIVE_H

@@ -54,7 +54,7 @@ from test_framework.script_util import (
     script_to_p2sh_script,
     script_to_p2wsh_script,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_is_hex_string,
@@ -83,7 +83,7 @@ def find_spendable_utxo(node, min_value):
 
 txs_mined = {} # txindex from txid to blockhash
 
-class SegWitTest(BitcoinTestFramework):
+class SegWitTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3

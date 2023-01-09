@@ -18,7 +18,7 @@
 import os
 
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 INBOUND_CONNECTIONS = 5
@@ -31,7 +31,7 @@ def check_node_connections(*, node, num_in, num_out):
     assert_equal(info["connections_out"], num_out)
 
 
-class AnchorsTest(BitcoinTestFramework):
+class AnchorsTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

@@ -16,14 +16,14 @@
 '''Test generateblock rpc.
 '''
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
 
-class GenerateBlockTest(BitcoinTestFramework):
+class GenerateBlockTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INTERFACES_WALLET_H
-#define BITCOIN_INTERFACES_WALLET_H
+#ifndef FREICOIN_INTERFACES_WALLET_H
+#define FREICOIN_INTERFACES_WALLET_H
 
 #include <amount.h>                    // For CAmount
 #include <interfaces/chain.h>          // For ChainClient
@@ -205,12 +205,12 @@ public:
         bool& in_mempool,
         int& num_blocks) = 0;
 
-    //! Fill PSBT.
-    virtual TransactionError fillPSBT(int sighash_type,
+    //! Fill PST.
+    virtual TransactionError fillPST(int sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,
-        PartiallySignedTransaction& psbtx,
+        PartiallySignedTransaction& pstx,
         bool& complete) = 0;
 
     //! Get balances.
@@ -429,4 +429,4 @@ std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_WALLET_H
+#endif // FREICOIN_INTERFACES_WALLET_H

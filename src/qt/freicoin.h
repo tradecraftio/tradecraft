@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_BITCOIN_H
-#define BITCOIN_QT_BITCOIN_H
+#ifndef FREICOIN_QT_FREICOIN_H
+#define FREICOIN_QT_FREICOIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <QApplication>
@@ -26,7 +26,7 @@
 
 #include <interfaces/node.h>
 
-class BitcoinGUI;
+class FreicoinGUI;
 class ClientModel;
 class NetworkStyle;
 class OptionsModel;
@@ -37,14 +37,14 @@ class WalletController;
 class WalletModel;
 
 
-/** Class encapsulating Bitcoin Core startup and shutdown.
+/** Class encapsulating Freicoin startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class BitcoinCore: public QObject
+class FreicoinCore: public QObject
 {
     Q_OBJECT
 public:
-    explicit BitcoinCore(interfaces::Node& node);
+    explicit FreicoinCore(interfaces::Node& node);
 
 public Q_SLOTS:
     void initialize();
@@ -62,13 +62,13 @@ private:
     interfaces::Node& m_node;
 };
 
-/** Main Bitcoin application object */
-class BitcoinApplication: public QApplication
+/** Main Freicoin application object */
+class FreicoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication();
-    ~BitcoinApplication();
+    explicit FreicoinApplication();
+    ~FreicoinApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
@@ -95,7 +95,7 @@ public:
     /// Get process return value
     int getReturnValue() const { return returnValue; }
 
-    /// Get window identifier of QMainWindow (BitcoinGUI)
+    /// Get window identifier of QMainWindow (FreicoinGUI)
     WId getMainWinId() const;
 
     /// Setup platform style
@@ -120,13 +120,13 @@ Q_SIGNALS:
     void requestedInitialize();
     void requestedShutdown();
     void splashFinished();
-    void windowShown(BitcoinGUI* window);
+    void windowShown(FreicoinGUI* window);
 
 private:
     QThread *coreThread;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
-    BitcoinGUI *window;
+    FreicoinGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};
@@ -143,4 +143,4 @@ private:
 
 int GuiMain(int argc, char* argv[]);
 
-#endif // BITCOIN_QT_BITCOIN_H
+#endif // FREICOIN_QT_FREICOIN_H

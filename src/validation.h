@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_VALIDATION_H
-#define BITCOIN_VALIDATION_H
+#ifndef FREICOIN_VALIDATION_H
+#define FREICOIN_VALIDATION_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <amount.h>
@@ -189,7 +189,7 @@ struct MempoolAcceptResult {
     // The following fields are only present when m_result_type = ResultType::VALID
     /** Mempool transactions replaced by the tx per BIP 125 rules. */
     const std::optional<std::list<CTransactionRef>> m_replaced_transactions;
-    /** Raw base fees in satoshis. */
+    /** Raw base fees in kria. */
     const std::optional<CAmount> m_base_fees;
     static MempoolAcceptResult Failure(TxValidationState state) {
         return MempoolAcceptResult(state);
@@ -1092,4 +1092,4 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
  */
 const AssumeutxoData* ExpectedAssumeutxo(const int height, const CChainParams& params);
 
-#endif // BITCOIN_VALIDATION_H
+#endif // FREICOIN_VALIDATION_H

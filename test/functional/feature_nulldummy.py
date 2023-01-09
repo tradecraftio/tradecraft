@@ -36,7 +36,7 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import CTransaction
 from test_framework.script import CScript
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
@@ -55,7 +55,7 @@ def trueDummy(tx):
     tx.rehash()
 
 
-class NULLDUMMYTest(BitcoinTestFramework):
+class NULLDUMMYTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

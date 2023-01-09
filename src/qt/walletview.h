@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_WALLETVIEW_H
-#define BITCOIN_QT_WALLETVIEW_H
+#ifndef FREICOIN_QT_WALLETVIEW_H
+#define FREICOIN_QT_WALLETVIEW_H
 
 #include <amount.h>
 
@@ -55,7 +55,7 @@ public:
     void setClientModel(ClientModel *clientModel);
     WalletModel *getWalletModel() { return walletModel; }
     /** Set the wallet model.
-        The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
+        The wallet model represents a freicoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
@@ -94,8 +94,8 @@ public Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
-    /** Load Partially Signed Bitcoin Transaction */
-    void gotoLoadPSBT(bool from_clipboard = false);
+    /** Load Partially Signed Freicoin Transaction */
+    void gotoLoadPST(bool from_clipboard = false);
 
     /** Show incoming transaction notification for new transactions.
 
@@ -138,4 +138,4 @@ Q_SIGNALS:
     void outOfSyncWarningClicked();
 };
 
-#endif // BITCOIN_QT_WALLETVIEW_H
+#endif // FREICOIN_QT_WALLETVIEW_H

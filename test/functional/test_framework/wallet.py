@@ -39,7 +39,7 @@ from test_framework.script import (
 from test_framework.util import (
     assert_equal,
     hex_str_to_bytes,
-    satoshi_round,
+    kria_round,
 )
 
 
@@ -146,20 +146,20 @@ class MiniWallet:
             return self._utxos[index]
 
     def send_self_transfer(self, **kwargs):
-        """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        """Create and send a tx with the specified fee_rate. Fee may be exact or at most one kria higher than needed."""
         tx = self.create_self_transfer(**kwargs)
         self.sendrawtransaction(from_node=kwargs['from_node'], tx_hex=tx['hex'])
         return tx
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
-        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one kria higher than needed."""
         self._utxos = sorted(self._utxos, key=lambda k: k['value'])
         utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
         if self._priv_key is None:
             vsize = Decimal(96)  # anyone-can-spend
         else:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
-        send_value = satoshi_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
+        send_value = kria_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
         fee = utxo_to_spend['value'] - send_value
         assert send_value > 0
 

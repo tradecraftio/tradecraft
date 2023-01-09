@@ -24,13 +24,13 @@
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
-#include <node/psbt.h>
+#include <node/pst.h>
 #include <node/transaction.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
-#include <psbt.h>
+#include <pst.h>
 #include <random.h>
 #include <rpc/blockchain.h>
 #include <rpc/rawtransaction_util.h>
@@ -55,10 +55,10 @@
 
 static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, CChainState& active_chainstate)
 {
-    // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
+    // Call into TxToUniv() in freicoin-common to decode the transaction hex.
     //
     // Blockchain contextual information (confirmations and blocktime) is not
-    // available to code in bitcoin-common, so we query them here and push the
+    // available to code in freicoin-common, so we query them here and push the
     // data into the returned UniValue.
     TxToUniv(tx, uint256(), entry, true, RPCSerializationFlags());
 
@@ -146,10 +146,10 @@ static RPCHelpMan getrawtransaction()
                                          {RPCResult::Type::STR, "hex", "the hex"},
                                          {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
                                          {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                         {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
-                                         {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
+                                         {RPCResult::Type::STR, "address", /* optional */ true, "freicoin address (only if a well-defined address exists)"},
+                                         {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of freicoin addresses",
                                          {
-                                             {RPCResult::Type::STR, "address", "bitcoin address"},
+                                             {RPCResult::Type::STR, "address", "freicoin address"},
                                          }},
                                      }},
                                  }},
@@ -411,7 +411,7 @@ static RPCHelpMan createrawtransaction()
                         {
                             {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
                                 {
-                                    {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT},
+                                    {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the freicoin address, the value (float or string) is the amount in " + CURRENCY_UNIT},
                                 },
                                 },
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -509,10 +509,10 @@ static RPCHelpMan decoderawtransaction()
                                     {RPCResult::Type::STR_HEX, "hex", "the hex"},
                                     {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                    {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
-                                    {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
+                                    {RPCResult::Type::STR, "address", /* optional */ true, "freicoin address (only if a well-defined address exists)"},
+                                    {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of freicoin addresses",
                                     {
-                                        {RPCResult::Type::STR, "address", "bitcoin address"},
+                                        {RPCResult::Type::STR, "address", "freicoin address"},
                                     }},
                                 }},
                             }},
@@ -566,11 +566,11 @@ static RPCHelpMan decodescript()
                     {
                         {RPCResult::Type::STR, "asm", "Script public key"},
                         {RPCResult::Type::STR, "type", "The output type (e.g. "+GetAllOutputTypes()+")"},
-                        {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
+                        {RPCResult::Type::STR, "address", /* optional */ true, "freicoin address (only if a well-defined address exists)"},
                         {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
-                        {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
+                        {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of freicoin addresses",
                         {
-                            {RPCResult::Type::STR, "address", "bitcoin address"},
+                            {RPCResult::Type::STR, "address", "freicoin address"},
                         }},
                         {RPCResult::Type::STR, "p2sh", "address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH)"},
                         {RPCResult::Type::OBJ, "segwit", "Result of a witness script public key wrapping this redeem script (not returned if the script is a P2SH or witness)",
@@ -578,9 +578,9 @@ static RPCHelpMan decodescript()
                             {RPCResult::Type::STR, "asm", "String representation of the script public key"},
                             {RPCResult::Type::STR_HEX, "hex", "Hex string of the script public key"},
                             {RPCResult::Type::STR, "type", "The type of the script public key (e.g. witness_v0_keyhash or witness_v0_scripthash)"},
-                            {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
+                            {RPCResult::Type::STR, "address", /* optional */ true, "freicoin address (only if a well-defined address exists)"},
                             {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
-                            {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
+                            {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of freicoin addresses",
                             {
                                 {RPCResult::Type::STR, "address", "segwit address"},
                             }},
@@ -1035,12 +1035,12 @@ static RPCHelpMan testmempoolaccept()
     };
 }
 
-static RPCHelpMan decodepsbt()
+static RPCHelpMan decodepst()
 {
-    return RPCHelpMan{"decodepsbt",
-                "\nReturn a JSON object representing the serialized, base64-encoded partially signed Bitcoin transaction.\n",
+    return RPCHelpMan{"decodepst",
+                "\nReturn a JSON object representing the serialized, base64-encoded partially signed Freicoin transaction.\n",
                 {
-                    {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The PSBT base64 string"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The PST base64 string"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1069,7 +1069,7 @@ static RPCHelpMan decodepsbt()
                                         {RPCResult::Type::STR, "asm", "The asm"},
                                         {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                         {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                        {RPCResult::Type::STR, "address"," Bitcoin address if there is one"},
+                                        {RPCResult::Type::STR, "address"," Freicoin address if there is one"},
                                     }},
                                 }},
                                 {RPCResult::Type::OBJ_DYN, "partial_signatures", /* optional */ true, "",
@@ -1143,20 +1143,20 @@ static RPCHelpMan decodepsbt()
                                 }},
                             }},
                         }},
-                        {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid if all UTXOs slots in the PSBT have been filled."},
+                        {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid if all UTXOs slots in the PST have been filled."},
                     }
                 },
                 RPCExamples{
-                    HelpExampleCli("decodepsbt", "\"psbt\"")
+                    HelpExampleCli("decodepst", "\"pst\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     // Unserialize the transactions
-    PartiallySignedTransaction psbtx;
+    PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1164,12 +1164,12 @@ static RPCHelpMan decodepsbt()
 
     // Add the decoded tx
     UniValue tx_univ(UniValue::VOBJ);
-    TxToUniv(CTransaction(*psbtx.tx), uint256(), tx_univ, false);
+    TxToUniv(CTransaction(*pstx.tx), uint256(), tx_univ, false);
     result.pushKV("tx", tx_univ);
 
     // Unknown data
     UniValue unknowns(UniValue::VOBJ);
-    for (auto entry : psbtx.unknown) {
+    for (auto entry : pstx.unknown) {
         unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
     }
     result.pushKV("unknown", unknowns);
@@ -1178,8 +1178,8 @@ static RPCHelpMan decodepsbt()
     CAmount total_in = 0;
     bool have_all_utxos = true;
     UniValue inputs(UniValue::VARR);
-    for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
-        const PSBTInput& input = psbtx.inputs[i];
+    for (unsigned int i = 0; i < pstx.inputs.size(); ++i) {
+        const PSTInput& input = pstx.inputs[i];
         UniValue in(UniValue::VOBJ);
         // UTXOs
         bool have_a_utxo = false;
@@ -1199,7 +1199,7 @@ static RPCHelpMan decodepsbt()
             have_a_utxo = true;
         }
         if (input.non_witness_utxo) {
-            txout = input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n];
+            txout = input.non_witness_utxo->vout[pstx.tx->vin[i].prevout.n];
 
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
@@ -1289,8 +1289,8 @@ static RPCHelpMan decodepsbt()
     // outputs
     CAmount output_value = 0;
     UniValue outputs(UniValue::VARR);
-    for (unsigned int i = 0; i < psbtx.outputs.size(); ++i) {
-        const PSBTOutput& output = psbtx.outputs[i];
+    for (unsigned int i = 0; i < pstx.outputs.size(); ++i) {
+        const PSTOutput& output = pstx.outputs[i];
         UniValue out(UniValue::VOBJ);
         // Redeem script and witness script
         if (!output.redeem_script.empty()) {
@@ -1329,8 +1329,8 @@ static RPCHelpMan decodepsbt()
         outputs.push_back(out);
 
         // Fee calculation
-        if (MoneyRange(psbtx.tx->vout[i].nValue) && MoneyRange(output_value + psbtx.tx->vout[i].nValue)) {
-            output_value += psbtx.tx->vout[i].nValue;
+        if (MoneyRange(pstx.tx->vout[i].nValue) && MoneyRange(output_value + pstx.tx->vout[i].nValue)) {
+            output_value += pstx.tx->vout[i].nValue;
         } else {
             // Hack to just not show fee later
             have_all_utxos = false;
@@ -1346,15 +1346,15 @@ static RPCHelpMan decodepsbt()
     };
 }
 
-static RPCHelpMan combinepsbt()
+static RPCHelpMan combinepst()
 {
-    return RPCHelpMan{"combinepsbt",
-                "\nCombine multiple partially signed Bitcoin transactions into one transaction.\n"
+    return RPCHelpMan{"combinepst",
+                "\nCombine multiple partially signed Freicoin transactions into one transaction.\n"
                 "Implements the Combiner role.\n",
                 {
                     {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",
                         {
-                            {"psbt", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A base64 string of a PSBT"},
+                            {"pst", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A base64 string of a PST"},
                         },
                         },
                 },
@@ -1362,78 +1362,78 @@ static RPCHelpMan combinepsbt()
                     RPCResult::Type::STR, "", "The base64-encoded partially signed transaction"
                 },
                 RPCExamples{
-                    HelpExampleCli("combinepsbt", R"('["mybase64_1", "mybase64_2", "mybase64_3"]')")
+                    HelpExampleCli("combinepst", R"('["mybase64_1", "mybase64_2", "mybase64_3"]')")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     RPCTypeCheck(request.params, {UniValue::VARR}, true);
 
     // Unserialize the transactions
-    std::vector<PartiallySignedTransaction> psbtxs;
+    std::vector<PartiallySignedTransaction> pstxs;
     UniValue txs = request.params[0].get_array();
     if (txs.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter 'txs' cannot be empty");
     }
     for (unsigned int i = 0; i < txs.size(); ++i) {
-        PartiallySignedTransaction psbtx;
+        PartiallySignedTransaction pstx;
         std::string error;
-        if (!DecodeBase64PSBT(psbtx, txs[i].get_str(), error)) {
+        if (!DecodeBase64PST(pstx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
         }
-        psbtxs.push_back(psbtx);
+        pstxs.push_back(pstx);
     }
 
-    PartiallySignedTransaction merged_psbt;
-    const TransactionError error = CombinePSBTs(merged_psbt, psbtxs);
+    PartiallySignedTransaction merged_pst;
+    const TransactionError error = CombinePSTs(merged_pst, pstxs);
     if (error != TransactionError::OK) {
         throw JSONRPCTransactionError(error);
     }
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << merged_psbt;
+    ssTx << merged_pst;
     return EncodeBase64(ssTx);
 },
     };
 }
 
-static RPCHelpMan finalizepsbt()
+static RPCHelpMan finalizepst()
 {
-    return RPCHelpMan{"finalizepsbt",
-                "Finalize the inputs of a PSBT. If the transaction is fully signed, it will produce a\n"
-                "network serialized transaction which can be broadcast with sendrawtransaction. Otherwise a PSBT will be\n"
+    return RPCHelpMan{"finalizepst",
+                "Finalize the inputs of a PST. If the transaction is fully signed, it will produce a\n"
+                "network serialized transaction which can be broadcast with sendrawtransaction. Otherwise a PST will be\n"
                 "created which has the final_scriptSig and final_scriptWitness fields filled for inputs that are complete.\n"
                 "Implements the Finalizer and Extractor roles.\n",
                 {
-                    {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"},
                     {"extract", RPCArg::Type::BOOL, RPCArg::Default{true}, "If true and the transaction is complete,\n"
-            "                             extract and return the complete transaction in normal network serialization instead of the PSBT."},
+            "                             extract and return the complete transaction in normal network serialization instead of the PST."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "psbt", "The base64-encoded partially signed transaction if not extracted"},
+                        {RPCResult::Type::STR, "pst", "The base64-encoded partially signed transaction if not extracted"},
                         {RPCResult::Type::STR_HEX, "hex", "The hex-encoded network transaction if extracted"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     }
                 },
                 RPCExamples{
-                    HelpExampleCli("finalizepsbt", "\"psbt\"")
+                    HelpExampleCli("finalizepst", "\"pst\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL}, true);
 
     // Unserialize the transactions
-    PartiallySignedTransaction psbtx;
+    PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
     bool extract = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
 
     CMutableTransaction mtx;
-    bool complete = FinalizeAndExtractPSBT(psbtx, mtx);
+    bool complete = FinalizeAndExtractPST(pstx, mtx);
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
@@ -1444,9 +1444,9 @@ static RPCHelpMan finalizepsbt()
         result_str = HexStr(ssTx);
         result.pushKV("hex", result_str);
     } else {
-        ssTx << psbtx;
+        ssTx << pstx;
         result_str = EncodeBase64(ssTx.str());
-        result.pushKV("psbt", result_str);
+        result.pushKV("pst", result_str);
     }
     result.pushKV("complete", complete);
 
@@ -1455,9 +1455,9 @@ static RPCHelpMan finalizepsbt()
     };
 }
 
-static RPCHelpMan createpsbt()
+static RPCHelpMan createpst()
 {
-    return RPCHelpMan{"createpsbt",
+    return RPCHelpMan{"createpst",
                 "\nCreates a transaction in the Partially Signed Transaction format.\n"
                 "Implements the Creator role.\n",
                 {
@@ -1479,7 +1479,7 @@ static RPCHelpMan createpsbt()
                         {
                             {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
                                 {
-                                    {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT},
+                                    {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the freicoin address, the value (float or string) is the amount in " + CURRENCY_UNIT},
                                 },
                                 },
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -1497,7 +1497,7 @@ static RPCHelpMan createpsbt()
                     RPCResult::Type::STR, "", "The resulting raw transaction (base64-encoded string)"
                 },
                 RPCExamples{
-                    HelpExampleCli("createpsbt", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+                    HelpExampleCli("createpst", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1516,30 +1516,30 @@ static RPCHelpMan createpsbt()
     }
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
 
-    // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = rawTx;
+    // Make a blank pst
+    PartiallySignedTransaction pstx;
+    pstx.tx = rawTx;
     for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
+        pstx.inputs.push_back(PSTInput());
     }
     for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
+        pstx.outputs.push_back(PSTOutput());
     }
 
-    // Serialize the PSBT
+    // Serialize the PST
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
+    ssTx << pstx;
 
     return EncodeBase64(ssTx);
 },
     };
 }
 
-static RPCHelpMan converttopsbt()
+static RPCHelpMan converttopst()
 {
-    return RPCHelpMan{"converttopsbt",
-                "\nConverts a network serialized transaction to a PSBT. This should be used only with createrawtransaction and fundrawtransaction\n"
-                "createpsbt and walletcreatefundedpsbt should be used for new applications.\n",
+    return RPCHelpMan{"converttopst",
+                "\nConverts a network serialized transaction to a PST. This should be used only with createrawtransaction and fundrawtransaction\n"
+                "createpst and walletcreatefundedpst should be used for new applications.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of a raw transaction"},
                     {"permitsigdata", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, any signatures in the input will be discarded and conversion\n"
@@ -1558,8 +1558,8 @@ static RPCHelpMan converttopsbt()
                 RPCExamples{
                             "\nCreate a transaction\n"
                             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"") +
-                            "\nConvert the transaction to a PSBT\n"
-                            + HelpExampleCli("converttopsbt", "\"rawtransaction\"")
+                            "\nConvert the transaction to a PST\n"
+                            + HelpExampleCli("converttopst", "\"rawtransaction\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1585,31 +1585,31 @@ static RPCHelpMan converttopsbt()
         input.scriptWitness.SetNull();
     }
 
-    // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = tx;
+    // Make a blank pst
+    PartiallySignedTransaction pstx;
+    pstx.tx = tx;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
+        pstx.inputs.push_back(PSTInput());
     }
     for (unsigned int i = 0; i < tx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
+        pstx.outputs.push_back(PSTOutput());
     }
 
-    // Serialize the PSBT
+    // Serialize the PST
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
+    ssTx << pstx;
 
     return EncodeBase64(ssTx);
 },
     };
 }
 
-static RPCHelpMan utxoupdatepsbt()
+static RPCHelpMan utxoupdatepst()
 {
-    return RPCHelpMan{"utxoupdatepsbt",
-            "\nUpdates all segwit inputs and outputs in a PSBT with data from output descriptors, the UTXO set or the mempool.\n",
+    return RPCHelpMan{"utxoupdatepst",
+            "\nUpdates all segwit inputs and outputs in a PST with data from output descriptors, the UTXO set or the mempool.\n",
             {
-                {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"},
+                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"},
                 {"descriptors", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "An array of either strings or objects", {
                     {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "An output descriptor"},
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "An object with an output descriptor and extra information", {
@@ -1622,16 +1622,16 @@ static RPCHelpMan utxoupdatepsbt()
                     RPCResult::Type::STR, "", "The base64-encoded partially signed transaction with inputs updated"
             },
             RPCExamples {
-                HelpExampleCli("utxoupdatepsbt", "\"psbt\"")
+                HelpExampleCli("utxoupdatepst", "\"pst\"")
             },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR}, true);
 
     // Unserialize the transactions
-    PartiallySignedTransaction psbtx;
+    PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1658,7 +1658,7 @@ static RPCHelpMan utxoupdatepsbt()
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
-        for (const CTxIn& txin : psbtx.tx->vin) {
+        for (const CTxIn& txin : pstx.tx->vin) {
             view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
         }
 
@@ -1666,140 +1666,140 @@ static RPCHelpMan utxoupdatepsbt()
     }
 
     // Fill the inputs
-    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        PSBTInput& input = psbtx.inputs.at(i);
+    const PrecomputedTransactionData txdata = PrecomputePSTData(pstx);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        PSTInput& input = pstx.inputs.at(i);
 
         if (input.non_witness_utxo || !input.witness_utxo.IsNull()) {
             continue;
         }
 
-        const Coin& coin = view.AccessCoin(psbtx.tx->vin[i].prevout);
+        const Coin& coin = view.AccessCoin(pstx.tx->vin[i].prevout);
 
         if (IsSegWitOutput(provider, coin.out.scriptPubKey)) {
             input.witness_utxo = coin.out;
         }
 
         // Update script/keypath information using descriptor data.
-        // Note that SignPSBTInput does a lot more than just constructing ECDSA signatures
+        // Note that SignPSTInput does a lot more than just constructing ECDSA signatures
         // we don't actually care about those here, in fact.
-        SignPSBTInput(public_provider, psbtx, i, &txdata, /* sighash_type */ 1);
+        SignPSTInput(public_provider, pstx, i, &txdata, /* sighash_type */ 1);
     }
 
     // Update script/keypath information using descriptor data.
-    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        UpdatePSBTOutput(public_provider, psbtx, i);
+    for (unsigned int i = 0; i < pstx.tx->vout.size(); ++i) {
+        UpdatePSTOutput(public_provider, pstx, i);
     }
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
+    ssTx << pstx;
     return EncodeBase64(ssTx);
 },
     };
 }
 
-static RPCHelpMan joinpsbts()
+static RPCHelpMan joinpsts()
 {
-    return RPCHelpMan{"joinpsbts",
-            "\nJoins multiple distinct PSBTs with different inputs and outputs into one PSBT with inputs and outputs from all of the PSBTs\n"
-            "No input in any of the PSBTs can be in more than one of the PSBTs.\n",
+    return RPCHelpMan{"joinpsts",
+            "\nJoins multiple distinct PSTs with different inputs and outputs into one PST with inputs and outputs from all of the PSTs\n"
+            "No input in any of the PSTs can be in more than one of the PSTs.\n",
             {
                 {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",
                     {
-                        {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"}
+                        {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"}
                     }}
             },
             RPCResult {
                     RPCResult::Type::STR, "", "The base64-encoded partially signed transaction"
             },
             RPCExamples {
-                HelpExampleCli("joinpsbts", "\"psbt\"")
+                HelpExampleCli("joinpsts", "\"pst\"")
             },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     RPCTypeCheck(request.params, {UniValue::VARR}, true);
 
     // Unserialize the transactions
-    std::vector<PartiallySignedTransaction> psbtxs;
+    std::vector<PartiallySignedTransaction> pstxs;
     UniValue txs = request.params[0].get_array();
 
     if (txs.size() <= 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "At least two PSBTs are required to join PSBTs.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "At least two PSTs are required to join PSTs.");
     }
 
     uint32_t best_version = 1;
     uint32_t best_locktime = 0xffffffff;
     for (unsigned int i = 0; i < txs.size(); ++i) {
-        PartiallySignedTransaction psbtx;
+        PartiallySignedTransaction pstx;
         std::string error;
-        if (!DecodeBase64PSBT(psbtx, txs[i].get_str(), error)) {
+        if (!DecodeBase64PST(pstx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
         }
-        psbtxs.push_back(psbtx);
+        pstxs.push_back(pstx);
         // Choose the highest version number
-        if (static_cast<uint32_t>(psbtx.tx->nVersion) > best_version) {
-            best_version = static_cast<uint32_t>(psbtx.tx->nVersion);
+        if (static_cast<uint32_t>(pstx.tx->nVersion) > best_version) {
+            best_version = static_cast<uint32_t>(pstx.tx->nVersion);
         }
         // Choose the lowest lock time
-        if (psbtx.tx->nLockTime < best_locktime) {
-            best_locktime = psbtx.tx->nLockTime;
+        if (pstx.tx->nLockTime < best_locktime) {
+            best_locktime = pstx.tx->nLockTime;
         }
     }
 
-    // Create a blank psbt where everything will be added
-    PartiallySignedTransaction merged_psbt;
-    merged_psbt.tx = CMutableTransaction();
-    merged_psbt.tx->nVersion = static_cast<int32_t>(best_version);
-    merged_psbt.tx->nLockTime = best_locktime;
+    // Create a blank pst where everything will be added
+    PartiallySignedTransaction merged_pst;
+    merged_pst.tx = CMutableTransaction();
+    merged_pst.tx->nVersion = static_cast<int32_t>(best_version);
+    merged_pst.tx->nLockTime = best_locktime;
 
     // Merge
-    for (auto& psbt : psbtxs) {
-        for (unsigned int i = 0; i < psbt.tx->vin.size(); ++i) {
-            if (!merged_psbt.AddInput(psbt.tx->vin[i], psbt.inputs[i])) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input %s:%d exists in multiple PSBTs", psbt.tx->vin[i].prevout.hash.ToString(), psbt.tx->vin[i].prevout.n));
+    for (auto& pst : pstxs) {
+        for (unsigned int i = 0; i < pst.tx->vin.size(); ++i) {
+            if (!merged_pst.AddInput(pst.tx->vin[i], pst.inputs[i])) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input %s:%d exists in multiple PSTs", pst.tx->vin[i].prevout.hash.ToString(), pst.tx->vin[i].prevout.n));
             }
         }
-        for (unsigned int i = 0; i < psbt.tx->vout.size(); ++i) {
-            merged_psbt.AddOutput(psbt.tx->vout[i], psbt.outputs[i]);
+        for (unsigned int i = 0; i < pst.tx->vout.size(); ++i) {
+            merged_pst.AddOutput(pst.tx->vout[i], pst.outputs[i]);
         }
-        merged_psbt.unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
+        merged_pst.unknown.insert(pst.unknown.begin(), pst.unknown.end());
     }
 
-    // Generate list of shuffled indices for shuffling inputs and outputs of the merged PSBT
-    std::vector<int> input_indices(merged_psbt.inputs.size());
+    // Generate list of shuffled indices for shuffling inputs and outputs of the merged PST
+    std::vector<int> input_indices(merged_pst.inputs.size());
     std::iota(input_indices.begin(), input_indices.end(), 0);
-    std::vector<int> output_indices(merged_psbt.outputs.size());
+    std::vector<int> output_indices(merged_pst.outputs.size());
     std::iota(output_indices.begin(), output_indices.end(), 0);
 
     // Shuffle input and output indices lists
     Shuffle(input_indices.begin(), input_indices.end(), FastRandomContext());
     Shuffle(output_indices.begin(), output_indices.end(), FastRandomContext());
 
-    PartiallySignedTransaction shuffled_psbt;
-    shuffled_psbt.tx = CMutableTransaction();
-    shuffled_psbt.tx->nVersion = merged_psbt.tx->nVersion;
-    shuffled_psbt.tx->nLockTime = merged_psbt.tx->nLockTime;
+    PartiallySignedTransaction shuffled_pst;
+    shuffled_pst.tx = CMutableTransaction();
+    shuffled_pst.tx->nVersion = merged_pst.tx->nVersion;
+    shuffled_pst.tx->nLockTime = merged_pst.tx->nLockTime;
     for (int i : input_indices) {
-        shuffled_psbt.AddInput(merged_psbt.tx->vin[i], merged_psbt.inputs[i]);
+        shuffled_pst.AddInput(merged_pst.tx->vin[i], merged_pst.inputs[i]);
     }
     for (int i : output_indices) {
-        shuffled_psbt.AddOutput(merged_psbt.tx->vout[i], merged_psbt.outputs[i]);
+        shuffled_pst.AddOutput(merged_pst.tx->vout[i], merged_pst.outputs[i]);
     }
-    shuffled_psbt.unknown.insert(merged_psbt.unknown.begin(), merged_psbt.unknown.end());
+    shuffled_pst.unknown.insert(merged_pst.unknown.begin(), merged_pst.unknown.end());
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << shuffled_psbt;
+    ssTx << shuffled_pst;
     return EncodeBase64(ssTx);
 },
     };
 }
 
-static RPCHelpMan analyzepsbt()
+static RPCHelpMan analyzepst()
 {
-    return RPCHelpMan{"analyzepsbt",
-            "\nAnalyzes and provides information about the current status of a PSBT and its inputs\n",
+    return RPCHelpMan{"analyzepst",
+            "\nAnalyzes and provides information about the current status of a PST and its inputs\n",
             {
-                {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"}
+                {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PST"}
             },
             RPCResult {
                 RPCResult::Type::OBJ, "", "",
@@ -1827,37 +1827,37 @@ static RPCHelpMan analyzepsbt()
                         }},
                     }},
                     {RPCResult::Type::NUM, "estimated_vsize", /* optional */ true, "Estimated vsize of the final signed transaction"},
-                    {RPCResult::Type::STR_AMOUNT, "estimated_feerate", /* optional */ true, "Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kvB. Shown only if all UTXO slots in the PSBT have been filled"},
-                    {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid. Shown only if all UTXO slots in the PSBT have been filled"},
-                    {RPCResult::Type::STR, "next", "Role of the next person that this psbt needs to go to"},
+                    {RPCResult::Type::STR_AMOUNT, "estimated_feerate", /* optional */ true, "Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kvB. Shown only if all UTXO slots in the PST have been filled"},
+                    {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid. Shown only if all UTXO slots in the PST have been filled"},
+                    {RPCResult::Type::STR, "next", "Role of the next person that this pst needs to go to"},
                     {RPCResult::Type::STR, "error", /* optional */ true, "Error message (if there is one)"},
                 }
             },
             RPCExamples {
-                HelpExampleCli("analyzepsbt", "\"psbt\"")
+                HelpExampleCli("analyzepst", "\"pst\"")
             },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     // Unserialize the transaction
-    PartiallySignedTransaction psbtx;
+    PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
-    PSBTAnalysis psbta = AnalyzePSBT(psbtx);
+    PSTAnalysis psta = AnalyzePST(pstx);
 
     UniValue result(UniValue::VOBJ);
     UniValue inputs_result(UniValue::VARR);
-    for (const auto& input : psbta.inputs) {
+    for (const auto& input : psta.inputs) {
         UniValue input_univ(UniValue::VOBJ);
         UniValue missing(UniValue::VOBJ);
 
         input_univ.pushKV("has_utxo", input.has_utxo);
         input_univ.pushKV("is_final", input.is_final);
-        input_univ.pushKV("next", PSBTRoleName(input.next));
+        input_univ.pushKV("next", PSTRoleName(input.next));
 
         if (!input.missing_pubkeys.empty()) {
             UniValue missing_pubkeys_univ(UniValue::VARR);
@@ -1886,18 +1886,18 @@ static RPCHelpMan analyzepsbt()
     }
     if (!inputs_result.empty()) result.pushKV("inputs", inputs_result);
 
-    if (psbta.estimated_vsize != std::nullopt) {
-        result.pushKV("estimated_vsize", (int)*psbta.estimated_vsize);
+    if (psta.estimated_vsize != std::nullopt) {
+        result.pushKV("estimated_vsize", (int)*psta.estimated_vsize);
     }
-    if (psbta.estimated_feerate != std::nullopt) {
-        result.pushKV("estimated_feerate", ValueFromAmount(psbta.estimated_feerate->GetFeePerK()));
+    if (psta.estimated_feerate != std::nullopt) {
+        result.pushKV("estimated_feerate", ValueFromAmount(psta.estimated_feerate->GetFeePerK()));
     }
-    if (psbta.fee != std::nullopt) {
-        result.pushKV("fee", ValueFromAmount(*psbta.fee));
+    if (psta.fee != std::nullopt) {
+        result.pushKV("fee", ValueFromAmount(*psta.fee));
     }
-    result.pushKV("next", PSBTRoleName(psbta.next));
-    if (!psbta.error.empty()) {
-        result.pushKV("error", psbta.error);
+    result.pushKV("next", PSTRoleName(psta.next));
+    if (!psta.error.empty()) {
+        result.pushKV("error", psta.error);
     }
 
     return result;
@@ -1919,14 +1919,14 @@ static const CRPCCommand commands[] =
     { "rawtransactions",     &combinerawtransaction,      },
     { "rawtransactions",     &signrawtransactionwithkey,  },
     { "rawtransactions",     &testmempoolaccept,          },
-    { "rawtransactions",     &decodepsbt,                 },
-    { "rawtransactions",     &combinepsbt,                },
-    { "rawtransactions",     &finalizepsbt,               },
-    { "rawtransactions",     &createpsbt,                 },
-    { "rawtransactions",     &converttopsbt,              },
-    { "rawtransactions",     &utxoupdatepsbt,             },
-    { "rawtransactions",     &joinpsbts,                  },
-    { "rawtransactions",     &analyzepsbt,                },
+    { "rawtransactions",     &decodepst,                 },
+    { "rawtransactions",     &combinepst,                },
+    { "rawtransactions",     &finalizepst,               },
+    { "rawtransactions",     &createpst,                 },
+    { "rawtransactions",     &converttopst,              },
+    { "rawtransactions",     &utxoupdatepst,             },
+    { "rawtransactions",     &joinpsts,                  },
+    { "rawtransactions",     &analyzepst,                },
 
     { "blockchain",          &gettxoutproof,              },
     { "blockchain",          &verifytxoutproof,           },

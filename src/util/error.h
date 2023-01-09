@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_ERROR_H
-#define BITCOIN_UTIL_ERROR_H
+#ifndef FREICOIN_UTIL_ERROR_H
+#define FREICOIN_UTIL_ERROR_H
 
 /**
  * util/error.h is a common place for definitions of simple error types and
@@ -37,8 +37,8 @@ enum class TransactionError {
     P2P_DISABLED,
     MEMPOOL_REJECTED,
     MEMPOOL_ERROR,
-    INVALID_PSBT,
-    PSBT_MISMATCH,
+    INVALID_PST,
+    PST_MISMATCH,
     SIGHASH_MISMATCH,
     MAX_FEE_EXCEEDED,
     EXTERNAL_SIGNER_NOT_FOUND,
@@ -53,4 +53,4 @@ bilingual_str AmountHighWarn(const std::string& optname);
 
 bilingual_str AmountErrMsg(const std::string& optname, const std::string& strValue);
 
-#endif // BITCOIN_UTIL_ERROR_H
+#endif // FREICOIN_UTIL_ERROR_H

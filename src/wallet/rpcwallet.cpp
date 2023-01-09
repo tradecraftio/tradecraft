@@ -245,7 +245,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
 static RPCHelpMan getnewaddress()
 {
     return RPCHelpMan{"getnewaddress",
-                "\nReturns a new Bitcoin address for receiving payments.\n"
+                "\nReturns a new Freicoin address for receiving payments.\n"
                 "If 'label' is specified, it is added to the address book \n"
                 "so payments received with the address will be associated with 'label'.\n",
                 {
@@ -253,7 +253,7 @@ static RPCHelpMan getnewaddress()
                     {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                 },
                 RPCResult{
-                    RPCResult::Type::STR, "address", "The new bitcoin address"
+                    RPCResult::Type::STR, "address", "The new freicoin address"
                 },
                 RPCExamples{
                     HelpExampleCli("getnewaddress", "")
@@ -299,7 +299,7 @@ static RPCHelpMan getnewaddress()
 static RPCHelpMan getrawchangeaddress()
 {
     return RPCHelpMan{"getrawchangeaddress",
-                "\nReturns a new Bitcoin address, for receiving change.\n"
+                "\nReturns a new Freicoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
                     {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
@@ -348,7 +348,7 @@ static RPCHelpMan setlabel()
     return RPCHelpMan{"setlabel",
                 "\nSets the label associated with the given address.\n",
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to be associated with a label."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The freicoin address to be associated with a label."},
                     {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label to assign to the address."},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
@@ -365,7 +365,7 @@ static RPCHelpMan setlabel()
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Freicoin address");
     }
 
     std::string label = LabelFromValue(request.params[1]);
@@ -387,7 +387,7 @@ void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_f
     for (const std::string& address: address_amounts.getKeys()) {
         CTxDestination dest = DecodeDestination(address);
         if (!IsValidDestination(dest)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Freicoin address: ") + address);
         }
 
         if (destinations.count(dest)) {
@@ -450,7 +450,7 @@ static RPCHelpMan sendtoaddress()
                 "\nSend an amount to a given address." +
         HELP_REQUIRING_PASSPHRASE,
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to send to."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The freicoin address to send to."},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment used to store what the transaction is for.\n"
                                          "This is not part of the transaction, just kept in your wallet."},
@@ -458,7 +458,7 @@ static RPCHelpMan sendtoaddress()
                                          "to which you're sending the transaction. This is not part of the \n"
                                          "transaction, just kept in your wallet."},
                     {"subtractfeefromamount", RPCArg::Type::BOOL, RPCArg::Default{false}, "The fee will be deducted from the amount being sent.\n"
-                                         "The recipient will receive less bitcoins than you enter in the amount field."},
+                                         "The recipient will receive less freicoins than you enter in the amount field."},
                     {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Allow this transaction to be replaced by a transaction with higher fees via BIP 125"},
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
@@ -481,15 +481,15 @@ static RPCHelpMan sendtoaddress()
                     },
                 },
                 RPCExamples{
-                    "\nSend 0.1 BTC\n"
+                    "\nSend 0.1 FRC\n"
                     + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1") +
-                    "\nSend 0.1 BTC with a confirmation target of 6 blocks in economical fee estimate mode using positional arguments\n"
+                    "\nSend 0.1 FRC with a confirmation target of 6 blocks in economical fee estimate mode using positional arguments\n"
                     + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"donation\" \"sean's outpost\" false true 6 economical") +
-                    "\nSend 0.1 BTC with a fee rate of 1.1 " + CURRENCY_ATOM + "/vB, subtract fee from amount, BIP125-replaceable, using positional arguments\n"
+                    "\nSend 0.1 FRC with a fee rate of 1.1 " + CURRENCY_ATOM + "/vB, subtract fee from amount, BIP125-replaceable, using positional arguments\n"
                     + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"drinks\" \"room77\" true true null \"unset\" null 1.1") +
-                    "\nSend 0.2 BTC with a confirmation target of 6 blocks in economical fee estimate mode using named arguments\n"
+                    "\nSend 0.2 FRC with a confirmation target of 6 blocks in economical fee estimate mode using named arguments\n"
                     + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.2 conf_target=6 estimate_mode=\"economical\"") +
-                    "\nSend 0.5 BTC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n"
+                    "\nSend 0.5 FRC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n"
                     + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.5 fee_rate=25")
                     + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.5 fee_rate=25 subtractfeefromamount=false replaceable=true avoid_reuse=true comment=\"2 pizzas\" comment_to=\"jeremy\" verbose=true")
                 },
@@ -560,7 +560,7 @@ static RPCHelpMan listaddressgroupings()
                         {
                             {RPCResult::Type::ARR_FIXED, "", "",
                             {
-                                {RPCResult::Type::STR, "address", "The bitcoin address"},
+                                {RPCResult::Type::STR, "address", "The freicoin address"},
                                 {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
                                 {RPCResult::Type::STR, "label", /* optional */ true, "The label"},
                             }},
@@ -612,7 +612,7 @@ static RPCHelpMan signmessage()
                 "\nSign a message with the private key of an address" +
         HELP_REQUIRING_PASSPHRASE,
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to use for the private key."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The freicoin address to use for the private key."},
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
                 },
                 RPCResult{
@@ -675,7 +675,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         // Get the address
         CTxDestination dest = DecodeDestination(params[0].get_str());
         if (!IsValidDestination(dest)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Freicoin address");
         }
         CScript script_pub_key = GetScriptForDestination(dest);
         if (!wallet.IsMine(script_pub_key)) {
@@ -714,7 +714,7 @@ static RPCHelpMan getreceivedbyaddress()
     return RPCHelpMan{"getreceivedbyaddress",
                 "\nReturns the total amount received by the given address in transactions with at least minconf confirmations.\n",
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address for transactions."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The freicoin address for transactions."},
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "Only include transactions confirmed at least this many times."},
                 },
                 RPCResult{
@@ -873,14 +873,14 @@ static RPCHelpMan sendmany()
                     {"dummy", RPCArg::Type::STR, RPCArg::Optional::NO, "Must be set to \"\" for backwards compatibility.", "\"\""},
                     {"amounts", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::NO, "The addresses and amounts",
                         {
-                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The bitcoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value"},
+                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The freicoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value"},
                         },
                     },
                     {"minconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "Ignored dummy value"},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment"},
                     {"subtractfeefrom", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The addresses.\n"
                                        "The fee will be equally deducted from the amount of each selected address.\n"
-                                       "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                                       "Those recipients will receive less freicoins than you enter in their corresponding amount field.\n"
                                        "If no addresses are specified here, the sender pays the fee.",
                         {
                             {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Subtract fee from this address"},
@@ -962,15 +962,15 @@ static RPCHelpMan addmultisigaddress()
 {
     return RPCHelpMan{"addmultisigaddress",
                 "\nAdd an nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
-                "Each key is a Bitcoin address or hex-encoded public key.\n"
+                "Each key is a Freicoin address or hex-encoded public key.\n"
                 "This functionality is only intended for use with non-watchonly addresses.\n"
                 "See `importaddress` for watchonly p2sh address support.\n"
                 "If 'label' is specified, assign address to that label.\n",
                 {
                     {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys or addresses."},
-                    {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "The bitcoin addresses or hex-encoded public keys",
+                    {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "The freicoin addresses or hex-encoded public keys",
                         {
-                            {"key", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "bitcoin address or hex-encoded public key"},
+                            {"key", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "freicoin address or hex-encoded public key"},
                         },
                         },
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the addresses to."},
@@ -1121,7 +1121,7 @@ static RPCHelpMan addwitnessaddress()
                       "\nAdd a witness address for a script (with pubkey or redeemscript known).\n"
                       "Requires a new wallet backup.  It returns the witness script.\n",
                       {
-                          {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "A bitcoin address known to the wallet."},
+                          {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "A freicoin address known to the wallet."},
                           {"p2sh", RPCArg::Type::BOOL, RPCArg::Default{true}, "Embed inside P2SH."},
                       },
                       RPCResult{
@@ -1138,7 +1138,7 @@ static RPCHelpMan addwitnessaddress()
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Freicoin address");
     }
 
     bool p2sh = true;
@@ -1560,7 +1560,7 @@ static RPCHelpMan listtransactions()
                         {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                         {
                             {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
-                            {RPCResult::Type::STR, "address", "The bitcoin address of the transaction."},
+                            {RPCResult::Type::STR, "address", "The freicoin address of the transaction."},
                             {RPCResult::Type::STR, "category", "The transaction category.\n"
                                 "\"send\"                  Transactions sent.\n"
                                 "\"receive\"               Non-coinbase transactions received.\n"
@@ -1674,7 +1674,7 @@ static RPCHelpMan listsinceblock()
                             {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                             {
                                 {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
-                                {RPCResult::Type::STR, "address", "The bitcoin address of the transaction."},
+                                {RPCResult::Type::STR, "address", "The freicoin address of the transaction."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
                                     "\"send\"                  Transactions sent.\n"
                                     "\"receive\"               Non-coinbase transactions received.\n"
@@ -1818,7 +1818,7 @@ static RPCHelpMan gettransaction()
                             {RPCResult::Type::OBJ, "", "",
                             {
                                 {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
-                                {RPCResult::Type::STR, "address", "The bitcoin address involved in the transaction."},
+                                {RPCResult::Type::STR, "address", "The freicoin address involved in the transaction."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
                                     "\"send\"                  Transactions sent.\n"
                                     "\"receive\"               Non-coinbase transactions received.\n"
@@ -2029,7 +2029,7 @@ static RPCHelpMan walletpassphrase()
 {
     return RPCHelpMan{"walletpassphrase",
                 "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-                "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
+                "This is needed prior to performing transactions related to private keys such as sending freicoins\n"
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
             "time that overrides the old one.\n",
@@ -2222,7 +2222,7 @@ static RPCHelpMan encryptwallet()
                 RPCExamples{
             "\nEncrypt your wallet\n"
             + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
-            "\nNow set the passphrase to use the wallet, such as for signing or sending bitcoin\n"
+            "\nNow set the passphrase to use the wallet, such as for signing or sending freicoin\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
             "\nNow we can do something like sign\n"
             + HelpExampleCli("signmessage", "\"address\" \"test message\"") +
@@ -2271,7 +2271,7 @@ static RPCHelpMan lockunspent()
                 "\nUpdates list of temporarily unspendable outputs.\n"
                 "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
                 "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
-                "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
+                "A locked transaction output will not be chosen by automatic coin selection, when spending freicoins.\n"
                 "Manually selected coins are automatically unlocked.\n"
                 "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
                 "is always cleared (by virtue of process exit) when a node stops or fails.\n"
@@ -2717,7 +2717,7 @@ static RPCHelpMan loadwallet()
 {
     return RPCHelpMan{"loadwallet",
                 "\nLoads a wallet from a wallet file or directory."
-                "\nNote that all wallet command-line options used when starting bitcoind will be"
+                "\nNote that all wallet command-line options used when starting freicoind will be"
                 "\napplied to the new wallet (eg -rescan, etc).\n",
                 {
                     {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
@@ -2996,9 +2996,9 @@ static RPCHelpMan listunspent()
                 {
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum confirmations to filter"},
                     {"maxconf", RPCArg::Type::NUM, RPCArg::Default{9999999}, "The maximum confirmations to filter"},
-                    {"addresses", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The bitcoin addresses to filter",
+                    {"addresses", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The freicoin addresses to filter",
                         {
-                            {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "bitcoin address"},
+                            {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "freicoin address"},
                         },
                     },
                     {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include outputs that are not safe to spend\n"
@@ -3019,7 +3019,7 @@ static RPCHelpMan listunspent()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "the transaction id"},
                             {RPCResult::Type::NUM, "vout", "the vout value"},
-                            {RPCResult::Type::STR, "address", "the bitcoin address"},
+                            {RPCResult::Type::STR, "address", "the freicoin address"},
                             {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
@@ -3068,7 +3068,7 @@ static RPCHelpMan listunspent()
             const UniValue& input = inputs[idx];
             CTxDestination dest = DecodeDestination(input.get_str());
             if (!IsValidDestination(dest)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + input.get_str());
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Freicoin address: ") + input.get_str());
             }
             if (!destinations.insert(dest).second) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + input.get_str());
@@ -3245,7 +3245,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"locktime", UniValueType(UniValue::VNUM)},
                 {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
                 {"feeRate", UniValueType()}, // will be checked by AmountFromValue() below
-                {"psbt", UniValueType(UniValue::VBOOL)},
+                {"pst", UniValueType(UniValue::VBOOL)},
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
@@ -3263,7 +3263,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
             CTxDestination dest = DecodeDestination(change_address_str);
 
             if (!IsValidDestination(dest)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid freicoin address");
             }
 
             coinControl.destChange = dest;
@@ -3368,7 +3368,7 @@ static RPCHelpMan fundrawtransaction()
                             {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include inputs that are not safe to spend (unconfirmed transactions from outside keys and unconfirmed replacement transactions).\n"
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
-                            {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
+                            {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"pool address"}, "The freicoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                             {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
@@ -3379,7 +3379,7 @@ static RPCHelpMan fundrawtransaction()
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The integers.\n"
                                                           "The fee will be equally deducted from the amount of each specified output.\n"
-                                                          "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                                                          "Those recipients will receive less freicoins than you enter in their corresponding amount field.\n"
                                                           "If no outputs are specified here, the sender pays the fee.",
                                 {
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
@@ -3545,12 +3545,12 @@ RPCHelpMan signrawtransactionwithwallet()
 
 static RPCHelpMan bumpfee_helper(std::string method_name)
 {
-    const bool want_psbt = method_name == "psbtbumpfee";
+    const bool want_pst = method_name == "pstbumpfee";
     const std::string incremental_fee{CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE).ToString(FeeEstimateMode::SAT_VB)};
 
     return RPCHelpMan{method_name,
         "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
-        + std::string(want_psbt ? "Returns a PSBT instead of creating and signing a new transaction.\n" : "") +
+        + std::string(want_pst ? "Returns a PST instead of creating and signing a new transaction.\n" : "") +
         "An opt-in RBF transaction with the given txid must be in the wallet.\n"
         "The command will pay the additional fee by reducing change outputs or adding inputs when necessary.\n"
         "It may add a new change output if one does not already exist.\n"
@@ -3585,8 +3585,8 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", Cat(
-                want_psbt ?
-                std::vector<RPCResult>{{RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction."}} :
+                want_pst ?
+                std::vector<RPCResult>{{RPCResult::Type::STR, "pst", "The base64-encoded unsigned PST of the new transaction."}} :
                 std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction."}},
             {
                 {RPCResult::Type::STR_AMOUNT, "origfee", "The fee of the replaced transaction."},
@@ -3598,16 +3598,16 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             })
         },
         RPCExamples{
-    "\nBump the fee, get the new transaction\'s " + std::string(want_psbt ? "psbt" : "txid") + "\n" +
+    "\nBump the fee, get the new transaction\'s " + std::string(want_pst ? "pst" : "txid") + "\n" +
             HelpExampleCli(method_name, "<txid>")
         },
-        [want_psbt](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [want_pst](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
-    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !want_psbt) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.");
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !want_pst) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "bumpfee is not available with wallets that have private keys disabled. Use pstbumpfee instead.");
     }
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
@@ -3681,8 +3681,8 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     UniValue result(UniValue::VOBJ);
 
     // For bumpfee, return the new transaction id.
-    // For psbtbumpfee, return the base64-encoded unsigned PSBT of the new transaction.
-    if (!want_psbt) {
+    // For pstbumpfee, return the base64-encoded unsigned PST of the new transaction.
+    if (!want_pst) {
         if (!feebumper::SignTransaction(*pwallet, mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
         }
@@ -3694,14 +3694,14 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
 
         result.pushKV("txid", txid.GetHex());
     } else {
-        PartiallySignedTransaction psbtx(mtx);
+        PartiallySignedTransaction pstx(mtx);
         bool complete = false;
-        const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, false /* sign */, true /* bip32derivs */);
+        const TransactionError err = pwallet->FillPST(pstx, complete, SIGHASH_DEFAULT, false /* sign */, true /* bip32derivs */);
         CHECK_NONFATAL(err == TransactionError::OK);
         CHECK_NONFATAL(!complete);
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << psbtx;
-        result.pushKV("psbt", EncodeBase64(ssTx.str()));
+        ssTx << pstx;
+        result.pushKV("pst", EncodeBase64(ssTx.str()));
     }
 
     result.pushKV("origfee", ValueFromAmount(old_fee));
@@ -3718,7 +3718,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
 }
 
 static RPCHelpMan bumpfee() { return bumpfee_helper("bumpfee"); }
-static RPCHelpMan psbtbumpfee() { return bumpfee_helper("psbtbumpfee"); }
+static RPCHelpMan pstbumpfee() { return bumpfee_helper("pstbumpfee"); }
 
 static RPCHelpMan rescanblockchain()
 {
@@ -3919,15 +3919,15 @@ static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool v
 RPCHelpMan getaddressinfo()
 {
     return RPCHelpMan{"getaddressinfo",
-                "\nReturn information about the given bitcoin address.\n"
+                "\nReturn information about the given freicoin address.\n"
                 "Some of the information will only be present if the address is in the active wallet.\n",
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address for which to get information."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The freicoin address for which to get information."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "address", "The bitcoin address validated."},
+                        {RPCResult::Type::STR, "address", "The freicoin address validated."},
                         {RPCResult::Type::STR_HEX, "scriptPubKey", "The hex-encoded scriptPubKey generated by the address."},
                         {RPCResult::Type::BOOL, "ismine", "If the address is yours."},
                         {RPCResult::Type::BOOL, "iswatchonly", "If the address is watchonly."},
@@ -4181,7 +4181,7 @@ static RPCHelpMan send()
                 {
                     {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
                         {
-                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
+                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the freicoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
                         },
                         },
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -4202,7 +4202,7 @@ static RPCHelpMan send()
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
                     {"add_to_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "When false, returns a serialized transaction which will not be added to the wallet or broadcast"},
-                    {"change_address", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
+                    {"change_address", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The freicoin address to receive the change"},
                     {"change_position", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                     {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if change_address is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
@@ -4221,10 +4221,10 @@ static RPCHelpMan send()
                     },
                     {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"lock_unspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
-                    {"psbt", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PSBT, implies add_to_wallet=false."},
+                    {"pst", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PST, implies add_to_wallet=false."},
                     {"subtract_fee_from_outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Outputs to subtract the fee from, specified as integer indices.\n"
                     "The fee will be equally deducted from the amount of each specified output.\n"
-                    "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                    "Those recipients will receive less freicoins than you enter in their corresponding amount field.\n"
                     "If no outputs are specified here, the sender pays the fee.",
                         {
                             {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
@@ -4241,17 +4241,17 @@ static RPCHelpMan send()
                     {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of the number of addresses."},
                     {RPCResult::Type::STR_HEX, "hex", "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
-                    {RPCResult::Type::STR, "psbt", "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
+                    {RPCResult::Type::STR, "pst", "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
                 }
         },
         RPCExamples{""
-        "\nSend 0.1 BTC with a confirmation target of 6 blocks in economical fee estimate mode\n"
+        "\nSend 0.1 FRC with a confirmation target of 6 blocks in economical fee estimate mode\n"
         + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 6 economical\n") +
-        "Send 0.2 BTC with a fee rate of 1.1 " + CURRENCY_ATOM + "/vB using positional arguments\n"
+        "Send 0.2 FRC with a fee rate of 1.1 " + CURRENCY_ATOM + "/vB using positional arguments\n"
         + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.2}' null \"unset\" 1.1\n") +
-        "Send 0.2 BTC with a fee rate of 1 " + CURRENCY_ATOM + "/vB using the options argument\n"
+        "Send 0.2 FRC with a fee rate of 1 " + CURRENCY_ATOM + "/vB using the options argument\n"
         + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.2}' null \"unset\" null '{\"fee_rate\": 1}'\n") +
-        "Send 0.3 BTC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n"
+        "Send 0.3 FRC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n"
         + HelpExampleCli("-named send", "outputs='{\"" + EXAMPLE_ADDRESS[0] + "\": 0.3}' fee_rate=25\n") +
         "Create a transaction that should confirm the next block, with a specific input, and return result without adding to wallet or broadcasting to the network\n"
         + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 1 economical '{\"add_to_wallet\": false, \"inputs\": [{\"txid\":\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\", \"vout\":1}]}'")
@@ -4308,7 +4308,7 @@ static RPCHelpMan send()
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Use subtract_fee_from_outputs");
             }
 
-            const bool psbt_opt_in = options.exists("psbt") && options["psbt"].get_bool();
+            const bool pst_opt_in = options.exists("pst") && options["pst"].get_bool();
 
             CAmount fee;
             int change_position;
@@ -4328,28 +4328,28 @@ static RPCHelpMan send()
                 add_to_wallet = options["add_to_wallet"].get_bool();
             }
 
-            // Make a blank psbt
-            PartiallySignedTransaction psbtx(rawTx);
+            // Make a blank pst
+            PartiallySignedTransaction pstx(rawTx);
 
             // First fill transaction with our data without signing,
             // so external signers are not asked sign more than once.
             bool complete;
-            pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, false, true);
-            const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, true, false);
+            pwallet->FillPST(pstx, complete, SIGHASH_DEFAULT, false, true);
+            const TransactionError err = pwallet->FillPST(pstx, complete, SIGHASH_DEFAULT, true, false);
             if (err != TransactionError::OK) {
                 throw JSONRPCTransactionError(err);
             }
 
             CMutableTransaction mtx;
-            complete = FinalizeAndExtractPSBT(psbtx, mtx);
+            complete = FinalizeAndExtractPST(pstx, mtx);
 
             UniValue result(UniValue::VOBJ);
 
-            if (psbt_opt_in || !complete || !add_to_wallet) {
-                // Serialize the PSBT
+            if (pst_opt_in || !complete || !add_to_wallet) {
+                // Serialize the PST
                 CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-                ssTx << psbtx;
-                result.pushKV("psbt", EncodeBase64(ssTx.str()));
+                ssTx << pstx;
+                result.pushKV("pst", EncodeBase64(ssTx.str()));
             }
 
             if (complete) {
@@ -4357,7 +4357,7 @@ static RPCHelpMan send()
                 std::string hex = EncodeHexTx(CTransaction(mtx));
                 CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
                 result.pushKV("txid", tx->GetHash().GetHex());
-                if (add_to_wallet && !psbt_opt_in) {
+                if (add_to_wallet && !pst_opt_in) {
                     pwallet->CommitTransaction(tx, {}, {} /* orderForm */);
                 } else {
                     result.pushKV("hex", hex);
@@ -4441,16 +4441,16 @@ static RPCHelpMan sethdseed()
     };
 }
 
-static RPCHelpMan walletprocesspsbt()
+static RPCHelpMan walletprocesspst()
 {
-    return RPCHelpMan{"walletprocesspsbt",
-                "\nUpdate a PSBT with input information from our wallet and then sign inputs\n"
+    return RPCHelpMan{"walletprocesspst",
+                "\nUpdate a PST with input information from our wallet and then sign inputs\n"
                 "that we can sign for." +
         HELP_REQUIRING_PASSPHRASE,
                 {
-                    {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
+                    {"pst", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
                     {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating"},
-                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "The signature hash type to sign with if not specified by the PST. Must be one of\n"
             "       \"DEFAULT\"\n"
             "       \"ALL\"\n"
             "       \"NONE\"\n"
@@ -4463,12 +4463,12 @@ static RPCHelpMan walletprocesspsbt()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "psbt", "The base64-encoded partially signed transaction"},
+                        {RPCResult::Type::STR, "pst", "The base64-encoded partially signed transaction"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     }
                 },
                 RPCExamples{
-                    HelpExampleCli("walletprocesspsbt", "\"psbt\"")
+                    HelpExampleCli("walletprocesspst", "\"pst\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -4483,9 +4483,9 @@ static RPCHelpMan walletprocesspsbt()
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL, UniValue::VSTR});
 
     // Unserialize the transaction
-    PartiallySignedTransaction psbtx;
+    PartiallySignedTransaction pstx;
     std::string error;
-    if (!DecodeBase64PSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodeBase64PST(pstx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -4496,15 +4496,15 @@ static RPCHelpMan walletprocesspsbt()
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool complete = true;
-    const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs)};
+    const TransactionError err{wallet.FillPST(pstx, complete, nHashType, sign, bip32derivs)};
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
     }
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
-    result.pushKV("psbt", EncodeBase64(ssTx.str()));
+    ssTx << pstx;
+    result.pushKV("pst", EncodeBase64(ssTx.str()));
     result.pushKV("complete", complete);
 
     return result;
@@ -4512,9 +4512,9 @@ static RPCHelpMan walletprocesspsbt()
     };
 }
 
-static RPCHelpMan walletcreatefundedpsbt()
+static RPCHelpMan walletcreatefundedpst()
 {
-    return RPCHelpMan{"walletcreatefundedpsbt",
+    return RPCHelpMan{"walletcreatefundedpst",
                 "\nCreates and funds a transaction in the Partially Signed Transaction format.\n"
                 "Implements the Creator and Updater roles.\n",
                 {
@@ -4536,7 +4536,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                         {
                             {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
                                 {
-                                    {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
+                                    {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the freicoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
                                 },
                                 },
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -4553,7 +4553,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                             {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include inputs that are not safe to spend (unconfirmed transactions from outside keys and unconfirmed replacement transactions).\n"
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
-                            {"changeAddress", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
+                            {"changeAddress", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The freicoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                             {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only"},
@@ -4562,7 +4562,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
                             {"subtractFeeFromOutputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The outputs to subtract the fee from.\n"
                                                           "The fee will be equally deducted from the amount of each specified output.\n"
-                                                          "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                                                          "Those recipients will receive less freicoins than you enter in their corresponding amount field.\n"
                                                           "If no outputs are specified here, the sender pays the fee.",
                                 {
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
@@ -4580,14 +4580,14 @@ static RPCHelpMan walletcreatefundedpsbt()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "psbt", "The resulting raw transaction (base64-encoded string)"},
+                        {RPCResult::Type::STR, "pst", "The resulting raw transaction (base64-encoded string)"},
                         {RPCResult::Type::STR_AMOUNT, "fee", "Fee in " + CURRENCY_UNIT + " the resulting transaction pays"},
                         {RPCResult::Type::NUM, "changepos", "The position of the added change output, or -1"},
                     }
                                 },
                                 RPCExamples{
                             "\nCreate a transaction with no inputs\n"
-                            + HelpExampleCli("walletcreatefundedpsbt", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+                            + HelpExampleCli("walletcreatefundedpst", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
                                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -4623,23 +4623,23 @@ static RPCHelpMan walletcreatefundedpsbt()
     coin_control.m_add_inputs = rawTx.vin.size() == 0;
     FundTransaction(wallet, rawTx, fee, change_position, request.params[3], coin_control, /* override_min_fee */ true);
 
-    // Make a blank psbt
-    PartiallySignedTransaction psbtx(rawTx);
+    // Make a blank pst
+    PartiallySignedTransaction pstx(rawTx);
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
-    const TransactionError err{wallet.FillPSBT(psbtx, complete, 1, false, bip32derivs)};
+    const TransactionError err{wallet.FillPST(pstx, complete, 1, false, bip32derivs)};
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
     }
 
-    // Serialize the PSBT
+    // Serialize the PST
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
+    ssTx << pstx;
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("psbt", EncodeBase64(ssTx.str()));
+    result.pushKV("pst", EncodeBase64(ssTx.str()));
     result.pushKV("fee", ValueFromAmount(fee));
     result.pushKV("changepos", change_position);
     return result;
@@ -4717,7 +4717,7 @@ static RPCHelpMan walletdisplayaddress()
     return RPCHelpMan{"walletdisplayaddress",
         "Display address on an external signer for verification.",
         {
-            {"address",     RPCArg::Type::STR, RPCArg::Optional::NO, /* default_val */ "", "bitcoin address to display"},
+            {"address",     RPCArg::Type::STR, RPCArg::Optional::NO, /* default_val */ "", "freicoin address to display"},
         },
         RPCResult{
             RPCResult::Type::OBJ,"","",
@@ -4779,7 +4779,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &addwitnessaddress,              },
     { "wallet",             &backupwallet,                   },
     { "wallet",             &bumpfee,                        },
-    { "wallet",             &psbtbumpfee,                    },
+    { "wallet",             &pstbumpfee,                    },
     { "wallet",             &createwallet,                   },
     { "wallet",             &dumpprivkey,                    },
     { "wallet",             &dumpwallet,                     },
@@ -4829,14 +4829,14 @@ static const CRPCCommand commands[] =
     { "wallet",             &signrawtransactionwithwallet,   },
     { "wallet",             &unloadwallet,                   },
     { "wallet",             &upgradewallet,                  },
-    { "wallet",             &walletcreatefundedpsbt,         },
+    { "wallet",             &walletcreatefundedpst,         },
 #ifdef ENABLE_EXTERNAL_SIGNER
     { "wallet",             &walletdisplayaddress,           },
 #endif // ENABLE_EXTERNAL_SIGNER
     { "wallet",             &walletlock,                     },
     { "wallet",             &walletpassphrase,               },
     { "wallet",             &walletpassphrasechange,         },
-    { "wallet",             &walletprocesspsbt,              },
+    { "wallet",             &walletprocesspst,              },
 };
 // clang-format on
     return MakeSpan(commands);

@@ -14,14 +14,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <qt/sendcoinsdialog.h>
 #include <qt/forms/ui_sendcoinsdialog.h>
 
 #include <qt/addresstablemodel.h>
-#include <qt/bitcoinunits.h>
+#include <qt/freicoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/coincontroldialog.h>
 #include <qt/guiutil.h>
@@ -195,7 +195,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         connect(ui->groupFee, qOverload<int>(&QButtonGroup::buttonClicked), this, &SendCoinsDialog::coinControlUpdateLabels);
 #endif
 
-        connect(ui->customFee, &BitcoinAmountField::valueChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
+        connect(ui->customFee, &FreicoinAmountField::valueChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
         connect(ui->optInRBF, &QCheckBox::stateChanged, this, &SendCoinsDialog::updateSmartFeeLabel);
         connect(ui->optInRBF, &QCheckBox::stateChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
         CAmount requiredFee = model->wallet().getRequiredFee(1000);
@@ -223,7 +223,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
             }
         } else if (model->wallet().privateKeysDisabled()) {
             ui->sendButton->setText(tr("Cr&eate Unsigned"));
-            ui->sendButton->setToolTip(tr("Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
+            ui->sendButton->setToolTip(tr("Creates a Partially Signed Freicoin Transaction (PST) for use with e.g. an offline %1 wallet, or a PST-compatible hardware wallet.").arg(PACKAGE_NAME));
         }
 
         // set the smartfee-sliders default value (wallets default conf.target or last stored value)
@@ -299,7 +299,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
-        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), m_current_transaction->getTransactionFee()));
+        FreicoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), m_current_transaction->getTransactionFee()));
 
     if(prepareStatus.status != WalletModel::OK) {
         fNewRecipientAllowed = true;
@@ -311,7 +311,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     for (const SendCoinsRecipient &rcp : m_current_transaction->getRecipients())
     {
         // generate amount string with wallet name in case of multiwallet
-        QString amount = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        QString amount = FreicoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         if (model->isMultiwallet()) {
             amount.append(tr(" from wallet '%1'").arg(GUIUtil::HtmlEscape(model->getWalletName())));
         }
@@ -343,7 +343,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
 
     question_string.append("<br /><span style='font-size:10pt;'>");
     if (model->wallet().privateKeysDisabled() && !model->wallet().hasExternalSigner()) {
-        question_string.append(tr("Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
+        question_string.append(tr("Please, review your transaction proposal. This will produce a Partially Signed Freicoin Transaction (PST) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PST-compatible hardware wallet.").arg(PACKAGE_NAME));
     } else {
         question_string.append(tr("Please, review your transaction."));
     }
@@ -361,7 +361,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
 
         // append transaction fee value
         question_string.append("<span style='color:#aa0000; font-weight:bold;'>");
-        question_string.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        question_string.append(FreicoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         question_string.append("</span><br />");
 
         // append RBF message according to transaction's signalling
@@ -378,13 +378,13 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     question_string.append("<hr />");
     CAmount totalAmount = m_current_transaction->getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
-    for (const BitcoinUnits::Unit u : BitcoinUnits::availableUnits())
+    for (const FreicoinUnits::Unit u : FreicoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
-            alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));
+            alternativeUnits.append(FreicoinUnits::formatHtmlWithUnit(u, totalAmount));
     }
     question_string.append(QString("<b>%1</b>: <b>%2</b>").arg(tr("Total Amount"))
-        .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount)));
+        .arg(FreicoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount)));
     question_string.append(QString("<br /><span style='font-size:10pt; font-weight:normal;'>(=%1)</span>")
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
@@ -423,16 +423,16 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     bool send_failure = false;
     if (model->wallet().privateKeysDisabled()) {
         CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
-        PartiallySignedTransaction psbtx(mtx);
+        PartiallySignedTransaction pstx(mtx);
         bool complete = false;
         // Always fill without signing first. This prevents an external signer
         // from being called prematurely and is not expensive.
-        TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
+        TransactionError err = model->wallet().fillPST(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, nullptr, pstx, complete);
         assert(!complete);
         assert(err == TransactionError::OK);
         if (model->wallet().hasExternalSigner()) {
             try {
-                err = model->wallet().fillPSBT(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
+                err = model->wallet().fillPST(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, nullptr, pstx, complete);
             } catch (const std::runtime_error& e) {
                 QMessageBox::critical(nullptr, tr("Sign failed"), e.what());
                 send_failure = true;
@@ -451,13 +451,13 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
                 return;
             }
             if (err != TransactionError::OK) {
-                tfm::format(std::cerr, "Failed to sign PSBT");
+                tfm::format(std::cerr, "Failed to sign PST");
                 processSendCoinsReturn(WalletModel::TransactionCreationFailed);
                 send_failure = true;
                 return;
             }
-            // fillPSBT does not always properly finalize
-            complete = FinalizeAndExtractPSBT(psbtx, mtx);
+            // fillPST does not always properly finalize
+            complete = FinalizeAndExtractPST(pstx, mtx);
         }
 
         // Broadcast transaction if complete (even with an external signer this
@@ -477,15 +477,15 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             return;
         }
 
-        // Copy PSBT to clipboard and offer to save
+        // Copy PST to clipboard and offer to save
         assert(!complete);
-        // Serialize the PSBT
+        // Serialize the PST
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << psbtx;
+        ssTx << pstx;
         GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
         QMessageBox msgBox;
         msgBox.setText("Unsigned Transaction");
-        msgBox.setInformativeText("The PSBT has been copied to the clipboard. You can also save it.");
+        msgBox.setInformativeText("The PST has been copied to the clipboard. You can also save it.");
         msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard);
         msgBox.setDefaultButton(QMessageBox::Discard);
         switch (msgBox.exec()) {
@@ -498,22 +498,22 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
                     fileNameSuggestion.append(" - ");
                 }
                 QString labelOrAddress = rcp.label.isEmpty() ? rcp.address : rcp.label;
-                QString amount = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+                QString amount = FreicoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
                 fileNameSuggestion.append(labelOrAddress + "-" + amount);
                 first = false;
             }
-            fileNameSuggestion.append(".psbt");
+            fileNameSuggestion.append(".pst");
             QString filename = GUIUtil::getSaveFileName(this,
                 tr("Save Transaction Data"), fileNameSuggestion,
-                //: Expanded name of the binary PSBT file format. See: BIP 174.
-                tr("Partially Signed Transaction (Binary)") + QLatin1String(" (*.psbt)"), &selectedFilter);
+                //: Expanded name of the binary PST file format. See: BIP 174.
+                tr("Partially Signed Transaction (Binary)") + QLatin1String(" (*.pst)"), &selectedFilter);
             if (filename.isEmpty()) {
                 return;
             }
             std::ofstream out(filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary);
             out << ssTx.str();
             out.close();
-            Q_EMIT message(tr("PSBT saved"), "PSBT saved to disk", CClientUIInterface::MSG_INFORMATION);
+            Q_EMIT message(tr("PST saved"), "PST saved to disk", CClientUIInterface::MSG_INFORMATION);
             break;
         }
         case QMessageBox::Discard:
@@ -693,7 +693,7 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
             balance = balances.watch_only_balance;
             ui->labelBalanceName->setText(tr("Watch-only balance:"));
         }
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
+        ui->labelBalance->setText(FreicoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
     }
 }
 
@@ -734,7 +734,7 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
     case WalletModel::AbsurdFee:
-        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->wallet().getDefaultMaxTxFee()));
+        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(FreicoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->wallet().getDefaultMaxTxFee()));
         break;
     case WalletModel::PaymentRequestExpired:
         msgParams.first = tr("Payment request expired.");
@@ -812,7 +812,7 @@ void SendCoinsDialog::updateFeeMinimizedLabel()
     if (ui->radioSmartFee->isChecked())
         ui->labelFeeMinimized->setText(ui->labelSmartFee->text());
     else {
-        ui->labelFeeMinimized->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), ui->customFee->value()) + "/kvB");
+        ui->labelFeeMinimized->setText(FreicoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), ui->customFee->value()) + "/kvB");
     }
 }
 
@@ -847,7 +847,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     FeeReason reason;
     CFeeRate feeRate = CFeeRate(model->wallet().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
 
-    ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kvB");
+    ui->labelSmartFee->setText(FreicoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kvB");
 
     if (reason == FeeReason::FALLBACK) {
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
@@ -962,7 +962,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!IsValidDestination(dest)) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Bitcoin address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Freicoin address"));
         }
         else // Valid address
         {

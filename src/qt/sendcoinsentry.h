@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_SENDCOINSENTRY_H
-#define BITCOIN_QT_SENDCOINSENTRY_H
+#ifndef FREICOIN_QT_SENDCOINSENTRY_H
+#define FREICOIN_QT_SENDCOINSENTRY_H
 
 #include <qt/sendcoinsrecipient.h>
 
@@ -32,7 +32,7 @@ namespace Ui {
 }
 
 /**
- * A single entry in the dialog for sending bitcoins.
+ * A single entry in the dialog for sending freicoins.
  * Stacked widget, with different UIs for payment requests
  * with a strong payee identity.
  */
@@ -92,4 +92,4 @@ private:
     bool updateLabel(const QString &address);
 };
 
-#endif // BITCOIN_QT_SENDCOINSENTRY_H
+#endif // FREICOIN_QT_SENDCOINSENTRY_H

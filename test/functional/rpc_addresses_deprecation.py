@@ -18,14 +18,14 @@
 from test_framework.messages import (
     tx_from_hex,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     hex_str_to_bytes
 )
 
 
-class AddressesDeprecationTest(BitcoinTestFramework):
+class AddressesDeprecationTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[], ["-deprecatedrpc=addresses"]]

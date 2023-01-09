@@ -19,14 +19,14 @@ from test_framework.messages import (
     sha256,
     tx_from_hex,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     hex_str_to_bytes,
 )
 
 
-class DecodeScriptTest(BitcoinTestFramework):
+class DecodeScriptTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

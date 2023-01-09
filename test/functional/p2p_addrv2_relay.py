@@ -26,7 +26,7 @@ from test_framework.messages import (
     NODE_WITNESS,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 I2P_ADDR = "c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p"
@@ -62,7 +62,7 @@ class AddrReceiver(P2PInterface):
         self.wait_until(lambda: "addrv2" in self.last_message)
 
 
-class AddrTest(BitcoinTestFramework):
+class AddrTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

@@ -30,7 +30,7 @@
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <psbt.h>
+#include <pst.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
@@ -1253,7 +1253,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         // when improving this code in the future. The wallet's heuristics for
         // distinguishing between conflicted and unconfirmed transactions are
         // imperfect, and could be improved in general, see
-        // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
+        // https://github.com/tradecraftio/tradecraft-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
         SyncTransaction(tx, {CWalletTx::Status::UNCONFIRMED, /* block height */ 0, /* block hash */ {}, /* index */ 0});
     }
 }
@@ -1853,19 +1853,19 @@ bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint,
     return false;
 }
 
-TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, int sighash_type, bool sign, bool bip32derivs, size_t * n_signed) const
+TransactionError CWallet::FillPST(PartiallySignedTransaction& pstx, bool& complete, int sighash_type, bool sign, bool bip32derivs, size_t * n_signed) const
 {
     if (n_signed) {
         *n_signed = 0;
     }
-    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
+    const PrecomputedTransactionData txdata = PrecomputePSTData(pstx);
     LOCK(cs_wallet);
     // Get all of the previous transactions
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        const CTxIn& txin = pstx.tx->vin[i];
+        PSTInput& input = pstx.inputs.at(i);
 
-        if (PSBTInputSigned(input)) {
+        if (PSTInputSigned(input)) {
             continue;
         }
 
@@ -1885,7 +1885,7 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
     // Fill in information from ScriptPubKeyMans
     for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
         int n_signed_this_spkm = 0;
-        TransactionError res = spk_man->FillPSBT(psbtx, txdata, sighash_type, sign, bip32derivs, &n_signed_this_spkm);
+        TransactionError res = spk_man->FillPST(pstx, txdata, sighash_type, sign, bip32derivs, &n_signed_this_spkm);
         if (res != TransactionError::OK) {
             return res;
         }
@@ -1897,8 +1897,8 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
 
     // Complete if every input is now signed
     complete = true;
-    for (const auto& input : psbtx.inputs) {
-        complete &= PSBTInputSigned(input);
+    for (const auto& input : pstx.inputs) {
+        complete &= PSTInputSigned(input);
     }
 
     return TransactionError::OK;

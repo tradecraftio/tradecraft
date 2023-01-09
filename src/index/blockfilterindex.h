@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INDEX_BLOCKFILTERINDEX_H
-#define BITCOIN_INDEX_BLOCKFILTERINDEX_H
+#ifndef FREICOIN_INDEX_BLOCKFILTERINDEX_H
+#define FREICOIN_INDEX_BLOCKFILTERINDEX_H
 
 #include <blockfilter.h>
 #include <chain.h>
@@ -110,4 +110,4 @@ bool DestroyBlockFilterIndex(BlockFilterType filter_type);
 /** Destroy all open block filter indexes. */
 void DestroyAllBlockFilterIndexes();
 
-#endif // BITCOIN_INDEX_BLOCKFILTERINDEX_H
+#endif // FREICOIN_INDEX_BLOCKFILTERINDEX_H

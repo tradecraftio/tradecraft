@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
-Compact, self-contained ELF implementation for bitcoin-core security checks.
+Compact, self-contained ELF implementation for freicoin security checks.
 '''
 import struct
 import types

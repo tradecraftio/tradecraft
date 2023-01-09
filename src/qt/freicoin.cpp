@@ -14,11 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
-#include <qt/bitcoin.h>
-#include <qt/bitcoingui.h>
+#include <qt/freicoin.h>
+#include <qt/freicoingui.h>
 
 #include <chainparams.h>
 #include <qt/clientmodel.h>
@@ -146,11 +146,11 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
     if (qtTranslator.load("qt_" + lang_territory, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         QApplication::installTranslator(&qtTranslator);
 
-    // Load e.g. bitcoin_de.qm (shortcut "de" needs to be defined in bitcoin.qrc)
+    // Load e.g. freicoin_de.qm (shortcut "de" needs to be defined in freicoin.qrc)
     if (translatorBase.load(lang, ":/translations/"))
         QApplication::installTranslator(&translatorBase);
 
-    // Load e.g. bitcoin_de_DE.qm (shortcut "de_DE" needs to be defined in bitcoin.qrc)
+    // Load e.g. freicoin_de_DE.qm (shortcut "de_DE" needs to be defined in freicoin.qrc)
     if (translator.load(lang_territory, ":/translations/"))
         QApplication::installTranslator(&translator);
 }
@@ -166,18 +166,18 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
     }
 }
 
-BitcoinCore::BitcoinCore(interfaces::Node& node) :
+FreicoinCore::FreicoinCore(interfaces::Node& node) :
     QObject(), m_node(node)
 {
 }
 
-void BitcoinCore::handleRunawayException(const std::exception *e)
+void FreicoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
 }
 
-void BitcoinCore::initialize()
+void FreicoinCore::initialize()
 {
     try
     {
@@ -193,7 +193,7 @@ void BitcoinCore::initialize()
     }
 }
 
-void BitcoinCore::shutdown()
+void FreicoinCore::shutdown()
 {
     try
     {
@@ -209,9 +209,9 @@ void BitcoinCore::shutdown()
 }
 
 static int qt_argc = 1;
-static const char* qt_argv = "bitcoin-qt";
+static const char* qt_argv = "freicoin-qt";
 
-BitcoinApplication::BitcoinApplication():
+FreicoinApplication::FreicoinApplication():
     QApplication(qt_argc, const_cast<char **>(&qt_argv)),
     coreThread(nullptr),
     optionsModel(nullptr),
@@ -226,20 +226,20 @@ BitcoinApplication::BitcoinApplication():
     setQuitOnLastWindowClosed(false);
 }
 
-void BitcoinApplication::setupPlatformStyle()
+void FreicoinApplication::setupPlatformStyle()
 {
     // UI per-platform customization
-    // This must be done inside the BitcoinApplication constructor, or after it, because
+    // This must be done inside the FreicoinApplication constructor, or after it, because
     // PlatformStyle::instantiate requires a QApplication
     std::string platformName;
-    platformName = gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
+    platformName = gArgs.GetArg("-uiplatform", FreicoinGUI::DEFAULT_UIPLATFORM);
     platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
     if (!platformStyle) // Fall back to "other" if specified name not found
         platformStyle = PlatformStyle::instantiate("other");
     assert(platformStyle);
 }
 
-BitcoinApplication::~BitcoinApplication()
+FreicoinApplication::~FreicoinApplication()
 {
     if(coreThread)
     {
@@ -256,38 +256,38 @@ BitcoinApplication::~BitcoinApplication()
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinApplication::createPaymentServer()
+void FreicoinApplication::createPaymentServer()
 {
     paymentServer = new PaymentServer(this);
 }
 #endif
 
-void BitcoinApplication::createOptionsModel(bool resetSettings)
+void FreicoinApplication::createOptionsModel(bool resetSettings)
 {
     optionsModel = new OptionsModel(this, resetSettings);
 }
 
-void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
+void FreicoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(node(), platformStyle, networkStyle, nullptr);
+    window = new FreicoinGUI(node(), platformStyle, networkStyle, nullptr);
 
     pollShutdownTimer = new QTimer(window);
-    connect(pollShutdownTimer, &QTimer::timeout, window, &BitcoinGUI::detectShutdown);
+    connect(pollShutdownTimer, &QTimer::timeout, window, &FreicoinGUI::detectShutdown);
 }
 
-void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
+void FreicoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
     assert(!m_splash);
     m_splash = new SplashScreen(networkStyle);
     // We don't hold a direct pointer to the splash screen after creation, but the splash
     // screen will take care of deleting itself when finish() happens.
     m_splash->show();
-    connect(this, &BitcoinApplication::requestedInitialize, m_splash, &SplashScreen::handleLoadWallet);
-    connect(this, &BitcoinApplication::splashFinished, m_splash, &SplashScreen::finish);
-    connect(this, &BitcoinApplication::requestedShutdown, m_splash, &QWidget::close);
+    connect(this, &FreicoinApplication::requestedInitialize, m_splash, &SplashScreen::handleLoadWallet);
+    connect(this, &FreicoinApplication::splashFinished, m_splash, &SplashScreen::finish);
+    connect(this, &FreicoinApplication::requestedShutdown, m_splash, &QWidget::close);
 }
 
-void BitcoinApplication::setNode(interfaces::Node& node)
+void FreicoinApplication::setNode(interfaces::Node& node)
 {
     assert(!m_node);
     m_node = &node;
@@ -295,32 +295,32 @@ void BitcoinApplication::setNode(interfaces::Node& node)
     if (m_splash) m_splash->setNode(*m_node);
 }
 
-bool BitcoinApplication::baseInitialize()
+bool FreicoinApplication::baseInitialize()
 {
     return node().baseInitialize();
 }
 
-void BitcoinApplication::startThread()
+void FreicoinApplication::startThread()
 {
     if(coreThread)
         return;
     coreThread = new QThread(this);
-    BitcoinCore *executor = new BitcoinCore(node());
+    FreicoinCore *executor = new FreicoinCore(node());
     executor->moveToThread(coreThread);
 
     /*  communication to and from thread */
-    connect(executor, &BitcoinCore::initializeResult, this, &BitcoinApplication::initializeResult);
-    connect(executor, &BitcoinCore::shutdownResult, this, &BitcoinApplication::shutdownResult);
-    connect(executor, &BitcoinCore::runawayException, this, &BitcoinApplication::handleRunawayException);
-    connect(this, &BitcoinApplication::requestedInitialize, executor, &BitcoinCore::initialize);
-    connect(this, &BitcoinApplication::requestedShutdown, executor, &BitcoinCore::shutdown);
+    connect(executor, &FreicoinCore::initializeResult, this, &FreicoinApplication::initializeResult);
+    connect(executor, &FreicoinCore::shutdownResult, this, &FreicoinApplication::shutdownResult);
+    connect(executor, &FreicoinCore::runawayException, this, &FreicoinApplication::handleRunawayException);
+    connect(this, &FreicoinApplication::requestedInitialize, executor, &FreicoinCore::initialize);
+    connect(this, &FreicoinApplication::requestedShutdown, executor, &FreicoinCore::shutdown);
     /*  make sure executor object is deleted in its own thread */
     connect(coreThread, &QThread::finished, executor, &QObject::deleteLater);
 
     coreThread->start();
 }
 
-void BitcoinApplication::parameterSetup()
+void FreicoinApplication::parameterSetup()
 {
     // Default printtoconsole to false for the GUI. GUI programs should not
     // print to the console unnecessarily.
@@ -330,19 +330,19 @@ void BitcoinApplication::parameterSetup()
     InitParameterInteraction(gArgs);
 }
 
-void BitcoinApplication::InitPruneSetting(int64_t prune_MiB)
+void FreicoinApplication::InitPruneSetting(int64_t prune_MiB)
 {
     optionsModel->SetPruneTargetGB(PruneMiBtoGB(prune_MiB), true);
 }
 
-void BitcoinApplication::requestInitialize()
+void FreicoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
     startThread();
     Q_EMIT requestedInitialize();
 }
 
-void BitcoinApplication::requestShutdown()
+void FreicoinApplication::requestShutdown()
 {
     // Show a simple window indicating shutdown status
     // Do this first as some of the steps may take some time below,
@@ -370,7 +370,7 @@ void BitcoinApplication::requestShutdown()
     Q_EMIT requestedShutdown();
 }
 
-void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
+void FreicoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
 {
     qDebug() << __func__ << ": Initialization result: " << success;
     // Set exit result.
@@ -404,10 +404,10 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
 
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
-        // bitcoin: URIs or payment requests:
+        // freicoin: URIs or payment requests:
         if (paymentServer) {
-            connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &BitcoinGUI::handlePaymentRequest);
-            connect(window, &BitcoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
+            connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &FreicoinGUI::handlePaymentRequest);
+            connect(window, &FreicoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
             connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
                 window->message(title, message, style);
             });
@@ -421,12 +421,12 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
     }
 }
 
-void BitcoinApplication::shutdownResult()
+void FreicoinApplication::shutdownResult()
 {
     quit(); // Exit second main loop invocation after shutdown finished
 }
 
-void BitcoinApplication::handleRunawayException(const QString &message)
+void FreicoinApplication::handleRunawayException(const QString &message)
 {
     QMessageBox::critical(
         nullptr, tr("Runaway exception"),
@@ -435,7 +435,7 @@ void BitcoinApplication::handleRunawayException(const QString &message)
     ::exit(EXIT_FAILURE);
 }
 
-void BitcoinApplication::handleNonFatalException(const QString& message)
+void FreicoinApplication::handleNonFatalException(const QString& message)
 {
     assert(QThread::currentThread() == thread());
     QMessageBox::warning(
@@ -445,7 +445,7 @@ void BitcoinApplication::handleNonFatalException(const QString& message)
         QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, PACKAGE_BUGREPORT));
 }
 
-WId BitcoinApplication::getMainWinId() const
+WId FreicoinApplication::getMainWinId() const
 {
     if (!window)
         return 0;
@@ -460,7 +460,7 @@ static void SetupUIArgs(ArgsManager& argsman)
     argsman.AddArg("-min", "Start minimized", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     argsman.AddArg("-resetguisettings", "Reset all settings changed in the GUI", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     argsman.AddArg("-splash", strprintf("Show splash screen on startup (default: %u)", DEFAULT_SPLASHSCREEN), ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
-    argsman.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcoinGUI::DEFAULT_UIPLATFORM), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::GUI);
+    argsman.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", FreicoinGUI::DEFAULT_UIPLATFORM), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::GUI);
 }
 
 int GuiMain(int argc, char* argv[])
@@ -483,8 +483,8 @@ int GuiMain(int argc, char* argv[])
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
     /// 1. Basic Qt initialization (not dependent on parameters or configuration)
-    Q_INIT_RESOURCE(bitcoin);
-    Q_INIT_RESOURCE(bitcoin_locale);
+    Q_INIT_RESOURCE(freicoin);
+    Q_INIT_RESOURCE(freicoin_locale);
 
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -496,7 +496,7 @@ int GuiMain(int argc, char* argv[])
     QApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
 
-    BitcoinApplication app;
+    FreicoinApplication app;
     QFontDatabase::addApplicationFont(":/fonts/monospace");
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
@@ -547,7 +547,7 @@ int GuiMain(int argc, char* argv[])
     // Gracefully exit if the user cancels
     if (!Intro::showIfNeeded(did_show_intro, prune_MiB)) return EXIT_SUCCESS;
 
-    /// 6. Determine availability of data directory and parse bitcoin.conf
+    /// 6. Determine availability of data directory and parse freicoin.conf
     /// - Do not call gArgs.GetDataDirNet() before this step finishes
     if (!CheckDataDirOption()) {
         InitError(strprintf(Untranslated("Specified data directory \"%s\" does not exist.\n"), gArgs.GetArg("-datadir", "")));
@@ -604,7 +604,7 @@ int GuiMain(int argc, char* argv[])
         exit(EXIT_SUCCESS);
 
     // Start up the payment server early, too, so impatient users that click on
-    // bitcoin: links repeatedly have their payment requests routed to this process:
+    // freicoin: links repeatedly have their payment requests routed to this process:
     if (WalletModel::isWalletEnabled()) {
         app.createPaymentServer();
     }
