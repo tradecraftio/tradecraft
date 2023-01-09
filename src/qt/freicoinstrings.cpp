@@ -42,8 +42,8 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "Error: Dumpfile version is not supported. This version of freicoin-wallet "
 "only supports version 1 dumpfiles. Got dumpfile with version %s"),
 QT_TRANSLATE_NOOP("freicoin", ""
-"Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and "
-"\"bech32\" address types"),
+"Error: Legacy wallets only support the \"legacy\" and \"bech32\" address "
+"types"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Error: Listening for incoming connections failed (listen returned error %s)"),
 QT_TRANSLATE_NOOP("freicoin", ""
@@ -77,6 +77,8 @@ QT_TRANSLATE_NOOP("freicoin", ""
 QT_TRANSLATE_NOOP("freicoin", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
+QT_TRANSLATE_NOOP("freicoin", ""
+"Reference height not specified and couldn't determine current chain height."),
 QT_TRANSLATE_NOOP("freicoin", ""
 "SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
 "supported"),
