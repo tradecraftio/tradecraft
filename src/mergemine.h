@@ -13,6 +13,7 @@
 #include <univalue.h>
 
 #include <map>
+#include <optional>
 #include <string>
 
 struct AuxWork {
