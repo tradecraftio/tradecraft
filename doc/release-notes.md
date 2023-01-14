@@ -17,7 +17,7 @@ Bitcoin Core version v24.0.1.1-35537 is now available from:
   * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/bitcoin-v24.0.1.1-35537-win64.zip)
   * [Source](https://github.com/tradecraftio/tradecraft/archive/bitcoin-v24.0.1.1-35537.zip)
 
-This is the first release of the v23 stable branch of Bitcoin Core with the
+This is the first release of the v24 stable branch of Bitcoin Core with the
 stratum mining server and Tradecraft/Freicoin merge-mining patches applied.
 
 Please report bugs related to the stratum mining server implementation or
@@ -62,7 +62,7 @@ Notable changes
 ===============
 
 There have been no notable changes in the stratum mining server or the
-Tradecraft/Freicoin merge-mining patches between v23.1.0.1-32975.md and this
+Tradecraft/Freicoin merge-mining patches between v23.1.0.1-32975 and this
 release.  Please see the Bitcoin Core release notes for notable changes between
 the upstream versions upon which these releases are based.
 
