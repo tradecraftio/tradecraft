@@ -357,6 +357,9 @@ void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
     // Create block-final tx
     CMutableTransaction txFinal;
     txFinal.nVersion = 2;
+    txFinal.vout.resize(1);
+    txFinal.vout[0].nValue = 0;
+    txFinal.vout[0].scriptPubKey = CScript() << OP_TRUE;
     txFinal.nLockTime = static_cast<uint32_t>(m_median_time_past);
 
     // Add all outputs from the prior block-final transaction.  We do nothing
@@ -379,9 +382,6 @@ void BlockAssembler::initFinalTx(const BlockFinalTxEntry& final_tx)
         LogPrintf("Unable to create block-final transaction due to lack of inputs.\n");
         return;
     }
-
-    // Add commitment and sign block-final transaction.
-    UpdateBlockFinalTxCommitment(txFinal, {});
 
     // Add block-final transaction to block template.
     pblocktemplate->block.vtx.emplace_back(MakeTransactionRef(std::move(txFinal)));
@@ -552,28 +552,5 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
         // Update transactions that depend on each of these
         nDescendantsUpdated += UpdatePackagesForAdded(mempool, ancestors, mapModifiedTx);
     }
-}
-
-void UpdateBlockFinalTxCommitment(CMutableTransaction &ret, const uint256& hash)
-{
-    CMutableTransaction mtx(ret);
-
-    // Generate new commitment
-    std::vector<unsigned char> new_commitment(36, 0x00);
-    std::copy(hash.begin(), hash.end(),
-              new_commitment.begin());
-    new_commitment[32] = 0x4b;
-    new_commitment[33] = 0x4a;
-    new_commitment[34] = 0x49;
-    new_commitment[35] = 0x48;
-
-    // Find & update commitment
-    if (!mtx.vout.empty() && mtx.vout.back().scriptPubKey.size() == 37 && mtx.vout.back().scriptPubKey[0] == 36 && mtx.vout.back().scriptPubKey[33] == 0x4b && mtx.vout.back().scriptPubKey[34] == 0x4a && mtx.vout.back().scriptPubKey[35] == 0x49 && mtx.vout.back().scriptPubKey[36] == 0x48) {
-        mtx.vout.back().scriptPubKey = CScript() << new_commitment;
-    } else {
-        mtx.vout.emplace_back(0, CScript() << new_commitment);
-    }
-
-    ret = mtx;
 }
 } // namespace node
