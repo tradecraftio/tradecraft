@@ -48,8 +48,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "upgrading to support pre-split keypool. Please use version %i or no version "
 "specified."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Distributed under the MIT software license, see the accompanying file %s or "
-"%s"),
+"Distributed under the GNU Affero General Purpose License v3.0, see the "
+"accompanying file %s or %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error loading %s: External signer wallet being loaded without external "
 "signer support compiled"),
@@ -112,12 +112,18 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "No wallet file format provided. To use createfromdump, -format=<format> must "
 "be provided."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Outbound connections restricted to CJDNS (-onlynet=cjdns) but -"
+"cjdnsreachable is not provided"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
 "reaching the Tor network is explicitly forbidden: -onion=0"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
 "reaching the Tor network is not provided: none of -proxy, -onion or -"
 "listenonion is given"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not "
+"provided"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
@@ -220,6 +226,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Copyright (C) %i-%i"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Could not find asmap file %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Could not parse asmap file %s"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Database corruption likely.  Try restarting with `-reindex=1`."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Disk space is too low!"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
