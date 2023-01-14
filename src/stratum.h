@@ -20,9 +20,6 @@ std::string HexInt4(uint32_t val);
 uint32_t ParseHexInt4(const UniValue& hex, const std::string& name);
 uint256 ParseUInt256(const UniValue& hex, const std::string& name);
 
-/** Check that the number of parameters are within [min, max]. */
-void BoundParams(const std::string& method, const UniValue& params, size_t min, size_t max);
-
 /** Configure the stratum server. */
 bool InitStratumServer(node::NodeContext& node);
 
