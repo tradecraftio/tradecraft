@@ -16,8 +16,8 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 
-#include <node/psbt.h>
-#include <psbt.h>
+#include <node/pst.h>
+#include <pst.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <streams.h>
@@ -29,82 +29,82 @@
 #include <string>
 #include <vector>
 
-using node::AnalyzePSBT;
-using node::PSBTAnalysis;
-using node::PSBTInputAnalysis;
+using node::AnalyzePST;
+using node::PSTAnalysis;
+using node::PSTInputAnalysis;
 
-void initialize_psbt()
+void initialize_pst()
 {
     static const ECCVerifyHandle verify_handle;
 }
 
-FUZZ_TARGET_INIT(psbt, initialize_psbt)
+FUZZ_TARGET_INIT(pst, initialize_pst)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    PartiallySignedTransaction psbt_mut;
+    PartiallySignedTransaction pst_mut;
     std::string error;
     auto str = fuzzed_data_provider.ConsumeRandomLengthString();
-    if (!DecodeRawPSBT(psbt_mut, MakeByteSpan(str), error)) {
+    if (!DecodeRawPST(pst_mut, MakeByteSpan(str), error)) {
         return;
     }
-    const PartiallySignedTransaction psbt = psbt_mut;
+    const PartiallySignedTransaction pst = pst_mut;
 
-    const PSBTAnalysis analysis = AnalyzePSBT(psbt);
-    (void)PSBTRoleName(analysis.next);
-    for (const PSBTInputAnalysis& input_analysis : analysis.inputs) {
-        (void)PSBTRoleName(input_analysis.next);
+    const PSTAnalysis analysis = AnalyzePST(pst);
+    (void)PSTRoleName(analysis.next);
+    for (const PSTInputAnalysis& input_analysis : analysis.inputs) {
+        (void)PSTRoleName(input_analysis.next);
     }
 
-    (void)psbt.IsNull();
+    (void)pst.IsNull();
 
-    std::optional<CMutableTransaction> tx = psbt.tx;
+    std::optional<CMutableTransaction> tx = pst.tx;
     if (tx) {
         const CMutableTransaction& mtx = *tx;
-        const PartiallySignedTransaction psbt_from_tx{mtx};
+        const PartiallySignedTransaction pst_from_tx{mtx};
     }
 
-    for (const PSBTInput& input : psbt.inputs) {
-        (void)PSBTInputSigned(input);
+    for (const PSTInput& input : pst.inputs) {
+        (void)PSTInputSigned(input);
         (void)input.IsNull();
     }
-    (void)CountPSBTUnsignedInputs(psbt);
+    (void)CountPSTUnsignedInputs(pst);
 
-    for (const PSBTOutput& output : psbt.outputs) {
+    for (const PSTOutput& output : pst.outputs) {
         (void)output.IsNull();
     }
 
-    for (size_t i = 0; i < psbt.tx->vin.size(); ++i) {
+    for (size_t i = 0; i < pst.tx->vin.size(); ++i) {
         CTxOut tx_out;
-        if (psbt.GetInputUTXO(tx_out, i)) {
+        if (pst.GetInputUTXO(tx_out, i)) {
             (void)tx_out.IsNull();
             (void)tx_out.ToString();
         }
     }
 
-    psbt_mut = psbt;
-    (void)FinalizePSBT(psbt_mut);
+    pst_mut = pst;
+    (void)FinalizePST(pst_mut);
 
-    psbt_mut = psbt;
+    pst_mut = pst;
     CMutableTransaction result;
-    if (FinalizeAndExtractPSBT(psbt_mut, result)) {
-        const PartiallySignedTransaction psbt_from_tx{result};
+    if (FinalizeAndExtractPST(pst_mut, result)) {
+        const PartiallySignedTransaction pst_from_tx{result};
     }
 
-    PartiallySignedTransaction psbt_merge;
+    PartiallySignedTransaction pst_merge;
     str = fuzzed_data_provider.ConsumeRandomLengthString();
-    if (!DecodeRawPSBT(psbt_merge, MakeByteSpan(str), error)) {
-        psbt_merge = psbt;
+    if (!DecodeRawPST(pst_merge, MakeByteSpan(str), error)) {
+        pst_merge = pst;
     }
-    psbt_mut = psbt;
-    (void)psbt_mut.Merge(psbt_merge);
-    psbt_mut = psbt;
-    (void)CombinePSBTs(psbt_mut, {psbt_mut, psbt_merge});
-    psbt_mut = psbt;
-    for (unsigned int i = 0; i < psbt_merge.tx->vin.size(); ++i) {
-        (void)psbt_mut.AddInput(psbt_merge.tx->vin[i], psbt_merge.inputs[i]);
+    pst_mut = pst;
+    (void)pst_mut.Merge(pst_merge);
+    pst_mut = pst;
+    (void)CombinePSTs(pst_mut, {pst_mut, pst_merge});
+    pst_mut = pst;
+    for (unsigned int i = 0; i < pst_merge.tx->vin.size(); ++i) {
+        (void)pst_mut.AddInput(pst_merge.tx->vin[i], pst_merge.inputs[i]);
     }
-    for (unsigned int i = 0; i < psbt_merge.tx->vout.size(); ++i) {
-        Assert(psbt_mut.AddOutput(psbt_merge.tx->vout[i], psbt_merge.outputs[i]));
+    for (unsigned int i = 0; i < pst_merge.tx->vout.size(); ++i) {
+        Assert(pst_mut.AddOutput(pst_merge.tx->vout[i], pst_merge.outputs[i]));
     }
-    psbt_mut.unknown.insert(psbt_merge.unknown.begin(), psbt_merge.unknown.end());
+    pst_mut.unknown.insert(pst_merge.unknown.begin(), pst_merge.unknown.end());
 }

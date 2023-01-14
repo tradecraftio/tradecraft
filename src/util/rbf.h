@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_RBF_H
-#define BITCOIN_UTIL_RBF_H
+#ifndef FREICOIN_UTIL_RBF_H
+#define FREICOIN_UTIL_RBF_H
 
 #include <cstdint>
 
@@ -31,4 +31,4 @@ static constexpr uint32_t MAX_BIP125_RBF_SEQUENCE{0xfffffffd};
 * party to be able to disable replacement by opting out in their own input. */
 bool SignalsOptInRBF(const CTransaction& tx);
 
-#endif // BITCOIN_UTIL_RBF_H
+#endif // FREICOIN_UTIL_RBF_H

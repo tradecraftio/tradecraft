@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_OUTPUTTYPE_H
-#define BITCOIN_OUTPUTTYPE_H
+#ifndef FREICOIN_OUTPUTTYPE_H
+#define FREICOIN_OUTPUTTYPE_H
 
 #include <script/signingprovider.h>
 #include <script/standard.h>
@@ -62,4 +62,4 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
 /** Get the OutputType for a CTxDestination */
 std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest);
 
-#endif // BITCOIN_OUTPUTTYPE_H
+#endif // FREICOIN_OUTPUTTYPE_H

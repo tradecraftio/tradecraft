@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_REST_H
-#define BITCOIN_REST_H
+#ifndef FREICOIN_REST_H
+#define FREICOIN_REST_H
 
 #include <string>
 
@@ -36,4 +36,4 @@ enum class RESTResponseFormat {
  */
 RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq);
 
-#endif // BITCOIN_REST_H
+#endif // FREICOIN_REST_H

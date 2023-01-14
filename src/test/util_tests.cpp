@@ -1165,7 +1165,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
     // If check below fails, should manually dump the results with:
     //
-    //   ARGS_MERGE_TEST_OUT=results.txt ./test_bitcoin --run_test=util_tests/util_ArgsMerge
+    //   ARGS_MERGE_TEST_OUT=results.txt ./test_freicoin --run_test=util_tests/util_ArgsMerge
     //
     // And verify diff against previous results to make sure the changes are expected.
     //
@@ -1268,7 +1268,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
 
     // If check below fails, should manually dump the results with:
     //
-    //   CHAIN_MERGE_TEST_OUT=results.txt ./test_bitcoin --run_test=util_tests/util_ChainMerge
+    //   CHAIN_MERGE_TEST_OUT=results.txt ./test_freicoin --run_test=util_tests/util_ChainMerge
     //
     // And verify diff against previous results to make sure the changes are expected.
     //
@@ -1789,7 +1789,7 @@ BOOST_AUTO_TEST_CASE(test_LocaleIndependentAtoi)
         BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>(pair.first), pair.second);
     }
 
-    // Ensure legacy compatibility with previous versions of Bitcoin Core's atoi64
+    // Ensure legacy compatibility with previous versions of Freicoin's atoi64
     for (const auto& pair : atoi64_test_pairs) {
         BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>(pair.first), atoi64_legacy(pair.first));
     }
@@ -2283,7 +2283,7 @@ BOOST_AUTO_TEST_CASE(test_ToUpper)
 BOOST_AUTO_TEST_CASE(test_Capitalize)
 {
     BOOST_CHECK_EQUAL(Capitalize(""), "");
-    BOOST_CHECK_EQUAL(Capitalize("bitcoin"), "Bitcoin");
+    BOOST_CHECK_EQUAL(Capitalize("freicoin"), "Freicoin");
     BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
 }
 
@@ -2787,7 +2787,7 @@ BOOST_AUTO_TEST_CASE(util_WriteBinaryFile)
 {
     fs::path tmpfolder = m_args.GetDataDirBase();
     fs::path tmpfile = tmpfolder / "write_binary.dat";
-    std::string expected_text = "bitcoin";
+    std::string expected_text = "freicoin";
     auto valid = WriteBinaryFile(tmpfile, expected_text);
     std::string actual_text;
     std::ifstream file{tmpfile};

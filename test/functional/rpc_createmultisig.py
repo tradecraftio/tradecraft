@@ -23,7 +23,7 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.authproxy import JSONRPCException
 from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.key import ECPubKey, ECKey
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
@@ -34,7 +34,7 @@ from test_framework.wallet import (
     getnewdestination,
 )
 
-class RpcCreateMultiSigTest(BitcoinTestFramework):
+class RpcCreateMultiSigTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3

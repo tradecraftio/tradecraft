@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <clientversion.h>
@@ -132,7 +132,7 @@ bool StartLogging(const ArgsManager& args)
     LogPrintf("Using data directory %s\n", fs::PathToString(gArgs.GetDataDirNet()));
 
     // Only log conf file usage message if conf file actually exists.
-    fs::path config_file_path = GetConfigFile(args.GetPathArg("-conf", BITCOIN_CONF_FILENAME));
+    fs::path config_file_path = GetConfigFile(args.GetPathArg("-conf", FREICOIN_CONF_FILENAME));
     if (fs::exists(config_file_path)) {
         LogPrintf("Config file: %s\n", fs::PathToString(config_file_path));
     } else if (args.IsArgSet("-conf")) {

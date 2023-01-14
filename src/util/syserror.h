@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SYSERROR_H
-#define BITCOIN_UTIL_SYSERROR_H
+#ifndef FREICOIN_UTIL_SYSERROR_H
+#define FREICOIN_UTIL_SYSERROR_H
 
 #include <string>
 
@@ -24,4 +24,4 @@
  */
 std::string SysErrorString(int err);
 
-#endif // BITCOIN_UTIL_SYSERROR_H
+#endif // FREICOIN_UTIL_SYSERROR_H

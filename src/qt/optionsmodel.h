@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_OPTIONSMODEL_H
-#define BITCOIN_QT_OPTIONSMODEL_H
+#ifndef FREICOIN_QT_OPTIONSMODEL_H
+#define FREICOIN_QT_OPTIONSMODEL_H
 
 #include <cstdint>
-#include <qt/bitcoinunits.h>
+#include <qt/freicoinunits.h>
 #include <qt/guiconstants.h>
 
 #include <QAbstractListModel>
@@ -42,7 +42,7 @@ static inline int PruneMiBtoGB(int64_t mib) { return (mib * 1024 * 1024 + GB_BYT
  */
 static inline int64_t PruneGBtoMiB(int gb) { return gb * GB_BYTES / 1024 / 1024; }
 
-/** Interface from Qt to configuration data structure for Bitcoin client.
+/** Interface from Qt to configuration data structure for Freicoin client.
    To Qt, the options are presented as a list with the different options
    laid out vertically.
    This can be changed to a tree once the settings become sufficiently
@@ -68,7 +68,7 @@ public:
         ProxyUseTor,            // bool
         ProxyIPTor,             // QString
         ProxyPortTor,           // int
-        DisplayUnit,            // BitcoinUnit
+        DisplayUnit,            // FreicoinUnit
         ThirdPartyTxUrls,       // QString
         Language,               // QString
         UseEmbeddedMonospacedFont, // bool
@@ -82,7 +82,7 @@ public:
         SpendZeroConfChange,    // bool
         Listen,                 // bool
         Server,                 // bool
-        EnablePSBTControls,     // bool
+        EnablePSFRControls,     // bool
         OptionIDRowCount,
     };
 
@@ -101,12 +101,12 @@ public:
     bool getShowTrayIcon() const { return m_show_tray_icon; }
     bool getMinimizeToTray() const { return fMinimizeToTray; }
     bool getMinimizeOnClose() const { return fMinimizeOnClose; }
-    BitcoinUnit getDisplayUnit() const { return m_display_bitcoin_unit; }
+    FreicoinUnit getDisplayUnit() const { return m_display_freicoin_unit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
-    bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
+    bool getEnablePSFRControls() const { return m_enable_pst_controls; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
@@ -125,15 +125,15 @@ private:
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
-    BitcoinUnit m_display_bitcoin_unit;
+    FreicoinUnit m_display_freicoin_unit;
     QString strThirdPartyTxUrls;
     bool m_use_embedded_monospaced_font;
     bool fCoinControlFeatures;
     bool m_sub_fee_from_amount;
-    bool m_enable_psbt_controls;
+    bool m_enable_pst_controls;
 
     //! In-memory settings for display. These are stored persistently by the
-    //! bitcoin node but it's also nice to store them in memory to prevent them
+    //! freicoin node but it's also nice to store them in memory to prevent them
     //! getting cleared when enable/disable toggles are used in the GUI.
     int m_prune_size_gb;
     QString m_proxy_ip;
@@ -151,10 +151,10 @@ private:
     void checkAndMigrate();
 
 Q_SIGNALS:
-    void displayUnitChanged(BitcoinUnit unit);
+    void displayUnitChanged(FreicoinUnit unit);
     void coinControlFeaturesChanged(bool);
     void showTrayIconChanged(bool);
     void useEmbeddedMonospacedFontChanged(bool);
 };
 
-#endif // BITCOIN_QT_OPTIONSMODEL_H
+#endif // FREICOIN_QT_OPTIONSMODEL_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NET_TYPES_H
-#define BITCOIN_NET_TYPES_H
+#ifndef FREICOIN_NET_TYPES_H
+#define FREICOIN_NET_TYPES_H
 
 #include <cstdint>
 #include <map>
@@ -68,4 +68,4 @@ UniValue BanMapToJson(const banmap_t& bans);
  */
 void BanMapFromJson(const UniValue& bans_json, banmap_t& bans);
 
-#endif // BITCOIN_NET_TYPES_H
+#endif // FREICOIN_NET_TYPES_H

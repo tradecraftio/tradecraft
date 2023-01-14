@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test that we reject low difficulty headers to prevent our block tree from filling up with useless bloat"""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 
 from test_framework.p2p import (
     P2PInterface,
@@ -36,7 +36,7 @@ NODE1_BLOCKS_REQUIRED = 15
 NODE2_BLOCKS_REQUIRED = 2047
 
 
-class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
+class RejectLowDifficultyHeadersTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4

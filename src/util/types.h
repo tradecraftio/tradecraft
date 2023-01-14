@@ -13,10 +13,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_TYPES_H
-#define BITCOIN_UTIL_TYPES_H
+#ifndef FREICOIN_UTIL_TYPES_H
+#define FREICOIN_UTIL_TYPES_H
 
 template <class>
 inline constexpr bool ALWAYS_FALSE{false};
 
-#endif // BITCOIN_UTIL_TYPES_H
+#endif // FREICOIN_UTIL_TYPES_H

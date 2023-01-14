@@ -13,14 +13,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-// The bitcoin-chainstate executable serves to surface the dependencies required
-// by a program wishing to use Bitcoin Core's consensus engine as it is right
+// The freicoin-chainstate executable serves to surface the dependencies required
+// by a program wishing to use Freicoin's consensus engine as it is right
 // now.
 //
 // DEVELOPER NOTE: Since this is a "demo-only", experimental, etc. executable,
-//                 it may diverge from Bitcoin Core's coding style.
+//                 it may diverge from Freicoin's coding style.
 //
-// It is part of the libbitcoinkernel project.
+// It is part of the libfreicoinkernel project.
 
 #include <kernel/checks.h>
 #include <kernel/context.h>

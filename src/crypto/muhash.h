@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_MUHASH_H
-#define BITCOIN_CRYPTO_MUHASH_H
+#ifndef FREICOIN_CRYPTO_MUHASH_H
+#define FREICOIN_CRYPTO_MUHASH_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <serialize.h>
@@ -100,7 +100,7 @@ public:
  * is intended to represent a set of elements.
  *
  * See also https://cseweb.ucsd.edu/~mihir/papers/inchash.pdf and
- * https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2017-May/014337.html.
+ * https://lists.linuxfoundation.org/pipermail/freicoin-dev/2017-May/014337.html.
  */
 class MuHash3072
 {
@@ -139,4 +139,4 @@ public:
     }
 };
 
-#endif // BITCOIN_CRYPTO_MUHASH_H
+#endif // FREICOIN_CRYPTO_MUHASH_H

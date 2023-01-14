@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_SHA3_H
-#define BITCOIN_CRYPTO_SHA3_H
+#ifndef FREICOIN_CRYPTO_SHA3_H
+#define FREICOIN_CRYPTO_SHA3_H
 
 #include <span.h>
 
@@ -49,4 +49,4 @@ public:
     SHA3_256& Reset();
 };
 
-#endif // BITCOIN_CRYPTO_SHA3_H
+#endif // FREICOIN_CRYPTO_SHA3_H

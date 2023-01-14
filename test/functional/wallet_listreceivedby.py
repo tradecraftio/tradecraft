@@ -17,7 +17,7 @@
 from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_array_result,
     assert_equal,
@@ -26,7 +26,7 @@ from test_framework.util import (
 from test_framework.wallet_util import test_address
 
 
-class ReceivedByTest(BitcoinTestFramework):
+class ReceivedByTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         # whitelist peers to speed up tx relay / mempool sync

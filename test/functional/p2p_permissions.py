@@ -29,20 +29,20 @@ from test_framework.script import (
     OP_TRUE,
 )
 from test_framework.test_node import ErrorMatch
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
 )
 
 
-class P2PPermissionsTests(BitcoinTestFramework):
+class P2PPermissionsTests(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
 
     def run_test(self):
-        # Let bitcoind handle the block-final initial output logic
+        # Let freicoind handle the block-final initial output logic
         self.generate(self.nodes[0], 1)
 
         self.check_tx_relay()
@@ -170,9 +170,9 @@ class P2PPermissionsTests(BitcoinTestFramework):
                 raise AssertionError("Expected permissions %r is not granted." % p)
 
     def replaceinconfig(self, nodeid, old, new):
-        with open(self.nodes[nodeid].bitcoinconf, encoding="utf8") as f:
+        with open(self.nodes[nodeid].freicoinconf, encoding="utf8") as f:
             newText = f.read().replace(old, new)
-        with open(self.nodes[nodeid].bitcoinconf, 'w', encoding="utf8") as f:
+        with open(self.nodes[nodeid].freicoinconf, 'w', encoding="utf8") as f:
             f.write(newText)
 
 

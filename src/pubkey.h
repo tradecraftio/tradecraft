@@ -15,8 +15,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_PUBKEY_H
-#define BITCOIN_PUBKEY_H
+#ifndef FREICOIN_PUBKEY_H
+#define FREICOIN_PUBKEY_H
 
 #include <hash.h>
 #include <serialize.h>
@@ -358,4 +358,4 @@ typedef struct secp256k1_context_struct secp256k1_context;
  *  by key.cpp. */
 const secp256k1_context* GetVerifyContext();
 
-#endif // BITCOIN_PUBKEY_H
+#endif // FREICOIN_PUBKEY_H

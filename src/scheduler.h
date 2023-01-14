@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCHEDULER_H
-#define BITCOIN_SCHEDULER_H
+#ifndef FREICOIN_SCHEDULER_H
+#define FREICOIN_SCHEDULER_H
 
 #include <attributes.h>
 #include <sync.h>
@@ -163,4 +163,4 @@ public:
     size_t CallbacksPending() EXCLUSIVE_LOCKS_REQUIRED(!m_callbacks_mutex);
 };
 
-#endif // BITCOIN_SCHEDULER_H
+#endif // FREICOIN_SCHEDULER_H

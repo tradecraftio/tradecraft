@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef BITCOIN_BANMAN_H
-#define BITCOIN_BANMAN_H
+#ifndef FREICOIN_BANMAN_H
+#define FREICOIN_BANMAN_H
 
 #include <addrdb.h>
 #include <common/bloom.h>
@@ -107,4 +107,4 @@ private:
     CRollingBloomFilter m_discouraged GUARDED_BY(m_cs_banned) {50000, 0.000001};
 };
 
-#endif // BITCOIN_BANMAN_H
+#endif // FREICOIN_BANMAN_H

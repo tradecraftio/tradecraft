@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ARITH_UINT256_H
-#define BITCOIN_ARITH_UINT256_H
+#ifndef FREICOIN_ARITH_UINT256_H
+#define FREICOIN_ARITH_UINT256_H
 
 #include <cstring>
 #include <limits>
@@ -275,7 +275,7 @@ public:
      * Thus 0x1234560000 is compact (0x05123456)
      * and  0xc0de000000 is compact (0x0600c0de)
      *
-     * Bitcoin only uses this "compact" format for encoding difficulty
+     * Freicoin only uses this "compact" format for encoding difficulty
      * targets, which are unsigned 256bit quantities.  Thus, all the
      * complexities of the sign bit and using base 256 are probably an
      * implementation accident.
@@ -292,4 +292,4 @@ arith_uint256 UintToArith256(const uint256 &);
 
 extern template class base_uint<256>;
 
-#endif // BITCOIN_ARITH_UINT256_H
+#endif // FREICOIN_ARITH_UINT256_H

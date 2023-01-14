@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CHAIN_H
-#define BITCOIN_CHAIN_H
+#ifndef FREICOIN_CHAIN_H
+#define FREICOIN_CHAIN_H
 
 #include <arith_uint256.h>
 #include <consensus/params.h>
@@ -500,4 +500,4 @@ CBlockLocator GetLocator(const CBlockIndex* index);
 /** Construct a list of hash entries to put in a locator.  */
 std::vector<uint256> LocatorEntries(const CBlockIndex* index);
 
-#endif // BITCOIN_CHAIN_H
+#endif // FREICOIN_CHAIN_H

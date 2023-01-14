@@ -13,9 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Test bitcoind shutdown."""
+"""Test freicoind shutdown."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal, get_rpc_proxy
 from threading import Thread
 
@@ -23,7 +23,7 @@ def test_long_call(node):
     block = node.waitfornewblock()
     assert_equal(block['height'], 0)
 
-class ShutdownTest(BitcoinTestFramework):
+class ShutdownTest(FreicoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True

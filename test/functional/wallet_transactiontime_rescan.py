@@ -19,7 +19,7 @@
 import time
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -27,7 +27,7 @@ from test_framework.util import (
 )
 
 
-class TransactionTimeRescanTest(BitcoinTestFramework):
+class TransactionTimeRescanTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 3
@@ -38,7 +38,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info('Prepare nodes and wallet')
 
-        minernode = self.nodes[0]  # node used to mine BTC and create transactions
+        minernode = self.nodes[0]  # node used to mine FRC and create transactions
         usernode = self.nodes[1]  # user node with correct time
         restorenode = self.nodes[2]  # node used to restore user wallet and check time determination in ComputeSmartTime (wallet.cpp)
 
@@ -72,7 +72,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         # check blockcount
         assert_equal(minernode.getblockcount(), 200)
 
-        # generate some btc to create transactions and check blockcount
+        # generate some frc to create transactions and check blockcount
         initial_mine = COINBASE_MATURITY + 1
         self.generatetoaddress(minernode, initial_mine, m1)
         assert_equal(minernode.getblockcount(), initial_mine + 200)
@@ -80,8 +80,8 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         # synchronize nodes and time
         self.sync_all()
         set_node_times(self.nodes, cur_time + ten_days)
-        # send 10 btc to user's first watch-only address
-        self.log.info('Send 10 btc to user')
+        # send 10 frc to user's first watch-only address
+        self.log.info('Send 10 frc to user')
         miner_wallet.sendtoaddress(wo1, 10)
 
         # generate blocks and check blockcount
@@ -91,8 +91,8 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         # synchronize nodes and time
         self.sync_all()
         set_node_times(self.nodes, cur_time + ten_days + ten_days)
-        # send 5 btc to our second watch-only address
-        self.log.info('Send 5 btc to user')
+        # send 5 frc to our second watch-only address
+        self.log.info('Send 5 frc to user')
         miner_wallet.sendtoaddress(wo2, 5)
 
         # generate blocks and check blockcount
@@ -102,8 +102,8 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         # synchronize nodes and time
         self.sync_all()
         set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days)
-        # send 1 btc to our third watch-only address
-        self.log.info('Send 1 btc to user')
+        # send 1 frc to our third watch-only address
+        self.log.info('Send 1 frc to user')
         miner_wallet.sendtoaddress(wo3, 1)
 
         # generate more blocks and check blockcount

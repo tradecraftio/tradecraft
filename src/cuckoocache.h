@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CUCKOOCACHE_H
-#define BITCOIN_CUCKOOCACHE_H
+#ifndef FREICOIN_CUCKOOCACHE_H
+#define FREICOIN_CUCKOOCACHE_H
 
 #include <util/fastrange.h>
 
@@ -499,4 +499,4 @@ public:
 };
 } // namespace CuckooCache
 
-#endif // BITCOIN_CUCKOOCACHE_H
+#endif // FREICOIN_CUCKOOCACHE_H

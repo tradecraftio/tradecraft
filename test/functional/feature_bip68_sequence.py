@@ -30,7 +30,7 @@ from test_framework.messages import (
     CTxOut,
     tx_from_hex,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -47,7 +47,7 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "non-BIP68-final"
 
-class BIP68Test(BitcoinTestFramework):
+class BIP68Test(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [
@@ -96,7 +96,7 @@ class BIP68Test(BitcoinTestFramework):
     def test_disable_flag(self):
         # Create some unconfirmed inputs
         new_addr = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 BTC
+        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 FRC
 
         utxos = self.nodes[0].listunspent(0, 0)
         assert len(utxos) > 0

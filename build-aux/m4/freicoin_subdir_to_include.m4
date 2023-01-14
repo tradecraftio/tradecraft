@@ -13,9 +13,9 @@ dnl
 dnl You should have received a copy of the GNU Affero General Public License
 dnl along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-dnl BITCOIN_SUBDIR_TO_INCLUDE([CPPFLAGS-VARIABLE-NAME],[SUBDIRECTORY-NAME],[HEADER-FILE])
+dnl FREICOIN_SUBDIR_TO_INCLUDE([CPPFLAGS-VARIABLE-NAME],[SUBDIRECTORY-NAME],[HEADER-FILE])
 dnl SUBDIRECTORY-NAME must end with a path separator
-AC_DEFUN([BITCOIN_SUBDIR_TO_INCLUDE],[
+AC_DEFUN([FREICOIN_SUBDIR_TO_INCLUDE],[
   if test "$2" = ""; then
     AC_MSG_RESULT([default])
   else

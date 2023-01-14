@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_BLOCKSTORAGE_H
-#define BITCOIN_NODE_BLOCKSTORAGE_H
+#ifndef FREICOIN_NODE_BLOCKSTORAGE_H
+#define FREICOIN_NODE_BLOCKSTORAGE_H
 
 #include <attributes.h>
 #include <chain.h>
@@ -225,4 +225,4 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, const fs::path& mempool_path);
 } // namespace node
 
-#endif // BITCOIN_NODE_BLOCKSTORAGE_H
+#endif // FREICOIN_NODE_BLOCKSTORAGE_H

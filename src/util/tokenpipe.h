@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_TOKENPIPE_H
-#define BITCOIN_UTIL_TOKENPIPE_H
+#ifndef FREICOIN_UTIL_TOKENPIPE_H
+#define FREICOIN_UTIL_TOKENPIPE_H
 
 #ifndef WIN32
 
@@ -135,4 +135,4 @@ public:
 
 #endif // WIN32
 
-#endif // BITCOIN_UTIL_TOKENPIPE_H
+#endif // FREICOIN_UTIL_TOKENPIPE_H

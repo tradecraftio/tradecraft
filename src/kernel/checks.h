@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_CHECKS_H
-#define BITCOIN_KERNEL_CHECKS_H
+#ifndef FREICOIN_KERNEL_CHECKS_H
+#define FREICOIN_KERNEL_CHECKS_H
 
 #include <optional>
 
@@ -31,4 +31,4 @@ std::optional<bilingual_str> SanityChecks(const Context&);
 
 }
 
-#endif // BITCOIN_KERNEL_CHECKS_H
+#endif // FREICOIN_KERNEL_CHECKS_H

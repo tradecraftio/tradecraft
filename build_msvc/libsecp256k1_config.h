@@ -16,12 +16,12 @@
  * <https://www.gnu.org/licenses/>.                                   *
  **********************************************************************/
 
-#ifndef BITCOIN_LIBSECP256K1_CONFIG_H
-#define BITCOIN_LIBSECP256K1_CONFIG_H
+#ifndef FREICOIN_LIBSECP256K1_CONFIG_H
+#define FREICOIN_LIBSECP256K1_CONFIG_H
 
 #undef USE_ASM_X86_64
 
 #define ECMULT_GEN_PREC_BITS 4
 #define ECMULT_WINDOW_SIZE 15
 
-#endif // BITCOIN_LIBSECP256K1_CONFIG_H
+#endif // FREICOIN_LIBSECP256K1_CONFIG_H

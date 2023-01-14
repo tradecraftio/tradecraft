@@ -14,14 +14,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoind (Bitcoin node with a JSON-RPC server)"
+            VALUE "CompanyName",        "Freicoin"
+            VALUE "FileDescription",    "freicoind (Freicoin node with a JSON-RPC server)"
             VALUE "FileVersion",        PACKAGE_VERSION
-            VALUE "InternalName",       "bitcoind"
+            VALUE "InternalName",       "freicoind"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the terms of the GNU Affero General Public License v3.0, see the accompanying file COPYING for details."
-            VALUE "OriginalFilename",   "bitcoind.exe"
-            VALUE "ProductName",        "bitcoind"
+            VALUE "OriginalFilename",   "freicoind.exe"
+            VALUE "ProductName",        "freicoind"
             VALUE "ProductVersion",     PACKAGE_VERSION
         END
     END

@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POLICY_SETTINGS_H
-#define BITCOIN_POLICY_SETTINGS_H
+#ifndef FREICOIN_POLICY_SETTINGS_H
+#define FREICOIN_POLICY_SETTINGS_H
 
 extern unsigned int nBytesPerSigOp;
 
-#endif // BITCOIN_POLICY_SETTINGS_H
+#endif // FREICOIN_POLICY_SETTINGS_H

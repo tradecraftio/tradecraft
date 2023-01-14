@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_FEES_H
-#define BITCOIN_WALLET_FEES_H
+#ifndef FREICOIN_WALLET_FEES_H
+#define FREICOIN_WALLET_FEES_H
 
 #include <consensus/amount.h>
 
@@ -56,4 +56,4 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
 CFeeRate GetDiscardRate(const CWallet& wallet);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_FEES_H
+#endif // FREICOIN_WALLET_FEES_H

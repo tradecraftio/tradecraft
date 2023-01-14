@@ -18,11 +18,11 @@
  * Server/client environment: argument handling, config file parsing,
  * thread wrappers, startup time
  */
-#ifndef BITCOIN_UTIL_SYSTEM_H
-#define BITCOIN_UTIL_SYSTEM_H
+#ifndef FREICOIN_UTIL_SYSTEM_H
+#define FREICOIN_UTIL_SYSTEM_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <compat/compat.h>
@@ -49,8 +49,8 @@ class UniValue;
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
-extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_SETTINGS_FILENAME;
+extern const char * const FREICOIN_CONF_FILENAME;
+extern const char * const FREICOIN_SETTINGS_FILENAME;
 
 void SetupEnvironment();
 bool SetupNetworking();
@@ -593,4 +593,4 @@ private:
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_SYSTEM_H
+#endif // FREICOIN_UTIL_SYSTEM_H

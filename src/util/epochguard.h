@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_EPOCHGUARD_H
-#define BITCOIN_UTIL_EPOCHGUARD_H
+#ifndef FREICOIN_UTIL_EPOCHGUARD_H
+#define FREICOIN_UTIL_EPOCHGUARD_H
 
 #include <threadsafety.h>
 #include <util/macros.h>
@@ -110,4 +110,4 @@ public:
 
 #define WITH_FRESH_EPOCH(epoch) const Epoch::Guard UNIQUE_NAME(epoch_guard_)(epoch)
 
-#endif // BITCOIN_UTIL_EPOCHGUARD_H
+#endif // FREICOIN_UTIL_EPOCHGUARD_H

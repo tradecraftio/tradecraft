@@ -17,8 +17,8 @@
 /**
  * Money parsing/formatting utilities.
  */
-#ifndef BITCOIN_UTIL_MONEYSTR_H
-#define BITCOIN_UTIL_MONEYSTR_H
+#ifndef FREICOIN_UTIL_MONEYSTR_H
+#define FREICOIN_UTIL_MONEYSTR_H
 
 #include <consensus/amount.h>
 
@@ -32,4 +32,4 @@ std::string FormatMoney(const CAmount n);
 /** Parse an amount denoted in full coins. E.g. "0.0034" supplied on the command line. **/
 std::optional<CAmount> ParseMoney(const std::string& str);
 
-#endif // BITCOIN_UTIL_MONEYSTR_H
+#endif // FREICOIN_UTIL_MONEYSTR_H

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RANDOM_H
-#define BITCOIN_RANDOM_H
+#ifndef FREICOIN_RANDOM_H
+#define FREICOIN_RANDOM_H
 
 #include <crypto/chacha20.h>
 #include <crypto/common.h>
@@ -316,4 +316,4 @@ bool Random_SanityCheck();
  */
 void RandomInit();
 
-#endif // BITCOIN_RANDOM_H
+#endif // FREICOIN_RANDOM_H

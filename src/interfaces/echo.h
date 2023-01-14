@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INTERFACES_ECHO_H
-#define BITCOIN_INTERFACES_ECHO_H
+#ifndef FREICOIN_INTERFACES_ECHO_H
+#define FREICOIN_INTERFACES_ECHO_H
 
 #include <memory>
 #include <string>
@@ -34,4 +34,4 @@ public:
 std::unique_ptr<Echo> MakeEcho();
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_ECHO_H
+#endif // FREICOIN_INTERFACES_ECHO_H

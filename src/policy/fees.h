@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef BITCOIN_POLICY_FEES_H
-#define BITCOIN_POLICY_FEES_H
+#ifndef FREICOIN_POLICY_FEES_H
+#define FREICOIN_POLICY_FEES_H
 
 #include <consensus/amount.h>
 #include <fs.h>
@@ -320,4 +320,4 @@ private:
     FastRandomContext insecure_rand;
 };
 
-#endif // BITCOIN_POLICY_FEES_H
+#endif // FREICOIN_POLICY_FEES_H

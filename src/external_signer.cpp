@@ -15,7 +15,7 @@
 
 #include <chainparams.h>
 #include <core_io.h>
-#include <psbt.h>
+#include <pst.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <external_signer.h>
@@ -80,22 +80,22 @@ UniValue ExternalSigner::GetDescriptors(const int account)
     return RunCommandParseJSON(m_command + " --fingerprint \"" + m_fingerprint + "\"" + NetworkArg() + " getdescriptors --account " + strprintf("%d", account));
 }
 
-bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::string& error)
+bool ExternalSigner::SignTransaction(PartiallySignedTransaction& pstx, std::string& error)
 {
-    // Serialize the PSBT
+    // Serialize the PST
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
+    ssTx << pstx;
     // parse ExternalSigner master fingerprint
     std::vector<unsigned char> parsed_m_fingerprint = ParseHex(m_fingerprint);
     // Check if signer fingerprint matches any input master key fingerprint
-    auto matches_signer_fingerprint = [&](const PSBTInput& input) {
+    auto matches_signer_fingerprint = [&](const PSTInput& input) {
         for (const auto& entry : input.hd_keypaths) {
             if (parsed_m_fingerprint == MakeUCharSpan(entry.second.fingerprint)) return true;
         }
         return false;
     };
 
-    if (!std::any_of(psbtx.inputs.begin(), psbtx.inputs.end(), matches_signer_fingerprint)) {
+    if (!std::any_of(pstx.inputs.begin(), pstx.inputs.end(), matches_signer_fingerprint)) {
         error = "Signer fingerprint " + m_fingerprint + " does not match any of the inputs:\n" + EncodeBase64(ssTx.str());
         return false;
     }
@@ -110,19 +110,19 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         return false;
     }
 
-    if (!find_value(signer_result, "psbt").isStr()) {
+    if (!find_value(signer_result, "pst").isStr()) {
         error = "Unexpected result from signer";
         return false;
     }
 
-    PartiallySignedTransaction signer_psbtx;
-    std::string signer_psbt_error;
-    if (!DecodeBase64PSBT(signer_psbtx, find_value(signer_result, "psbt").get_str(), signer_psbt_error)) {
-        error = strprintf("TX decode failed %s", signer_psbt_error);
+    PartiallySignedTransaction signer_pstx;
+    std::string signer_pst_error;
+    if (!DecodeBase64PST(signer_pstx, find_value(signer_result, "pst").get_str(), signer_pst_error)) {
+        error = strprintf("TX decode failed %s", signer_pst_error);
         return false;
     }
 
-    psbtx = signer_psbtx;
+    pstx = signer_pstx;
 
     return true;
 }

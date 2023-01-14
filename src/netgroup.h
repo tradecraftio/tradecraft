@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NETGROUP_H
-#define BITCOIN_NETGROUP_H
+#ifndef FREICOIN_NETGROUP_H
+#define FREICOIN_NETGROUP_H
 
 #include <netaddress.h>
 #include <uint256.h>
@@ -74,4 +74,4 @@ private:
     const std::vector<bool> m_asmap;
 };
 
-#endif // BITCOIN_NETGROUP_H
+#endif // FREICOIN_NETGROUP_H

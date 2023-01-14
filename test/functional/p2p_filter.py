@@ -39,7 +39,7 @@ from test_framework.p2p import (
     p2p_lock,
 )
 from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
@@ -101,7 +101,7 @@ class P2PBloomFilter(P2PInterface):
             self._merkleblock_received = value
 
 
-class FilterTest(BitcoinTestFramework):
+class FilterTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[
