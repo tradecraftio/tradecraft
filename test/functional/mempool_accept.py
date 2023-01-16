@@ -56,6 +56,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
             '-txindex',
             '-permitbaremultisig=0',
             '-datacarrier=1',  # We still test OP_RETURN
+            '-mempoolfullrbf=0',
         ]] * self.num_nodes
         self.supports_cli = False
 
