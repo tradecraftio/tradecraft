@@ -174,6 +174,11 @@ static std::vector<RPCArg> CreateTxDoc()
                         {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
                     },
                 },
+                {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                    {
+                        {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "An amount of freicoin to be destroyed (sent to an OP_RETURN output)."},
+                    },
+                },
             },
          RPCArgOptions{.skip_type_check = true}},
         {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
@@ -566,6 +571,7 @@ static RPCHelpMan decodescript()
             // Can be wrapped if the checks below pass
             break;
         case TxoutType::NULL_DATA:
+        case TxoutType::UNSPENDABLE:
         case TxoutType::SCRIPTHASH:
         case TxoutType::WITNESS_UNKNOWN:
         case TxoutType::WITNESS_V1_TAPROOT:
@@ -606,6 +612,7 @@ static RPCHelpMan decodescript()
                 // Can be P2WSH wrapped
                 return true;
             case TxoutType::NULL_DATA:
+            case TxoutType::UNSPENDABLE:
             case TxoutType::SCRIPTHASH:
             case TxoutType::WITNESS_UNKNOWN:
             case TxoutType::WITNESS_V0_KEYHASH:
