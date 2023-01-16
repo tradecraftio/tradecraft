@@ -147,7 +147,7 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
             return false;
         }
 
-        if (whichType == TxoutType::NULL_DATA)
+        if (whichType == TxoutType::NULL_DATA || whichType == TxoutType::UNSPENDABLE)
             nDataOut++;
         else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";

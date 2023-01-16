@@ -869,7 +869,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RETURN;
     CheckIsNotStandard(t, "scriptpubkey");
 
-    // TxoutType::NULL_DATA w/o PUSHDATA
+    // TxoutType::UNSPENDABLE (NULL_DATA w/o PUSHDATA)
     t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     CheckIsStandard(t);

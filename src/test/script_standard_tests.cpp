@@ -106,6 +106,12 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NULL_DATA);
     BOOST_CHECK_EQUAL(solutions.size(), 0U);
 
+    // TxoutType::UNSPENDABLE
+    s.clear();
+    s << OP_RETURN;
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::UNSPENDABLE);
+    BOOST_CHECK_EQUAL(solutions.size(), 0U);
+
     // TxoutType::WITNESS_V0_KEYHASH
     s.clear();
     s << OP_0 << ToByteVector(pubkeys[0].GetID());
@@ -238,6 +244,11 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     // TxoutType::NULL_DATA
     s.clear();
     s << OP_RETURN << std::vector<unsigned char>({75});
+    BOOST_CHECK(!ExtractDestination(s, address));
+
+    // TxoutType::UNSPENDABLE
+    s.clear();
+    s << OP_RETURN;
     BOOST_CHECK(!ExtractDestination(s, address));
 
     // TxoutType::WITNESS_V0_KEYHASH
