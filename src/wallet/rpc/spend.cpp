@@ -984,6 +984,11 @@ static std::vector<RPCArg> OutputsDoc()
                 {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
             },
         },
+        {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+            {
+                {"destroy", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "An amount of freicoin to be destroyed (sent to an OP_RETURN output)."},
+            },
+        },
     };
 }
 

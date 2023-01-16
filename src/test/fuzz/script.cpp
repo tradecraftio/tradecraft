@@ -67,6 +67,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     if (!is_standard_ret) {
         assert(which_type == TxoutType::NONSTANDARD ||
                which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::UNSPENDABLE ||
                which_type == TxoutType::MULTISIG);
     }
     if (which_type == TxoutType::NONSTANDARD) {
@@ -75,8 +76,12 @@ FUZZ_TARGET_INIT(script, initialize_script)
     if (which_type == TxoutType::NULL_DATA) {
         assert(script.IsUnspendable());
     }
+    if (which_type == TxoutType::UNSPENDABLE) {
+        assert(script.IsUnspendable());
+    }
     if (script.IsUnspendable()) {
         assert(which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::UNSPENDABLE ||
                which_type == TxoutType::NONSTANDARD);
     }
 
@@ -86,10 +91,12 @@ FUZZ_TARGET_INIT(script, initialize_script)
         assert(which_type == TxoutType::PUBKEY ||
                which_type == TxoutType::NONSTANDARD ||
                which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::UNSPENDABLE ||
                which_type == TxoutType::MULTISIG);
     }
     if (which_type == TxoutType::NONSTANDARD ||
         which_type == TxoutType::NULL_DATA ||
+        which_type == TxoutType::UNSPENDABLE ||
         which_type == TxoutType::MULTISIG) {
         assert(!extract_destination_ret);
     }
