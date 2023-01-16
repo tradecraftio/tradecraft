@@ -115,6 +115,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
     // Duplicate checking
     std::set<CTxDestination> destinations;
     bool has_data{false};
+    bool has_destroy{false};
 
     for (const std::string& name_ : outputs.getKeys()) {
         if (name_ == "data") {
@@ -124,8 +125,35 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             has_data = true;
             std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
 
-            CTxOut out(0, CScript() << OP_RETURN << data);
-            rawTx.vout.push_back(out);
+            if (has_destroy) {
+                for (auto& txout : rawTx.vout) {
+                    if (txout.scriptPubKey[0] == OP_RETURN) {
+                        txout.scriptPubKey = CScript() << OP_RETURN << data;
+                        break;
+                    }
+                }
+            } else {
+                CTxOut out(0, CScript() << OP_RETURN << data);
+                rawTx.vout.push_back(out);
+            }
+        } else if (name_ == "destroy") {
+            if (has_destroy) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: destroy");
+            }
+            has_destroy = true;
+            CAmount amount = AmountFromValue(outputs[name_]);
+
+            if (has_data) {
+                for (auto& txout : rawTx.vout) {
+                    if (txout.scriptPubKey[0] == OP_RETURN) {
+                        txout.nValue = amount;
+                        break;
+                    }
+                }
+            } else {
+                CTxOut out(amount, CScript() << OP_RETURN);
+                rawTx.vout.push_back(out);
+            }
         } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {
