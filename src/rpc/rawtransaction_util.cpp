@@ -114,6 +114,7 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
     std::set<CTxDestination> destinations;
     std::vector<std::pair<CTxDestination, CAmount>> parsed_outputs;
     bool has_data{false};
+    bool has_destroy{false};
     for (const std::string& name_ : outputs.getKeys()) {
         if (name_ == "data") {
             if (has_data) {
@@ -121,9 +122,39 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
             }
             has_data = true;
             std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
+
             CTxDestination destination{CNoDestination{CScript() << OP_RETURN << data}};
-            CAmount amount{0};
-            parsed_outputs.emplace_back(destination, amount);
+            if (has_destroy) {
+                for (auto& output : parsed_outputs) {
+                    CNoDestination *pdest = std::get_if<CNoDestination>(&output.first);
+                    if (pdest && pdest->GetScript().size() >= 1 && pdest->GetScript()[0] == OP_RETURN) {
+                        output.first = destination;
+                        break;
+                    }
+                }
+            } else {
+                CAmount amount{0};
+                parsed_outputs.emplace_back(destination, amount);
+            }
+        } else if (name_ == "destroy") {
+            if (has_destroy) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: destroy");
+            }
+            has_destroy = true;
+            CAmount amount = AmountFromValue(outputs[name_]);
+
+            if (has_data) {
+                for (auto& output : parsed_outputs) {
+                    CNoDestination *pdest = std::get_if<CNoDestination>(&output.first);
+                    if (pdest && pdest->GetScript().size() >= 1 && pdest->GetScript()[0] == OP_RETURN) {
+                        output.second = amount;
+                        break;
+                    }
+                }
+            } else {
+                CTxDestination destination{CNoDestination{CScript() << OP_RETURN}};
+                parsed_outputs.emplace_back(destination, amount);
+            }
         } else {
             CTxDestination destination{DecodeDestination(name_)};
             CAmount amount{AmountFromValue(outputs[name_])};
