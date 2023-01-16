@@ -38,7 +38,6 @@ class ListSinceBlockTest(FreicoinTestFramework):
         self.setup_clean_chain = True
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
-        self.extra_args = [["-datacarrier=1"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -492,10 +491,10 @@ class ListSinceBlockTest(FreicoinTestFramework):
         """Test if OP_RETURN outputs will be displayed correctly."""
         block_hash = self.nodes[2].getbestblockhash()
 
-        raw_tx = self.nodes[2].createrawtransaction([], [{'data': 'aa'}])
+        raw_tx = self.nodes[2].createrawtransaction([], [{'destroy': 0.0001}])
         funded_tx = self.nodes[2].fundrawtransaction(raw_tx)
         signed_tx = self.nodes[2].signrawtransactionwithwallet(funded_tx['hex'])
-        tx_id = self.nodes[2].sendrawtransaction(signed_tx['hex'])
+        tx_id = self.nodes[2].sendrawtransaction(signed_tx['hex'], maxburnamount=0.0001)
 
         op_ret_tx = [tx for tx in self.nodes[2].listsinceblock(blockhash=block_hash)["transactions"] if tx['txid'] == tx_id][0]
 

@@ -39,7 +39,7 @@ class ListTransactionsTest(FreicoinTestFramework):
         self.num_nodes = 3
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
-        self.extra_args = [["-datacarrier=1", "-walletrbf=0"]] * self.num_nodes
+        self.extra_args = [["-walletrbf=0"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -330,10 +330,10 @@ class ListTransactionsTest(FreicoinTestFramework):
 
     def test_op_return(self):
         """Test if OP_RETURN outputs will be displayed correctly."""
-        raw_tx = self.nodes[0].createrawtransaction([], [{'data': 'aa'}])
+        raw_tx = self.nodes[0].createrawtransaction([], [{'destroy': 0.0001}])
         funded_tx = self.nodes[0].fundrawtransaction(raw_tx)
         signed_tx = self.nodes[0].signrawtransactionwithwallet(funded_tx['hex'])
-        tx_id = self.nodes[0].sendrawtransaction(signed_tx['hex'])
+        tx_id = self.nodes[0].sendrawtransaction(signed_tx['hex'], maxburnamount=0.0001)
 
         op_ret_tx = [tx for tx in self.nodes[0].listtransactions() if tx['txid'] == tx_id][0]
 

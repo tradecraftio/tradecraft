@@ -61,7 +61,10 @@ struct MemPoolOptions {
      * type is designated as TxoutType::NULL_DATA.
      *
      * Maximum size of TxoutType::NULL_DATA scripts that this node considers standard.
-     * If nullopt, any size is nonstandard.
+     * If nullopt, any size (other than zero) is nonstandard.
+     *
+     * Zero-sized OP_RETURN outputs are classed as TxoutType::UNSPENDABLE
+     * and are always allowed as a way of destroying coin.
      */
     std::optional<unsigned> max_datacarrier_bytes{DEFAULT_ACCEPT_DATACARRIER ? std::optional{MAX_OP_RETURN_RELAY} : std::nullopt};
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
