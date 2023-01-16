@@ -44,6 +44,7 @@ class ReplaceByFeeTest(FreicoinTestFramework):
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
                 "-limitdescendantsize=101",
+                "-mempoolfullrbf=0",
             ],
             # second node has default mempool parameters
             [
