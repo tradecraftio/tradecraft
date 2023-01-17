@@ -751,10 +751,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     m_node.mempool->clear();
 
-    // As would a strictly increasing lock_height
+    // However a strictly increasing block height would run afoul of
+    // the rule that lock_heights not exceed the current block height
     ++tx2.lock_height;
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx)));
-    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx2)));
+    BOOST_CHECK(!CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction(tx2)));
 
     {
         CTransaction _tx(tx);
@@ -765,13 +766,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         CTransaction _tx2(tx2);
         const auto res = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), MakeTransactionRef(std::move(_tx2)), GetTime(), /*bypass_limits=*/false, /*test_accept=*/false);
-        BOOST_CHECK_MESSAGE(res.m_result_type == MempoolAcceptResult::ResultType::VALID, res.m_state.GetRejectReason());
+        BOOST_CHECK_MESSAGE(res.m_result_type == MempoolAcceptResult::ResultType::INVALID, res.m_state.GetRejectReason());
     }
 
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
-    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 2);
     BOOST_CHECK(pblocktemplate->block.vtx.size() >= 2 && pblocktemplate->block.vtx[1]->GetHash() == tx.GetHash());
-    BOOST_CHECK(pblocktemplate->block.vtx.size() >= 3 && pblocktemplate->block.vtx[2]->GetHash() == tx2.GetHash());
 
     m_node.mempool->clear();
 
