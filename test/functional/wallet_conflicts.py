@@ -312,7 +312,7 @@ class TxConflicts(FreicoinTestFramework):
         assert_equal(bob.getbalances()["mine"]["untrusted_pending"], Decimal("24.99990000"))
 
         # create a conflict to previous tx (also spends unspents[2]), but don't broadcast, sends funds back to alice
-        raw_tx = alice.createrawtransaction(inputs=[unspents[2]], outputs=[{alice.getnewaddress() : 24.99}])
+        raw_tx = alice.createrawtransaction(inputs=[unspents[2]], outputs=[{alice.getnewaddress() : 24.99}], lockheight=bob.getblockcount())
         tx1_conflict_conflict = alice.signrawtransactionwithwallet(raw_tx)['hex']
 
         bob.sendrawtransaction(tx1_conflict_conflict) # kick tx1_conflict out of the mempool
