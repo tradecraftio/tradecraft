@@ -309,6 +309,7 @@ class ImportRescanTest(FreicoinTestFramework):
                 add_to_wallet=False,
                 inputs=[unspent_txid_map[variant.initial_txid]],
                 outputs=[{ADDRESS_BCRT1_UNSPENDABLE : variant.initial_amount}],
+                lockheight=unspent_txid_map[variant.initial_txid]["refheight"],
                 subtract_fee_from_outputs=[0]
             )
             variant.child_txid = child["txid"]
