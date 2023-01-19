@@ -187,7 +187,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
         }
 
         BOOST_CHECK_EQUAL(total_coins, initial_total_coins);
-        BOOST_CHECK_EQUAL(initial_size, initial_total_coins + COINBASE_MATURITY + 1 + 3);
+        BOOST_CHECK_EQUAL(initial_size, initial_total_coins + 3);
     }
 
     // Snapshot should refuse to load at this height.
@@ -276,7 +276,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
                 total_coins++;
             }
 
-            BOOST_CHECK_EQUAL(initial_size , coinscache.GetCacheSize() + COINBASE_MATURITY + 1 + 3);
+            BOOST_CHECK_EQUAL(initial_size , coinscache.GetCacheSize() + 3);
             BOOST_CHECK_EQUAL(total_coins, initial_total_coins);
             chains_tested++;
         }

@@ -3574,27 +3574,28 @@ void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CB
 void ChainstateManager::GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev) const
 {
     if (!GetWitnessCommitment(block, nullptr, nullptr)) {
+        // No existing commitment; leave block alone
+        return;
+    }
+    Assert(!block.vtx.empty());
+    Assert(!block.vtx.back()->vout.empty());
+    // First setup an "empty" commitment in the last output of the last
+    // transaction, so that BlockWitnessMerkleRoot() will give the correct
+    // commitment value.
+    {
+        CMutableTransaction tx(*block.vtx.back());
+        tx.vout.back().scriptPubKey = EMPTY_SEGWIT_COMMITMENT;
+        block.vtx.back() = MakeTransactionRef(std::move(tx));
+    }
+    // Then fill in the actual commitment calculated by
+    // BlockWitnessMerkleRoot()
+    {
         uint256 witnessroot = BlockWitnessMerkleRoot(block);
-        CTxOut out;
-        out.SetReferenceValue(0);
-        const int excess = 4 * !!(block.vtx[0]->nVersion == 1);
-        out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + excess);
-        out.scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT + excess - 1;
-        out.scriptPubKey[1] = 0x01;
-        memcpy(&out.scriptPubKey[2], witnessroot.begin(), 32);
-        out.scriptPubKey[34] = 0x4b;
-        out.scriptPubKey[35] = 0x4a;
-        out.scriptPubKey[36] = 0x49;
-        out.scriptPubKey[37] = 0x48;
-        if (excess) {
-            out.scriptPubKey[38] = 0;
-            out.scriptPubKey[39] = 0;
-            out.scriptPubKey[40] = 0;
-            out.scriptPubKey[41] = 0;
-        }
-        CMutableTransaction tx(*block.vtx[0]);
-        tx.vout.push_back(out);
-        block.vtx[0] = MakeTransactionRef(std::move(tx));
+        CMutableTransaction tx(*block.vtx.back());
+        CScript& script = tx.vout.back().scriptPubKey;
+        script[1] = 0x01;
+        memcpy(&script[2], witnessroot.begin(), 32);
+        block.vtx.back() = MakeTransactionRef(std::move(tx));
     }
     UpdateUncommittedBlockStructures(block, pindexPrev);
 }
