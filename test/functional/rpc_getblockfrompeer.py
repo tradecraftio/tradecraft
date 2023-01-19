@@ -134,7 +134,7 @@ class GetBlockFromPeerTest(FreicoinTestFramework):
         self.generate(self.nodes[0], 400, sync_fun=self.no_op)
         self.sync_blocks([self.nodes[0], pruned_node])
         pruneheight = pruned_node.pruneblockchain(300)
-        assert_equal(pruneheight, 236)
+        assert_equal(pruneheight, 258)
         # Ensure the block is actually pruned
         pruned_block = self.nodes[0].getblockhash(2)
         assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
@@ -150,14 +150,14 @@ class GetBlockFromPeerTest(FreicoinTestFramework):
         self.log.info("Fetched block persists after next pruning event")
         self.generate(self.nodes[0], 250, sync_fun=self.no_op)
         self.sync_blocks([self.nodes[0], pruned_node])
-        pruneheight += 219
+        pruneheight += 227
         assert_equal(pruned_node.pruneblockchain(700), pruneheight)
-        assert_equal(pruned_node.getblock(pruned_block)["hash"], "237e1839e16433532cb33d042187472811a624d16700723c0c52add30f0ea0a0")
+        assert_equal(pruned_node.getblock(pruned_block)["hash"], "0893bfc8a505a34eb50708a9b4d8eb54fc2143e4384d6d60fc2304440e76c64e")
 
         self.log.info("Fetched block can be pruned again when prune height exceeds the height of the tip at the time when the block was fetched")
         self.generate(self.nodes[0], 208, sync_fun=self.no_op)
         self.sync_blocks([self.nodes[0], pruned_node])
-        pruneheight += 219
+        pruneheight += 226
         assert_equal(pruned_node.pruneblockchain(1000), pruneheight)
         assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
 

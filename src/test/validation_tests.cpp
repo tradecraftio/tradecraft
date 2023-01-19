@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *ExpectedAssumeutxo(110, *params);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "3ea018ad48b2faa5308769613e750790a4fda69cacc108a52b0fe970682877c5");
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "01b62c5a22bee927df759c13d44526d90e1ead7ebf8872ce4a9c4da9456e72c1");
     BOOST_CHECK_EQUAL(out110.nChainTx, 110U);
 
     const auto out210 = *ExpectedAssumeutxo(200, *params);
@@ -214,24 +214,26 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         }
 
         coinbase.vout.resize(1);
-        coinbase.vout[0].scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-        coinbase.vout[0].scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
-        coinbase.vout[0].scriptPubKey[1] = 0x01;
-        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-4] = 0x4b;
-        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-3] = 0x4a;
-        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-2] = 0x49;
-        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-1] = 0x48;
-
         auto tx = MakeTransactionRef(coinbase);
         assert(tx->IsCoinBase());
         return tx;
     };
     auto insert_witness_commitment = [](CBlock& block, uint256 commitment) {
-        assert(!block.vtx.empty() && block.vtx[0]->IsCoinBase() && !block.vtx[0]->vout.empty());
+        assert(!block.vtx.empty());
 
-        CMutableTransaction mtx{*block.vtx[0]};
-        memcpy(&mtx.vout[0].scriptPubKey[2], commitment.begin(), 32);
-        block.vtx[0] = MakeTransactionRef(mtx);
+        CMutableTransaction mtx{*block.vtx.back()};
+        if (mtx.vout.empty()) {
+            mtx.vout.resize(1);
+        }
+        mtx.vout.back().scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
+        mtx.vout.back().scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
+        mtx.vout.back().scriptPubKey[1] = 0x01;
+        memcpy(&mtx.vout.back().scriptPubKey[2], commitment.begin(), 32);
+        mtx.vout.back().scriptPubKey[MINIMUM_WITNESS_COMMITMENT-4] = 0x4b;
+        mtx.vout.back().scriptPubKey[MINIMUM_WITNESS_COMMITMENT-3] = 0x4a;
+        mtx.vout.back().scriptPubKey[MINIMUM_WITNESS_COMMITMENT-2] = 0x49;
+        mtx.vout.back().scriptPubKey[MINIMUM_WITNESS_COMMITMENT-1] = 0x48;
+        block.vtx.back() = MakeTransactionRef(mtx);
     };
 
     {
@@ -350,6 +352,11 @@ BOOST_AUTO_TEST_CASE(block_malleation)
             mtx.vin[0].scriptWitness.stack[0] = {0};
             block.vtx.push_back(MakeTransactionRef(mtx));
         }
+        {
+            CMutableTransaction mtx;
+            mtx.vin.resize(1);
+            block.vtx.push_back(MakeTransactionRef(mtx));
+        }
         block.hashMerkleRoot = BlockMerkleRoot(block);
         // Block with witnesses is considered mutated if the witness commitment
         // is not validated.
@@ -359,6 +366,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
 
         // Block with valid commitment is not mutated
         {
+            insert_witness_commitment(block, uint256());
             auto commitment{BlockWitnessMerkleRoot(block)};
             insert_witness_commitment(block, commitment);
             block.hashMerkleRoot = BlockMerkleRoot(block);
@@ -377,6 +385,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         BOOST_CHECK(block.hashMerkleRoot == BlockMerkleRoot(block));
         BOOST_CHECK(is_mutated(block, /*check_witness_root=*/true));
         {
+            insert_witness_commitment(block, uint256());
             auto commitment{BlockWitnessMerkleRoot(block)};
             insert_witness_commitment(block, commitment);
             block.hashMerkleRoot = BlockMerkleRoot(block);
