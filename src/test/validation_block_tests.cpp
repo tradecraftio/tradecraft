@@ -39,7 +39,7 @@ struct MinerTestingSetup : public RegTestingSetup {
     std::shared_ptr<CBlock> Block(const uint256& prev_hash, int height, BlockFinalTxEntry& entry);
     std::shared_ptr<const CBlock> GoodBlock(const uint256& prev_hash, int height, BlockFinalTxEntry& entry);
     std::shared_ptr<const CBlock> BadBlock(const uint256& prev_hash, int height, BlockFinalTxEntry& entry);
-    std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock);
+    std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock, BlockFinalTxEntry& entry);
     void BuildChain(const uint256& root, int root_height, const BlockFinalTxEntry& entry, int remaining, const unsigned int invalid_rate, const unsigned int branch_rate, const unsigned int max_size, std::vector<std::pair<std::shared_ptr<const CBlock>, bool>>& blocks);
 };
 } // namespace validation_block_tests
@@ -89,10 +89,14 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash, int h
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
     const CScript op_true = CScript() << OP_TRUE;
     bool initial_block_final = (txCoinbase.vout[0].scriptPubKey == op_true);
-    txCoinbase.vout.resize(2 + initial_block_final);
+    txCoinbase.vout.resize(2 + initial_block_final + entry.IsNull());
     txCoinbase.vout[1 + initial_block_final].scriptPubKey = P2WSH_OP_TRUE;
     txCoinbase.vout[1 + initial_block_final].nValue = txCoinbase.vout[0 + initial_block_final].nValue;
     txCoinbase.vout[0 + initial_block_final].nValue = 0;
+    if (entry.IsNull()) {
+        txCoinbase.vout.back().nValue = 0;
+        txCoinbase.vout.back().scriptPubKey = CScript() << OP_TRUE;
+    }
     txCoinbase.vin[0].scriptWitness.SetNull();
     // Always pad with OP_0 at the end to avoid bad-cb-length error
     txCoinbase.vin[0].scriptSig = CScript{} << WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight + 1) << OP_0;
@@ -112,9 +116,6 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash, int h
         }
         final_tx.vout.emplace_back(0, CScript() << OP_TRUE);
         final_tx.lock_height = (uint32_t)height;
-        // Store block-final info for next block
-        entry.hash = final_tx.GetHash();
-        entry.size = 1;
         // Add it to the block
         pblock->vtx.push_back(MakeTransactionRef(std::move(final_tx)));
     }
@@ -122,10 +123,15 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash, int h
     return pblock;
 }
 
-std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock> pblock)
+std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock> pblock, BlockFinalTxEntry& entry)
 {
     const CBlockIndex* prev_block{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
     m_node.chainman->GenerateCoinbaseCommitment(*pblock, prev_block);
+    // Store block-final info for next block
+    if (!entry.IsNull()) {
+        entry.hash = pblock->vtx.back()->GetHash();
+        entry.size = 1;
+    }
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
@@ -144,7 +150,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
 // construct a valid block
 std::shared_ptr<const CBlock> MinerTestingSetup::GoodBlock(const uint256& prev_hash, int height, BlockFinalTxEntry& entry)
 {
-    return FinalizeBlock(Block(prev_hash, height, entry));
+    return FinalizeBlock(Block(prev_hash, height, entry), entry);
 }
 
 // construct an invalid block (but with a valid header)
@@ -160,7 +166,7 @@ std::shared_ptr<const CBlock> MinerTestingSetup::BadBlock(const uint256& prev_ha
     CTransactionRef tx = MakeTransactionRef(coinbase_spend);
     pblock->vtx.insert(pblock->vtx.end() - !entry.IsNull(), tx);
 
-    auto ret = FinalizeBlock(pblock);
+    auto ret = FinalizeBlock(pblock, entry);
     return ret;
 }
 
@@ -411,6 +417,11 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     pubKey << 1 << OP_TRUE;
     auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get()}.CreateNewBlock(pubKey);
     CBlock pblock = ptemplate->block;
+    // Add a blank transaction as our block-final tx, since the mining test
+    // chain hasn't been extended far enough to activate block-final
+    // transactions.
+    CMutableTransaction final_tx;
+    pblock.vtx.push_back(MakeTransactionRef(final_tx));
 
     CTxOut witness;
     witness.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
@@ -429,21 +440,21 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     CTxOut invalid = witness;
     invalid.scriptPubKey.back() ^= 1;
 
-    CMutableTransaction txCoinbase(*pblock.vtx[0]);
-    txCoinbase.vout.resize(4);
-    txCoinbase.vout[0] = witness;
-    txCoinbase.vout[1] = witness;
-    txCoinbase.vout[2] = min_plus_one;
-    txCoinbase.vout[3] = invalid;
-    pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+    CMutableTransaction txFinal(*pblock.vtx.back());
+    txFinal.vout.resize(4);
+    txFinal.vout[0] = witness;
+    txFinal.vout[1] = witness;
+    txFinal.vout[2] = min_plus_one;
+    txFinal.vout[3] = invalid;
+    pblock.vtx.back() = MakeTransactionRef(std::move(txFinal));
 
     // The last output is invalid
     BOOST_CHECK(!GetWitnessCommitment(pblock, nullptr, nullptr));
 
     // Remove the invalid output and it should work
-    CMutableTransaction txCoinbase2(*pblock.vtx[0]);
-    txCoinbase2.vout.pop_back();
-    pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase2));
+    CMutableTransaction txFinal2(*pblock.vtx.back());
+    txFinal2.vout.pop_back();
+    pblock.vtx.back() = MakeTransactionRef(std::move(txFinal2));
     BOOST_CHECK(GetWitnessCommitment(pblock, nullptr, nullptr));
 }
 BOOST_AUTO_TEST_SUITE_END()
