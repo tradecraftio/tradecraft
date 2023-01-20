@@ -227,20 +227,55 @@ bool CScript::IsPayToWitnessScriptHash() const
 }
 
 // A witness program is any valid CScript that consists of a valid 1-byte opcode
-// followed by a data push between 2 and 75 bytes.
+// followed by a required data push between 2 and 75 bytes, an optional shard
+// prefix specifier, and another optional data push with the same 2- to 75-byte
+// constraint.
 bool CScript::IsWitnessProgram(int* version, std::vector<unsigned char>* program) const
 {
     // Early-out based on the minimum and maximum sizes.
-    if (this->size() < 4 || this->size() > 77) {
+    if (this->size() < 4 || this->size() > 155) {
         return false;
     }
     // The second byte is a push between 2 and 75 bytes in length.
     if ((*this)[1] < 2 || (*this)[1] > 75) {
         return false;
     }
-    // And that's the whole script.
-    if ((2 + (std::size_t)(*this)[1]) != this->size()) {
+    // Make sure the script contains the push value.
+    int pos = 2 + (*this)[1];
+    if ((size_t)pos > this->size()) {
         return false;
+    }
+    // The shard specifier and extension output are optional.
+    if ((size_t)pos < this->size()) {
+        // Valiate shard prefix.
+        // Note that the extension output is a push between 2 and 75 bytes in
+        // length.  So if the shard prefix is not present, we will fall though
+        // this switch statement without any action.
+        switch ((*this)[pos]) {
+            case 0x01:
+                ++pos;
+                // Make sure the shard prefix is not one of the ones with
+                // special encoding.
+                if ((*this)[pos] < 0x10 || (*this)[pos] == 0x80) {
+                    return false;
+                }
+                // Fall through to advance past the push value as well.
+            case OP_1NEGATE:
+            case OP_1:  case OP_2:  case OP_3:  case OP_4:
+            case OP_5:  case OP_6:  case OP_7:  case OP_8:
+            case OP_9:  case OP_10: case OP_11: case OP_12:
+            case OP_13: case OP_14: case OP_15: case OP_16:
+                ++pos;
+        }
+        // Validate extension output
+        if ((std::size_t)pos != this->size()) {
+            if ((*this)[pos] < 2 || (*this)[pos] > 75) {
+                return false;
+            }
+            if ((std::size_t)pos + 1 + (*this)[pos] != this->size()) {
+                return false;
+            }
+        }
     }
     // There are 31 single-byte opcodes which can start a script under the
     // legacy, pre-cleanup rules.  Ordered by opcode, these constitute our 31
