@@ -193,9 +193,9 @@ class DecodeScriptTest(FreicoinTestFramework):
         self.log.info("- P2TR")
         # 1 <x-only pubkey>
         xonly_public_key = '01'*32  # first ever P2TR output on mainnet
-        rpc_result = self.nodes[0].decodescript('5120' + xonly_public_key)
+        rpc_result = self.nodes[0].decodescript('4f20' + xonly_public_key)
         assert_equal('witness_v1_taproot', rpc_result['type'])
-        assert_equal('1 ' + xonly_public_key, rpc_result['asm'])
+        assert_equal('-1 ' + xonly_public_key, rpc_result['asm'])
         assert 'segwit' not in rpc_result
 
     def decoderawtransaction_asm_sighashtype(self):

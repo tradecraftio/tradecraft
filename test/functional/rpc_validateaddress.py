@@ -99,11 +99,6 @@ INVALID_DATA = [
         "Invalid Base 32 character",  # Invalid character in checksum
         [59],
     ),
-    (
-        "BC130XLXVLHEMJA6C4DQV22UAPCTQUPFHLXM9H8Z3K2E72Q4K9HCZ7VQ7ZWS8R",
-        "Invalid Bech32 address witness version",
-        [],
-    ),
     ("bc1pw5dgrnzv", "Invalid Bech32 address program size (1 byte)", []),
     (
         "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47Zagq",
@@ -124,8 +119,12 @@ INVALID_DATA = [
 ]
 VALID_DATA = [
     (
+        "BC130XLXVLHEMJA6C4DQV22UAPCTQUPFHLXM9H8Z3K2E72Q4K9HCZ7VQ7ZWS8R",
+        "602079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+    ),
+    (
         "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v8n0nx0muaewav253zgeav",
-        "512979be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f8179879be667ef9dcbbac55",
+        "4f2979be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f8179879be667ef9dcbbac55",
     ),
     (
         "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
@@ -146,10 +145,10 @@ VALID_DATA = [
     ),
     (
         "bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y",
-        "5128751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6",
+        "4f28751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6",
     ),
-    ("BC1SW50QGDZ25J", "6002751e"),
-    ("bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs", "5210751e76e8199196d454941c45d1b3a323"),
+    ("BC1SW50QGDZ25J", "5f02751e"),
+    ("bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs", "5110751e76e8199196d454941c45d1b3a323"),
     # (
     #   "tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy",
     #   "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
@@ -160,15 +159,15 @@ VALID_DATA = [
     ),
     # (
     #   "tb1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesf3hn0c",
-    #   "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
+    #   "4f20000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
     # ),
     (
         "bc1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvses7epu4h",
-        "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
+        "4f20000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
     ),
     (
         "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0",
-        "512079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+        "4f2079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
     ),
 ]
 

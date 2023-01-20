@@ -142,7 +142,7 @@ def key_to_p2sh_p2wpkh(key, main=False):
 def program_to_witness(version, program, main=False):
     if (type(program) is str):
         program = bytes.fromhex(program)
-    assert 0 <= version <= 16
+    assert 0 <= version <= 30
     assert 2 <= len(program) <= 75
     return encode_segwit_address("bc" if main else "bcrt", version, program)
 
