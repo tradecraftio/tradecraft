@@ -78,7 +78,7 @@ class InvalidAddressErrorMessageTest(FreicoinTestFramework):
         self.check_invalid(BECH32_INVALID_PREFIX, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
         self.check_invalid(BECH32_INVALID_BECH32, 'Version 1+ witness address must use Bech32m checksum')
         self.check_invalid(BECH32_INVALID_BECH32M, 'Version 0 witness address must use Bech32 checksum')
-        self.check_invalid(BECH32_INVALID_VERSION, 'Invalid Bech32 address witness version')
+        self.check_valid(BECH32_INVALID_VERSION) # Expand allowed witness versions to be any of the 31 1-byte opcodes which can appear at the beginning of a legacy, pre-cleanup scriptPubKey.
         self.check_valid(BECH32_INVALID_V0_SIZE) # Unrecognized witness lengths are treated as unknown segwit versions
         self.check_invalid(BECH32_TOO_LONG, 'Bech32 string too long', list(range(90, 108)))
         self.check_invalid(BECH32_ONE_ERROR, 'Invalid Bech32 checksum', [9])
