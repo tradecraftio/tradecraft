@@ -51,6 +51,7 @@ from test_framework.script import (
     MAX_SCRIPT_ELEMENT_SIZE,
     MAX_WITNESS_STACK_SIZE as MAX_STACK_SIZE,
     OP_0,
+    OP_1NEGATE,
     OP_1,
     OP_2,
     OP_3,
@@ -63,15 +64,21 @@ from test_framework.script import (
     OP_10,
     OP_11,
     OP_12,
+    OP_13,
+    OP_14,
+    OP_15,
     OP_16,
     OP_2DROP,
     OP_2DUP,
+    OP_CHECKLOCKTIMEVERIFY,
     OP_CHECKMULTISIG,
     OP_CHECKMULTISIGVERIFY,
+    OP_CHECKSEQUENCEVERIFY,
     OP_CHECKSIG,
     OP_CHECKSIGADD,
     OP_CHECKSIGVERIFY,
     OP_CODESEPARATOR,
+    OP_DEPTH,
     OP_DROP,
     OP_DUP,
     OP_ELSE,
@@ -79,7 +86,15 @@ from test_framework.script import (
     OP_EQUAL,
     OP_EQUALVERIFY,
     OP_IF,
+    OP_MERKLEBRANCHVERIFY,
     OP_NOP,
+    OP_NOP1,
+    OP_NOP5,
+    OP_NOP6,
+    OP_NOP7,
+    OP_NOP8,
+    OP_NOP9,
+    OP_NOP10,
     OP_NOT,
     OP_NOTIF,
     OP_PUSHDATA1,
@@ -826,7 +841,7 @@ def spenders_taproot_active():
     # == Test that BIP341 spending only applies to witness version 1, program length 32, no P2SH ==
 
     for p2sh in [False, True]:
-        for witver in range(1, 17):
+        for witver in range(1, 31):
             for witlen in [20, 31, 32, 33]:
                 def mutate(spk):
                     prog = spk[2:]
@@ -835,7 +850,24 @@ def spenders_taproot_active():
                         prog = prog[0:witlen]
                     elif witlen > 32:
                         prog += bytes([0 for _ in range(witlen - 32)])
-                    return CScript([CScriptOp.encode_op_n(witver), prog])
+                    op_from_ver = {
+                        0: OP_0,
+                        1: OP_1NEGATE,
+                        2: OP_1, 3: OP_2, 4: OP_3, 5: OP_4,
+                        6: OP_5, 7: OP_6, 8: OP_7, 9: OP_8,
+                        10: OP_9, 11: OP_10, 12: OP_11, 13: OP_12,
+                        14: OP_13, 15: OP_14, 16: OP_15, 17: OP_16,
+                        18: OP_NOP,
+                        19: OP_DEPTH,
+                        20: OP_CODESEPARATOR,
+                        21: OP_NOP1,
+                        22: OP_CHECKLOCKTIMEVERIFY,
+                        23: OP_CHECKSEQUENCEVERIFY,
+                        24: OP_MERKLEBRANCHVERIFY,
+                        25: OP_NOP5, 26: OP_NOP6, 27: OP_NOP7,
+                        28: OP_NOP8, 29: OP_NOP9, 30: OP_NOP10,
+                    }
+                    return CScript([op_from_ver[witver], prog])
                 scripts = [("s0", CScript([pubs[0], OP_CHECKSIG])), ("dummy", CScript([OP_RETURN]))]
                 tap = taproot_construct(pubs[1], scripts)
                 if not p2sh and witver == 1 and witlen == 32:
@@ -1777,7 +1809,7 @@ class TaprootTest(FreicoinTestFramework):
         aux = tx_test.setdefault("auxiliary", {})
         aux['fullySignedTx'] = tx.serialize().hex()
         keypath_tests.append(tx_test)
-        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "dad1499506368ba0ce532793b34541d802d2f812a3846a65c7f2db71a14b10e5")
+        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "d4a20b242f8680b6c747bbb30b7d2e45898e8ac249db35f3e7394428c477bbb0")
         # Mine the spending transaction
         self.block_submit(self.nodes[0], [tx], "Spending txn", None, sigops_weight=10000, accept=True, witness=True)
 
