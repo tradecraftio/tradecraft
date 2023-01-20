@@ -1,17 +1,17 @@
 [
     [
-        "5120eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "4f20eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         {
-            "asm": "1 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "asm": "-1 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
             "address": "bcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqz6nvlh",
             "desc": "rawtr(eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee)#jk7c6kys",
             "type": "witness_v1_taproot"
         }
     ],
     [
-        "5102eeee",
+        "4f02eeee",
         {
-            "asm": "1 -28398",
+            "asm": "-1 -28398",
             "address": "bcrt1pamhqk96edn",
             "desc": "addr(bcrt1pamhqk96edn)#vkh8uj5a",
             "type": "witness_unknown"

@@ -19,9 +19,36 @@ import unittest
 from test_framework.script import (
     CScript,
     OP_0,
+    OP_1NEGATE,
     OP_1,
+    OP_2,
+    OP_3,
+    OP_4,
+    OP_5,
+    OP_6,
+    OP_7,
+    OP_8,
+    OP_9,
+    OP_10,
+    OP_11,
+    OP_12,
+    OP_13,
+    OP_14,
     OP_15,
     OP_16,
+    OP_NOP,
+    OP_DEPTH,
+    OP_CODESEPARATOR,
+    OP_NOP1,
+    OP_CHECKLOCKTIMEVERIFY,
+    OP_CHECKSEQUENCEVERIFY,
+    OP_MERKLEBRANCHVERIFY,
+    OP_NOP5,
+    OP_NOP6,
+    OP_NOP7,
+    OP_NOP8,
+    OP_NOP9,
+    OP_NOP10,
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DUP,
@@ -54,7 +81,7 @@ assert MIN_PADDING == 1
 DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
 assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
 
-PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
+PAY_TO_ANCHOR = CScript([OP_1NEGATE, bytes.fromhex("4e73")])
 
 def key_to_p2pk_script(key):
     key = check_key(key)
@@ -99,8 +126,41 @@ def key_to_p2sh_p2wpkh_script(key):
 def program_to_witness_script(version, program):
     if isinstance(program, str):
         program = bytes.fromhex(program)
-    assert 0 <= version <= 16
+    assert 0 <= version <= 30
     assert 2 <= len(program) <= 75
+    version = [
+        OP_0,
+        OP_1NEGATE,
+        OP_1,
+        OP_2,
+        OP_3,
+        OP_4,
+        OP_5,
+        OP_6,
+        OP_7,
+        OP_8,
+        OP_9,
+        OP_10,
+        OP_11,
+        OP_12,
+        OP_13,
+        OP_14,
+        OP_15,
+        OP_16,
+        OP_NOP,
+        OP_DEPTH,
+        OP_CODESEPARATOR,
+        OP_NOP1,
+        OP_CHECKLOCKTIMEVERIFY,
+        OP_CHECKSEQUENCEVERIFY,
+        OP_MERKLEBRANCHVERIFY,
+        OP_NOP5,
+        OP_NOP6,
+        OP_NOP7,
+        OP_NOP8,
+        OP_NOP9,
+        OP_NOP10,
+    ][version]
     return CScript([version, program])
 
 
