@@ -348,12 +348,45 @@ public:
 
     CScript operator()(const WitnessV1Taproot& tap) const
     {
-        return CScript() << OP_1 << ToByteVector(tap);
+        return CScript() << OP_1NEGATE << ToByteVector(tap);
     }
 
     CScript operator()(const WitnessUnknown& id) const
     {
-        return CScript() << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
+        static const opcodetype versionmap[] = {
+            /*  0 */OP_0,
+            /*  1 */OP_1NEGATE,
+            /*  2 */OP_1,
+            /*  3 */OP_2,
+            /*  4 */OP_3,
+            /*  5 */OP_4,
+            /*  6 */OP_5,
+            /*  7 */OP_6,
+            /*  8 */OP_7,
+            /*  9 */OP_8,
+            /* 10 */OP_9,
+            /* 11 */OP_10,
+            /* 12 */OP_11,
+            /* 13 */OP_12,
+            /* 14 */OP_13,
+            /* 15 */OP_14,
+            /* 16 */OP_15,
+            /* 17 */OP_16,
+            /* 18 */OP_NOP,
+            /* 19 */OP_DEPTH,
+            /* 20 */OP_CODESEPARATOR,
+            /* 21 */OP_NOP1,
+            /* 22 */OP_CHECKLOCKTIMEVERIFY,
+            /* 23 */OP_CHECKSEQUENCEVERIFY,
+            /* 24 */OP_MERKLEBRANCHVERIFY,
+            /* 25 */OP_NOP5,
+            /* 26 */OP_NOP6,
+            /* 27 */OP_NOP7,
+            /* 28 */OP_NOP8,
+            /* 29 */OP_NOP9,
+            /* 30 */OP_NOP10,
+        };
+        return CScript() << versionmap[id.version] << std::vector<unsigned char>(id.program, id.program + id.length);
     }
 };
 } // namespace

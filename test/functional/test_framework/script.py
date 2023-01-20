@@ -614,7 +614,7 @@ class CScript(bytes):
         """A witness program is any valid CScript that consists of a 1-byte
            push opcode followed by a data push between 2 and 40 bytes."""
         return ((4 <= len(self) <= 42) and
-                (self[0] == OP_0 or (OP_1 <= self[0] <= OP_16)) and
+                (self[0] in (OP_0, OP_1NEGATE, OP_NOP, OP_DEPTH, OP_CODESEPARATOR) or (OP_1 <= self[0] <= OP_16) or (OP_NOP1 <= self[0] <= OP_NOP10)) and
                 (self[1] + 2 == len(self)))
 
 
@@ -925,7 +925,7 @@ def taproot_construct(pubkey, scripts=None, treat_internal_as_infinity=False):
     else:
         tweaked, negated = tweak_add_pubkey(pubkey, tweak)
     leaves = dict((name, TaprootLeafInfo(script, version, merklebranch, leaf)) for name, version, script, merklebranch, leaf in ret)
-    return TaprootInfo(CScript([OP_1, tweaked]), pubkey, negated + 0, tweak, leaves, h, tweaked)
+    return TaprootInfo(CScript([OP_1NEGATE, tweaked]), pubkey, negated + 0, tweak, leaves, h, tweaked)
 
 def is_op_success(o):
     return o == 0x50 or o == 0x62 or o == 0x7a or o == 0x89 or o == 0x8a or o == 0x8d or o == 0x8e or (o >= 0x7e and o <= 0x81) or (o >= 0x83 and o <= 0x86) or (o >= 0x95 and o <= 0x99) or o == 0xa7 or o == 0xb0 or (o >= 0xb4 and o <= 0xb9) or (o >= 0xbb and o <= 0xfe)

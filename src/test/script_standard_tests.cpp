@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
 
     // TxoutType::WITNESS_V1_TAPROOT
     s.clear();
-    s << OP_1 << ToByteVector(uint256::ZERO);
+    s << OP_1NEGATE << ToByteVector(uint256::ZERO);
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_V1_TAPROOT);
     BOOST_CHECK_EQUAL(solutions.size(), 1U);
     BOOST_CHECK(solutions[0] == ToByteVector(uint256::ZERO));
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     s << OP_16 << ToByteVector(uint256::ONE);
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
     BOOST_CHECK_EQUAL(solutions.size(), 2U);
-    BOOST_CHECK(solutions[0] == std::vector<unsigned char>{16});
+    BOOST_CHECK(solutions[0] == std::vector<unsigned char>{17});
     BOOST_CHECK(solutions[1] == ToByteVector(uint256::ONE));
 
     // TxoutType::NONSTANDARD
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     BOOST_CHECK(ExtractDestination(s, address));
     WitnessUnknown unk;
     unk.length = 33;
-    unk.version = 1;
+    unk.version = 2;
     std::copy(pubkey.begin(), pubkey.end(), unk.program);
     BOOST_CHECK(std::get<WitnessUnknown>(address) == unk);
 }
