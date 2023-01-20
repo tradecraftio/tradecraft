@@ -79,7 +79,7 @@ public:
     std::string operator()(const WitnessUnknown& id) const
     {
         const std::vector<unsigned char>& program = id.GetWitnessProgram();
-        if ((id.GetWitnessVersion() == 0 && (program.size() == 20 || program.size() == 32)) || id.GetWitnessVersion() > 16 || program.size() < 2 || program.size() > 75) {
+        if ((id.GetWitnessVersion() == 0 && (program.size() == 20 || program.size() == 32)) || id.GetWitnessVersion() > 30 || program.size() < 2 || program.size() > 75) {
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.GetWitnessVersion()};
@@ -150,7 +150,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             error_str = strprintf("Invalid or unsupported prefix for Segwit (Bech32) address (expected %s, got %s).", params.Bech32HRP(), dec.hrp);
             return CNoDestination();
         }
-        int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
+        int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-30)
         if (version == 0 && dec.encoding != bech32::Encoding::BECH32) {
             error_str = "Version 0 witness address must use Bech32 checksum";
             return CNoDestination();
@@ -189,7 +189,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 return tap;
             }
 
-            if (version > 16) {
+            if (version > 30) {
                 error_str = "Invalid Bech32 address witness version";
                 return CNoDestination();
             }
