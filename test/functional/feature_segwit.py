@@ -585,7 +585,7 @@ class SegWitTest(FreicoinTestFramework):
             self.mine_and_test_listunspent(unseen_anytime, 0)
 
             # Check that createrawtransaction/decoderawtransaction with non-v0 Bech32 works
-            v1_addr = program_to_witness(1, [3, 5])
+            v1_addr = program_to_witness(2, [3, 5])
             v1_tx = self.nodes[0].createrawtransaction([getutxo(spendable_txid[0])], {v1_addr: 1})
             v1_decoded = self.nodes[1].decoderawtransaction(v1_tx)
             assert_equal(v1_decoded['vout'][0]['scriptPubKey']['address'], v1_addr)

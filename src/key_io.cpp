@@ -75,7 +75,7 @@ public:
 
     std::string operator()(const WitnessUnknown& id) const
     {
-        if ((id.version == 0 && (id.length == 20 || id.length == 32)) || id.version > 16 || id.length < 2 || id.length > 75) {
+        if ((id.version == 0 && (id.length == 20 || id.length == 32)) || id.version > 30 || id.length < 2 || id.length > 75) {
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.version};
@@ -145,7 +145,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             error_str = "Invalid prefix for Bech32 address";
             return CNoDestination();
         }
-        int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
+        int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-30)
         if (version == 0 && dec.encoding != bech32::Encoding::BECH32) {
             error_str = "Version 0 witness address must use Bech32 checksum";
             return CNoDestination();
@@ -181,7 +181,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 return tap;
             }
 
-            if (version > 16) {
+            if (version > 30) {
                 error_str = "Invalid Bech32 address witness version";
                 return CNoDestination();
             }
