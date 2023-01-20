@@ -111,12 +111,12 @@ BOOST_AUTO_TEST_CASE(IsWitnessProgram_Valid)
     // Witness programs have a maximum data push of 75 bytes.
     program.resize(75);
     wit << OP_16 << program;
-    BOOST_CHECK(IsExpectedWitnessProgram(wit, 16, program));
+    BOOST_CHECK(IsExpectedWitnessProgram(wit, 17, program));
 
     program.resize(32);
     std::vector<unsigned char> bytes = {OP_5, static_cast<unsigned char>(program.size())};
     bytes.insert(bytes.end(), program.begin(), program.end());
-    BOOST_CHECK(IsExpectedWitnessProgram(CScript(bytes.begin(), bytes.end()), 5, program));
+    BOOST_CHECK(IsExpectedWitnessProgram(CScript(bytes.begin(), bytes.end()), 6, program));
 }
 
 BOOST_AUTO_TEST_CASE(IsWitnessProgram_Invalid_Version)
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(IsWitnessProgram_Invalid_Version)
     std::vector<unsigned char> program(10);
     CScript nowit;
     nowit << OP_1NEGATE << program;
-    BOOST_CHECK(IsNoWitnessProgram(nowit));
+    BOOST_CHECK(IsExpectedWitnessProgram(nowit, 1, program));
 }
 
 BOOST_AUTO_TEST_CASE(IsWitnessProgram_Invalid_Size)
