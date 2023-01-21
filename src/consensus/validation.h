@@ -27,7 +27,8 @@
 static constexpr int NO_WITNESS_COMMITMENT{-1};
 
 /** Minimum size of a witness commitment structure. Defined in BIP 141. **/
-static constexpr size_t MINIMUM_WITNESS_COMMITMENT{37};
+static constexpr size_t MINIMUM_WITNESS_COMMITMENT{1 + 4 + 1 + 32};
+static constexpr size_t MAXIMUM_WITNESS_COMMITMENT{1 + 0x4b};
 
 /** A "reason" why a transaction was invalid, suitable for determining whether the
   * provider of the transaction should be banned/ignored/disconnected/etc.
@@ -172,18 +173,28 @@ static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
 }
 
 /** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found */
+inline bool IsCoinbaseCommitment(const CTxOut& txout)
+{
+    if (   txout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT
+        && txout.scriptPubKey.size() <= MAXIMUM_WITNESS_COMMITMENT
+        && txout.scriptPubKey[0] == (txout.scriptPubKey.size()-1)
+        && txout.scriptPubKey[1] == 0xaa
+        && txout.scriptPubKey[2] == 0x21
+        && txout.scriptPubKey[3] == 0xa9
+        && txout.scriptPubKey[4] == 0xed)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 inline int GetWitnessCommitmentIndex(const CBlock& block)
 {
     int commitpos = NO_WITNESS_COMMITMENT;
     if (!block.vtx.empty()) {
         for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            const CTxOut& vout = block.vtx[0]->vout[o];
-            if (vout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT &&
-                vout.scriptPubKey[0] == 0x24 &&
-                vout.scriptPubKey[1] == 0xaa &&
-                vout.scriptPubKey[2] == 0x21 &&
-                vout.scriptPubKey[3] == 0xa9 &&
-                vout.scriptPubKey[4] == 0xed) {
+            if (IsCoinbaseCommitment(block.vtx[0]->vout[o])) {
                 commitpos = o;
             }
         }
