@@ -834,15 +834,15 @@ class SegWitTest(FreicoinTestFramework):
 
         block_3 = self.build_next_block()
         self.update_witness_block_with_transactions(block_3, [tx, tx2], nonce=1)
-        # Add an extra output that matches the witness commitment template,
-        # even though it has extra data after the incorrect commitment.
-        # This block should fail.
-        block_3.vtx[0].vout.append(CTxOut(0, CScript([WITNESS_COMMITMENT_HEADER + ser_uint256(2), 10])))
+        # Add a witness commitment with an invalid path ("0" as a path
+        # means an empty Merkle tree, but there must be at least one
+        # hash--the witness root).  This block should fail.
+        block_3.vtx[0].vout.append(CTxOut(0, CScript([WITNESS_COMMITMENT_HEADER + b'\x00' + ser_uint256(2)])))
         block_3.vtx[0].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
         block_3.solve()
 
-        test_witness_block(self.nodes[0], self.test_node, block_3, accepted=False, reason='bad-witness-merkle-match')
+        test_witness_block(self.nodes[0], self.test_node, block_3, accepted=False, reason='bad-witness-path')
 
         # Add a different commitment with different nonce, but in the
         # right location, and with some funds burned(!).
@@ -888,7 +888,7 @@ class SegWitTest(FreicoinTestFramework):
 
         # We can't send over the p2p network, because this is too big to relay
         # TODO: repeat this test with a block that can be relayed
-        assert_equal('bad-witness-nonce-size', self.nodes[0].submitblock(block.serialize().hex()))
+        assert_equal('bad-witness-branch-size', self.nodes[0].submitblock(block.serialize().hex()))
 
         assert self.nodes[0].getbestblockhash() != block.hash
 
@@ -907,10 +907,10 @@ class SegWitTest(FreicoinTestFramework):
         # Change the nonce -- should not cause the block to be permanently
         # failed
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(1)]
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='bad-witness-merkle-match')
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='bad-witness-branch-size')
 
         # Changing the witness reserved value doesn't change the block hash
-        block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(0)]
+        block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ b'' ]
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
     @subtest
@@ -998,7 +998,7 @@ class SegWitTest(FreicoinTestFramework):
         add_witness_commitment(block, nonce=1)
         block.vtx[0].wit = CTxWitness()  # drop the nonce
         block.solve()
-        assert_equal('bad-witness-merkle-match', self.nodes[0].submitblock(block.serialize().hex()))
+        assert_equal('bad-witness-branch-size', self.nodes[0].submitblock(block.serialize().hex()))
         assert self.nodes[0].getbestblockhash() != block.hash
 
         # Now redo commitment with the standard nonce, but let freicoind fill it in.

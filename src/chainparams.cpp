@@ -613,7 +613,7 @@ public:
         m_assumeutxo_data = MapAssumeutxo{
             {
                 110,
-                {AssumeutxoHash{uint256S("0xc953a12de2143bdad9f341b1b341587b6f76893d4d3ca8b76a20348335a33f37")}, 110},
+                {AssumeutxoHash{uint256S("0xc556634bf5e262fcd2e4d7f4ebdce879312f0dc955fc305258dbac760175a759")}, 110},
             },
             {
                 200,
