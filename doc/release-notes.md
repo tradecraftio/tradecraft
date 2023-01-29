@@ -65,7 +65,7 @@ P2P and network changes
 
 - Full support has been added for the CJDNS network.  See the new option
   `-cjdnsreachable` and
-  [doc/cjdns.md](https://github.com/freicoin/freicoin/tree/23.x/doc/cjdns.md)
+  [doc/cjdns.md](https://github.com/tradecraftio/tradecraft/tree/23/doc/cjdns.md).
   (bitcoin#23077)
 
 Fee estimation changes
@@ -151,7 +151,7 @@ New RPCs
 Files
 -----
 
-* On startup, the list of banned hosts and networks (via `setban` RPC) in
+- On startup, the list of banned hosts and networks (via `setban` RPC) in
   `banlist.dat` is ignored and only `banlist.json` is considered.  Freicoin
   version v22 is the only version that can read `banlist.dat` and also write it
   to `banlist.json`.  If `banlist.json` already exists, version v22 will not try
