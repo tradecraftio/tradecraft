@@ -37,12 +37,18 @@
 #include <validation.h>
 #include <wallet/miner.h>
 
+using node::UpdateBlockFinalTxCommitment;
+using wallet::SignBlockFinalTransaction;
+
 #include <univalue.h>
 
 #include <optional>
 #include <string>
 #include <thread>
 #include <vector>
+
+// for argument-dependent lookup
+using std::swap;
 
 #include <boost/algorithm/string.hpp> // for boost::trim
 
@@ -94,6 +100,10 @@ struct StratumClient {
     bool m_authorized;
     //! The address to which the client is authorized to submit shares.
     CTxDestination m_addr;
+    //! The client's merge-mining authorization info for various chains.
+    std::map<ChainId, std::pair<std::string, std::string> > m_mmauth;
+    //! The current merge-mining work on the chains for which the client is authorized.
+    std::map<uint256, std::pair<uint64_t, std::map<ChainId, AuxWork> > > m_mmwork;
     //! The minimum difficulty the client is willing to work on.
     double m_mindiff;
 
@@ -102,6 +112,8 @@ struct StratumClient {
 
     //! The last block index the client was notified of.
     CBlockIndex* m_last_tip;
+    //! The last second stage work unit the client was notified of.
+    std::optional<std::pair<ChainId, uint256> > m_last_second_stage;
     //! Set to true during the handling of a message (e.g. "mining.submit") if
     //! new work needs to be generated for the client.
     bool m_send_work;
@@ -234,6 +246,9 @@ struct JobId : BaseHash<uint256> {
 //! A mapping of job_id -> work templates
 static std::map<JobId, StratumWork> work_templates;
 
+//! A mapping of job_id -> second stage work
+static std::map<std::string, std::pair<ChainId, SecondStageWork> > second_stages;
+
 //! A thread to watch for new blocks and send mining notifications
 static std::thread block_watcher_thread;
 
@@ -275,6 +290,26 @@ uint256 ParseUInt256(const UniValue& hex, const std::string& name)
     return ret;
 }
 
+static uint256 AuxWorkMerkleRoot(const std::map<ChainId, AuxWork>& mmwork)
+{
+    // If there is nothing to commit to, then the default zero hash is as good
+    // as any other value.
+    if (mmwork.empty()) {
+        return uint256();
+    }
+    // The protocol supports an effectively limitless number of auxiliary
+    // commitments under the Merkle root, however code has not yet been written
+    // to generate root values and proofs for arbitrary trees.
+    if (mmwork.size() != 1) {
+        throw std::runtime_error("AuxWorkMerkleRoot: we do not yet support more than one merge-mining commitment");
+    }
+    // For now, we've hard-coded the special case of a single hash commitment:
+    const ChainId& key = mmwork.begin()->first;
+    const uint256& value = mmwork.begin()->second.commit;
+    uint256 ret = ComputeMerkleMapRootFromBranch(value, {}, uint256(key));
+    return ret;
+}
+
 static double ClampDifficulty(const StratumClient& client, double diff)
 {
     if (client.m_mindiff > 0) {
@@ -284,7 +319,7 @@ static double ClampDifficulty(const StratumClient& client, double diff)
     return diff;
 }
 
-static std::string GetExtraNonceRequest(StratumClient& client, const JobId& job_id) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+static std::string GetExtraNonceRequest(StratumClient& client, const BaseHash<uint256>& job_id) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     std::string ret;
     if (client.m_supports_extranonce) {
@@ -312,7 +347,7 @@ static std::string GetExtraNonceRequest(StratumClient& client, const JobId& job_
     return ret;
 }
 
-void CustomizeWork(const ChainstateManager& chainman, const StratumClient& client, const JobId& job_id, const StratumWork& current_work, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch) {
+void CustomizeWork(const ChainstateManager& chainman, const StratumClient& client, const JobId& job_id, const uint256& mmroot, const StratumWork& current_work, const std::vector<unsigned char>& extranonce2, CMutableTransaction& cb, CMutableTransaction& bf, std::vector<uint256>& cb_branch) {
     if (current_work.GetBlock().vtx.empty()) {
         const std::string msg("SubmitBlock: no transactions in block template; unable to submit work");
         LogPrint(BCLog::STRATUM, "%s\n", msg);
@@ -352,6 +387,15 @@ void CustomizeWork(const ChainstateManager& chainman, const StratumClient& clien
     }
 
     bf = CMutableTransaction(*current_work.GetBlock().vtx.back());
+    if (current_work.m_block_template.has_block_final_tx) {
+        UpdateBlockFinalTxCommitment(bf, mmroot);
+        bilingual_str error;
+        if (SignBlockFinalTransaction(*g_context, bf, error)) {
+            LogPrint(BCLog::STRATUM, "Updated merge-mining commitment in block-final transaction.\n");
+        } else {
+            LogPrint(BCLog::STRATUM, "Failed to update merge-mining commitment in block-final transaction: %s\n", error.translated);
+        }
+    }
     cb_branch = current_work.m_cb_branch;
     if (current_work.m_is_witness_enabled) {
         UpdateSegwitCommitment(*g_context->chainman, current_work, cb, bf, cb_branch);
@@ -387,6 +431,67 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
 
     if (!client.m_authorized) {
         throw JSONRPCError(RPC_INVALID_REQUEST, "Stratum client not authorized.  Use mining.authorize first, with a Bitcoin address as the username.");
+    }
+
+    auto second_stage =
+        GetSecondStageWork(client.m_last_second_stage
+                           ? std::optional<ChainId>(client.m_last_second_stage->first)
+                           : std::nullopt);
+    if (second_stage) {
+        double diff = ClampDifficulty(client, second_stage->second.diff);
+
+        UniValue set_difficulty(UniValue::VOBJ);
+        set_difficulty.pushKV("id", client.m_nextid++);
+        set_difficulty.pushKV("method", "mining.set_difficulty");
+        UniValue set_difficulty_params(UniValue::VARR);
+        set_difficulty_params.push_back(UniValue(diff));
+        set_difficulty.pushKV("params", set_difficulty_params);
+
+        std::string job_id = ":" + second_stage->second.job_id;
+
+        UniValue mining_notify(UniValue::VOBJ);
+        mining_notify.pushKV("id", client.m_nextid++);
+        mining_notify.pushKV("method", "mining.notify");
+        UniValue mining_notify_params(UniValue::VARR);
+        mining_notify_params.push_back(job_id);
+        // Byte-swap the hashPrevBlock, as stratum expects.
+        uint256 hashPrevBlock(second_stage->second.hashPrevBlock);
+        for (int i = 0; i < 256/32; ++i) {
+            ((uint32_t*)hashPrevBlock.begin())[i] = bswap_32(
+            ((uint32_t*)hashPrevBlock.begin())[i]);
+        }
+        mining_notify_params.push_back(HexStr(hashPrevBlock));
+        mining_notify_params.push_back(HexStr(second_stage->second.cb1));
+        mining_notify_params.push_back(HexStr(second_stage->second.cb2));
+        // Reverse the order of the hashes, because that's what stratum does.
+        UniValue branch(UniValue::VARR);
+        for (const uint256& hash : second_stage->second.cb_branch) {
+            branch.push_back(HexStr(hash));
+        }
+        mining_notify_params.push_back(branch);
+        mining_notify_params.push_back(HexInt4(second_stage->second.nVersion));
+        mining_notify_params.push_back(HexInt4(second_stage->second.nBits));
+        mining_notify_params.push_back(HexInt4(second_stage->second.nTime));
+        if (client.m_last_second_stage && (client.m_last_second_stage->first == second_stage->first) && (client.m_last_second_stage->second == second_stage->second.hashPrevBlock)) {
+            mining_notify_params.push_back(UniValue(false));
+        } else {
+            mining_notify_params.push_back(UniValue(true));
+        }
+        mining_notify.pushKV("params", mining_notify_params);
+
+        second_stages[second_stage->second.job_id] = *second_stage;
+
+        client.m_last_second_stage =
+            std::make_pair(second_stage->first,
+                           second_stage->second.hashPrevBlock);
+
+        client.m_last_work_time = GetTime();
+        return GetExtraNonceRequest(client, second_stage->first) // note: not job_id
+             + set_difficulty.write() + "\n"
+             + mining_notify.write() + "\n";
+    } else {
+        client.m_last_second_stage = std::nullopt;
+        second_stages.clear();
     }
 
     static CBlockIndex* tip = NULL;
@@ -465,9 +570,70 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
             work_templates.erase(*oldest_job_id);
             LogPrint(BCLog::STRATUM, "Removed oldest stratum block template (%d total): %s\n", work_templates.size(), HexStr(*oldest_job_id));
         }
+
+        // Do the same for merge-mining work
+        std::vector<uint256> old_mmwork_keys;
+        std::optional<uint256> oldest_mmwork_key = std::nullopt;
+        uint64_t oldest_mmwork_timestamp = static_cast<uint64_t>(last_update_time) * 1000;
+        const uint64_t cutoff_timestamp = oldest_mmwork_timestamp - (900 * 1000);
+        for (const auto& mmwork : client.m_mmwork) {
+            // Build a list of outdated work units to free
+            if (mmwork.second.first < cutoff_timestamp) {
+                old_mmwork_keys.push_back(mmwork.first);
+            }
+            // Track the oldest work unit, in case we have too much recent work.
+            if (mmwork.second.first <= oldest_mmwork_timestamp) {
+                oldest_mmwork_key = mmwork.first;
+                oldest_mmwork_timestamp = mmwork.second.first;
+            }
+        }
+        // Remove outdated mmwork units.
+        for (const auto& old_mmwork_key : old_mmwork_keys) {
+            client.m_mmwork.erase(old_mmwork_key);
+            LogPrint(BCLog::MERGEMINE, "Removed outdated merge-mining work unit for miner %s from %s (%d total): %s\n", EncodeDestination(client.m_addr), client.GetPeer().ToStringAddrPort(), client.m_mmwork.size(), HexStr(old_mmwork_key));
+        }
+        // Remove the oldest mmwork unit if we're still over the maximum number
+        // of stored mmwork templates.
+        if (client.m_mmwork.size() > 30 && oldest_mmwork_key) {
+            client.m_mmwork.erase(*oldest_mmwork_key);
+            LogPrint(BCLog::MERGEMINE, "Removed oldest merge-mining work unit for miner %s from %s (%d total): %s\n", EncodeDestination(client.m_addr), client.GetPeer().ToStringAddrPort(), client.m_mmwork.size(), HexStr(*oldest_mmwork_key));
+        }
     }
 
     StratumWork& current_work = work_templates[job_id];
+
+    CMutableTransaction cb(*current_work.GetBlock().vtx[0]);
+    CMutableTransaction bf(*current_work.GetBlock().vtx.back());
+
+    // Our first customization of the work template is the insert merge-mine
+    // block header commitments, but we can only do that if the template has a
+    // block-final transaction.
+    uint32_t max_bits = current_work.GetBlock().nBits;
+    bool has_merge_mining = false;
+    uint256 mmroot;
+    if (current_work.m_block_template.has_block_final_tx) {
+        std::map<ChainId, AuxWork> mmwork = GetMergeMineWork(client.m_mmauth);
+        if (mmwork.empty()) {
+            LogPrint(BCLog::MERGEMINE, "No auxiliary work commitments to add to block template for stratum miner %s from %s.\n", EncodeDestination(client.m_addr), client.GetPeer().ToStringAddrPort());
+        } else {
+            mmroot = AuxWorkMerkleRoot(mmwork);
+            if (!client.m_mmwork.count(mmroot)) {
+                client.m_mmwork[mmroot] = std::make_pair(GetTimeMillis(), mmwork);
+            }
+            UpdateBlockFinalTxCommitment(bf, mmroot);
+            bilingual_str error;
+            if (SignBlockFinalTransaction(*g_context, bf, error)) {
+                LogPrint(BCLog::STRATUM, "Updated merge-mining commitment in block-final transaction.\n");
+                has_merge_mining = true;
+            } else {
+                LogPrint(BCLog::STRATUM, "Failed to sign block-final transaction: %s\n", error.translated);
+            }
+        }
+    } else {
+        if (!client.m_mmauth.empty()) {
+            LogPrint(BCLog::MERGEMINE, "Cannot add merge-mining commitments to block template because there is no block-final transaction.\n");
+        }
+    }
 
     CBlockIndex tmp_index;
     tmp_index.nBits = current_work.GetBlock().nBits;
@@ -480,11 +646,10 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     set_difficulty_params.push_back(UniValue(diff));
     set_difficulty.pushKV("params", set_difficulty_params);
 
-    CMutableTransaction cb, bf;
     std::vector<uint256> cb_branch;
     {
         static const std::vector<unsigned char> dummy(4, 0x00); // extranonce2
-        CustomizeWork(*g_context->chainman, client, job_id, current_work, dummy, cb, bf, cb_branch);
+        CustomizeWork(*g_context->chainman, client, job_id, mmroot, current_work, dummy, cb, bf, cb_branch);
     }
 
     CDataStream ds(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
@@ -500,7 +665,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     std::string cb2 = HexStr({&ds[pos], ds.size()-pos});
 
     UniValue params(UniValue::VARR);
-    params.push_back(HexStr(job_id));
+    params.push_back(HexStr(job_id) + (has_merge_mining? ":" + HexStr(mmroot): ""));
     // For reasons of who-the-heck-knows-why, stratum byte-swaps each
     // 32-bit chunk of the hashPrevBlock.
     uint256 hashPrevBlock(current_work.GetBlock().hashPrevBlock);
@@ -539,7 +704,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
          + mining_notify.write()  + "\n";
 }
 
-bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
+bool SubmitBlock(StratumClient& client, const JobId& job_id, const uint256& mmroot, const StratumWork& current_work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
     if (!g_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Node context not found when submitting block");
@@ -555,7 +720,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
 
     CMutableTransaction cb, bf;
     std::vector<uint256> cb_branch;
-    CustomizeWork(*g_context->chainman, client, job_id, current_work, extranonce2, cb, bf, cb_branch);
+    CustomizeWork(*g_context->chainman, client, job_id, mmroot, current_work, extranonce2, cb, bf, cb_branch);
 
     CBlockHeader blkhdr(current_work.GetBlock());
     blkhdr.nVersion = nVersion;
@@ -600,6 +765,55 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
         LogPrintf("NEW SHARE!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
     }
 
+    // Now we check if the work meets any of the auxiliary header requirements,
+    // and if so submit them.
+    //client.m_mmwork[mmroot] = std::make_pair(GetTimeMillis(), mmwork);
+    if (current_work.m_is_witness_enabled && current_work.m_block_template.has_block_final_tx && client.m_mmwork.count(mmroot)) {
+        AuxProof auxproof;
+        CDataStream ds(SER_GETHASH, PROTOCOL_VERSION);
+        ds << bf;
+        ds.resize(ds.size() - 40);
+        auxproof.midstate_buffer.resize(ds.size() % 64);
+        uint64_t tmp = 0;
+        CSHA256()
+            .Write((unsigned char*)&ds[0], ds.size())
+            .Midstate(auxproof.midstate_hash.begin(),
+                      auxproof.midstate_buffer.data(),
+                     &tmp);
+        auxproof.midstate_length = static_cast<uint32_t>(tmp / 8);
+        auxproof.lock_time = bf.nLockTime;
+        std::vector<uint256> leaves;
+        leaves.reserve(current_work.GetBlock().vtx.size());
+        for (const auto& tx : current_work.GetBlock().vtx) {
+            leaves.push_back(tx->GetHash());
+        }
+        leaves.front() = cb.GetHash();
+        leaves.back() = bf.GetHash();
+        auxproof.aux_branch = ComputeStableMerkleBranch(leaves, leaves.size()-1).first;
+        auxproof.num_txns = leaves.size();
+        auxproof.nVersion = blkhdr.nVersion;
+        auxproof.hashPrevBlock = blkhdr.hashPrevBlock;
+        auxproof.nTime = blkhdr.nTime;
+        auxproof.nBits = blkhdr.nBits;
+        auxproof.nNonce = blkhdr.nNonce;
+        for (const auto& item : client.m_mmwork[mmroot].second) {
+            const ChainId& chainid = item.first;
+            const AuxWork& auxwork = item.second;
+            if (!client.m_mmauth.count(chainid)) {
+                LogPrint(BCLog::MERGEMINE, "Got share for chain we aren't authorized for; unable to submit work.\n");
+                continue;
+            }
+            const std::string& username = client.m_mmauth[chainid].first;
+            SubmitAuxChainShare(chainid, username, auxwork, auxproof);
+            // FIXME: Change to our own consensus params with no powlimit
+            if (CheckProofOfWork(hash, auxwork.bits, auxwork.bias, Params().GetConsensus())) {
+                LogPrintf("GOT AUX CHAIN BLOCK!!! 0x%s by %s: %s %s\n", HexStr(chainid), username, auxwork.commit.ToString(), hash.ToString());
+            } else {
+                LogPrintf("NEW AUX CHAIN SHARE!!! 0x%s by %s: %s %s\n", HexStr(chainid), username, auxwork.commit.ToString(), hash.ToString());
+            }
+        }
+    }
+
     if (res) {
         // Block was accepted, so the chain tip was updated.
         //
@@ -610,6 +824,57 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
             wallet::KeepMiningDestination(current_work.m_coinbase_dest);
         }
         // The client needs new work!
+        client.m_send_work = true;
+    }
+
+    return res;
+}
+
+bool SubmitSecondStage(StratumClient& client, const ChainId& chainid, const SecondStageWork& work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion)
+{
+    if (!client.m_mmauth.count(chainid)) {
+        LogPrint(BCLog::MERGEMINE, "Got second stage share for chain we aren't authorized for; unable to submit work.\n");
+        return false;
+    }
+    const std::string& username = client.m_mmauth[chainid].first;
+
+    std::vector<unsigned char> extranonce1 = client.ExtraNonce1(chainid); // Note: not job_id
+
+    SubmitSecondStageShare(chainid, username, work, SecondStageProof(extranonce1, extranonce2, nVersion, nTime, nNonce));
+
+    uint256 hash;
+    CSHA256()
+        .Write(&work.cb1[0], work.cb1.size())
+        .Write(&extranonce1[0], extranonce1.size())
+        .Write(&extranonce2[0], extranonce2.size())
+        .Write(&work.cb2[0], work.cb2.size())
+        .Finalize(hash.begin());
+    CSHA256()
+        .Write(hash.begin(), 32)
+        .Finalize(hash.begin());
+
+    CBlockHeader blkhdr;
+    blkhdr.nVersion = nVersion;
+    blkhdr.hashPrevBlock = work.hashPrevBlock;
+    blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(hash, work.cb_branch, 0);
+    blkhdr.nTime = nTime;
+    blkhdr.nBits = work.nBits;
+    blkhdr.nNonce = nNonce;
+    hash = blkhdr.GetHash();
+
+    bool res = false;
+    // FIXME: Change to our own consensus params with no powlimit
+    if ((res = CheckProofOfWork(hash, work.nBits, 0, Params().GetConsensus()))) {
+        LogPrintf("GOT AUX CHAIN SECOND STAGE BLOCK!!! 0x%s by %s: %s\n", HexStr(chainid), username, hash.ToString());
+    } else {
+        LogPrintf("NEW AUX CHAIN SECOND STAGE SHARE!!! 0x%s by %s: %s\n", HexStr(chainid), username, hash.ToString());
+    }
+
+    if (res) {
+        // The auxiliary block was accepted, and the merge-mined chain tip was
+        // updated, although we may not have received a new auxiliary work unit
+        // yet.  Nevertheless let's optimistically assume that by the time we
+        // get to sending the client new work, it will be ready.
         client.m_send_work = true;
     }
 
@@ -683,10 +948,82 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
     boost::trim(username);
 
     // params[1] is the client-provided password.  We do not perform
-    // user authorization, so we ignore this value.
+    // user authorization, but we instead allow the password field to
+    // be used to specify merge-mining parameters.
+    std::string password = params[1].get_str();
+    boost::trim(password);
+
+    size_t start = 0;
+    size_t pos = 0;
+    std::vector<std::string> opts;
+    while ((pos = password.find(',', start)) != std::string::npos) {
+        std::string opt(password, start, pos);
+        boost::trim(opt);
+        if (opt.empty()) {
+            continue;
+        }
+        opts.push_back(opt);
+        start = pos + 1;
+    }
+    std::string opt(password, start);
+    boost::trim(opt);
+    if (!opt.empty()) {
+        opts.push_back(opt);
+    }
+
+    std::map<ChainId, std::pair<std::string, std::string> > mmauth;
+    for (const std::string& opt : opts) {
+        if ((pos = opt.find('=')) != std::string::npos) {
+            std::string key(opt, 0, pos); // chain name or ID
+            boost::trim_right(key);
+            std::string value(opt, pos+1); // pass-through to chain server
+            boost::trim_left(value);
+            std::string username(value);
+            std::string password;
+            if ((pos = value.find(':')) != std::string::npos) {
+                username.resize(pos);
+                password = value.substr(pos+1);
+            }
+            if (chain_names.count(key)) {
+                const ChainId& chainid = chain_names[key];
+                LogPrint(BCLog::MERGEMINE, "Merge-mine chain \"%s\" (0x%s) with username \"%s\" and password \"%s\"\n", key, HexStr(chainid), username, password);
+                mmauth[chainid] = std::make_pair(username, password);
+            } else {
+                ChainId chainid(ParseUInt256(key, "chainid"));
+                std::vector<unsigned char> zero(24, 0x00);
+                if (memcmp(chainid.begin()+8, zero.data(), 24) == 0) {
+                    // At least 24 bytes are empty. Gonna go out on a limb and
+                    // say this wasn't a hex-encoded aux_pow_path.
+                    LogPrint(BCLog::MERGEMINE, "Skipping unrecognized stratum password keyword option \"%s=%s\"\n", key, value);
+                } else {
+                    if (mmauth.count(chainid)) {
+                        LogPrint(BCLog::MERGEMINE, "Duplicate chain 0x%s; skipping\n", HexStr(chainid));
+                        continue;
+                    }
+                    LogPrint(BCLog::MERGEMINE, "Merge-mine chain 0x%s with username \"%s\" and password \"%s\"\n", HexStr(chainid), username, password);
+                    mmauth[chainid] = std::make_pair(username, password);
+                }
+            }
+        } else {
+            CTxDestination addr = DecodeDestination(opt);
+            if (IsValidDestination(addr)) {
+                const ChainId& chainid = Params().DefaultAuxPowPath();
+                if (mmauth.count(chainid)) {
+                    LogPrint(BCLog::MERGEMINE, "Duplicate chain 0x%s (default); skipping\n", HexStr(chainid));
+                    continue;
+                }
+                std::string username(EncodeDestination(addr));
+                std::string password("x");
+                LogPrint(BCLog::MERGEMINE, "Merge-mine chain 0x%s with username \"%s\" and password \"%s\"\n", HexStr(chainid), username, password);
+                mmauth[chainid] = std::make_pair(username, password);
+            } else {
+                LogPrint(BCLog::MERGEMINE, "Skipping unrecognized stratum password option \"%s\"\n", opt);
+            }
+        }
+    }
 
     double mindiff = 0.0;
-    size_t pos = username.find('+');
+    pos = username.find('+');
     if (pos != std::string::npos) {
         // Extract the suffix and trim it
         std::string suffix(username, pos+1);
@@ -710,6 +1047,10 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
     }
 
     client.m_addr = addr;
+    swap(client.m_mmauth, mmauth);
+    for (const auto& item : client.m_mmauth) {
+        RegisterMergeMineClient(item.first, item.second.first, item.second.second);
+    }
     client.m_mindiff = mindiff;
     client.m_authorized = true;
 
@@ -761,12 +1102,7 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     BoundParams(method, params, 5, 6);
     // First parameter is the client username, which is ignored.
 
-    JobId job_id(ParseUInt256(params[1], "job_id"));
-    if (!work_templates.count(job_id)) {
-        LogPrint(BCLog::STRATUM, "Received completed share for unknown job_id : %s\n", HexStr(job_id));
-        return false;
-    }
-    StratumWork &current_work = work_templates[job_id];
+    std::string id = params[1].get_str();
 
     std::vector<unsigned char> extranonce2 = ParseHexV(params[2], "extranonce2");
     if (extranonce2.size() != 4) {
@@ -774,14 +1110,56 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     }
     uint32_t nTime = ParseHexInt4(params[3], "nTime");
     uint32_t nNonce = ParseHexInt4(params[4], "nNonce");
-    uint32_t nVersion = current_work.GetBlock().nVersion;
-    if (params.size() > 5) {
-        uint32_t bits = ParseHexInt4(params[5], "nVersion");
-        nVersion = (nVersion & ~client.m_version_rolling_mask)
-                 | (bits & client.m_version_rolling_mask);
-    }
 
-    SubmitBlock(client, job_id, current_work, extranonce2, nTime, nNonce, nVersion);
+    if (id[0] == ':') {
+        // Second stage work unit
+        std::string job_id(id, 1);
+        if (!second_stages.count(job_id)) {
+            LogPrint(BCLog::STRATUM, "Received completed share for unknown second stage work : %s\n", id);
+            // The client is sending us work we never heard of.  Somethig is
+            // seriously wrong.  Let's get the client back on track.
+            client.m_send_work = true;
+            return false;
+        }
+        const auto& item = second_stages[job_id];
+        const ChainId& aux_pow_path = item.first;
+        const SecondStageWork& second_stage = item.second;
+
+        uint32_t nVersion = second_stage.nVersion;
+        if (params.size() > 5) {
+            uint32_t bits = ParseHexInt4(params[5], "nVersion");
+            nVersion = (nVersion & ~client.m_version_rolling_mask)
+                     | (bits & client.m_version_rolling_mask);
+        }
+
+        SubmitSecondStage(client, aux_pow_path, second_stage, extranonce2, nTime, nNonce, nVersion);
+    } else {
+        uint256 mmroot;
+        size_t pos = std::string::npos;
+        if ((pos = id.find(':', 0)) != std::string::npos) {
+            mmroot = ParseUInt256(std::string(id, pos+1), "mmroot");
+            id.resize(pos);
+        }
+        JobId job_id(ParseUInt256(id, "job_id"));
+
+        if (!work_templates.count(job_id)) {
+            LogPrint(BCLog::STRATUM, "Received completed share for unknown job_id : %s\n", HexStr(job_id));
+            // The client is sending us work we never heard of.  Somethig is
+            // seriously wrong.  Let's get the client back on track.
+            client.m_send_work = true;
+            return false;
+        }
+        StratumWork &current_work = work_templates[job_id];
+
+        uint32_t nVersion = current_work.GetBlock().nVersion;
+        if (params.size() > 5) {
+            uint32_t bits = ParseHexInt4(params[5], "nVersion");
+            nVersion = (nVersion & ~client.m_version_rolling_mask)
+                     | (bits & client.m_version_rolling_mask);
+        }
+
+        SubmitBlock(client, job_id, mmroot, current_work, extranonce2, nTime, nNonce, nVersion);
+    }
 
     return true;
 }
@@ -1026,8 +1404,8 @@ void BlockWatcher()
             break;
         }
 
-        // Either new block, or updated transactions.  Either way,
-        // send updated work to miners.
+        // Either new block, updated transactions, or updated merge-mining
+        // commitments.  Regardless, send updated work to miners.
         for (auto& subscription : subscriptions) {
             bufferevent* bev = subscription.first;
             evbuffer *output = bufferevent_get_output(bev);
@@ -1036,18 +1414,31 @@ void BlockWatcher()
             if (!client.m_authorized) {
                 continue;
             }
+            // Ignore clients that are already working on the current second
+            // stage work unit.
+            auto second_stage =
+                GetSecondStageWork(client.m_last_second_stage
+                                 ? std::optional<ChainId>(client.m_last_second_stage->first)
+                                 : std::nullopt);
+            if (second_stage && client.m_last_second_stage && (*client.m_last_second_stage == std::make_pair(second_stage->first, second_stage->second.hashPrevBlock))) {
+                continue;
+            }
             // Ignore clients that are already working on the new block.
             // Typically this is just the miner that found the block, who was
             // immediately sent a work update.  This check avoids sending that
             // work notification again, moments later.  Due to race conditions
             // there could be more than one miner that have already received an
             // update, however.
-            CBlockIndex* tip = nullptr;
-            if (g_context && g_context->chainman) {
-                tip = g_context->chainman->ActiveChain().Tip();
-            }
-            if (client.m_last_tip == tip) {
-                continue;
+            if (!second_stage) {
+                CBlockIndex* tip = nullptr;
+                if (g_context && g_context->chainman) {
+                    tip = g_context->chainman->ActiveChain().Tip();
+                }
+                std::map<ChainId, AuxWork> mmwork = GetMergeMineWork(client.m_mmauth);
+                uint256 mmroot = AuxWorkMerkleRoot(mmwork);
+                if ((client.m_last_tip == tip) && client.m_mmwork.count(mmroot)) {
+                    continue;
+                }
             }
             // Get new work
             std::string data;
@@ -1197,6 +1588,12 @@ static RPCHelpMan getstratuminfo() {
                     {RPCResult::Type::STR, "useragent", /*optional=*/true, "the self-reported user agent field identifying the client's software"},
                     {RPCResult::Type::BOOL, "authorized", "whether the client has sent a \"mining.authorize\" message yet"},
                     {RPCResult::Type::STR, "address", /*optional=*/true, "the address the client's mining rewards are being sent to"},
+                    {RPCResult::Type::OBJ_DYN, "mmauth", /*optional=*/true, "the client's merge-mining authorization credentials", {
+                        {RPCResult::Type::ARR_FIXED, "chainid", "the authorization credentials for the specified chain", {
+                            {RPCResult::Type::STR, "username", "the client's username"},
+                            {RPCResult::Type::STR, "password", "the client's password"},
+                        }},
+                    }},
                     {RPCResult::Type::NUM, "mindiff", /*optional=*/true, "the minimum difficulty the client is willing to accept"},
                     {RPCResult::Type::NUM_TIME, "lastjob", /*optional=*/true, "the time elapsed since the last job was sent to the client, in seconds"},
                     {RPCResult::Type::NUM_TIME, "lastshare", /*optional=*/true, "the time elapsed since the last share was received from the client, in seconds"},
@@ -1258,6 +1655,17 @@ static RPCHelpMan getstratuminfo() {
         obj.pushKV("authorized", authorized);
         if (authorized) {
             obj.pushKV("address", EncodeDestination(client.m_addr));
+            UniValue mmauth(UniValue::VOBJ);
+            for (const auto& item : client.m_mmauth) {
+                const ChainId& chainid = item.first;
+                const std::string& username = item.second.first;
+                const std::string& password = item.second.second;
+                UniValue params(UniValue::VARR);
+                params.push_back(username);
+                params.push_back(password);
+                mmauth.pushKV(HexStr(chainid), params);
+            }
+            obj.pushKV("mmauth", mmauth);
             if (client.m_mindiff > 0.0) {
                 obj.pushKV("mindiff", client.m_mindiff);
             }
