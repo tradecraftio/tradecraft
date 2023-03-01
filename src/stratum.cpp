@@ -290,7 +290,27 @@ uint256 ParseUInt256(const UniValue& hex, const std::string& name)
     return ret;
 }
 
-static uint256 AuxWorkMerkleRoot(const std::map<ChainId, AuxWork>& mmwork)
+static std::map<ChainId, AuxWork>::iterator build_aux_work_proofs(std::map<ChainId, AuxWork>::iterator it, std::vector<std::pair<uint8_t, uint256>> path, std::shared_ptr<MerkleMapNode> subtree) {
+    if (subtree->zero) {
+        assert(subtree->one);
+        path.emplace_back(subtree->skip, subtree->one->hash);
+        it = build_aux_work_proofs(it, path, subtree->zero);
+        path.pop_back();
+    }
+    if (subtree->one) {
+        assert(subtree->zero);
+        path.emplace_back(subtree->skip, subtree->zero->hash);
+        it = build_aux_work_proofs(it, path, subtree->one);
+        path.pop_back();
+    }
+    if (!subtree->zero && !subtree->one) {
+        it->second.path = path;
+        ++it;
+    }
+    return it;
+}
+
+static uint256 AuxWorkMerkleRoot(std::map<ChainId, AuxWork>& mmwork)
 {
     // If there is nothing to commit to, then the default zero hash is as good
     // as any other value.
@@ -298,16 +318,24 @@ static uint256 AuxWorkMerkleRoot(const std::map<ChainId, AuxWork>& mmwork)
         return uint256();
     }
     // The protocol supports an effectively limitless number of auxiliary
-    // commitments under the Merkle root, however code has not yet been written
-    // to generate root values and proofs for arbitrary trees.
-    if (mmwork.size() != 1) {
-        throw std::runtime_error("AuxWorkMerkleRoot: we do not yet support more than one merge-mining commitment");
+    // commitments under the Merkle root, using a Merkle trie structure.  The
+    // key is the ChainID, and the value is the commitment.
+    std::map<uint256, uint256> mmwork_map;
+    for (const auto& item : mmwork) {
+        mmwork_map[uint256(item.first)] = item.second.commit;
     }
-    // For now, we've hard-coded the special case of a single hash commitment:
-    const ChainId& key = mmwork.begin()->first;
-    const uint256& value = mmwork.begin()->second.commit;
-    uint256 ret = ComputeMerkleMapRootFromBranch(value, {}, uint256(key));
-    return ret;
+    auto root = BuildMerkleMapTree(mmwork_map);
+    assert(root);
+    // Now scan the resulting tree and record the path to each terminal node.
+    // We can take advantage of the fact that std::map and our own Merkle trie
+    // structure both store their elements in sorted order, so we can do this in
+    // one pass.
+    auto it = mmwork.begin();
+    std::vector<std::pair<uint8_t, uint256>> path;
+    it = build_aux_work_proofs(it, path, root);
+    assert(it == mmwork.end());
+    // Return the root hash of the Merkle trie.
+    return root->hash;
 }
 
 static double ClampDifficulty(const StratumClient& client, double diff)

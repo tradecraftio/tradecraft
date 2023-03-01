@@ -20,6 +20,7 @@
 struct AuxWork {
     uint64_t timestamp;
     std::string job_id;
+    std::vector<std::pair<uint8_t, uint256>> path;
     uint256 commit;
     uint32_t bits;
     unsigned char bias;
