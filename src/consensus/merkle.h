@@ -137,6 +137,21 @@ uint256 ComputeFastMerkleRoot(const std::vector<uint256>& leaves);
 std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vector<uint256>& leaves, uint32_t position);
 uint256 ComputeFastMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path, bool* invalid = nullptr);
 
+struct MerkleMapNode {
+    //! The number of prefix bits in common among all keys in this subtree, and
+    //! therefore the number of branches 'skipped.'
+    int skip = 0;
+    //! The hash of the subtree, or the value in the case of a terminal node.
+    uint256 hash;
+    //! The left and right subtrees, or null if this is a terminal node.  These
+    //! are named zero and one instead of the more usual left and right as the
+    //! 'zero' subtree contains keys whose key bit is zero, and the 'one'
+    //! subtree contains those with a 1 bit at the relevant position.
+    std::shared_ptr<MerkleMapNode> zero;
+    std::shared_ptr<MerkleMapNode> one;
+};
+
+std::shared_ptr<MerkleMapNode> BuildMerkleMapTree(std::map<uint256, uint256> pairs);
 uint256 ComputeMerkleMapRootFromBranch(const uint256& value, const std::vector<std::pair<unsigned char, uint256> >& branch, const uint256& key, bool* invalid = nullptr);
 
 /*

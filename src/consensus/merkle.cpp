@@ -4,6 +4,7 @@
 
 #include <consensus/merkle.h>
 #include <hash.h>
+#include <logging.h>
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
@@ -354,6 +355,95 @@ static uint256 calc_remainder(const uint256& key, int used)
         }
     }
     return ret;
+}
+
+static std::shared_ptr<MerkleMapNode> BuildMerkleMapTreeInner(std::map<uint256, uint256> pairs, int used) {
+    // An empty map is an uninteresting edge case.
+    if (pairs.empty()) {
+        assert(false);
+        return nullptr;
+    }
+    // A commitment to a single value is just that value.
+    if (pairs.size() == 1) {
+        auto ret = std::make_shared<MerkleMapNode>();
+        ret->skip = 256 - used;
+        MerkleHash_Sha256Midstate(ret->hash, calc_remainder(pairs.begin()->first, used), pairs.begin()->second);
+        ret->zero = nullptr; // terminal node
+        ret->one = nullptr;
+        return ret;
+    }
+    // Find the longest common prefix between the keys we are given, starting
+    // from the first as yet unused bit.  The keys will have the already used
+    // bits in common as well, but we know that already and don't have to check.
+    int end = used; // used is a count of the number of key prefix bits already
+                    // consumed, and thefore also the zero-indexed beginning of
+                    // the remaining bits.
+    while (end < 256) { // should never reach 256, but just in case
+        // We check for commonality one byte at a time, for efficiency's sake.
+        // 'diff' will be zero if all the keys have the same value for this
+        // byte, and if non-zero the set bits will indicate which positions
+        // differ.
+        unsigned char diff = 0;
+        // Could be any key, doesn't matter which.
+        unsigned char bits = pairs.begin()->first.begin()[end/8];
+        for (auto pair : pairs) {
+            // Bitwise-XOR of the bits of the current byte from each key, with
+            // bits gives the positions which differ from the first key.
+            // Bitwise-OR ensures that if a bit is ever set in a comparison, it
+            // remains set across the whole set.
+            // The end result is that a bit in 'diff' will be zero if and only
+            // if that bit has the same value across all keys.
+            diff |= bits ^ pair.first.begin()[end/8];
+        }
+        // Now check if any of the bits differ.
+        // Note that our starting bit might not be at index 0.
+        int idx = end % 8;
+        while (idx < 8) {
+            // The 0th index is the highest bit of the first byte.
+            if (diff & (1 << (7-idx))) {
+                break;
+            }
+            ++idx;
+            ++end;
+        }
+        // If we found a differing bit, we're done.
+        if (idx != 8) {
+            break;
+        }
+    }
+    if (end == 256) {
+        // FIXME: This cannot happen as there is no way to have two keys with
+        //        the same value.
+        assert(false);
+        return nullptr;
+    }
+    // end is the index of the first differing bit.  We divide the keys into two
+    // groups based on their value for this bit.
+    std::map<uint256, uint256> zero_pairs;
+    std::map<uint256, uint256> one_pairs;
+    for (auto pair : pairs) {
+        if (pair.first.begin()[end/8] & (1 << (7-(end%8)))) {
+            one_pairs[pair.first] = pair.second;
+        } else {
+            zero_pairs[pair.first] = pair.second;
+        }
+    }
+    assert(!zero_pairs.empty());
+    assert(!one_pairs.empty());
+    // Now we recurse to build the subtrees.
+    auto ret = std::make_shared<MerkleMapNode>();
+    ret->skip = end - used;
+    ret->zero = BuildMerkleMapTreeInner(zero_pairs, end + 1);
+    ret->one = BuildMerkleMapTreeInner(one_pairs, end + 1);
+    assert(ret->zero);
+    assert(ret->one);
+    MerkleHash_Sha256Midstate(ret->hash, ret->zero->hash, ret->one->hash);
+    MerkleHash_Sha256Midstate(ret->hash, calc_bits(pairs.begin()->first, used, end), ret->hash);
+    return ret;
+}
+
+std::shared_ptr<MerkleMapNode> BuildMerkleMapTree(std::map<uint256, uint256> pairs) {
+    return BuildMerkleMapTreeInner(pairs, 0);
 }
 
 uint256 ComputeMerkleMapRootFromBranch(const uint256& value, const std::vector<std::pair<unsigned char, uint256> >& branch, const uint256& key, bool* invalid)
