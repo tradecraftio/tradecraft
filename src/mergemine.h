@@ -93,9 +93,9 @@ std::map<ChainId, AuxWork> GetMergeMineWork(const std::map<ChainId, std::pair<st
 std::optional<std::pair<ChainId, SecondStageWork> > GetSecondStageWork(std::optional<ChainId> hint);
 
 /** Submit share to the specified auxiliary chain. */
-void SubmitAuxChainShare(const ChainId& chainid, const std::string& username, const AuxWork& work, const AuxProof& proof);
+void SubmitAuxChainShare(const ChainId& chainid, const std::optional<std::string>& username, const AuxWork& work, const AuxProof& proof);
 
-void SubmitSecondStageShare(const ChainId& chainid, const std::string& username, const SecondStageWork& work, const SecondStageProof& proof);
+void SubmitSecondStageShare(const ChainId& chainid, const std::optional<std::string>& username, const SecondStageWork& work, const SecondStageProof& proof);
 
 /** Reconnect to any auxiliary work sources with dropped connections. */
 void ReconnectToMergeMineEndpoints();
