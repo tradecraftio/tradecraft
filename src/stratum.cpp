@@ -34,6 +34,7 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
+#include <wallet/miner.h>
 
 #include <univalue.h>
 
@@ -136,6 +137,11 @@ std::vector<unsigned char> StratumClient::ExtraNonce1(const BaseHash<uint256>& j
 struct StratumWork {
     //! The block index of the block this work builds on.
     const CBlockIndex *m_prev_block_index;
+    //! The destination of the coinbase transaction's output which claims the
+    //! block reward.  Usually this is replaced by the miner's address when
+    //! the work is customized, but it is kept when the default credentials
+    //! are used.
+    CTxDestination m_coinbase_dest;
     //! The block template used to generate this work.
     node::CBlockTemplate m_block_template;
     //! The merkle branch to the coinbase transaction of the block.
@@ -148,7 +154,7 @@ struct StratumWork {
     int m_height;
 
     StratumWork() : m_prev_block_index(0), m_is_witness_enabled(false), m_height(0) {};
-    StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, int height, const node::CBlockTemplate& block_template);
+    StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, int height, const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template);
 
     //! A more ergonomic way to access the block template.
     CBlock& GetBlock()
@@ -157,8 +163,9 @@ struct StratumWork {
       { return m_block_template.block; }
 };
 
-StratumWork::StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, int height, const node::CBlockTemplate& block_template)
+StratumWork::StratumWork(const ChainstateManager& chainman, const CBlockIndex* prev_block_index, int height, const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template)
     : m_prev_block_index(prev_block_index)
+    , m_coinbase_dest(coinbase_dest)
     , m_block_template(block_template)
     , m_height(height)
 {
@@ -336,7 +343,7 @@ void CustomizeWork(const ChainstateManager& chainman, const StratumClient& clien
     }
     if (cb.vout.front().scriptPubKey == (CScript() << OP_FALSE)) {
         cb.vout.front().scriptPubKey =
-            GetScriptForDestination(client.m_addr);
+            GetScriptForDestination(IsValidDestination(client.m_addr) ? client.m_addr : current_work.m_coinbase_dest);
     }
 
     bf = CMutableTransaction(*current_work.GetBlock().vtx.back());
@@ -387,6 +394,9 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     // seconds and there are new transactions.
     if (tip != g_context->chainman->ActiveChain().Tip() || (mempool.GetTransactionsUpdated() != transactions_updated_last && (GetTime() - last_update_time) > 5) || !work_templates.count(job_id))
     {
+        CTxDestination coinbase_dest;
+        bilingual_str error;
+        wallet::ReserveMiningDestination(*g_context, coinbase_dest, error);
         // Update block template
         CBlockIndex* tip_new = g_context->chainman->ActiveChain().Tip();
         const CScript script = CScript() << OP_FALSE;
@@ -402,7 +412,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
         new_work->block.hashMerkleRoot = BlockMerkleRoot(new_work->block);
 
         job_id = JobId(new_work->block.GetHash());
-        work_templates[job_id] = StratumWork(*g_context->chainman, tip_new, tip_new->nHeight + 1, *new_work);
+        work_templates[job_id] = StratumWork(*g_context->chainman, tip_new, tip_new->nHeight + 1, coinbase_dest, *new_work);
         tip = tip_new;
 
         LogPrint(BCLog::STRATUM, "New stratum block template (%d total): %s\n", work_templates.size(), HexStr(job_id));
@@ -576,6 +586,13 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
 
     if (res) {
         // Block was accepted, so the chain tip was updated.
+        //
+        // If the client is mining directly to the local wallet, consume the
+        // destination used for this work unit so that new work mines to a
+        // fresh address.
+        if (!IsValidDestination(client.m_addr)) {
+            wallet::KeepMiningDestination(current_work.m_coinbase_dest);
+        }
         // The client needs new work!
         client.m_send_work = true;
     }
@@ -665,10 +682,15 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
         boost::trim_right(username);
     }
 
-    CTxDestination addr = DecodeDestination(username);
-
-    if (!IsValidDestination(addr)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Bitcoin address: %s", username));
+    // If the username is a valid Bitcoin address, use it as the destination
+    // for block rewards.  Otherwise setup the miner to use fresh keys from the
+    // wallet.
+    CTxDestination addr;
+    if (!username.empty()) {
+        addr = DecodeDestination(username);
+        if (!IsValidDestination(addr)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Bitcoin address: %s", username));
+        }
     }
 
     client.m_addr = addr;
@@ -1093,6 +1115,8 @@ void StopStratumServer()
         block_watcher_thread.join();
     }
     LOCK(cs_stratum);
+    /* Release any reserved keys back to the pool. */
+    wallet::ReleaseMiningDestinations();
     /* Tear-down active connections. */
     for (const auto& subscription : subscriptions) {
         LogPrint(BCLog::STRATUM, "Closing stratum server connection to %s due to process termination\n", subscription.second.GetPeer().ToStringAddrPort());
