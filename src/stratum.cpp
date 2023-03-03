@@ -111,6 +111,7 @@ std::vector<unsigned char> StratumClient::ExtraNonce1(uint256 job_id) const
 }
 
 struct StratumWork {
+    // The block template used to generate the work.
     node::CBlockTemplate m_block_template;
     // First we generate the segwit commitment for the miner's coinbase with
     // ComputeFastMerkleBranch.
