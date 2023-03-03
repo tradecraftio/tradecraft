@@ -42,7 +42,6 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp> // for boost::trim
-#include <boost/lexical_cast.hpp>
 
 #include <event2/event.h>
 #include <event2/listener.h>
@@ -930,7 +929,7 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
         std::string suffix(username, pos+1);
         boost::trim_left(suffix);
         // Extract the minimum difficulty request
-        mindiff = boost::lexical_cast<double>(suffix);
+        mindiff = std::stod(suffix);
         // Remove the '+' and everything after
         username.resize(pos);
         boost::trim_right(username);
