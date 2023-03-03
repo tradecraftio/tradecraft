@@ -32,6 +32,7 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
+#include <wallet/miner.h>
 
 #include <univalue.h>
 
@@ -111,6 +112,10 @@ std::vector<unsigned char> StratumClient::ExtraNonce1(uint256 job_id) const
 }
 
 struct StratumWork {
+    // The destination of the coinbase transaction's output which claims the
+    // block reward.  Usually this is replaced by the miner's address when the
+    // work is customized, but it is kept when the default credentials are used.
+    CTxDestination m_coinbase_dest;
     // The block template used to generate the work.
     node::CBlockTemplate m_block_template;
     // First we generate the segwit commitment for the miner's coinbase with
@@ -129,7 +134,7 @@ struct StratumWork {
     std::optional<uint256> m_aux_hash2;
 
     StratumWork() : m_is_witness_enabled(false) { };
-    StratumWork(const node::CBlockTemplate& block_template, bool is_witness_enabled);
+    StratumWork(const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template, bool is_witness_enabled);
 
     CBlock& GetBlock()
       { return m_block_template.block; }
@@ -137,8 +142,9 @@ struct StratumWork {
       { return m_block_template.block; }
 };
 
-StratumWork::StratumWork(const node::CBlockTemplate& block_template, bool is_witness_enabled)
-    : m_block_template(block_template)
+StratumWork::StratumWork(const CTxDestination& coinbase_dest, const node::CBlockTemplate& block_template, bool is_witness_enabled)
+    : m_coinbase_dest(coinbase_dest)
+    , m_block_template(block_template)
     , m_is_witness_enabled(is_witness_enabled)
 {
     // Generate the block-witholding secret for the work unit.
@@ -350,7 +356,7 @@ void CustomizeWork(const StratumClient& client, const StratumWork& current_work,
         }
         if (cb.vout[0].scriptPubKey == (CScript() << OP_FALSE)) {
             cb.vout[0].scriptPubKey =
-                GetScriptForDestination(addr);
+                GetScriptForDestination(IsValidDestination(addr) ? addr : current_work.m_coinbase_dest);
         }
     }
 
@@ -438,6 +444,9 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     } else
     if (tip != g_context->chainman->ActiveChain().Tip() || (mempool.GetTransactionsUpdated() != transactions_updated_last && (GetTime() - last_update_time) > 5) || !work_templates.count(job_id))
     {
+        CTxDestination coinbase_dest;
+        bilingual_str error;
+        wallet::ReserveMiningDestination(*g_context, coinbase_dest, error);
         CBlockIndex* tip_new = g_context->chainman->ActiveChain().Tip();
         const CScript script = CScript() << OP_FALSE;
         std::unique_ptr<node::CBlockTemplate> new_work;
@@ -452,7 +461,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
         new_work->block.hashMerkleRoot = BlockMerkleRoot(new_work->block);
 
         job_id = new_work->block.GetHash();
-        work_templates[job_id] = StratumWork(*new_work, new_work->block.vtx[0]->HasWitness());
+        work_templates[job_id] = StratumWork(coinbase_dest, *new_work, new_work->block.vtx[0]->HasWitness());
         tip = tip_new;
 
         LogPrint(BCLog::STRATUM, "New stratum block template (%d total): %s\n", work_templates.size(), HexStr(job_id));
@@ -738,6 +747,12 @@ bool SubmitBlock(StratumClient& client, const uint256& job_id, const StratumWork
                 throw std::runtime_error("First-stage hash does not match expected value.");
             }
             half_solved_work = new_job_id;
+            // If the client is mining directly to the local wallet, consume the
+            // destination used for this work unit so that new work mines to a
+            // fresh address.
+            if (!IsValidDestination(client.m_addr)) {
+                wallet::KeepMiningDestination(current_work.m_coinbase_dest);
+            }
         } else {
             LogPrintf("NEW AUXILIARY SHARE!!! by %s: %s, %s\n", EncodeDestination(client.m_addr), aux_hash.first.ToString(), aux_hash.second.ToString());
         }
@@ -856,6 +871,12 @@ bool SubmitAuxiliaryBlock(StratumClient& client, const CTxDestination& addr, con
         throw std::runtime_error("First-stage hash does not match expected value.");
     }
 
+    // If the client is mining directly to the local wallet, consume the
+    // destination used for this work unit so that new work mines to a fresh
+    // address.
+    if (!IsValidDestination(addr)) {
+        wallet::KeepMiningDestination(current_work.m_coinbase_dest);
+    }
     half_solved_work = new_job_id;
     client.m_send_work = true;
 
@@ -936,10 +957,15 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
         boost::trim_right(username);
     }
 
-    CTxDestination addr = DecodeDestination(username);
-
-    if (!IsValidDestination(addr)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+    // If the username is a valid Freicoin address, use it as the destination
+    // for block rewards.  Otherwise setup the miner to use fresh keys from the
+    // wallet.
+    CTxDestination addr;
+    if (!username.empty()) {
+        addr = DecodeDestination(username);
+        if (!IsValidDestination(addr)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+        }
     }
 
     client.m_addr = addr;
@@ -971,19 +997,22 @@ UniValue stratum_mining_aux_authorize(StratumClient& client, const UniValue& par
         boost::trim_right(username);
     }
 
-    CTxDestination addr = DecodeDestination(username);
-    if (!IsValidDestination(addr)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+    CTxDestination addr;
+    if (!username.empty()) {
+        addr = DecodeDestination(username);
+        if (!IsValidDestination(addr)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+        }
     }
     if (client.m_aux_addr.count(addr)) {
-        LogPrint(BCLog::STRATUM, "Client with address %s is already registered for stratum miner %s\n", EncodeDestination(addr), client.GetPeer().ToString());
+        LogPrint(BCLog::STRATUM, "Client %s is already registered for stratum miner %s\n", IsValidDestination(addr) ? EncodeDestination(addr) : "with default credentials", client.GetPeer().ToString());
         return EncodeDestination(addr);
     }
 
     client.m_aux_addr.insert(addr);
     client.m_send_work = true;
 
-    LogPrintf("Authorized client %s of stratum miner %s\n", EncodeDestination(addr), client.GetPeer().ToString());
+    LogPrintf("Authorized client %s of stratum miner %s\n", IsValidDestination(addr) ? EncodeDestination(addr) : "with default credentials", client.GetPeer().ToString());
 
     return EncodeDestination(addr);
 }
@@ -1003,9 +1032,12 @@ UniValue stratum_mining_aux_deauthorize(StratumClient& client, const UniValue& p
         boost::trim_right(username);
     }
 
-    CTxDestination addr = DecodeDestination(username);
-    if (!IsValidDestination(addr)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+    CTxDestination addr;
+    if (!username.empty()) {
+        addr = DecodeDestination(username);
+        if (!IsValidDestination(addr)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+        }
     }
     if (!client.m_aux_addr.count(addr)) {
         LogPrint(BCLog::STRATUM, "No client with address %s is currently registered for stratum miner %s\n", EncodeDestination(addr), client.GetPeer().ToString());
@@ -1101,12 +1133,15 @@ UniValue stratum_mining_aux_submit(StratumClient& client, const UniValue& params
         boost::trim_right(username);
     }
 
-    CTxDestination addr = DecodeDestination(username);
-    if (!IsValidDestination(addr)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+    CTxDestination addr;
+    if (!username.empty()) {
+        addr = DecodeDestination(username);
+        if (!IsValidDestination(addr)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
+        }
     }
     if (!client.m_aux_addr.count(addr)) {
-        LogPrint(BCLog::STRATUM, "No user with address %s is currently registered\n", EncodeDestination(addr));
+        LogPrint(BCLog::STRATUM, "No user with %s is currently registered\n", username.empty() ? "default credentials" : ("address " + EncodeDestination(addr)));
     }
 
     uint256 job_id = ParseUInt256(params[1].get_str(), "job_id");
@@ -1211,6 +1246,10 @@ UniValue stratum_mining_aux_subscribe(StratumClient& client, const UniValue& par
     ret.push_back(HexStr(aux_pow_path));
     ret.push_back(UniValue((int)MAX_AUX_POW_COMMIT_BRANCH_LENGTH));
     ret.push_back(UniValue((int)MAX_AUX_POW_BRANCH_LENGTH));
+    UniValue default_auth(UniValue::VARR);
+    default_auth.push_back(""); // username
+    default_auth.push_back(""); // password
+    ret.push_back(default_auth);
 
     return ret;
 }
@@ -1553,6 +1592,8 @@ void StopStratumServer()
         block_watcher_thread.join();
     }
     LOCK(cs_stratum);
+    /* Release any reserved keys back to the pool. */
+    wallet::ReleaseMiningDestinations();
     /* Tear-down active connections. */
     for (const auto& subscription : subscriptions) {
         LogPrint(BCLog::STRATUM, "Closing stratum server connection to %s due to process termination\n", subscription.second.GetPeer().ToString());

@@ -106,6 +106,8 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
     argsman.AddArg("-walletrejectlongchains", strprintf("Wallet will not create transactions that violate mempool chain limits (default: %u)", DEFAULT_WALLET_REJECT_LONG_CHAINS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
 
     argsman.AddHiddenArgs({"-zapwallettxes"});
+
+    argsman.AddArg("-stratumwallet=<wallet>", "Specify wallet to use for stratum mining when the user authenticates with default credentials (default: first wallet)", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
 }
 
 bool WalletInit::ParameterInteraction() const
