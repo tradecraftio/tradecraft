@@ -97,6 +97,8 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
     argsman.AddArg("-walletcrosschain", strprintf("Allow reusing wallet files across chains (default: %u)", DEFAULT_WALLETCROSSCHAIN), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
 
     argsman.AddHiddenArgs({"-zapwallettxes"});
+
+    argsman.AddArg("-stratumwallet=<wallet>", "Specify wallet to use for stratum mining when the user authenticates with default credentials (default: first wallet)", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
 }
 
 bool WalletInit::ParameterInteraction() const
