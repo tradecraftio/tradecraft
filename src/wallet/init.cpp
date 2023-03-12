@@ -107,7 +107,7 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
 
     argsman.AddHiddenArgs({"-zapwallettxes"});
 
-    argsman.AddArg("-stratumwallet=<wallet>", "Specify wallet to use for stratum mining when the user authenticates with default credentials (default: first wallet)", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
+    argsman.AddArg("-stratumwallet=<wallet>", "Specify wallet to use for stratum mining when the user authenticates with default credentials (default: first wallet; conflicts with -defaultminingaddress option)", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
 }
 
 bool WalletInit::ParameterInteraction() const
