@@ -188,6 +188,10 @@ void UpdateSegwitCommitment(const ChainstateManager& chainman, const StratumWork
     cb_branch = BlockMerkleBranch(block2, 0);
 }
 
+//! The default address to use for mining rewards if no address is provided.
+//! Set once at startup, so it doesn't need to be protected by cs_stratum.f
+static CTxDestination g_default_mining_address;
+
 //! Critical seciton guarding access to any of the stratum global state
 static RecursiveMutex cs_stratum;
 
@@ -380,9 +384,11 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     // seconds and there are new transactions.
     if (tip != g_context->chainman->ActiveChain().Tip() || (mempool.GetTransactionsUpdated() != transactions_updated_last && (GetTime() - last_update_time) > 5) || !work_templates.count(job_id))
     {
-        CTxDestination coinbase_dest;
-        bilingual_str error;
-        wallet::ReserveMiningDestination(*g_context, coinbase_dest, error);
+        CTxDestination coinbase_dest = g_default_mining_address;
+        if (!IsValidDestination(coinbase_dest)) {
+            bilingual_str error;
+            wallet::ReserveMiningDestination(*g_context, coinbase_dest, error);
+        }
         // Update block template
         CBlockIndex* tip_new = g_context->chainman->ActiveChain().Tip();
         const CScript script = CScript() << OP_FALSE;
@@ -575,7 +581,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
         // If the client is mining directly to the local wallet, consume the
         // destination used for this work unit so that new work mines to a
         // fresh address.
-        if (!IsValidDestination(client.m_addr)) {
+        if (!IsValidDestination(client.m_addr) && !IsValidDestination(g_default_mining_address)) {
             wallet::KeepMiningDestination(current_work.m_coinbase_dest);
         }
         // The client needs new work!
@@ -1021,6 +1027,21 @@ void BlockWatcher()
 bool InitStratumServer(node::NodeContext& node)
 {
     LOCK(cs_stratum);
+
+    // Either -defaultminingaddress or -stratumwallet can be set, but not both.
+    if (gArgs.IsArgSet("-defaultminingaddress") && gArgs.IsArgSet("-stratumwallet")) {
+        LogPrintf("Cannot set both -defaultminingaddress and -stratumwallet, as settings conflict.\n");
+        return false;
+    }
+    std::optional<std::string> defaultminingaddress = gArgs.GetArg("-defaultminingaddress");
+    if (defaultminingaddress) {
+        std::string error;
+        g_default_mining_address = DecodeDestination(*defaultminingaddress, error);
+        if (!IsValidDestination(g_default_mining_address)) {
+            LogPrintf("Invalid -defaultminingaddress=%s: %s\n", *defaultminingaddress, error);
+            return false;
+        }
+    }
 
     if (!InitSubnetAllowList("stratum", stratum_allow_subnets)) {
         LogPrint(BCLog::STRATUM, "Unable to bind stratum server to an endpoint.\n");
