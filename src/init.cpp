@@ -636,6 +636,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-stratumbind=<addr>", "Bind to given address to listen for Stratum work requests. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::STRATUM);
     argsman.AddArg("-stratumport=<port>", strprintf("Listen for Stratum work requests on <port> (default: %u or testnet: %u)", defaultBaseParams->StratumPort(), testnetBaseParams->StratumPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::STRATUM);
     argsman.AddArg("-stratumallowip=<ip>", "Allow Stratum work requests from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
+    argsman.AddArg("-defaultminingaddress=<addr>", "Set the default mining address for the stratum server, used if the miner authenticates with a blank username. (Conflicts with -stratumwallet option)", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
 
 #if HAVE_DECL_FORK
     argsman.AddArg("-daemon", strprintf("Run in the background as a daemon and accept commands (default: %d)", DEFAULT_DAEMON), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
