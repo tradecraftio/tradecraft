@@ -813,6 +813,12 @@ Accept command line and JSON\-RPC commands
 .PP
 Stratum server:
 .HP
+\fB\-defaultminingaddress=\fR<addr>
+.IP
+Set the default mining address for the stratum server, used if the miner
+authenticates with a blank username. (Conflicts with
+\fB\-stratumwallet\fR option)
+.HP
 \fB\-miningmindiff=\fR<n>
 .IP
 Set the minimum difficulty for stratum clients (default: 1000)
@@ -842,7 +848,8 @@ Listen for Stratum work requests on <port> (default: 9332 or testnet:
 \fB\-stratumwallet=\fR<wallet>
 .IP
 Specify wallet to use for stratum mining when the user authenticates
-with default credentials (default: first wallet)
+with default credentials (default: first wallet; conflicts with
+\fB\-defaultminingaddress\fR option)
 .SH COPYRIGHT
 Copyright (C) 2009-2024 The Bitcoin Core developers
 
