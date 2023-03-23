@@ -116,12 +116,12 @@ public:
 
         /**
          * The protocol cleanup rule change is scheduled for activation on 16
-         * Apr 2021 at midnight UTC.  This is 4PM PDT, 7PM EDT, and 9AM JST.
+         * Oct 2024 at midnight UTC.  This is 4PM PDT, 7PM EDT, and 9AM JST.
          * Since the activation time is median-time-past, it'll actually trigger
          * about 90 minutes after this wall-clock time.  Note that the auxpow
          * soft-fork must activate before the protocol cleanup rule change.
          */
-        consensus.protocol_cleanup_activation_time = 1618531200;
+        consensus.protocol_cleanup_activation_time = 1729062000;
 
         /**
          * The size expansion rule change is scheduled for activation on 16 Oct
@@ -317,9 +317,9 @@ public:
         // Tuesday, April 2, 2019 00:00:00 UTC
         consensus.verify_coinbase_lock_time_timeout = 1554163200;
 
-        // Two months prior to main net
-        // 16 November 2020 00:00:00 UTC
-        consensus.protocol_cleanup_activation_time = 1605484800;
+        // One month prior to main net
+        // 16 September 2024 00:00:00 UTC
+        consensus.protocol_cleanup_activation_time = 1726470000;
 
         // Nine months prior to main net
         // 16 January 2024 00:00:00 UTC
@@ -465,9 +465,9 @@ public:
         consensus.verify_coinbase_lock_time_activation_height = std::numeric_limits<int64_t>::max();
         consensus.verify_coinbase_lock_time_timeout = 1356123600;
 
-        // Two months prior to main net
-        // 16 November 2020 00:00:00 UTC
-        consensus.protocol_cleanup_activation_time = 1605484800;
+        // One month prior to main net
+        // 16 September 2024 00:00:00 UTC
+        consensus.protocol_cleanup_activation_time = 1726470000;
 
         // Nine months prior to main net
         // 16 January 2024 00:00:00 UTC
