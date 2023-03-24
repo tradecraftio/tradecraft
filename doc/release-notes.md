@@ -18,7 +18,8 @@ Bitcoin Core version v24.0.1.2-35544 is now available from:
   * [Source](https://github.com/tradecraftio/tradecraft/archive/bitcoin-v24.0.1.2-35544.zip)
 
 This is a new patch release of the v24 stable branch of Bitcoin Core with the
-stratum mining server and Tradecraft/Freicoin merge-mining patches applied.  This release adds new capabilities to the stratum mining server.
+stratum mining server and Tradecraft/Freicoin merge-mining patches applied.
+This release adds new capabilities to the stratum mining server.
 
 Please report bugs related to the stratum mining server implementation or
 Tradecraft/Freicoin merge-mining at the Tradecraft issue tracker on GitHub:
@@ -99,7 +100,8 @@ empty), then the configuration option `-defaultminingaddress` is used as the
 bitcoin address for that user.  If this configuration option is not set, then
 the option `-stratumwallet` specifies the name of a wallet from which to
 generate an address (or if given a non-zero value that does not correspond to
-a wallet, then the default/first wallet is used).  When used in this mode, a new address is generated for each found block.
+a wallet, then the default/first wallet is used).  When used in this mode, a
+new address is generated for each found block.
 
 Merge-mining defaults can similarly be specified with the `-mergeminedefault`
 option, which takes a name/chain ID, a username/address, and an optional
