@@ -1566,6 +1566,14 @@ static RPCHelpMan getstratuminfo() {
             {RPCResult::Type::BOOL, "enabled", "whether the server is running or not"},
             {RPCResult::Type::NUM_TIME, "curtime", /*optional=*/true, "the current time, in seconds since UNIX epoch"},
             {RPCResult::Type::NUM_TIME, "uptime", /*optional=*/true, "the server uptime, in seconds"},
+            {RPCResult::Type::ARR, "listeners", /*optional=*/true, "network interfaces the server is listening on", {
+                {RPCResult::Type::OBJ, "", "", {
+                    {RPCResult::Type::STR, "netaddr", "the network interface address and port"},
+                }},
+            }},
+            {RPCResult::Type::ARR, "allowip", /*optional=*/true, "subnets the server is allowed to accept connections from", {
+                {RPCResult::Type::STR, "subnet", "the subnet"},
+            }},
         }},
         RPCExamples{
             HelpExampleCli("getstratuminfo", "")
@@ -1573,15 +1581,32 @@ static RPCHelpMan getstratuminfo() {
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    // Check if the stratum server is even enabled.
+    // If not, our response is short.
     UniValue ret(UniValue::VOBJ);
     bool enabled = !bound_listeners.empty();
     ret.pushKV("enabled", enabled);
     if (!enabled) {
         return ret;
     }
+    LOCK(cs_stratum);
     int64_t now = GetTime();
     ret.pushKV("curtime", now);
     ret.pushKV("uptime", now - g_start_time);
+    // Report which network interfaces we are listening on.
+    UniValue listeners(UniValue::VARR);
+    for (const auto& binding : bound_listeners) {
+        UniValue listener(UniValue::VOBJ);
+        listener.pushKV("netaddr", binding.second.ToString());
+        listeners.push_back(listener);
+    }
+    ret.pushKV("listeners", listeners);
+    // Report which IP subnets we are alloweding connections from.
+    UniValue allowed(UniValue::VARR);
+    for (const auto& subnet : stratum_allow_subnets) {
+        allowed.push_back(subnet.ToString());
+    }
+    ret.pushKV("allowip", allowed);
     return ret;
 },
     };
