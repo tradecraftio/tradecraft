@@ -1564,6 +1564,8 @@ static RPCHelpMan getstratuminfo() {
         {},
         RPCResult{RPCResult::Type::OBJ, "", "", {
             {RPCResult::Type::BOOL, "enabled", "whether the server is running or not"},
+            {RPCResult::Type::NUM_TIME, "curtime", /*optional=*/true, "the current time, in seconds since UNIX epoch"},
+            {RPCResult::Type::NUM_TIME, "uptime", /*optional=*/true, "the server uptime, in seconds"},
         }},
         RPCExamples{
             HelpExampleCli("getstratuminfo", "")
@@ -1572,7 +1574,14 @@ static RPCHelpMan getstratuminfo() {
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("enabled", static_cast<bool>(!bound_listeners.empty()));
+    bool enabled = !bound_listeners.empty();
+    ret.pushKV("enabled", enabled);
+    if (!enabled) {
+        return ret;
+    }
+    int64_t now = GetTime();
+    ret.pushKV("curtime", now);
+    ret.pushKV("uptime", now - g_start_time);
     return ret;
 },
     };
