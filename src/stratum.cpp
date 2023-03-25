@@ -1562,12 +1562,9 @@ static RPCHelpMan getstratuminfo() {
     return RPCHelpMan{"getstratuminfo",
         "\nReturns an object containing various state info regarding the stratum server.\n",
         {},
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::BOOL, "enabled", "whether the server is running or not"},
-            }
-        },
+        RPCResult{RPCResult::Type::OBJ, "", "", {
+            {RPCResult::Type::BOOL, "enabled", "whether the server is running or not"},
+        }},
         RPCExamples{
             HelpExampleCli("getstratuminfo", "")
             + HelpExampleRpc("getstratuminfo", "")
