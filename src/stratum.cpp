@@ -77,6 +77,9 @@ struct StratumClient {
     CService GetPeer() const
       { return m_from; }
 
+    //! The time at which the client connected.
+    int64_t m_connect_time;
+
     //! An auto-incrementing ID of the next message to be sent to the client.
     int m_nextid;
     //! An unguessable random string unique to this client.
@@ -110,8 +113,8 @@ struct StratumClient {
     //! Whether the client supports the "mining.set_extranonce" message.
     bool m_supports_extranonce;
 
-    StratumClient() : m_socket(0), m_bev(0), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
-    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_nextid(0), m_from(from), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
 
     //! Generate a new random secret for this client.
     void GenSecret();
@@ -1577,6 +1580,7 @@ static RPCHelpMan getstratuminfo() {
             {RPCResult::Type::ARR, "clients", /*optional=*/true, "stratum clients connected to the server", {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "netaddr", "the remote address of the client"},
+                    {RPCResult::Type::NUM_TIME, "conntime", "the time elapsed since the connection was established, in seconds"},
                 }}
             }}
         }},
@@ -1618,6 +1622,7 @@ static RPCHelpMan getstratuminfo() {
         const StratumClient& client = subscription.second;
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("netaddr", client.GetPeer().ToString());
+        obj.pushKV("conntime", now - client.m_connect_time);
         clients.push_back(obj);
     }
     ret.pushKV("clients", clients);
