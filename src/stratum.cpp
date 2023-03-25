@@ -1574,6 +1574,11 @@ static RPCHelpMan getstratuminfo() {
             {RPCResult::Type::ARR, "allowip", /*optional=*/true, "subnets the server is allowed to accept connections from", {
                 {RPCResult::Type::STR, "subnet", "the subnet"},
             }},
+            {RPCResult::Type::ARR, "clients", /*optional=*/true, "stratum clients connected to the server", {
+                {RPCResult::Type::OBJ, "", "", {
+                    {RPCResult::Type::STR, "netaddr", "the remote address of the client"},
+                }}
+            }}
         }},
         RPCExamples{
             HelpExampleCli("getstratuminfo", "")
@@ -1607,6 +1612,15 @@ static RPCHelpMan getstratuminfo() {
         allowed.push_back(subnet.ToString());
     }
     ret.pushKV("allowip", allowed);
+    // Report list of connected stratum clients.
+    UniValue clients(UniValue::VARR);
+    for (const auto& subscription : subscriptions) {
+        const StratumClient& client = subscription.second;
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("netaddr", client.GetPeer().ToString());
+        clients.push_back(obj);
+    }
+    ret.pushKV("clients", clients);
     return ret;
 },
     };
