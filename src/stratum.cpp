@@ -85,6 +85,8 @@ struct StratumClient {
     //! An unguessable random string unique to this client.
     uint256 m_secret;
 
+    //! Set to true if the client has sent a "mining.subscribe" message.
+    bool m_subscribed;
     //! A string provided by the client which identifies them.
     std::string m_client;
 
@@ -113,8 +115,8 @@ struct StratumClient {
     //! Whether the client supports the "mining.set_extranonce" message.
     bool m_supports_extranonce;
 
-    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
-    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_nextid(0), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
 
     //! Generate a new random secret for this client.
     void GenSecret();
@@ -917,6 +919,7 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
         client.m_client = params[0].get_str();
         LogPrint(BCLog::STRATUM, "Received subscription from client %s\n", client.m_client);
     }
+    client.m_subscribed = true;
 
     // params[1] is the subscription ID for reconnect, which we
     // currently do not support.
@@ -951,6 +954,13 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
 {
     const std::string method("mining.authorize");
     BoundParams(method, params, 1, 2);
+
+    // If the "mining.subscribe" message has not been received yet, then the
+    // client user agent field hasn't been filled and the client doesn't have
+    // their extranonce1 value.  We can't authorize them yet.
+    if (!client.m_subscribed) {
+        throw JSONRPCError(RPC_IN_WARMUP, "Client must subscribe before authorizing");
+    }
 
     std::string username = params[0].get_str();
     boost::trim(username);
