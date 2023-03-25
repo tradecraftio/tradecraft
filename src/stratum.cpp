@@ -205,6 +205,9 @@ void UpdateSegwitCommitment(const ChainstateManager& chainman, const StratumWork
 //! Set once at startup, so it doesn't need to be protected by cs_stratum.f
 static CTxDestination g_default_mining_address;
 
+//! The time at which the statum server started, used to calculate uptime.
+static int64_t g_start_time = 0;
+
 //! Critical seciton guarding access to any of the stratum global state
 static RecursiveMutex cs_stratum;
 
@@ -1499,6 +1502,7 @@ bool InitStratumServer(node::NodeContext& node)
     }
 
     g_context = &node;
+    g_start_time = GetTime();
 
     stratum_method_dispatch["mining.subscribe"] = stratum_mining_subscribe;
     stratum_method_dispatch["mining.authorize"] = stratum_mining_authorize;
