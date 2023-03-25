@@ -1608,6 +1608,8 @@ static RPCHelpMan getstratuminfo() {
                     {RPCResult::Type::STR, "netaddr", "the remote address of the client"},
                     {RPCResult::Type::NUM_TIME, "conntime", "the time elapsed since the connection was established, in seconds"},
                     {RPCResult::Type::NUM_TIME, "lastrecv", /*optional=*/true, "the time elapsed since the last message was received, in seconds"},
+                    {RPCResult::Type::BOOL, "subscribed", "whether the client has sent a \"mining.subscribe\" message yet"},
+                    {RPCResult::Type::STR, "useragent", /*optional=*/true, "the self-reported user agent field identifying the client's software"},
                 }}
             }}
         }},
@@ -1652,6 +1654,13 @@ static RPCHelpMan getstratuminfo() {
         obj.pushKV("conntime", now - client.m_connect_time);
         if (client.m_last_recv_time > 0) {
             obj.pushKV("lastrecv", now - client.m_last_recv_time);
+        }
+        // The useragent field is only available if the "mining.subscribe"
+        // message has been received.
+        bool subscribed = client.m_subscribed;
+        obj.pushKV("subscribed", subscribed);
+        if (subscribed) {
+            obj.pushKV("useragent", client.m_client);
         }
         clients.push_back(obj);
     }
