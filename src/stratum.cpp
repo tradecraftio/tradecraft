@@ -1610,6 +1610,11 @@ static RPCHelpMan getstratuminfo() {
                     {RPCResult::Type::NUM_TIME, "lastrecv", /*optional=*/true, "the time elapsed since the last message was received, in seconds"},
                     {RPCResult::Type::BOOL, "subscribed", "whether the client has sent a \"mining.subscribe\" message yet"},
                     {RPCResult::Type::STR, "useragent", /*optional=*/true, "the self-reported user agent field identifying the client's software"},
+                    {RPCResult::Type::BOOL, "authorized", "whether the client has sent a \"mining.authorize\" message yet"},
+                    {RPCResult::Type::STR, "address", /*optional=*/true, "the address the client's mining rewards are being sent to"},
+                    {RPCResult::Type::NUM, "mindiff", /*optional=*/true, "the minimum difficulty the client is willing to accept"},
+                    {RPCResult::Type::NUM_TIME, "lastjob", /*optional=*/true, "the time elapsed since the last job was sent to the client, in seconds"},
+                    {RPCResult::Type::NUM_TIME, "lastshare", /*optional=*/true, "the time elapsed since the last share was received from the client, in seconds"},
                 }}
             }}
         }},
@@ -1661,6 +1666,22 @@ static RPCHelpMan getstratuminfo() {
         obj.pushKV("subscribed", subscribed);
         if (subscribed) {
             obj.pushKV("useragent", client.m_client);
+        }
+        // The remaining fields are only filled in if the client has
+        // authorized and subscribed to mining notifications.
+        bool authorized = client.m_authorized;
+        obj.pushKV("authorized", authorized);
+        if (authorized) {
+            obj.pushKV("address", EncodeDestination(client.m_addr));
+            if (client.m_mindiff > 0.0) {
+                obj.pushKV("mindiff", client.m_mindiff);
+            }
+            if (client.m_last_work_time > 0) {
+                obj.pushKV("lastjob", now - client.m_last_work_time);
+            }
+            if (client.m_last_submit_time > 0) {
+                obj.pushKV("lastshare", now - client.m_last_submit_time);
+            }
         }
         clients.push_back(obj);
     }
