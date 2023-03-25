@@ -79,6 +79,12 @@ struct StratumClient {
 
     //! The time at which the client connected.
     int64_t m_connect_time;
+    //! Last time a message was received from this client.
+    int64_t m_last_recv_time;
+    //! Last time work was sent to this client.
+    int64_t m_last_work_time;
+    //! Last time a work submission was received from this client.
+    int64_t m_last_submit_time;
 
     //! An auto-incrementing ID of the next message to be sent to the client.
     int m_nextid;
@@ -115,8 +121,8 @@ struct StratumClient {
     //! Whether the client supports the "mining.set_extranonce" message.
     bool m_supports_extranonce;
 
-    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
-    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient() : m_socket(0), m_bev(0), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
+    StratumClient(evutil_socket_t socket, bufferevent* bev, CService from) : m_socket(socket), m_bev(bev), m_from(from), m_connect_time(GetTime()), m_last_recv_time(0), m_last_work_time(0), m_last_submit_time(0), m_nextid(0), m_subscribed(false), m_authorized(false), m_mindiff(0.0), m_version_rolling_mask(0x00000000), m_last_tip(0), m_send_work(false), m_supports_extranonce(false) { GenSecret(); }
 
     //! Generate a new random secret for this client.
     void GenSecret();
@@ -507,6 +513,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
             std::make_pair(second_stage->first,
                            second_stage->second.hashPrevBlock);
 
+        client.m_last_work_time = GetTime();
         return GetExtraNonceRequest(client, second_stage->first) // note: not job_id
              + set_difficulty.write() + "\n"
              + mining_notify.write() + "\n";
@@ -719,6 +726,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     mining_notify.pushKV("id", client.m_nextid++);
     mining_notify.pushKV("method", "mining.notify");
 
+    client.m_last_work_time = GetTime();
     return GetExtraNonceRequest(client, job_id)
          + set_difficulty.write() + "\n"
          + mining_notify.write()  + "\n";
@@ -1111,6 +1119,11 @@ UniValue stratum_mining_configure(StratumClient& client, const UniValue& params)
 
 UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum)
 {
+    // m_last_recv_time was set to the current time when we started processing
+    // this message.  We set m_last_submit_time to the current time so we know
+    // when the client last submitted a work unit.
+    client.m_last_submit_time = client.m_last_recv_time;
+
     const std::string method("mining.submit");
     BoundParams(method, params, 5, 6);
     // First parameter is the client username, which is ignored.
@@ -1205,6 +1218,9 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
     char *cstr = 0;
     size_t len = 0;
     while ((cstr = evbuffer_readln(input, &len, EVBUFFER_EOL_CRLF))) {
+        // Update the receive timestamp for the client.
+        client.m_last_recv_time = GetTime();
+
         // Convert the line of data to a std::string with managed memory.
         std::string line(cstr, len);
         free(cstr);
@@ -1591,6 +1607,7 @@ static RPCHelpMan getstratuminfo() {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "netaddr", "the remote address of the client"},
                     {RPCResult::Type::NUM_TIME, "conntime", "the time elapsed since the connection was established, in seconds"},
+                    {RPCResult::Type::NUM_TIME, "lastrecv", /*optional=*/true, "the time elapsed since the last message was received, in seconds"},
                 }}
             }}
         }},
@@ -1633,6 +1650,9 @@ static RPCHelpMan getstratuminfo() {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("netaddr", client.GetPeer().ToString());
         obj.pushKV("conntime", now - client.m_connect_time);
+        if (client.m_last_recv_time > 0) {
+            obj.pushKV("lastrecv", now - client.m_last_recv_time);
+        }
         clients.push_back(obj);
     }
     ret.pushKV("clients", clients);
