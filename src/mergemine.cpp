@@ -903,7 +903,7 @@ void ReconnectToMergeMineEndpoints()
     LocalReconnectToMergeMineEndpoints();
 }
 
-static void LocalReconnectToMergeMineEndpoints()
+static void LocalReconnectToMergeMineEndpoints() EXCLUSIVE_LOCKS_REQUIRED(cs_mergemine)
 {
     uint64_t now = GetTimeMillis();
 
