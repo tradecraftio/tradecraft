@@ -1187,6 +1187,10 @@ static RPCHelpMan getmergemineinfo() {
                     {RPCResult::Type::NUM_TIME, "lastjob", /*optional=*/true, "the time elapsed since the last updated work unit was received from the server, in seconds"},
                     {RPCResult::Type::NUM_TIME, "lastshare", /*optional=*/true, "the time elapsed since the last share we submitted to the server, in seconds"},
                     {RPCResult::Type::NUM, "difficulty", "the current submission difficulty for subchain shares"},
+                    {RPCResult::Type::OBJ, "defaultauth", "The default authentication credentials for the server", {
+                        {RPCResult::Type::STR, "username", "the username"},
+                        {RPCResult::Type::STR, "password", "the password"},
+                    }},
                     {RPCResult::Type::OBJ_DYN, "auxauth", "A map of usernames to remote addresses for each connected user", {
                         {RPCResult::Type::STR, "username", "the remote address of the user"},
                     }},
@@ -1240,6 +1244,12 @@ static RPCHelpMan getmergemineinfo() {
             obj.pushKV("lastshare", now - server.last_submit_time);
         }
         obj.pushKV("difficulty", server.diff);
+        if (server.default_auth.has_value()) {
+            UniValue defaultauth(UniValue::VOBJ);
+            defaultauth.pushKV("username", server.default_auth->first);
+            defaultauth.pushKV("password", server.default_auth->second);
+            obj.pushKV("defaultauth", defaultauth);
+        }
         UniValue auxauth(UniValue::VOBJ);
         for (const auto& item : server.aux_auth) {
             const std::string& name = item.first;
