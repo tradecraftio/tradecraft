@@ -284,13 +284,15 @@ void ReleaseBlockFinalWallet() {
 //! Critical seciton guarding access to any of the stratum global state
 static RecursiveMutex cs_stratum_wallet;
 
+//! The wallet used to create mining destinations.
+static std::shared_ptr<CWallet> g_stratum_wallet GUARDED_BY(cs_stratum_wallet);
+
 static std::shared_ptr<CWallet> GetWalletForMiner(const NodeContext& node, bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum_wallet) {
-    // Use a static variable to cache the wallet pointer.  This is safe this
+    // Use a global variable to cache the wallet pointer.  This is safe this
     // whole function requires cs_stratum_wallet to be held.
-    static std::shared_ptr<CWallet> pwallet;
-    if (pwallet) {
+    if (g_stratum_wallet) {
         // The wallet has already been configured.
-        return pwallet;
+        return g_stratum_wallet;
     }
     if (!node.wallet_loader) {
         error = _("The wallet subsystem is not enabled.");
@@ -310,10 +312,10 @@ static std::shared_ptr<CWallet> GetWalletForMiner(const NodeContext& node, bilin
     // '-stratumwallet' option.  If the user does not specify a wallet, then
     // the first wallet (the default wallet) is used.
     const std::string requestedwallet = gArgs.GetArg("-stratumwallet", "");
-    pwallet = GetWallet(*context, requestedwallet);
-    if (pwallet) {
+    g_stratum_wallet = GetWallet(*context, requestedwallet);
+    if (g_stratum_wallet) {
         // Found it!
-        return pwallet;
+        return g_stratum_wallet;
     }
     // The user requested a wallet that is not loaded.  Fall back to the default
     // wallet, but report the error so the user can fix their configuration.
@@ -329,9 +331,9 @@ static std::shared_ptr<CWallet> GetWalletForMiner(const NodeContext& node, bilin
     // If we get this far, it is because the default wallet was requested.
     if (!wallets.empty()) {
         // The default wallet is the first wallet.
-        pwallet = wallets[0];
+        g_stratum_wallet = wallets[0];
     }
-    return pwallet;
+    return g_stratum_wallet;
 }
 
 //! The destination to use for stratum mining
@@ -390,6 +392,7 @@ void ReleaseMiningDestinations() {
     }
     g_next_reservation.reset();
     g_next_destination.reset();
+    g_stratum_wallet.reset();
 }
 
 } // namespace wallet
