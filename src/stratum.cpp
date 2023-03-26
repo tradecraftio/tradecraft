@@ -1218,7 +1218,7 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
     char *cstr = 0;
     size_t len = 0;
     while ((cstr = evbuffer_readln(input, &len, EVBUFFER_EOL_CRLF))) {
-        // Update the receive timestamp for the client.
+        // Update the last message received timestamp for the client.
         client.m_last_recv_time = GetTime();
 
         // Convert the line of data to a std::string with managed memory.
