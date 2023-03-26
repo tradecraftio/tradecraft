@@ -938,8 +938,6 @@ static int DefaultMergeMinePort()
 }
 
 static std::atomic<bool> g_shutdown = false;
-static Mutex g_shutdown_mutex;
-static std::condition_variable g_shutdown_cv;
 void MergeMiningManagerThread()
 {
     int defaultPort = DefaultMergeMinePort();
@@ -1039,23 +1037,25 @@ void MergeMiningManagerThread()
         }
     }
 
+    // Shutdown the thread if there are no connections to manage.
+    if (g_mergemine_conn.empty() && g_mergemine_noconn.empty()) {
+        LogPrint(BCLog::MERGEMINE, "No merge-mining connections to manage, exiting event dispatch thread.\n");
+        return;
+    }
+
+    // Set the timeout for the event dispatch loop.
+    struct timeval timeout;
+    timeout.tv_sec = 15;
+    timeout.tv_usec = 0;
+
     LogPrint(BCLog::MERGEMINE, "Entering merge-mining event dispatch loop\n");
     while (!g_shutdown) {
         // Attempt to re-establish any connections that have been dropped.
         ReconnectToMergeMineEndpoints();
 
-        // Enter event dispatch loop.
+        // Enter event dispatch loop, with a 15 second timeout.
+        event_base_loopexit(base, &timeout);
         event_base_dispatch(base);
-
-        // Shutdown the thread if there are no connections to manage.
-        g_shutdown = g_shutdown || (g_mergemine_conn.empty() && g_mergemine_noconn.empty());
-
-        // If we are not done, wait 15 seconds before re-starting the dispatch
-        // loop, to prevent us from spin-locking.
-        if (!g_shutdown) {
-            WAIT_LOCK(g_shutdown_mutex, lock);
-            g_shutdown_cv.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::seconds(15));
-        }
     }
     LogPrint(BCLog::MERGEMINE, "Exited merge-mining event dispatch loop\n");
 }
@@ -1094,7 +1094,7 @@ void InterruptMergeMining()
 {
     // Tell the merge-mining connection manager thread to shutdown.
     g_shutdown = true;
-    g_shutdown_cv.notify_all();
+    event_base_loopbreak(base);
 }
 
 /** Cleanup network connections made by the merge-mining subsystem, free
@@ -1102,7 +1102,7 @@ void InterruptMergeMining()
 void StopMergeMining()
 {
     g_shutdown = true;
-    g_shutdown_cv.notify_all();
+    event_base_loopbreak(base);
     if (merge_mining_manager_thread.joinable()) {
         merge_mining_manager_thread.join();
     }
