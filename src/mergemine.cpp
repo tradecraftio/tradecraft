@@ -61,6 +61,10 @@ static NodeContext* g_context;
 //! Event base
 static event_base* base = nullptr;
 
+//! The time (in seconds since the epoch) at which the merge-mining
+//! coodination server was started.  Used for calculating uptime.
+static int64_t start_time;
+
 //! Mapping of alternative names to chain specifiers
 std::map<std::string, ChainId> chain_names;
 
@@ -1043,6 +1047,10 @@ void MergeMiningManagerThread()
         return;
     }
 
+    // Ready to start processing events.
+    // Set the start time to the current time.
+    start_time = GetTime();
+
     // Set the timeout for the event dispatch loop.
     struct timeval timeout;
     timeout.tv_sec = 15;
@@ -1058,6 +1066,10 @@ void MergeMiningManagerThread()
         event_base_dispatch(base);
     }
     LogPrint(BCLog::MERGEMINE, "Exited merge-mining event dispatch loop\n");
+
+    // Clear the start_time to indicate that the event dispatch loop is no
+    // longer runing.
+    start_time = 0;
 }
 
 /** Configure the merge-mining subsystem. */
