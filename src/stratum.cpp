@@ -1612,6 +1612,12 @@ static RPCHelpMan getstratuminfo() {
                     {RPCResult::Type::STR, "useragent", /*optional=*/true, "the self-reported user agent field identifying the client's software"},
                     {RPCResult::Type::BOOL, "authorized", "whether the client has sent a \"mining.authorize\" message yet"},
                     {RPCResult::Type::STR, "address", /*optional=*/true, "the address the client's mining rewards are being sent to"},
+                    {RPCResult::Type::OBJ_DYN, "mmauth", /*optional=*/true, "the client's merge-mining authorization credentials", {
+                        {RPCResult::Type::ARR_FIXED, "chainid", "the authorization credentials for the specified chain", {
+                            {RPCResult::Type::STR, "username", "the client's username"},
+                            {RPCResult::Type::STR, "password", "the client's password"},
+                        }},
+                    }},
                     {RPCResult::Type::NUM, "mindiff", /*optional=*/true, "the minimum difficulty the client is willing to accept"},
                     {RPCResult::Type::NUM_TIME, "lastjob", /*optional=*/true, "the time elapsed since the last job was sent to the client, in seconds"},
                     {RPCResult::Type::NUM_TIME, "lastshare", /*optional=*/true, "the time elapsed since the last share was received from the client, in seconds"},
@@ -1673,6 +1679,17 @@ static RPCHelpMan getstratuminfo() {
         obj.pushKV("authorized", authorized);
         if (authorized) {
             obj.pushKV("address", EncodeDestination(client.m_addr));
+            UniValue mmauth(UniValue::VOBJ);
+            for (const auto& item : client.m_mmauth) {
+                const ChainId& chainid = item.first;
+                const std::string& username = item.second.first;
+                const std::string& password = item.second.second;
+                UniValue params(UniValue::VARR);
+                params.push_back(username);
+                params.push_back(password);
+                mmauth.pushKV(HexStr(chainid), params);
+            }
+            obj.pushKV("mmauth", mmauth);
             if (client.m_mindiff > 0.0) {
                 obj.pushKV("mindiff", client.m_mindiff);
             }
