@@ -23,6 +23,8 @@ namespace wallet {
 bool AddBlockFinalTransaction(const node::NodeContext& node, Chainstate& chainstate, node::CBlockTemplate& tmpl, bilingual_str& error);
 //! Update the signature of a block-final transaction.
 bool SignBlockFinalTransaction(const node::NodeContext& node, CMutableTransaction &ret, bilingual_str& error);
+//! Release (un-cache) the wallet used for signing block-final transactions.
+void ReleaseBlockFinalWallet();
 
 //! Reserve a destination for mining.
 bool ReserveMiningDestination(const node::NodeContext& node, CTxDestination& dest, bilingual_str& error);

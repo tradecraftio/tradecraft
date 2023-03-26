@@ -38,15 +38,17 @@ namespace wallet {
 //! Critical seciton guarding access to any of the stratum global state
 static RecursiveMutex cs_block_final_wallet;
 
+//! Cached pointer to the wallet used for block-final transactions.
+static std::shared_ptr<CWallet> g_block_final_wallet GUARDED_BY(cs_block_final_wallet);
+
 static std::shared_ptr<CWallet> GetWalletForBlockFinalTx(const NodeContext& node, bilingual_str& error) {
     // Must take lock before accessing static variables.
     LOCK(cs_block_final_wallet);
-    // Use a static variable to cache the wallet pointer.  This is safe this
+    // Use a global variable to cache the wallet pointer.  This is safe this
     // whole function requires cs_block_final_wallet to be held.
-    static std::shared_ptr<CWallet> pwallet;
-    if (pwallet) {
+    if (g_block_final_wallet) {
         // The wallet has already been configured.
-        return pwallet;
+        return g_block_final_wallet;
     }
     if (!node.wallet_loader) {
         error = _("The wallet subsystem is not enabled.");
@@ -66,10 +68,10 @@ static std::shared_ptr<CWallet> GetWalletForBlockFinalTx(const NodeContext& node
     // '-walletblockfinaltx' option.  If the user does not specify a wallet,
     // then the first wallet (the default wallet) is used.
     const std::string requestedwallet = gArgs.GetArg("-walletblockfinaltx", "");
-    pwallet = GetWallet(*context, requestedwallet);
-    if (pwallet) {
+    g_block_final_wallet = GetWallet(*context, requestedwallet);
+    if (g_block_final_wallet) {
         // Found it!
-        return pwallet;
+        return g_block_final_wallet;
     }
     // The user requested a wallet that is not loaded.  Fall back to the
     // default wallet, but report the error so the user can fix their
@@ -87,9 +89,9 @@ static std::shared_ptr<CWallet> GetWalletForBlockFinalTx(const NodeContext& node
     // If we get this far, it is because the default wallet was requested.
     if (!wallets.empty()) {
         // The default wallet is the first wallet.
-        pwallet = wallets[0];
+        g_block_final_wallet = wallets[0];
     }
-    return pwallet;
+    return g_block_final_wallet;
 }
 
 bool AddBlockFinalTransaction(const NodeContext& node, Chainstate& chainstate, CBlockTemplate& tmpl, bilingual_str& error) {
@@ -262,7 +264,7 @@ bool SignBlockFinalTransaction(const NodeContext& node, CMutableTransaction &ret
         // Script verification errors
         std::map<int, bilingual_str> input_errors;
         if (!pwallet->SignTransaction(mtx, coins, SIGHASH_ALL, input_errors)) {
-            LogPrintf("error signing block-final transaction with wallet \"%s\%", pwallet->GetName());
+            LogPrintf("error signing block-final transaction with wallet \"%s\"", pwallet->GetName());
             for (const auto& error : input_errors) {
                 LogPrintf("error creating signature input %d to block-final transaction: %s", error.first, error.second.translated);
                 return false;
@@ -272,6 +274,11 @@ bool SignBlockFinalTransaction(const NodeContext& node, CMutableTransaction &ret
 
     ret = mtx;
     return true;
+}
+
+void ReleaseBlockFinalWallet() {
+    LOCK(cs_block_final_wallet);
+    g_block_final_wallet.reset();
 }
 
 //! Critical seciton guarding access to any of the stratum global state

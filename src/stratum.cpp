@@ -1569,6 +1569,8 @@ void StopStratumServer()
         block_watcher_thread.join();
     }
     LOCK(cs_stratum);
+    /* Release the wallet pointer used for block-final transactions. */
+    wallet::ReleaseBlockFinalWallet();
     /* Release any reserved keys back to the pool. */
     wallet::ReleaseMiningDestinations();
     /* Tear-down active connections. */
