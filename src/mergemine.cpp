@@ -1183,12 +1183,27 @@ static RPCHelpMan getmergemineinfo() {
                     {RPCResult::Type::STR, "chainid", "the chain ID"},
                     {RPCResult::Type::STR, "netaddr", "The network address used to connect to the server, resolved from th connection string"},
                     {RPCResult::Type::NUM_TIME, "conntime", "the time elapsed since the connection was established, in seconds"},
+                    {RPCResult::Type::NUM_TIME, "lastrecv", /*optional=*/true, "the time elapsed since the last message was received, in seconds"},
+                    {RPCResult::Type::NUM_TIME, "lastjob", /*optional=*/true, "the time elapsed since the last updated work unit was received from the server, in seconds"},
+                    {RPCResult::Type::NUM_TIME, "lastshare", /*optional=*/true, "the time elapsed since the last share we submitted to the server, in seconds"},
+                    {RPCResult::Type::NUM, "difficulty", "the current submission difficulty for subchain shares"},
+                    {RPCResult::Type::OBJ_DYN, "auxauth", "A map of usernames to remote addresses for each connected user", {
+                        {RPCResult::Type::STR, "username", "the remote address of the user"},
+                    }},
                 }},
             }},
             {RPCResult::Type::OBJ_DYN, "disconnects", /*optional=*/true, "An array of subchain servers awaiting reconnection attempts", {
                 {RPCResult::Type::OBJ, "name", "The connection string for the server, as specified in the config file", {
                     {RPCResult::Type::STR, "netaddr", "The network address used to connect to the server, resolved from th connection string"},
                     {RPCResult::Type::NUM_TIME, "since", "How long ago in seconds that communication with the server was lost"},
+                }},
+            }},
+            {RPCResult::Type::OBJ_DYN, "secondstage", "A map of chain IDs to second stage work units that are currently being worked on", {
+                {RPCResult::Type::OBJ, "chainid", "the chain ID", {
+                    {RPCResult::Type::STR_HEX, "jobid", "the job ID"},
+                    {RPCResult::Type::STR_HEX, "target", "the difficulty converted into a target hash"},
+                    {RPCResult::Type::NUM, "difficulty", "the required difficulty of the second stage work unit"},
+                    {RPCResult::Type::NUM_TIME, "age", "how long the second stage work unit has been queued, in seconds"},
                 }},
             }},
         }},
@@ -1215,6 +1230,23 @@ static RPCHelpMan getmergemineinfo() {
         obj.pushKV("chainid", HexStr(server.aux_pow_path));
         obj.pushKV("netaddr", server.socket.ToString());
         obj.pushKV("conntime", now - server.connect_time);
+        if (server.last_recv_time > 0) {
+            obj.pushKV("lastrecv", now - server.last_recv_time);
+        }
+        if (server.last_work_time > 0) {
+            obj.pushKV("lastjob", now - server.last_work_time);
+        }
+        if (server.last_submit_time > 0) {
+            obj.pushKV("lastshare", now - server.last_submit_time);
+        }
+        obj.pushKV("difficulty", server.diff);
+        UniValue auxauth(UniValue::VOBJ);
+        for (const auto& item : server.aux_auth) {
+            const std::string& name = item.first;
+            const std::string& addr = item.second;
+            auxauth.pushKV(name, addr);
+        }
+        obj.pushKV("auxauth", auxauth);
         connected.pushKV(server.name, obj);
     }
     ret.pushKV("connected", connected);
@@ -1228,6 +1260,20 @@ static RPCHelpMan getmergemineinfo() {
         disconnects.pushKV(disconnect.name, chain);
     }
     ret.pushKV("disconnects", disconnects);
+    UniValue secondstage(UniValue::VOBJ);
+    for (const auto& item : g_second_stage) {
+        const ChainId& chainid = item.first;
+        const SecondStageWork& work = item.second;
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("jobid", HexStr(work.job_id));
+        arith_uint256 target;
+        target.SetCompact(work.nBits);
+        obj.pushKV("target", target.ToString());
+        obj.pushKV("difficulty", work.diff);
+        obj.pushKV("age", now - (work.timestamp / 1000));
+        secondstage.pushKV(HexStr(chainid), obj);
+    }
+    ret.pushKV("secondstage", secondstage);
     return ret;
 },
     };
