@@ -1143,4 +1143,76 @@ void StopMergeMining()
     }
 }
 
+static RPCHelpMan getmergemineinfo() {
+    return RPCHelpMan{"getmergemineinfo",
+        "\nReturns an object containing various state info regarding the merge-mining coordination server.\n",
+        {},
+        RPCResult{RPCResult::Type::OBJ, "", "", {
+            {RPCResult::Type::BOOL, "enabled", "whether the merged-mining coordination server is running or not"},
+            {RPCResult::Type::NUM_TIME, "curtime", /*optional=*/true, "the current time, in seconds since UNIX epoch"},
+            {RPCResult::Type::NUM_TIME, "uptime", /*optional=*/true, "the merged-mining coordination server uptime, in seconds"},
+            {RPCResult::Type::OBJ_DYN, "connected", /*optional=*/true, "A map of chain IDs to descriptive objects for each connected merge-mined subchain", {
+                {RPCResult::Type::OBJ, "name", "The connection string for the server, as specified in the config file", {
+                    {RPCResult::Type::STR, "chainid", "the chain ID"},
+                    {RPCResult::Type::STR, "netaddr", "The network address used to connect to the server, resolved from th connection string"},
+                    {RPCResult::Type::NUM_TIME, "conntime", "the time elapsed since the connection was established, in seconds"},
+                }},
+            }},
+            {RPCResult::Type::OBJ_DYN, "disconnects", /*optional=*/true, "An array of subchain servers awaiting reconnection attempts", {
+                {RPCResult::Type::OBJ, "name", "The connection string for the server, as specified in the config file", {
+                    {RPCResult::Type::STR, "netaddr", "The network address used to connect to the server, resolved from th connection string"},
+                    {RPCResult::Type::NUM_TIME, "since", "How long ago in seconds that communication with the server was lost"},
+                }},
+            }},
+        }},
+        RPCExamples{
+            HelpExampleCli("getmergemineinfo", "")
+            + HelpExampleRpc("getmergemineinfo", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    UniValue ret(UniValue::VOBJ);
+    bool enabled = (start_time != 0);
+    ret.pushKV("enabled", enabled);
+    if (!enabled) {
+        return ret;
+    }
+    LOCK(cs_mergemine);
+    int64_t now = GetTime();
+    ret.pushKV("curtime", now);
+    ret.pushKV("uptime", now - start_time);
+    UniValue connected(UniValue::VOBJ);
+    for (const auto& item : g_mergemine_conn) {
+        const AuxWorkServer& server = item.second;
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("chainid", HexStr(server.aux_pow_path));
+        obj.pushKV("netaddr", server.socket.ToString());
+        obj.pushKV("conntime", now - server.m_connect_time);
+        connected.pushKV(server.name, obj);
+    }
+    ret.pushKV("connected", connected);
+    UniValue disconnects(UniValue::VOBJ);
+    for (const auto& item : g_mergemine_noconn) {
+        const CService& socket = item.first;
+        const AuxServerDisconnect& disconnect = item.second;
+        UniValue chain(UniValue::VOBJ);
+        chain.pushKV("netaddr", socket.ToString());
+        chain.pushKV("since", now - (disconnect.timestamp / 1000));
+        disconnects.pushKV(disconnect.name, chain);
+    }
+    ret.pushKV("disconnects", disconnects);
+    return ret;
+},
+    };
+}
+
+void RegisterMergeMineRPCCommands(CRPCTable& t) {
+    static const CRPCCommand commands[]{
+        {"mining", &getmergemineinfo},
+    };
+    for (const auto& c : commands) {
+        t.appendCommand(c.name, &c);
+    }
+}
+
 // End of File
