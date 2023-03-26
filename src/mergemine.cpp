@@ -81,6 +81,8 @@ struct AuxWorkServer {
     CService socket;
     //! The libevent buffer used to communicate with the server.
     bufferevent* bev;
+    //! The time at which the connection was established.
+    int64_t m_connect_time;
     //! Whether we have received the first two (ignorable) responses from the server.
     int idflags;
     //! The next id to use for a request.
@@ -102,8 +104,8 @@ struct AuxWorkServer {
     //! The current difficulty.
     double diff;
 
-    AuxWorkServer() : bev(nullptr), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
-    AuxWorkServer(const std::string& nameIn, const CService& socketIn, bufferevent* bevIn) : name(nameIn), socket(socketIn), bev(bevIn), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
+    AuxWorkServer() : bev(nullptr), m_connect_time(GetTime()), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
+    AuxWorkServer(const std::string& nameIn, const CService& socketIn, bufferevent* bevIn) : name(nameIn), socket(socketIn), bev(bevIn), m_connect_time(GetTime()), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
 };
 
 struct AuxServerDisconnect {
