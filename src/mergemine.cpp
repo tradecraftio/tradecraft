@@ -83,6 +83,12 @@ struct AuxWorkServer {
     bufferevent* bev;
     //! The time at which the connection was established.
     int64_t connect_time;
+    //! Last time a message was received from this server.
+    int64_t last_recv_time;
+    //! Last time a work unit was received from this server.
+    int64_t last_work_time;
+    //! Last time we submitted a solved share to this server.
+    int64_t last_submit_time;
     //! Whether we have received the first two (ignorable) responses from the server.
     int idflags;
     //! The next id to use for a request.
@@ -104,8 +110,8 @@ struct AuxWorkServer {
     //! The current difficulty.
     double diff;
 
-    AuxWorkServer() : bev(nullptr), connect_time(GetTime()), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
-    AuxWorkServer(const std::string& nameIn, const CService& socketIn, bufferevent* bevIn) : name(nameIn), socket(socketIn), bev(bevIn), connect_time(GetTime()), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
+    AuxWorkServer() : bev(nullptr), connect_time(GetTime()), last_recv_time(0), last_work_time(0), last_submit_time(0), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
+    AuxWorkServer(const std::string& nameIn, const CService& socketIn, bufferevent* bevIn) : name(nameIn), socket(socketIn), bev(bevIn), connect_time(GetTime()), last_recv_time(0), last_work_time(0), last_submit_time(0), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
 };
 
 struct AuxServerDisconnect {
@@ -428,6 +434,9 @@ void SubmitAuxChainShare(const ChainId& chainid, const std::optional<std::string
 {
     LOCK(cs_mergemine);
 
+    // Record the time at which we received this share.
+    int64_t now = GetTime();
+
     // Lookup the server corresponding to this chainid:
     AuxWorkServer* server = GetServerFromChainId(chainid, __func__);
     if (!server) {
@@ -446,11 +455,15 @@ void SubmitAuxChainShare(const ChainId& chainid, const std::optional<std::string
 
     // Submit the share to the server:
     SendAuxSubmitRequest(*server, address, work, proof);
+    server->last_submit_time = now;
 }
 
 void SubmitSecondStageShare(const ChainId& chainid, const std::optional<std::string>& username, const SecondStageWork& work, const SecondStageProof& proof)
 {
     LOCK(cs_mergemine);
+
+    // Record the time at which we received this share.
+    int64_t now = GetTime();
 
     // Lookup the server corresponding to this chainid:
     AuxWorkServer* server = GetServerFromChainId(chainid, __func__);
@@ -462,10 +475,16 @@ void SubmitSecondStageShare(const ChainId& chainid, const std::optional<std::str
     const std::string address = GetRegisteredAddress(*server, username);
 
     SendSubmitRequest(*server, address, work, proof);
+    server->last_submit_time = now;
 }
 
 static UniValue stratum_mining_aux_notify(AuxWorkServer& server, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_mergemine)
 {
+    // last_recv_time was set to the current time when we started processing
+    // this message.  We set last_work_time to the current time so we know
+    // when the server last gave us a work unit.
+    server.last_work_time = server.last_recv_time;
+
     const std::string method("mining.aux.notify");
     BoundParams(method, params, 5, 5);
 
@@ -524,6 +543,11 @@ static UniValue stratum_mining_set_difficulty(AuxWorkServer& server, const UniVa
 
 static UniValue stratum_mining_notify(AuxWorkServer& server, const UniValue& params) EXCLUSIVE_LOCKS_REQUIRED(cs_mergemine)
 {
+    // last_recv_time was set to the current time when we started processing
+    // this message.  We set last_work_time to the current time so we know
+    // when the server last gave us a work unit.
+    server.last_work_time = server.last_recv_time;
+
     const std::string method("mining.notify");
     BoundParams(method, params, 8, 9);
 
@@ -593,6 +617,9 @@ static void merge_mining_read_cb(bufferevent *bev, void *ctx)
     char *cstr = 0;
     size_t len = 0;
     while (!done && (cstr = evbuffer_readln(input, &len, EVBUFFER_EOL_CRLF))) {
+        // Update the last message received timestamp for the server.
+        server.last_recv_time = GetTime();
+
         // Convert the line to a std::string with managed memory.
         std::string line(cstr, len);
         free(cstr);
