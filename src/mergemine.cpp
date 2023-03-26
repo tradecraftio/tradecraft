@@ -82,7 +82,7 @@ struct AuxWorkServer {
     //! The libevent buffer used to communicate with the server.
     bufferevent* bev;
     //! The time at which the connection was established.
-    int64_t m_connect_time;
+    int64_t connect_time;
     //! Whether we have received the first two (ignorable) responses from the server.
     int idflags;
     //! The next id to use for a request.
@@ -104,8 +104,8 @@ struct AuxWorkServer {
     //! The current difficulty.
     double diff;
 
-    AuxWorkServer() : bev(nullptr), m_connect_time(GetTime()), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
-    AuxWorkServer(const std::string& nameIn, const CService& socketIn, bufferevent* bevIn) : name(nameIn), socket(socketIn), bev(bevIn), m_connect_time(GetTime()), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
+    AuxWorkServer() : bev(nullptr), connect_time(GetTime()), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
+    AuxWorkServer(const std::string& nameIn, const CService& socketIn, bufferevent* bevIn) : name(nameIn), socket(socketIn), bev(bevIn), connect_time(GetTime()), idflags(0), nextid(0), extranonce2_size(0), diff(0.0) {}
 };
 
 struct AuxServerDisconnect {
@@ -1187,7 +1187,7 @@ static RPCHelpMan getmergemineinfo() {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("chainid", HexStr(server.aux_pow_path));
         obj.pushKV("netaddr", server.socket.ToString());
-        obj.pushKV("conntime", now - server.m_connect_time);
+        obj.pushKV("conntime", now - server.connect_time);
         connected.pushKV(server.name, obj);
     }
     ret.pushKV("connected", connected);
