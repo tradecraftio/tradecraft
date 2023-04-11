@@ -57,7 +57,11 @@ void MerkleHash_Hash256(uint256& parent, const uint256& left, const uint256& rig
  * midstate is then extracted and used as our hash value.  Expressed with the
  * pure-Python sha256 package, this would be something like the following:
  *
- *   iv = sha256(sha256().digest() + sha256().digest()).state[0]
+ *     import struct
+ *     from sha256 import SHA256
+ *     iv = b''.join([struct.pack(">I", i) for i in
+ *                    SHA256(SHA256(b"").digest() +
+ *                           SHA256(b"").digest()).state])
  */
 static unsigned char _MidstateIV[32] =
     { 0x1e, 0x4e, 0x0f, 0x95, 0x5a, 0x4b, 0xc8, 0x1c,
