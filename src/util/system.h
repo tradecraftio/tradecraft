@@ -344,6 +344,12 @@ protected:
     std::string GetChainName() const;
 
     /**
+     * Returns the appropriate share chain name from the program arguments.
+     * @return ShareChainParams::MAIN by default; raises runtime error if an invalid combination of flags is given.
+     */
+    std::string GetShareChainName() const;
+
+    /**
      * Add argument
      */
     void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
