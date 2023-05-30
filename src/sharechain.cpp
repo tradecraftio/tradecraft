@@ -10,9 +10,45 @@
 #include <primitives/block.h> // for CBlockHeader
 #include <streams.h> // for CDataStream
 #include <span.h> // for Span, MakeUCharSpan
+#include <util/check.h> // for Assert
 
 #include <array> // for std::array
 #include <utility> // for std::swap
+
+void SetupShareChainParamsOptions(ArgsManager& argsman) {
+    argsman.AddArg("-sharechain=<name>", "Use the share chain <name> (default: main). Allowed values: solo or main", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
+}
+
+struct SoloShareChainParams : public ShareChainParams {
+    SoloShareChainParams(const ArgsManager& args) {
+        is_valid = false;
+        network_name = SOLO;
+    }
+};
+
+struct MainShareChainParams : public ShareChainParams {
+    MainShareChainParams(const ArgsManager& args) {
+        is_valid = true;
+        network_name = MAIN;
+    }
+};
+
+std::unique_ptr<const ShareChainParams> g_share_chain_params;
+
+void SelectShareParams(const ArgsManager& args, const std::string& chain) {
+    if (chain == ShareChainParams::SOLO) {
+        g_share_chain_params = std::unique_ptr<const ShareChainParams>(new SoloShareChainParams(args));
+    } else if (chain == ShareChainParams::MAIN) {
+        g_share_chain_params = std::unique_ptr<const ShareChainParams>(new MainShareChainParams(args));
+    } else {
+        throw std::runtime_error(strprintf("%s: Unknown share chain %s.", __func__, chain));
+    }
+}
+
+const ShareChainParams& ShareParams() {
+    Assert(g_share_chain_params);
+    return *g_share_chain_params;
+}
 
 void swap(ShareWitness& lhs, ShareWitness& rhs) {
     using std::swap; // for ADL

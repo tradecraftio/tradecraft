@@ -8,8 +8,51 @@
 #include <script/standard.h> // for WitnessUnknown
 #include <serialize.h> // for Serialize, Unserialize, VARINT
 #include <uint256.h> // for uint256
+#include <util/system.h> // for ArgsManager
+
+#include <string> // for std::string
 
 #include <stdint.h> // for uint32_t
+
+struct ShareChainParams {
+    ///@{
+    /** Share chain name strings */
+    static const std::string SOLO;
+    static const std::string MAIN;
+    ///@}
+
+    bool IsValid() const { return is_valid; }
+    const std::string& NetworkName() const { return network_name; }
+
+protected:
+    bool is_valid{false};
+    std::string network_name;
+};
+
+/**
+ * @brief Registers command-line and config-file options for share chain parameters.
+ *
+ * @param argsman The command-line and config file option manager.
+ */
+void SetupShareChainParamsOptions(ArgsManager& argsman);
+
+/**
+ * @brief Sets the params returned by ShareParams() to those for the given chain name.
+ *
+ * @param args The command-line and config file options.
+ * @param chain For future expansion.  Must be set to `ShareChainParams::MAIN`.
+ * @throws std::runtime_error when the chain is not recognized.
+ */
+void SelectShareParams(const ArgsManager& args, const std::string& chain);
+
+/**
+ * @brief Return the currently selected share chain parameters. This won't
+ * change after app startup, except for unit tests.
+ *
+ * @return const ShareChainParams& The currently selected parameters.
+ * @throws std::runtime_error if the share chain hasn't been configured.
+ */
+const ShareChainParams& ShareParams();
 
 struct ShareWitness {
     // A share is committed to at the end of the coinbase transaction, which

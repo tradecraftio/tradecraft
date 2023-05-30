@@ -62,6 +62,7 @@
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <script/standard.h>
+#include <sharechain.h> // for SetupShareChainParamsOptions
 #include <shutdown.h>
 #include <stratum.h>
 #include <sync.h>
@@ -627,6 +628,8 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-mergemine=<addr>:<port>", "Merge-mine another chain using the auxiliary block commitment information served by stratum+tcp://<addr>:<port>", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
     argsman.AddArg("-mergeminename=<name>:<chainid>", "Use <name> as an alternative specifier for the given chainid.", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
     argsman.AddArg("-mergeminedefault=<name/chainid>:<username>[:<password>]", "Use <username>:<password> as the default authorization credentials for the specified chain, overriding the auxiliary work server's defaults.", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
+
+    SetupShareChainParamsOptions(argsman);
 
 #if HAVE_DECL_FORK
     argsman.AddArg("-daemon", strprintf("Run in the background as a daemon and accept commands (default: %d)", DEFAULT_DAEMON), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);

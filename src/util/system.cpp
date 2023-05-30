@@ -6,6 +6,7 @@
 #include <util/system.h>
 
 #include <chainparamsbase.h>
+#include <sharechain.h>
 #include <sync.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -875,6 +876,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         }
         if (use_conf_file) {
             std::string chain_id = GetChainName();
+            std::string share_chain_id = GetShareChainName();
             std::vector<std::string> conf_file_names;
 
             auto add_includes = [&](const std::string& network, size_t skip = 0) {
@@ -894,6 +896,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             // We haven't set m_network yet (that happens in SelectParams()), so manually check
             // for network.includeconf args.
             const size_t chain_includes = add_includes(chain_id);
+            const size_t share_chain_includes = add_includes(share_chain_id);
             const size_t default_includes = add_includes({});
 
             for (const std::string& conf_file_name : conf_file_names) {
@@ -912,11 +915,17 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             // Warn about recursive -includeconf
             conf_file_names.clear();
             add_includes(chain_id, /* skip= */ chain_includes);
+            add_includes(share_chain_id, /* skip= */ share_chain_includes);
             add_includes({}, /* skip= */ default_includes);
             std::string chain_id_final = GetChainName();
+            std::string share_chain_id_final = GetShareChainName();
             if (chain_id_final != chain_id) {
                 // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
                 add_includes(chain_id_final);
+            }
+            if (share_chain_id_final != share_chain_id) {
+                // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
+                add_includes(share_chain_id_final);
             }
             for (const std::string& conf_file_name : conf_file_names) {
                 tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", conf_file_name);
@@ -961,6 +970,17 @@ std::string ArgsManager::GetChainName() const
         return CBaseChainParams::TESTNET;
 
     return GetArg("-chain", CBaseChainParams::MAIN);
+}
+
+std::string ArgsManager::GetShareChainName() const {
+    std::string sharechain = GetArg("-sharechain", ShareChainParams::MAIN);
+    if (sharechain.empty() || sharechain == "1") {
+        sharechain = ShareChainParams::MAIN;
+    }
+    if (sharechain == "0") {
+        sharechain = ShareChainParams::SOLO;
+    }
+    return sharechain;
 }
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const

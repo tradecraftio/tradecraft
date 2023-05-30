@@ -711,6 +711,7 @@ libbitcoin_util_a_SOURCES = \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
+  shareparamsbase.cpp \
   support/cleanse.cpp \
   sync.cpp \
   util/asmap.cpp \
