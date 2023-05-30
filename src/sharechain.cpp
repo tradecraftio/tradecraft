@@ -9,9 +9,48 @@
 #include <primitives/block.h> // for CBlockHeader
 #include <streams.h> // for CDataStream
 #include <span.h> // for Span, MakeUCharSpan
+#include <util/check.h> // for Assert
 
 #include <array> // for std::array
 #include <utility> // for std::swap
+
+void SetupShareChainParamsOptions(ArgsManager& argsman) {
+    argsman.AddArg("-sharechain=<name>", "Use the share chain <name> (default: main). Allowed values: solo or main", ArgsManager::ALLOW_ANY, OptionsCategory::STRATUM);
+}
+
+struct SoloShareChainParams : public ShareChainParams {
+    SoloShareChainParams() {
+        is_valid = false;
+        m_share_chain_type = ShareChainType::SOLO;
+    }
+};
+
+struct MainShareChainParams : public ShareChainParams {
+    MainShareChainParams() {
+        is_valid = true;
+        m_share_chain_type = ShareChainType::MAIN;
+    }
+};
+
+std::unique_ptr<const ShareChainParams> g_share_chain_params;
+
+void SelectShareParams(const ShareChainType share_chain) {
+    switch (share_chain) {
+    case ShareChainType::SOLO:
+        g_share_chain_params = std::unique_ptr<const ShareChainParams>(new SoloShareChainParams());
+        return;
+    case ShareChainType::MAIN:
+        g_share_chain_params = std::unique_ptr<const ShareChainParams>(new MainShareChainParams());
+        return;
+    }
+    // Switch statement is exhaustive.
+    assert(false);
+}
+
+const ShareChainParams& ShareParams() {
+    Assert(g_share_chain_params);
+    return *g_share_chain_params;
+}
 
 void swap(ShareWitness& lhs, ShareWitness& rhs) {
     using std::swap; // for ADL

@@ -9,6 +9,7 @@
 #include <compat/compat.h>
 #include <sync.h>
 #include <util/chaintype.h>
+#include <util/sharechaintype.h>
 #include <util/fs.h>
 
 #include <iosfwd>
@@ -340,6 +341,21 @@ protected:
     std::string GetChainTypeString() const;
 
     /**
+     * Returns the appropriate share chain type from the program arguments.
+     * @return ShareChainType::MAIN by default; raises runtime error if an
+     * invalid combination, or unknown share chain is given.
+     */
+    ShareChainType GetShareChainType() const;
+
+    /**
+     * Returns the appropriate share chain type string from the program
+     * arguments.
+     * @return ShareChainType::MAIN string by default; raises runtime error if
+     * an invalid combination is given.
+     */
+    std::string GetShareChainTypeString() const;
+
+    /**
      * Add argument
      */
     void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
@@ -429,6 +445,14 @@ private:
      * provided.
      */
     std::variant<ChainType, std::string> GetChainArg() const;
+
+    /**
+     * Return -sharechain= setting as a ChainType enum if a recognized share
+     * chain type was set, or as a string if an unrecognized chain name was
+     * set.  Raise an exception if an invalid combination of flags was
+     * provided.
+     */
+    std::variant<ShareChainType, std::string> GetShareChainArg() const;
 
     // Helper function for LogArgs().
     void logArgsPrefix(
