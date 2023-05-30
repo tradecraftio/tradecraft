@@ -196,6 +196,7 @@ BITCOIN_CORE_H = \
   kernel/mempool_removal_reason.h \
   kernel/messagestartchars.h \
   kernel/notifications_interface.h \
+  kernel/sharechainstatemanager_opts.h \
   kernel/validation_cache_sizes.h \
   key.h \
   key_io.h \

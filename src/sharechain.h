@@ -5,11 +5,15 @@
 #include <addresstype.h> // for WitnessUnknown
 #include <common/args.h> // for ArgsManager
 #include <consensus/merklerange.h> // for MmrAccumulator
+#include <kernel/sharechainstatemanager_opts.h> // for kernel::ShareChainstateManagerOpts
 #include <primitives/block.h> // for CBlockHeader
 #include <serialize.h> // for Serialize, Unserialize, VARINT
 #include <uint256.h> // for uint256
+#include <util/check.h> // for Assert
 #include <util/sharechaintype.h> // for ShareChainType, ShareChainTypeToString
+#include <validation.h> // for cs_main
 
+#include <memory> // for std::shared_ptr
 #include <string> // for std::string
 
 #include <stdint.h> // for uint32_t
@@ -210,5 +214,94 @@ struct Share {
 };
 
 void swap(Share& lhs, Share& rhs);
+
+struct ShareIndex {
+    //! The share header and witness data.
+    Share share;
+    //! The previous share in the share chain, or nullptr if this is the
+    //! genesis share.
+    std::shared_ptr<const ShareIndex> prev_share;
+
+    uint256 GetHash() const { return share.GetHash(); }
+};
+
+struct ShareChain {
+    std::vector<std::shared_ptr<ShareIndex>> chain;
+
+    ShareChain() = default;
+    ShareChain(const ShareChain&) = delete;
+    ShareChain& operator=(const ShareChain&) = delete;
+
+    /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
+    std::shared_ptr<ShareIndex> Genesis() const {
+        return chain.size() > 0 ? chain[0] : nullptr;
+    }
+
+    /** Returns the index entry for the tip of this chain, or nullptr if none. */
+    std::shared_ptr<ShareIndex> Tip() const {
+        return chain.size() > 0 ? chain.back() : nullptr;
+    }
+
+    /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
+    std::shared_ptr<ShareIndex> operator[](int height) const {
+        if (height < 0 || height >= (int)chain.size())
+            return nullptr;
+        return chain[height];
+    }
+
+    /** Efficiently check whether a block is present in this chain. */
+    bool Contains(const ShareIndex& index) const
+    {
+        return (*this)[index.share.height]->GetHash() == index.GetHash();
+    }
+
+    /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
+    std::shared_ptr<ShareIndex> Next(const ShareIndex& index) const
+    {
+        if (Contains(index))
+            return (*this)[index.share.height + 1];
+        else
+            return nullptr;
+    }
+
+    /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
+    int Height() const
+    {
+        return int(chain.size()) - 1;
+    }
+
+};
+
+struct ShareChainstate {
+    ShareChain chain;
+};
+
+struct ShareChainstateManager {
+    RecursiveMutex& GetMutex() const LOCK_RETURNED(::cs_main) { return ::cs_main; }
+
+    using Options = kernel::ShareChainstateManagerOpts;
+    Options m_options;
+    std::shared_ptr<ShareChainstate> m_active_chainstate GUARDED_BY(GetMutex()) {nullptr};
+    std::shared_ptr<ShareChainstate> m_best_invalid GUARDED_BY(GetMutex()){nullptr};
+
+    explicit ShareChainstateManager(Options options) : m_options(std::move(options)) {
+        Assert(m_options.adjusted_time_callback);
+    }
+
+    //! The most-work chain.
+    ShareChainstate& ActiveChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+        Assert(m_active_chainstate);
+        return *m_active_chainstate;
+    }
+    ShareChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+        return ActiveChainstate().chain;
+    }
+    int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+        return ActiveChain().Height();
+    }
+    std::shared_ptr<ShareIndex> ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+        return ActiveChain().Tip();
+    }
+};
 
 // End of File

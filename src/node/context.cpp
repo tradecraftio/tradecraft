@@ -14,6 +14,7 @@
 #include <node/kernel_notifications.h>
 #include <policy/fees.h>
 #include <scheduler.h>
+#include <sharechain.h>
 #include <txmempool.h>
 #include <validation.h>
 
