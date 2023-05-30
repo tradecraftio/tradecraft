@@ -187,6 +187,7 @@ BITCOIN_CORE_H = \
   kernel/mempool_limits.h \
   kernel/mempool_options.h \
   kernel/mempool_persist.h \
+  kernel/sharechainstatemanager_opts.h \
   kernel/validation_cache_sizes.h \
   key.h \
   key_io.h \
