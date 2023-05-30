@@ -29,6 +29,7 @@
 #include <sharechain.h> // for SelectShareParams
 #include <serialize.h>
 #include <streams.h>
+#include <timedata.h> // for GetAdjustedTime
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
@@ -1495,6 +1496,15 @@ bool InitStratumServer(node::NodeContext& node)
 
     // Setup the share chain parameters.
     SelectShareParams(gArgs, gArgs.GetShareChainName());
+    const ShareChainParams& sharechainparams = ShareParams();
+    if (sharechainparams.IsValid()) {
+        const ShareChainstateManager::Options sharechainman_opts{
+            .chainparams = Params(),
+            .sharechainparams = sharechainparams,
+            .adjusted_time_callback = GetAdjustedTime,
+        };
+        node.sharechainman = std::make_unique<ShareChainstateManager>(sharechainman_opts);
+    }
 
     // Either -defaultminingaddress or -stratumwallet can be set, but not both.
     if (gArgs.IsArgSet("-defaultminingaddress") && gArgs.IsArgSet("-stratumwallet")) {
