@@ -8,6 +8,7 @@
 #include <chainparamsbase.h>
 #include <common/settings.h>
 #include <logging.h>
+#include <sharechain.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <univalue.h>
@@ -765,6 +766,32 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
     if (fSigNet) return ChainType::SIGNET;
     if (fTestNet) return ChainType::TESTNET;
     return ChainType::MAIN;
+}
+
+ShareChainType ArgsManager::GetShareChainType() const
+{
+    std::variant<ShareChainType, std::string> arg = GetShareChainArg();
+    if (auto* parsed = std::get_if<ShareChainType>(&arg)) return *parsed;
+    throw std::runtime_error(strprintf("Unknown share chain %s.", std::get<std::string>(arg)));
+}
+
+std::string ArgsManager::GetShareChainTypeString() const
+{
+    auto arg = GetShareChainArg();
+    if (auto* parsed = std::get_if<ShareChainType>(&arg)) return ShareChainTypeToString(*parsed);
+    return std::get<std::string>(arg);
+}
+
+std::variant<ShareChainType, std::string> ArgsManager::GetShareChainArg() const
+{
+    std::string sharechain = GetArg("-sharechain", "");
+    if (sharechain.empty() || sharechain == "1") {
+        return ShareChainType::MAIN;
+    }
+    if (sharechain == "0") {
+        return ShareChainType::SOLO;
+    }
+    return sharechain;
 }
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const

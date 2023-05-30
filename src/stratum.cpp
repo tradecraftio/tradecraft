@@ -26,6 +26,7 @@
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <sharechain.h> // for SelectShareParams
 #include <serialize.h>
 #include <streams.h>
 #include <txmempool.h>
@@ -1488,6 +1489,9 @@ void BlockWatcher()
 bool InitStratumServer(node::NodeContext& node)
 {
     LOCK(cs_stratum);
+
+    // Setup the share chain parameters.
+    SelectShareParams(gArgs.GetShareChainType());
 
     // Either -defaultminingaddress or -stratumwallet can be set, but not both.
     if (gArgs.IsArgSet("-defaultminingaddress") && gArgs.IsArgSet("-stratumwallet")) {

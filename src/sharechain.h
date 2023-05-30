@@ -3,12 +3,52 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h> // for WitnessUnknown
+#include <common/args.h> // for ArgsManager
 #include <consensus/merklerange.h> // for MmrAccumulator
 #include <primitives/block.h> // for CBlockHeader
 #include <serialize.h> // for Serialize, Unserialize, VARINT
 #include <uint256.h> // for uint256
+#include <util/sharechaintype.h> // for ShareChainType, ShareChainTypeToString
+
+#include <string> // for std::string
 
 #include <stdint.h> // for uint32_t
+
+struct ShareChainParams {
+    bool IsValid() const { return is_valid; }
+    /** Return the share chain type string */
+    std::string GetShareChainTypeString() const { return ShareChainTypeToString(m_share_chain_type); }
+    /** Return the share chain type */
+    ShareChainType GetShareChainType() const { return m_share_chain_type; }
+
+protected:
+    bool is_valid{false};
+    ShareChainType m_share_chain_type{ShareChainType::SOLO};
+};
+
+/**
+ * @brief Registers command-line and config-file options for share chain parameters.
+ *
+ * @param argsman The command-line and config file option manager.
+ */
+void SetupShareChainParamsOptions(ArgsManager& argsman);
+
+/**
+ * @brief Sets the params returned by ShareParams() to those for the given chain name.
+ *
+ * @param chain For future expansion.  Must be set to `ShareChainParams::MAIN`.
+ * @throws std::runtime_error when the chain is not recognized.
+ */
+void SelectShareParams(const ShareChainType share_chain);
+
+/**
+ * @brief Return the currently selected share chain parameters. This won't
+ * change after app startup, except for unit tests.
+ *
+ * @return const ShareChainParams& The currently selected parameters.
+ * @throws std::runtime_error if the share chain hasn't been configured.
+ */
+const ShareChainParams& ShareParams();
 
 struct ShareWitness {
     // A share is committed to at the end of the coinbase transaction, which
