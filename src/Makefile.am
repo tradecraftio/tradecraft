@@ -682,6 +682,7 @@ libbitcoin_util_a_SOURCES = \
   random.cpp \
   randomenv.cpp \
   rpc/request.cpp \
+  shareparamsbase.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
