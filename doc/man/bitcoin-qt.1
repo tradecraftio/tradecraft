@@ -845,6 +845,12 @@ authenticates with a blank username. (Conflicts with
 Merge\-mine another chain using the auxiliary block commitment
 information served by stratum+tcp://<addr>:<port>
 .HP
+\fB\-mergeminedefault=\fR<name/chainid>:<username>[:<password>]
+.IP
+Use <username>:<password> as the default authorization credentials for
+the specified chain, overriding the auxiliary work server's
+defaults.
+.HP
 \fB\-mergeminename=\fR<name>:<chainid>
 .IP
 Use <name> as an alternative specifier for the given chainid.
