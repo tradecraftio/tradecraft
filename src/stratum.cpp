@@ -898,17 +898,16 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const uint256& mmro
         for (const auto& item : client.m_mmwork[mmjobid].second) {
             const ChainId& chainid = item.first;
             const AuxWork& auxwork = item.second;
-            if (!client.m_mmauth.count(chainid)) {
-                LogPrint(BCLog::MERGEMINE, "Got share for chain we aren't authorized for; unable to submit work.\n");
-                continue;
+            std::optional<std::string> username;
+            if (client.m_mmauth.count(chainid)) {
+                username = client.m_mmauth[chainid].first;
             }
-            const std::string& username = client.m_mmauth[chainid].first;
             SubmitAuxChainShare(chainid, username, auxwork, auxproof);
             // FIXME: Change to our own consensus params with no powlimit
             if (CheckProofOfWork(hash, auxwork.bits, auxwork.bias, Params().GetConsensus())) {
-                LogPrintf("GOT AUX CHAIN BLOCK!!! 0x%s by %s: %s %s\n", HexStr(chainid), username, auxwork.commit.ToString(), hash.ToString());
+                LogPrintf("GOT AUX CHAIN BLOCK!!! 0x%s%s: %s %s\n", HexStr(chainid), username.has_value() ? (" by " + *username) : " with default credentials", auxwork.commit.ToString(), hash.ToString());
             } else {
-                LogPrintf("NEW AUX CHAIN SHARE!!! 0x%s by %s: %s %s\n", HexStr(chainid), username, auxwork.commit.ToString(), hash.ToString());
+                LogPrintf("NEW AUX CHAIN SHARE!!! 0x%s%s: %s %s\n", HexStr(chainid), username.has_value() ? (" by " + *username) : " with default credentials", auxwork.commit.ToString(), hash.ToString());
             }
         }
     }
@@ -931,11 +930,10 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const uint256& mmro
 
 bool SubmitSecondStage(StratumClient& client, const ChainId& chainid, const SecondStageWork& work, std::vector<unsigned char> extranonce2, uint32_t nTime, uint32_t nNonce, uint32_t nVersion)
 {
-    if (!client.m_mmauth.count(chainid)) {
-        LogPrint(BCLog::MERGEMINE, "Got second stage share for chain we aren't authorized for; unable to submit work.\n");
-        return false;
+    std::optional<std::string> username;
+    if (client.m_mmauth.count(chainid)) {
+        username = client.m_mmauth[chainid].first;
     }
-    const std::string& username = client.m_mmauth[chainid].first;
 
     std::vector<unsigned char> extranonce1 = client.ExtraNonce1(JobId(chainid)); // Note: not job_id
 
@@ -964,9 +962,9 @@ bool SubmitSecondStage(StratumClient& client, const ChainId& chainid, const Seco
     bool res = false;
     // FIXME: Change to our own consensus params with no powlimit
     if ((res = CheckProofOfWork(hash, work.nBits, 0, Params().GetConsensus()))) {
-        LogPrintf("GOT AUX CHAIN SECOND STAGE BLOCK!!! 0x%s by %s: %s\n", HexStr(chainid), username, hash.ToString());
+        LogPrintf("GOT AUX CHAIN SECOND STAGE BLOCK!!! 0x%s%s: %s\n", HexStr(chainid), username.has_value() ? (" by " + *username) : " with default credentials", hash.ToString());
     } else {
-        LogPrintf("NEW AUX CHAIN SECOND STAGE SHARE!!! 0x%s by %s: %s\n", HexStr(chainid), username, hash.ToString());
+        LogPrintf("NEW AUX CHAIN SECOND STAGE SHARE!!! 0x%s%s: %s\n", HexStr(chainid), username.has_value() ? (" by " + *username) : " with default credentials", hash.ToString());
     }
 
     if (res) {
