@@ -88,7 +88,7 @@ New RPC: getstratuminfo
 -----------------------
 
 A new RPC `getstratuminfo` has been added to the stratum mining server.  This
-RPC returns information about the stratum mining server's configureation and
+RPC returns information about the stratum mining server's configuration and
 connected miners.
 
 New RPC: getmergemineinfo
