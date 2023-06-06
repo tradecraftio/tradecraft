@@ -49,13 +49,15 @@ def mine_large_blocks(node, n):
     # Get the block parameters for the first block
     big_script = CScript([OP_RETURN] + [OP_NOP] * 950000)
     best_block = node.getblock(node.getbestblockhash())
-    final_tx = []
+    final_tx = get_final_tx_info(node)
     height = int(best_block["height"]) + 1
     mine_large_blocks.nTime = max(mine_large_blocks.nTime, int(best_block["time"])) + 1
     previousblockhash = int(best_block["hash"], 16)
 
     for _ in range(n):
         block = create_block(hashprev=previousblockhash, ntime=mine_large_blocks.nTime, coinbase=create_coinbase(height, script_pubkey=big_script))
+        if height > 100:
+            final_tx = add_final_tx(final_tx, block)
         block.solve()
 
         # Submit to the node
