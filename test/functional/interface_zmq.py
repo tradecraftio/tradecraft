@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
+from io import BytesIO
 import struct
 from time import sleep
 
@@ -19,6 +20,7 @@ from test_framework.blocktools import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
+    CTransaction,
     hash256,
     tx_from_hex,
 )
