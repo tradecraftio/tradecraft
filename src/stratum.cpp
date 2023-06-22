@@ -217,6 +217,7 @@ void UpdateSegwitCommitment(const ChainstateManager& chainman, const StratumWork
 //! The default address to use for mining rewards if no address is provided.
 //! Set once at startup, so it doesn't need to be protected by cs_stratum.f
 static CTxDestination g_default_mining_address;
+static WitnessUnknown g_default_share_address;
 
 //! The time at which the statum server started, used to calculate uptime.
 static int64_t g_start_time = 0;
@@ -535,6 +536,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     if (tip != g_context->chainman->ActiveChain().Tip() || (mempool.GetTransactionsUpdated() != transactions_updated_last && (GetTime() - last_update_time) > 5) || !work_templates.count(job_id))
     {
         CTxDestination coinbase_dest = g_default_mining_address;
+        WitnessUnknown witness_dest = g_default_share_address;
         if (!IsValidDestination(coinbase_dest)) {
             bilingual_str error;
             wallet::ReserveMiningDestination(*g_context, coinbase_dest, error);
@@ -1489,6 +1491,44 @@ void BlockWatcher()
     }
 }
 
+struct SetDefaultShareAddress {
+    bool operator()(const CNoDestination&) const { return false; }
+    bool operator()(const PKHash&) const { return false; }
+    bool operator()(const ScriptHash&) const { return false; }
+    bool operator()(const WitnessV0KeyHash& id) const {
+        g_default_share_address.version = 0;
+        g_default_share_address.length = id.size();
+        std::copy(id.begin(), id.end(), &g_default_share_address.program[0]);
+        std::fill(&g_default_share_address.program[id.size()],
+                  &g_default_share_address.program[sizeof(g_default_share_address.program)], 0);
+        return true;
+    }
+    bool operator()(const WitnessV0ScriptHash& id) const {
+        g_default_share_address.version = 0;
+        g_default_share_address.length = id.size();
+        std::copy(id.begin(), id.end(), &g_default_share_address.program[0]);
+        std::fill(&g_default_share_address.program[id.size()],
+                  &g_default_share_address.program[sizeof(g_default_share_address.program)], 0);
+        return true;
+    }
+    bool operator()(const WitnessV1Taproot& id) const {
+        g_default_share_address.version = 1;
+        g_default_share_address.length = id.size();
+        std::copy(id.begin(), id.end(), &g_default_share_address.program[0]);
+        std::fill(&g_default_share_address.program[id.size()],
+                  &g_default_share_address.program[sizeof(g_default_share_address.program)], 0);
+        return true;
+    }
+    bool operator()(const WitnessUnknown& id) const {
+        g_default_share_address.version = id.version;
+        g_default_share_address.length = id.length;
+        std::copy(&id.program[0], &id.program[id.length], &g_default_share_address.program[0]);
+        std::fill(&g_default_share_address.program[id.length],
+                  &g_default_share_address.program[sizeof(g_default_share_address.program)], 0);
+        return true;
+    }
+};
+
 /** Configure the stratum server */
 bool InitStratumServer(node::NodeContext& node)
 {
@@ -1511,7 +1551,12 @@ bool InitStratumServer(node::NodeContext& node)
         LogPrintf("Cannot set both -defaultminingaddress and -stratumwallet, as settings conflict.\n");
         return false;
     }
+    if (gArgs.IsArgSet("-defaultshareaddress") && gArgs.IsArgSet("-stratumwallet")) {
+        LogPrintf("Cannot set both -defaultshareaddress and -stratumwallet, as settings conflict.\n");
+        return false;
+    }
     std::optional<std::string> defaultminingaddress = gArgs.GetArg("-defaultminingaddress");
+    bool have_default_share_address = false;
     if (defaultminingaddress) {
         std::string error;
         g_default_mining_address = DecodeDestination(*defaultminingaddress, error);
@@ -1519,6 +1564,24 @@ bool InitStratumServer(node::NodeContext& node)
             LogPrintf("Invalid -defaultminingaddress=%s: %s\n", *defaultminingaddress, error);
             return false;
         }
+        have_default_share_address = std::visit(SetDefaultShareAddress(), g_default_mining_address);
+    }
+    std::optional<std::string> defaultshareaddress = gArgs.GetArg("-defaultshareaddress");
+    if (defaultshareaddress) {
+        std::string error;
+        CTxDestination default_share_address = DecodeDestination(*defaultshareaddress, error);
+        if (!IsValidDestination(default_share_address)) {
+            LogPrintf("Invalid -defaultshareaddress=%s: %s\n", *defaultshareaddress, error);
+            return false;
+        }
+        if (!std::visit(SetDefaultShareAddress(), default_share_address)) {
+            LogPrintf("Invalid -defaultshareaddress=%s: not a witness program\n", *defaultshareaddress);
+            return false;
+        }
+        have_default_share_address = true;
+    }
+    if (IsValidDestination(g_default_mining_address) && !have_default_share_address) {
+        LogPrintf("WARNING: -defaultminingaddress=%s is not a witness program, and therefore cannot be used as a share address, but no -defaultshareaddress is set.  Are you sure this is what you want?\n", EncodeDestination(g_default_mining_address));
     }
 
     if (!InitSubnetAllowList("stratum", stratum_allow_subnets)) {
