@@ -19,6 +19,7 @@ void RegisterNetRPCCommands(CRPCTable&);
 void RegisterOutputScriptRPCCommands(CRPCTable&);
 void RegisterMergeMineRPCCommands(CRPCTable&);
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
+void RegisterShareChainRPCCommands(CRPCTable&);
 void RegisterSignMessageRPCCommands(CRPCTable&);
 void RegisterSignerRPCCommands(CRPCTable &tableRPC);
 void RegisterStratumRPCCommands(CRPCTable&);
@@ -36,6 +37,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterOutputScriptRPCCommands(t);
     RegisterMergeMineRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
+    RegisterShareChainRPCCommands(t);
     RegisterSignMessageRPCCommands(t);
 #ifdef ENABLE_EXTERNAL_SIGNER
     RegisterSignerRPCCommands(t);

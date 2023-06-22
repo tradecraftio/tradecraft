@@ -8,6 +8,7 @@
 #include <consensus/merkle.h> // for ComputeMerkleMapRootFromBranch, ComputeMerkleRootFromBranch
 #include <hash.h> // for CHash256, CHashWriter
 #include <primitives/block.h> // for CBlockHeader
+#include <rpc/server.h> // for CRPCTable
 #include <streams.h> // for CDataStream
 #include <span.h> // for Span, MakeUCharSpan
 #include <util/check.h> // for Assert
@@ -136,6 +137,41 @@ CBlockHeader Share::GetBlockHeader(bool *mutated) const {
     blkhdr.nBits = wit.nBits;
     blkhdr.nNonce = wit.nNonce;
     return blkhdr;
+}
+
+static RPCHelpMan getsharechaininfo() {
+    return RPCHelpMan{"getsharechaininfo",
+        "\nReturns an object containing various state info regarding the share chain.\n",
+        {},
+        RPCResult{RPCResult::Type::OBJ, "", "", {
+            {RPCResult::Type::BOOL, "enabled", "whether the share chain service is enabled"},
+            {RPCResult::Type::STR, "network", /*optional=*/true, "which share chain the mining service is using"},
+        }},
+        RPCExamples{
+            HelpExampleCli("getstratuminfo", "")
+            + HelpExampleRpc("getstratuminfo", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("enabled", g_share_chain_params != nullptr);
+    if (!g_share_chain_params) {
+        return obj;
+    }
+    const auto& shareparams = *g_share_chain_params;
+    obj.pushKV("network", shareparams.NetworkName());
+    return obj;
+},
+    };
+}
+
+void RegisterShareChainRPCCommands(CRPCTable& t) {
+    static const CRPCCommand commands[]{
+        {"mining", &getsharechaininfo},
+    };
+    for (const auto& c : commands) {
+        t.appendCommand(c.name, &c);
+    }
 }
 
 // End of File
