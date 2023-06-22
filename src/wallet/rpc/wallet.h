@@ -5,11 +5,15 @@
 #ifndef BITCOIN_WALLET_RPC_WALLET_H
 #define BITCOIN_WALLET_RPC_WALLET_H
 
+#include <rpc/util.h>
 #include <span.h>
+#include <wallet/wallet.h>
 
 class CRPCCommand;
 
 namespace wallet {
+std::vector<RPCResult> GetWalletInfoDesc();
+UniValue GetWalletInfo(const CWallet& wallet);
 Span<const CRPCCommand> GetWalletRPCCommands();
 } // namespace wallet
 
