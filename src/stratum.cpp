@@ -36,6 +36,7 @@
 #include <util/hash_type.h> // for BaseHash
 #include <util/strencodings.h>
 #include <validation.h>
+#include <wallet/rpc/miner.h> // for GetMiningWalletInfo
 #include <wallet/miner.h>
 
 using node::UpdateBlockFinalTxCommitment;
@@ -1655,6 +1656,11 @@ static RPCHelpMan getstratuminfo() {
             {RPCResult::Type::BOOL, "enabled", "whether the server is running or not"},
             {RPCResult::Type::NUM_TIME, "curtime", /*optional=*/true, "the current time, in seconds since UNIX epoch"},
             {RPCResult::Type::NUM_TIME, "uptime", /*optional=*/true, "the server uptime, in seconds"},
+            {RPCResult::Type::STR, "defaultminingaddress", /*optional=*/true, "the default mining address"},
+            {RPCResult::Type::STR, "defaultshareaddress", /*optional=*/true, "the default share address"},
+            {RPCResult::Type::OBJ, "stratumwallet", /*optional=*/true, "the wallet used for generating default mining addresses",
+                wallet::GetMiningWalletInfoDesc()
+            },
             {RPCResult::Type::ARR, "listeners", /*optional=*/true, "network interfaces the server is listening on", {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "netaddr", "the network interface address and port"},
@@ -1702,6 +1708,18 @@ static RPCHelpMan getstratuminfo() {
     int64_t now = GetTime();
     ret.pushKV("curtime", now);
     ret.pushKV("uptime", now - g_start_time);
+    // Report the default mining addresses or wallet.
+    bool has_default_mining_address = IsValidDestination(g_default_mining_address);
+    if (has_default_mining_address) {
+        ret.pushKV("defaultminingaddress", EncodeDestination(g_default_mining_address));
+    }
+    bool have_default_share_address = IsValidDestination(g_default_share_address);
+    if (have_default_share_address) {
+        ret.pushKV("defaultshareaddress", EncodeDestination(g_default_share_address));
+    }
+    if (g_context && (!has_default_mining_address || !have_default_share_address)) {
+        ret.pushKV("stratumwallet", wallet::GetMiningWalletInfo(*g_context));
+    }
     // Report which network interfaces we are listening on.
     UniValue listeners(UniValue::VARR);
     for (const auto& binding : bound_listeners) {
