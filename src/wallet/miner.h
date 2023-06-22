@@ -12,6 +12,9 @@
 #include <script/standard.h> // for CTxDestination
 #include <util/translation.h> // for bilingual_str
 #include <validation.h> // for Chainstate
+#include <wallet/wallet.h> // for CWallet
+
+#include <memory> // for std::shared_ptr
 
 namespace wallet {
 
@@ -26,6 +29,8 @@ bool SignBlockFinalTransaction(const node::NodeContext& node, CMutableTransactio
 //! Release (un-cache) the wallet used for signing block-final transactions.
 void ReleaseBlockFinalWallet();
 
+//! Get the wallet used for mining.
+std::shared_ptr<CWallet> GetWalletForMiner(const node::NodeContext& node, bilingual_str& error);
 //! Reserve a destination for mining.
 bool ReserveMiningDestination(const node::NodeContext& node, CTxDestination& dest, bilingual_str& error);
 //! Mark a destination as permanently used, due to a block being found.

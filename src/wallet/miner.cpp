@@ -19,6 +19,7 @@
 #include <validation.h> // for Chainstate
 #include <wallet/coinselection.h> // for COutput
 #include <wallet/context.h> // for WalletContext
+#include <wallet/rpc/wallet.h> // for GetWalletInfo, GetWalletInfoDesc
 #include <wallet/spend.h> // for AvailableCoins
 #include <wallet/wallet.h> // for CWallet, GetWallets, GetWallet, ReserveDestination
 
@@ -287,7 +288,7 @@ static RecursiveMutex cs_stratum_wallet;
 //! The wallet used to create mining destinations.
 static std::shared_ptr<CWallet> g_stratum_wallet GUARDED_BY(cs_stratum_wallet);
 
-static std::shared_ptr<CWallet> GetWalletForMiner(const NodeContext& node, bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum_wallet) {
+static std::shared_ptr<CWallet> GetWalletForMinerInner(const NodeContext& node, bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_stratum_wallet) {
     // Use a global variable to cache the wallet pointer.  This is safe this
     // whole function requires cs_stratum_wallet to be held.
     if (g_stratum_wallet) {
@@ -334,6 +335,11 @@ static std::shared_ptr<CWallet> GetWalletForMiner(const NodeContext& node, bilin
         g_stratum_wallet = wallets[0];
     }
     return g_stratum_wallet;
+}
+
+std::shared_ptr<CWallet> GetWalletForMiner(const NodeContext& node, bilingual_str& error) {
+    LOCK(cs_stratum_wallet);
+    return GetWalletForMinerInner(node, error);
 }
 
 //! The destination to use for stratum mining
