@@ -63,14 +63,6 @@ struct ChainTxData {
 };
 
 /**
- * Holds the auxiliary chain ID for a particular chain.  Used for merged mining.
- */
-struct ChainId : BaseHash<uint256> {
-    ChainId() : BaseHash() {}
-    explicit ChainId(const uint256& hash) : BaseHash(hash) {}
-};
-
-/**
  * CChainParams defines various tweakable parameters of a given instance of the
  * Bitcoin system.
  */
@@ -130,8 +122,6 @@ public:
     const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
 
     const ChainTxData& TxData() const { return chainTxData; }
-    /** Default merge-mine chain if chain id isn't specified */
-    const ChainId& DefaultAuxPowPath() const { return default_aux_pow_path; }
 protected:
     CChainParams() {}
 
@@ -154,7 +144,6 @@ protected:
     CCheckpointData checkpointData;
     MapAssumeutxo m_assumeutxo_data;
     ChainTxData chainTxData;
-    ChainId default_aux_pow_path;
 };
 
 /**
