@@ -1,6 +1,17 @@
 dnl Copyright (c) 2013-2016 The Bitcoin Core developers
-dnl Distributed under the MIT software license, see the accompanying
-dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
+dnl Copyright (c) 2013-2023 The Freicoin Developers
+dnl
+dnl This program is free software: you can redistribute it and/or modify it
+dnl under the terms of version 3 of the GNU Affero General Public License as
+dnl published by the Free Software Foundation.
+dnl
+dnl This program is distributed in the hope that it will be useful, but WITHOUT
+dnl ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+dnl FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License
+dnl for more details.
+dnl
+dnl You should have received a copy of the GNU Affero General Public License
+dnl along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set bitcoin_enable_qt to false. Else, exit.
