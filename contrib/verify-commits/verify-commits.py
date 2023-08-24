@@ -27,7 +27,7 @@ GIT = os.getenv('GIT', 'git')
 def tree_sha512sum(commit='HEAD'):
     """Calculate the Tree-sha512 for the commit.
 
-    This is copied from github-merge.py. See https://github.com/bitcoin-core/bitcoin-maintainer-tools."""
+    This is copied from github-merge.py. See https://github.com/tradecraftio/tradecraft-maintainer-tools."""
 
     # request metadata for entire tree, recursively
     files = []
@@ -130,8 +130,8 @@ def main():
             verify_tree = False
             no_sha1 = False
 
-        os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "0" if no_sha1 else "1"
-        os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG'] = "1" if current_commit in revsig_allowed else "0"
+        os.environ['FREICOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "0" if no_sha1 else "1"
+        os.environ['FREICOIN_VERIFY_COMMITS_ALLOW_REVSIG'] = "1" if current_commit in revsig_allowed else "0"
 
         # Check that the commit (and parents) was signed with a trusted key
         if subprocess.call([GIT, '-c', 'gpg.program={}/gpg.sh'.format(dirname), 'verify-commit', current_commit], stdout=subprocess.DEVNULL):

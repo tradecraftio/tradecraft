@@ -19,13 +19,13 @@ to peers until a GETDATA is received."""
 import time
 
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
 MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
-class MempoolUnbroadcastTest(BitcoinTestFramework):
+class MempoolUnbroadcastTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         if self.is_wallet_compiled():

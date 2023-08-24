@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCRIPT_INTERPRETER_H
-#define BITCOIN_SCRIPT_INTERPRETER_H
+#ifndef FREICOIN_SCRIPT_INTERPRETER_H
+#define FREICOIN_SCRIPT_INTERPRETER_H
 
 #include <hash.h>
 #include <script/script_error.h>
@@ -357,4 +357,4 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
 
 int FindAndDelete(CScript& script, const CScript& b);
 
-#endif // BITCOIN_SCRIPT_INTERPRETER_H
+#endif // FREICOIN_SCRIPT_INTERPRETER_H

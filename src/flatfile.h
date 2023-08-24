@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_FLATFILE_H
-#define BITCOIN_FLATFILE_H
+#ifndef FREICOIN_FLATFILE_H
+#define FREICOIN_FLATFILE_H
 
 #include <string>
 
@@ -98,4 +98,4 @@ public:
     bool Flush(const FlatFilePos& pos, bool finalize = false);
 };
 
-#endif // BITCOIN_FLATFILE_H
+#endif // FREICOIN_FLATFILE_H

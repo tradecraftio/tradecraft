@@ -24,7 +24,7 @@
 - (NSString *)__bundleIdentifier
 {
     if (self == [NSBundle mainBundle]) {
-        return @"org.bitcoinfoundation.Bitcoin-Qt";
+        return @"in.freico.Freicoin-Qt";
     } else {
         return [self __bundleIdentifier];
     }

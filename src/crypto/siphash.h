@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_SIPHASH_H
-#define BITCOIN_CRYPTO_SIPHASH_H
+#ifndef FREICOIN_CRYPTO_SIPHASH_H
+#define FREICOIN_CRYPTO_SIPHASH_H
 
 #include <stdint.h>
 
@@ -55,4 +55,4 @@ public:
 uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
 uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
 
-#endif // BITCOIN_CRYPTO_SIPHASH_H
+#endif // FREICOIN_CRYPTO_SIPHASH_H

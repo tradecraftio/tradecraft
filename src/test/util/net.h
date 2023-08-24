@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_NET_H
-#define BITCOIN_TEST_UTIL_NET_H
+#ifndef FREICOIN_TEST_UTIL_NET_H
+#define FREICOIN_TEST_UTIL_NET_H
 
 #include <compat/compat.h>
 #include <node/eviction.h>
@@ -202,4 +202,4 @@ private:
 
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context);
 
-#endif // BITCOIN_TEST_UTIL_NET_H
+#endif // FREICOIN_TEST_UTIL_NET_H

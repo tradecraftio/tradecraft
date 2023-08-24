@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_RAWTRANSACTION_UTIL_H
-#define BITCOIN_RPC_RAWTRANSACTION_UTIL_H
+#ifndef FREICOIN_RPC_RAWTRANSACTION_UTIL_H
+#define FREICOIN_RPC_RAWTRANSACTION_UTIL_H
 
 #include <map>
 #include <string>
@@ -52,4 +52,4 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf);
 
-#endif // BITCOIN_RPC_RAWTRANSACTION_UTIL_H
+#endif // FREICOIN_RPC_RAWTRANSACTION_UTIL_H

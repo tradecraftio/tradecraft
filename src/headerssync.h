@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_HEADERSSYNC_H
-#define BITCOIN_HEADERSSYNC_H
+#ifndef FREICOIN_HEADERSSYNC_H
+#define FREICOIN_HEADERSSYNC_H
 
 #include <arith_uint256.h>
 #include <chain.h>
@@ -67,7 +67,7 @@ struct CompressedHeader {
  *
  * We wish to download a peer's headers chain in a DoS-resistant way.
  *
- * The Bitcoin protocol does not offer an easy way to determine the work on a
+ * The Freicoin protocol does not offer an easy way to determine the work on a
  * peer's chain. Currently, we can query a peer's headers by using a GETHEADERS
  * message, and our peer can return a set of up to 2000 headers that connect to
  * something we know. If a peer's chain has more than 2000 blocks, then we need
@@ -285,4 +285,4 @@ private:
     State m_download_state{State::PRESYNC};
 };
 
-#endif // BITCOIN_HEADERSSYNC_H
+#endif // FREICOIN_HEADERSSYNC_H

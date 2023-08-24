@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_THREAD_H
-#define BITCOIN_UTIL_THREAD_H
+#ifndef FREICOIN_UTIL_THREAD_H
+#define FREICOIN_UTIL_THREAD_H
 
 #include <functional>
 #include <string>
@@ -27,4 +27,4 @@ void TraceThread(std::string_view thread_name, std::function<void()> thread_func
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_THREAD_H
+#endif // FREICOIN_UTIL_THREAD_H

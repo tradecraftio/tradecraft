@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SETTINGS_H
-#define BITCOIN_UTIL_SETTINGS_H
+#ifndef FREICOIN_UTIL_SETTINGS_H
+#define FREICOIN_UTIL_SETTINGS_H
 
 #include <fs.h>
 
@@ -122,4 +122,4 @@ auto FindKey(Map&& map, Key&& key) -> decltype(&map.at(key))
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_SETTINGS_H
+#endif // FREICOIN_UTIL_SETTINGS_H

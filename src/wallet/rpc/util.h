@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_RPC_UTIL_H
-#define BITCOIN_WALLET_RPC_UTIL_H
+#ifndef FREICOIN_WALLET_RPC_UTIL_H
+#define FREICOIN_WALLET_RPC_UTIL_H
 
 #include <script/script.h>
 
@@ -58,4 +58,4 @@ void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, 
 void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error);
 } //  namespace wallet
 
-#endif // BITCOIN_WALLET_RPC_UTIL_H
+#endif // FREICOIN_WALLET_RPC_UTIL_H

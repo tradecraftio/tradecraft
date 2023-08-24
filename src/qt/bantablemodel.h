@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_BANTABLEMODEL_H
-#define BITCOIN_QT_BANTABLEMODEL_H
+#ifndef FREICOIN_QT_BANTABLEMODEL_H
+#define FREICOIN_QT_BANTABLEMODEL_H
 
 #include <addrdb.h>
 #include <net.h>
@@ -88,4 +88,4 @@ private:
     std::unique_ptr<BanTablePriv> priv;
 };
 
-#endif // BITCOIN_QT_BANTABLEMODEL_H
+#endif // FREICOIN_QT_BANTABLEMODEL_H

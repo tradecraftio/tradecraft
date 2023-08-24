@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_VALIDATION_H
-#define BITCOIN_VALIDATION_H
+#ifndef FREICOIN_VALIDATION_H
+#define FREICOIN_VALIDATION_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <arith_uint256.h>
@@ -162,7 +162,7 @@ struct MempoolAcceptResult {
     const std::optional<std::list<CTransactionRef>> m_replaced_transactions;
     /** Virtual size as used by the mempool, calculated using serialized size and sigops. */
     const std::optional<int64_t> m_vsize;
-    /** Raw base fees in satoshis. */
+    /** Raw base fees in kria. */
     const std::optional<CAmount> m_base_fees;
 
     // The following field is only present when m_result_type = ResultType::DIFFERENT_WITNESS
@@ -1109,4 +1109,4 @@ bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
  */
 const AssumeutxoData* ExpectedAssumeutxo(const int height, const CChainParams& params);
 
-#endif // BITCOIN_VALIDATION_H
+#endif // FREICOIN_VALIDATION_H

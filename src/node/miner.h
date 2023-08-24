@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_MINER_H
-#define BITCOIN_NODE_MINER_H
+#ifndef FREICOIN_NODE_MINER_H
+#define FREICOIN_NODE_MINER_H
 
 #include <primitives/block.h>
 #include <txmempool.h>
@@ -224,4 +224,4 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 } // namespace node
 
-#endif // BITCOIN_NODE_MINER_H
+#endif // FREICOIN_NODE_MINER_H
