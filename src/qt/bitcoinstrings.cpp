@@ -48,8 +48,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "upgrading to support pre-split keypool. Please use version %i or no version "
 "specified."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Distributed under the MIT software license, see the accompanying file %s or "
-"%s"),
+"Distributed under the GNU Affero General Purpose License v3.0, see the "
+"accompanying file %s or %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error loading %s: External signer wallet being loaded without external "
 "signer support compiled"),
@@ -79,8 +79,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: Transaction %s in wallet cannot be identified to belong to migrated "
 "wallets"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: Unable to produce descriptors for this legacy wallet. Make sure the "
-"wallet is unlocked first"),
+"Error: Unable to produce descriptors for this legacy wallet. Make sure to "
+"provide the wallet's passphrase if it is encrypted."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Failed to rename invalid peers.dat file. Please move or delete it and try "
 "again."),
@@ -112,12 +112,18 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "No wallet file format provided. To use createfromdump, -format=<format> must "
 "be provided."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Outbound connections restricted to CJDNS (-onlynet=cjdns) but -"
+"cjdnsreachable is not provided"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
 "reaching the Tor network is explicitly forbidden: -onion=0"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
 "reaching the Tor network is not provided: none of -proxy, -onion or -"
 "listenonion is given"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not "
+"provided"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
@@ -220,6 +226,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Copyright (C) %i-%i"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Could not find asmap file %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Could not parse asmap file %s"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Database corruption likely.  Try restarting with `-reindex=1`."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Direct mining to an internal wallet is disabled."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Disk space is too low!"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
@@ -283,6 +291,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Missing amount"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Missing solving data for estimating transaction size"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Need to specify a port with -whitebind: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "No addresses available"),
+QT_TRANSLATE_NOOP("bitcoin-core", "No wallets available for mining."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Prune cannot be configured with a negative value."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Prune mode is incompatible with -txindex."),
@@ -304,6 +313,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Starting network threads…"),
 QT_TRANSLATE_NOOP("bitcoin-core", "The source code is available from %s."),
 QT_TRANSLATE_NOOP("bitcoin-core", "The specified config file %s does not exist"),
 QT_TRANSLATE_NOOP("bitcoin-core", "The transaction amount is too small to pay the fee"),
+QT_TRANSLATE_NOOP("bitcoin-core", "The wallet subsystem is not configured."),
+QT_TRANSLATE_NOOP("bitcoin-core", "The wallet subsystem is not enabled."),
 QT_TRANSLATE_NOOP("bitcoin-core", "The wallet will avoid paying less than the minimum relay fee."),
 QT_TRANSLATE_NOOP("bitcoin-core", "This is experimental software."),
 QT_TRANSLATE_NOOP("bitcoin-core", "This is the minimum transaction fee you pay on every transaction."),
