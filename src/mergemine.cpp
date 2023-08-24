@@ -68,9 +68,6 @@ static int64_t start_time;
 //! Mapping of alternative names to chain specifiers
 std::map<std::string, ChainId> chain_names;
 
-//! Mapping of chain specifiers to overriding default authorization credentials
-std::map<ChainId, std::pair<std::string, std::string>> default_auths;
-
 //! Merge-mining manager thread
 static std::thread merge_mining_manager_thread;
 
@@ -99,8 +96,6 @@ struct AuxWorkServer {
     int extranonce2_size;
     //! The chain specifier for the chain being merged-mined.
     ChainId aux_pow_path;
-    //! Default authorization credentials, if any.
-    std::optional<std::pair<std::string, std::string>> default_auth;
     //! Map response ids to the associated user.
     std::map<int, std::string> aux_auth_jreqid;
     //! Authentication credentials for users.
@@ -325,42 +320,6 @@ std::map<ChainId, AuxWork> GetMergeMineWork(const std::map<ChainId, std::pair<st
         ret[chainid] = server->aux_work[address];
     }
 
-    // Now add work for chains that the caller did provide credentials, but for
-    // which default credentials have been provided.
-    for (auto& item : g_mergemine_conn) {
-        AuxWorkServer& server = item.second;
-        // Skip if no default credentials.
-        if (!server.default_auth) {
-            LogPrint(BCLog::MERGEMINE, "No default credentials for chain 0x%s\n", HexStr(server.aux_pow_path));
-            continue;
-        }
-        // Skip if we already have work for this chain (because the caller
-        // provided credentials).
-        const ChainId& chainid = server.aux_pow_path;
-        if (ret.count(chainid)) {
-            LogPrint(BCLog::MERGEMINE, "Already have work for chain 0x%s\n", HexStr(chainid));
-            continue;
-        }
-        // Skip if the default credentials are not registered.
-        const std::string& username = server.default_auth->first;
-        const std::string& password = server.default_auth->second;
-        if (!server.aux_auth.count(username)) {
-            // Default credentials are not registered yet.
-            LogPrint(BCLog::MERGEMINE, "Default credentials for chain 0x%s are not registered yet.\n", HexStr(chainid));
-            RegisterMergeMineClient(server, username, password);
-            continue;
-        }
-        // Skip if there is no work available.
-        const std::string& address = server.aux_auth[username];
-        if (!server.aux_work.count(address)) {
-            LogPrint(BCLog::MERGEMINE, "No work available for default user \"%s\" (\"%s\") on chain 0x%s\n", username, address, HexStr(chainid));
-            continue;
-        }
-        // Add work for this chain.
-        LogPrint(BCLog::MERGEMINE, "Adding work for default user \"%s\" (\"%s\") on chain 0x%s\n", username, address, HexStr(chainid));
-        ret[chainid] = server.aux_work[address];
-    }
-
     // Return all found work units back to caller.
     return ret;
 }
@@ -387,50 +346,28 @@ std::optional<std::pair<ChainId, SecondStageWork> > GetSecondStageWork(std::opti
     return std::nullopt;
 }
 
-static std::string GetRegisteredAddress(const AuxWorkServer& server, const std::optional<std::string>& username) EXCLUSIVE_LOCKS_REQUIRED(cs_mergemine)
+static std::string GetRegisteredAddress(const AuxWorkServer& server, const std::string& username) EXCLUSIVE_LOCKS_REQUIRED(cs_mergemine)
 {
-    std::string key;
-    if (username.has_value()) {
-        key = username.value();
-    } else {
-        if (server.default_auth.has_value()) {
-            key = server.default_auth->first; // username
-        } else {
-            // We got called with a default credential for a chain that has no
-            // default credentials.  This should never, ever happen.  We
-            // handle it partly to ensure that code analysis tools don't
-            // complain, and also to provide proper logging for the obscure,
-            // twisted edge cases where this might actually happen (e.g. the
-            // auxiliary work server was configured to support default
-            // credentials, and then was restared without that support).
-            if (!server.aux_auth.empty()) {
-                key = server.aux_auth.begin()->first;
-            } else {
-                key = "";
-            }
-            LogPrint(BCLog::MERGEMINE, "Submitted work for chain 0x%s with default credentials, but auxiliary work server does not support default credentials; using \"%s\" as username.\n", HexStr(server.aux_pow_path), key);
-        }
-    }
     std::string ret;
-    if (server.aux_auth.count(key)) {
-        ret = server.aux_auth.at(key);
+    if (server.aux_auth.count(username)) {
+        ret = server.aux_auth.at(username);
     } else {
         // This should never happen.  Nevertheless, we don't want to throw
         // shares away.  Usually the username is the address, so let's assume
         // that and hope for the best.
-        ret = key;
+        ret = username;
         // Remove the "+opts" suffix from the username, if present
         size_t pos = 0;
         if ((pos = ret.find('+')) != std::string::npos) {
             ret.resize(pos);
         }
         boost::trim(ret);
-        LogPrint(BCLog::MERGEMINE, "Submitted work for chain 0x%s but user \"%s\" is not registered; assuming address is \"%s\".\n", HexStr(server.aux_pow_path), key, ret);
+        LogPrint(BCLog::MERGEMINE, "Submitted work for chain 0x%s but user \"%s\" is not registered; assuming address is \"%s\".\n", HexStr(server.aux_pow_path), username, ret);
     }
     return ret;
 }
 
-void SubmitAuxChainShare(const ChainId& chainid, const std::optional<std::string>& username, const AuxWork& work, const AuxProof& proof)
+void SubmitAuxChainShare(const ChainId& chainid, const std::string& username, const AuxWork& work, const AuxProof& proof)
 {
     LOCK(cs_mergemine);
 
@@ -458,7 +395,7 @@ void SubmitAuxChainShare(const ChainId& chainid, const std::optional<std::string
     server->last_submit_time = now;
 }
 
-void SubmitSecondStageShare(const ChainId& chainid, const std::optional<std::string>& username, const SecondStageWork& work, const SecondStageProof& proof)
+void SubmitSecondStageShare(const ChainId& chainid, const std::string& username, const SecondStageWork& work, const SecondStageProof& proof)
 {
     LOCK(cs_mergemine);
 
@@ -735,24 +672,8 @@ static void merge_mining_read_cb(bufferevent *bev, void *ctx)
                 // because at this time all known merge-mining chains have
                 // limits set high enough that this can never be an issue
                 // unless bitcoin's blocksize is significantly increased.
-                if (default_auths.count(aux_pow_path)) {
-                    // We have default credentials for this chain, overriding
-                    // whatever defaults were sent by the server.
-                    server.default_auth = default_auths[aux_pow_path];
-                } else if (result.size() >= 4 && result[3].isArray() && result[3].size() >= 2 && result[3][0].isStr() && result[3][1].isStr()) {
-                    // result[3] is the default connection credentials, to be
-                    // used if no credentials are provided for this chain by
-                    // the miner.
-                    server.default_auth = std::make_pair(result[3][0].get_str(), result[3][1].get_str());
-                }
-                // Report the auxiliary work server as online in the logs.
-                LogPrintf("Registering auxiliary work notifications for chain 0x%s from stratum+tcp://%s (%s)%s\n", HexStr(aux_pow_path), server.socket.ToString(), server.name, server.default_auth ? " with default credentials" : "");
+                LogPrintf("Registering auxiliary work notifications for chain 0x%s from stratum+tcp://%s (%s)\n", HexStr(aux_pow_path), server.socket.ToString(), server.name);
                 g_mergemine[aux_pow_path] = bev;
-                // If we have default credentials, open a subscription channel
-                // using those credentials to receive work update notifications.
-                if (server.default_auth) {
-                    RegisterMergeMineClient(server, server.default_auth->first, server.default_auth->second);
-                }
             }
         } catch (const std::exception& e) {
             LogPrint(BCLog::MERGEMINE, "Received %s response from stratum+tcp://%s (%s): %s\n", val["id"].getInt<int>()==-1 ? "mining.subscribe" : "mining.aux.subscribe", server.socket.ToString(), server.name, e.what());
@@ -1007,40 +928,6 @@ void MergeMiningManagerThread()
         }
     }
 
-    if (gArgs.IsArgSet("-mergeminedefault")) {
-        // Setup the chainid -> (username, password) defaults from conf-file settings:
-        const std::vector<std::string>& vdefaults = gArgs.GetArgs("-mergeminedefault");
-        for (const auto& conf : vdefaults) {
-            size_t pos = conf.find(':');
-            if (pos == std::string::npos) {
-                LogPrintf("Unable to parse -mergeminedefault=\"%s\". Needs to be in the format \"name:username[:password]\" or \"chainid:username[:password]\".\n", conf);
-                continue;
-            }
-            std::string chainid_str(conf, 0, pos);
-            std::string userpass(conf, pos+1);
-            ChainId chainid;
-            if (chain_names.count(chainid_str)) {
-                chainid = chain_names[chainid_str];
-            } else {
-                try {
-                    chainid = ChainId(ParseUInt256(chainid_str, "chainid"));
-                } catch (...) {
-                    LogPrintf("Unable to convert \"%s\" to uint256. Not a proper chain id?\n", chainid_str);
-                    continue;
-                }
-            }
-            size_t pos2 = userpass.find(':');
-            std::string username(userpass);
-            std::string password;
-            if (pos2 != std::string::npos) {
-                password = std::string(userpass, pos2+1);
-                username.resize(pos2);
-            }
-            LogPrintf("Adding default username \"%s\"%s for merge-mine chain id 0x%s%s\n", username, password.empty() ? "" : " with password", HexStr(chainid), default_auths.count(chainid) ? " (overriding previous setting)" : "");
-            default_auths[chainid] = std::make_pair(username, password);
-        }
-    }
-
     if (gArgs.IsArgSet("-mergemine")) {
         // Servers which we will attempt to to establish a connection to.
         std::map<CService, std::string> servers;
@@ -1187,10 +1074,6 @@ static RPCHelpMan getmergemineinfo() {
                     {RPCResult::Type::NUM_TIME, "lastjob", /*optional=*/true, "the time elapsed since the last updated work unit was received from the server, in seconds"},
                     {RPCResult::Type::NUM_TIME, "lastshare", /*optional=*/true, "the time elapsed since the last share we submitted to the server, in seconds"},
                     {RPCResult::Type::NUM, "difficulty", "the current submission difficulty for subchain shares"},
-                    {RPCResult::Type::OBJ, "defaultauth", "The default authentication credentials for the server", {
-                        {RPCResult::Type::STR, "username", "the username"},
-                        {RPCResult::Type::STR, "password", "the password"},
-                    }},
                     {RPCResult::Type::OBJ_DYN, "auxauth", "A map of usernames to remote addresses for each connected user", {
                         {RPCResult::Type::STR, "username", "the remote address of the user"},
                     }},
@@ -1244,12 +1127,6 @@ static RPCHelpMan getmergemineinfo() {
             obj.pushKV("lastshare", now - server.last_submit_time);
         }
         obj.pushKV("difficulty", server.diff);
-        if (server.default_auth.has_value()) {
-            UniValue defaultauth(UniValue::VOBJ);
-            defaultauth.pushKV("username", server.default_auth->first);
-            defaultauth.pushKV("password", server.default_auth->second);
-            obj.pushKV("defaultauth", defaultauth);
-        }
         UniValue auxauth(UniValue::VOBJ);
         for (const auto& item : server.aux_auth) {
             const std::string& name = item.first;
