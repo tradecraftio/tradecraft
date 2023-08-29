@@ -73,12 +73,12 @@ Despite this lack of assurance, multiple Bitcoin merchants and services today
 still make this assumption.  Freicoin, by contrast, has never had a policy
 that transactions are final after being seen in the mempool, and freicoind has
 allowed transactions to be replaced with newer versions paying higher fees by
-since the release of [Freicoin v12.1-10123][] (April 2019).
+since the release of [Freicoin v12.1-10123]() (April 2019).
 
 There are several benefits to users from not relying on this *first-seen*
 simplification.  One key benefit, the ability for the sender of a transaction
 to replace it with an alternative version paying higher fees, was realized in
-[Freicoin v12.1-10123][] with the introduction of full Replace By Fee (RBF).
+[Freicoin v12.1-10123]() with the introduction of full Replace By Fee (RBF).
 
 However, maintenance of the full-RBF patch has been a burden on Freicoin
 developers, as mempool policies interact with many parts of the codebase.
@@ -136,7 +136,7 @@ Updated RPCs
 
 - The `-deprecatedrpc=softforks` configuration option has been removed.  The
   RPC `getblockchaininfo` no longer returns the `softforks` field, which was
-  previously deprecated in 23.0.  (#23508) Information on soft fork status is
+  previously deprecated in v23.  (#23508) Information on soft fork status is
   now only available via the `getdeploymentinfo` RPC.
 
 - The `deprecatedrpc=exclude_coinbase` configuration option has been removed.
@@ -144,7 +144,7 @@ Updated RPCs
   `getreceivedbyaddress` and `getreceivedbylabel`) now always return results
   accounting for received coins from coinbase outputs, without an option to
   change that behaviour.  Excluding coinbases was previously deprecated in
-  23.0. (#25171)
+  v23.  (#25171)
 
 - The `deprecatedrpc=fees` configuration option has been removed.  The
   top-level fee fields `fee`, `modifiedfee`, `ancestorfees` and
@@ -152,7 +152,7 @@ Updated RPCs
   `getrawmempool(verbose=true)`, `getmempoolancestors(verbose=true)` and
   `getmempooldescendants(verbose=true)`.  The same fee fields can be accessed
   through the `fees` object in the result. The top-level fee fields were
-  previously deprecated in 23.0.  (#25204)
+  previously deprecated in v23.  (#25204)
 
 - The `getpeerinfo` RPC has been updated with a new `presynced_headers` field,
   indicating the progress on the presync phase mentioned in the "P2P and
