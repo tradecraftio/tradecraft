@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_XOROSHIRO128PLUSPLUS_H
-#define BITCOIN_TEST_UTIL_XOROSHIRO128PLUSPLUS_H
+#ifndef FREICOIN_TEST_UTIL_XOROSHIRO128PLUSPLUS_H
+#define FREICOIN_TEST_UTIL_XOROSHIRO128PLUSPLUS_H
 
 #include <cstdint>
 #include <limits>
@@ -79,4 +79,4 @@ public:
     static constexpr double entropy() noexcept { return 0.0; }
 };
 
-#endif // BITCOIN_TEST_UTIL_XOROSHIRO128PLUSPLUS_H
+#endif // FREICOIN_TEST_UTIL_XOROSHIRO128PLUSPLUS_H

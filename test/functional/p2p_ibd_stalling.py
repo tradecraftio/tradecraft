@@ -39,7 +39,7 @@ from test_framework.script import (
         CScript,
         OP_TRUE,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
         assert_equal,
 )
@@ -61,7 +61,7 @@ class P2PStaller(P2PDataStore):
         pass
 
 
-class P2PIBDStallingTest(BitcoinTestFramework):
+class P2PIBDStallingTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

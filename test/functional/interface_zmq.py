@@ -29,7 +29,7 @@ from test_framework.blocktools import (
     get_final_tx_info,
     add_final_tx,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.messages import (
     CTransaction,
     hash256,
@@ -122,7 +122,7 @@ class ZMQTestSetupBlock:
         )
 
 
-class ZMQTest (BitcoinTestFramework):
+class ZMQTest (FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         # This test isn't testing txn relay/timing, so set whitelist on the
@@ -132,7 +132,7 @@ class ZMQTest (BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
-        self.skip_if_no_bitcoind_zmq()
+        self.skip_if_no_freicoind_zmq()
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])

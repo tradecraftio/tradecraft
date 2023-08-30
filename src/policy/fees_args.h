@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POLICY_FEES_ARGS_H
-#define BITCOIN_POLICY_FEES_ARGS_H
+#ifndef FREICOIN_POLICY_FEES_ARGS_H
+#define FREICOIN_POLICY_FEES_ARGS_H
 
 #include <util/fs.h>
 
@@ -23,4 +23,4 @@ class ArgsManager;
 /** @return The fee estimates data file path. */
 fs::path FeeestPath(const ArgsManager& argsman);
 
-#endif // BITCOIN_POLICY_FEES_ARGS_H
+#endif // FREICOIN_POLICY_FEES_ARGS_H

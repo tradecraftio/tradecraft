@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
-#define BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
+#ifndef FREICOIN_KERNEL_BLOCKMANAGER_OPTS_H
+#define FREICOIN_KERNEL_BLOCKMANAGER_OPTS_H
 
 namespace kernel {
 
@@ -28,4 +28,4 @@ struct BlockManagerOpts {
 
 } // namespace kernel
 
-#endif // BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
+#endif // FREICOIN_KERNEL_BLOCKMANAGER_OPTS_H

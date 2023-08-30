@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_BLOCKCHAIN_H
-#define BITCOIN_RPC_BLOCKCHAIN_H
+#ifndef FREICOIN_RPC_BLOCKCHAIN_H
+#define FREICOIN_RPC_BLOCKCHAIN_H
 
 #include <consensus/amount.h>
 #include <core_io.h>
@@ -68,4 +68,4 @@ UniValue CreateUTXOSnapshot(
     const fs::path& path,
     const fs::path& tmppath);
 
-#endif // BITCOIN_RPC_BLOCKCHAIN_H
+#endif // FREICOIN_RPC_BLOCKCHAIN_H

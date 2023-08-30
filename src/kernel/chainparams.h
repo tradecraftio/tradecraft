@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_CHAINPARAMS_H
-#define BITCOIN_KERNEL_CHAINPARAMS_H
+#ifndef FREICOIN_KERNEL_CHAINPARAMS_H
+#define FREICOIN_KERNEL_CHAINPARAMS_H
 
 #include <consensus/params.h>
 #include <netaddress.h>
@@ -81,7 +81,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system.
+ * Freicoin system.
  */
 class CChainParams
 {
@@ -195,4 +195,4 @@ protected:
     ChainTxData chainTxData;
 };
 
-#endif // BITCOIN_KERNEL_CHAINPARAMS_H
+#endif // FREICOIN_KERNEL_CHAINPARAMS_H

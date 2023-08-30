@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NOUI_H
-#define BITCOIN_NOUI_H
+#ifndef FREICOIN_NOUI_H
+#define FREICOIN_NOUI_H
 
 #include <string>
 
@@ -27,13 +27,13 @@ bool noui_ThreadSafeQuestion(const bilingual_str& /* ignored interactive message
 /** Non-GUI handler, which only logs a message. */
 void noui_InitMessage(const std::string& message);
 
-/** Connect all bitcoind signal handlers */
+/** Connect all freicoind signal handlers */
 void noui_connect();
 
-/** Redirect all bitcoind signal handlers to LogPrintf. Used to check or suppress output during test runs that produce expected errors */
+/** Redirect all freicoind signal handlers to LogPrintf. Used to check or suppress output during test runs that produce expected errors */
 void noui_test_redirect();
 
 /** Reconnects the regular Non-GUI handlers after having used noui_test_redirect */
 void noui_reconnect();
 
-#endif // BITCOIN_NOUI_H
+#endif // FREICOIN_NOUI_H

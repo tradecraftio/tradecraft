@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(streams_hashed)
 {
     CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
     HashedSourceWriter hash_writer{stream};
-    const std::string data{"bitcoin"};
+    const std::string data{"freicoin"};
     hash_writer << data;
 
     CHashVerifier hash_verifier{&stream};

@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_PAYMENTSERVER_H
-#define BITCOIN_QT_PAYMENTSERVER_H
+#ifndef FREICOIN_QT_PAYMENTSERVER_H
+#define FREICOIN_QT_PAYMENTSERVER_H
 
 // This class handles payment requests from clicking on
-// bitcoin: URIs
+// freicoin: URIs
 //
 // This is somewhat tricky, because we have to deal with
 // the situation where the user clicks on a link during
@@ -44,7 +44,7 @@
 //
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <qt/sendcoinsrecipient.h>
@@ -117,4 +117,4 @@ private:
     OptionsModel* optionsModel{nullptr};
 };
 
-#endif // BITCOIN_QT_PAYMENTSERVER_H
+#endif // FREICOIN_QT_PAYMENTSERVER_H

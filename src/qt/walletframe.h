@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_WALLETFRAME_H
-#define BITCOIN_QT_WALLETFRAME_H
+#ifndef FREICOIN_QT_WALLETFRAME_H
+#define FREICOIN_QT_WALLETFRAME_H
 
 #include <QFrame>
 #include <QMap>
@@ -31,9 +31,9 @@ QT_END_NAMESPACE
 
 /**
  * A container for embedding all wallet-related
- * controls into BitcoinGUI. The purpose of this class is to allow future
+ * controls into FreicoinGUI. The purpose of this class is to allow future
  * refinements of the wallet controls with minimal need for further
- * modifications to BitcoinGUI, thus greatly simplifying merges while
+ * modifications to FreicoinGUI, thus greatly simplifying merges while
  * reducing the risk of breaking top-level stuff.
  */
 class WalletFrame : public QFrame
@@ -92,8 +92,8 @@ public Q_SLOTS:
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
 
-    /** Load Partially Signed Bitcoin Transaction */
-    void gotoLoadPSBT(bool from_clipboard = false);
+    /** Load Partially Signed Freicoin Transaction */
+    void gotoLoadPST(bool from_clipboard = false);
 
     /** Encrypt the wallet */
     void encryptWallet();
@@ -110,4 +110,4 @@ public Q_SLOTS:
     void usedReceivingAddresses();
 };
 
-#endif // BITCOIN_QT_WALLETFRAME_H
+#endif // FREICOIN_QT_WALLETFRAME_H

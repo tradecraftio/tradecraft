@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_HASH_H
-#define BITCOIN_HASH_H
+#ifndef FREICOIN_HASH_H
+#define FREICOIN_HASH_H
 
 #include <attributes.h>
 #include <crypto/common.h>
@@ -32,7 +32,7 @@
 
 typedef uint256 ChainCode;
 
-/** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
+/** A hasher class for Freicoin's 256-bit hash (double SHA-256). */
 class CHash256 {
 private:
     CSHA256 sha;
@@ -57,7 +57,7 @@ public:
     }
 };
 
-/** A hasher class for Bitcoin's 160-bit hash (SHA-256 + RIPEMD-160). */
+/** A hasher class for Freicoin's 160-bit hash (SHA-256 + RIPEMD-160). */
 class CHash160 {
 private:
     CSHA256 sha;
@@ -301,4 +301,4 @@ inline uint160 RIPEMD160(Span<const unsigned char> data)
     return result;
 }
 
-#endif // BITCOIN_HASH_H
+#endif // FREICOIN_HASH_H

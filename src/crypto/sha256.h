@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_SHA256_H
-#define BITCOIN_CRYPTO_SHA256_H
+#ifndef FREICOIN_CRYPTO_SHA256_H
+#define FREICOIN_CRYPTO_SHA256_H
 
 #include <cstdlib>
 #include <stdint.h>
@@ -52,4 +52,4 @@ std::string SHA256AutoDetect();
  */
 void SHA256D64(unsigned char* output, const unsigned char* input, size_t blocks);
 
-#endif // BITCOIN_CRYPTO_SHA256_H
+#endif // FREICOIN_CRYPTO_SHA256_H
