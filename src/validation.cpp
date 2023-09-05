@@ -2234,6 +2234,9 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     if (block_index.pprev && IsProtocolCleanupActive(consensusparams, *block_index.pprev)) {
         flags |= SCRIPT_VERIFY_PROTOCOL_CLEANUP;
     }
+    if (block_index.pprev && IsSizeExpansionActive(consensusparams, *block_index.pprev)) {
+        flags |= SCRIPT_VERIFY_SIZE_EXPANSION;
+    }
 
     return flags;
 }
@@ -3930,7 +3933,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         return false;
     }
 
-    // Check if the protocol-cleanup fork has activated
+    // Check if the consensus rules have changed
     const Consensus::RuleSet rules = GetActiveRules(consensusParams, block);
 
     // All potential-corruption validation must be done before we do any
@@ -3940,7 +3943,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     // checks that use witness data may be performed here.
 
     // Size limits
-    const std::size_t max_block_weight = (rules & Consensus::PROTOCOL_CLEANUP) ? PROTOCOL_CLEANUP_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT;
+    const std::size_t max_block_weight = (rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT;
     if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > max_block_weight || ::GetSerializeSize(TX_NO_WITNESS(block)) * WITNESS_SCALE_FACTOR > max_block_weight)
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
 
@@ -4184,7 +4187,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    if (GetBlockWeight(block) > ((rules & Consensus::PROTOCOL_CLEANUP) ? PROTOCOL_CLEANUP_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT)) {
+    if (GetBlockWeight(block) > ((rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
 
@@ -4955,7 +4958,7 @@ void ChainstateManager::LoadExternalBlockFile(
     const auto start{SteadyClock::now()};
     const CChainParams& params{GetParams()};
 
-    // If the protocol cleanup fork has activated, then we should
+    // If the size expansion fork has activated, then we should
     // allow importing blocks larger than than the old MAX_BLOCK_SIZE.
     const Consensus::RuleSet rules = GetActiveRules(params.GetConsensus(), std::chrono::seconds{TicksSinceEpoch<std::chrono::seconds>(start)});
 
@@ -4983,7 +4986,7 @@ void ChainstateManager::LoadExternalBlockFile(
                 }
                 // read size
                 blkdat >> nSize;
-                if (nSize < 80 || nSize > ((rules & Consensus::PROTOCOL_CLEANUP) ? PROTOCOL_CLEANUP_MAX_BLOCK_SERIALIZED_SIZE : MAX_BLOCK_SERIALIZED_SIZE))
+                if (nSize < 80 || nSize > ((rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_SERIALIZED_SIZE : MAX_BLOCK_SERIALIZED_SIZE))
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
