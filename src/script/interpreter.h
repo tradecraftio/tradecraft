@@ -206,6 +206,13 @@ enum : uint32_t {
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
     // Set if we are relaxing some of the overly restrictive protocol
+    // rules as part of the "size expansion" fork. See commet in
+    // main.h for further description. This flag is a bit unlike the
+    // other script verification flags, but it is the easiest way to
+    // pass this parameter around the script validation code.
+    SCRIPT_VERIFY_SIZE_EXPANSION = (1U << 28),
+
+    // Set if we are relaxing some of the overly restrictive protocol
     // rules as part of the "protocol cleanup" fork. See commet in
     // main.h for further description. This flag is a bit unlike the
     // other script verification flags, but it is the easiest way to
