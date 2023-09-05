@@ -31,6 +31,7 @@ namespace Consensus {
 enum RuleSet : uint8_t {
     NONE = 0,
     PROTOCOL_CLEANUP = (1U << 0),
+    SIZE_EXPANSION = (1U << 1),
 };
 
 inline RuleSet operator | (RuleSet lhs, RuleSet rhs) {
@@ -144,6 +145,8 @@ struct Params {
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Scheduled protocol cleanup rule change */
     int64_t protocol_cleanup_activation_time;
+    /** Scheduled size expansion rule change */
+    int64_t size_expansion_activation_time;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
@@ -208,11 +211,18 @@ inline bool IsProtocolCleanupActive(const Consensus::Params& params, std::chrono
     // banned for relaying invalid transactions moments before the switchover.
     return (now.count() > (params.protocol_cleanup_activation_time - /* 3 hours */ 3*60*60));
 }
+inline bool IsSizeExpansionActive(const Consensus::Params& params, std::chrono::seconds now)
+{
+    return (now.count() > (params.size_expansion_activation_time - /* 3 hours */ 3*60*60));
+}
 inline Consensus::RuleSet GetActiveRules(const Consensus::Params& params, std::chrono::seconds now)
 {
     Consensus::RuleSet rules = Consensus::NONE;
     if (IsProtocolCleanupActive(params, now)) {
         rules |= Consensus::PROTOCOL_CLEANUP;
+    }
+    if (IsSizeExpansionActive(params, now)) {
+        rules |= Consensus::SIZE_EXPANSION;
     }
     return rules;
 }
