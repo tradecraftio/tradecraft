@@ -862,7 +862,7 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, const C
 
     bool finalize_undo = false;
     if (!fKnown) {
-        unsigned int max_blockfile_size = (rules & Consensus::PROTOCOL_CLEANUP) ? PROTOCOL_CLEANUP_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE;
+        unsigned int max_blockfile_size = (rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCKFILE_SIZE : MAX_BLOCKFILE_SIZE;
         // Use smaller blockfiles in test-only -fastprune mode - but avoid
         // the possibility of having a block not fit into the block file.
         if (m_opts.fast_prune) {
