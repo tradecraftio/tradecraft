@@ -17,6 +17,7 @@
 #ifndef FREICOIN_POW_H
 #define FREICOIN_POW_H
 
+#include <consensus/consensus.h>
 #include <consensus/params.h>
 
 #include <stdint.h>

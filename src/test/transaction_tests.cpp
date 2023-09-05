@@ -176,8 +176,9 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
 
 unsigned int TrimFlags(unsigned int flags)
 {
-    // Clear verification flag related to protocl rule changes
+    // Clear verification flags related to protocl rule changes
     flags &= ~(unsigned int)SCRIPT_VERIFY_PROTOCOL_CLEANUP;
+    flags &= ~(unsigned int)SCRIPT_VERIFY_SIZE_EXPANSION;
 
     // WITNESS requires P2SH
     if (!(flags & SCRIPT_VERIFY_P2SH)) flags &= ~(unsigned int)SCRIPT_VERIFY_WITNESS;
