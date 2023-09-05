@@ -28,7 +28,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state, Consensu
     if (!(rules & Consensus::PROTOCOL_CLEANUP) && tx.vout.empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-empty");
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > ((rules & Consensus::PROTOCOL_CLEANUP) ? PROTOCOL_CLEANUP_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT))
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > ((rules & Consensus::SIZE_EXPANSION) ? SIZE_EXPANSION_MAX_BLOCK_WEIGHT : MAX_BLOCK_WEIGHT))
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-oversize");
 
     // Check for negative or overflow output values (see CVE-2010-5139)
