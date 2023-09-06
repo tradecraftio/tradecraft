@@ -3834,7 +3834,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
             assert(!block.vtx.empty() && !block.vtx[0]->vin.empty());
             const auto& witness_stack{block.vtx[0]->vin[0].scriptWitness.stack};
 
-            if (witness_stack.size() != 1 || witness_stack[0].size() != 32) {
+            if (witness_stack.size() != 1 || witness_stack[0].size() % 32) {
                 return state.Invalid(
                     /*result=*/BlockValidationResult::BLOCK_MUTATED,
                     /*reject_reason=*/"bad-witness-nonce-size",
@@ -3848,8 +3848,35 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
             // legacy Merkle trees used for the stripped transaction tree.
             uint256 hash_witness = BlockWitnessMerkleRoot(block);
 
-            hash_witness = MerkleHash_Sha256Midstate(hash_witness, uint256(witness_stack[0]));
-            if (memcmp(hash_witness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[5], 32)) {
+            const CScript& commitscript = block.vtx[0]->vout[commitpos].scriptPubKey;
+            const unsigned char& witnesspath = commitscript[commitscript.size()-33];
+            if (witnesspath == 0) {
+                return state.Invalid(
+                    /*result=*/BlockValidationResult::BLOCK_MUTATED,
+                    /*reject_reason=*/"bad-witness-path",
+                    /*debug_message=*/strprintf("%s : witness commitment path is not present", __func__));
+            }
+            size_t witnessdepth = 0;
+            for (int pos = 0; pos < 8; ++pos) {
+                if (witnesspath & (1<<pos)) {
+                    witnessdepth = pos;
+                }
+            }
+            if (witness_stack.size() != 1 || witness_stack[0].size() != 32*witnessdepth) {
+                return state.Invalid(
+                    /*result=*/BlockValidationResult::BLOCK_MUTATED,
+                    /*reject_reason=*/"bad-witness-branch-size",
+                    /*debug_message=*/strprintf("%s : invalid witness branch size", __func__));
+            }
+            CDataStream ds(witness_stack[0], SER_NETWORK, PROTOCOL_VERSION);
+            std::vector<uint256> branch;
+            branch.resize(witnessdepth);
+            for (size_t pos = 0; pos < witnessdepth; ++pos) {
+                ds >> branch[pos];
+            }
+            bool invalid = true;
+            hash_witness = ComputeFastMerkleRootFromBranch(hash_witness, branch, witnesspath ^ (1 << witnessdepth), &invalid);
+            if (invalid || memcmp(hash_witness.begin(), &commitscript[commitscript.size()-32], 32)) {
                 return state.Invalid(
                     /*result=*/BlockValidationResult::BLOCK_MUTATED,
                     /*reject_reason=*/"bad-witness-merkle-match",
@@ -3946,7 +3973,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev) const
 {
     int commitpos = GetWitnessCommitmentIndex(block);
-    static const std::vector<unsigned char> nonce(32, 0x00);
+    static const std::vector<unsigned char> nonce; // empty
     if (commitpos != NO_WITNESS_COMMITMENT && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
         tx.vin[0].scriptWitness.stack.resize(1);
@@ -3959,19 +3986,18 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
 {
     std::vector<unsigned char> commitment;
     int commitpos = GetWitnessCommitmentIndex(block);
-    std::vector<unsigned char> ret(32, 0x00);
     if (commitpos == NO_WITNESS_COMMITMENT) {
         uint256 witnessroot = BlockWitnessMerkleRoot(block);
-        witnessroot = MerkleHash_Sha256Midstate(witnessroot, uint256(ret));
         CTxOut out;
         out.SetReferenceValue(0);
         out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-        out.scriptPubKey[0] = 0x24;
+        out.scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
         out.scriptPubKey[1] = 0xaa;
         out.scriptPubKey[2] = 0x21;
         out.scriptPubKey[3] = 0xa9;
         out.scriptPubKey[4] = 0xed;
-        memcpy(&out.scriptPubKey[5], witnessroot.begin(), 32);
+        out.scriptPubKey[5] = 0x01;
+        memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
         commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
         CMutableTransaction tx(*block.vtx[0]);
         tx.vout.push_back(out);
@@ -4134,11 +4160,13 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // Validation for witness commitments.
     // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
     //   coinbase (where 0x0000....0000 is used instead).
-    // * The coinbase scriptWitness is a stack of a single 32-byte vector, containing a witness reserved value (unconstrained).
+    // * The coinbase scriptWitness is a stack of a serialized vector of N*32-byte length, where N is the number of hashes in the
+    //   (unconstrained) Merkle path from the commitment to the witness tree (0 <= N <= 7).
     // * We build a merkle tree with all those witness hashes as leaves (similar to the hashMerkleRoot in the block header).
-    // * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
-    //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness reserved value). In case there are
-    //   multiple, the last one is used.
+    // * There must be at least one output whose scriptPubKey is a single >=37-byte push, the first 4 bytes of which are
+    //   {0xaa, 0x21, 0xa9, 0xed}, followed by between 0 and 38 unconstrained bytes, then a single byte encoding of the
+    //   path from the commitment root to the witness root, and the final 32 bytes are the commitment root. In case there
+    //   are multiple, the last one is used.
     if (!CheckWitnessMalleation(block, DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT), state)) {
         return false;
     }
