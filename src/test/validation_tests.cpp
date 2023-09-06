@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *ExpectedAssumeutxo(110, *params);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "c953a12de2143bdad9f341b1b341587b6f76893d4d3ca8b76a20348335a33f37");
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "c556634bf5e262fcd2e4d7f4ebdce879312f0dc955fc305258dbac760175a759");
     BOOST_CHECK_EQUAL(out110.nChainTx, 110U);
 
     const auto out210 = *ExpectedAssumeutxo(200, *params);
@@ -210,16 +210,17 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         coinbase.vin.resize(1);
         if (include_witness) {
             coinbase.vin[0].scriptWitness.stack.resize(1);
-            coinbase.vin[0].scriptWitness.stack[0] = std::vector<unsigned char>(32, 0x00);
+            coinbase.vin[0].scriptWitness.stack[0] = std::vector<unsigned char>();
         }
 
         coinbase.vout.resize(1);
         coinbase.vout[0].scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-        coinbase.vout[0].scriptPubKey[0] = 0x24;
+        coinbase.vout[0].scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
         coinbase.vout[0].scriptPubKey[1] = 0xaa;
         coinbase.vout[0].scriptPubKey[2] = 0x21;
         coinbase.vout[0].scriptPubKey[3] = 0xa9;
         coinbase.vout[0].scriptPubKey[4] = 0xed;
+        coinbase.vout[0].scriptPubKey[5] = 0x01;
 
         auto tx = MakeTransactionRef(coinbase);
         assert(tx->IsCoinBase());
@@ -229,8 +230,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         assert(!block.vtx.empty() && block.vtx[0]->IsCoinBase() && !block.vtx[0]->vout.empty());
 
         CMutableTransaction mtx{*block.vtx[0]};
-        commitment = MerkleHash_Sha256Midstate(commitment, uint256());
-        memcpy(&mtx.vout[0].scriptPubKey[5], commitment.begin(), 32);
+        memcpy(&mtx.vout[0].scriptPubKey[6], commitment.begin(), 32);
         block.vtx[0] = MakeTransactionRef(mtx);
     };
 
