@@ -84,7 +84,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         # block hash of the snapshot base is stored right at the start (first 32 bytes)
         assert_equal(valid_snapshot_contents[:32][::-1].hex(),
-            '846cddcbf3542af8316826041ed6bbfe7cc0e95270d177baf974bf8a0acfd486')
+            'e0efbb827cbba9d860b3d4a663273c6635d62ec01f70212cf7651f5847529686')
 
         def expected_error(log_msg="", rpc_details=""):
             with self.nodes[1].assert_debug_log([log_msg]):
@@ -119,10 +119,10 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         self.log.info("  - snapshot file with alternated UTXO data")
         cases = [
-            [b"\xff" * 32, 0, "761a49f17c35933b0b0cb85d88ceebd333a2db99bd7c484f04cea09a58ca4018"], # wrong outpoint hash
-            [(1).to_bytes(4, "little"), 32, "364a585fcd42440c08f1ce39d74fc0e1624cb7714bdcc99e72a881e7b47feed1"], # wrong outpoint index
-            [bytes([valid_snapshot_contents[idx + 44] ^ 0x02]), 36, "e9943b3376c5797104b88c5b3278cba1d4268bfe90d2feef680f58baf07ff1d9"], # wrong coin code VARINT((coinbase ? 1 : 0) | (height << 1))
-            [bytes([valid_snapshot_contents[idx + 44] ^ 0x03]), 36, "d0a41449829adcb8ea3efd1519b0c12b4d77a4962224d692bd6ca7e446c531e8"], # another wrong coin code
+            [b"\xff" * 32, 0, "9c3b9cb9b9abc36a8c56bc3246f4c9eed8e1735d28b8fd41fa18a77971097231"], # wrong outpoint hash
+            [(1).to_bytes(4, "little"), 32, "b60f8d9869ded6d880b05ef2a13573bd4f64146c20aceb046bd4ca739ab28dde"], # wrong outpoint index
+            [bytes([valid_snapshot_contents[idx + 44] ^ 0x02]), 36, "486612fbb1e9dd49fc6be86a34c5cb49ce2e7579731f5235fbfee54ab9296364"], # wrong coin code VARINT((coinbase ? 1 : 0) | (height << 1))
+            [bytes([valid_snapshot_contents[idx + 44] ^ 0x03]), 36, "33df98f2f2e3be870102c640627c6e4602a19e275665fdc956dc382096d5ca47"], # another wrong coin code
         ]
 
         for content, offset, wrong_hash in cases:
@@ -130,7 +130,7 @@ class AssumeutxoTest(FreicoinTestFramework):
                 f.write(valid_snapshot_contents[:(idx + 8 + offset)])
                 f.write(content)
                 f.write(valid_snapshot_contents[(idx + 8 + offset + len(content)):])
-            expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected d350a97b35cfa9f5e21d3299c69019f5a6319c84dc8fd117d4b0ccd0ba2027ac, got {wrong_hash}")
+            expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected 96e68c63c78ffec6688f3d9b980d3aec107b0f3339be5327dc2276b54ab19f3a, got {wrong_hash}")
 
     def test_invalid_chainstate_scenarios(self):
         self.log.info("Test different scenarios of invalid snapshot chainstate in datadir")
@@ -193,7 +193,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         assert_equal(
             dump_output['txoutset_hash'],
-            'd350a97b35cfa9f5e21d3299c69019f5a6319c84dc8fd117d4b0ccd0ba2027ac')
+            '96e68c63c78ffec6688f3d9b980d3aec107b0f3339be5327dc2276b54ab19f3a')
         assert_equal(dump_output['nchaintx'], 499)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 

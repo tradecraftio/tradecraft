@@ -131,8 +131,12 @@ def add_final_tx(info, block):
     }]
 
 def get_witness_script(witness_root, witness_nonce):
-    witness_commitment = uint256_from_str(fastHash256(ser_uint256(witness_root), ser_uint256(witness_nonce)))
-    output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
+    witness_path = 0x01
+    if witness_nonce:
+        witness_path = 0x02
+        witness_root = uint256_from_str(fastHash256(ser_uint256(witness_root),
+                                                    ser_uint256(witness_nonce)))
+    output_data = WITNESS_COMMITMENT_HEADER + bytes((witness_path,)) + ser_uint256(witness_root)
     return CScript([output_data])
 
 def add_witness_commitment(block, nonce=0):
@@ -142,15 +146,16 @@ def add_witness_commitment(block, nonce=0):
     hash of all in-block transactions including witness."""
     # First calculate the merkle root of the block's
     # transactions, with witnesses.
-    witness_nonce = nonce
+    witness_branch = b''
+    if nonce:
+        witness_branch = ser_uint256(nonce)
     witness_root = block.calc_witness_merkle_root()
-    witness_commitment = uint256_from_str(fastHash256(ser_uint256(witness_root), ser_uint256(witness_nonce)))
-    # witness_nonce should go to coinbase witness.
+    # witness_branch should go to coinbase witness.
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
-    block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
+    block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [witness_branch]
 
     # witness commitment is the last qualifying output in coinbase
-    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce)))
+    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, nonce)))
     block.vtx[0].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()
