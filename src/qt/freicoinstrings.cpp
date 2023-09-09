@@ -87,8 +87,7 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "Error: Duplicate descriptors created during migration. Your wallet may be "
 "corrupted."),
 QT_TRANSLATE_NOOP("freicoin", ""
-"Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and "
-"\"bech32\" address types"),
+"Error: Legacy wallets only support the \"legacy\" or \"bech32\" address types"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Error: Transaction %s in wallet cannot be identified to belong to migrated "
 "wallets"),
@@ -152,6 +151,8 @@ QT_TRANSLATE_NOOP("freicoin", ""
 QT_TRANSLATE_NOOP("freicoin", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
+QT_TRANSLATE_NOOP("freicoin", ""
+"Reference height not specified and couldn't determine current chain height."),
 QT_TRANSLATE_NOOP("freicoin", ""
 "SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
 "supported"),
@@ -251,6 +252,7 @@ QT_TRANSLATE_NOOP("freicoin", ""
 QT_TRANSLATE_NOOP("freicoin", "%s is set very high!"),
 QT_TRANSLATE_NOOP("freicoin", "-maxmempool must be at least %d MB"),
 QT_TRANSLATE_NOOP("freicoin", "A fatal internal error occurred, see debug.log for details"),
+QT_TRANSLATE_NOOP("freicoin", "Bitcoin unit test compatibility mode only allowed on regtest."),
 QT_TRANSLATE_NOOP("freicoin", "Block verification was interrupted"),
 QT_TRANSLATE_NOOP("freicoin", "Cannot resolve -%s address: '%s'"),
 QT_TRANSLATE_NOOP("freicoin", "Cannot set -forcednsseed to true when setting -dnsseed to false."),
@@ -326,8 +328,8 @@ QT_TRANSLATE_NOOP("freicoin", "Loading P2P addresses…"),
 QT_TRANSLATE_NOOP("freicoin", "Loading banlist…"),
 QT_TRANSLATE_NOOP("freicoin", "Loading block index…"),
 QT_TRANSLATE_NOOP("freicoin", "Loading wallet…"),
-QT_TRANSLATE_NOOP("freicoin", "Missing amount"),
 QT_TRANSLATE_NOOP("freicoin", "Missing solving data for estimating transaction size"),
+QT_TRANSLATE_NOOP("freicoin", "Missing value"),
 QT_TRANSLATE_NOOP("freicoin", "Need to specify a port with -whitebind: '%s'"),
 QT_TRANSLATE_NOOP("freicoin", "No addresses available"),
 QT_TRANSLATE_NOOP("freicoin", "No wallets available for mining."),
@@ -338,6 +340,7 @@ QT_TRANSLATE_NOOP("freicoin", "Prune cannot be configured with a negative value.
 QT_TRANSLATE_NOOP("freicoin", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("freicoin", "Pruning blockstore…"),
 QT_TRANSLATE_NOOP("freicoin", "Reducing -maxconnections from %d to %d, because of system limitations."),
+QT_TRANSLATE_NOOP("freicoin", "Reference height out of range"),
 QT_TRANSLATE_NOOP("freicoin", "Replaying blocks…"),
 QT_TRANSLATE_NOOP("freicoin", "Rescanning…"),
 QT_TRANSLATE_NOOP("freicoin", "SQLiteDatabase: Failed to execute statement to verify database: %s"),
