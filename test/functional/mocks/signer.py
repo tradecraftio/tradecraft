@@ -38,13 +38,10 @@ def getdescriptors(args):
         "receive": [
             "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/0/*)#vt6w3l3j",
             "wpk([00000001/84'/1'/" + args.account + "']" + xpub + "/0/*)#5zw5r7xs",
-            "tr([00000001/86'/1'/" + args.account + "']" + xpub + "/0/*)#sng9rd4t"
         ],
         "internal": [
             "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/1/*)#all0v2p2",
             "wpk([00000001/84'/1'/" + args.account + "']" + xpub + "/1/*)#9kt47tkg",
-            "tr([00000001/86'/1'/" + args.account + "']" + xpub + "/1/*)#p8dy7c9n"
-
         ]
     }))
 
@@ -57,7 +54,6 @@ def displayaddress(args):
 
     expected_desc = [
         "wpk([00000001/84'/1'/0'/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#0yneg42r",
-        "tr([00000001/86'/1'/0'/0/0]c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#4vdj9jqk",
     ]
     if args.desc not in expected_desc:
         return sys.stdout.write(json.dumps({"error": "Unexpected descriptor", "desc": args.desc}))
