@@ -3,18 +3,18 @@ v25-37561 Release Notes
 
 Freicoin version v25-37561 is now available from:
 
-  * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/v25-37561-x86_64-linux-gnu.tar.gz)
-  * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/v25-37561-arm-linux-gnueabihf.tar.gz)
-  * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/v25-37561-aarch64-linux-gnu.tar.gz)
-  * [Linux PowerPC (64-bit, big endian)](https://s3.amazonaws.com/in.freico.stable/v25-37561-powerpc64-linux-gnu.tar.gz)
-  * [Linux PowerPC (64-bit, little endian)](https://s3.amazonaws.com/in.freico.stable/v25-37561-powerpc64le-linux-gnu.tar.gz)
-  * [Linux RISC-V 64-bit (RV64GC)](https://s3.amazonaws.com/in.freico.stable/v25-37561-riscv64-linux-gnu.tar.gz)
-  * [macOS (Apple Silicon, app)](https://s3.amazonaws.com/in.freico.stable/v25-37561-arm64-apple-darwin.dmg)
-  * [macOS (Apple Silicon, server)](https://s3.amazonaws.com/in.freico.stable/v25-37561-arm64-apple-darwin.tar.gz)
-  * [macOS (Intel, app)](https://s3.amazonaws.com/in.freico.stable/v25-37561-x86_64-apple-darwin.dmg)
-  * [macOS (Intel, server)](https://s3.amazonaws.com/in.freico.stable/v25-37561-x86_64-apple-darwin.tar.gz)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/v25-37561-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/v25-37561-win64.zip)
+  * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-x86_64-linux-gnu.tar.gz)
+  * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-arm-linux-gnueabihf.tar.gz)
+  * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-aarch64-linux-gnu.tar.gz)
+  * [Linux PowerPC (64-bit, big endian)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-powerpc64-linux-gnu.tar.gz)
+  * [Linux PowerPC (64-bit, little endian)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-powerpc64le-linux-gnu.tar.gz)
+  * [Linux RISC-V 64-bit (RV64GC)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-riscv64-linux-gnu.tar.gz)
+  * [macOS (Apple Silicon, app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-arm64-apple-darwin.dmg)
+  * [macOS (Apple Silicon, server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-arm64-apple-darwin.tar.gz)
+  * [macOS (Intel, app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-x86_64-apple-darwin.dmg)
+  * [macOS (Intel, server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-x86_64-apple-darwin.tar.gz)
+  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-win64-setup.exe)
+  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25-37561-win64.zip)
   * [Source](https://github.com/tradecraftio/tradecraft/archive/v25-37561.zip)
 
 This release includes new features, various bug fixes and performance
@@ -54,7 +54,7 @@ Notable changes
 New RPCs
 --------
 
-- The scanblocks RPC returns the relevant blockhashes from a set of
+- The `scanblocks` RPC returns the relevant blockhashes from a set of
   descriptors by scanning all blockfilters in the given range.  It can be used
   in combination with the getblockheader and rescanblockchain RPCs to achieve
   fast wallet rescans.  Note that this functionality can only be used if a
@@ -243,7 +243,9 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
-- @RandyMcMillan
+- 0xb10c
+- 721217.xyz
+- amadeuszpawlik
 - Amiti Uttarwar
 - Andrew Chow
 - Andrew Toth
@@ -252,22 +254,32 @@ Thanks to everyone who directly contributed to this release:
 - Aurèle Oulès
 - Ben Woosley
 - Bitcoin Hodler
+- brunoerg
 - Bushstar
 - Carl Dong
 - Chris Geihsler
 - Cory Fields
 - David Gumberg
+- dergoegge
 - Dhruv Mehta
 - Dimitris Tsapakidis
+- dougEfish
 - Douglas Chimento
+- ekzyis
 - Elichai Turkel
 - Ethan Heilman
 - Fabian Jahr
 - FractalEncrypt
+- furszy
 - Gleb Naumenko
+- glozow
 - Greg Sanders
 - Hennadii Stepanov
+- hernanmarino
+- ishaanam
+- ismaelsadeeq
 - James O'Beirne
+- jdjkelly@gmail.com
 - Jeff Ruane
 - Jeffrey Czyz
 - Jeremy Rubin
@@ -277,10 +289,16 @@ Thanks to everyone who directly contributed to this release:
 - John Moffett
 - Jon Atack
 - Jonas Schnelli
+- jonatack
 - Joshua Kelly
+- josibake
 - Juan Pablo Civile
+- kdmukai
+- klementtan
 - Kolby ML
+- kouloumos
 - Kristaps Kaupe
+- laanwj
 - Larry Ruane
 - Leonardo Araujo
 - Leonardo Lazzaro
@@ -294,58 +312,40 @@ Thanks to everyone who directly contributed to this release:
 - Matthew Zipkin
 - Michael Ford
 - Miles Liu
+- mruddy
 - Murray Nesbitt
+- muxator
+- omahs
+- pablomartin4btc
 - Pasta
 - Pieter Wuille
 - Pttn
 - Randall Naar
+- @RandyMcMillan
 - Riahiamirreza
+- roconnor-blockstream
 - Russell O'Connor
 - Ryan Ofsky
 - S3RK
 - Sebastian Falbesoner
 - Seibart Nedor
+- sinetek
 - Sjors Provoost
 - Skuli Dulfari
 - SomberNight
 - Stacie Waleyko
+- stickies-v
+- stratospher
 - Suhas Daftuar
 - Suriyaa Sundararuban
 - TheCharlatan
 - Vasil Dimov
 - Vasil Stoyanov
-- Yusuf Sahin HAMZA
-- amadeuszpawlik
-- brunoerg
-- dergoegge
-- dougEfish
-- ekzyis
-- furszy
-- glozow
-- hernanmarino
-- ishaanam
-- ismaelsadeeq
-- jdjkelly@gmail.com
-- jonatack
-- josibake
-- kdmukai
-- klementtan
-- kouloumos
-- laanwj
-- mruddy
-- muxator
-- omahs
-- pablomartin4btc
-- roconnor-blockstream
-- sinetek
-- stickies-v
-- stratospher
 - virtu
 - w0xlt
 - willcl-ark
 - yancy
-- 0xb10c
-- 721217.xyz
+- Yusuf Sahin HAMZA
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/tradecraft/freicoin-1/).
