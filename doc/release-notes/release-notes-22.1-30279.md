@@ -13,7 +13,7 @@ Freicoin version v22.1-30279 is now available from:
   * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v22.1-30279-osx64.tar.gz)
   * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v22.1-30279-win64-setup.exe)
   * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v22.1-30279-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/freicoin-v22.1-30279.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/v22.1-30279.zip)
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
