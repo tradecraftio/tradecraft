@@ -94,8 +94,8 @@ class PSTTest(FreicoinTestFramework):
         w2 = online_node.get_wallet_rpc(self.default_wallet_name)
 
         # Mine a transaction that credits the offline address
-        offline_addr = offline_node.getnewaddress(address_type="bech32m")
-        online_addr = w2.getnewaddress(address_type="bech32m")
+        offline_addr = offline_node.getnewaddress(address_type="bech32")
+        online_addr = w2.getnewaddress(address_type="bech32")
         wonline.importaddress(offline_addr, "", False)
         mining_wallet = mining_node.get_wallet_rpc(self.default_wallet_name)
         mining_wallet.sendtoaddress(address=offline_addr, amount=1.0)
