@@ -400,7 +400,7 @@ class MiniWallet:
 def getnewdestination(address_type='bech32m'):
     """Generate a random destination of the specified type and return the
        corresponding public key, scriptPubKey and address. Supported types are
-       'legacy', 'p2sh-segwit', 'bech32' and 'bech32m'. Can be used when a random
+       'legacy', 'bech32', or 'bech32m'. Can be used when a random
        destination is needed, but no compiled wallet is available (e.g. as
        replacement to the getnewaddress/getaddressinfo RPCs)."""
     key = ECKey()
