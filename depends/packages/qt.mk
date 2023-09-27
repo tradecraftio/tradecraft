@@ -14,6 +14,7 @@ $(package)_patches += fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch fix_limits_header.patch
 $(package)_patches += fix_bigsur_style.patch use_android_ndk23.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
+$(package)_patches += fix-macos-linker.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=d5788e86257b21d5323f1efd94376a213e091d1e5e03b45a95dd052b5f570db8
@@ -230,6 +231,7 @@ endef
 define $(package)_preprocess_cmds
   cp $($(package)_patch_dir)/qt.pro qt.pro && \
   cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
+  patch -p1 -i $($(package)_patch_dir)/fix-macos-linker.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_no_printer.patch && \
