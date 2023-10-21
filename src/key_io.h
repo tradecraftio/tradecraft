@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KEY_IO_H
-#define BITCOIN_KEY_IO_H
+#ifndef FREICOIN_KEY_IO_H
+#define FREICOIN_KEY_IO_H
 
 #include <chainparams.h>
 #include <key.h>
@@ -38,4 +38,4 @@ CTxDestination DecodeDestination(const std::string& str, std::string& error_msg,
 bool IsValidDestinationString(const std::string& str);
 bool IsValidDestinationString(const std::string& str, const CChainParams& params);
 
-#endif // BITCOIN_KEY_IO_H
+#endif // FREICOIN_KEY_IO_H

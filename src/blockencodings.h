@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_BLOCKENCODINGS_H
-#define BITCOIN_BLOCKENCODINGS_H
+#ifndef FREICOIN_BLOCKENCODINGS_H
+#define FREICOIN_BLOCKENCODINGS_H
 
 #include <primitives/block.h>
 
@@ -158,4 +158,4 @@ public:
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);
 };
 
-#endif // BITCOIN_BLOCKENCODINGS_H
+#endif // FREICOIN_BLOCKENCODINGS_H

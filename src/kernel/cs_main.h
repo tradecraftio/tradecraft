@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_CS_MAIN_H
-#define BITCOIN_KERNEL_CS_MAIN_H
+#ifndef FREICOIN_KERNEL_CS_MAIN_H
+#define FREICOIN_KERNEL_CS_MAIN_H
 
 #include <sync.h>
 
@@ -30,4 +30,4 @@
  */
 extern RecursiveMutex cs_main;
 
-#endif // BITCOIN_KERNEL_CS_MAIN_H
+#endif // FREICOIN_KERNEL_CS_MAIN_H

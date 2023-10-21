@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(key_key_negation)
 {
     // create a dummy hash for signature comparison
     unsigned char rnd[8];
-    std::string str = "Bitcoin key verification\n";
+    std::string str = "Freicoin key verification\n";
     GetRandBytes(rnd);
     uint256 hash{Hash(str, rnd)};
 

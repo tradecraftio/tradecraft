@@ -20,8 +20,8 @@
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <key_io.h>
-#include <qt/bitcoinamountfield.h>
-#include <qt/bitcoinunits.h>
+#include <qt/freicoinamountfield.h>
+#include <qt/freicoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
@@ -90,7 +90,7 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
     entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(EncodeDestination(address)));
-    entry->findChild<BitcoinAmountField*>("payAmount")->setValue(amount);
+    entry->findChild<FreicoinAmountField*>("payAmount")->setValue(amount);
     sendCoinsDialog.findChild<QFrame*>("frameFee")
         ->findChild<QFrame*>("frameFeeSelection")
         ->findChild<QCheckBox*>("optInRBF")
@@ -147,8 +147,8 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
 
 void CompareBalance(WalletModel& walletModel, CAmount expected_balance, QLabel* balance_label_to_check)
 {
-    BitcoinUnit unit = walletModel.getOptionsModel()->getDisplayUnit();
-    QString balanceComparison = BitcoinUnits::formatWithUnit(unit, expected_balance, false, BitcoinUnits::SeparatorStyle::ALWAYS);
+    FreicoinUnit unit = walletModel.getOptionsModel()->getDisplayUnit();
+    QString balanceComparison = FreicoinUnits::formatWithUnit(unit, expected_balance, false, FreicoinUnits::SeparatorStyle::ALWAYS);
     QCOMPARE(balance_label_to_check->text().trimmed(), balanceComparison);
 }
 
@@ -275,9 +275,9 @@ public:
 //
 // This also requires overriding the default minimal Qt platform:
 //
-//     QT_QPA_PLATFORM=xcb     src/qt/test/test_bitcoin-qt  # Linux
-//     QT_QPA_PLATFORM=windows src/qt/test/test_bitcoin-qt  # Windows
-//     QT_QPA_PLATFORM=cocoa   src/qt/test/test_bitcoin-qt  # macOS
+//     QT_QPA_PLATFORM=xcb     src/qt/test/test_freicoin-qt  # Linux
+//     QT_QPA_PLATFORM=windows src/qt/test/test_freicoin-qt  # Windows
+//     QT_QPA_PLATFORM=cocoa   src/qt/test/test_freicoin-qt  # macOS
 void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
 {
     // Create widgets for sending coins and listing transactions.
@@ -329,7 +329,7 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
     labelInput->setText("TEST_LABEL_1");
 
     // Amount input
-    BitcoinAmountField* amountInput = receiveCoinsDialog.findChild<BitcoinAmountField*>("reqAmount");
+    FreicoinAmountField* amountInput = receiveCoinsDialog.findChild<FreicoinAmountField*>("reqAmount");
     amountInput->setValue(1);
 
     // Message input
@@ -345,7 +345,7 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
             QCOMPARE(receiveRequestDialog->QObject::findChild<QLabel*>("payment_header")->text(), QString("Payment information"));
             QCOMPARE(receiveRequestDialog->QObject::findChild<QLabel*>("uri_tag")->text(), QString("URI:"));
             QString uri = receiveRequestDialog->QObject::findChild<QLabel*>("uri_content")->text();
-            QCOMPARE(uri.count("bitcoin:"), 2);
+            QCOMPARE(uri.count("freicoin:"), 2);
             QCOMPARE(receiveRequestDialog->QObject::findChild<QLabel*>("address_tag")->text(), QString("Address:"));
             QVERIFY(address.isEmpty());
             address = receiveRequestDialog->QObject::findChild<QLabel*>("address_content")->text();
@@ -422,7 +422,7 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
     // Set change address
     sendCoinsDialog.getCoinControl()->destChange = GetDestinationForKey(test.coinbaseKey.GetPubKey(), OutputType::LEGACY);
 
-    // Time to reject "save" PSBT dialog ('SendCoins' locks the main thread until the dialog receives the event).
+    // Time to reject "save" PST dialog ('SendCoins' locks the main thread until the dialog receives the event).
     QTimer timer;
     timer.setInterval(500);
     QObject::connect(&timer, &QTimer::timeout, [&](){
@@ -439,17 +439,17 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
     });
     timer.start(500);
 
-    // Send tx and verify PSBT copied to the clipboard.
+    // Send tx and verify PST copied to the clipboard.
     SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, /*rbf=*/false, QMessageBox::Save);
-    const std::string& psbt_string = QApplication::clipboard()->text().toStdString();
-    QVERIFY(!psbt_string.empty());
+    const std::string& pst_string = QApplication::clipboard()->text().toStdString();
+    QVERIFY(!pst_string.empty());
 
-    // Decode psbt
-    std::optional<std::vector<unsigned char>> decoded_psbt = DecodeBase64(psbt_string);
-    QVERIFY(decoded_psbt);
-    PartiallySignedTransaction psbt;
+    // Decode pst
+    std::optional<std::vector<unsigned char>> decoded_pst = DecodeBase64(pst_string);
+    QVERIFY(decoded_pst);
+    PartiallySignedTransaction pst;
     std::string err;
-    QVERIFY(DecodeRawPSBT(psbt, MakeByteSpan(*decoded_psbt), err));
+    QVERIFY(DecodeRawPST(pst, MakeByteSpan(*decoded_pst), err));
 }
 
 void TestGUI(interfaces::Node& node)
@@ -468,7 +468,7 @@ void TestGUI(interfaces::Node& node)
     TestGUI(node, desc_wallet);
 
     // Legacy watch-only wallet test
-    // Verify PSBT creation.
+    // Verify PST creation.
     TestGUIWatchOnly(node, test);
 }
 
@@ -483,7 +483,7 @@ void WalletTests::walletTests()
         // and fails to handle returned nulls
         // (https://bugreports.qt.io/browse/QTBUG-49686).
         QWARN("Skipping WalletTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
-              "with 'QT_QPA_PLATFORM=cocoa test_bitcoin-qt' on mac, or else use a linux or windows build.");
+              "with 'QT_QPA_PLATFORM=cocoa test_freicoin-qt' on mac, or else use a linux or windows build.");
         return;
     }
 #endif

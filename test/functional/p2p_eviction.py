@@ -39,7 +39,7 @@ from test_framework.p2p import (
     P2PDataStore,
     P2PInterface,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
@@ -56,7 +56,7 @@ class SlowP2PInterface(P2PInterface):
         self.send_message(msg_pong(message.nonce))
 
 
-class P2PEvict(BitcoinTestFramework):
+class P2PEvict(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # The choice of maxconnections=32 results in a maximum of 21 inbound connections

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_FUZZ_UTIL_NET_H
-#define BITCOIN_TEST_FUZZ_UTIL_NET_H
+#ifndef FREICOIN_TEST_FUZZ_UTIL_NET_H
+#define FREICOIN_TEST_FUZZ_UTIL_NET_H
 
 #include <net.h>
 #include <net_permissions.h>
@@ -149,4 +149,4 @@ inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, co
 
 void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, CNode& node) noexcept EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex);
 
-#endif // BITCOIN_TEST_FUZZ_UTIL_NET_H
+#endif // FREICOIN_TEST_FUZZ_UTIL_NET_H

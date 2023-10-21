@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INDEX_TXINDEX_H
-#define BITCOIN_INDEX_TXINDEX_H
+#ifndef FREICOIN_INDEX_TXINDEX_H
+#define FREICOIN_INDEX_TXINDEX_H
 
 #include <index/base.h>
 
@@ -59,4 +59,4 @@ public:
 /// The global transaction index, used in GetTransaction. May be null.
 extern std::unique_ptr<TxIndex> g_txindex;
 
-#endif // BITCOIN_INDEX_TXINDEX_H
+#endif // FREICOIN_INDEX_TXINDEX_H

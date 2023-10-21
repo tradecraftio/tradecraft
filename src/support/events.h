@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SUPPORT_EVENTS_H
-#define BITCOIN_SUPPORT_EVENTS_H
+#ifndef FREICOIN_SUPPORT_EVENTS_H
+#define FREICOIN_SUPPORT_EVENTS_H
 
 #include <ios>
 #include <memory>
@@ -64,4 +64,4 @@ inline raii_evhttp_connection obtain_evhttp_connection_base(struct event_base* b
     return result;
 }
 
-#endif // BITCOIN_SUPPORT_EVENTS_H
+#endif // FREICOIN_SUPPORT_EVENTS_H

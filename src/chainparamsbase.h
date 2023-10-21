@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CHAINPARAMSBASE_H
-#define BITCOIN_CHAINPARAMSBASE_H
+#ifndef FREICOIN_CHAINPARAMSBASE_H
+#define FREICOIN_CHAINPARAMSBASE_H
 
 #include <memory>
 #include <string>
@@ -22,8 +22,8 @@
 class ArgsManager;
 
 /**
- * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
- * of a given instance of the Bitcoin system.
+ * CBaseChainParams defines the base parameters (shared between freicoin-cli and freicoind)
+ * of a given instance of the Freicoin system.
  */
 class CBaseChainParams
 {
@@ -72,4 +72,4 @@ const CBaseChainParams& BaseParams();
 /** Sets the params returned by Params() to those for the given network. */
 void SelectBaseParams(const std::string& chain);
 
-#endif // BITCOIN_CHAINPARAMSBASE_H
+#endif // FREICOIN_CHAINPARAMSBASE_H

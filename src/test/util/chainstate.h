@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#ifndef BITCOIN_TEST_UTIL_CHAINSTATE_H
-#define BITCOIN_TEST_UTIL_CHAINSTATE_H
+#ifndef FREICOIN_TEST_UTIL_CHAINSTATE_H
+#define FREICOIN_TEST_UTIL_CHAINSTATE_H
 
 #include <clientversion.h>
 #include <logging.h>
@@ -107,4 +107,4 @@ CreateAndActivateUTXOSnapshot(
 }
 
 
-#endif // BITCOIN_TEST_UTIL_CHAINSTATE_H
+#endif // FREICOIN_TEST_UTIL_CHAINSTATE_H

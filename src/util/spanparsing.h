@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SPANPARSING_H
-#define BITCOIN_UTIL_SPANPARSING_H
+#ifndef FREICOIN_UTIL_SPANPARSING_H
+#define FREICOIN_UTIL_SPANPARSING_H
 
 #include <span.h>
 
@@ -87,4 +87,4 @@ std::vector<T> Split(const Span<const char>& sp, char sep)
 
 } // namespace spanparsing
 
-#endif // BITCOIN_UTIL_SPANPARSING_H
+#endif // FREICOIN_UTIL_SPANPARSING_H
