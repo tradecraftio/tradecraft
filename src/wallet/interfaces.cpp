@@ -133,6 +133,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
 {
     WalletTxOut result;
     result.txout = output.txout;
+    result.refheight = output.refheight;
     result.time = output.time;
     result.depth_in_main_chain = output.depth;
     result.is_spent = wallet.IsSpent(output.outpoint);
