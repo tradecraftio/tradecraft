@@ -3,16 +3,11 @@
 
 Freicoin version v25.1-37601 is now available from:
 
-  * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-x86_
-64-linux-gnu.tar.gz)
-  * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-arm-l
-inux-gnueabihf.tar.gz)
-  * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-aarch
-64-linux-gnu.tar.gz)
-  * [Linux PowerPC (64-bit, big endian)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25
--0-powerpc64-linux-gnu.tar.gz)
-  * [Linux PowerPC (64-bit, little endian)](https://s3.amazonaws.com/in.freico.stable/freicoin-
-v25.1-37601-powerpc64le-linux-gnu.tar.gz)
+  * [Linux x86_64 (Intel 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-x86_64-linux-gnu.tar.gz)
+  * [Linux ARMv7-A (ARM 32-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-arm-linux-gnueabihf.tar.gz)
+  * [Linux ARMv8-A (ARM 64-bit)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-aarch64-linux-gnu.tar.gz)
+  * [Linux PowerPC (64-bit, big endian)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-powerpc64-linux-gnu.tar.gz)
+  * [Linux PowerPC (64-bit, little endian)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-powerpc64le-linux-gnu.tar.gz)
   * [Linux RISC-V 64-bit (RV64GC)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-riscv64-linux-gnu.tar.gz)
   * [macOS (Apple Silicon, app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-arm64-apple-darwin.dmg)
   * [macOS (Apple Silicon, server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v25.1-37601-arm64-apple-darwin.tar.gz)
