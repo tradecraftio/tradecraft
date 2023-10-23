@@ -22,8 +22,6 @@ Freicoin is released under the terms of version 3 of the GNU Affero
 General Public License as published by the Free Software Foundation. See
 [COPYING](COPYING) for more information.
 
-Some components of Freicoin are released under the terms of the Mozilla Public License Version 2.0. See [MPL-2.0.txt](MPL-2.0.txt) for more information or visit https://www.mozilla.org/en-US/MPL/2.0/ in your web browser.
-
 Development Process
 -------------------
 
