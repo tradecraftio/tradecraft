@@ -77,12 +77,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     ["""
 
 Please contribute if you find Bitcoin Core useful. Visit
-<https://bitcoincore.org> for further information about the software.
+<https://bitcoincore.org/> for further information about the software.
 The source code is available from <https://github.com/bitcoin/bitcoin>.
 
 This is experimental software.
 Distributed under the MIT software license, see the accompanying file COPYING
-or <http://www.opensource.org/licenses/mit-license.php>.
+or <https://opensource.org/licenses/MIT>
 ""","""
 Copyright (C) 2011-2023 The Freicoin Developers
 
