@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ADDRMAN_H
-#define BITCOIN_ADDRMAN_H
+#ifndef FREICOIN_ADDRMAN_H
+#define FREICOIN_ADDRMAN_H
 
 #include <netaddress.h>
 #include <netgroup.h>
@@ -194,4 +194,4 @@ public:
     std::optional<AddressPosition> FindAddressEntry(const CAddress& addr);
 };
 
-#endif // BITCOIN_ADDRMAN_H
+#endif // FREICOIN_ADDRMAN_H

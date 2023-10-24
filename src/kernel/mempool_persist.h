@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_MEMPOOL_PERSIST_H
-#define BITCOIN_KERNEL_MEMPOOL_PERSIST_H
+#ifndef FREICOIN_KERNEL_MEMPOOL_PERSIST_H
+#define FREICOIN_KERNEL_MEMPOOL_PERSIST_H
 
 #include <fs.h>
 
@@ -36,4 +36,4 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path,
 } // namespace kernel
 
 
-#endif // BITCOIN_KERNEL_MEMPOOL_PERSIST_H
+#endif // FREICOIN_KERNEL_MEMPOOL_PERSIST_H

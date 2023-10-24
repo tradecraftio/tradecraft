@@ -17,7 +17,7 @@
 
 from decimal import Decimal, getcontext
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -35,7 +35,7 @@ def cleanup(func):
             assert_equal(0, self.wallet.getbalances()["mine"]["trusted"]) # wallet is empty
     return wrapper
 
-class SendallTest(BitcoinTestFramework):
+class SendallTest(FreicoinTestFramework):
     # Setup and helpers
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -311,8 +311,8 @@ class SendallTest(BitcoinTestFramework):
             watchonly.importmulti(import_req)
 
         sendall_tx_receipt = watchonly.sendall(recipients=[self.remainder_target], options={"inputs": [utxo]})
-        psbt = sendall_tx_receipt["psbt"]
-        decoded = self.nodes[0].decodepsbt(psbt)
+        pst = sendall_tx_receipt["pst"]
+        decoded = self.nodes[0].decodepst(pst)
         assert_equal(len(decoded["inputs"]), 1)
         assert_equal(len(decoded["outputs"]), 1)
         assert_equal(decoded["tx"]["vin"][0]["txid"], utxo["txid"])

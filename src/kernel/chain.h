@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_CHAIN_H
-#define BITCOIN_KERNEL_CHAIN_H
+#ifndef FREICOIN_KERNEL_CHAIN_H
+#define FREICOIN_KERNEL_CHAIN_H
 
 class CBlock;
 class CBlockIndex;
@@ -27,4 +27,4 @@ namespace kernel {
 interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* block_index, const CBlock* data = nullptr);
 } // namespace kernel
 
-#endif // BITCOIN_KERNEL_CHAIN_H
+#endif // FREICOIN_KERNEL_CHAIN_H

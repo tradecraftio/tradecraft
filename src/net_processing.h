@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NET_PROCESSING_H
-#define BITCOIN_NET_PROCESSING_H
+#ifndef FREICOIN_NET_PROCESSING_H
+#define FREICOIN_NET_PROCESSING_H
 
 #include <net.h>
 #include <validationinterface.h>
@@ -101,4 +101,4 @@ public:
     virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
 };
 
-#endif // BITCOIN_NET_PROCESSING_H
+#endif // FREICOIN_NET_PROCESSING_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_FUZZ_MEMPOOL_UTILS_H
-#define BITCOIN_TEST_FUZZ_MEMPOOL_UTILS_H
+#ifndef FREICOIN_TEST_FUZZ_MEMPOOL_UTILS_H
+#define FREICOIN_TEST_FUZZ_MEMPOOL_UTILS_H
 
 #include <validation.h>
 
@@ -27,4 +27,4 @@ public:
     }
 };
 
-#endif // BITCOIN_TEST_FUZZ_MEMPOOL_UTILS_H
+#endif // FREICOIN_TEST_FUZZ_MEMPOOL_UTILS_H

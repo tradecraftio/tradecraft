@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ZMQ_ZMQUTIL_H
-#define BITCOIN_ZMQ_ZMQUTIL_H
+#ifndef FREICOIN_ZMQ_ZMQUTIL_H
+#define FREICOIN_ZMQ_ZMQUTIL_H
 
 #include <string>
 
 void zmqError(const std::string& str);
 
-#endif // BITCOIN_ZMQ_ZMQUTIL_H
+#endif // FREICOIN_ZMQ_ZMQUTIL_H

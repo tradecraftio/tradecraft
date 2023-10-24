@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INDEX_DISKTXPOS_H
-#define BITCOIN_INDEX_DISKTXPOS_H
+#ifndef FREICOIN_INDEX_DISKTXPOS_H
+#define FREICOIN_INDEX_DISKTXPOS_H
 
 #include <flatfile.h>
 #include <serialize.h>
@@ -43,4 +43,4 @@ struct CDiskTxPos : public FlatFilePos
 };
 
 
-#endif // BITCOIN_INDEX_DISKTXPOS_H
+#endif // FREICOIN_INDEX_DISKTXPOS_H

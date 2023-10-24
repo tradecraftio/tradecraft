@@ -13,12 +13,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_BLOCKFILTER_H
-#define BITCOIN_TEST_UTIL_BLOCKFILTER_H
+#ifndef FREICOIN_TEST_UTIL_BLOCKFILTER_H
+#define FREICOIN_TEST_UTIL_BLOCKFILTER_H
 
 #include <blockfilter.h>
 class CBlockIndex;
 
 bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex* block_index, BlockFilter& filter);
 
-#endif // BITCOIN_TEST_UTIL_BLOCKFILTER_H
+#endif // FREICOIN_TEST_UTIL_BLOCKFILTER_H

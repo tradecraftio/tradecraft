@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_IPC_CAPNP_CONTEXT_H
-#define BITCOIN_IPC_CAPNP_CONTEXT_H
+#ifndef FREICOIN_IPC_CAPNP_CONTEXT_H
+#define FREICOIN_IPC_CAPNP_CONTEXT_H
 
 #include <ipc/context.h>
 
@@ -31,4 +31,4 @@ struct Context : ipc::Context
 } // namespace capnp
 } // namespace ipc
 
-#endif // BITCOIN_IPC_CAPNP_CONTEXT_H
+#endif // FREICOIN_IPC_CAPNP_CONTEXT_H

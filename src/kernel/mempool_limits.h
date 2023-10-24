@@ -12,8 +12,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef BITCOIN_KERNEL_MEMPOOL_LIMITS_H
-#define BITCOIN_KERNEL_MEMPOOL_LIMITS_H
+#ifndef FREICOIN_KERNEL_MEMPOOL_LIMITS_H
+#define FREICOIN_KERNEL_MEMPOOL_LIMITS_H
 
 #include <policy/policy.h>
 
@@ -38,4 +38,4 @@ struct MemPoolLimits {
 };
 } // namespace kernel
 
-#endif // BITCOIN_KERNEL_MEMPOOL_LIMITS_H
+#endif // FREICOIN_KERNEL_MEMPOOL_LIMITS_H
