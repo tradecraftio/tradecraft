@@ -82,8 +82,8 @@ The source code is available from <https://github.com/bitcoin/bitcoin>.
 
 This is experimental software.
 Distributed under the MIT software license, see the accompanying file COPYING
-or <https://opensource.org/licenses/MIT>
-""","""
+or <https://opensource.org/licenses/MIT>""" # No EOF
+,"""
 Copyright (C) 2011-2023 The Freicoin Developers
 
 Please contribute if you find Bitcoin Core useful. Visit
