@@ -583,7 +583,7 @@ class ImportMultiTest(FreicoinTestFramework):
 
         # Test ranged descriptor fails if range is not specified
         xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
-        addresses = ["bcrt1qqled64ja2uzm22tuljxgrkt6wxarefplunk52t", "bcrt1qwc7hkenmn2zrjx7zgcna7k5cfwwlgx32czdzsj"] # hdkeypath=m/0'/0'/0' and 1'
+        addresses = ["fcrt1qqled64ja2uzm22tuljxgrkt6wxarefpl08lnga", "fcrt1qwc7hkenmn2zrjx7zgcna7k5cfwwlgx32tky9jy"] # hdkeypath=m/0'/0'/0' and 1'
         desc = "wpk(" + xpriv + "/0'/0'/*'" + ")"
         self.log.info("Ranged descriptor import should fail without a specified range")
         self.test_importmulti({"desc": descsum_create(desc),
@@ -621,7 +621,7 @@ class ImportMultiTest(FreicoinTestFramework):
 
         # Test importing a descriptor containing a WIF private key
         wif_priv = "cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh"
-        address = "bcrt1qm2nvsr3n8kljgt3r0c9yjm7x8dm7srz3p9njq7"
+        address = "fcrt1qm2nvsr3n8kljgt3r0c9yjm7x8dm7srz3j364zg"
         desc = "wpk(" + wif_priv + ")"
         self.log.info("Should import a descriptor with a WIF private key as spendable")
         self.test_importmulti({"desc": descsum_create(desc),
@@ -752,7 +752,7 @@ class ImportMultiTest(FreicoinTestFramework):
         self.log.info("Bech32m addresses and descriptors cannot be imported")
         self.test_importmulti(
             {
-                "scriptPubKey": {"address": "bcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqc8gma6"},
+                "scriptPubKey": {"address": "fcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqnw8tmd"},
                 "timestamp": "now",
             },
             success=False,
@@ -863,11 +863,11 @@ class ImportMultiTest(FreicoinTestFramework):
         assert_equal(wrpc.getwalletinfo()["private_keys_enabled"], False)
         xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
         addresses = [
-            'bcrt1qpjdewptcahxy8vpnvr7ukevzx4a7zyhp664v9x', # m/0'/0'/0
-            'bcrt1qq5m59csrvle2us5lj9c59etglje69yuaxn5wqj', # m/0'/0'/1
-            'bcrt1qjxc9np7uux87shxkzgqy23ek8eap52xfa5hmuc', # m/0'/0'/2
-            'bcrt1qa5pwzv5wsxgddqltx77ljlfrsnf9rs5nhazwtv', # m/0'/0'/3
-            'bcrt1qg3zm4zh6prq45r6hduznyl63f2upm5mjmtgtq3', # m/0'/0'/4
+            'fcrt1qpjdewptcahxy8vpnvr7ukevzx4a7zyhpfwut8s', # m/0'/0'/0
+            'fcrt1qq5m59csrvle2us5lj9c59etglje69yua48afzy', # m/0'/0'/1
+            'fcrt1qjxc9np7uux87shxkzgqy23ek8eap52xfwq7u7w', # m/0'/0'/2
+            'fcrt1qa5pwzv5wsxgddqltx77ljlfrsnf9rs5nyftff6', # m/0'/0'/3
+            'fcrt1qg3zm4zh6prq45r6hduznyl63f2upm5mjglpvz8', # m/0'/0'/4
         ]
         result = wrpc.importmulti(
             [{
