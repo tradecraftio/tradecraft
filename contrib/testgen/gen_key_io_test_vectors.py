@@ -1,7 +1,18 @@
 #!/usr/bin/env python3
 # Copyright (c) 2012-2021 The Bitcoin Core developers
-# Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# Copyright (c) 2010-2023 The Freicoin Developers
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of version 3 of the GNU Affero General Public License as published
+# by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 Generate valid and invalid base58/bech32(m) address and private key test vectors.
 
@@ -10,7 +21,8 @@ Usage:
     PYTHONPATH=../../test/functional/test_framework ./gen_key_io_test_vectors.py invalid 70 > ../../src/test/data/key_io_invalid.json
 '''
 # 2012 Wladimir J. van der Laan
-# Released under MIT License
+# Originally released under MIT License,
+# Relicensed under the AGPL-3.0
 import os
 from itertools import islice
 from base58 import b58encode_chk, b58decode_chk, b58chars
