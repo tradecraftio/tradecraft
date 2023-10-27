@@ -96,10 +96,6 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
     argsman.AddArg("-walletrejectlongchains", strprintf("Wallet will not create transactions that violate mempool chain limits (default: %u)", DEFAULT_WALLET_REJECT_LONG_CHAINS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
 
     argsman.AddHiddenArgs({"-zapwallettxes"});
-
-    argsman.AddArg("-walletblockfinaltx=<wallet>", "Use the named wallet for constructing block-final transactions using wallet outputs prior to activation of the block-final transaction rules", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
-    argsman.AddArg("-minesweepto=<address>", "Use the block-final transaction to send all value of the walletblockfinaltx wallet to the specified address in generated block templates", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
-    argsman.AddArg("-carryforward=<address>", "Create an output to the specified address in the block-final transaction, typically to provide an input to the block-final transaction of the next block (default: use wallet-generated change address)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
 }
 
 bool WalletInit::ParameterInteraction() const
