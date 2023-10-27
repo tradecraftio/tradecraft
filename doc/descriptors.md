@@ -1,6 +1,6 @@
-# Support for Output Descriptors in Bitcoin Core
+# Support for Output Descriptors in Freicoin
 
-Since Bitcoin Core v17, there is support for Output Descriptors. This is a
+Since Freicoin v17, there is support for Output Descriptors. This is a
 simple language which can be used to describe collections of output scripts.
 Supporting RPCs are:
 - `scantxoutset` takes as input descriptors to scan for, and also reports
@@ -15,7 +15,7 @@ Supporting RPCs are:
   (since v18).
 - `generatetodescriptor` takes as input a descriptor and generates coins to it
   (`regtest` only, since v19).
-- `utxoupdatepsbt` takes as input descriptors to add information to the psbt
+- `utxoupdatepst` takes as input descriptors to add information to the pst
   (since v19).
 - `createmultisig` and `addmultisigaddress` return descriptors as well (since v20)
 
@@ -120,7 +120,7 @@ not contain "p2" for brevity.
 ### Multisig
 
 Several pieces of software use multi-signature (multisig) scripts based
-on Bitcoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
+on Freicoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
 `multi(k,key_1,key_2,...,key_n)` and `sortedmulti(k,key_1,key_2,...,key_n)`
 functions. They represent a *k-of-n*
 multisig policy, where any *k* out of the *n* provided `KEY` expressions must
@@ -142,12 +142,12 @@ are lexicographically ordered as described in BIP67.
 #### Basic multisig example
 
 For a good example of a basic M-of-N multisig between multiple participants using descriptor
-wallets and PSBTs, as well as a signing flow, see [this functional test](/test/functional/wallet_multisig_descriptor_psbt.py).
+wallets and PSTs, as well as a signing flow, see [this functional test](/test/functional/wallet_multisig_descriptor_pst.py).
 
 Disclaimers: It is important to note that this example serves as a quick-start and is kept basic for readability. A downside of the approach
 outlined here is that each participant must maintain (and backup) two separate wallets: a signer and the corresponding multisig.
 It should also be noted that privacy best-practices are not "by default" here - participants should take care to only use the signer to sign
-transactions related to the multisig. Lastly, it is not recommended to use anything other than a Bitcoin Core descriptor wallet to serve as your
+transactions related to the multisig. Lastly, it is not recommended to use anything other than a Freicoin descriptor wallet to serve as your
 signer(s). Other wallets, whether hardware or software, likely impose additional checks and safeguards to prevent users from signing transactions that
 could lead to loss of funds, or are deemed security hazards. Conforming to various 3rd-party checks and verifications is not in the scope of this example.
 
@@ -163,21 +163,21 @@ The basic steps are:
   3. A receiving address is generated for the multisig. As a check to ensure step 2 was done correctly, every participant
      should verify they get the same addresses
   4. Funds are sent to the resulting address
-  5. A sending transaction from the multisig is created using `walletcreatefundedpsbt` (anyone can initiate this). It is simple to do
-     this in the GUI by going to the `Send` tab in the multisig wallet and creating an unsigned transaction (PSBT)
-  6. At least `M` participants check the PSBT with their multisig using `decodepsbt` to verify the transaction is OK before signing it.
-  7. (If OK) the participant signs the PSBT with their signer wallet using `walletprocesspsbt`. It is simple to do this in the GUI by
-     loading the PSBT from file and signing it
-  8. The signed PSBTs are collected with `combinepsbt`, finalized w/ `finalizepsbt`, and then the resulting transaction is broadcasted
+  5. A sending transaction from the multisig is created using `walletcreatefundedpst` (anyone can initiate this). It is simple to do
+     this in the GUI by going to the `Send` tab in the multisig wallet and creating an unsigned transaction (PST)
+  6. At least `M` participants check the PST with their multisig using `decodepst` to verify the transaction is OK before signing it.
+  7. (If OK) the participant signs the PST with their signer wallet using `walletprocesspst`. It is simple to do this in the GUI by
+     loading the PST from file and signing it
+  8. The signed PSTs are collected with `combinepst`, finalized w/ `finalizepst`, and then the resulting transaction is broadcasted
      to the network. Note that any wallet (eg one of the signers or multisig) is capable of doing this.
   9. Checks that balances are correct after the transaction has been included in a block
 
-You may prefer a daisy chained signing flow where each participant signs the PSBT one after another until
-the PSBT has been signed `M` times and is "complete." For the most part, the steps above remain the same, except (6, 7)
-change slightly from signing the original PSBT in parallel to signing it in series. `combinepsbt` is not necessary with
-this signing flow and the last (`m`th) signer can just broadcast the PSBT after signing. Note that a parallel signing flow may be
+You may prefer a daisy chained signing flow where each participant signs the PST one after another until
+the PST has been signed `M` times and is "complete." For the most part, the steps above remain the same, except (6, 7)
+change slightly from signing the original PST in parallel to signing it in series. `combinepst` is not necessary with
+this signing flow and the last (`m`th) signer can just broadcast the PST after signing. Note that a parallel signing flow may be
 preferable in cases where there are more signers. This signing flow is also included in the test / Python example.
-[The test](/test/functional/wallet_multisig_descriptor_psbt.py) is meant to be documentation as much as it is a functional test, so
+[The test](/test/functional/wallet_multisig_descriptor_pst.py) is meant to be documentation as much as it is a functional test, so
 it is kept as simple and readable as possible.
 
 ### BIP32 derived keys and chains
@@ -238,7 +238,7 @@ steps, or for dumping wallet descriptors including private key material.
 ### Compatibility with old wallets
 
 In order to easily represent the sets of scripts currently supported by
-existing Bitcoin Core wallets, a convenience function `combo` is
+existing Freicoin wallets, a convenience function `combo` is
 provided, which takes as input a public key, and describes a set of P2PK,
 P2PKH, P2WPKH, and P2SH-P2WPKH scripts for that key. In case the key is
 uncompressed, the set only includes P2PK and P2PKH scripts.
@@ -255,7 +255,7 @@ be detected in descriptors up to 501 characters, and up to 3 errors in longer
 ones. For larger numbers of errors, or other types of errors, there is a
 roughly 1 in a trillion chance of not detecting the errors.
 
-All RPCs in Bitcoin Core will include the checksum in their output. Only
+All RPCs in Freicoin will include the checksum in their output. Only
 certain RPCs require checksums on input, including `deriveaddress` and
 `importmulti`. The checksum for a descriptor without one can be computed
 using the `getdescriptorinfo` RPC.

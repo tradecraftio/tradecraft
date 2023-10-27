@@ -1,41 +1,41 @@
-Bitcoin Core integration/staging tree
+Freicoin integration/staging tree
 =====================================
 
-https://bitcoincore.org
+http://freico.in
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+For an immediately usable, binary version of the Freicoin software, see
+http://freico.in/en/download/.
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+Further information about Freicoin is available in the [doc folder](/doc).
 
-What is Bitcoin?
+What is Freicoin?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
+Freicoin is an experimental digital currency that enables instant payments to
+anyone, anywhere in the world. Freicoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
+out collectively by the network. Freicoin is the name of open source
 software which enables the use of this currency.
 
-For more information read the original Bitcoin whitepaper.
+For more information read the original Freicoin whitepaper.
 
 License
 -------
 
-Bitcoin Core is released under the terms of version 3 of the GNU Affero
+Freicoin is released under the terms of version 3 of the GNU Affero
 General Public License as published by the Free Software Foundation. See
 [COPYING](COPYING) for more information.
 
-Some components of Bitcoin Core are released under the terms of the Mozilla Public License Version 2.0. See [MPL-2.0.txt](MPL-2.0.txt) for more information or visit https://www.mozilla.org/en-US/MPL/2.0/ in your web browser.
+Some components of Freicoin are released under the terms of the Mozilla Public License Version 2.0. See [MPL-2.0.txt](MPL-2.0.txt) for more information or visit https://www.mozilla.org/en-US/MPL/2.0/ in your web browser.
 
 Development Process
 -------------------
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
+completely stable. [Tags](https://github.com/tradecraftio/tradecraft/tags) are created
+regularly from release branches to indicate new official, stable release versions of Freicoin.
 
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
+The https://github.com/freicoin/gui repository is used exclusively for the
 development of the GUI. Its master branch is identical in all monotree
 repositories. Release branches and tags do not exist, so please do not fork
 that repository unless it is for development reasons.
@@ -76,7 +76,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
+[Freicoin's Transifex page](https://www.transifex.com/tradecraft/freicoin-1/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.

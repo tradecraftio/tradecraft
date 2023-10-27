@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INDEX_COINSTATSINDEX_H
-#define BITCOIN_INDEX_COINSTATSINDEX_H
+#ifndef FREICOIN_INDEX_COINSTATSINDEX_H
+#define FREICOIN_INDEX_COINSTATSINDEX_H
 
 #include <chain.h>
 #include <crypto/muhash.h>
@@ -69,4 +69,4 @@ public:
 /// The global UTXO set hash object.
 extern std::unique_ptr<CoinStatsIndex> g_coin_stats_index;
 
-#endif // BITCOIN_INDEX_COINSTATSINDEX_H
+#endif // FREICOIN_INDEX_COINSTATSINDEX_H

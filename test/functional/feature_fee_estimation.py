@@ -34,13 +34,13 @@ from test_framework.script import (
 from test_framework.script_util import (
     script_to_p2sh_script,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
-    satoshi_round,
+    kria_round,
 )
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
@@ -68,7 +68,7 @@ def small_txpuzzle_randfee(
     # Exponentially distributed from 1-128 * fee_increment
     rand_fee = float(fee_increment) * (1.1892 ** random.randint(0, 28))
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
-    fee = min_fee - fee_increment + satoshi_round(rand_fee)
+    fee = min_fee - fee_increment + kria_round(rand_fee)
     tx = CTransaction()
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
@@ -153,7 +153,7 @@ def send_tx(node, utxo, feerate):
     return node.sendrawtransaction(tx.serialize().hex())
 
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         # Force fSendTrickle to true (via whitelist.noban)

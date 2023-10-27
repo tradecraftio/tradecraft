@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_FUZZ_FUZZ_H
-#define BITCOIN_TEST_FUZZ_FUZZ_H
+#ifndef FREICOIN_TEST_FUZZ_FUZZ_H
+#define FREICOIN_TEST_FUZZ_FUZZ_H
 
 #include <span.h>
 
@@ -55,4 +55,4 @@ inline void FuzzFrameworkEmptyInitFun() {}
     } const static g_##name##_before_main;                                            \
     void name##_fuzz_target(FuzzBufferType buffer)
 
-#endif // BITCOIN_TEST_FUZZ_FUZZ_H
+#endif // FREICOIN_TEST_FUZZ_FUZZ_H

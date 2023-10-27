@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
-#define BITCOIN_PRIMITIVES_TRANSACTION_H
+#ifndef FREICOIN_PRIMITIVES_TRANSACTION_H
+#define FREICOIN_PRIMITIVES_TRANSACTION_H
 
 #include <stdint.h>
 #include <consensus/amount.h>
@@ -435,4 +435,4 @@ public:
     friend bool operator<(const GenTxid& a, const GenTxid& b) { return std::tie(a.m_is_wtxid, a.m_hash) < std::tie(b.m_is_wtxid, b.m_hash); }
 };
 
-#endif // BITCOIN_PRIMITIVES_TRANSACTION_H
+#endif // FREICOIN_PRIMITIVES_TRANSACTION_H

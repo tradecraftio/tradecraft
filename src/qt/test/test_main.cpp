@@ -14,12 +14,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <interfaces/init.h>
 #include <interfaces/node.h>
-#include <qt/bitcoin.h>
+#include <qt/freicoin.h>
 #include <qt/test/apptests.h>
 #include <qt/test/optiontests.h>
 #include <qt/test/rpcnestedtests.h>
@@ -93,8 +93,8 @@ int main(int argc, char* argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    BitcoinApplication app;
-    app.setApplicationName("Bitcoin-Qt-test");
+    FreicoinApplication app;
+    app.setApplicationName("Freicoin-Qt-test");
     app.createNode(*init);
 
     AppTests app_tests(app);

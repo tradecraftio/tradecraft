@@ -637,16 +637,16 @@ SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, con
     return SigningResult::SIGNING_FAILED;
 }
 
-TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+TransactionError LegacyScriptPubKeyMan::FillPST(PartiallySignedTransaction& pstx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
     }
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        const CTxIn& txin = pstx.tx->vin[i];
+        PSTInput& input = pstx.inputs.at(i);
 
-        if (PSBTInputSigned(input)) {
+        if (PSTInputSigned(input)) {
             continue;
         }
 
@@ -666,9 +666,9 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
         }
         SignatureData sigdata;
         input.FillSignatureData(sigdata);
-        SignPSBTInput(HidingSigningProvider(this, !sign, !bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);
+        SignPSTInput(HidingSigningProvider(this, !sign, !bip32derivs), pstx, i, &txdata, sighash_type, nullptr, finalize);
 
-        bool signed_one = PSBTInputSigned(input);
+        bool signed_one = PSTInputSigned(input);
         if (n_signed && (signed_one || !sign)) {
             // If sign is false, we assume that we _could_ sign if we get here. This
             // will never have false negatives; it is hard to tell under what i
@@ -678,8 +678,8 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
-    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        UpdatePSBTOutput(HidingSigningProvider(this, true, !bip32derivs), psbtx, i);
+    for (unsigned int i = 0; i < pstx.tx->vout.size(); ++i) {
+        UpdatePSTOutput(HidingSigningProvider(this, true, !bip32derivs), pstx, i);
     }
 
     return TransactionError::OK;
@@ -2143,16 +2143,16 @@ SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message,
     return SigningResult::OK;
 }
 
-TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+TransactionError DescriptorScriptPubKeyMan::FillPST(PartiallySignedTransaction& pstx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
     }
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
+    for (unsigned int i = 0; i < pstx.tx->vin.size(); ++i) {
+        const CTxIn& txin = pstx.tx->vin[i];
+        PSTInput& input = pstx.inputs.at(i);
 
-        if (PSBTInputSigned(input)) {
+        if (PSTInputSigned(input)) {
             continue;
         }
 
@@ -2193,9 +2193,9 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
             }
         }
 
-        SignPSBTInput(HidingSigningProvider(keys.get(), !sign, !bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);
+        SignPSTInput(HidingSigningProvider(keys.get(), !sign, !bip32derivs), pstx, i, &txdata, sighash_type, nullptr, finalize);
 
-        bool signed_one = PSBTInputSigned(input);
+        bool signed_one = PSTInputSigned(input);
         if (n_signed && (signed_one || !sign)) {
             // If sign is false, we assume that we _could_ sign if we get here. This
             // will never have false negatives; it is hard to tell under what i
@@ -2205,12 +2205,12 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
-    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        std::unique_ptr<SigningProvider> keys = GetSolvingProvider(psbtx.tx->vout.at(i).scriptPubKey);
+    for (unsigned int i = 0; i < pstx.tx->vout.size(); ++i) {
+        std::unique_ptr<SigningProvider> keys = GetSolvingProvider(pstx.tx->vout.at(i).scriptPubKey);
         if (!keys) {
             continue;
         }
-        UpdatePSBTOutput(HidingSigningProvider(keys.get(), true, !bip32derivs), psbtx, i);
+        UpdatePSTOutput(HidingSigningProvider(keys.get(), true, !bip32derivs), pstx, i);
     }
 
     return TransactionError::OK;

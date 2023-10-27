@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_FS_H
-#define BITCOIN_FS_H
+#ifndef FREICOIN_FS_H
+#define FREICOIN_FS_H
 
 #include <tinyformat.h>
 
@@ -220,4 +220,4 @@ template<> inline void formatValue(std::ostream&, const char*, const char*, int,
 template<> inline void formatValue(std::ostream&, const char*, const char*, int, const fs::path&) = delete;
 } // namespace tinyformat
 
-#endif // BITCOIN_FS_H
+#endif // FREICOIN_FS_H

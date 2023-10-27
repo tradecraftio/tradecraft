@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <qt/bitcoin.h>
+#include <qt/freicoin.h>
 #include <qt/test/optiontests.h>
 #include <test/util/setup_common.h>
 #include <util/system.h>
@@ -23,7 +23,7 @@
 
 #include <univalue.h>
 
-//! Entry point for BitcoinApplication tests.
+//! Entry point for FreicoinApplication tests.
 void OptionTests::optionTests()
 {
     // Test regression https://github.com/bitcoin/bitcoin/issues/24457. Ensure

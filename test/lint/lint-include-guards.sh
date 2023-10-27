@@ -18,7 +18,7 @@
 # Check include guards.
 
 export LC_ALL=C
-HEADER_ID_PREFIX="BITCOIN_"
+HEADER_ID_PREFIX="FREICOIN_"
 HEADER_ID_SUFFIX="_H"
 
 REGEXP_EXCLUDE_FILES_WITH_PREFIX="src/(crypto/ctaes/|leveldb/|crc32c/|secp256k1/|minisketch/|test/fuzz/FuzzedDataProvider.h|tinyformat.h|bench/nanobench.h|univalue/)"

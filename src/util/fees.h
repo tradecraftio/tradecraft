@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef BITCOIN_UTIL_FEES_H
-#define BITCOIN_UTIL_FEES_H
+#ifndef FREICOIN_UTIL_FEES_H
+#define FREICOIN_UTIL_FEES_H
 
 #include <string>
 
@@ -26,4 +26,4 @@ std::string StringForFeeReason(FeeReason reason);
 std::string FeeModes(const std::string& delimiter);
 const std::string InvalidEstimateModeErrorMessage();
 
-#endif // BITCOIN_UTIL_FEES_H
+#endif // FREICOIN_UTIL_FEES_H

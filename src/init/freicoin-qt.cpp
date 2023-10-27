@@ -25,10 +25,10 @@
 
 namespace init {
 namespace {
-class BitcoinQtInit : public interfaces::Init
+class FreicoinQtInit : public interfaces::Init
 {
 public:
-    BitcoinQtInit()
+    FreicoinQtInit()
     {
         m_node.args = &gArgs;
         m_node.init = this;
@@ -48,6 +48,6 @@ public:
 namespace interfaces {
 std::unique_ptr<Init> MakeGuiInit(int argc, char* argv[])
 {
-    return std::make_unique<init::BitcoinQtInit>();
+    return std::make_unique<init::FreicoinQtInit>();
 }
 } // namespace interfaces

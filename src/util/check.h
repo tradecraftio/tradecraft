@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_CHECK_H
-#define BITCOIN_UTIL_CHECK_H
+#ifndef FREICOIN_UTIL_CHECK_H
+#define FREICOIN_UTIL_CHECK_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <tinyformat.h>
@@ -83,4 +83,4 @@ T get_pure_r_value(T&& val)
 #define Assume(val) ([&]() -> decltype(get_pure_r_value(val)) { auto&& check = (val); return std::forward<decltype(get_pure_r_value(val))>(check); }())
 #endif
 
-#endif // BITCOIN_UTIL_CHECK_H
+#endif // FREICOIN_UTIL_CHECK_H

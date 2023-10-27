@@ -1,6 +1,6 @@
 // Automatically generated file. Do not modify.
-#ifndef BITCOIN_UNIVALUE_UNIVALUE_ESCAPES_H
-#define BITCOIN_UNIVALUE_UNIVALUE_ESCAPES_H
+#ifndef FREICOIN_UNIVALUE_UNIVALUE_ESCAPES_H
+#define FREICOIN_UNIVALUE_UNIVALUE_ESCAPES_H
 static const char *escapes[256] = {
 	"\\u0000",
 	"\\u0001",
@@ -259,4 +259,4 @@ static const char *escapes[256] = {
 	nullptr,
 	nullptr,
 };
-#endif // BITCOIN_UNIVALUE_UNIVALUE_ESCAPES_H
+#endif // FREICOIN_UNIVALUE_UNIVALUE_ESCAPES_H

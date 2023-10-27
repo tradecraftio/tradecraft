@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_VECTOR_H
-#define BITCOIN_UTIL_VECTOR_H
+#ifndef FREICOIN_UTIL_VECTOR_H
+#define FREICOIN_UTIL_VECTOR_H
 
 #include <initializer_list>
 #include <type_traits>
@@ -59,4 +59,4 @@ inline V Cat(V v1, const V& v2)
     return v1;
 }
 
-#endif // BITCOIN_UTIL_VECTOR_H
+#endif // FREICOIN_UTIL_VECTOR_H

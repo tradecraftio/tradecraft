@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TXORPHANAGE_H
-#define BITCOIN_TXORPHANAGE_H
+#ifndef FREICOIN_TXORPHANAGE_H
+#define FREICOIN_TXORPHANAGE_H
 
 #include <net.h>
 #include <primitives/block.h>
@@ -100,4 +100,4 @@ protected:
     std::map<uint256, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(g_cs_orphans);
 };
 
-#endif // BITCOIN_TXORPHANAGE_H
+#endif // FREICOIN_TXORPHANAGE_H

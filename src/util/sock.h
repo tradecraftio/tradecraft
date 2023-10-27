@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SOCK_H
-#define BITCOIN_UTIL_SOCK_H
+#ifndef FREICOIN_UTIL_SOCK_H
+#define FREICOIN_UTIL_SOCK_H
 
 #include <compat.h>
 #include <threadinterrupt.h>
@@ -202,4 +202,4 @@ std::string NetworkErrorString(int err);
 /** Close socket and set hSocket to INVALID_SOCKET */
 bool CloseSocket(SOCKET& hSocket);
 
-#endif // BITCOIN_UTIL_SOCK_H
+#endif // FREICOIN_UTIL_SOCK_H

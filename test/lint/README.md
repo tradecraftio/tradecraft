@@ -30,7 +30,7 @@ maintained:
 * for `src/leveldb`: https://github.com/bitcoin-core/leveldb-subtree.git (branch bitcoin-fork)
 * for `src/univalue`: https://github.com/bitcoin-core/univalue-subtree.git (branch master)
 * for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
-* for `src/crc32c`: https://github.com/bitcoin-core/crc32c-subtree.git (branch bitcoin-fork)
+* for `src/crc32c`: https://github.com/freicoin/crc32c-subtree.git (branch bitcoin-fork)
 * for `src/minisketch`: https://github.com/sipa/minisketch.git (branch master)
 
 To do so, add the upstream repository as remote:

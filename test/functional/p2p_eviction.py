@@ -39,7 +39,7 @@ from test_framework.messages import (
     tx_from_hex,
 )
 from test_framework.p2p import P2PDataStore, P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 
@@ -53,7 +53,7 @@ class SlowP2PInterface(P2PInterface):
         time.sleep(0.1)
         self.send_message(msg_pong(message.nonce))
 
-class P2PEvict(BitcoinTestFramework):
+class P2PEvict(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_SENDCOINSDIALOG_H
-#define BITCOIN_QT_SENDCOINSDIALOG_H
+#ifndef FREICOIN_QT_SENDCOINSDIALOG_H
+#define FREICOIN_QT_SENDCOINSDIALOG_H
 
 #include <qt/walletmodel.h>
 
@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
 
-/** Dialog for sending bitcoins */
+/** Dialog for sending freicoins */
 class SendCoinsDialog : public QDialog
 {
     Q_OBJECT
@@ -81,8 +81,8 @@ private:
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
 
-    // Copy PSBT to clipboard and offer to save it.
-    void presentPSBT(PartiallySignedTransaction& psbt);
+    // Copy PST to clipboard and offer to save it.
+    void presentPST(PartiallySignedTransaction& pst);
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
     // Additional parameter msgArg can be used via .arg(msgArg).
@@ -90,15 +90,15 @@ private:
     void minimizeFeeSection(bool fMinimize);
     // Format confirmation message
     bool PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text);
-    /* Sign PSBT using external signer.
+    /* Sign PST using external signer.
      *
-     * @param[in,out] psbtx the PSBT to sign
+     * @param[in,out] pstx the PST to sign
      * @param[in,out] mtx needed to attempt to finalize
-     * @param[in,out] complete whether the PSBT is complete (a successfully signed multisig transaction may not be complete)
+     * @param[in,out] complete whether the PST is complete (a successfully signed multisig transaction may not be complete)
      *
      * @returns false if any failure occurred, which may include the user rejection of a transaction on the device.
      */
-    bool signWithExternalSigner(PartiallySignedTransaction& psbt, CMutableTransaction& mtx, bool& complete);
+    bool signWithExternalSigner(PartiallySignedTransaction& pst, CMutableTransaction& mtx, bool& complete);
     void updateFeeMinimizedLabel();
     void updateCoinControlState();
 
@@ -149,12 +149,12 @@ private Q_SLOTS:
 
 private:
     QAbstractButton *yesButton;
-    QAbstractButton *m_psbt_button;
+    QAbstractButton *m_pst_button;
     QTimer countDownTimer;
     int secDelay;
     QString confirmButtonText{tr("Send")};
     bool m_enable_send;
-    QString m_psbt_button_text{tr("Create Unsigned")};
+    QString m_pst_button_text{tr("Create Unsigned")};
 };
 
-#endif // BITCOIN_QT_SENDCOINSDIALOG_H
+#endif // FREICOIN_QT_SENDCOINSDIALOG_H

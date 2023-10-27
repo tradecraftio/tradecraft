@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SERIALIZE_H
-#define BITCOIN_SERIALIZE_H
+#ifndef FREICOIN_SERIALIZE_H
+#define FREICOIN_SERIALIZE_H
 
 #include <compat/endian.h>
 
@@ -1109,4 +1109,4 @@ size_t GetSerializeSizeMany(int nType, int nVersion, const T&... t)
     return sc.size();
 }
 
-#endif // BITCOIN_SERIALIZE_H
+#endif // FREICOIN_SERIALIZE_H

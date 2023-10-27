@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_FEEBUMPER_H
-#define BITCOIN_WALLET_FEEBUMPER_H
+#ifndef FREICOIN_WALLET_FEEBUMPER_H
+#define FREICOIN_WALLET_FEEBUMPER_H
 
 #include <primitives/transaction.h>
 
@@ -69,4 +69,4 @@ Result CommitTransaction(CWallet& wallet,
 } // namespace feebumper
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_FEEBUMPER_H
+#endif // FREICOIN_WALLET_FEEBUMPER_H

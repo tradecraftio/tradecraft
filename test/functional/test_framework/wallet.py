@@ -168,7 +168,7 @@ class MiniWallet:
             return self._utxos[index]
 
     def send_self_transfer(self, **kwargs):
-        """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        """Create and send a tx with the specified fee_rate. Fee may be exact or at most one kria higher than needed."""
         tx = self.create_self_transfer(**kwargs)
         self.sendrawtransaction(from_node=kwargs['from_node'], tx_hex=tx['hex'])
         return tx
@@ -193,7 +193,7 @@ class MiniWallet:
         return txid, 1
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
-        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one kria higher than needed."""
         from_node = from_node or self._test_node
         utxo_to_spend = utxo_to_spend or self.get_utxo()
         if self._priv_key is None:

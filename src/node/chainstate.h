@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_CHAINSTATE_H
-#define BITCOIN_NODE_CHAINSTATE_H
+#ifndef FREICOIN_NODE_CHAINSTATE_H
+#define FREICOIN_NODE_CHAINSTATE_H
 
 #include <cstdint>
 #include <functional>
@@ -96,4 +96,4 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 std::function<int64_t()> get_unix_time_seconds);
 } // namespace node
 
-#endif // BITCOIN_NODE_CHAINSTATE_H
+#endif // FREICOIN_NODE_CHAINSTATE_H

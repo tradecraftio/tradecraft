@@ -66,16 +66,16 @@ def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
-    with open(os.path.join(os.getcwd(), "mock_psbt"), "r", encoding="utf8") as f:
-        mock_psbt = f.read()
+    with open(os.path.join(os.getcwd(), "mock_pst"), "r", encoding="utf8") as f:
+        mock_pst = f.read()
 
     if args.fingerprint == "00000001" :
         sys.stdout.write(json.dumps({
-            "psbt": mock_psbt,
+            "pst": mock_pst,
             "complete": True
         }))
     else:
-        sys.stdout.write(json.dumps({"psbt": args.psbt}))
+        sys.stdout.write(json.dumps({"pst": args.pst}))
 
 parser = argparse.ArgumentParser(prog='./signer.py', description='External signer mock')
 parser.add_argument('--fingerprint')
@@ -97,7 +97,7 @@ parser_displayaddress.add_argument('--desc', metavar='desc')
 parser_displayaddress.set_defaults(func=displayaddress)
 
 parser_signtx = subparsers.add_parser('signtx')
-parser_signtx.add_argument('psbt', metavar='psbt')
+parser_signtx.add_argument('pst', metavar='pst')
 
 parser_signtx.set_defaults(func=signtx)
 

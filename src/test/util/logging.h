@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_LOGGING_H
-#define BITCOIN_TEST_UTIL_LOGGING_H
+#ifndef FREICOIN_TEST_UTIL_LOGGING_H
+#define FREICOIN_TEST_UTIL_LOGGING_H
 
 #include <util/macros.h>
 
@@ -49,4 +49,4 @@ public:
 
 #define ASSERT_DEBUG_LOG(message) DebugLogHelper PASTE2(debugloghelper, __COUNTER__)(message)
 
-#endif // BITCOIN_TEST_UTIL_LOGGING_H
+#endif // FREICOIN_TEST_UTIL_LOGGING_H

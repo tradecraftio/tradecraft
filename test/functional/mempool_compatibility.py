@@ -24,14 +24,14 @@ The previous release v0.19.1 is required by this test, see test/README.md.
 import os
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,
 )
 
 
-class MempoolCompatibilityTest(BitcoinTestFramework):
+class MempoolCompatibilityTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.wallet_names = [None]

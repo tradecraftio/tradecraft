@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_SERVER_UTIL_H
-#define BITCOIN_RPC_SERVER_UTIL_H
+#ifndef FREICOIN_RPC_SERVER_UTIL_H
+#define FREICOIN_RPC_SERVER_UTIL_H
 
 #include <any>
 
@@ -40,4 +40,4 @@ CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
 CConnman& EnsureConnman(const node::NodeContext& node);
 PeerManager& EnsurePeerman(const node::NodeContext& node);
 
-#endif // BITCOIN_RPC_SERVER_UTIL_H
+#endif // FREICOIN_RPC_SERVER_UTIL_H

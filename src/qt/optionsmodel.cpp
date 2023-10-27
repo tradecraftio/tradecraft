@@ -14,12 +14,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <qt/optionsmodel.h>
 
-#include <qt/bitcoinunits.h>
+#include <qt/freicoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
@@ -83,7 +83,7 @@ void OptionsModel::Init(bool resetSettings)
 
     // Display
     if (!settings.contains("nDisplayUnit"))
-        settings.setValue("nDisplayUnit", BitcoinUnits::BTC);
+        settings.setValue("nDisplayUnit", FreicoinUnits::FRC);
     nDisplayUnit = settings.value("nDisplayUnit").toInt();
 
     if (!settings.contains("strThirdPartyTxUrls"))
@@ -94,10 +94,10 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
-    if (!settings.contains("enable_psbt_controls")) {
-        settings.setValue("enable_psbt_controls", false);
+    if (!settings.contains("enable_pst_controls")) {
+        settings.setValue("enable_pst_controls", false);
     }
-    m_enable_psbt_controls = settings.value("enable_psbt_controls", false).toBool();
+    m_enable_pst_controls = settings.value("enable_pst_controls", false).toBool();
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
@@ -379,8 +379,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return m_use_embedded_monospaced_font;
         case CoinControlFeatures:
             return fCoinControlFeatures;
-        case EnablePSBTControls:
-            return settings.value("enable_psbt_controls");
+        case EnablePSFRControls:
+            return settings.value("enable_pst_controls");
         case Prune:
             return settings.value("bPrune");
         case PruneSize:
@@ -528,9 +528,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
             break;
-        case EnablePSBTControls:
-            m_enable_psbt_controls = value.toBool();
-            settings.setValue("enable_psbt_controls", m_enable_psbt_controls);
+        case EnablePSFRControls:
+            m_enable_pst_controls = value.toBool();
+            settings.setValue("enable_pst_controls", m_enable_pst_controls);
             break;
         case Prune:
             if (settings.value("bPrune") != value) {

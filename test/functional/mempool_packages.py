@@ -20,7 +20,7 @@ from decimal import Decimal
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import COIN
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -35,7 +35,7 @@ MAX_ANCESTORS_CUSTOM = 5
 MAX_DESCENDANTS_CUSTOM = 10
 assert MAX_DESCENDANTS_CUSTOM >= MAX_ANCESTORS_CUSTOM
 
-class MempoolPackagesTest(BitcoinTestFramework):
+class MempoolPackagesTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [
