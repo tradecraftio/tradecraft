@@ -65,7 +65,7 @@ Notable changes
 ===============
 
 There have been no notable changes in the stratum mining server or the
-Tradecraft/Freicoin merge-mining patches between v22.0.0.1-30022 and this
+Tradecraft/Freicoin merge-mining patches between v23.0.0.1-32930 and this
 release.  Please see the Bitcoin Core release notes for notable changes between
 the upstream versions upon which these releases are based.
 
