@@ -57,7 +57,7 @@ use Bitcoin Core on unsupported systems.
 Bitcoin Core should also work on most other Unix-like systems but is not as
 frequently tested on them.
 
-From Bitcoin Core 0.17.0 onwards, macOS versions earlier than 10.10 are no
+From Bitcoin Core v0.17 onwards, macOS versions earlier than 10.10 are no
 longer supported, as Bitcoin Core is now built using Qt 5.9.x which requires
 macOS 10.10+. Additionally, Bitcoin Core does not yet change appearance when
 macOS "dark mode" is activated.
