@@ -58,7 +58,7 @@ Linux kernel, macOS 10.15+, and Windows 7 and newer.  Bitcoin Core should also
 work on most other Unix-like systems but is not as frequently tested on them.
 It is not recommended to use Bitcoin Core on unsupported systems.
 
-From Bitcoin Core 23.0 onwards, macOS versions earlier than 10.15 are no longer
+From Bitcoin Core v23 onwards, macOS versions earlier than 10.15 are no longer
 supported.
 
 Notable changes
