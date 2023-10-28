@@ -13,7 +13,7 @@ Freicoin version v22.1-30279 is now available from:
   * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v22.1-30279-osx64.tar.gz)
   * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v22.1-30279-win64-setup.exe)
   * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v22.1-30279-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v22.1-30279.zip)
+  * [Source](https://github.com/tradecraftio/tradecraft/archive/freicoin-v22.1-30279.zip)
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -42,7 +42,7 @@ Compatibility
 =============
 
 Freicoin is supported and extensively tested on operating systems using the
-Linux kernel, macOS 10.14+, and Windows 7 and newer.  Freicoin Core should also
+Linux kernel, macOS 10.14+, and Windows 7 and newer.  Freicoin should also
 work on most other Unix-like systems but is not as frequently tested on them.
 It is not recommended to use Freicoin on unsupported systems.
 
@@ -59,46 +59,35 @@ P2P and network changes
   Project)](https://en.wikipedia.org/wiki/I2P) service and connect to such
   services.  See
   [i2p.md](https://github.com/bitcoin/bitcoin/blob/22.x/doc/i2p.md) for details.
-  (#20685)
+  (bitcoin/bitcoin#20685)
 
 - This release removes support for Tor version 2 hidden services in favor of Tor
   v3 only, as the Tor network [dropped support for Tor
   v2](https://blog.torproject.org/v2-deprecation-timeline) with the release of
   Tor version 0.4.6.  Henceforth, Freicoin ignores Tor v2 addresses; it neither
   rumors them over the network to other peers, nor stores them in memory or to
-  `peers.dat`.  (#22050)
+  `peers.dat`.  (bitcoin/bitcoin#22050)
 
 - Added NAT-PMP port mapping support via
-  [`libnatpmp`](https://miniupnp.tuxfamily.org/libnatpmp.html).  (#18077)
+  [`libnatpmp`](https://miniupnp.tuxfamily.org/libnatpmp.html).
+  (bitcoin/bitcoin#18077)
 
 New and Updated RPCs
 --------------------
-
-- Due to [BIP
-  350](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki) being
-  implemented, behavior for all RPCs that accept addresses is changed when a
-  native witness version 1 (or higher) is passed.  These now require a Bech32m
-  encoding instead of a Bech32 one, and Bech32m encoding will be used for such
-  addresses in RPC output as well.  No version 1 addresses should be created for
-  mainnet until consensus rules are adopted that give them meaning (as will
-  happen through [BIP
-  341](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)).  Once
-  that happens, Bech32m is expected to be used for them, so this shouldn't
-  affect any production systems, but may be observed on other networks where
-  such addresses already have meaning (like signet).  (#20861)
 
 - The `getpeerinfo` RPC returns two new boolean fields, `bip152_hb_to` and
   `bip152_hb_from`, that respectively indicate whether we selected a peer to be
   in compact blocks high-bandwidth mode or whether a peer selected us as a
   compact blocks high-bandwidth peer.  High-bandwidth peers send new block
   announcements via a `cmpctblock` message rather than the usual inv/headers
-  announcements.  See BIP 152 for more details.  (#19776)
+  announcements.  See BIP 152 for more details.  (bitcoin/bitcoin#19776)
 
 - `getpeerinfo` no longer returns the following fields: `addnode`, `banscore`,
   and `whitelisted`, which were previously deprecated in v21.  Instead of
   `addnode`, the `connection_type` field returns manual.  Instead of
   `whitelisted`, the `permissions` field indicates if the peer has special
-  privileges. The `banscore` field has simply been removed.  (#20755)
+  privileges. The `banscore` field has simply been removed.
+  (bitcoin/bitcoin#20755)
 
 - The following RPCs: `gettxout`, `getrawtransaction`, `decoderawtransaction`,
   `decodescript`, `gettransaction`, and REST endpoints: `/rest/tx`,
@@ -110,26 +99,29 @@ New and Updated RPCs
   fields are attributes of the `scriptPubKey` object returned in the RPC
   response.  However, in the response of `decodescript` these fields are
   top-level attributes, and included again as attributes of the `scriptPubKey`
-  object.  (#20286)
+  object.  (bitcoin/bitcoin#20286)
 
 - When creating a hex-encoded freicoin transaction using the `freicoin-tx`
   utility with the `-json` option set, the following fields: `addresses`,
-  `reqSigs` are no longer returned in the tx output of the response.  (#20286)
+  `reqSigs` are no longer returned in the tx output of the response.
+  (bitcoin/bitcoin#20286)
 
 - The `listbanned` RPC now returns two new numeric fields: `ban_duration` and
   `time_remaining`.  Respectively, these new fields indicate the duration of a
   ban and the time remaining until a ban expires, both in seconds.
   Additionally, the `ban_created` field is repositioned to come before
-  `banned_until`.  (#21602)
+  `banned_until`.  (bitcoin/bitcoin#21602)
 
 - The `setban` RPC can ban onion addresses again.  This fixes a regression
-  introduced in version 0.21.0.  (#20852)
+  introduced in version v21.  (bitcoin/bitcoin#20852)
 
 - The `getnodeaddresses` RPC now returns a "network" field indicating the
-  network type (ipv4, ipv6, onion, or i2p) for each address.  (#21594)
+  network type (ipv4, ipv6, onion, or i2p) for each address.
+  (bitcoin/bitcoin#21594)
 
 - `getnodeaddresses` now also accepts a "network" argument (ipv4, ipv6, onion,
-  or i2p) to return only addresses of the specified network.  (#21843)
+  or i2p) to return only addresses of the specified network.
+  (bitcoin/bitcoin#21843)
 
 - The `testmempoolaccept` RPC now accepts multiple transactions (still
   experimental at the moment, API may be unstable).  This is intended for
@@ -138,13 +130,13 @@ New and Updated RPCs
   mempool policy, package policies apply: the list cannot contain more than 25
   transactions or have a total size exceeding 101K virtual bytes, and cannot
   conflict with (spend the same inputs as) each other or the mempool, even if it
-  would be a valid BIP125 replace-by-fee.  There are some known limitations to
-  the accuracy of the test accept: it's possible for `testmempoolaccept` to
-  return "allowed"=True for a group of transactions, but
-  "too-long-mempool-chain" if they are actually submitted.  (#20833)
+  would be a valid replace-by-fee.  There are some known limitations to the
+  accuracy of the test accept: it's possible for `testmempoolaccept` to return
+  "allowed"=True for a group of transactions, but "too-long-mempool-chain" if
+  they are actually submitted.  (bitcoin/bitcoin#20833)
 
 - `addmultisigaddress` and `createmultisig` now support up to 20 keys for Segwit
-  addresses.  (#20867)
+  addresses.  (bitcoin/bitcoin#20867)
 
 Changes to Wallet or GUI related RPCs can be found in the GUI or Wallet section
 below.
@@ -163,14 +155,14 @@ Files
   in JSON format in `banlist.json` instead of `banlist.dat`.  `banlist.dat` is
   only read on startup if `banlist.json` is not present.  Changes are only
   written to the new `banlist.json`.  A future version of Freicoin may
-  completely ignore `banlist.dat`.  (#20966)
+  completely ignore `banlist.dat`.  (bitcoin/bitcoin#20966)
 
 New settings
 ------------
 
 - The `-natpmp` option has been added to use NAT-PMP to map the listening port.
   If both UPnP and NAT-PMP are enabled, a successful allocation from UPnP
-  prevails over one from NAT-PMP. (#18077)
+  prevails over one from NAT-PMP. (bitcoin/bitcoin#18077)
 
 Updated settings
 ----------------
@@ -179,13 +171,13 @@ Changes to Wallet or GUI related settings can be found in the GUI or Wallet
 section below.
 
 - Passing an invalid `-rpcauth` argument now cause freicoind to fail to start.
-  (#20461)
+  (bitcoin/bitcoin#20461)
 
 - In previous releases, the meaning of the command line option `-persistmempool`
   (without a value provided) incorrectly disabled mempool persistence.
   `-persistmempool` is now treated like other boolean options to mean
   `-persistmempool=1`.  Passing `-persistmempool=0`, `-persistmempool=1` and
-  `-nopersistmempool` is unaffected.  (#23061)
+  `-nopersistmempool` is unaffected.  (bitcoin/bitcoin#23061)
 
 Tools and Utilities
 -------------------
@@ -194,11 +186,11 @@ Tools and Utilities
   node per network type (including Tor v2 versus v3) and total.  This can be
   useful to see if the node knows enough addresses in a network to use options
   like `-onlynet=<network>` or to upgrade to this release of Freicoin v22 that
-  supports Tor v3 only.  (#21595)
+  supports Tor v3 only.  (bitcoin/bitcoin#21595)
 
 - A new `-rpcwaittimeout` argument to `freicoin-cli` sets the timeout in seconds
   to use with `-rpcwait`.  If the timeout expires, `freicoin-cli` will report a
-  failure. (#21056)
+  failure. (bitcoin/bitcoin#21056)
 
 Wallet
 ------
@@ -207,30 +199,25 @@ Wallet
   methods `enumeratesigners` and `displayaddress`.  Support is also added to the
   `send` RPC call.  This feature is experimental.  See
   [external-signer.md](https://github.com/bitcoin/bitcoin/blob/22.x/doc/external-signer.md)
-  for details.  (#16546)
+  for details.  (bitcoin/bitcoin#16546)
 
 - A new `listdescriptors` RPC is available to inspect the contents of
   descriptor-enabled wallets.  The RPC returns public versions of all imported
   descriptors, including their timestamp and flags.  For ranged descriptors, it
   also returns the range boundaries and the next index to generate addresses
-  from.  (#20226)
+  from.  (bitcoin/bitcoin#20226)
 
 - The `bumpfee` RPC is not available with wallets that have private keys
-  disabled.  `psbtbumpfee` can be used instead.  (#20891)
+  disabled.  `psbtbumpfee` can be used instead.  (bitcoin/bitcoin#20891)
 
 - The `fundrawtransaction`, `send` and `walletcreatefundedpsbt` RPCs now support
   an `include_unsafe` option that when `true` allows using unsafe inputs to fund
   the transaction.  Note that the resulting transaction may become invalid if
   one of the unsafe inputs disappears.  If that happens, the transaction must be
-  funded with different inputs and republished.  (#21359)
+  funded with different inputs and republished.  (bitcoin/bitcoin#21359)
 
 - We now support up to 20 keys in `multi()` and `sortedmulti()` descriptors
-  under `wsh()`.  (#20867)
-
-- Taproot descriptors can be imported into the wallet only after activation has
-  occurred on the network (e.g. mainnet, testnet, signet) in use.  See
-  [descriptors.md](https://github.com/bitcoin/bitcoin/blob/22.x/doc/descriptors.md)
-  for supported descriptors.
+  under `wsh()`.  (bitcoin/bitcoin#20867)
 
 GUI changes
 -----------
@@ -255,10 +242,11 @@ RPC
   Previously, if this limit was exceeded, the RPC server would respond with
   [status code 500
   (`HTTP_INTERNAL_SERVER_ERROR`)](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#5xx_server_errors).
-  Now it returns status code 503 (`HTTP_SERVICE_UNAVAILABLE`). (#18335)
+  Now it returns status code 503 (`HTTP_SERVICE_UNAVAILABLE`).
+  (bitcoin/bitcoin#18335)
 
 - Error codes have been updated to be more accurate for the following error
-  cases (#18466):
+  cases (bitcoin/bitcoin#18466):
 
   - `signmessage` now returns RPC_INVALID_ADDRESS_OR_KEY (-5) if the passed
     address is invalid.  Previously returned RPC_TYPE_ERROR (-3).
@@ -268,9 +256,6 @@ RPC
 
   - `verifymessage` now returns RPC_TYPE_ERROR (-3) if the passed signature is
     malformed.  Previously returned RPC_INVALID_ADDRESS_OR_KEY (-5).
-
-Tests
------
 
 v22.1-30279 change log
 ======================
@@ -1108,7 +1093,6 @@ changes are sometimes condensed into one line.
 - bitcoin/bitcoin#26321 Adjust .tx/config for new Transifex CLI
 
 ### Utilities
-
 - bitcoin/bitcoin#22390 system: skip trying to set the locale on NetBSD
 - bitcoin/bitcoin#22895 don't call GetBlockPos in ReadBlockFromDisk without cs_main lock
 - bitcoin/bitcoin#24104 fs: Make compatible with boost 1.78
