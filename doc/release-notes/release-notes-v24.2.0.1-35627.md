@@ -23,7 +23,7 @@ stratum mining server and Tradecraft/Freicoin merge-mining patches applied.
 Please report bugs related to the stratum mining server implementation or
 Tradecraft/Freicoin merge-mining at the Tradecraft issue tracker on GitHub:
 
-  <https://github.com/tradecraftio/tradecraft/issues>
+  <https://github.com/tradecraftio/mergemine/issues>
 
 Please report other bugs regarding Bitcoin Core at the issue tracker on GitHub:
 
