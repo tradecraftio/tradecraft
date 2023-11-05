@@ -160,7 +160,7 @@ static RPCHelpMan getsharechaininfo() {
         return obj;
     }
     const auto& shareparams = *g_share_chain_params;
-    obj.pushKV("network", shareparams.NetworkName());
+    obj.pushKV("network", shareparams.GetShareChainTypeString());
     return obj;
 },
     };
