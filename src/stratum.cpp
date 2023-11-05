@@ -4,6 +4,7 @@
 
 #include <stratum.h>
 
+#include <addresstype.h> // for WitnessUnknown
 #include <base58.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
