@@ -828,13 +828,23 @@ class CBlock(CBlockHeader):
         return self.get_merkle_root(hashes)
 
     def calc_witness_merkle_root(self):
-        # For witness root purposes, the hash of the
-        # coinbase, with witness, is defined to be 0...0
-        hashes = [ser_uint256(0)]
+        # For witness root purposes, the hash of the coinbase does not include
+        # the coinbase witness, which is the witness nonce
+        if getattr(self.vtx[0], 'sha256', None) is None:
+            self.vtx[0].calc_sha256(False)
+        hashes = [ser_uint256(self.vtx[0].sha256)]
 
-        for tx in self.vtx[1:]:
+        for tx in self.vtx[1:-1]:
             # Calculate the hashes with witness data
             hashes.append(ser_uint256(tx.calc_sha256(True)))
+
+        # Strip the witness commitment from the block-final transaction. The
+        # witness is not serialized, but the block-final transaction never has a
+        # witness anyway.
+        tx = self.vtx[-1].serialize_without_witness()
+        if len(tx) >= (1 + 32 + 4 + 8) and tx[-8-4]==0x4b and tx[-8-3]==0x4a and tx[-8-2]==0x49 and tx[-8-1]==0x48:
+            tx = tx[:-8-4-32-1] + (33 * b'\x00') + tx[-8-4:]
+        hashes.append(hash256(tx))
 
         return self.get_fast_merkle_root(hashes)
 

@@ -178,12 +178,6 @@ void UpdateSegwitCommitment(const ChainstateManager& chainman, const StratumWork
     if (block2.vtx.size() > 1) {
         block2.vtx.back() = MakeTransactionRef(std::move(bf));
     }
-    // Erase any existing commitments:
-    while (GetWitnessCommitment(block2, nullptr, nullptr)) {
-        CMutableTransaction mtx(*block2.vtx[0]);
-        mtx.vout.erase(mtx.vout.end()-1);
-        block2.vtx[0] = MakeTransactionRef(std::move(mtx));
-    }
     // Generate new commitment:
     chainman.GenerateCoinbaseCommitment(block2, current_work.m_prev_block_index);
     // Save results from temporary block structure:
