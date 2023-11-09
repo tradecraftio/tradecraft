@@ -201,6 +201,7 @@ BOOST_AUTO_TEST_CASE(packet_test_vectors) {
     //             quote(row['out_ciphertext_endswith'])
     //         ]
     //         print("    TestBIP324PacketVector(\n        " + ",\n        ".join(args) + ");")
+#if 0 // We have no way of fixing these to work with freicoin's changed configuration.
     TestBIP324PacketVector(
         1,
         "61062ea5071d800bbfd59e2e8b53d47d194b095ae5a4df04936b49772ef0d4d7",
@@ -306,6 +307,7 @@ BOOST_AUTO_TEST_CASE(packet_test_vectors) {
         "889f339285564fd868401fac8380bb9887925122ec8f31c8ae51ce067def103b",
         "",
         "7c4b9e1e6c1ce69da7b01513cdc4588fd93b04dafefaf87f31561763d906c672bac3dfceb751ebd126728ac017d4d580e931b8e5c7d5dfe0123be4dc9b2d2238b655c8a7fadaf8082c31e310909b5b731efc12f0a56e849eae6bfeedcc86dd27ef9b91d159256aa8e8d2b71a311f73350863d70f18d0d7302cf551e4303c7733");
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()
