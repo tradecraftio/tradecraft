@@ -177,11 +177,11 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *params->AssumeutxoForHeight(110);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "67088cccadbb1a8e34fd8b03e65c247df1e38260b3bac6d9fdba096affdae1ea");
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "d9de564d8b460e26dbf7dca0c5716bc7029ee966658a5a5936c870514c2d1d79");
     BOOST_CHECK_EQUAL(out110.nChainTx, 121U);
 
-    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256S("0x0ba0bd14a3fdcd7b9a5c37dc949210331fc377c7c38797d534160a70583129d9"));
-    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "67088cccadbb1a8e34fd8b03e65c247df1e38260b3bac6d9fdba096affdae1ea");
+    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256S("0x4b1160d0b1ec03eeb876024ef6d96db8f3696118e1409c44166f4f532640b496"));
+    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "d9de564d8b460e26dbf7dca0c5716bc7029ee966658a5a5936c870514c2d1d79");
     BOOST_CHECK_EQUAL(out110_2.nChainTx, 121U);
 }
 
@@ -215,24 +215,26 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         }
 
         coinbase.vout.resize(1);
-        coinbase.vout[0].scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-        coinbase.vout[0].scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
-        coinbase.vout[0].scriptPubKey[1] = 0x01;
-        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-4] = 0x4b;
-        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-3] = 0x4a;
-        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-2] = 0x49;
-        coinbase.vout[0].scriptPubKey[MINIMUM_WITNESS_COMMITMENT-1] = 0x48;
-
         auto tx = MakeTransactionRef(coinbase);
         assert(tx->IsCoinBase());
         return tx;
     };
     auto insert_witness_commitment = [](CBlock& block, uint256 commitment) {
-        assert(!block.vtx.empty() && block.vtx[0]->IsCoinBase() && !block.vtx[0]->vout.empty());
+        assert(!block.vtx.empty());
 
-        CMutableTransaction mtx{*block.vtx[0]};
-        memcpy(&mtx.vout[0].scriptPubKey[2], commitment.begin(), 32);
-        block.vtx[0] = MakeTransactionRef(mtx);
+        CMutableTransaction mtx{*block.vtx.back()};
+        if (mtx.vout.empty()) {
+            mtx.vout.resize(1);
+        }
+        mtx.vout.back().scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
+        mtx.vout.back().scriptPubKey[0] = MINIMUM_WITNESS_COMMITMENT - 1;
+        mtx.vout.back().scriptPubKey[1] = 0x01;
+        memcpy(&mtx.vout.back().scriptPubKey[2], commitment.begin(), 32);
+        mtx.vout.back().scriptPubKey[MINIMUM_WITNESS_COMMITMENT-4] = 0x4b;
+        mtx.vout.back().scriptPubKey[MINIMUM_WITNESS_COMMITMENT-3] = 0x4a;
+        mtx.vout.back().scriptPubKey[MINIMUM_WITNESS_COMMITMENT-2] = 0x49;
+        mtx.vout.back().scriptPubKey[MINIMUM_WITNESS_COMMITMENT-1] = 0x48;
+        block.vtx.back() = MakeTransactionRef(mtx);
     };
 
     {
@@ -351,6 +353,11 @@ BOOST_AUTO_TEST_CASE(block_malleation)
             mtx.vin[0].scriptWitness.stack[0] = {0};
             block.vtx.push_back(MakeTransactionRef(mtx));
         }
+        {
+            CMutableTransaction mtx;
+            mtx.vin.resize(1);
+            block.vtx.push_back(MakeTransactionRef(mtx));
+        }
         block.hashMerkleRoot = BlockMerkleRoot(block);
         // Block with witnesses is considered mutated if the witness commitment
         // is not validated.
@@ -360,6 +367,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
 
         // Block with valid commitment is not mutated
         {
+            insert_witness_commitment(block, uint256());
             auto commitment{BlockWitnessMerkleRoot(block)};
             insert_witness_commitment(block, commitment);
             block.hashMerkleRoot = BlockMerkleRoot(block);
@@ -378,6 +386,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         BOOST_CHECK(block.hashMerkleRoot == BlockMerkleRoot(block));
         BOOST_CHECK(is_mutated(block, /*check_witness_root=*/true));
         {
+            insert_witness_commitment(block, uint256());
             auto commitment{BlockWitnessMerkleRoot(block)};
             insert_witness_commitment(block, commitment);
             block.hashMerkleRoot = BlockMerkleRoot(block);
