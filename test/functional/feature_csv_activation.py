@@ -41,10 +41,10 @@ BIP 68:
 bip68txs - 16 txs with nSequence relative locktime of 10 with various bits set as per the relative_locktimes below
 
 BIP 112:
-bip112txs_vary_nSequence - 16 txs with nSequence relative_locktimes of 10 evaluated against 10 OP_CSV OP_DROP
-bip112txs_vary_nSequence_9 - 16 txs with nSequence relative_locktimes of 9 evaluated against 10 OP_CSV OP_DROP
-bip112txs_vary_OP_CSV - 16 txs with nSequence = 10 evaluated against varying {relative_locktimes of 10} OP_CSV OP_DROP
-bip112txs_vary_OP_CSV_9 - 16 txs with nSequence = 9 evaluated against varying {relative_locktimes of 10} OP_CSV OP_DROP
+bip112txs_vary_nSequence - 16 txs with nSequence relative_locktimes of 10 evaluated against 10 OP_CSV
+bip112txs_vary_nSequence_9 - 16 txs with nSequence relative_locktimes of 9 evaluated against 10 OP_CSV
+bip112txs_vary_OP_CSV - 16 txs with nSequence = 10 evaluated against varying {relative_locktimes of 10} OP_CSV
+bip112txs_vary_OP_CSV_9 - 16 txs with nSequence = 9 evaluated against varying {relative_locktimes of 10} OP_CSV
 bip112tx_special - test negative argument to OP_CSV
 bip112tx_emptystack - test empty stack (= no argument) OP_CSV
 """
@@ -61,7 +61,6 @@ from test_framework.p2p import P2PDataStore
 from test_framework.script import (
     CScript,
     OP_CHECKSEQUENCEVERIFY,
-    OP_DROP,
 )
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
@@ -124,7 +123,7 @@ class BIP68_112_113Test(FreicoinTestFramework):
         tx = self.create_self_transfer_from_utxo(input)
         tx.nVersion = txversion
         self.miniwallet.sign_tx(tx)
-        tx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
+        tx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
         tx.rehash()
         return tx
 
@@ -169,9 +168,9 @@ class BIP68_112_113Test(FreicoinTestFramework):
             tx.nVersion = txversion
             self.miniwallet.sign_tx(tx)
             if varyOP_CSV:
-                tx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
+                tx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
             else:
-                tx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
+                tx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
             tx.rehash()
             txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
         return txs
@@ -235,7 +234,7 @@ class BIP68_112_113Test(FreicoinTestFramework):
         for _ in range(16):
             bip68inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
 
-        # 2 sets of 16 inputs with 10 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
+        # 2 sets of 16 inputs with 10 OP_CSV (actually will be prepended to spending scriptSig)
         bip112basicinputs = []
         for _ in range(2):
             inputs = []
@@ -243,7 +242,7 @@ class BIP68_112_113Test(FreicoinTestFramework):
                 inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
             bip112basicinputs.append(inputs)
 
-        # 2 sets of 16 varied inputs with (relative_lock_time) OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
+        # 2 sets of 16 varied inputs with (relative_lock_time) OP_CSV (actually will be prepended to spending scriptSig)
         bip112diverseinputs = []
         for _ in range(2):
             inputs = []
@@ -251,7 +250,7 @@ class BIP68_112_113Test(FreicoinTestFramework):
                 inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
             bip112diverseinputs.append(inputs)
 
-        # 1 special input with -1 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
+        # 1 special input with -1 OP_CSV (actually will be prepended to spending scriptSig)
         bip112specialinput = self.send_generic_input_tx(self.coinbase_blocks)
         # 1 special input with (empty stack) OP_CSV (actually will be prepended to spending scriptSig)
         bip112emptystackinput = self.send_generic_input_tx(self.coinbase_blocks)
@@ -290,19 +289,19 @@ class BIP68_112_113Test(FreicoinTestFramework):
         bip68txs_v2 = self.create_bip68txs(bip68inputs, 2)
 
         # For BIP112 test:
-        # 16 relative sequence locktimes of 10 against 10 OP_CSV OP_DROP inputs
+        # 16 relative sequence locktimes of 10 against 10 OP_CSV inputs
         bip112txs_vary_nSequence_v1 = self.create_bip112txs(bip112basicinputs[0], False, 1)
         bip112txs_vary_nSequence_v2 = self.create_bip112txs(bip112basicinputs[0], False, 2)
-        # 16 relative sequence locktimes of 9 against 10 OP_CSV OP_DROP inputs
+        # 16 relative sequence locktimes of 9 against 10 OP_CSV inputs
         bip112txs_vary_nSequence_9_v1 = self.create_bip112txs(bip112basicinputs[1], False, 1, -1)
         bip112txs_vary_nSequence_9_v2 = self.create_bip112txs(bip112basicinputs[1], False, 2, -1)
-        # sequence lock time of 10 against 16 (relative_lock_time) OP_CSV OP_DROP inputs
+        # sequence lock time of 10 against 16 (relative_lock_time) OP_CSV inputs
         bip112txs_vary_OP_CSV_v1 = self.create_bip112txs(bip112diverseinputs[0], True, 1)
         bip112txs_vary_OP_CSV_v2 = self.create_bip112txs(bip112diverseinputs[0], True, 2)
-        # sequence lock time of 9 against 16 (relative_lock_time) OP_CSV OP_DROP inputs
+        # sequence lock time of 9 against 16 (relative_lock_time) OP_CSV inputs
         bip112txs_vary_OP_CSV_9_v1 = self.create_bip112txs(bip112diverseinputs[1], True, 1, -1)
         bip112txs_vary_OP_CSV_9_v2 = self.create_bip112txs(bip112diverseinputs[1], True, 2, -1)
-        # -1 OP_CSV OP_DROP input
+        # -1 OP_CSV input
         bip112tx_special_v1 = self.create_bip112special(bip112specialinput, 1)
         bip112tx_special_v2 = self.create_bip112special(bip112specialinput, 2)
         # (empty stack) OP_CSV input
