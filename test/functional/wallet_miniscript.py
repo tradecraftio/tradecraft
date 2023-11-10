@@ -49,11 +49,11 @@ P2WSH_MINISCRIPTS = [
     # One of two keys
     f"or_b(pk({TPUBS[0]}/*),s:pk({TPUBS[1]}/*))",
     # A script similar (same spending policy) to BOLT3's offered HTLC (with anchor outputs)
-    f"or_d(pk({TPUBS[0]}/*),and_v(and_v(v:pk({TPUBS[1]}/*),or_c(pk({TPUBS[2]}/*),v:hash160(7f999c905d5e35cefd0a37673f746eb13fba3640))),older(1)))",
+    f"or_d(pk({TPUBS[0]}/*),and_v(and_v(v:pk({TPUBS[1]}/*),or_c(pk({TPUBS[2]}/*),v:hash160(7f999c905d5e35cefd0a37673f746eb13fba3640))),d:older(1)))",
     # A Revault Unvault policy with the older() replaced by an after()
     f"andor(multi(2,{TPUBS[0]}/*,{TPUBS[1]}/*),and_v(v:multi(4,{PUBKEYS[0]},{PUBKEYS[1]},{PUBKEYS[2]},{PUBKEYS[3]}),t:after(424242)),thresh(4,pkh({TPUBS[2]}/*),a:pkh({TPUBS[3]}/*),a:pkh({TPUBS[4]}/*),a:pkh({TPUBS[5]}/*)))",
     # Liquid-like federated pegin with emergency recovery keys
-    f"or_i(and_b(pk({PUBKEYS[0]}),a:and_b(pk({PUBKEYS[1]}),a:and_b(pk({PUBKEYS[2]}),a:and_b(pk({PUBKEYS[3]}),s:pk({PUBKEYS[4]}))))),and_v(v:thresh(2,pkh({TPUBS[0]}/*),a:pkh({PUBKEYS[5]}),a:pkh({PUBKEYS[6]})),older(4209713)))",
+    f"or_i(and_b(pk({PUBKEYS[0]}),a:and_b(pk({PUBKEYS[1]}),a:and_b(pk({PUBKEYS[2]}),a:and_b(pk({PUBKEYS[3]}),s:pk({PUBKEYS[4]}))))),and_v(v:thresh(2,pkh({TPUBS[0]}/*),a:pkh({PUBKEYS[5]}),a:pkh({PUBKEYS[6]})),d:older(4209713)))",
 ]
 
 DESCS = [
@@ -79,7 +79,7 @@ DESCS_PRIV = [
     },
     # A more complex policy, that can't be satisfied through the first branch (need for a preimage)
     {
-        "desc": f"wsh(andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(2a8ce30189b2ec3200b47aeb4feaac8fcad7c0ba170389729f4898b0b7933bcb)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*))))",
+        "desc": f"wsh(andor(nd:older(2),and_v(v:pk({TPRVS[0]}),sha256(2a8ce30189b2ec3200b47aeb4feaac8fcad7c0ba170389729f4898b0b7933bcb)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*))))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 3,
@@ -87,7 +87,7 @@ DESCS_PRIV = [
     },
     # The same policy but we provide the preimage. This path will be chosen as it's a smaller witness.
     {
-        "desc": f"wsh(andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*))))",
+        "desc": f"wsh(andor(nd:older(2),and_v(v:pk({TPRVS[0]}),sha256(61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*))))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 3,
@@ -98,7 +98,7 @@ DESCS_PRIV = [
     },
     # Signature with a relative timelock
     {
-        "desc": f"wsh(and_v(v:older(2),pk({TPRVS[0]}/*)))",
+        "desc": f"wsh(and_v(older(2),pk({TPRVS[0]}/*)))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 1,
@@ -114,7 +114,7 @@ DESCS_PRIV = [
     },
     # Signature with both
     {
-        "desc": f"wsh(and_v(older(4),and_v(v:after(30),pk({TPRVS[0]}/*))))",
+        "desc": f"wsh(and_v(older(4),and_v(after(30),pk({TPRVS[0]}/*))))",
         "sequence": 4,
         "locktime": 30,
         "sigs_count": 1,
@@ -130,7 +130,7 @@ DESCS_PRIV = [
     },
     # We have all the keys, wallet selects the timeout path to sign since it's smaller and sequence is set
     {
-        "desc": f"wsh(andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pk({TPRVS[1]}),older(10))))",
+        "desc": f"wsh(andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pk({TPRVS[1]}),t:older(10))))",
         "sequence": 10,
         "locktime": None,
         "sigs_count": 3,
@@ -138,7 +138,7 @@ DESCS_PRIV = [
     },
     # We have all the keys, wallet selects the primary path to sign unconditionally since nsequence wasn't set to be valid for timeout path
     {
-        "desc": f"wsh(andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pkh({TPRVS[1]}),older(10))))",
+        "desc": f"wsh(andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pkh({TPRVS[1]}),t:older(10))))",
         "sequence": None,
         "locktime": None,
         "sigs_count": 3,
@@ -146,7 +146,7 @@ DESCS_PRIV = [
     },
     # Finalizes to the smallest valid witness, regardless of sequence
     {
-        "desc": f"wsh(or_d(pk({TPRVS[0]}/*),and_v(v:pk({TPRVS[1]}),and_v(v:pk({TPRVS[2]}),older(10)))))",
+        "desc": f"wsh(or_d(pk({TPRVS[0]}/*),and_v(v:pk({TPRVS[1]}),and_v(v:pk({TPRVS[2]}),t:older(10)))))",
         "sequence": 12,
         "locktime": None,
         "sigs_count": 3,
@@ -154,7 +154,7 @@ DESCS_PRIV = [
     },
     # Liquid-like federated pegin with emergency recovery privkeys
     {
-        "desc": f"wsh(or_i(and_b(pk({TPUBS[0]}/*),a:and_b(pk({TPUBS[1]}),a:and_b(pk({TPUBS[2]}),a:and_b(pk({TPUBS[3]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[4]})),older(42))))",
+        "desc": f"wsh(or_i(and_b(pk({TPUBS[0]}/*),a:and_b(pk({TPUBS[1]}),a:and_b(pk({TPUBS[2]}),a:and_b(pk({TPUBS[3]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[4]})),t:older(42))))",
         "sequence": 42,
         "locktime": None,
         "sigs_count": 2,
@@ -187,7 +187,7 @@ DESCS_PRIV = [
     # A key immediately or one of two keys after a timelock. If both paths are available it'll use the
     # non-timelocked path because it's a smaller witness.
     {
-        "desc": f"tr({TPUBS[0]}/*,{{pk({TPRVS[0]}/*),and_v(v:older(42),multi_a(1,{TPRVS[1]},{TPRVS[2]}))}})",
+        "desc": f"tr({TPUBS[0]}/*,{{pk({TPRVS[0]}/*),and_v(older(42),multi_a(1,{TPRVS[1]},{TPRVS[2]}))}})",
         "sequence": 42,
         "locktime": None,
         "sigs_count": 3,
@@ -196,7 +196,7 @@ DESCS_PRIV = [
     # A key immediately or one of two keys after a timelock. If the "primary" key isn't available though it'll
     # use the timelocked path. Same remark for multi_a.
     {
-        "desc": f"tr({TPUBS[0]}/*,{{pk({TPUBS[1]}/*),and_v(v:older(42),multi_a(1,{TPRVS[0]},{TPRVS[1]}))}})",
+        "desc": f"tr({TPUBS[0]}/*,{{pk({TPUBS[1]}/*),and_v(older(42),multi_a(1,{TPRVS[0]},{TPRVS[1]}))}})",
         "sequence": 42,
         "locktime": None,
         "sigs_count": 2,
@@ -204,7 +204,7 @@ DESCS_PRIV = [
     },
     # Liquid-like federated pegin with emergency recovery privkeys, but in a Taproot.
     {
-        "desc": f"tr({TPUBS[1]}/*,{{and_b(pk({TPUBS[2]}/*),a:and_b(pk({TPUBS[3]}),a:and_b(pk({TPUBS[4]}),a:and_b(pk({TPUBS[5]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[6]})),older(42))}})",
+        "desc": f"tr({TPUBS[1]}/*,{{and_b(pk({TPUBS[2]}/*),a:and_b(pk({TPUBS[3]}),a:and_b(pk({TPUBS[4]}),a:and_b(pk({TPUBS[5]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[6]})),t:older(42))}})",
         "sequence": 42,
         "locktime": None,
         "sigs_count": 2,

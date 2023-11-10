@@ -1007,7 +1007,7 @@ private:
         switch (fragment) {
             case Fragment::JUST_0: return {{}, SatInfo::Push()};
             case Fragment::JUST_1: return {SatInfo::Push(), {}};
-            case Fragment::OLDER: return {SatInfo::Push() + SatInfo::Nop(), {}};
+            case Fragment::OLDER: return {SatInfo::Push() + SatInfo::OP_VERIFY(), {}};
             case Fragment::AFTER: return {SatInfo::Push() + SatInfo::OP_VERIFY(), {}};
             case Fragment::PK_K: return {SatInfo::Push()};
             case Fragment::PK_H: return {SatInfo::OP_DUP() + SatInfo::Hash() + SatInfo::Push() + SatInfo::OP_EQUALVERIFY()};

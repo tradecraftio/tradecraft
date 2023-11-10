@@ -713,12 +713,12 @@
 ["0x17 0x3014021077777777777777777777777777777777020001", "0 CHECKSIG NOT", "", "OK", "Zero-length S is correctly encoded for DERSIG"],
 ["0x27 0x302402107777777777777777777777777777777702108777777777777777777777777777777701", "0 CHECKSIG NOT", "", "OK", "Negative S is correctly encoded"],
 
-[["0000008000", "b2", 0.00000001], "", "0 0x20 0x9be3799f24592e94e1f7991e5f312648a509ce2fb1edbafa50a66b65c916539a", "P2SH,WITNESS,CLEANSTACK", "OK", "CSV passes if stack top bit 1 << 31 is set"],
-[["0000008000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "CLEANSTACK", "CSV passes if stack top bit 1 << 31 is set"],
-[["ffff008000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "CLEANSTACK", "CSV passes if stack top bit 1 << 31 is set"],
-[["0000408000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "CLEANSTACK", "CSV passes if stack top bit 1 << 31 is set"],
-[["ffff408000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "CLEANSTACK", "CSV passes if stack top bit 1 << 31 is set"],
-[["ffff408100", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "CLEANSTACK", "CSV passes if stack top bit 1 << 31 is set"],
+[["0000008000", "b2", 0.00000001], "", "0 0x20 0x9be3799f24592e94e1f7991e5f312648a509ce2fb1edbafa50a66b65c916539a", "P2SH,WITNESS,CLEANSTACK", "CLEANSTACK", "CSV passes if stack top bit 1 << 31 is set"],
+[["0000008000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "OK", "CSV passes if stack top bit 1 << 31 is set"],
+[["ffff008000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "OK", "CSV passes if stack top bit 1 << 31 is set"],
+[["0000408000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "OK", "CSV passes if stack top bit 1 << 31 is set"],
+[["ffff408000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "OK", "CSV passes if stack top bit 1 << 31 is set"],
+[["ffff408100", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "OK", "CSV passes if stack top bit 1 << 31 is set"],
 [["ffff4081", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "NEGATIVE_LOCKTIME", "A 4 byte negative value does not count as bit 1 << 31 being set"],
 
 ["", "DEPTH", "P2SH,STRICTENC",   "EVAL_FALSE", "Test the test: we should have an empty stack after scriptSig evaluation"],
@@ -2518,7 +2518,7 @@
 [["00", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "UNKNOWN_ERROR", "CSV fails if stack top is not minimally encoded"],
 [["", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is set and the tx version < 2"],
 [["0000000001", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is not set, and tx version < 2"],
-[["0000008000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "CLEANSTACK", "CSV passes if stack top bit 1 << 31 is set"],
+[["0000008000", "b251", 0.00000001], "", "0 0x20 0xc145a9d2baa585ef1d89794598d73a8a39779101de46fc5d9d5f51995d3a05e9", "P2SH,WITNESS,CLEANSTACK", "OK", "CSV passes if stack top bit 1 << 31 is set"],
 
 ["MINIMALIF tests"],
 ["MINIMALIF is not applied to non-segwit scripts"],
