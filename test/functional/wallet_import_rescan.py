@@ -55,11 +55,8 @@ class Variant(collections.namedtuple("Variant", "call data address_type rescan p
         rescan = self.rescan == Rescan.yes
 
         assert_equal(self.address["solvable"], True)
-        assert_equal(self.address["isscript"], self.address_type == AddressType.p2sh_segwit or self.address_type == AddressType.bech32)
+        assert_equal(self.address["isscript"], self.address_type == AddressType.bech32)
         assert_equal(self.address["iswitness"], self.address_type == AddressType.bech32)
-        if self.address["isscript"] and self.address_type == AddressType.p2sh_segwit:
-            assert_equal(self.address["embedded"]["isscript"], True)
-            assert_equal(self.address["embedded"]["iswitness"], True)
         if self.address["isscript"] and self.address_type == AddressType.bech32:
             assert_equal(self.address["embedded"]["isscript"], False)
             assert_equal(self.address["embedded"]["iswitness"], False)
@@ -84,9 +81,6 @@ class Variant(collections.namedtuple("Variant", "call data address_type rescan p
                 "label": self.label,
                 "watchonly": self.data != Data.priv
             }
-            if self.address_type == AddressType.p2sh_segwit and self.data != Data.address:
-                # We need solving data when providing a pubkey or privkey as data
-                request.update({"redeemscript": self.address['embedded']['scriptPubKey']})
             response = self.node.importmulti(
                 requests=[request],
                 rescan=self.rescan in (Rescan.yes, Rescan.late_timestamp),

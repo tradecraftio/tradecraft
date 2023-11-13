@@ -27,7 +27,6 @@ from test_framework.address import (
     address_to_scriptpubkey,
     create_deterministic_address_bcrt1_p2tr_op_true,
     key_to_p2pkh,
-    key_to_p2sh_p2wpk,
     key_to_p2wpk,
     output_key_to_p2tr,
 )
@@ -57,7 +56,6 @@ from test_framework.script import (
 from test_framework.script_util import (
     key_to_p2pk_script,
     key_to_p2pkh_script,
-    key_to_p2sh_p2wpk_script,
     key_to_p2wpk_script,
 )
 from test_framework.util import (
@@ -425,16 +423,13 @@ class MiniWallet:
 def getnewdestination(address_type='bech32m'):
     """Generate a random destination of the specified type and return the
        corresponding public key, scriptPubKey and address. Supported types are
-       'legacy', 'p2sh-segwit', 'bech32' and 'bech32m'. Can be used when a random
+       'legacy', 'bech32', or 'bech32m'. Can be used when a random
        destination is needed, but no compiled wallet is available (e.g. as
        replacement to the getnewaddress/getaddressinfo RPCs)."""
     key, pubkey = generate_keypair()
     if address_type == 'legacy':
         scriptpubkey = key_to_p2pkh_script(pubkey)
         address = key_to_p2pkh(pubkey)
-    elif address_type == 'p2sh-segwit':
-        scriptpubkey = key_to_p2sh_p2wpk_script(pubkey)
-        address = key_to_p2sh_p2wpk(pubkey)
     elif address_type == 'bech32':
         scriptpubkey = key_to_p2wpk_script(pubkey)
         address = key_to_p2wpk(pubkey)

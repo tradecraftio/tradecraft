@@ -795,11 +795,11 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
     }
 
-    // P2WSH multisig wrapped in P2SH - Descriptor
+    // P2WSH multisig - Descriptor
     {
         CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
 
-        std::string desc_str = "sh(wsh(multi(2, " + EncodeSecret(keys[0]) + ", " + EncodeSecret(keys[1]) + ")))";
+        std::string desc_str = "wsh(multi(2, " + EncodeSecret(keys[0]) + ", " + EncodeSecret(keys[1]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
 
@@ -807,6 +807,9 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         CScript redeemScript = GetScriptForDestination(WitnessV0LongHash(0 /* version */, witnessScript));
         scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         result = spk_manager->IsMine(scriptPubKey);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+
+        result = spk_manager->IsMine(redeemScript);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -841,7 +844,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         redeemScript = GetScriptForDestination(WitnessV0ShortHash(/*version=*/0, pubkeys[0]));
         scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         result = spk_manager->IsMine(scriptPubKey);
-        BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
         // Test P2TR (combo descriptor does not describe P2TR)
         XOnlyPubKey xpk(pubkeys[0]);
