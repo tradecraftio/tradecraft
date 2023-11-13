@@ -350,6 +350,7 @@ void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& wi
     if (!miniscript::IsTapscript(ctx)) {
         WitnessV0ScriptEntry entry(/*version=*/0, script);
         witness.stack.push_back(entry.m_script);
+        witness.stack.emplace_back();
         return;
     }
     // For Tapscript we also need the control block.
@@ -389,9 +390,9 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
 
             if (nonmal_success) {
                 // Non-malleable satisfactions are bounded by the satisfaction size plus:
-                // - For P2WSH spends, the witness script
+                // - For P2WSH spends, the witness script and the path two it
                 // - For Tapscript spends, both the witness script and the control block
-                const size_t max_stack_size{*node->GetStackSize() + 1 + miniscript::IsTapscript(converter.MsContext())};
+                const size_t max_stack_size{*node->GetStackSize() + 2};
                 BOOST_CHECK(witness_nonmal.stack.size() <= max_stack_size);
                 // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
                 BOOST_CHECK(mal_success);

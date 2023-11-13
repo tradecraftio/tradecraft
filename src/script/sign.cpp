@@ -29,6 +29,8 @@
 #include <util/translation.h>
 #include <util/vector.h>
 
+#include <algorithm>
+
 typedef std::vector<unsigned char> valtype;
 
 MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx, unsigned int input_idx, const CAmount& amount, int64_t refheight, int hash_type)
@@ -595,9 +597,27 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
             const auto ms = miniscript::FromScript(witnessscript, ms_satisfier);
             solved = ms && ms->Satisfy(ms_satisfier, result) == miniscript::Availability::YES;
         }
-        // The only item on the stack is the witness script, which is
-        // contained in the WitnessV0ScriptEntry passed back to us.
+        // The second item on the stack (first to be pushed) is the witness
+        // script, which is contained in the WitnessV0ScriptEntry passed back
+        // to us.
         result.push_back(sigdata.witness_entry.m_script);
+        // The first item on the stack (last to be pushed) is the Merkle proof.
+        // We construct the proof from the branch and path fields of the
+        // WitnessV0ScriptEntry structure.
+        result.emplace_back();
+        // The path is specified in zero to four bytes in little endian order.
+        // The exact number of bytes is implicit since the size of the field
+        // which follows is known to be a multiple of 32.  So we add all the
+        // bytes of path, and then remove any ending zero bytes, which are to be
+        // understood implicitly.
+        for (uint32_t path = sigdata.witness_entry.m_path; path; path >>= 8) {
+            result.back().push_back((unsigned char)(path & 0xff));
+        }
+        // The branch hashes are serialized in order, without a length specifier
+        // or padding bytes.
+        for (const auto& hash : sigdata.witness_entry.m_branch) {
+            result.back().insert(result.back().end(), hash.begin(), hash.end());
+        }
 
         sigdata.scriptWitness.stack = result;
         sigdata.witness = true;
@@ -691,7 +711,20 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
         script_type = Solver(next_script, solutions);
         stack.script.pop_back();
     }
-    if (script_type == TxoutType::WITNESS_V0_SCRIPTHASH && !stack.witness.empty() && !stack.witness.back().empty() && (stack.witness.back()[0] == 0x00)) {
+    if (script_type == TxoutType::WITNESS_V0_SCRIPTHASH && !(stack.witness.size() <= 1) && !(stack.witness.end() - 2)->empty() && ((stack.witness.end() - 2)->front() == 0x00)) {
+        // Get the Merkle proof
+        data.witness_entry.SetNull();
+        size_t i = 0;
+        for (; i < (stack.witness.back().size() % 32); ++i) {
+            data.witness_entry.m_path <<= 8;
+            data.witness_entry.m_path |= stack.witness.back()[i];
+        }
+        for (; i < stack.witness.back().size(); i += 32) {
+            data.witness_entry.m_branch.emplace_back();
+            std::copy(&stack.witness.back()[i], &stack.witness.back()[i + 32], data.witness_entry.m_branch.back().begin());
+        }
+        stack.witness.pop_back();
+
         // Get the witnessScript
         swap(data.witness_entry.m_script, stack.witness.back());
         stack.witness.pop_back();
@@ -699,7 +732,6 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
 
         // Get witnessScript type
         script_type = Solver(next_script, solutions);
-        stack.witness.pop_back();
         stack.script = std::move(stack.witness);
         stack.witness.clear();
         sigversion = SigVersion::WITNESS_V0;

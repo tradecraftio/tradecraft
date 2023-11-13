@@ -650,6 +650,12 @@ public:
             if (!entry.m_script.empty()) {
                 obj.pushKV("witscript_version", (int64_t)entry.m_script[0]);
                 if (entry.m_script[0] == 0x00) {
+                    UniValue branch(UniValue::VARR);
+                    for (const auto& hash : entry.m_branch) {
+                        branch.push_back(HexStr(hash));
+                    }
+                    obj.pushKV("witness_branch", branch);
+                    obj.pushKV("witness_path", (int64_t)entry.m_path);
                     CScript subscript(entry.m_script.begin() + 1, entry.m_script.end());
                     ProcessSubScript(subscript, obj);
                 }
@@ -697,6 +703,11 @@ RPCHelpMan getaddressinfo()
                         {RPCResult::Type::BOOL, "iswitness", "If the address is a witness address."},
                         {RPCResult::Type::NUM, "witness_version", /*optional=*/true, "The version number of the witness program."},
                         {RPCResult::Type::STR_HEX, "witness_program", /*optional=*/true, "The hex value of the witness program."},
+                        {RPCResult::Type::ARR, "witness_branch", /*optional=*/true, "The hex-encoded hashes of the Merkle branch proof",
+                        {
+                            {RPCResult::Type::STR_HEX, "hash", "The hex-encoded branch skip hash"},
+                        }},
+                        {RPCResult::Type::NUM, "witness_path", /*optional=*/true, "The left/right branching information for the Merkle branch proof"},
                         {RPCResult::Type::NUM, "witscript_version", /*optional=*/true, "The inner script version"},
                         {RPCResult::Type::STR, "script", /*optional=*/true, "The output script type. Only if isscript is true and the redeemscript is known. Possible\n"
                                                                      "types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash,\n"
