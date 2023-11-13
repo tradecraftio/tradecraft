@@ -39,6 +39,7 @@ from test_framework.script import (
     OP_IF,
     OP_TRUE,
     hash160,
+    hash256,
 )
 from test_framework.script_util import script_to_witness
 from test_framework.test_framework import FreicoinTestFramework
@@ -63,7 +64,7 @@ class MempoolWtxidTest(FreicoinTestFramework):
         self.log.info("Submit parent with multiple script branches to mempool")
         hashlock = hash160(b'Preimage')
         witness_script = script_to_witness(CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF]))
-        witness_program = sha256(witness_script)
+        witness_program = hash256(witness_script)
         script_pubkey = CScript([OP_0, witness_program])
 
         parent = CTransaction()
@@ -89,13 +90,13 @@ class MempoolWtxidTest(FreicoinTestFramework):
         child_one.vout.append(CTxOut(int(9.99996 * COIN), child_script_pubkey))
         child_one.lock_height = parent.lock_height
         child_one.wit.vtxinwit.append(CTxInWitness())
-        child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script]
+        child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script, b'']
         child_one_wtxid = child_one.getwtxid()
         child_one_txid = child_one.rehash()
 
         # Create another identical transaction with witness solving second branch
         child_two = deepcopy(child_one)
-        child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script]
+        child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script, b'']
         child_two_wtxid = child_two.getwtxid()
         child_two_txid = child_two.rehash()
 

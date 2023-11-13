@@ -219,6 +219,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         scriptWitness.stack.emplace_back(0);
         scriptWitness.stack.emplace_back(1, 0); // version
         scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), witnessScript.begin(), witnessScript.end());
+        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);
@@ -237,6 +238,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         scriptWitness.stack.emplace_back(0);
         scriptWitness.stack.emplace_back(1, 0); // version
         scriptWitness.stack.back().insert(scriptWitness.stack.back().end(), witnessScript.begin(), witnessScript.end());
+        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags), 0);

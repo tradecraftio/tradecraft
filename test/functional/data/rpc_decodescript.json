@@ -68,12 +68,12 @@
             "type": "nonstandard",
             "p2sh": "2N34iiGoUUkVSPiaaTFpJjB1FR9TXQu3PGM",
             "segwit": {
-                "asm": "0 c06133bb2d34fc811005c23314cc0a2f255a3c93f42d1f05030295cdcc3f5c91",
-                "desc": "addr(bcrt1qcpsn8wedxn7gzyq9cge3fnq29uj450yn7sk37pgrq22umnpltjgs2e3yg4)#zxzpy7s8",
-                "hex": "0020c06133bb2d34fc811005c23314cc0a2f255a3c93f42d1f05030295cdcc3f5c91",
-                "address": "bcrt1qcpsn8wedxn7gzyq9cge3fnq29uj450yn7sk37pgrq22umnpltjgs2e3yg4",
+                "asm": "0 e9a24cbd44d36dfd108fd2e6347223055f70d237beb2cc42c5824025ceee8f4b",
+                "desc": "addr(bcrt1qax3ye02y6dkl6yy06tnrgu3rq40hp53hh6evcsk9sfqztnhw3a9sthgefq)#r3ake4l4",
+                "hex": "0020e9a24cbd44d36dfd108fd2e6347223055f70d237beb2cc42c5824025ceee8f4b",
+                "address": "bcrt1qax3ye02y6dkl6yy06tnrgu3rq40hp53hh6evcsk9sfqztnhw3a9sthgefq",
                 "type": "witness_v0_scripthash",
-                "p2sh-segwit": "2N4hQgEtCk92gAfpiCt1AqLEmDC5iE5rAaG"
+                "p2sh-segwit": "2Mu3suXG1ZRpNGwma3FFDS1KF3bH32a8Wzf"
             }
         }
     ],

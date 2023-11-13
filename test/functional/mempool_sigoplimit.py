@@ -73,7 +73,7 @@ class BytesPerSigOpTest(FreicoinTestFramework):
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(fund["txid"], 16), fund["sent_vout"]))]
         tx.wit.vtxinwit = [CTxInWitness()]
-        tx.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + bytes(witness_script)]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + bytes(witness_script), b""]
         tx.vout = [CTxOut(500000, output_script)]
         return tx
 
