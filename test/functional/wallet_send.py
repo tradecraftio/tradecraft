@@ -560,7 +560,7 @@ class WalletSendTest(FreicoinTestFramework):
         # Note that occasionally this weight estimate may be slightly larger or smaller than the real weight
         # as sometimes ECDSA signatures are one byte shorter than expected with a probability of 1/128
         len_scriptsig = len(pst_in["final_scriptSig"]["hex"]) // 2 if "final_scriptSig" in pst_in else 0
-        len_scriptsig += len(ser_compact_size(len_scriptsig))
+        len_scriptsig += len(ser_compact_size(len_scriptsig)) + 1
         len_scriptwitness = (sum([(len(x) // 2) + len(ser_compact_size(len(x) // 2)) for x in pst_in["final_scriptwitness"]]) + len(ser_compact_size(len(pst_in["final_scriptwitness"])))) if "final_scriptwitness" in pst_in else 0
         len_prevout_txid = 32
         len_prevout_index = 4
