@@ -111,7 +111,7 @@ class WalletSignerTest(FreicoinTestFramework):
         # )
         # self.clear_mock_result(self.nodes[1])
 
-        assert_equal(hww.getwalletinfo()["keypoolsize"], 40)
+        assert_equal(hww.getwalletinfo()["keypoolsize"], 30)
 
         address1 = hww.getnewaddress(address_type="bech32")
         assert_equal(address1, "bcrt1q55f34cyg0hy9w4ka6pnlf6h5za68jccjex27gc")
@@ -119,13 +119,6 @@ class WalletSignerTest(FreicoinTestFramework):
         assert_equal(address_info['solvable'], True)
         assert_equal(address_info['ismine'], True)
         assert_equal(address_info['hdkeypath'], "m/84h/1h/0h/0/0")
-
-        address2 = hww.getnewaddress(address_type="p2sh-segwit")
-        assert_equal(address2, "2NCWdX9n9Vz7dng75KNNSziiRiRaH5mzeon")
-        address_info = hww.getaddressinfo(address2)
-        assert_equal(address_info['solvable'], True)
-        assert_equal(address_info['ismine'], True)
-        assert_equal(address_info['hdkeypath'], "m/49h/1h/0h/0/0")
 
         address3 = hww.getnewaddress(address_type="legacy")
         assert_equal(address3, "n1LKejAadN6hg2FrBXoU1KrwX4uK16mco9")
