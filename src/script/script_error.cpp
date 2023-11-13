@@ -104,6 +104,8 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Stack size must be exactly one after execution";
         case SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY:
             return "Witness program was passed an empty witness";
+        case SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF:
+            return "Witness program invalid Merkle proof";
         case SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH:
             return "Witness program hash mismatch";
         case SCRIPT_ERR_WITNESS_MALLEATED:

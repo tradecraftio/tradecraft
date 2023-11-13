@@ -122,7 +122,7 @@ class BIP68Test(FreicoinTestFramework):
         sequence_value = sequence_value & 0x7fffffff
         tx2.vin = [CTxIn(COutPoint(tx1_id, 0), nSequence=sequence_value)]
         tx2.wit.vtxinwit = [CTxInWitness()]
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + CScript([OP_TRUE])]
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + CScript([OP_TRUE]), b""]
         tx2.vout = [CTxOut(int(value - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
         tx2.rehash()
 
@@ -260,7 +260,7 @@ class BIP68Test(FreicoinTestFramework):
             tx.nVersion = 2
             tx.vin = [CTxIn(COutPoint(orig_tx.sha256, 0), nSequence=sequence_value)]
             tx.wit.vtxinwit = [CTxInWitness()]
-            tx.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + CScript([OP_TRUE])]
+            tx.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + CScript([OP_TRUE]), b""]
             tx.vout = [CTxOut(int(orig_tx.vout[0].nValue - relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
             tx.rehash()
 
@@ -395,7 +395,7 @@ class BIP68Test(FreicoinTestFramework):
         tx3.nVersion = 2
         tx3.vin = [CTxIn(COutPoint(tx2.sha256, 0), nSequence=sequence_value)]
         tx3.wit.vtxinwit = [CTxInWitness()]
-        tx3.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + CScript([OP_TRUE])]
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + CScript([OP_TRUE]), b""]
         tx3.vout = [CTxOut(int(tx2.vout[0].nValue - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
         tx3.rehash()
 

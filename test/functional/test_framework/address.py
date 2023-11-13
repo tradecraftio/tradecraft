@@ -28,7 +28,6 @@ from .script import (
     OP_TRUE,
     hash160,
     hash256,
-    sha256,
     taproot_construct,
 )
 from .util import assert_equal
@@ -46,7 +45,7 @@ from test_framework.segwit_addr import (
 ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
 # Coins sent to this address can be spent with a version=0 witness stack of just OP_TRUE
-ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qadv29xzkvgm7tlzvtgxg0xaeu9fhqxfermqxj68ynq5slwpf8zmshjwsdt'
+ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qpfumrmcfcusnnjk4k6gfdpdh4940m0jlxh92kxnl6p403cvrfatsp0tfxn'
 
 
 class AddressType(enum.Enum):
@@ -151,7 +150,7 @@ def script_to_witscript(script, main=False):
 
 def script_to_p2wsh(script, main=False):
     script = check_script(script)
-    return program_to_witness(0, sha256(script_to_witscript(script)), main)
+    return program_to_witness(0, hash256(script_to_witscript(script)), main)
 
 def key_to_p2wpkh(key, main=False):
     key = check_key(key)
@@ -159,7 +158,7 @@ def key_to_p2wpkh(key, main=False):
 
 def script_to_p2sh_p2wsh(script, main=False):
     script = check_script(script)
-    p2shscript = CScript([OP_0, sha256(script_to_witscript(script))])
+    p2shscript = CScript([OP_0, hash256(script_to_witscript(script))])
     return script_to_p2sh(p2shscript, main)
 
 def output_key_to_p2tr(key, main=False):
