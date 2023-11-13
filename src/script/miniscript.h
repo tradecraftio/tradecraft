@@ -411,7 +411,7 @@ struct Ops {
  * individual opcodes miniscripts correspond to, using concatenation to construct scripts, and
  * using the union operation to choose between execution branches. Since any top-level script
  * satisfaction ends with a single stack element, we know that for a full script:
- * - netdiff+1 is the maximal initial stack size (relevant for P2WSH stack limits).
+ * - netdiff+2 is the maximal initial stack size (relevant for P2WSH stack limits).
  * - exec+1 is the maximal stack size reached during execution (relevant for P2TR stack limits).
  *
  * Mathematically, SatInfo forms a semiring:
