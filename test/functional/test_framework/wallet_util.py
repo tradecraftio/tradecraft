@@ -147,7 +147,7 @@ def calculate_input_weight(scriptsig_hex, witness_stack_hex=None):
     """Given a scriptSig and a list of witness stack items for an input in hex format,
        calculate the total input weight. If the input has no witness data,
        `witness_stack_hex` can be set to None."""
-    tx_in = CTxIn(scriptSig=bytes.fromhex(scriptsig_hex))
+    tx_in = CTxIn(scriptSig=bytes.fromhex('00' + scriptsig_hex))
     witness_size = 0
     if witness_stack_hex is not None:
         tx_inwit = CTxInWitness()
@@ -178,7 +178,7 @@ class WalletUnlock():
 
 class TestFrameworkWalletUtil(unittest.TestCase):
     def test_calculate_input_weight(self):
-        SKELETON_BYTES = 32 + 4 + 4  # prevout-txid, prevout-index, sequence
+        SKELETON_BYTES = 32 + 4 + 4 + 1  # prevout-txid, prevout-index, sequence, witness version
         SMALL_LEN_BYTES = 1  # bytes needed for encoding scriptSig / witness item lengths < 253
         LARGE_LEN_BYTES = 3  # bytes needed for encoding scriptSig / witness item lengths >= 253
 
@@ -188,19 +188,19 @@ class TestFrameworkWalletUtil(unittest.TestCase):
         self.assertEqual(calculate_input_weight("", None),
                          (SKELETON_BYTES + SMALL_LEN_BYTES) * WITNESS_SCALE_FACTOR)
         # small scriptSig, no witness
-        scriptSig_small = "00"*252
+        scriptSig_small = "00"*251
         self.assertEqual(calculate_input_weight(scriptSig_small, None),
-                         (SKELETON_BYTES + SMALL_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR)
+                         (SKELETON_BYTES + SMALL_LEN_BYTES + 251) * WITNESS_SCALE_FACTOR)
         # small scriptSig, empty witness stack
         self.assertEqual(calculate_input_weight(scriptSig_small, []),
-                         (SKELETON_BYTES + SMALL_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR + SMALL_LEN_BYTES)
+                         (SKELETON_BYTES + SMALL_LEN_BYTES + 251) * WITNESS_SCALE_FACTOR + SMALL_LEN_BYTES)
         # large scriptSig, no witness
-        scriptSig_large = "00"*253
+        scriptSig_large = "00"*252
         self.assertEqual(calculate_input_weight(scriptSig_large, None),
-                         (SKELETON_BYTES + LARGE_LEN_BYTES + 253) * WITNESS_SCALE_FACTOR)
+                         (SKELETON_BYTES + LARGE_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR)
         # large scriptSig, empty witness stack
         self.assertEqual(calculate_input_weight(scriptSig_large, []),
-                         (SKELETON_BYTES + LARGE_LEN_BYTES + 253) * WITNESS_SCALE_FACTOR + SMALL_LEN_BYTES)
+                         (SKELETON_BYTES + LARGE_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR + SMALL_LEN_BYTES)
         # empty scriptSig, 5 small witness stack items
         self.assertEqual(calculate_input_weight("", ["00", "11", "22", "33", "44"]),
                          ((SKELETON_BYTES + SMALL_LEN_BYTES) * WITNESS_SCALE_FACTOR) + SMALL_LEN_BYTES + 5 * SMALL_LEN_BYTES + 5)
@@ -209,7 +209,7 @@ class TestFrameworkWalletUtil(unittest.TestCase):
                          ((SKELETON_BYTES + SMALL_LEN_BYTES) * WITNESS_SCALE_FACTOR) + LARGE_LEN_BYTES + 253 * SMALL_LEN_BYTES + 253)
         # small scriptSig, 3 large witness stack items
         self.assertEqual(calculate_input_weight(scriptSig_small, ["00"*253]*3),
-                         ((SKELETON_BYTES + SMALL_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR) + SMALL_LEN_BYTES + 3 * LARGE_LEN_BYTES + 3*253)
+                         ((SKELETON_BYTES + SMALL_LEN_BYTES + 251) * WITNESS_SCALE_FACTOR) + SMALL_LEN_BYTES + 3 * LARGE_LEN_BYTES + 3*253)
         # large scriptSig, 3 large witness stack items
         self.assertEqual(calculate_input_weight(scriptSig_large, ["00"*253]*3),
-                         ((SKELETON_BYTES + LARGE_LEN_BYTES + 253) * WITNESS_SCALE_FACTOR) + SMALL_LEN_BYTES + 3 * LARGE_LEN_BYTES + 3*253)
+                         ((SKELETON_BYTES + LARGE_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR) + SMALL_LEN_BYTES + 3 * LARGE_LEN_BYTES + 3*253)
