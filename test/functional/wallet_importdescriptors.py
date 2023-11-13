@@ -141,52 +141,11 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         assert_equal(info["ismine"], True)
         assert_equal(info["ischange"], True)
 
-        # # Test importing of a P2SH-P2WPK descriptor
-        key = get_generate_key()
-        self.log.info("Should not import a p2sh-p2wpk descriptor without checksum")
-        self.test_importdesc({"desc": "sh(wpk(" + key.pubkey + "))",
-                              "timestamp": "now"
-                              },
-                             success=False,
-                             error_code=-5,
-                             error_message="Missing checksum")
-
-        self.log.info("Should not import a p2sh-p2wpk descriptor that has range specified")
-        self.test_importdesc({"desc": descsum_create("sh(wpk(" + key.pubkey + "))"),
-                               "timestamp": "now",
-                               "range": 1,
-                              },
-                              success=False,
-                              error_code=-8,
-                              error_message="Range should not be specified for an un-ranged descriptor")
-
-        self.log.info("Should not import a p2sh-p2wpk descriptor and have it set to active")
-        self.test_importdesc({"desc": descsum_create("sh(wpk(" + key.pubkey + "))"),
-                               "timestamp": "now",
-                               "active": True,
-                              },
-                              success=False,
-                              error_code=-8,
-                              error_message="Active descriptors must be ranged")
-
-        self.log.info("Should import a (non-active) p2sh-p2wpk descriptor")
-        self.test_importdesc({"desc": descsum_create("sh(wpk(" + key.pubkey + "))"),
-                               "timestamp": "now",
-                               "active": False,
-                              },
-                              success=True)
-        assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
-
-        test_address(w1,
-                     key.p2sh_p2wpk_addr,
-                     ismine=True,
-                     solvable=True)
-
         # Check persistence of data and that loading works correctly
         w1.unloadwallet()
         self.nodes[1].loadwallet('w1')
         test_address(w1,
-                     key.p2sh_p2wpk_addr,
+                     key.p2pkh_addr,
                      ismine=True,
                      solvable=True)
 
@@ -207,7 +166,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         xpub = "tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H"
         addresses = ["2N7yv4p8G8yEaPddJxY41kPihnWvs39qCMf", "2MsHxyb2JS3pAySeNUsJ7mNnurtpeenDzLA"] # hdkeypath=m/0'/0'/0' and 1'
         addresses += ["bcrt1qrd3n235cj2czsfmsuvqqpr3lu6lg0ju7scl8gn", "bcrt1qfqeppuvj0ww98r6qghmdkj70tv8qpchehegrg8"] # wpk subscripts corresponding to the above addresses
-        desc = "sh(wpk(" + xpub + "/0/0/*" + "))"
+        desc = "wpk(" + xpub + "/0/0/*" + ")"
 
         self.log.info("Ranged descriptors cannot have labels")
         self.test_importdesc({"desc":descsum_create(desc),
@@ -236,7 +195,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
 
         # # Test importing of a ranged descriptor with xpriv
         self.log.info("Should not import a ranged descriptor that includes xpriv into a watch-only wallet")
-        desc = "sh(wpk(" + xpriv + "/0'/0'/*'" + "))"
+        desc = "wpk(" + xpriv + "/0'/0'/*'" + ")"
         self.test_importdesc({"desc": descsum_create(desc),
                               "timestamp": "now",
                               "range": 1},
@@ -296,15 +255,15 @@ class ImportDescriptorsTest(FreicoinTestFramework):
         self.log.info("Check we can change descriptor internal flag")
         self.test_importdesc({**range_request, "range": [0, 20], "internal": True}, wallet=wpriv, success=True)
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getnewaddress, '', 'p2sh-segwit')
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getnewaddress, '', 'bech32')
         assert_equal(wpriv.getwalletinfo()['keypoolsize_hd_internal'], 21)
-        wpriv.getrawchangeaddress('p2sh-segwit')
+        wpriv.getrawchangeaddress('bech32')
 
         self.test_importdesc({**range_request, "range": [0, 20], "internal": False}, wallet=wpriv, success=True)
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
-        wpriv.getnewaddress('', 'p2sh-segwit')
+        wpriv.getnewaddress('', 'bech32')
         assert_equal(wpriv.getwalletinfo()['keypoolsize_hd_internal'], 0)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getrawchangeaddress, 'p2sh-segwit')
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getrawchangeaddress, 'bech32')
 
         # Make sure ranged imports import keys in order
         w1 = self.nodes[1].get_wallet_rpc('w1')
@@ -324,12 +283,6 @@ class ImportDescriptorsTest(FreicoinTestFramework):
                               'timestamp': 'now'
                              },
                              success=True)
-        self.test_importdesc({'desc': descsum_create('sh(wpk([abcdef12/0h/0h]' + xpub + '/*))'),
-                              'active': True,
-                              'range' : [0, 2],
-                              'timestamp': 'now'
-                             },
-                             success=True)
         self.test_importdesc({'desc': descsum_create('pkh([12345678/0h/0h]' + xpub + '/*)'),
                               'active': True,
                               'range' : [0, 2],
@@ -337,7 +290,7 @@ class ImportDescriptorsTest(FreicoinTestFramework):
                              },
                              success=True)
 
-        assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 3)
+        assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 2)
         for i, expected_addr in enumerate(addresses):
             received_addr = w1.getnewaddress('', 'bech32')
             assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
@@ -345,17 +298,13 @@ class ImportDescriptorsTest(FreicoinTestFramework):
             bech32_addr_info = w1.getaddressinfo(received_addr)
             assert_equal(bech32_addr_info['desc'][:22], 'wpk([80002067/0h/0h/{}]'.format(i))
 
-            shwpkh_addr = w1.getnewaddress('', 'p2sh-segwit')
-            shwpkh_addr_info = w1.getaddressinfo(shwpkh_addr)
-            assert_equal(shwpkh_addr_info['desc'][:25], 'sh(wpk([abcdef12/0h/0h/{}]'.format(i))
-
             pkh_addr = w1.getnewaddress('', 'legacy')
             pkh_addr_info = w1.getaddressinfo(pkh_addr)
             assert_equal(pkh_addr_info['desc'][:22], 'pkh([12345678/0h/0h/{}]'.format(i))
 
-            assert_equal(w1.getwalletinfo()['keypoolsize'], 4 * 3) # After retrieving a key, we don't refill the keypool again, so it's one less for each address type
+            assert_equal(w1.getwalletinfo()['keypoolsize'], 4 * 2) # After retrieving a key, we don't refill the keypool again, so it's one less for each address type
         w1.keypoolrefill()
-        assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 3)
+        assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 2)
 
         self.log.info("Check we can change next_index")
         # go back and forth with next_index
@@ -407,8 +356,8 @@ class ImportDescriptorsTest(FreicoinTestFramework):
 
         # # Test importing a descriptor containing a WIF private key
         wif_priv = "cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh"
-        address = "2ND15xBwCC1VC7Gf2fghCN6vwu8babD77xs"
-        desc = "sh(wpk(" + wif_priv + "))"
+        address = "bcrt1qm2nvsr3n8kljgt3r0c9yjm7x8dm7srz3p9njq7"
+        desc = "wpk(" + wif_priv + ")"
         self.log.info("Should import a descriptor with a WIF private key as spendable")
         self.test_importdesc({"desc": descsum_create(desc),
                                "timestamp": "now"},

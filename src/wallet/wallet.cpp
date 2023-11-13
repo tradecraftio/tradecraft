@@ -2277,7 +2277,6 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
 
     bool any_tr{false};
     bool any_wpk{false};
-    bool any_sh{false};
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
@@ -2285,8 +2284,6 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
             any_tr = true;
         } else if (std::get_if<WitnessV0ShortHash>(&recipient.dest)) {
             any_wpk = true;
-        } else if (std::get_if<ScriptHash>(&recipient.dest)) {
-            any_sh = true;
         } else if (std::get_if<PKHash>(&recipient.dest)) {
             any_pkh = true;
         }
@@ -2301,12 +2298,6 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     if (has_bech32_spkman && any_wpk) {
         // Currently wpk is the only type supported by the BECH32 spkman
         return OutputType::BECH32;
-    }
-    const bool has_p2sh_segwit_spkman(GetScriptPubKeyMan(OutputType::P2SH_SEGWIT, /*internal=*/true));
-    if (has_p2sh_segwit_spkman && any_sh) {
-        // Currently sh_wpk is the only type supported by the P2SH_SEGWIT spkman
-        // As of 2021 about 80% of all SH are wrapping WPK, so use that
-        return OutputType::P2SH_SEGWIT;
     }
     const bool has_legacy_spkman(GetScriptPubKeyMan(OutputType::LEGACY, /*internal=*/true));
     if (has_legacy_spkman && any_pkh) {
