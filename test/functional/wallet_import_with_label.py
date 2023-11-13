@@ -21,6 +21,7 @@ with or without a label and then its private key is imported with importprivkey
 with and without a label.
 """
 
+from test_framework.address import key_to_p2pkh
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.wallet_util import test_address
 
@@ -107,8 +108,8 @@ class ImportWithLabel(FreicoinTestFramework):
             "Test importprivkey won't label new dests with the same "
             "label as others labeled dests for the same key."
         )
-        self.log.info("Import a watch-only p2sh-segwit address with a label.")
-        address4 = self.nodes[0].getnewaddress("", "p2sh-segwit")
+        self.log.info("Import a watch-only bech32 address with a label.")
+        address4 = self.nodes[0].getnewaddress("", "bech32")
         label4_addr = "Test Label 4 for importaddress"
         self.nodes[1].importaddress(address4, label4_addr)
         test_address(self.nodes[1],
@@ -126,7 +127,7 @@ class ImportWithLabel(FreicoinTestFramework):
         )
         priv_key4 = self.nodes[0].dumpprivkey(address4)
         self.nodes[1].importprivkey(priv_key4)
-        embedded_addr = self.nodes[1].getaddressinfo(address4)['embedded']['address']
+        embedded_addr = key_to_p2pkh(self.nodes[1].getaddressinfo(address4)['embedded']['pubkey'])
 
         test_address(self.nodes[1], embedded_addr, labels=[""])
 

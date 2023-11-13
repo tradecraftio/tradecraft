@@ -2121,7 +2121,7 @@ static RPCHelpMan scantxoutset()
         "Examples of output descriptors are:\n"
         "    addr(<address>)                      Outputs whose scriptPubKey corresponds to the specified address (does not include P2PK)\n"
         "    raw(<hex script>)                    Outputs whose scriptPubKey equals the specified hex scripts\n"
-        "    combo(<pubkey>)                      P2PK, P2PKH, P2WPK, and P2SH-P2WPK outputs for the given pubkey\n"
+        "    combo(<pubkey>)                      P2PK, P2PKH, and P2WPK outputs for the given pubkey\n"
         "    pkh(<pubkey>)                        P2PKH outputs for the given pubkey\n"
         "    sh(multi(<n>,<pubkey>,<pubkey>,...)) P2SH-multisig outputs for the given threshold and pubkeys\n"
         "    tr(<pubkey>)                         P2TR\n"

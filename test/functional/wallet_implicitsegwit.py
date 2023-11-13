@@ -19,13 +19,11 @@ import test_framework.address as address
 from test_framework.test_framework import FreicoinTestFramework
 
 # TODO: Might be nice to test p2pk here too
-address_types = ('legacy', 'bech32', 'p2sh-segwit')
+address_types = ('legacy', 'bech32')
 
 def key_to_address(key, address_type):
     if address_type == 'legacy':
         return address.key_to_p2pkh(key)
-    elif address_type == 'p2sh-segwit':
-        return address.key_to_p2sh_p2wpk(key)
     elif address_type == 'bech32':
         return address.key_to_p2wpk(key)
 

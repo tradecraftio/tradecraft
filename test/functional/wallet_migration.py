@@ -126,12 +126,11 @@ class WalletMigrationTest(FreicoinTestFramework):
         # The wallet should create the following descriptors:
         # * BIP32 descriptors in the form of "0h/0h/*" and "0h/1h/*" (2 descriptors)
         # * BIP44 descriptors in the form of "44h/1h/0h/0/*" and "44h/1h/0h/1/*" (2 descriptors)
-        # * BIP49 descriptors, P2SH(P2WPK), in the form of "86h/1h/0h/0/*" and "86h/1h/0h/1/*" (2 descriptors)
         # * BIP84 descriptors, P2WPK, in the form of "84h/1h/0h/1/*" and "84h/1h/0h/1/*" (2 descriptors)
         # * BIP86 descriptors, P2TR, in the form of "86h/1h/0h/0/*" and "86h/1h/0h/1/*" (2 descriptors)
         # * A combo(PK) descriptor for the wallet master key.
-        # So, should have a total of 11 descriptors on it.
-        assert_equal(len(basic0.listdescriptors()["descriptors"]), 11)
+        # So, should have a total of 9 descriptors on it.
+        assert_equal(len(basic0.listdescriptors()["descriptors"]), 9)
 
         # Compare addresses info
         addr_info = basic0.getaddressinfo(addr)
@@ -190,7 +189,7 @@ class WalletMigrationTest(FreicoinTestFramework):
 
         # Receive coins on different output types for the same seed
         basic2_balance = 0
-        for addr in [basic2_seed.p2pkh_addr, basic2_seed.p2wpk_addr, basic2_seed.p2sh_p2wpk_addr]:
+        for addr in [basic2_seed.p2pkh_addr, basic2_seed.p2wpk_addr]:
             send_value = random.randint(1, 4)
             default.sendtoaddress(addr, send_value)
             basic2_balance += send_value
