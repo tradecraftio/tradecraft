@@ -13,6 +13,7 @@
 
 #include <variant>
 #include <algorithm>
+#include <utility> // for std::tie
 
 class CNoDestination
 {
@@ -121,20 +122,28 @@ class WitnessV0ScriptEntry
 {
 public:
     std::vector<unsigned char> m_script;
+    std::vector<uint256> m_branch;
+    uint32_t m_path;
 
-    WitnessV0ScriptEntry() { }
+    WitnessV0ScriptEntry() : m_path(0) { }
 
-    explicit WitnessV0ScriptEntry(const std::vector<unsigned char>& scriptIn) : m_script(scriptIn) { }
-    explicit WitnessV0ScriptEntry(std::vector<unsigned char>&& scriptIn) : m_script(scriptIn) { }
+    explicit WitnessV0ScriptEntry(const std::vector<unsigned char>& scriptIn) : m_script(scriptIn), m_path(0) { }
+    explicit WitnessV0ScriptEntry(std::vector<unsigned char>&& scriptIn) : m_script(scriptIn), m_path(0) { }
+    WitnessV0ScriptEntry(const std::vector<unsigned char>& scriptIn, const std::vector<uint256>& branchIn, uint32_t pathIn) : m_script(scriptIn), m_branch(branchIn), m_path(pathIn) { }
+    WitnessV0ScriptEntry(std::vector<unsigned char>&& scriptIn, std::vector<uint256>&& branchIn, uint32_t pathIn) : m_script(scriptIn), m_branch(branchIn), m_path(pathIn) { }
 
     WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript);
+    WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript, const std::vector<uint256>& branchIn, uint32_t pathIn);
+    WitnessV0ScriptEntry(unsigned char version, const CScript& innerscript, std::vector<uint256>&& branchIn, uint32_t pathIn);
 
     SERIALIZE_METHODS(WitnessV0ScriptEntry, obj) {
-        READWRITE(obj.m_script);
+        READWRITE(obj.m_script, VARINT(obj.m_path), obj.m_branch);
     }
 
     inline void SetNull() {
         m_script.clear();
+        m_branch.clear();
+        m_path = 0;
     }
 
     inline bool IsNull() const {
@@ -142,7 +151,7 @@ public:
     }
 
     inline bool operator<(const WitnessV0ScriptEntry& rhs) const {
-        return m_script < rhs.m_script;
+        return std::tie(m_script, m_branch, m_path) < std::tie(rhs.m_script, rhs.m_branch, rhs.m_path);
     }
 
     WitnessV0ScriptHash GetScriptHash() const;
@@ -151,6 +160,8 @@ public:
 inline void swap(WitnessV0ScriptEntry& lhs, WitnessV0ScriptEntry& rhs) noexcept {
     using std::swap;
     swap(lhs.m_script, rhs.m_script);
+    swap(lhs.m_branch, rhs.m_branch);
+    swap(lhs.m_path, rhs.m_path);
 }
 
 /**

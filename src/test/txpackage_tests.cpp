@@ -418,10 +418,12 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CScriptWitness witness1;
     witness1.stack.emplace_back(1);
     witness1.stack.push_back(entry.m_script);
+    witness1.stack.emplace_back();
 
     CScriptWitness witness2(witness1);
     witness2.stack.emplace_back(2);
     witness2.stack.push_back(entry.m_script);
+    witness2.stack.emplace_back();
 
     CKey child_key;
     child_key.MakeNewKey(true);
@@ -544,6 +546,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CScript acs_spk = GetScriptForDestination(acs_entry.GetScriptHash());
     CScriptWitness acs_witness;
     acs_witness.stack.push_back(acs_entry.m_script);
+    acs_witness.stack.emplace_back();
 
     // parent1 will already be in the mempool
     auto mtx_parent1 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[1], /*input_vout=*/0,
@@ -560,9 +563,11 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CScriptWitness parent2_witness1;
     parent2_witness1.stack.emplace_back(1);
     parent2_witness1.stack.push_back(grandparent2_entry.m_script);
+    parent2_witness1.stack.emplace_back();
     CScriptWitness parent2_witness2;
     parent2_witness2.stack.emplace_back(2);
     parent2_witness2.stack.push_back(grandparent2_entry.m_script);
+    parent2_witness2.stack.emplace_back();
 
     // Create grandparent2 creating an output with multiple spending paths. Submit to mempool.
     auto mtx_grandparent2 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[2], /*input_vout=*/0,

@@ -364,7 +364,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int(seed_tx["txid"], 16), seed_tx["sent_vout"]), b"", SEQUENCE_FINAL))
         tx.wit.vtxinwit = [CTxInWitness()]
-        tx.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + CScript([OP_TRUE])]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" + CScript([OP_TRUE]), b""]
         tx.vout.append(CTxOut(0, b""))
         # Note it's only non-witness size that matters!
         assert_equal(len(tx.serialize_without_witness()), 64)
