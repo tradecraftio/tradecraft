@@ -56,7 +56,7 @@ from test_framework.script import (
     OP_HASH160,
     OP_RETURN,
     hash160,
-    sha256,
+    hash256,
 )
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
@@ -169,7 +169,7 @@ def script_to_witness(script):
 
 def script_to_p2wsh_script(script):
     script = check_script(script)
-    return program_to_witness_script(0, sha256(script_to_witness(script)))
+    return program_to_witness_script(0, hash256(script_to_witness(script)))
 
 
 def key_to_p2wpkh_script(key):
@@ -179,7 +179,7 @@ def key_to_p2wpkh_script(key):
 
 def script_to_p2sh_p2wsh_script(script):
     script = check_script(script)
-    p2shscript = CScript([OP_0, sha256(script_to_witness(script))])
+    p2shscript = CScript([OP_0, hash256(script_to_witness(script))])
     return script_to_p2sh_script(p2shscript)
 
 
