@@ -22,6 +22,7 @@
 #include <streams.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <version.h> // for PROTOCOL_VERSION
 
 #include <cstddef>
 #include <exception>
@@ -90,8 +91,8 @@ private:
     struct WriteBatchImpl;
     const std::unique_ptr<WriteBatchImpl> m_impl_batch;
 
-    DataStream ssKey{};
-    DataStream ssValue{};
+    CDataStream ssKey{SER_DISK, PROTOCOL_VERSION};
+    CDataStream ssValue{SER_DISK, PROTOCOL_VERSION};
 
     size_t size_estimate{0};
 
@@ -177,7 +178,7 @@ public:
 
     template<typename V> bool GetValue(V& value) {
         try {
-            DataStream ssValue{GetValueImpl()};
+            CDataStream ssValue{GetValueImpl(), SER_DISK, PROTOCOL_VERSION};
             ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
             ssValue >> value;
         } catch (const std::exception&) {
