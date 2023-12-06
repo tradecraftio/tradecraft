@@ -6,18 +6,6 @@
 #define BITCOIN_STRATUM_H
 
 #include <node/context.h>
-#include <uint256.h>
-
-#include <univalue.h>
-
-#include <stdint.h>
-
-#include <string>
-
-/** JSON ser/deser utility functions. */
-std::string HexInt4(uint32_t val);
-uint32_t ParseHexInt4(const UniValue& hex, const std::string& name);
-uint256 ParseUInt256(const UniValue& hex, const std::string& name);
 
 /** Configure the stratum server. */
 bool InitStratumServer(node::NodeContext& node);
