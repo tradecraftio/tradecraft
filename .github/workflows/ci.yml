@@ -87,7 +87,7 @@ jobs:
     runs-on: macos-13  # Use M1 once available https://github.com/github/roadmap/issues/528
 
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: github.repository != 'freicoin/gui' || github.event_name == 'pull_request'
 
     timeout-minutes: 120
 
@@ -134,7 +134,7 @@ jobs:
     runs-on: windows-2022
 
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: github.repository != 'freicoin/gui' || github.event_name == 'pull_request'
 
     env:
       CCACHE_MAXSIZE: '200M'
@@ -313,7 +313,7 @@ jobs:
         shell: cmd
         run: |
           ccache --zero-stats
-          msbuild build_msvc\bitcoin.sln -property:CLToolPath=C:\ccache;CLToolExe=cl.exe;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+          msbuild build_msvc\freicoin.sln -property:CLToolPath=C:\ccache;CLToolExe=cl.exe;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
 
       - name: Ccache stats
         run: ccache --show-stats
@@ -327,10 +327,10 @@ jobs:
           key: ${{ github.job }}-ccache-${{ github.run_id }}
 
       - name: Run unit tests
-        run: src\test_bitcoin.exe -l test_suite
+        run: src\test_freicoin.exe -l test_suite
 
       - name: Run benchmarks
-        run: src\bench_bitcoin.exe -sanity-check
+        run: src\bench_freicoin.exe -sanity-check
 
       - name: Run util tests
         run: py -3 test\util\test_runner.py

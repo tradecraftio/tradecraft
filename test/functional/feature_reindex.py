@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Test running bitcoind with -reindex and -reindex-chainstate options.
+"""Test running freicoind with -reindex and -reindex-chainstate options.
 
 - Start a single node and generate 3 blocks.
 - Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
@@ -21,12 +21,12 @@
 - Verify that out-of-order blocks are correctly processed, see LoadExternalBlockFile()
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.p2p import MAGIC_BYTES
 from test_framework.util import assert_equal
 
 
-class ReindexTest(BitcoinTestFramework):
+class ReindexTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

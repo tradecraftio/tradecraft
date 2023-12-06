@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_THREADINTERRUPT_H
-#define BITCOIN_UTIL_THREADINTERRUPT_H
+#ifndef FREICOIN_UTIL_THREADINTERRUPT_H
+#define FREICOIN_UTIL_THREADINTERRUPT_H
 
 #include <sync.h>
 #include <threadsafety.h>
@@ -50,4 +50,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif // BITCOIN_UTIL_THREADINTERRUPT_H
+#endif // FREICOIN_UTIL_THREADINTERRUPT_H

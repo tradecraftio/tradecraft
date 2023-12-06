@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SYNC_H
-#define BITCOIN_SYNC_H
+#ifndef FREICOIN_SYNC_H
+#define FREICOIN_SYNC_H
 
 #ifdef DEBUG_LOCKCONTENTION
 #include <logging.h>
@@ -439,4 +439,4 @@ public:
     }
 };
 
-#endif // BITCOIN_SYNC_H
+#endif // FREICOIN_SYNC_H

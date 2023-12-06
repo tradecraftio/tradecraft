@@ -29,7 +29,7 @@ from test_framework.p2p import (
     P2P_SUBVERSION,
     P2P_VERSION,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 class PeerNoVerack(P2PInterface):
@@ -72,7 +72,7 @@ def create_sendtxrcncl_msg():
     sendtxrcncl_msg.salt = 2
     return sendtxrcncl_msg
 
-class SendTxRcnclTest(BitcoinTestFramework):
+class SendTxRcnclTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-txreconciliation']]

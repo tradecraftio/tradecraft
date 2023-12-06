@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_MEMPOOL_ENTRY_H
-#define BITCOIN_KERNEL_MEMPOOL_ENTRY_H
+#ifndef FREICOIN_KERNEL_MEMPOOL_ENTRY_H
+#define FREICOIN_KERNEL_MEMPOOL_ENTRY_H
 
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -187,4 +187,4 @@ public:
     mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms
 };
 
-#endif // BITCOIN_KERNEL_MEMPOOL_ENTRY_H
+#endif // FREICOIN_KERNEL_MEMPOOL_ENTRY_H

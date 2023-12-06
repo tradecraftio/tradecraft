@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_MERKLEBLOCK_H
-#define BITCOIN_MERKLEBLOCK_H
+#ifndef FREICOIN_MERKLEBLOCK_H
+#define FREICOIN_MERKLEBLOCK_H
 
 #include <common/bloom.h>
 #include <primitives/block.h>
@@ -166,4 +166,4 @@ private:
     CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids);
 };
 
-#endif // BITCOIN_MERKLEBLOCK_H
+#endif // FREICOIN_MERKLEBLOCK_H

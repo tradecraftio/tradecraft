@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_TXRECONCILIATION_H
-#define BITCOIN_NODE_TXRECONCILIATION_H
+#ifndef FREICOIN_NODE_TXRECONCILIATION_H
+#define FREICOIN_NODE_TXRECONCILIATION_H
 
 #include <net.h>
 #include <sync.h>
@@ -97,4 +97,4 @@ public:
     bool IsPeerRegistered(NodeId peer_id) const;
 };
 
-#endif // BITCOIN_NODE_TXRECONCILIATION_H
+#endif // FREICOIN_NODE_TXRECONCILIATION_H

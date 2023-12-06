@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_BATCHPRIORITY_H
-#define BITCOIN_UTIL_BATCHPRIORITY_H
+#ifndef FREICOIN_UTIL_BATCHPRIORITY_H
+#define FREICOIN_UTIL_BATCHPRIORITY_H
 
 /**
  * On platforms that support it, tell the kernel the calling thread is
@@ -23,4 +23,4 @@
  */
 void ScheduleBatchPriority();
 
-#endif // BITCOIN_UTIL_BATCHPRIORITY_H
+#endif // FREICOIN_UTIL_BATCHPRIORITY_H

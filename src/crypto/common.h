@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_COMMON_H
-#define BITCOIN_CRYPTO_COMMON_H
+#ifndef FREICOIN_CRYPTO_COMMON_H
+#define FREICOIN_CRYPTO_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <stdint.h>
@@ -118,4 +118,4 @@ uint64_t static inline CountBits(uint64_t x)
     return ret;
 }
 
-#endif // BITCOIN_CRYPTO_COMMON_H
+#endif // FREICOIN_CRYPTO_COMMON_H

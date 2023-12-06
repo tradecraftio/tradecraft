@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TXMEMPOOL_H
-#define BITCOIN_TXMEMPOOL_H
+#ifndef FREICOIN_TXMEMPOOL_H
+#define FREICOIN_TXMEMPOOL_H
 
 #include <coins.h>
 #include <consensus/amount.h>
@@ -859,4 +859,4 @@ public:
     /** Clear m_temp_added and m_non_base_coins. */
     void Reset();
 };
-#endif // BITCOIN_TXMEMPOOL_H
+#endif // FREICOIN_TXMEMPOOL_H

@@ -13,17 +13,17 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Test running bitcoind with -reindex from a read-only blockstore
+"""Test running freicoind with -reindex from a read-only blockstore
 - Start a node, generate blocks, then restart with -reindex after setting blk files to read-only
 """
 
 import os
 import stat
 import subprocess
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 
 
-class BlockstoreReindexTest(BitcoinTestFramework):
+class BlockstoreReindexTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

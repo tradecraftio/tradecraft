@@ -17,7 +17,7 @@
 
 import socket
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 
@@ -37,7 +37,7 @@ def is_valid_ipv6_address(address):
     return True
 
 
-class DiscoverTest(BitcoinTestFramework):
+class DiscoverTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.bind_to_localhost_only = False

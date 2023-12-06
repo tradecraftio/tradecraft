@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CHECKQUEUE_H
-#define BITCOIN_CHECKQUEUE_H
+#ifndef FREICOIN_CHECKQUEUE_H
+#define FREICOIN_CHECKQUEUE_H
 
 #include <sync.h>
 #include <tinyformat.h>
@@ -259,4 +259,4 @@ public:
     }
 };
 
-#endif // BITCOIN_CHECKQUEUE_H
+#endif // FREICOIN_CHECKQUEUE_H

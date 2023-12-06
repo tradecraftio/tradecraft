@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_HMAC_SHA512_H
-#define BITCOIN_CRYPTO_HMAC_SHA512_H
+#ifndef FREICOIN_CRYPTO_HMAC_SHA512_H
+#define FREICOIN_CRYPTO_HMAC_SHA512_H
 
 #include <crypto/sha512.h>
 
@@ -41,4 +41,4 @@ public:
     void Midstate(unsigned char hash[OUTPUT_SIZE*2], unsigned char* buffer, size_t* length);
 };
 
-#endif // BITCOIN_CRYPTO_HMAC_SHA512_H
+#endif // FREICOIN_CRYPTO_HMAC_SHA512_H

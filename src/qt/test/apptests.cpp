@@ -18,8 +18,8 @@
 #include <chainparams.h>
 #include <key.h>
 #include <logging.h>
-#include <qt/bitcoin.h>
-#include <qt/bitcoingui.h>
+#include <qt/freicoin.h>
+#include <qt/freicoingui.h>
 #include <qt/networkstyle.h>
 #include <qt/rpcconsole.h>
 #include <shutdown.h>
@@ -27,7 +27,7 @@
 #include <validation.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <QAction>
@@ -67,7 +67,7 @@ void TestRpcCommand(RPCConsole* console)
 }
 } // namespace
 
-//! Entry point for BitcoinApplication tests.
+//! Entry point for FreicoinApplication tests.
 void AppTests::appTests()
 {
 #ifdef Q_OS_MACOS
@@ -77,7 +77,7 @@ void AppTests::appTests()
         // and fails to handle returned nulls
         // (https://bugreports.qt.io/browse/QTBUG-49686).
         QWARN("Skipping AppTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
-              "with 'QT_QPA_PLATFORM=cocoa test_bitcoin-qt' on mac, or else use a linux or windows build.");
+              "with 'QT_QPA_PLATFORM=cocoa test_freicoin-qt' on mac, or else use a linux or windows build.");
         return;
     }
 #endif
@@ -88,7 +88,7 @@ void AppTests::appTests()
     QScopedPointer<const NetworkStyle> style(NetworkStyle::instantiate(Params().GetChainType()));
     m_app.setupPlatformStyle();
     m_app.createWindow(style.data());
-    connect(&m_app, &BitcoinApplication::windowShown, this, &AppTests::guiTests);
+    connect(&m_app, &FreicoinApplication::windowShown, this, &AppTests::guiTests);
     expectCallback("guiTests");
     m_app.baseInitialize();
     m_app.requestInitialize();
@@ -100,11 +100,11 @@ void AppTests::appTests()
     LogInstance().DisconnectTestLogger();
 }
 
-//! Entry point for BitcoinGUI tests.
-void AppTests::guiTests(BitcoinGUI* window)
+//! Entry point for FreicoinGUI tests.
+void AppTests::guiTests(FreicoinGUI* window)
 {
     HandleCallback callback{"guiTests", *this};
-    connect(window, &BitcoinGUI::consoleShown, this, &AppTests::consoleTests);
+    connect(window, &FreicoinGUI::consoleShown, this, &AppTests::consoleTests);
     expectCallback("consoleTests");
     QAction* action = window->findChild<QAction*>("openRPCConsoleAction");
     action->activate(QAction::Trigger);

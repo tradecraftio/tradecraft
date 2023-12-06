@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLETINITINTERFACE_H
-#define BITCOIN_WALLETINITINTERFACE_H
+#ifndef FREICOIN_WALLETINITINTERFACE_H
+#define FREICOIN_WALLETINITINTERFACE_H
 
 class ArgsManager;
 
@@ -38,4 +38,4 @@ public:
 
 extern const WalletInitInterface& g_wallet_init_interface;
 
-#endif // BITCOIN_WALLETINITINTERFACE_H
+#endif // FREICOIN_WALLETINITINTERFACE_H

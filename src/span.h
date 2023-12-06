@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SPAN_H
-#define BITCOIN_SPAN_H
+#ifndef FREICOIN_SPAN_H
+#define FREICOIN_SPAN_H
 
 #include <algorithm>
 #include <cassert>
@@ -291,4 +291,4 @@ template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename s
 /** Like the Span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
 template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(Span{std::forward<V>(v)})) { return UCharSpanCast(Span{std::forward<V>(v)}); }
 
-#endif // BITCOIN_SPAN_H
+#endif // FREICOIN_SPAN_H

@@ -20,14 +20,14 @@ import socket
 
 from test_framework.messages import NODE_P2P_V2
 from test_framework.p2p import MAGIC_BYTES
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
 )
 
 
-class V2TransportTest(BitcoinTestFramework):
+class V2TransportTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 5

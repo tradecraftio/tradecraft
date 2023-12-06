@@ -31,7 +31,7 @@ for fn in `git grep "Distributed under the MIT/X11 software license" | cut -d':'
 done
 
 # Files having to do with the stratum mining server are licensed under the
-# MIT/X11 license, so that patches can be shared with Bitcoin Core.
+# MIT/X11 license, so that patches can be shared with Freicoin.
 for file in \
     src/node/miner.cpp \
     src/node/miner.h \

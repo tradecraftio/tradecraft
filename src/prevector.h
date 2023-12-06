@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_PREVECTOR_H
-#define BITCOIN_PREVECTOR_H
+#ifndef FREICOIN_PREVECTOR_H
+#define FREICOIN_PREVECTOR_H
 
 #include <assert.h>
 #include <cstdlib>
@@ -544,4 +544,4 @@ public:
     }
 };
 
-#endif // BITCOIN_PREVECTOR_H
+#endif // FREICOIN_PREVECTOR_H

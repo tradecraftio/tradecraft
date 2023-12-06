@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test the deriveaddresses rpc call."""
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
-class DeriveaddressesTest(BitcoinTestFramework):
+class DeriveaddressesTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -58,10 +58,10 @@ class DeriveaddressesTest(BitcoinTestFramework):
         # P2PK does not have a valid address
         assert_raises_rpc_error(-5, "Descriptor does not have a corresponding address", self.nodes[0].deriveaddresses, descsum_create("pk(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK)"))
 
-        # Before #26275, bitcoind would crash when deriveaddresses was
+        # Before #26275, freicoind would crash when deriveaddresses was
         # called with derivation index 2147483647, which is the maximum
         # positive value of a signed int32, and - currently - the
-        # maximum value that the deriveaddresses bitcoin RPC call
+        # maximum value that the deriveaddresses freicoin RPC call
         # accepts as derivation index.
         assert_equal(self.nodes[0].deriveaddresses(descsum_create("wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/*)"), [2147483647, 2147483647]), ["bcrt1qtzs23vgzpreks5gtygwxf8tv5rldxvvsyfpdkg"])
 

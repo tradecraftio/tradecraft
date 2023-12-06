@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COMMON_ARGS_H
-#define BITCOIN_COMMON_ARGS_H
+#ifndef FREICOIN_COMMON_ARGS_H
+#define FREICOIN_COMMON_ARGS_H
 
 #include <common/settings.h>
 #include <compat/compat.h>
@@ -34,8 +34,8 @@
 
 class ArgsManager;
 
-extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_SETTINGS_FILENAME;
+extern const char * const FREICOIN_CONF_FILENAME;
+extern const char * const FREICOIN_SETTINGS_FILENAME;
 
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption(const ArgsManager& args);
@@ -492,4 +492,4 @@ private:
 #endif
 } // namespace common
 
-#endif // BITCOIN_COMMON_ARGS_H
+#endif // FREICOIN_COMMON_ARGS_H

@@ -112,7 +112,7 @@ class MiniWallet:
 
         # When the pre-mined test framework chain is used, it contains coinbase
         # outputs to the MiniWallet's default address in blocks 76-100
-        # (see method BitcoinTestFramework._initialize_chain())
+        # (see method FreicoinTestFramework._initialize_chain())
         # The MiniWallet needs to rescan_utxos() in order to account
         # for those mature UTXOs, so that all txs spend confirmed coins
         self.rescan_utxos()
@@ -358,7 +358,7 @@ class MiniWallet:
             target_weight=0,
             confirmed_only=False
     ):
-        """Create and return a tx with the specified fee. If fee is 0, use fee_rate, where the resulting fee may be exact or at most one satoshi higher than needed."""
+        """Create and return a tx with the specified fee. If fee is 0, use fee_rate, where the resulting fee may be exact or at most one kria higher than needed."""
         utxo_to_spend = utxo_to_spend or self.get_utxo(confirmed_only=confirmed_only)
         assert fee_rate >= 0
         assert fee >= 0

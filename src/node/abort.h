@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_ABORT_H
-#define BITCOIN_NODE_ABORT_H
+#ifndef FREICOIN_NODE_ABORT_H
+#define FREICOIN_NODE_ABORT_H
 
 #include <util/translation.h>
 
@@ -25,4 +25,4 @@ namespace node {
 void AbortNode(std::atomic<int>& exit_status, const std::string& debug_message, const bilingual_str& user_message = {}, bool shutdown = true);
 } // namespace node
 
-#endif // BITCOIN_NODE_ABORT_H
+#endif // FREICOIN_NODE_ABORT_H

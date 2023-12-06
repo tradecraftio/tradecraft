@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Functionality to build scripts, as well as signature hash functions.
 
-This file is modified from python-bitcoinlib.
+This file is modified from python-freicoinlib.
 """
 
 from collections import namedtuple
@@ -48,7 +48,7 @@ def hash160(s):
     return ripemd160(sha256(s))
 
 def bn2vch(v):
-    """Convert number to bitcoin-specific little endian format."""
+    """Convert number to freicoin-specific little endian format."""
     # We need v.bit_length() bits, plus a sign bit for every nonzero number.
     n_bits = v.bit_length() + (v != 0)
     # The number of bytes for that is:

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_SETUP_COMMON_H
-#define BITCOIN_TEST_UTIL_SETUP_COMMON_H
+#ifndef FREICOIN_TEST_UTIL_SETUP_COMMON_H
+#define FREICOIN_TEST_UTIL_SETUP_COMMON_H
 
 #include <common/args.h>
 #include <key.h>
@@ -221,4 +221,4 @@ private:
     const std::string m_reason;
 };
 
-#endif // BITCOIN_TEST_UTIL_SETUP_COMMON_H
+#endif // FREICOIN_TEST_UTIL_SETUP_COMMON_H

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-""" Example logging Bitcoin Core mempool events using the mempool:added,
+""" Example logging Freicoin mempool events using the mempool:added,
     mempool:removed, mempool:replaced, and mempool:rejected tracepoints. """
 
 import curses
@@ -125,16 +125,16 @@ int trace_replaced(struct pt_regs *ctx) {
 """
 
 
-def main(bitcoind_path):
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+def main(freicoind_path):
+    freicoind_with_usdts = USDT(path=str(freicoind_path))
 
     # attaching the trace functions defined in the BPF program
     # to the tracepoints
-    bitcoind_with_usdts.enable_probe(probe="mempool:added", fn_name="trace_added")
-    bitcoind_with_usdts.enable_probe(probe="mempool:removed", fn_name="trace_removed")
-    bitcoind_with_usdts.enable_probe(probe="mempool:replaced", fn_name="trace_replaced")
-    bitcoind_with_usdts.enable_probe(probe="mempool:rejected", fn_name="trace_rejected")
-    bpf = BPF(text=PROGRAM, usdt_contexts=[bitcoind_with_usdts])
+    freicoind_with_usdts.enable_probe(probe="mempool:added", fn_name="trace_added")
+    freicoind_with_usdts.enable_probe(probe="mempool:removed", fn_name="trace_removed")
+    freicoind_with_usdts.enable_probe(probe="mempool:replaced", fn_name="trace_replaced")
+    freicoind_with_usdts.enable_probe(probe="mempool:rejected", fn_name="trace_rejected")
+    bpf = BPF(text=PROGRAM, usdt_contexts=[freicoind_with_usdts])
 
     events = []
 
@@ -376,7 +376,7 @@ class Dashboard:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("USAGE: ", sys.argv[0], "path/to/bitcoind")
+        print("USAGE: ", sys.argv[0], "path/to/freicoind")
         exit(1)
 
     path = sys.argv[1]

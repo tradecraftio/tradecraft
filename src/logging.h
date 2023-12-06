@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_LOGGING_H
-#define BITCOIN_LOGGING_H
+#ifndef FREICOIN_LOGGING_H
+#define FREICOIN_LOGGING_H
 
 #include <threadsafety.h>
 #include <tinyformat.h>
@@ -277,4 +277,4 @@ bool error(const char* fmt, const Args&... args)
     return false;
 }
 
-#endif // BITCOIN_LOGGING_H
+#endif // FREICOIN_LOGGING_H

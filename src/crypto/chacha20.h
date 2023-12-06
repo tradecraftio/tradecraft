@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_CHACHA20_H
-#define BITCOIN_CRYPTO_CHACHA20_H
+#ifndef FREICOIN_CRYPTO_CHACHA20_H
+#define FREICOIN_CRYPTO_CHACHA20_H
 
 #include <span.h>
 
@@ -167,4 +167,4 @@ public:
     void Crypt(Span<const std::byte> input, Span<std::byte> output) noexcept;
 };
 
-#endif // BITCOIN_CRYPTO_CHACHA20_H
+#endif // FREICOIN_CRYPTO_CHACHA20_H

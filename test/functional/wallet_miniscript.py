@@ -16,8 +16,8 @@
 """Test Miniscript descriptors integration in the wallet."""
 
 from test_framework.descriptors import descsum_create
-from test_framework.psbt import PSBT, PSBT_IN_SHA256
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.pst import PST, PST_IN_SHA256
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 
@@ -213,7 +213,7 @@ DESCS_PRIV = [
 ]
 
 
-class WalletMiniscriptTest(BitcoinTestFramework):
+class WalletMiniscriptTest(FreicoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
         self.rpc_timeout = 480
@@ -292,7 +292,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         dest_addr = self.funder.getnewaddress()
         seq = sequence if sequence is not None else 0xFFFFFFFF - 2
         lt = locktime if locktime is not None else 0
-        psbt = self.ms_sig_wallet.createpsbt(
+        pst = self.ms_sig_wallet.createpst(
             [
                 {
                     "txid": txid,
@@ -306,16 +306,16 @@ class WalletMiniscriptTest(BitcoinTestFramework):
 
         self.log.info("Signing it and checking the satisfaction.")
         if sha256_preimages is not None:
-            psbt = PSBT.from_base64(psbt)
+            pst = PST.from_base64(pst)
             for (h, preimage) in sha256_preimages.items():
-                k = PSBT_IN_SHA256.to_bytes(1, "big") + bytes.fromhex(h)
-                psbt.i[0].map[k] = bytes.fromhex(preimage)
-            psbt = psbt.to_base64()
-        res = self.ms_sig_wallet.walletprocesspsbt(psbt=psbt, finalize=False)
-        psbtin = self.nodes[0].rpc.decodepsbt(res["psbt"])["inputs"][0]
+                k = PST_IN_SHA256.to_bytes(1, "big") + bytes.fromhex(h)
+                pst.i[0].map[k] = bytes.fromhex(preimage)
+            pst = pst.to_base64()
+        res = self.ms_sig_wallet.walletprocesspst(pst=pst, finalize=False)
+        pstin = self.nodes[0].rpc.decodepst(res["pst"])["inputs"][0]
         sigs_field_name = "taproot_script_path_sigs" if is_taproot else "partial_signatures"
-        assert len(psbtin[sigs_field_name]) == sigs_count
-        res = self.ms_sig_wallet.finalizepsbt(res["psbt"])
+        assert len(pstin[sigs_field_name]) == sigs_count
+        res = self.ms_sig_wallet.finalizepst(res["pst"])
         assert res["complete"] == (stack_size is not None)
 
         if stack_size is not None:

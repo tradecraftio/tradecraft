@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Test framework for bitcoin utils.
+"""Test framework for freicoin utils.
 
 Runs automatically during `make check`.
 
@@ -50,7 +50,7 @@ def main():
     # Add the format/level to the logger
     logging.basicConfig(format=formatter, level=level)
 
-    bctester(os.path.join(env_conf["SRCDIR"], "test", "util", "data"), "bitcoin-util-test.json", env_conf)
+    bctester(os.path.join(env_conf["SRCDIR"], "test", "util", "data"), "freicoin-util-test.json", env_conf)
 
 def bctester(testDir, input_basename, buildenv):
     """ Loads and parses the input file, runs all tests and reports results"""
@@ -85,10 +85,10 @@ def bctest(testDir, testObj, buildenv):
     """
     # Get the exec names and arguments
     execprog = os.path.join(buildenv["BUILDDIR"], "src", testObj["exec"] + buildenv["EXEEXT"])
-    if testObj["exec"] == "./bitcoin-util":
-        execprog = os.getenv("BITCOINUTIL", default=execprog)
-    elif testObj["exec"] == "./bitcoin-tx":
-        execprog = os.getenv("BITCOINTX", default=execprog)
+    if testObj["exec"] == "./freicoin-util":
+        execprog = os.getenv("FREICOINUTIL", default=execprog)
+    elif testObj["exec"] == "./freicoin-tx":
+        execprog = os.getenv("FREICOINTX", default=execprog)
 
     execargs = testObj['args']
     execrun = [execprog] + execargs
@@ -171,7 +171,7 @@ def bctest(testDir, testObj, buildenv):
         want_error = testObj["error_txt"]
         # Compare error text
         # TODO: ideally, we'd compare the strings exactly and also assert
-        # That stderr is empty if no errors are expected. However, bitcoin-tx
+        # That stderr is empty if no errors are expected. However, freicoin-tx
         # emits DISPLAY errors when running as a windows application on
         # linux through wine. Just assert that the expected error text appears
         # somewhere in stderr.

@@ -384,7 +384,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     }
 
     if (!client.m_authorized) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Stratum client not authorized.  Use mining.authorize first, with a Bitcoin address as the username.");
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Stratum client not authorized.  Use mining.authorize first, with a Freicoin address as the username.");
     }
 
     static CBlockIndex* tip = NULL;
@@ -687,14 +687,14 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
         boost::trim_right(username);
     }
 
-    // If the username is a valid Bitcoin address, use it as the destination
+    // If the username is a valid Freicoin address, use it as the destination
     // for block rewards.  Otherwise setup the miner to use fresh keys from the
     // wallet.
     CTxDestination addr;
     if (!username.empty()) {
         addr = DecodeDestination(username);
         if (!IsValidDestination(addr)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Bitcoin address: %s", username));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
         }
     }
 

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
-#define BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
+#ifndef FREICOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
+#define FREICOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 
 #include <util/translation.h>
 
@@ -72,4 +72,4 @@ public:
 };
 } // namespace kernel
 
-#endif // BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
+#endif // FREICOIN_KERNEL_NOTIFICATIONS_INTERFACE_H

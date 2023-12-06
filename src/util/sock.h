@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SOCK_H
-#define BITCOIN_UTIL_SOCK_H
+#ifndef FREICOIN_UTIL_SOCK_H
+#define FREICOIN_UTIL_SOCK_H
 
 #include <compat/compat.h>
 #include <util/threadinterrupt.h>
@@ -288,4 +288,4 @@ private:
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
 
-#endif // BITCOIN_UTIL_SOCK_H
+#endif // FREICOIN_UTIL_SOCK_H

@@ -37,11 +37,11 @@ from test_framework.blocktools import (
 from test_framework.messages import COIN
 from test_framework.p2p import P2PDataStore
 from test_framework.script import OP_TRUE
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 
-class InvalidBlockRequestTest(BitcoinTestFramework):
+class InvalidBlockRequestTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -52,7 +52,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         node = self.nodes[0]  # convenience reference to the node
         peer = node.add_p2p_connection(P2PDataStore())
 
-        # Let bitcoind handle the block-final initial output logic
+        # Let freicoind handle the block-final initial output logic
         self.generate(self.nodes[0], 1)
 
         best_block = node.getblock(node.getbestblockhash())

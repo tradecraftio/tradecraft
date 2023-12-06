@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TXDB_H
-#define BITCOIN_TXDB_H
+#ifndef FREICOIN_TXDB_H
+#define FREICOIN_TXDB_H
 
 #include <coins.h>
 #include <dbwrapper.h>
@@ -89,4 +89,4 @@ public:
     std::optional<fs::path> StoragePath() { return m_db->StoragePath(); }
 };
 
-#endif // BITCOIN_TXDB_H
+#endif // FREICOIN_TXDB_H

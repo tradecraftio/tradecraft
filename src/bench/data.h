@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_BENCH_DATA_H
-#define BITCOIN_BENCH_DATA_H
+#ifndef FREICOIN_BENCH_DATA_H
+#define FREICOIN_BENCH_DATA_H
 
 #include <cstdint>
 #include <vector>
@@ -27,4 +27,4 @@ extern const std::vector<uint8_t> block413567;
 } // namespace data
 } // namespace benchmark
 
-#endif // BITCOIN_BENCH_DATA_H
+#endif // FREICOIN_BENCH_DATA_H

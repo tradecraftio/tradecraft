@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TXORPHANAGE_H
-#define BITCOIN_TXORPHANAGE_H
+#ifndef FREICOIN_TXORPHANAGE_H
+#define FREICOIN_TXORPHANAGE_H
 
 #include <net.h>
 #include <primitives/block.h>
@@ -113,4 +113,4 @@ protected:
     int EraseTxNoLock(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 };
 
-#endif // BITCOIN_TXORPHANAGE_H
+#endif // FREICOIN_TXORPHANAGE_H

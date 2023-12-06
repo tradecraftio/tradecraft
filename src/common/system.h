@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COMMON_SYSTEM_H
-#define BITCOIN_COMMON_SYSTEM_H
+#ifndef FREICOIN_COMMON_SYSTEM_H
+#define FREICOIN_COMMON_SYSTEM_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <compat/assumptions.h>
@@ -46,4 +46,4 @@ void runCommand(const std::string& strCommand);
  */
 int GetNumCores();
 
-#endif // BITCOIN_COMMON_SYSTEM_H
+#endif // FREICOIN_COMMON_SYSTEM_H

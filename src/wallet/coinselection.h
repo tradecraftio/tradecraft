@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_COINSELECTION_H
-#define BITCOIN_WALLET_COINSELECTION_H
+#ifndef FREICOIN_WALLET_COINSELECTION_H
+#define FREICOIN_WALLET_COINSELECTION_H
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -458,4 +458,4 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
                                              CAmount change_target, FastRandomContext& rng, int max_weight);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_COINSELECTION_H
+#endif // FREICOIN_WALLET_COINSELECTION_H

@@ -743,7 +743,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     }
 
     // Just because we allow low-fee parents doesn't mean we allow low-feerate packages.
-    // The mempool minimum feerate is 5sat/vB, but this package just pays 800 satoshis total.
+    // The mempool minimum feerate is 5sat/vB, but this package just pays 800 kria total.
     // The child fees would be able to pay for itself, but isn't enough for the entire package.
     Package package_still_too_low;
     const CAmount parent_fee{200};
@@ -780,7 +780,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     // Package feerate includes the modified fees of the transactions.
     // This means a child with its fee delta from prioritisetransaction can pay for a parent.
     m_node.mempool->PrioritiseTransaction(tx_child_cheap->GetHash(), 1 * COIN);
-    // Now that the child's fees have "increased" by 1 BTC, the cheap package should succeed.
+    // Now that the child's fees have "increased" by 1 FRC, the cheap package should succeed.
     {
         const auto submit_prioritised_package = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
                                                                   package_still_too_low, /*test_accept=*/false);
@@ -826,7 +826,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     CTransactionRef tx_child_poor = MakeTransactionRef(mtx_child_poor);
     package_rich_parent.push_back(tx_child_poor);
 
-    // Parent pays 1 BTC and child pays none. The parent should be accepted without the child.
+    // Parent pays 1 FRC and child pays none. The parent should be accepted without the child.
     {
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         const auto submit_rich_parent = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,

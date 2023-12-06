@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_RPC_UTIL_H
-#define BITCOIN_WALLET_RPC_UTIL_H
+#ifndef FREICOIN_WALLET_RPC_UTIL_H
+#define FREICOIN_WALLET_RPC_UTIL_H
 
 #include <rpc/util.h>
 #include <script/script.h>
@@ -66,4 +66,4 @@ int64_t ParseISO8601DateTime(const std::string& str);
 void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } //  namespace wallet
 
-#endif // BITCOIN_WALLET_RPC_UTIL_H
+#endif // FREICOIN_WALLET_RPC_UTIL_H

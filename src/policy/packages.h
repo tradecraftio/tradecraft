@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POLICY_PACKAGES_H
-#define BITCOIN_POLICY_PACKAGES_H
+#ifndef FREICOIN_POLICY_PACKAGES_H
+#define FREICOIN_POLICY_PACKAGES_H
 
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
@@ -78,4 +78,4 @@ bool IsChildWithParents(const Package& package);
  * other (the package is a "tree").
  */
 bool IsChildWithParentsTree(const Package& package);
-#endif // BITCOIN_POLICY_PACKAGES_H
+#endif // FREICOIN_POLICY_PACKAGES_H

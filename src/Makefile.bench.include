@@ -13,22 +13,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-bin_PROGRAMS += bench/bench_bitcoin
+bin_PROGRAMS += bench/bench_freicoin
 BENCH_SRCDIR = bench
-BENCH_BINARY = bench/bench_bitcoin$(EXEEXT)
+BENCH_BINARY = bench/bench_freicoin$(EXEEXT)
 
 RAW_BENCH_FILES = \
   bench/data/block413567.raw
 GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
-bench_bench_bitcoin_SOURCES = \
+bench_bench_freicoin_SOURCES = \
   $(RAW_BENCH_FILES) \
   bench/addrman.cpp \
   bench/base58.cpp \
   bench/bech32.cpp \
   bench/bench.cpp \
   bench/bench.h \
-  bench/bench_bitcoin.cpp \
+  bench/bench_freicoin.cpp \
   bench/bip324_ecdh.cpp \
   bench/block_assemble.cpp \
   bench/ccoins_caching.cpp \
@@ -66,19 +66,19 @@ bench_bench_bitcoin_SOURCES = \
   bench/verify_script.cpp \
   bench/xor.cpp
 
-nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_BENCH_FILES)
+nodist_bench_bench_freicoin_SOURCES = $(GENERATED_BENCH_FILES)
 
-bench_bench_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
-bench_bench_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bench_bench_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
-bench_bench_bitcoin_LDADD = \
+bench_bench_freicoin_CPPFLAGS = $(AM_CPPFLAGS) $(FREICOIN_INCLUDES) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_freicoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bench_bench_freicoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+bench_bench_freicoin_LDADD = \
   $(LIBTEST_UTIL) \
-  $(LIBBITCOIN_NODE) \
-  $(LIBBITCOIN_WALLET) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CONSENSUS) \
-  $(LIBBITCOIN_CRYPTO) \
+  $(LIBFREICOIN_NODE) \
+  $(LIBFREICOIN_WALLET) \
+  $(LIBFREICOIN_COMMON) \
+  $(LIBFREICOIN_UTIL) \
+  $(LIBFREICOIN_CONSENSUS) \
+  $(LIBFREICOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
@@ -89,27 +89,27 @@ bench_bench_bitcoin_LDADD = \
   $(NATPMP_LIBS)
 
 if ENABLE_ZMQ
-bench_bench_bitcoin_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+bench_bench_freicoin_LDADD += $(LIBFREICOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_WALLET
-bench_bench_bitcoin_SOURCES += bench/coin_selection.cpp
-bench_bench_bitcoin_SOURCES += bench/wallet_balance.cpp
-bench_bench_bitcoin_SOURCES += bench/wallet_loading.cpp
-bench_bench_bitcoin_SOURCES += bench/wallet_create_tx.cpp
-bench_bench_bitcoin_LDADD += $(BDB_LIBS) $(SQLITE_LIBS)
+bench_bench_freicoin_SOURCES += bench/coin_selection.cpp
+bench_bench_freicoin_SOURCES += bench/wallet_balance.cpp
+bench_bench_freicoin_SOURCES += bench/wallet_loading.cpp
+bench_bench_freicoin_SOURCES += bench/wallet_create_tx.cpp
+bench_bench_freicoin_LDADD += $(BDB_LIBS) $(SQLITE_LIBS)
 endif
 
-CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
+CLEAN_FREICOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
-CLEANFILES += $(CLEAN_BITCOIN_BENCH)
+CLEANFILES += $(CLEAN_FREICOIN_BENCH)
 
 bench/data.cpp: bench/data/block413567.raw.h
 
-bitcoin_bench: $(BENCH_BINARY)
+freicoin_bench: $(BENCH_BINARY)
 
 bench: $(BENCH_BINARY) FORCE
 	$(BENCH_BINARY)
 
-bitcoin_bench_clean : FORCE
-	rm -f $(CLEAN_BITCOIN_BENCH) $(bench_bench_bitcoin_OBJECTS) $(BENCH_BINARY)
+freicoin_bench_clean : FORCE
+	rm -f $(CLEAN_FREICOIN_BENCH) $(bench_bench_freicoin_OBJECTS) $(BENCH_BINARY)

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POLICY_POLICY_H
-#define BITCOIN_POLICY_POLICY_H
+#ifndef FREICOIN_POLICY_POLICY_H
+#define FREICOIN_POLICY_POLICY_H
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -178,4 +178,4 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
     return GetVirtualTransactionInputSize(tx, 0, 0);
 }
 
-#endif // BITCOIN_POLICY_POLICY_H
+#endif // FREICOIN_POLICY_POLICY_H

@@ -64,11 +64,11 @@
         <context-group purpose="location"><context context-type="linenumber">104</context></context-group>
       </trans-unit>
       <trans-unit id="_msg15">
-        <source xml:space="preserve">These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source xml:space="preserve">These are your Freicoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <context-group purpose="location"><context context-type="linenumber">110</context></context-group>
       </trans-unit>
       <trans-unit id="_msg16">
-        <source xml:space="preserve">These are your Bitcoin addresses for receiving payments. Use the &apos;Create new receiving address&apos; button in the receive tab to create new addresses.
+        <source xml:space="preserve">These are your Freicoin addresses for receiving payments. Use the &apos;Create new receiving address&apos; button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">115</context></context-group>
       </trans-unit>
@@ -175,7 +175,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">118</context></context-group>
       </trans-unit>
       <trans-unit id="_msg39">
-        <source xml:space="preserve">Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source xml:space="preserve">Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR FREICOINS&lt;/b&gt;!</source>
         <context-group purpose="location"><context context-type="linenumber">119</context></context-group>
       </trans-unit>
       <trans-unit id="_msg40">
@@ -196,7 +196,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">72</context></context-group>
       </trans-unit>
       <trans-unit id="_msg44">
-        <source xml:space="preserve">Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source xml:space="preserve">Remember that encrypting your wallet cannot fully protect your freicoins from being stolen by malware infecting your computer.</source>
         <context-group purpose="location"><context context-type="linenumber">126</context></context-group>
       </trans-unit>
       <trans-unit id="_msg45">
@@ -277,8 +277,8 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
       </trans-unit>
     </group>
   </body></file>
-  <file original="../bitcoin.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="BitcoinApplication">
+  <file original="../freicoin.cpp" datatype="cpp" source-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="FreicoinApplication">
       <trans-unit id="_msg61">
         <source xml:space="preserve">Settings file %1 might be corrupt or invalid.</source>
         <context-group purpose="location"><context context-type="linenumber">286</context></context-group>
@@ -321,8 +321,8 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
       </trans-unit>
     </group>
   </body></file>
-  <file original="../bitcoingui.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="BitcoinGUI">
+  <file original="../freicoingui.cpp" datatype="cpp" source-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="FreicoinGUI">
       <trans-unit id="_msg70">
         <source xml:space="preserve">&amp;Overview</source>
         <context-group purpose="location"><context context-type="linenumber">261</context></context-group>
@@ -389,7 +389,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">1466</context></context-group>
       </trans-unit>
       <trans-unit id="_msg86">
-        <source xml:space="preserve">Send coins to a Bitcoin address</source>
+        <source xml:space="preserve">Send coins to a Freicoin address</source>
         <context-group purpose="location"><context context-type="linenumber">269</context></context-group>
       </trans-unit>
       <trans-unit id="_msg87">
@@ -433,7 +433,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">325</context></context-group>
       </trans-unit>
       <trans-unit id="_msg97">
-        <source xml:space="preserve">Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source xml:space="preserve">Sign messages with your Freicoin addresses to prove you own them</source>
         <context-group purpose="location"><context context-type="linenumber">326</context></context-group>
       </trans-unit>
       <trans-unit id="_msg98">
@@ -441,11 +441,11 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">327</context></context-group>
       </trans-unit>
       <trans-unit id="_msg99">
-        <source xml:space="preserve">Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source xml:space="preserve">Verify messages to ensure they were signed with specified Freicoin addresses</source>
         <context-group purpose="location"><context context-type="linenumber">328</context></context-group>
       </trans-unit>
       <trans-unit id="_msg100">
-        <source xml:space="preserve">&amp;Load PSBT from file…</source>
+        <source xml:space="preserve">&amp;Load PST from file…</source>
         <context-group purpose="location"><context context-type="linenumber">329</context></context-group>
       </trans-unit>
       <trans-unit id="_msg101">
@@ -501,7 +501,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">1131</context></context-group>
       </trans-unit>
       <trans-unit id="_msg114">
-        <source xml:space="preserve">Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source xml:space="preserve">Request payments (generates QR codes and freicoin: URIs)</source>
         <context-group purpose="location"><context context-type="linenumber">276</context></context-group>
       </trans-unit>
       <trans-unit id="_msg115">
@@ -562,15 +562,15 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">304</context></context-group>
       </trans-unit>
       <trans-unit id="_msg128">
-        <source xml:space="preserve">Load Partially Signed Bitcoin Transaction</source>
+        <source xml:space="preserve">Load Partially Signed Freicoin Transaction</source>
         <context-group purpose="location"><context context-type="linenumber">330</context></context-group>
       </trans-unit>
       <trans-unit id="_msg129">
-        <source xml:space="preserve">Load PSBT from &amp;clipboard…</source>
+        <source xml:space="preserve">Load PST from &amp;clipboard…</source>
         <context-group purpose="location"><context context-type="linenumber">331</context></context-group>
       </trans-unit>
       <trans-unit id="_msg130">
-        <source xml:space="preserve">Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <source xml:space="preserve">Load Partially Signed Freicoin Transaction from clipboard</source>
         <context-group purpose="location"><context context-type="linenumber">332</context></context-group>
       </trans-unit>
       <trans-unit id="_msg131">
@@ -590,7 +590,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">342</context></context-group>
       </trans-unit>
       <trans-unit id="_msg135">
-        <source xml:space="preserve">Open a bitcoin: URI</source>
+        <source xml:space="preserve">Open a freicoin: URI</source>
         <context-group purpose="location"><context context-type="linenumber">346</context></context-group>
       </trans-unit>
       <trans-unit id="_msg136">
@@ -628,7 +628,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">371</context></context-group>
       </trans-unit>
       <trans-unit id="_msg144">
-        <source xml:space="preserve">Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source xml:space="preserve">Show the %1 help message to get a list with possible Freicoin command-line options</source>
         <context-group purpose="location"><context context-type="linenumber">375</context></context-group>
       </trans-unit>
       <trans-unit id="_msg145">
@@ -699,10 +699,10 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">1012</context></context-group>
         <note annotates="source" from="developer">A substring of the tooltip.</note>
         <trans-unit id="_msg160[0]">
-          <source xml:space="preserve">%n active connection(s) to Bitcoin network.</source>
+          <source xml:space="preserve">%n active connection(s) to Freicoin network.</source>
         </trans-unit>
         <trans-unit id="_msg160[1]">
-          <source xml:space="preserve">%n active connection(s) to Bitcoin network.</source>
+          <source xml:space="preserve">%n active connection(s) to Freicoin network.</source>
         </trans-unit>
       </group>
       <trans-unit id="_msg161">
@@ -938,7 +938,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">382</context></context-group>
       </trans-unit>
       <trans-unit id="_msg214">
-        <source xml:space="preserve">Can vary +/- %1 satoshi(s) per input.</source>
+        <source xml:space="preserve">Can vary +/- %1 kria per input.</source>
         <context-group purpose="location"><context context-type="linenumber">547</context></context-group>
       </trans-unit>
       <trans-unit id="_msg215">
@@ -1229,7 +1229,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">47</context></context-group>
       </trans-unit>
       <trans-unit id="_msg275">
-        <source xml:space="preserve">The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
+        <source xml:space="preserve">The entered address &quot;%1&quot; is not a valid Freicoin address.</source>
         <context-group purpose="location"><context context-type="linenumber">124</context></context-group>
       </trans-unit>
       <trans-unit id="_msg276">
@@ -1275,7 +1275,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </group>
     <group restype="x-trolltech-linguist-context" resname="Intro">
       <trans-unit id="_msg285">
-        <source xml:space="preserve">Bitcoin</source>
+        <source xml:space="preserve">Freicoin</source>
         <context-group purpose="location"><context context-type="linenumber">150</context></context-group>
       </trans-unit>
       <group restype="x-gettext-plurals">
@@ -1328,7 +1328,7 @@ The migration process will create a backup of the wallet before migrating. This 
         </trans-unit>
       </group>
       <trans-unit id="_msg293">
-        <source xml:space="preserve">%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source xml:space="preserve">%1 will download and store a copy of the Freicoin block chain.</source>
         <context-group purpose="location"><context context-type="linenumber">403</context></context-group>
       </trans-unit>
       <trans-unit id="_msg294">
@@ -1426,11 +1426,11 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
       <trans-unit id="_msg314">
-        <source xml:space="preserve">Recent transactions may not yet be visible, and therefore your wallet&apos;s balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <source xml:space="preserve">Recent transactions may not yet be visible, and therefore your wallet&apos;s balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the freicoin network, as detailed below.</source>
         <context-group purpose="location"><context context-type="linenumber">133</context></context-group>
       </trans-unit>
       <trans-unit id="_msg315">
-        <source xml:space="preserve">Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source xml:space="preserve">Attempting to spend freicoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <context-group purpose="location"><context context-type="linenumber">152</context></context-group>
       </trans-unit>
       <trans-unit id="_msg316">
@@ -1499,7 +1499,7 @@ The migration process will create a backup of the wallet before migrating. This 
   <file original="../forms/openuridialog.ui" datatype="x-trolltech-designer-ui" source-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="OpenURIDialog">
       <trans-unit id="_msg329">
-        <source xml:space="preserve">Open bitcoin URI</source>
+        <source xml:space="preserve">Open freicoin URI</source>
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
       <trans-unit id="_msg330">
@@ -1657,14 +1657,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">251</context></context-group>
       </trans-unit>
       <trans-unit id="_msg365">
-        <source xml:space="preserve">Enable &amp;PSBT controls</source>
+        <source xml:space="preserve">Enable &amp;PST controls</source>
         <context-group purpose="location"><context context-type="linenumber">258</context></context-group>
-        <note annotates="source" from="developer">An options window setting to enable PSBT controls.</note>
+        <note annotates="source" from="developer">An options window setting to enable PST controls.</note>
       </trans-unit>
       <trans-unit id="_msg366">
-        <source xml:space="preserve">Whether to show PSBT controls.</source>
+        <source xml:space="preserve">Whether to show PST controls.</source>
         <context-group purpose="location"><context context-type="linenumber">261</context></context-group>
-        <note annotates="source" from="developer">Tooltip text for options window setting that enables PSBT controls.</note>
+        <note annotates="source" from="developer">Tooltip text for options window setting that enables PST controls.</note>
       </trans-unit>
       <trans-unit id="_msg367">
         <source xml:space="preserve">External Signer (e.g. hardware wallet)</source>
@@ -1675,7 +1675,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">279</context></context-group>
       </trans-unit>
       <trans-unit id="_msg369">
-        <source xml:space="preserve">Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source xml:space="preserve">Automatically open the Freicoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <context-group purpose="location"><context context-type="linenumber">321</context></context-group>
       </trans-unit>
       <trans-unit id="_msg370">
@@ -1683,7 +1683,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">324</context></context-group>
       </trans-unit>
       <trans-unit id="_msg371">
-        <source xml:space="preserve">Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <source xml:space="preserve">Automatically open the Freicoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
         <context-group purpose="location"><context context-type="linenumber">331</context></context-group>
       </trans-unit>
       <trans-unit id="_msg372">
@@ -1699,7 +1699,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">344</context></context-group>
       </trans-unit>
       <trans-unit id="_msg375">
-        <source xml:space="preserve">Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source xml:space="preserve">Connect to the Freicoin network through a SOCKS5 proxy.</source>
         <context-group purpose="location"><context context-type="linenumber">351</context></context-group>
       </trans-unit>
       <trans-unit id="_msg376">
@@ -1795,7 +1795,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">238</context></context-group>
       </trans-unit>
       <trans-unit id="_msg398">
-        <source xml:space="preserve">Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <source xml:space="preserve">Connect to the Freicoin network through a separate SOCKS5 proxy for Tor onion services.</source>
         <context-group purpose="location"><context context-type="linenumber">538</context></context-group>
       </trans-unit>
       <trans-unit id="_msg399">
@@ -1911,7 +1911,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
       <trans-unit id="_msg422">
-        <source xml:space="preserve">The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source xml:space="preserve">The displayed information may be out of date. Your wallet automatically synchronizes with the Freicoin network after a connection is established, but this process has not completed yet.</source>
         <context-group purpose="location"><context context-type="linenumber">76</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">411</context></context-group>
       </trans-unit>
@@ -1989,10 +1989,10 @@ The migration process will create a backup of the wallet before migrating. This 
       </trans-unit>
     </group>
   </body></file>
-  <file original="../forms/psbtoperationsdialog.ui" datatype="x-trolltech-designer-ui" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="PSBTOperationsDialog">
+  <file original="../forms/pstoperationsdialog.ui" datatype="x-trolltech-designer-ui" source-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="PSTOperationsDialog">
       <trans-unit id="_msg440">
-        <source xml:space="preserve">PSBT Operations</source>
+        <source xml:space="preserve">PST Operations</source>
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
       <trans-unit id="_msg441">
@@ -2017,8 +2017,8 @@ The migration process will create a backup of the wallet before migrating. This 
       </trans-unit>
     </group>
   </body></file>
-  <file original="../psbtoperationsdialog.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="PSBTOperationsDialog">
+  <file original="../pstoperationsdialog.cpp" datatype="cpp" source-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="PSTOperationsDialog">
       <trans-unit id="_msg446">
         <source xml:space="preserve">Failed to load transaction: %1</source>
         <context-group purpose="location"><context context-type="linenumber">71</context></context-group>
@@ -2056,7 +2056,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">136</context></context-group>
       </trans-unit>
       <trans-unit id="_msg455">
-        <source xml:space="preserve">PSBT copied to clipboard.</source>
+        <source xml:space="preserve">PST copied to clipboard.</source>
         <context-group purpose="location"><context context-type="linenumber">145</context></context-group>
       </trans-unit>
       <trans-unit id="_msg456">
@@ -2066,10 +2066,10 @@ The migration process will create a backup of the wallet before migrating. This 
       <trans-unit id="_msg457">
         <source xml:space="preserve">Partially Signed Transaction (Binary)</source>
         <context-group purpose="location"><context context-type="linenumber">170</context></context-group>
-        <note annotates="source" from="developer">Expanded name of the binary PSBT file format. See: BIP 174.</note>
+        <note annotates="source" from="developer">Expanded name of the binary PST file format. See: BIP 174.</note>
       </trans-unit>
       <trans-unit id="_msg458">
-        <source xml:space="preserve">PSBT saved to disk.</source>
+        <source xml:space="preserve">PST saved to disk.</source>
         <context-group purpose="location"><context context-type="linenumber">177</context></context-group>
       </trans-unit>
       <trans-unit id="_msg459">
@@ -2137,7 +2137,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">160</context></context-group>
       </trans-unit>
       <trans-unit id="_msg474">
-        <source xml:space="preserve">Cannot start bitcoin: click-to-pay handler</source>
+        <source xml:space="preserve">Cannot start freicoin: click-to-pay handler</source>
         <context-group purpose="location"><context context-type="linenumber">161</context></context-group>
       </trans-unit>
       <trans-unit id="_msg475">
@@ -2148,7 +2148,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">238</context></context-group>
       </trans-unit>
       <trans-unit id="_msg476">
-        <source xml:space="preserve">&apos;bitcoin://&apos; is not a valid URI. Use &apos;bitcoin:&apos; instead.</source>
+        <source xml:space="preserve">&apos;freicoin://&apos; is not a valid URI. Use &apos;freicoin:&apos; instead.</source>
         <context-group purpose="location"><context context-type="linenumber">209</context></context-group>
       </trans-unit>
       <trans-unit id="_msg477">
@@ -2159,7 +2159,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <context-group purpose="location"><context context-type="linenumber">249</context></context-group>
       </trans-unit>
       <trans-unit id="_msg478">
-        <source xml:space="preserve">URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source xml:space="preserve">URI cannot be parsed! This can be caused by an invalid Freicoin address or malformed URI parameters.</source>
         <context-group purpose="location"><context context-type="linenumber">239</context></context-group>
       </trans-unit>
       <trans-unit id="_msg479">
@@ -2236,7 +2236,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
       </trans-unit>
     </group>
   </body></file>
-  <file original="../bitcoinunits.cpp" datatype="cpp" source-language="en"><body>
+  <file original="../freicoinunits.cpp" datatype="cpp" source-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="QObject">
       <trans-unit id="_msg492">
         <source xml:space="preserve">Amount</source>
@@ -2247,7 +2247,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
   <file original="../guiutil.cpp" datatype="cpp" source-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="QObject">
       <trans-unit id="_msg493">
-        <source xml:space="preserve">Enter a Bitcoin address (e.g. %1)</source>
+        <source xml:space="preserve">Enter a Freicoin address (e.g. %1)</source>
         <context-group purpose="location"><context context-type="linenumber">144</context></context-group>
       </trans-unit>
       <trans-unit id="_msg494">
@@ -3041,7 +3041,7 @@ For more information on using this console, type %6.
         <context-group purpose="location"><context context-type="linenumber">53</context></context-group>
       </trans-unit>
       <trans-unit id="_msg654">
-        <source xml:space="preserve">An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source xml:space="preserve">An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Freicoin network.</source>
         <context-group purpose="location"><context context-type="linenumber">50</context></context-group>
       </trans-unit>
       <trans-unit id="_msg655">
@@ -3361,11 +3361,11 @@ For more information on using this console, type %6.
       <trans-unit id="_msg728">
         <source xml:space="preserve">Specify a custom fee per kB (1,000 bytes) of the transaction&apos;s virtual size.
 
-Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 satoshis per kvB&quot; for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
+Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 kria per kvB&quot; for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 kria.</source>
         <context-group purpose="location"><context context-type="linenumber">828</context></context-group>
       </trans-unit>
       <trans-unit id="_msg729">
-        <source xml:space="preserve">When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <source xml:space="preserve">When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for freicoin transactions than the network can process.</source>
         <context-group purpose="location"><context context-type="linenumber">863</context></context-group>
       </trans-unit>
       <trans-unit id="_msg730">
@@ -3455,7 +3455,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">223</context></context-group>
       </trans-unit>
       <trans-unit id="_msg750">
-        <source xml:space="preserve">Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Creates a Partially Signed Freicoin Transaction (PST) for use with e.g. an offline %1 wallet, or a PST-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">224</context></context-group>
       </trans-unit>
       <trans-unit id="_msg751">
@@ -3495,12 +3495,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
       <trans-unit id="_msg759">
         <source xml:space="preserve">Partially Signed Transaction (Binary)</source>
         <context-group purpose="location"><context context-type="linenumber">438</context></context-group>
-        <note annotates="source" from="developer">Expanded name of the binary PSBT file format. See: BIP 174.</note>
+        <note annotates="source" from="developer">Expanded name of the binary PST file format. See: BIP 174.</note>
       </trans-unit>
       <trans-unit id="_msg760">
-        <source xml:space="preserve">PSBT saved</source>
+        <source xml:space="preserve">PST saved</source>
         <context-group purpose="location"><context context-type="linenumber">446</context></context-group>
-        <note annotates="source" from="developer">Popup message when a PSBT has been saved to a file</note>
+        <note annotates="source" from="developer">Popup message when a PST has been saved to a file</note>
       </trans-unit>
       <trans-unit id="_msg761">
         <source xml:space="preserve">External balance:</source>
@@ -3515,9 +3515,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">377</context></context-group>
       </trans-unit>
       <trans-unit id="_msg764">
-        <source xml:space="preserve">Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Please, review your transaction proposal. This will produce a Partially Signed Freicoin Transaction (PST) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PST-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">346</context></context-group>
-        <note annotates="source" from="developer">Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</note>
+        <note annotates="source" from="developer">Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PST. This string is displayed when private keys are disabled and an external signer is not available.</note>
       </trans-unit>
       <trans-unit id="_msg765">
         <source xml:space="preserve">Do you want to create this transaction?</source>
@@ -3525,9 +3525,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <note annotates="source" from="developer">Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</note>
       </trans-unit>
       <trans-unit id="_msg766">
-        <source xml:space="preserve">Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Please, review your transaction. You can create and send this transaction or create a Partially Signed Freicoin Transaction (PST), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PST-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">351</context></context-group>
-        <note annotates="source" from="developer">Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</note>
+        <note annotates="source" from="developer">Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PST. This string is displayed when both private keys and PST controls are enabled.</note>
       </trans-unit>
       <trans-unit id="_msg767">
         <source xml:space="preserve">Please, review your transaction.</source>
@@ -3541,8 +3541,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
       <trans-unit id="_msg769">
         <source xml:space="preserve">%1 kvB</source>
         <context-group purpose="location"><context context-type="linenumber">367</context></context-group>
-        <context-group><context context-type="x-gettext-msgctxt">PSBT transaction creation</context></context-group>
-        <note annotates="source" from="developer">When reviewing a newly created PSBT (via Send flow), the transaction fee is shown, with &quot;virtual size&quot; of the transaction displayed for context</note>
+        <context-group><context context-type="x-gettext-msgctxt">PST transaction creation</context></context-group>
+        <note annotates="source" from="developer">When reviewing a newly created PST (via Send flow), the transaction fee is shown, with &quot;virtual size&quot; of the transaction displayed for context</note>
       </trans-unit>
       <trans-unit id="_msg770">
         <source xml:space="preserve">Not signalling Replace-By-Fee, BIP-125.</source>
@@ -3555,15 +3555,15 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
       <trans-unit id="_msg772">
         <source xml:space="preserve">Unsigned Transaction</source>
         <context-group purpose="location"><context context-type="linenumber">416</context></context-group>
-        <context-group><context context-type="x-gettext-msgctxt">PSBT copied</context></context-group>
-        <note annotates="source" from="developer">Caption of &quot;PSBT has been copied&quot; messagebox</note>
+        <context-group><context context-type="x-gettext-msgctxt">PST copied</context></context-group>
+        <note annotates="source" from="developer">Caption of &quot;PST has been copied&quot; messagebox</note>
       </trans-unit>
       <trans-unit id="_msg773">
-        <source xml:space="preserve">The PSBT has been copied to the clipboard. You can also save it.</source>
+        <source xml:space="preserve">The PST has been copied to the clipboard. You can also save it.</source>
         <context-group purpose="location"><context context-type="linenumber">417</context></context-group>
       </trans-unit>
       <trans-unit id="_msg774">
-        <source xml:space="preserve">PSBT saved to disk</source>
+        <source xml:space="preserve">PST saved to disk</source>
         <context-group purpose="location"><context context-type="linenumber">446</context></context-group>
       </trans-unit>
       <trans-unit id="_msg775">
@@ -3617,7 +3617,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         </trans-unit>
       </group>
       <trans-unit id="_msg786">
-        <source xml:space="preserve">Warning: Invalid Bitcoin address</source>
+        <source xml:space="preserve">Warning: Invalid Freicoin address</source>
         <context-group purpose="location"><context context-type="linenumber">988</context></context-group>
       </trans-unit>
       <trans-unit id="_msg787">
@@ -3657,7 +3657,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">60</context></context-group>
       </trans-unit>
       <trans-unit id="_msg795">
-        <source xml:space="preserve">The Bitcoin address to send the payment to</source>
+        <source xml:space="preserve">The Freicoin address to send the payment to</source>
         <context-group purpose="location"><context context-type="linenumber">53</context></context-group>
       </trans-unit>
       <trans-unit id="_msg796">
@@ -3681,7 +3681,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">166</context></context-group>
       </trans-unit>
       <trans-unit id="_msg801">
-        <source xml:space="preserve">The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source xml:space="preserve">The fee will be deducted from the amount being sent. The recipient will receive less freicoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <context-group purpose="location"><context context-type="linenumber">173</context></context-group>
       </trans-unit>
       <trans-unit id="_msg802">
@@ -3702,7 +3702,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">144</context></context-group>
       </trans-unit>
       <trans-unit id="_msg806">
-        <source xml:space="preserve">A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source xml:space="preserve">A message that was attached to the freicoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Freicoin network.</source>
         <context-group purpose="location"><context context-type="linenumber">202</context></context-group>
       </trans-unit>
     </group>
@@ -3730,11 +3730,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">27</context></context-group>
       </trans-unit>
       <trans-unit id="_msg811">
-        <source xml:space="preserve">You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source xml:space="preserve">You can sign messages/agreements with your addresses to prove you can receive freicoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <context-group purpose="location"><context context-type="linenumber">33</context></context-group>
       </trans-unit>
       <trans-unit id="_msg812">
-        <source xml:space="preserve">The Bitcoin address to sign the message with</source>
+        <source xml:space="preserve">The Freicoin address to sign the message with</source>
         <context-group purpose="location"><context context-type="linenumber">51</context></context-group>
       </trans-unit>
       <trans-unit id="_msg813">
@@ -3769,7 +3769,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">140</context></context-group>
       </trans-unit>
       <trans-unit id="_msg820">
-        <source xml:space="preserve">Sign the message to prove you own this Bitcoin address</source>
+        <source xml:space="preserve">Sign the message to prove you own this Freicoin address</source>
         <context-group purpose="location"><context context-type="linenumber">161</context></context-group>
       </trans-unit>
       <trans-unit id="_msg821">
@@ -3794,7 +3794,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">246</context></context-group>
       </trans-unit>
       <trans-unit id="_msg826">
-        <source xml:space="preserve">The Bitcoin address the message was signed with</source>
+        <source xml:space="preserve">The Freicoin address the message was signed with</source>
         <context-group purpose="location"><context context-type="linenumber">267</context></context-group>
       </trans-unit>
       <trans-unit id="_msg827">
@@ -3808,7 +3808,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">309</context></context-group>
       </trans-unit>
       <trans-unit id="_msg829">
-        <source xml:space="preserve">Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source xml:space="preserve">Verify the message to ensure it was signed with the specified Freicoin address</source>
         <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
       </trans-unit>
       <trans-unit id="_msg830">
@@ -4388,7 +4388,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <context-group purpose="location"><context context-type="linenumber">240</context></context-group>
       </trans-unit>
       <trans-unit id="_msg955">
-        <source xml:space="preserve">Unable to decode PSBT from clipboard (invalid base64)</source>
+        <source xml:space="preserve">Unable to decode PST from clipboard (invalid base64)</source>
         <context-group purpose="location"><context context-type="linenumber">212</context></context-group>
       </trans-unit>
       <trans-unit id="_msg956">
@@ -4396,15 +4396,15 @@ Go to File &gt; Open Wallet to load a wallet.
         <context-group purpose="location"><context context-type="linenumber">218</context></context-group>
       </trans-unit>
       <trans-unit id="_msg957">
-        <source xml:space="preserve">Partially Signed Transaction (*.psbt)</source>
+        <source xml:space="preserve">Partially Signed Transaction (*.pst)</source>
         <context-group purpose="location"><context context-type="linenumber">219</context></context-group>
       </trans-unit>
       <trans-unit id="_msg958">
-        <source xml:space="preserve">PSBT file must be smaller than 100 MiB</source>
+        <source xml:space="preserve">PST file must be smaller than 100 MiB</source>
         <context-group purpose="location"><context context-type="linenumber">222</context></context-group>
       </trans-unit>
       <trans-unit id="_msg959">
-        <source xml:space="preserve">Unable to decode PSBT</source>
+        <source xml:space="preserve">Unable to decode PST</source>
         <context-group purpose="location"><context context-type="linenumber">240</context></context-group>
       </trans-unit>
     </group>
@@ -4457,13 +4457,13 @@ Go to File &gt; Open Wallet to load a wallet.
         <context-group purpose="location"><context context-type="linenumber">553</context></context-group>
       </trans-unit>
       <trans-unit id="_msg970">
-        <source xml:space="preserve">PSBT copied</source>
+        <source xml:space="preserve">PST copied</source>
         <context-group purpose="location"><context context-type="linenumber">560</context></context-group>
       </trans-unit>
       <trans-unit id="_msg971">
         <source xml:space="preserve">Copied to clipboard</source>
         <context-group purpose="location"><context context-type="linenumber">560</context></context-group>
-        <context-group><context context-type="x-gettext-msgctxt">Fee-bump PSBT saved</context></context-group>
+        <context-group><context context-type="x-gettext-msgctxt">Fee-bump PST saved</context></context-group>
       </trans-unit>
       <trans-unit id="_msg972">
         <source xml:space="preserve">Can&apos;t sign transaction.</source>
@@ -4524,14 +4524,14 @@ Go to File &gt; Open Wallet to load a wallet.
       </trans-unit>
     </group>
   </body></file>
-  <file original="../bitcoinstrings.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="bitcoin-core">
+  <file original="../freicoinstrings.cpp" datatype="cpp" source-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="freicoin">
       <trans-unit id="_msg985">
         <source xml:space="preserve">The %s developers</source>
         <context-group purpose="location"><context context-type="linenumber">12</context></context-group>
       </trans-unit>
       <trans-unit id="_msg986">
-        <source xml:space="preserve">%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <source xml:space="preserve">%s corrupt. Try using the wallet tool freicoin-wallet to salvage or restoring a backup.</source>
         <context-group purpose="location"><context context-type="linenumber">13</context></context-group>
       </trans-unit>
       <trans-unit id="_msg987">
@@ -4575,7 +4575,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <context-group purpose="location"><context context-type="linenumber">69</context></context-group>
       </trans-unit>
       <trans-unit id="_msg997">
-        <source xml:space="preserve">Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <source xml:space="preserve">Error: Dumpfile version is not supported. This version of freicoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
         <context-group purpose="location"><context context-type="linenumber">71</context></context-group>
       </trans-unit>
       <trans-unit id="_msg998">

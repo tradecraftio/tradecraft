@@ -19,7 +19,7 @@ This module calls down into individual test cases via subprocess. It will
 forward all unrecognized arguments onto the individual test scripts.
 
 For a description of arguments recognized by test scripts, see
-`test/functional/test_framework/test_framework.py:BitcoinTestFramework.main`.
+`test/functional/test_framework/test_framework.py:FreicoinTestFramework.main`.
 
 """
 
@@ -118,8 +118,8 @@ BASE_SCRIPTS = [
     'mempool_persist.py --descriptors',
     'wallet_miniscript.py --descriptors',
     # vv Tests less than 60s vv
-    'rpc_psbt.py --legacy-wallet',
-    'rpc_psbt.py --descriptors',
+    'rpc_pst.py --legacy-wallet',
+    'rpc_pst.py --descriptors',
     'wallet_fundrawtransaction.py --legacy-wallet',
     'wallet_fundrawtransaction.py --descriptors',
     'wallet_bumpfee.py --legacy-wallet',
@@ -190,8 +190,8 @@ BASE_SCRIPTS = [
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
     'rpc_validateaddress.py',
-    'interface_bitcoin_cli.py --legacy-wallet',
-    'interface_bitcoin_cli.py --descriptors',
+    'interface_freicoin_cli.py --legacy-wallet',
+    'interface_freicoin_cli.py --descriptors',
     'feature_bind_extra.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
@@ -268,7 +268,7 @@ BASE_SCRIPTS = [
     'p2p_v2_transport.py',
     'example_test.py',
     'wallet_txn_doublespend.py --legacy-wallet',
-    'wallet_multisig_descriptor_psbt.py --descriptors',
+    'wallet_multisig_descriptor_pst.py --descriptors',
     'wallet_txn_doublespend.py --descriptors',
     'wallet_backwards_compatibility.py --legacy-wallet',
     'wallet_backwards_compatibility.py --descriptors',
@@ -460,9 +460,9 @@ def main():
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
-    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_freicoind = config["components"].getboolean("ENABLE_FREICOIND")
 
-    if not enable_bitcoind:
+    if not enable_freicoind:
         print("No functional tests to run.")
         print("Rerun ./configure with --with-daemon and then make")
         sys.exit(0)
@@ -544,11 +544,11 @@ def main():
 def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control):
     args = args or []
 
-    # Warn if bitcoind is already running
+    # Warn if freicoind is already running
     try:
         # pgrep exits with code zero when one or more matching processes found
-        if subprocess.run(["pgrep", "-x", "bitcoind"], stdout=subprocess.DEVNULL).returncode == 0:
-            print("%sWARNING!%s There is already a bitcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+        if subprocess.run(["pgrep", "-x", "freicoind"], stdout=subprocess.DEVNULL).returncode == 0:
+            print("%sWARNING!%s There is already a freicoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except OSError:
         # pgrep not supported
         pass
@@ -830,7 +830,7 @@ class RPCCoverage():
     Coverage calculation works by having each test script subprocess write
     coverage files into a particular directory. These files contain the RPC
     commands invoked during testing, as well as a complete listing of RPC
-    commands per `bitcoin-cli help` (`rpc_interface.txt`).
+    commands per `freicoin-cli help` (`rpc_interface.txt`).
 
     After all tests complete, the commands run are combined and diff'd against
     the complete list to calculate uncovered RPC commands.

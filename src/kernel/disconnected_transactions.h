@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
-#define BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
+#ifndef FREICOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
+#define FREICOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
 
 #include <core_memusage.h>
 #include <memusage.h>
@@ -145,4 +145,4 @@ public:
         return ret;
     }
 };
-#endif // BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
+#endif // FREICOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H

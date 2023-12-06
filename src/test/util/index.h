@@ -13,12 +13,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_INDEX_H
-#define BITCOIN_TEST_UTIL_INDEX_H
+#ifndef FREICOIN_TEST_UTIL_INDEX_H
+#define FREICOIN_TEST_UTIL_INDEX_H
 
 class BaseIndex;
 
 /** Block until the index is synced to the current chain */
 void IndexWaitSynced(const BaseIndex& index);
 
-#endif // BITCOIN_TEST_UTIL_INDEX_H
+#endif // FREICOIN_TEST_UTIL_INDEX_H
