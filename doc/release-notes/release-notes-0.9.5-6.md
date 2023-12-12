@@ -1,6 +1,9 @@
-Freicoin version 0.9.5.0-6 is now available from:
+v0.9.5.0-6 Release Notes
+========================
 
-  http://freico.in/download/
+Freicoin version v0.9.5.0-6 is now available from:
+
+  https://github.com/tradecraftio/tradecraft/releases/tag/v0.9.5.0-6
 
 This is a new major version release, bringing both new features and
 bug fixes, and numerous security fixes.  It is recommended to upgrade
@@ -10,7 +13,7 @@ It is especially important to upgrade if you are using freicoind from
 any pre-0.9 version, and have enabled SSL for RPC and have configured
 allowip to allow rpc connections from potentially hostile hosts.
 
-Please report bugs using the issue tracker at github:
+Please report bugs using the issue tracker at GitHub:
 
   https://github.com/freicoin/freicoin/issues
 
@@ -33,7 +36,7 @@ Freicoin client first, especially if you are switching to the 64-bit
 version.
 
 OpenSSL Warning
-===============
+---------------
 
 OpenSSL 1.0.0p / 1.0.1k was recently released and is being pushed out
 by various operating system maintainers.  Review by Gregory Maxwell
@@ -53,10 +56,9 @@ very rigid manner. This was a result of OpenSSL's change for
 CVE-2014-8275 "Certificate fingerprints can be modified".
 
 Notable changes
-===============
+---------------
 
-Compatibility of Linux build
------------------------------
+### Compatibility of Linux build
 
 For Linux we now build against Qt 4.6, and filter the symbols for
 libstdc++ and glibc.  This brings back compatibility with
@@ -65,8 +67,7 @@ libstdc++ and glibc.  This brings back compatibility with
 - Ubuntu 10.04
 - CentOS 6.5
 
-Windows 64-bit installer
-------------------------
+### Windows 64-bit installer
 
 New in 0.9.5.0-6 is the Windows 64-bit version of the client. There
 have been frequent reports of Bitcoin users of the equivalent version
@@ -74,8 +75,7 @@ of the software running out of virtual memory on 32-bit systems during
 the initial sync. Because of this it is recommended to install the
 64-bit version if your system supports it.
 
-Gitian OSX build
------------------
+### Gitian OSX build
 
 The deterministic build system that was already used for Windows and
 Linux builds is now used for OSX as well.  Although the resulting
@@ -83,16 +83,14 @@ executables have been tested quite a bit, there could be possible
 regressions.  Be sure to report these on the Github bug tracker
 mentioned above.
 
-OSX 10.5 / 32-bit no longer supported
--------------------------------------
+### OSX 10.5 / 32-bit no longer supported
 
 0.9.5.0-6 drops support for older Macs. The minimum requirements are
 now:
 * A 64-bit-capable CPU (see http://support.apple.com/kb/ht3696);
 * Mac OS 10.6 or later (see https://support.apple.com/kb/ht1633).
 
-Downgrading warnings
---------------------
+### Downgrading warnings
 
 The 'chainstate' for this release is not always compatible with
 previous releases, so if you run 0.9 and then decide to switch back to
@@ -107,8 +105,7 @@ Also, the first time you run a 0.8.x release on a 0.9 wallet it will
 rescan the blockchain for missing spent coins, which will take a long
 time (tens of minutes on a typical machine).
 
-OP_RETURN and data in the block chain
--------------------------------------
+### OP_RETURN and data in the block chain
 
 Unlike equivlent versions of Bitcoin, Freicoin's 0.9 release does not
 relay transactions containing so-called "OP_RETURN" data outputs.
@@ -117,8 +114,7 @@ regarding the OP_RETURN feature in 0.9 and data in the blockchain.
 Storing arbitrary data in the blockchain is a bad idea; it is less
 costly and far more efficient to store non-currency data elsewhere.
 
-Autotools build system
-----------------------
+### Autotools build system
 
 For 0.9.5.0-6 we switched to an autotools-based build system instead
 of individual (q)makefiles.
@@ -130,8 +126,7 @@ developers to contribute to the project.
 Be sure to check doc/build-*.md for your platform before building from
 source.
 
-freicoin-cli
-------------
+### freicoin-cli
 
 Another change in the 0.9 release is moving away from the freicoind
 executable functioning both as a server and as a RPC client.  The RPC
@@ -140,8 +135,7 @@ was split into a separate executable, 'freicoin-cli'.  The RPC client
 code will eventually be removed from freicoind, but will be kept for
 backwards compatibility for a release or two.
 
-`walletpassphrase` RPC
-----------------------
+### `walletpassphrase` RPC
 
 The behavior of the `walletpassphrase` RPC when the wallet is already
 unlocked has changed between 0.8 and 0.9.
@@ -162,8 +156,7 @@ overriding the old one:
     > walletpassphrase 10
     walletunlocktime = now + 10 (overriding the old unlock time)
 
-Transaction malleability-related fixes
---------------------------------------
+### Transaction malleability-related fixes
 
 This release contains a few fixes for transaction ID (TXID)
 malleability issues:
@@ -181,8 +174,7 @@ malleability issues:
 - New option: -zapwallettxes to rebuild the wallet's transaction
   information
 
-Transaction Fees
-----------------
+### Transaction Fees
 
 This release keeps the existing fee required to relay transactions
 across the network and for miners to consider the transaction in their
@@ -205,8 +197,8 @@ transaction volume, even this fee may not be enough to get
 transactions confirmed quickly; the mintxfee option may be used to
 override the default.
 
-0.9.5.0-6 changelog
-===================
+v0.9.5.0-6 Change log
+---------------------
 
 RPC:
 

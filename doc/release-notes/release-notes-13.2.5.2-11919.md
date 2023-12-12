@@ -1,9 +1,9 @@
-v14.3.0.1-13385 Release Notes
+v13.2.5.2-11919 Release Notes
 =============================
 
-Freicoin version v14.3.0.1-13385 is now available from:
+Freicoin version v13.2.5.2-11919 is now available from:
 
-  https://github.com/tradecraftio/tradecraft/releases/tag/v14.3.0.1-13385
+  https://github.com/tradecraftio/tradecraft/releases/tag/v13.2.5.2-11919
 
 This is a new patch release, containing a critical fix to the p2p block transmission code to fix a bug which prevents merge-mined blocks from being communicated to older clients.  Upgrading is highly recommended for nodes running v13.2.4-11864 or later releases.
 
@@ -15,17 +15,14 @@ To receive security and update notifications, please subscribe to:
 
   https://tradecraft.groups.io/g/announce/
 
-Compatibility
--------------
-
-Freicoin is extensively tested on multiple operating systems using the Linux kernel, macOS 10.8+, and Windows Vista and later.
-
-Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support), No attempt is made to prevent installing or running the software on Windows XP, you can still do so at your own risk but be aware that there are known instabilities and issues.  Please do not report issues about Windows XP to the issue tracker.
-
-Freicoin should also work on most other Unix-like systems but is not frequently tested on them.
-
 Notable changes
 ---------------
+
+The recently released v13.2-11780 features activation parameters for the segregated witness (segwit) soft-fork, and dropped support for Microsoft Windows XP and macOS 10.7.  Please see the comprehensive notes accompanying v13.2-11780 for more information.
+
+The recently released v13.2.4-11864 features activation parameters for the auxiliary proof-of-work (AKA "merge mining") soft-fork.  Please see the release notes accompanying v13.2.4-11864 for more information.
+
+### Fix block propagation to non-segwit clients
 
 The v13.2.4-11864 release introduced the auxiliary proof-of-work (AKA "merge mining") soft-fork, which has since activated on both testnet and mainnet.  Please see the release notes accompanying v13.2.4-11864 for more information.  Unbeknownst by anyone at the time, a bug in the serialization & p2p network code prevented auxiliary proof-of-work data structures from being stripped from block headers before being transmitted directly to non-segwit supporting clients (v12 or earlier).
 
@@ -34,11 +31,6 @@ Headers sent to more recent segwit-supporting nodes would be properly stripped a
 Although v12 and earlier nodes are not generally supported, this emergency patch release nevertheless fixes this serialization bug in order to re-enable syncing directly to these pre-segwit nodes.
 
 Upgrading is highly recommended for all nodes currently running clients between v13.2.4-11864 and v14.3-13381.
-
-Known Bugs
-----------
-
-Starting with v14.3-13381, the approximate transaction fee shown in Freicoin-Qt when using coin control and smart fee estimation does not reflect any change in target from the smart fee slider.  It will only present an approximate fee calculated using the default target.  The fee calculated using the correct target is still applied to the transaction and shown in the final send confirmation dialog.
 
 Credits
 -------
