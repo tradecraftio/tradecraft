@@ -58,6 +58,37 @@
 #include <sys/socket.h>
 #endif
 
+//! Wraps a hash value representing an ID for a stratum job
+struct JobId : public std::array<unsigned char, 8> {
+    JobId() {
+        std::fill(begin(), end(), 0);
+    }
+    explicit JobId(const uint256& hash) {
+        uint64_t siphash = htole64(
+            SipHashUint256(0x779210d350dae066UL, 0x828d056f89a7486aUL, hash)
+        );
+        const unsigned char* siphash_bytes = reinterpret_cast<const unsigned char*>(&siphash);
+        std::copy(siphash_bytes, siphash_bytes + size(), begin());
+    }
+    explicit JobId(const BaseHash<uint256>& hash) {
+        uint64_t siphash = htole64(
+            CSipHasher(0x11d6a16033e584bdUL, 0x5784b7e61ca05cf2UL).Write(hash).Finalize()
+        );
+        const unsigned char* siphash_bytes = reinterpret_cast<const unsigned char*>(&siphash);
+        std::copy(siphash_bytes, siphash_bytes + size(), begin());
+    }
+    explicit JobId(const std::string& hex) {
+        std::vector<unsigned char> vch = ParseHex(hex);
+        if (vch.size() != size()) {
+            throw std::runtime_error("JobId must be exactly 7 bytes / 14 hex");
+        }
+        std::copy(vch.begin(), vch.end(), begin());
+    }
+    std::string ToString() const {
+        return HexStr(*this);
+    }
+};
+
 struct StratumClient {
     //! The return socket used to communicate with the client.
     evutil_socket_t m_socket;
@@ -122,14 +153,14 @@ struct StratumClient {
     void GenSecret();
 
     //! Get the extra nonce to use for the given job ID.
-    std::vector<unsigned char> ExtraNonce1(const BaseHash<uint256>& job_id) const;
+    std::vector<unsigned char> ExtraNonce1(const JobId& job_id) const;
 };
 
 void StratumClient::GenSecret() {
     GetRandBytes(m_secret);
 }
 
-std::vector<unsigned char> StratumClient::ExtraNonce1(const BaseHash<uint256>& job_id) const
+std::vector<unsigned char> StratumClient::ExtraNonce1(const JobId& job_id) const
 {
     CSHA256 nonce_hasher;
     nonce_hasher.Write(m_secret.begin(), 32);
@@ -268,12 +299,6 @@ static std::map<bufferevent*, StratumClient> subscriptions;
 
 //! Mapping of stratum method names -> handlers
 static std::map<std::string, std::function<UniValue(StratumClient&, const UniValue&)> > stratum_method_dispatch;
-
-//! Wraps a hash value representing an ID for a stratum job
-struct JobId : BaseHash<uint256> {
-    JobId() : BaseHash() {}
-    explicit JobId(const uint256& hash) : BaseHash(hash) {}
-};
 
 //! A mapping of job_id -> work templates
 static std::map<JobId, StratumWork> work_templates;
@@ -1150,7 +1175,7 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     BoundParams(method, params, 5, 7);
     // First parameter is the client username, which is ignored.
 
-    JobId job_id(ParseUInt256(params[1], "job_id"));
+    JobId job_id(params[1].get_str());
     if (!work_templates.count(job_id)) {
         LogPrint(BCLog::STRATUM, "Received completed share for unknown job_id : %s\n", HexStr(job_id));
         return false;
@@ -1205,7 +1230,7 @@ UniValue stratum_mining_aux_submit(StratumClient& client, const UniValue& params
         LogPrint(BCLog::STRATUM, "No user with address %s is currently registered\n", EncodeDestination(addr));
     }
 
-    JobId job_id(ParseUInt256(params[1].get_str(), "job_id"));
+    JobId job_id(params[1].get_str());
     if (!work_templates.count(job_id)) {
         LogPrint(BCLog::STRATUM, "Received completed auxiliary share for unknown job_id : %s\n", HexStr(job_id));
         return false;
