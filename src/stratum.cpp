@@ -80,7 +80,7 @@ struct JobId : public std::array<unsigned char, 8> {
     explicit JobId(const std::string& hex) {
         std::vector<unsigned char> vch = ParseHex(hex);
         if (vch.size() != size()) {
-            throw std::runtime_error("JobId must be exactly 7 bytes / 14 hex");
+            throw std::runtime_error("JobId must be exactly 8 bytes / 16 hex");
         }
         std::copy(vch.begin(), vch.end(), begin());
     }
