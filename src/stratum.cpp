@@ -1225,7 +1225,7 @@ UniValue stratum_mining_submit(StratumClient& client, const UniValue& params) EX
     BoundParams(method, params, 5, 7);
     // First parameter is the client username, which is ignored.
 
-    JobId job_id(ParseUInt256(params[1], "job_id"));
+    JobId job_id(params[1].get_str());
     if (!work_templates.count(job_id)) {
         LogPrint(BCLog::STRATUM, "Received completed share for unknown job_id : %s\n", HexStr(job_id));
         return false;
@@ -1280,7 +1280,7 @@ UniValue stratum_mining_aux_submit(StratumClient& client, const UniValue& params
         LogPrint(BCLog::STRATUM, "No user with address %s is currently registered\n", EncodeDestination(addr));
     }
 
-    JobId job_id(ParseUInt256(params[1].get_str(), "job_id"));
+    JobId job_id(params[1].get_str());
     if (!work_templates.count(job_id)) {
         LogPrint(BCLog::STRATUM, "Received completed auxiliary share for unknown job_id : %s\n", HexStr(job_id));
         return false;
