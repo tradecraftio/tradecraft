@@ -1004,8 +1004,8 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
     // as a numeric value...
     UniValue set_difficulty(UniValue::VARR);
     set_difficulty.push_back("mining.set_difficulty");
-    set_difficulty.push_back("1e+06"); // Will be overriden by later
-    msg.push_back(set_difficulty);     // work delivery messages.
+    set_difficulty.push_back("1"); // Will be overriden by later
+    msg.push_back(set_difficulty); // work delivery messages.
 
     UniValue notify(UniValue::VARR);
     notify.push_back("mining.notify");
