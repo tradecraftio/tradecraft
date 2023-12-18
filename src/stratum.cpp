@@ -1018,6 +1018,16 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
     ret.push_back(HexStr(client.ExtraNonce1(JobId{})));
     ret.push_back(UniValue(4)); // sizeof(extranonce2)
 
+    // Send the client a `mining.set_difficulty` message with the current
+    // difficulty.  This is required by some mining hardware (e.g. the Apollo
+    // BTC miner).
+    //
+    // Note: The client is not authorized, and therefore the no work will be
+    //       generated for them.  The send_work handler will merely generate
+    //       and return to the client `mining.set_difficulty` message, which
+    //       is all that we need here.
+    client.m_send_work = true;
+
     return ret;
 }
 
@@ -1429,18 +1439,45 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
 
     // If required, send new work to the client.
     if (client.m_send_work) {
-        std::string data;
-        try {
-            data = GetWorkUnit(client);
-        } catch (const UniValue& objError) {
-            data = JSONRPCReply(NullUniValue, objError, NullUniValue);
-        } catch (const std::exception& e) {
-            data = JSONRPCReply(NullUniValue, JSONRPCError(RPC_INTERNAL_ERROR, e.what()), NullUniValue);
-        }
+        if (!client.m_authorized && client.m_aux_addr.empty()) {
+            double diff = DEFAULT_MINING_DIFFICULTY;
+            if (g_context && g_context->chainman) {
+                LOCK(g_context->chainman->GetMutex());
+                CBlockIndex* tip = g_context->chainman->ActiveChain().Tip();
+                if (!tip->m_aux_pow.IsNull()) {
+                    diff = GetAuxiliaryDifficulty(tip);
+                } else {
+                    diff = GetDifficulty(tip);
+                }
+            }
+            diff = ClampDifficulty(client, diff);
 
-        LogPrint(BCLog::STRATUM, "Sending requested stratum work unit to %s : %s", client.GetPeer().ToStringAddrPort(), data);
-        if (evbuffer_add(output, data.data(), data.size())) {
-            LogPrint(BCLog::STRATUM, "Sending stratum work unit failed. (Reason: %d, '%s')\n", errno, evutil_socket_error_to_string(errno));
+            UniValue set_difficulty(UniValue::VOBJ);
+            set_difficulty.pushKV("id", client.m_nextid++);
+            set_difficulty.pushKV("method", "mining.set_difficulty");
+            UniValue set_difficulty_params(UniValue::VARR);
+            set_difficulty_params.push_back(UniValue(diff));
+            set_difficulty.pushKV("params", set_difficulty_params);
+
+            std::string data = set_difficulty.write() + "\n";
+            LogPrint(BCLog::STRATUM, "Sending stratum difficulty update to %s : %s", client.GetPeer().ToStringAddrPort(), data);
+            if (evbuffer_add(output, data.data(), data.size())) {
+                LogPrint(BCLog::STRATUM, "Sending stratum difficulty update failed. (Reason: %d, '%s')\n", errno, evutil_socket_error_to_string(errno));
+            }
+        } else {
+            std::string data;
+            try {
+                data = GetWorkUnit(client);
+            } catch (const UniValue& objError) {
+                data = JSONRPCReply(NullUniValue, objError, NullUniValue);
+            } catch (const std::exception& e) {
+                data = JSONRPCReply(NullUniValue, JSONRPCError(RPC_INTERNAL_ERROR, e.what()), NullUniValue);
+            }
+
+            LogPrint(BCLog::STRATUM, "Sending requested stratum work unit to %s : %s", client.GetPeer().ToStringAddrPort(), data);
+            if (evbuffer_add(output, data.data(), data.size())) {
+                LogPrint(BCLog::STRATUM, "Sending stratum work unit failed. (Reason: %d, '%s')\n", errno, evutil_socket_error_to_string(errno));
+            }
         }
 
         // Clear the flag now that the client has an updated work unit.
