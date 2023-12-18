@@ -279,6 +279,12 @@ void UpdateSegwitCommitment(const ChainstateManager& chainman, const StratumWork
 //! Set once at startup, so it doesn't need to be protected by cs_stratum.f
 static CTxDestination g_default_mining_address;
 
+//! The minimum difficulty to use for mining, for DoS protection.  This is
+//! configurable via the -miningmindifficulty option.  As of late 2023, reasonable
+//! values for this are ~1000 for ASIC mining hardware, and ~0.001 for CPU
+//! miners (used primarily for testing).
+static double g_min_difficulty = DEFAULT_MINING_DIFFICULTY;
+
 //! The time at which the statum server started, used to calculate uptime.
 static int64_t g_start_time = 0;
 
@@ -353,7 +359,7 @@ static double ClampDifficulty(const StratumClient& client, double diff)
     if (client.m_mindiff > 0) {
         diff = client.m_mindiff;
     }
-    diff = std::max(diff, 0.001);
+    diff = std::max(diff, g_min_difficulty);
     return diff;
 }
 
@@ -1630,6 +1636,16 @@ bool InitStratumServer(node::NodeContext& node)
             LogPrintf("Invalid -defaultminingaddress=%s: %s\n", *defaultminingaddress, error);
             return false;
         }
+    }
+
+    std::optional<std::string> mindiff = gArgs.GetArg("-miningmindifficulty");
+    if (mindiff) {
+        double diff = std::stod(*mindiff);
+        if (diff < 0.0) {
+            LogPrintf("Invalid -miningmindifficulty=%s: must be non-negative\n", *mindiff);
+            return false;
+        }
+        g_min_difficulty = diff;
     }
 
     if (!InitSubnetAllowList("stratum", stratum_allow_subnets)) {
