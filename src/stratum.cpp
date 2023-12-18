@@ -1009,7 +1009,7 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
 
     UniValue notify(UniValue::VARR);
     notify.push_back("mining.notify");
-    notify.push_back("ae6812eb4cd7735a302a8a9dd95cf71f");
+    notify.push_back("1");
     msg.push_back(notify);
 
     UniValue ret(UniValue::VARR);
