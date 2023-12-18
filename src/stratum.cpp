@@ -1050,7 +1050,7 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
 
     // Send the client a `mining.set_difficulty` message with the current
     // difficulty.  This is required by some mining hardware (e.g. the Apollo
-    // FRC miner).
+    // BTC miner).
     //
     // Note: The client is not authorized, and therefore the no work will be
     //       generated for them.  The send_work handler will merely generate
@@ -1472,12 +1472,16 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
 
     // If required, send new work to the client.
     if (client.m_send_work) {
-        if (!client.m_authorized) {
+        if (!client.m_authorized && client.m_aux_addr.empty()) {
             double diff = g_min_difficulty;
             if (g_context && g_context->chainman) {
                 LOCK(g_context->chainman->GetMutex());
                 CBlockIndex* tip = g_context->chainman->ActiveChain().Tip();
-                diff = GetDifficulty(tip);
+                if (!tip->m_aux_pow.IsNull()) {
+                    diff = GetAuxiliaryDifficulty(tip);
+                } else {
+                    diff = GetDifficulty(tip);
+                }
             }
             diff = ClampDifficulty(client, diff);
 
