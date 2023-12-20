@@ -328,16 +328,27 @@ std::string HexInt4(uint32_t val)
 
 uint32_t ParseHexInt4(const UniValue& hex, const std::string& name)
 {
-    std::vector<unsigned char> vch = ParseHexV(hex, name);
-    if (vch.size() != 4) {
+    if (!hex.isStr()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, name+" must be string valued");
+    }
+    std::string hexstr = hex.get_str();
+    for (char& c : hexstr) {
+        if (HexDigit(c) < 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, name+" must be a hexidecimal string");
+        }
+    }
+    // Some bitcoin miners incorrectly report version strings using "%x"
+    // instead of "%08x", so we need to handle that case by inserting leading
+    // zeros.  Still the standard is "%08x", so that's what our error message
+    // will say.
+    if (hexstr.size() > 8) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, name+" must be exactly 4 bytes / 8 hex");
     }
-    uint32_t ret = 0;
-    ret |= vch[0] << 24;
-    ret |= vch[1] << 16;
-    ret |= vch[2] <<  8;
-    ret |= vch[3];
-    return ret;
+    if (hexstr.size() < 8) {
+        hexstr = std::string(8-hexstr.size(), '0') + hexstr;
+    }
+    std::vector<unsigned char> vch = ParseHex(hexstr);
+    return be32toh(*reinterpret_cast<uint32_t*>(vch.data()));
 }
 
 uint256 ParseUInt256(const UniValue& hex, const std::string& name)
