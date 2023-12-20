@@ -915,8 +915,9 @@ bool SubmitAuxiliaryBlock(StratumClient& client, const CTxDestination& addr, con
 
     LogPrintf("GOT AUXILIARY BLOCK!!! by %s: %s, %s\n", EncodeDestination(addr), aux_hash.first.ToString(), aux_hash.second.ToString());
     blkhdr.hashMerkleRoot = ComputeMerkleRootFromBranch(cb.GetHash(), cb_branch, 0);
+    const uint256 first_stage_hash = blkhdr.GetHash();
 
-    JobId new_job_id(blkhdr.GetHash());
+    JobId new_job_id(first_stage_hash);
     work_templates[new_job_id] = current_work;
     StratumWork& new_work = work_templates[new_job_id];
     new_work.GetBlock().vtx[0] = MakeTransactionRef(std::move(cb));
@@ -928,7 +929,7 @@ bool SubmitAuxiliaryBlock(StratumClient& client, const CTxDestination& addr, con
     new_work.GetBlock().m_aux_pow = blkhdr.m_aux_pow;
     new_work.GetBlock().nTime = blkhdr.nTime;
     new_work.m_aux_hash2 = aux_hash.second;
-    if (new_job_id != JobId(new_work.GetBlock().GetHash())) {
+    if (first_stage_hash != new_work.GetBlock().GetHash()) {
         throw std::runtime_error("First-stage hash does not match expected value.");
     }
 
