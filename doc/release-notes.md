@@ -1,94 +1,50 @@
-26.2 Release Notes
-==================
+v26.2.0.1-39308 Release Notes
+=============================
 
-Bitcoin Core version 26.2 is now available from:
+Bitcoin Core version v26.2.0.1-39308 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-26.2/>
+  https://github.com/tradecraftio/mergemine/releases/tag/v26.2.0.1-39308
 
-This release includes new features, various bug fixes and performance
-improvements, as well as updated translations.
+This is a point release of the v26 stable branch of Bitcoin Core with the stratum mining server and Tradecraft/Freicoin merge-mining patches applied.
 
-Please report bugs using the issue tracker at GitHub:
+Please report bugs related to the stratum mining server implementation or Tradecraft/Freicoin merge-mining at the Tradecraft issue tracker on GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  https://github.com/tradecraftio/mergemine/issues
 
-To receive security and update notifications, please subscribe to:
+Please report other bugs regarding Bitcoin Core at the issue tracker on GitHub:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  https://github.com/bitcoin/bitcoin/issues
+
+To receive security and update notifications for the stratum mining server and merge-mining patches, please subscribe to:
+
+  https://tradecraft.groups.io/g/announce/
+
+To receive security notifications for Bitcoin Core, please subscribe to:
+
+  https://bitcoincore.org/en/list/announcements/join/
 
 How to Upgrade
-==============
+--------------
 
-If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes in some cases), then run the installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS) or `bitcoind`/`bitcoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
-possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+Upgrading directly from a version of Bitcoin Core that has reached its EOL is possible, but it might take some time if the data directory needs to be migrated.  Old wallet versions of Bitcoin Core are generally supported.
 
 Compatibility
-==============
+-------------
 
-Bitcoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 11.0+, and Windows 7 and newer.  Bitcoin
-Core should also work on most other Unix-like systems but is not as
-frequently tested on them.  It is not recommended to use Bitcoin Core on
-unsupported systems.
+Bitcoin Core is supported and extensively tested on operating systems using the Linux kernel, macOS 11.0+, and Windows 7 and newer.  Bitcoin Core should also work on most other Unix-like systems but is not as frequently tested on them.  It is not recommended to use Bitcoin Core on unsupported systems.
 
 Notable changes
-===============
+---------------
 
-### Script
-
-- #29853: sign: don't assume we are parsing a sane TapMiniscript
-
-### P2P and network changes
-
-- #29691: Change Luke Dashjr seed to dashjr-list-of-p2p-nodes.us
-- #30085: p2p: detect addnode cjdns peers in GetAddedNodeInfo()
-
-### RPC
-
-- #29869: rpc, bugfix: Enforce maximum value for setmocktime
-- #28554: bugfix: throw an error if an invalid parameter is passed to getnetworkhashps RPC
-- #30094: rpc: move UniValue in blockToJSON
-- #29870: rpc: Reword SighashFromStr error message
-
-### Build
-
-- #29747: depends: fix mingw-w64 Qt DEBUG=1 build
-- #29985: depends: Fix build of Qt for 32-bit platforms with recent glibc
-- #30151: depends: Fetch miniupnpc sources from an alternative website
-- #30283: upnp: fix build with miniupnpc 2.2.8
-
-### Misc
-
-- #29776: ThreadSanitizer: Fix #29767
-- #29856: ci: Bump s390x to ubuntu:24.04
-- #29764: doc: Suggest installing dev packages for debian/ubuntu qt5 build
-- #30149: contrib: Renew Windows code signing certificate
+There have been no notable changes in the stratum mining server or the Tradecraft/Freicoin merge-mining patches between v26.1.0.1-39278 and this release.  Please see the Bitcoin Core release notes for notable changes between the upstream versions upon which these releases are based.
 
 Credits
-=======
+-------
 
 Thanks to everyone who directly contributed to this release:
 
-- Antoine Poinsot
-- Ava Chow
-- Cory Fields
-- dergoegge
-- fanquake
-- glozow
-- Hennadii Stepanov
-- Jameson Lopp
-- jonatack
-- laanwj
-- Luke Dashjr
-- MarcoFalke
-- nanlour
-- willcl-ark
+- Mark Friedenbach
 
-As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+As well as to everyone that helped with translations on [Transifex](https://www.transifex.com/tradecraft/freicoin-1/).
