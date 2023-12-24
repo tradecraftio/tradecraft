@@ -42,7 +42,7 @@ MerkleNode::code_type MerkleNode::_encode(MerkleLink left, MerkleLink right) {
         case MerkleLink::SKIP:    code = 7; break;
     }
     switch (right) {
-        case MerkleLink::SKIP:    --code; // No break!
+        case MerkleLink::SKIP:    --code; [[fallthrough]];
         case MerkleLink::VERIFY:  --code; break;
         case MerkleLink::DESCEND:         break;
     }
