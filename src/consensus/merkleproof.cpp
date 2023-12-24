@@ -415,7 +415,10 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
                                 : m_verify[0];
     }
 
-    std::vector<std::pair<bool, uint256> > stack(2);
+    std::vector<std::pair<bool, uint256> > stack = {
+        {false, uint256()},
+        {false, uint256()},
+    };
     std::size_t verify_pos = 0;
     std::size_t skip_pos = 0;
 
@@ -431,7 +434,7 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
                     ++extra_depths[pos];
                 }
                 vpath.push_back(side);
-                stack.emplace_back();
+                stack.emplace_back(false, uint256());
                 return false;
 
             case MerkleLink::VERIFY:
