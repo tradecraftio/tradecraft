@@ -1176,7 +1176,7 @@ UniValue stratum_mining_configure(StratumClient& client, const UniValue& params)
 
     UniValue extensions = params[0].get_array();
     UniValue config = params[1].get_obj();
-    for (int i = 0; i < extensions.size(); ++i) {
+    for (size_t i = 0; i < extensions.size(); ++i) {
         std::string name = extensions[i].get_str();
 
         if ("version-rolling" == name) {
