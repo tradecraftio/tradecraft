@@ -428,7 +428,7 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
         const uint256* new_hash = nullptr;
         switch (value) {
             case MerkleLink::DESCEND:
-                for (auto pos = 0; pos < verify_pos; ++pos) {
+                for (size_t pos = 0; pos < verify_pos; ++pos) {
                     ++extra_depths[pos];
                 }
                 vpath.push_back(side);
@@ -455,7 +455,7 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
 
         uint256 tmp;
         while (stack.back().first) {
-            for (auto pos = 0; pos < verify_pos; ++pos) {
+            for (size_t pos = 0; pos < verify_pos; ++pos) {
                 if (extra_depths[pos]) {
                     --extra_depths[pos];
                 } else {
