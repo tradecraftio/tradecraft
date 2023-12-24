@@ -470,7 +470,11 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
                     }
                 }
             }
-            vpath.pop_back();
+            // Move one level up the tree.  At the root node the path is empth
+            // though, so avoid popping an empty path.
+            if (!vpath.empty()) {
+                vpath.pop_back();
+            }
             tmp = MerkleHash_Sha256Midstate(stack.back().second, *new_hash);
             new_hash = &tmp;
             stack.pop_back();
