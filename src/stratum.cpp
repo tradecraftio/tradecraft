@@ -166,7 +166,7 @@ std::vector<unsigned char> StratumClient::ExtraNonce1(const JobId& job_id) const
     CSHA256 nonce_hasher;
     nonce_hasher.Write(m_secret.begin(), 32);
     if (m_supports_extranonce) {
-        nonce_hasher.Write(job_id.begin(), job_id.size());
+        nonce_hasher.Write(job_id.data(), job_id.size());
     }
     uint256 job_nonce;
     nonce_hasher.Finalize(job_nonce.begin());
