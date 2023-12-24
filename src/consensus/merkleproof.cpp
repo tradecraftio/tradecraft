@@ -188,7 +188,6 @@ std::vector<unsigned char> MerkleBranch::getvch() const {
 }
 
 MerkleBranch& MerkleBranch::setvch(const std::vector<unsigned char>& data) {
-    using std::swap; // enable ADL
     if (data.size() > 1028) { // 1028 = 32*32 + (32/8)
         throw std::runtime_error("MerkleBranch::setvch : byte vector is too large to contain branch of 32 hashes or less");
     }
