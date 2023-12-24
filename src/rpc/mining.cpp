@@ -836,7 +836,7 @@ static RPCHelpMan getblocktemplate()
 
     UniValue transactions(UniValue::VARR);
     std::map<uint256, int64_t> setTxIndex;
-    for (int i = 0; i < pblock->vtx.size() - !!pblocktemplate->has_block_final_tx; ++i) {
+    for (size_t i = 0; i < pblock->vtx.size() - !!pblocktemplate->has_block_final_tx; ++i) {
         const CTransaction& tx = *pblock->vtx[i];
         uint256 txHash = tx.GetHash();
         setTxIndex[txHash] = i;
