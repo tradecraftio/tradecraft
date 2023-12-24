@@ -5524,7 +5524,6 @@ bool ChainstateManager::ActivateSnapshot(
         bool in_memory)
 {
     uint256 base_blockhash = metadata.m_base_blockhash;
-    BlockFinalTxEntry final_tx = metadata.m_final_tx;
 
     if (this->SnapshotBlockhash()) {
         LogPrintf("[snapshot] can't activate a snapshot-based chainstate more than once\n");
