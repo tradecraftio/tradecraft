@@ -1365,7 +1365,6 @@ UniValue stratum_mining_extranonce_subscribe(StratumClient& client, const UniVal
 /** Callback to read from a stratum connection. */
 static void stratum_read_cb(bufferevent *bev, void *ctx)
 {
-    evconnlistener *listener = (evconnlistener*)ctx;
     LOCK(cs_stratum);
     // Lookup the client record for this connection
     if (!subscriptions.count(bev)) {
@@ -1488,7 +1487,6 @@ static void stratum_read_cb(bufferevent *bev, void *ctx)
 /** Callback to handle unrecoverable errors in a stratum link. */
 static void stratum_event_cb(bufferevent *bev, short what, void *ctx)
 {
-    evconnlistener *listener = (evconnlistener*)ctx;
     LOCK(cs_stratum);
     // Fetch the return address for this connection, for the debug log.
     std::string from("UNKNOWN");
