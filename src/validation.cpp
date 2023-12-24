@@ -2483,8 +2483,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         // Every output of the block-final transaction must be trivially
         // spendable (with current validation flags, without providing a
         // scriptSig or witness).
-        for (const CTxOut& txout : final_tx.vout) {
-            if (!IsTriviallySpendable(final_tx, 0, flags|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
+        for (size_t n = 0; n < final_tx.vout.size(); ++n) {
+            if (!IsTriviallySpendable(final_tx, static_cast<uint32_t>(n), flags|SCRIPT_VERIFY_WITNESS|SCRIPT_VERIFY_CLEANSTACK)) {
                 return state.Invalid(BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE, "block-final-nontrivial-ouput", "block-final txout not trivially spendable");
             }
         }
