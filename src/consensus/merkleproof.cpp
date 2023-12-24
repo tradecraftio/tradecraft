@@ -157,7 +157,6 @@ void swap(MerkleBranch& lhs, MerkleBranch& rhs) {
 
 uint32_t MerkleBranch::GetPath() const {
     uint32_t ret = 0;
-    uint32_t mask = 1;
     int pos = 0;
     for (; pos < m_vpath.size() && pos < 32; ++pos) {
         ret |= static_cast<uint32_t>(m_vpath[pos]) << pos;
