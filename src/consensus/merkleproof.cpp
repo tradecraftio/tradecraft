@@ -157,7 +157,7 @@ void swap(MerkleBranch& lhs, MerkleBranch& rhs) {
 
 uint32_t MerkleBranch::GetPath() const {
     uint32_t ret = 0;
-    int pos = 0;
+    size_t pos = 0;
     for (; pos < m_vpath.size() && pos < 32; ++pos) {
         ret |= static_cast<uint32_t>(m_vpath[pos]) << pos;
     }
@@ -192,8 +192,8 @@ MerkleBranch& MerkleBranch::setvch(const std::vector<unsigned char>& data) {
     if (data.size() > 1028) { // 1028 = 32*32 + (32/8)
         throw std::runtime_error("MerkleBranch::setvch : byte vector is too large to contain branch of 32 hashes or less");
     }
-    const int bytes_in_path = data.size() % 32;
-    const int max_bytes_in_path = ((data.size() / 32) + 7) / 8;
+    const size_t bytes_in_path = data.size() % 32;
+    const size_t max_bytes_in_path = ((data.size() / 32) + 7) / 8;
     if (bytes_in_path > max_bytes_in_path) {
         throw std::runtime_error("MerkleBranch::setvch : residual bytes for path is greater than 4 (> 32 bits)");
     }
@@ -202,8 +202,8 @@ MerkleBranch& MerkleBranch::setvch(const std::vector<unsigned char>& data) {
     }
     m_vpath.clear();
     m_vpath.resize(data.size() / 32, false);
-    for (int i = 0; i < bytes_in_path; ++i) {
-        for (int j = 0; j < 8; ++j) {
+    for (size_t i = 0; i < bytes_in_path; ++i) {
+        for (size_t j = 0; j < 8; ++j) {
             bool bit = data[i] & (static_cast<unsigned char>(1) << j);
             if ((i*8 + j) < m_vpath.size()) {
                 m_vpath[i*8+j] = bit;
