@@ -69,7 +69,7 @@ Release Process
 - Translations on Transifex
     - Change the auto-update URL for the new major version's resource away from `master` and to the branch, e.g. `https://raw.githubusercontent.com/freicoin/freicoin/<branch>/src/qt/locale/freicoin_en.xlf`. Do not forget this or it will keep tracking the translations on master instead, drifting away from the specific major release.
 - Prune inputs from the qa-assets repo (See [pruning
-  inputs](https://github.com/freicoin/qa-assets#pruning-inputs)).
+  inputs](https://github.com/bitcoin-core/qa-assets#pruning-inputs)).
 
 #### Before final release
 
