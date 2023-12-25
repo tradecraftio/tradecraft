@@ -446,7 +446,8 @@ public:
 
     void SetMaxMessageLength(size_t limit) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex) {
         assert(limit <= MAX_SIZE);
-        max_message_length = limit;
+        AssertLockNotHeld(m_recv_mutex);
+        WITH_LOCK(m_recv_mutex, max_message_length = limit);
     }
 
     bool ReceivedBytes(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
@@ -693,7 +694,8 @@ public:
 
     void SetMaxMessageLength(size_t limit) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex) {
         assert(limit <= MAX_SIZE);
-        max_message_length = limit;
+        AssertLockNotHeld(m_recv_mutex);
+        WITH_LOCK(m_recv_mutex, max_message_length = limit);
     }
 };
 
