@@ -28,7 +28,7 @@
 
 bool IsFinalTx(const CTransaction &tx, int32_t nBlockHeight, int64_t nBlockTime)
 {
-    if (tx.lock_height > nBlockHeight)
+    if (static_cast<int64_t>(tx.lock_height) > static_cast<int64_t>(nBlockHeight))
         return false;
     if (tx.nLockTime == 0)
         return true;
