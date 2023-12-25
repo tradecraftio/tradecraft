@@ -124,6 +124,7 @@ git grep -z -l 'branch freicoin-fork' | xargs -0 sed -i 's:branch freicoin-fork:
 git grep -z -l 'freicoin/univalue' | xargs -0 sed -i 's:freicoin/univalue:bitcoin-core/univalue:g'
 git grep -z -l 'freicoin/ctaes' | xargs -0 sed -i 's:freicoin/ctaes:bitcoin-core/ctaes:g'
 git grep -z -l 'freicoin/bips' | xargs -0 sed -i 's:freicoin/bips:bitcoin/bips:g'
+git grep -z -l 'bitcoin-core/qa-assets' | xargs -0 sed -i 's:bitcoin-core/qa-assets:bitcoin-core/qa-assets:g'
 
 # Restore gitian instructions
 git grep -z -l 'gitian-freicoin-host' | xargs -0 sed -i 's:gitian-freicoin-host:gitian-bitcoin-host:g'
