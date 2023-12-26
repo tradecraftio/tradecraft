@@ -176,7 +176,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
     int next_height = test_setup->m_node.chain->getHeight().value() + 1;
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet, next_height).GetTotalAmount()); // Cache
     CAmount total{0};
-    for (int height = 0; height < chain_size - COINBASE_MATURITY; ++height) {
+    for (unsigned int height = 0; height < chain_size - COINBASE_MATURITY; ++height) {
         total += GetTimeAdjustedValue(49 * COIN, next_height - height);
         total += GetTimeAdjustedValue( 1 * COIN, next_height - height);
     }
