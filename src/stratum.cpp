@@ -242,7 +242,7 @@ StratumWork::StratumWork(const CTxDestination& coinbase_dest, const node::CBlock
         // To calculate the segwit commitment for the block-final tx,
         // we use a proof from the coinbase's position of the witness
         // Merkle tree.
-        for (int i = 1; i < m_block_template.block.vtx.size()-1; ++i) {
+        for (size_t i = 1; i < m_block_template.block.vtx.size()-1; ++i) {
             leaves[i] = m_block_template.block.vtx[i]->GetWitnessHash();
         }
         CMutableTransaction bf(*m_block_template.block.vtx.back());
