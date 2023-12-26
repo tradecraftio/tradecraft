@@ -1063,8 +1063,6 @@ public:
 class ScriptMaker {
     //! Keys contained in the Miniscript (the evaluation of DescriptorImpl::m_pubkey_args).
     const std::vector<CPubKey>& m_keys;
-    //! The script context we're operating within (P2WSH).
-    const miniscript::MiniscriptContext m_script_ctx;
 
     //! Get the ripemd160(sha256()) hash of this key.
     uint160 GetHash160(uint32_t key) const {
@@ -1072,7 +1070,7 @@ class ScriptMaker {
     }
 
 public:
-    ScriptMaker(const std::vector<CPubKey>& keys LIFETIMEBOUND, const miniscript::MiniscriptContext script_ctx) : m_keys(keys), m_script_ctx{script_ctx} {}
+    ScriptMaker(const std::vector<CPubKey>& keys LIFETIMEBOUND, const miniscript::MiniscriptContext script_ctx) : m_keys(keys) {}
 
     std::vector<unsigned char> ToPKBytes(uint32_t key) const {
         return {m_keys[key].begin(), m_keys[key].end()};
