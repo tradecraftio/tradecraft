@@ -1158,7 +1158,7 @@ private:
                             InputStack right = std::move(sats[j - 1].second) + sat;
                             left.m_left_or_right = false;
                             right.m_left_or_right = true;
-                            next_sats.emplace_back(std::move(sats[j - 1].first), std::move(left | right));
+                            next_sats.emplace_back(std::move(sats[j - 1].first), left | right);
                             if (next_sats.back().second.m_left_or_right == false) {
                                 next_sats.back().first = sats[j].first;
                             } else if (have_sig) {
