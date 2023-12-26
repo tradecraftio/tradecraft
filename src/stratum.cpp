@@ -518,19 +518,19 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     static int64_t last_update_time = 0;
     const CTxMemPool& mempool = *g_context->mempool;
 
+    CBlockIndex *tip_new = tip;
+    {
+        LOCK(g_context->chainman->GetMutex());
+        tip_new = g_context->chainman->ActiveChainstate().m_chain.Tip();
+    }
+
     // When merge-mining is active, finding a block is a two-stage process.
     // First the auxiliary proof-of-work is solved, which requires constructing
     // a fake bitcoin block which commits to our Freicoin block.  Then the
     // coinbase is updated to commit to the auxiliary proof-of-work solution and
     // the native proof-of-work is solved.
-    if (half_solved_work && (tip != g_context->chainman->ActiveChain().Tip() || !work_templates.count(*half_solved_work))) {
+    if (half_solved_work && (tip != tip_new || !work_templates.count(*half_solved_work))) {
         half_solved_work = std::nullopt;
-    }
-
-    CBlockIndex *tip_new = tip;
-    {
-        LOCK(g_context->chainman->GetMutex());
-        tip_new = g_context->chainman->ActiveChainstate().m_chain.Tip();
     }
 
     if (half_solved_work) {
@@ -897,9 +897,11 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
             std::shared_ptr<const CBlock> pblock = std::make_shared<const CBlock>(block);
             res = g_context->chainman->ProcessNewBlock(pblock, true, true, NULL);
             if (res) {
+                Chainstate *pchainstate = nullptr;
                 CBlockIndex* block_index = nullptr;
                 {
                     LOCK(g_context->chainman->GetMutex());
+                    pchainstate = &g_context->chainman->ActiveChainstate();
                     if (g_context->chainman->BlockIndex().count(hash)) {
                         block_index = &g_context->chainman->BlockIndex().at(hash);
                     }
@@ -908,7 +910,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
                     LogPrintf("Unable to find new block index entry; cannot prioritise block 0x%s\n", hash.ToString());
                 } else {
                     BlockValidationState state;
-                    g_context->chainman->ActiveChainstate().PreciousBlock(state, block_index);
+                    pchainstate->PreciousBlock(state, block_index);
                     if (!state.IsValid()) {
                         LogPrintf("Database error while prioritising new block 0x%s: %s\n", hash.ToString(), state.ToString());
                     }
