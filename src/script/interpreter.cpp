@@ -1257,6 +1257,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                     // Otherwise we fall-though to the legacy handler with the
                     // original SHA1 semantics:
+                    [[fallthrough]];
 
                 case OP_RIPEMD160:
                 case OP_SHA256:
