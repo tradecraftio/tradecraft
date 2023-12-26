@@ -1532,6 +1532,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 // in a live branch, or we're in a pre-segwit script; either
                 // way, we handle these opcodes the same as any other undefined
                 // opcode.)
+                [[fallthrough]];
 
                 default:
                     if (!protocol_cleanup && (sigversion == SigVersion::BASE)) {
