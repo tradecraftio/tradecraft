@@ -211,6 +211,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
     listReceived.clear();
     listSent.clear();
 
+    LOCK(wallet.cs_wallet);
     // Compute fee and demurrage:
     CAmount nDebit = CachedTxGetDebit(wallet, wtx, filter);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
@@ -220,7 +221,6 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         nFee = value_in - wtx.tx->GetValueOut();
     }
 
-    LOCK(wallet.cs_wallet);
     // Sent/received.
     for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i)
     {
