@@ -17,6 +17,7 @@
 set -e
 
 if [ -e share/examples/bitcoin.conf ]; then
+  # rename files
   for fn in `git ls-tree -r --name-only HEAD | grep bitcoin`; do
     oldfn=`basename "$fn"`
     newfn=`basename "$fn" | sed -e 's:bitcoin:freicoin:g'`
@@ -30,6 +31,25 @@ if [ -e share/examples/bitcoin.conf ]; then
     if [ "$oldfn" != "$newfn" ]; then
       git mv "$fn" `dirname "$fn"`/"$newfn"
     fi
+  done
+  # rename directories
+  while [[ $(find * -name \*bitcoin\* -type d) ]]; do
+    for fn in `find * -name \*bitcoin\* -type d`; do
+      oldfn=`basename "$fn"`
+      newfn=`basename "$fn" | sed -e 's:bitcoin:freicoin:g'`
+      if [ "$oldfn" != "$newfn" ]; then
+        git mv "$fn" `dirname "$fn"`/"$newfn"
+      fi
+    done
+  done
+  while [[ $(find * -name \*psbt\* -type d) ]]; do
+    for fn in `find * -name \*pst\* -type d`; do
+      oldfn=`basename "$fn"`
+      newfn=`basename "$fn" | sed -e 's:psbt:pst:g'`
+      if [ "$oldfn" != "$newfn" ]; then
+        git mv "$fn" `dirname "$fn"`/"$newfn"
+      fi
+    done
   done
   git commit -m '[Branding] Rename files "bitcoin" -> "freicoin".'
 fi
