@@ -266,6 +266,7 @@ bool CScript::IsWitnessProgram(int* version, std::vector<unsigned char>* program
                     return false;
                 }
                 // Fall through to advance past the push value as well.
+                [[fallthrough]];
             case OP_1NEGATE:
             case OP_1:  case OP_2:  case OP_3:  case OP_4:
             case OP_5:  case OP_6:  case OP_7:  case OP_8:
