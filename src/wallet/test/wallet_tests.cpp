@@ -601,7 +601,11 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
 {
     std::string coinbaseAddress = coinbaseKey.GetPubKey().GetID().ToString();
 
-    const int next_height = this->m_node.chainman->ActiveChain().Height() + 1;
+    int next_height = -1;
+    {
+        LOCK(this->m_node.chainman->GetMutex());
+        next_height = this->m_node.chainman->ActiveChain().Height() + 1;
+    }
 
     // Confirm ListCoins initially returns 1 coin grouped under coinbaseKey
     // address.
@@ -664,7 +668,11 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
     CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
     CoinFilterParams filter;
     filter.skip_locked = false;
-    const int next_height = context.m_node.chainman->ActiveChain().Height() + 1;
+    int next_height = -1;
+    {
+        LOCK(context.m_node.chainman->GetMutex());
+        next_height = context.m_node.chainman->ActiveChain().Height() + 1;
+    }
     CoinsResult available_coins = AvailableCoins(*context.wallet, next_height, nullptr, std::nullopt, filter);
     // Lock outputs so they are not spent in follow-up transactions
     for (uint32_t i = 0; i < wtx.tx->vout.size(); i++) context.wallet->LockCoin({wtx.GetHash(), i});
@@ -676,7 +684,11 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
     std::map<OutputType, size_t> expected_coins_sizes;
     for (const auto& out_type : OUTPUT_TYPES) { expected_coins_sizes[out_type] = 0U; }
 
-    const int next_height = this->m_node.chainman->ActiveChain().Height() + 1;
+    int next_height = -1;
+    {
+        LOCK(this->m_node.chainman->GetMutex());
+        next_height = this->m_node.chainman->ActiveChain().Height() + 1;
+    }
 
     // Verify our wallet has one usable coinbase UTXO before starting
     // This UTXO is a P2PK, so it should show up in the Other bucket
