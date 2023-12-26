@@ -31,6 +31,7 @@
 
 namespace {
 
+#if 0 // Unused, since we removed the bip324 test vectors (see below).
 void TestBIP324PacketVector(
     uint32_t in_idx,
     const std::string& in_priv_ours_hex,
@@ -166,6 +167,7 @@ void TestBIP324PacketVector(
         }
     }
 }
+#endif // 0
 
 }  // namespace
 
