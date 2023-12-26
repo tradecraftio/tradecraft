@@ -2204,20 +2204,6 @@ uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint25
     return k;
 }
 
-static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const uint256& tapleaf_hash)
-{
-    assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
-    assert(program.size() >= uint256::size());
-    //! The internal pubkey (x-only, so no Y coordinate parity).
-    const XOnlyPubKey p{Span{control}.subspan(1, TAPROOT_CONTROL_BASE_SIZE - 1)};
-    //! The output pubkey (taken from the scriptPubKey).
-    const XOnlyPubKey q{program};
-    // Compute the Merkle root from the leaf and the provided path.
-    const uint256 merkle_root = ComputeTaprootMerkleRoot(control, tapleaf_hash);
-    // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.
-    return q.CheckTapTweak(p, merkle_root, control[0] & 1);
-}
-
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
     CScript exec_script; //!< Actually executed script (second to last stack item in P2WSH or P2WPK; leaf script in P2TR)
