@@ -2248,10 +2248,10 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             }
             uint32_t path = 0;
             switch (bytes_in_path) {
-                case 4: path |= (static_cast<uint32_t>(proof_bytes[3]) << 24);
-                case 3: path |= (static_cast<uint32_t>(proof_bytes[2]) << 16);
-                case 2: path |= (static_cast<uint32_t>(proof_bytes[1]) <<  8);
-                case 1: path |=  static_cast<uint32_t>(proof_bytes[0]);
+                case 4: path |= (static_cast<uint32_t>(proof_bytes[3]) << 24); [[fallthrough]];
+                case 3: path |= (static_cast<uint32_t>(proof_bytes[2]) << 16); [[fallthrough]];
+                case 2: path |= (static_cast<uint32_t>(proof_bytes[1]) <<  8); [[fallthrough]];
+                case 1: path |=  static_cast<uint32_t>(proof_bytes[0]);        [[fallthrough]];
                 case 0: break;
                 default:
                     return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_INVALID_PROOF);
