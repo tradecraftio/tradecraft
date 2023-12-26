@@ -1349,7 +1349,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     partial3_sigs.signatures.emplace(keys[2].GetPubKey().GetID(), SigPair(keys[2].GetPubKey(), sig3));
 
     std::array<SignatureData, 8> partials;
-    for (int i = 0; i < partials.size(); ++i) {
+    for (std::size_t i = 0; i < partials.size(); ++i) {
         if (i & 1) {
             partials[i].signatures.emplace(keys[0].GetPubKey().GetID(), SigPair(keys[0].GetPubKey(), sig1));
         }
