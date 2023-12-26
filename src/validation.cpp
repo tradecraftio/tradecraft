@@ -4154,7 +4154,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             CDataStream ds(block.vtx[0]->vin[0].scriptWitness.stack[0], SER_NETWORK, PROTOCOL_VERSION);
             std::vector<uint256> branch;
             branch.resize(witnessdepth);
-            for (int pos = 0; pos < witnessdepth; ++pos) {
+            for (size_t pos = 0; pos < witnessdepth; ++pos) {
                 ds >> branch[pos];
             }
             bool invalid = true;
