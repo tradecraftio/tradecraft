@@ -2268,7 +2268,6 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         return OutputType::LEGACY;
     }
 
-    bool any_tr{false};
     bool any_wpk{false};
     bool any_pkh{false};
 
