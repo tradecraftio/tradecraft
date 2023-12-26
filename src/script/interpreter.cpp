@@ -1042,6 +1042,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     }
                     // in legacy scripts, fall through
                 }
+                [[fallthrough]];
                 case OP_PICK: // and OP_ROLL
                 {
                     // (xn ... x2 x1 x0 n - xn ... x2 x1 x0 xn)
