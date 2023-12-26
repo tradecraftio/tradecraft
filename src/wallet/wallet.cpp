@@ -2270,14 +2270,11 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
 
     bool any_tr{false};
     bool any_wpk{false};
-    bool any_sh{false};
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
         if (std::get_if<WitnessV0ShortHash>(&recipient.dest)) {
             any_wpk = true;
-        } else if (std::get_if<ScriptHash>(&recipient.dest)) {
-            any_sh = true;
         } else if (std::get_if<PKHash>(&recipient.dest)) {
             any_pkh = true;
         }
