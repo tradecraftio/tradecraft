@@ -130,7 +130,6 @@ std::pair<int64_t, int64_t> GetFilteredAdjustmentFactor(const CBlockIndex* pinde
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
-    static const unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // Special, one-time adjustment due to the "hash crash" of Apr/May 2013
     // which rushed the introduction of the new difficulty adjustment filter.
