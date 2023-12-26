@@ -60,7 +60,6 @@ public:
         return *this;
     }
 
-    int GetType() const { return m_type; }
     int GetVersion() const { return m_version; }
 private:
     const int m_type;
