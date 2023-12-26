@@ -1421,7 +1421,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         // corresponding to our bitfield length, so that we don't risk
                         // any malleability or implementation / platform-defined
                         // behavior.
-                        if ((ser_hint < 0) || (ser_hint >= (1 << nKeysCount))) {
+                        if ((ser_hint < 0) || (ser_hint >= (1LL << nKeysCount))) {
                             return set_error(serror, SCRIPT_ERR_MULTISIG_HINT);
                         }
                         // Fill the skip-bitfield of our MultiSigHint object
