@@ -1281,7 +1281,7 @@ UniValue stratum_mining_aux_submit(StratumClient& client, const UniValue& params
 
     const UniValue& commit_branch = params[2].get_array();
     aux_pow.m_commit_branch.clear();
-    for (int i = 0; i < commit_branch.size(); ++i) {
+    for (size_t i = 0; i < commit_branch.size(); ++i) {
         const UniValue& inner_hash_node = commit_branch[i].get_array();
         if (inner_hash_node.size() != 2) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "commit_branch has unexpected size; must be of the form [[int, uint256]...]");
@@ -1333,7 +1333,7 @@ UniValue stratum_mining_aux_submit(StratumClient& client, const UniValue& params
 
     const UniValue& aux_branch = params[7].get_array();
     aux_pow.m_aux_branch.clear();
-    for (int i = 0; i < aux_branch.size(); ++i) {
+    for (size_t i = 0; i < aux_branch.size(); ++i) {
         aux_pow.m_aux_branch.push_back(ParseUInt256(aux_branch[i], "aux_branch"));
     }
     if (aux_pow.m_aux_branch.size() > MAX_AUX_POW_BRANCH_LENGTH) {
