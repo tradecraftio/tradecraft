@@ -2578,7 +2578,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(time_connect),
              Ticks<MillisecondsDouble>(time_connect) / num_blocks_total);
 
-    if (block.vtx[0]->lock_height != pindex->nHeight) {
+    if (static_cast<int64_t>(block.vtx[0]->lock_height) != static_cast<int64_t>(pindex->nHeight)) {
         LogPrintf("ERROR: coinbase lock_height != block height (%d != %d)\n", block.vtx[0]->lock_height, pindex->nHeight);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-lock-height");
     }
