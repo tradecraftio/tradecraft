@@ -1326,17 +1326,6 @@ std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptCo
     return key_provider;
 }
 
-std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseScriptContext ctx, const SigningProvider& provider)
-{
-    CPubKey pubkey{xkey.GetEvenCorrespondingCPubKey()};
-    std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
-    KeyOriginInfo info;
-    if (provider.GetKeyOriginByXOnly(xkey, info)) {
-        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider), /*apostrophe=*/false);
-    }
-    return key_provider;
-}
-
 /**
  * The context for parsing a Miniscript descriptor (either from Script or from its textual representation).
  */
