@@ -150,7 +150,6 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 10000;
     tx.lock_height = txFirst[1]->lock_height;
     uint256 hashMediumFeeTx = tx.GetHash();
-    uint32_t refheightMediumFeeTx = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
 
     // This tx has a high fee, but depends on the first transaction
@@ -184,7 +183,6 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
     tx.lock_height = refheightFreeTx;
     uint256 hashLowFeeTx = tx.GetHash();
-    uint32_t refheightLowFeeTx = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(feeToUse).FromTx(tx));
     pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
     // Verify that the free tx and the low fee tx didn't get selected
@@ -224,7 +222,6 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 100000000 - feeToUse;
     tx.lock_height = refheightFreeTx2;
     uint256 hashLowFeeTx2 = tx.GetHash();
-    uint32_t refheightLowFeeTx2 = tx.lock_height;
     tx_mempool.addUnchecked(entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
     pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
 
