@@ -1643,6 +1643,7 @@ void BlockWatcher()
             // update, however.
             CBlockIndex* tip = nullptr;
             if (g_context && g_context->chainman) {
+                LOCK(g_context->chainman->GetMutex());
                 tip = g_context->chainman->ActiveChain().Tip();
             }
             if (client.m_last_tip == tip) {
