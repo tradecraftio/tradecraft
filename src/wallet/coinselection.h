@@ -96,9 +96,9 @@ public:
     CAmount ancestor_bump_fees{0};
 
     COutput(uint32_t atheight, CAmount adjusted, const COutPoint& outpoint, const SpentOutput& spent_output, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
-        : atheight{atheight},
+        : outpoint{outpoint},
+          atheight{atheight},
           adjusted{adjusted},
-          outpoint{outpoint},
           txout{spent_output.out},
           refheight{spent_output.refheight},
           depth{depth},
