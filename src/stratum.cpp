@@ -696,7 +696,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
             // Write the commitment identifier.
             static const std::array<unsigned char, 4> id
                 = { 0x4b, 0x4a, 0x49, 0x48 };
-            midstate.Write(id.begin(), 4);
+            midstate.Write(id.data(), 4);
             // Write the transaction's nLockTime field.
             CDataStream lock_time(SER_NETWORK, PROTOCOL_VERSION);
             lock_time << aux_pow.m_aux_lock_time;
