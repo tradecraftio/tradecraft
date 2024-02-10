@@ -788,7 +788,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Node chainman not found when submitting block");
     }
     if (extranonce1.size() != 8) {
-        std::string msg = strprintf("extranonce1 is wrong length (received %d bytes; expected %d bytes", extranonce2.size(), 8);
+        std::string msg = strprintf("extranonce1 is wrong length (received %d bytes; expected %d bytes", extranonce1.size(), 8);
         LogPrint(BCLog::STRATUM, "%s\n", msg);
         throw JSONRPCError(RPC_INVALID_PARAMETER, msg);
     }
