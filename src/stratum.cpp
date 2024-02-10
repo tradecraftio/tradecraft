@@ -922,6 +922,10 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
     }
 
     if (res) {
+        // Remove the half-solved work as it is no longer relevant.
+        if (half_solved_work && *half_solved_work == job_id) {
+            half_solved_work = std::nullopt;
+        }
         // Block was accepted, so the chain tip was updated.
         //
         // If the client is mining directly to the local wallet, consume the
