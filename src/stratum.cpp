@@ -881,7 +881,8 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
         blkhdr.nBits = current_work.GetBlock().nBits;
         blkhdr.nNonce = nNonce;
 
-        res = CheckProofOfWork(blkhdr, Params().GetConsensus());
+        const Consensus::Params& params = Params().GetConsensus();
+        res = IsProtocolCleanupActive(params, current_work.GetBlock()) || CheckProofOfWork(blkhdr, params);
         uint256 hash = blkhdr.GetHash();
         if (res) {
             LogPrintf("GOT BLOCK!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
@@ -989,6 +990,12 @@ bool SubmitAuxiliaryBlock(StratumClient& client, const CTxDestination& addr, con
 
     half_solved_work = new_job_id;
     client.m_send_work = true;
+
+    if (IsProtocolCleanupActive(params, new_work.GetBlock())) {
+        LogPrint(BCLog::STRATUM, "Protocol cleanup is active; submitting block directly to the network.\n");
+        const std::vector<unsigned char> extranonce2(4, 0x00);
+        return SubmitBlock(client, new_job_id, new_work, client.ExtraNonce1(new_job_id), extranonce2, new_work.GetBlock().nVersion, new_work.GetBlock().nTime, 0);
+    }
 
     return false;
 }
