@@ -491,6 +491,12 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
                            : std::nullopt);
     if (second_stage) {
         double diff = ClampDifficulty(client, second_stage->second.diff);
+        if ((second_stage->second.nBits & 0xffff8000) == 0x1d008000) {
+            // As a special case, difficulty <2 shares will be reported as
+            // difficulty 1 in the stratum protocol, irrespective of the
+            // client's preference or the -miningmindifficulty setting.
+            diff = 1.0;
+        }
 
         UniValue set_difficulty(UniValue::VOBJ);
         set_difficulty.pushKV("id", client.m_nextid++);
