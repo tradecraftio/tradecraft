@@ -81,8 +81,8 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         embedded_privkey, embedded_pubkey = generate_keypair(wif=True)
         p2sh_p2wsh_address = self.nodes[1].createmultisig(1, [embedded_pubkey.hex()], "p2sh-segwit")
         # send transaction to P2SH-P2WSH 1-of-1 multisig address
-        self.block_hash = self.generate(self.nodes[0], COINBASE_MATURITY + 1)
-        self.blk_idx = 0
+        self.block_hash = self.generate(self.nodes[0], COINBASE_MATURITY + 2)
+        self.blk_idx = 1
         self.send_to_address(p2sh_p2wsh_address["address"], 49.999)
         self.generate(self.nodes[0], 1)
         # Get the UTXO info from scantxoutset

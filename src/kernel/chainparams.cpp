@@ -460,7 +460,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_FINALTX].min_activation_height = 0; // No activation delay
 
@@ -523,16 +523,16 @@ public:
         m_assumeutxo_data = {
             {
                 .height = 110,
-                .hash_serialized = AssumeutxoHash{uint256S("0x6657b736d4fe4db0cbc796789e812d5dba7f5c143764b1b6905612f1830609d1")},
-                .nChainTx = 111,
-                .blockhash = uint256S("0x696e92821f65549c7ee134edceeeeaaa4105647a3c4fd9f298c0aec0ab50425c")
+                .hash_serialized = AssumeutxoHash{uint256S("0xff639020089a1befe6c55c6ef696adf9c4911aa00547e230efd7d00c48f44f25")},
+                .nChainTx = 121,
+                .blockhash = uint256S("0x4294742361c4131179bc1f78d483bfbb12c691b1f43da7484bbc99d901e6a071")
             },
             {
                 // For use by test/functional/feature_assumeutxo.py
                 .height = 299,
-                .hash_serialized = AssumeutxoHash{uint256S("0xa4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27")},
-                .nChainTx = 334,
-                .blockhash = uint256S("0x3d1f7c510e5ae1c540549402ab72ec8235a57b3866f6441ed512af01a634c1ff")
+                .hash_serialized = AssumeutxoHash{uint256S("0xd8006e8892c18986f210740b08a8f8609a6c53bd1eb01373586444eb5ea7c79a")},
+                .nChainTx = 533,
+                .blockhash = uint256S("0x6d3daa7651234fc27576c3a081fffc1db33bdc9060df4954f0dd6de945da66b3")
             },
         };
 
