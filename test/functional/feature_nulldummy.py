@@ -55,7 +55,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         # This script tests NULLDUMMY activation, which is part of the 'segwit' deployment, so we go through
         # normal segwit activation here (and don't use the default always-on behaviour).
         self.extra_args = [[
-            f'-testactivationheight=segwit@{COINBASE_MATURITY + 5}',
+            f'-testactivationheight=segwit@{COINBASE_MATURITY + 6}',
             '-addresstype=legacy',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
@@ -78,13 +78,13 @@ class NULLDUMMYTest(BitcoinTestFramework):
                              "redeemScript": cms["redeemScript"]}
         self.wit_ms_address = wms['address']
 
-        self.coinbase_blocks = self.generate(self.nodes[0], 2)  # block height = 2
+        self.coinbase_blocks = self.generate(self.nodes[0], 3)[1:]  # block height = 3
         coinbase_txid = []
         for i in self.coinbase_blocks:
             coinbase_txid.append(self.nodes[0].getblock(i)['tx'][0])
         self.generate(self.nodes[0], COINBASE_MATURITY)  # block height = COINBASE_MATURITY + 2
         self.lastblockhash = self.nodes[0].getbestblockhash()
-        self.lastblockheight = COINBASE_MATURITY + 2
+        self.lastblockheight = COINBASE_MATURITY + 3
         self.lastblocktime = int(time.time()) + self.lastblockheight
 
         self.log.info(f"Test 1: NULLDUMMY compliant base transactions should be accepted to mempool and mined before activation [{COINBASE_MATURITY + 3}]")
