@@ -5,7 +5,12 @@
 """Test node responses to invalid transactions.
 
 In this test we connect to one node over p2p, and test tx requests."""
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+    get_final_tx_info,
+    add_final_tx,
+)
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -49,13 +54,16 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.bootstrap_p2p()  # Add one p2p connection to the node
 
+        # Let bitcoind handle the block-final initial output logic
+        self.generate(self.nodes[0], 1)
+
         best_block = self.nodes[0].getbestblockhash()
         tip = int(best_block, 16)
         best_block_time = self.nodes[0].getblock(best_block)['time']
         block_time = best_block_time + 1
 
         self.log.info("Create a new block with an anyone-can-spend coinbase.")
-        height = 1
+        height = self.nodes[0].getblockcount() + 1
         block = create_block(tip, create_coinbase(height), block_time)
         block.solve()
         # Save the coinbase for later
@@ -185,7 +193,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         tip = int(node.getbestblockhash(), 16)
         height = node.getblockcount() + 1
         block_A = create_block(tip, create_coinbase(height))
+        final_tx = get_final_tx_info(node)
         block_A.vtx.extend([tx_withhold, tx_withhold_until_block_A, tx_orphan_include_by_block_A])
+        final_tx = add_final_tx(final_tx, block_A)
         block_A.hashMerkleRoot = block_A.calc_merkle_root()
         block_A.solve()
 
@@ -215,6 +225,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         height = node.getblockcount() + 1
         block_B = create_block(tip, create_coinbase(height))
         block_B.vtx.extend([tx_withhold_until_block_B, tx_orphan_include_by_block_B])
+        final_tx = add_final_tx(final_tx, block_B)
         block_B.hashMerkleRoot = block_B.calc_merkle_root()
         block_B.solve()
 
