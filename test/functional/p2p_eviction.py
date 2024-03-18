@@ -17,6 +17,8 @@ import time
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
+    get_final_tx_info,
+    add_final_tx,
 )
 from test_framework.messages import (
     msg_pong,
@@ -66,6 +68,7 @@ class P2PEvict(BitcoinTestFramework):
             tip = int(best_block, 16)
             best_block_time = node.getblock(best_block)['time']
             block = create_block(tip, create_coinbase(node.getblockcount() + 1), best_block_time + 1)
+            add_final_tx(get_final_tx_info(node), block)
             block.solve()
             block_peer.send_blocks_and_test([block], node, success=True)
             protected_peers.add(current_peer)
