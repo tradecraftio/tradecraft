@@ -730,6 +730,25 @@ Set maximum BIP141 block weight (default: 3996000)
 .IP
 Set lowest fee rate (in BTC/kvB) for transactions to be included in
 block creation. (default: 0.00001)
+.HP
+\fB\-carryforward=\fR<address>
+.IP
+Create an output to the specified address in the block\-final
+transaction, typically to provide an input to the block\-final
+transaction of the next block (default: use wallet\-generated
+change address)
+.HP
+\fB\-minesweepto=\fR<address>
+.IP
+Use the block\-final transaction to send all value of the
+walletblockfinaltx wallet to the specified address in generated
+block templates
+.HP
+\fB\-walletblockfinaltx=\fR<wallet>
+.IP
+Use the named wallet for constructing block\-final transactions using
+wallet outputs prior to activation of the block\-final transaction
+rules
 .PP
 RPC server options:
 .HP
