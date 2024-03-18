@@ -25,6 +25,9 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.num_nodes = 2
 
     def run_test(self):
+        # Let bitcoind handle the block-final initial output logic
+        self.generate(self.nodes[0], 1)
+
         self.wallet = MiniWallet(self.nodes[0])
 
         self.check_tx_relay()

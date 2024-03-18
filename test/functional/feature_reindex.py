@@ -40,7 +40,7 @@ class ReindexTest(BitcoinTestFramework):
 
         # In this test environment, blocks will always be in order (since
         # we're generating them rather than getting them from peers), so to
-        # test out-of-order handling, swap blocks 1 and 2 on disk.
+        # test out-of-order handling, swap blocks 2 and 3 on disk.
         blk0 = self.nodes[0].blocks_path / "blk00000.dat"
         xor_dat = self.nodes[0].read_xor_key()
 
@@ -48,7 +48,7 @@ class ReindexTest(BitcoinTestFramework):
             # Read at least the first few blocks (including genesis)
             b = util_xor(bf.read(2000), xor_dat, offset=0)
 
-            # Find the offsets of blocks 2, 3, and 4 (the first 3 blocks beyond genesis)
+            # Find the offsets of blocks 2, 3, 4, and 5 (the first 4 blocks beyond genesis)
             # by searching for the regtest marker bytes (see pchMessageStart).
             def find_block(b, start):
                 return b.find(MAGIC_BYTES["regtest"], start)+4
@@ -58,14 +58,15 @@ class ReindexTest(BitcoinTestFramework):
             b2_start = find_block(b, genesis_start)
             b3_start = find_block(b, b2_start)
             b4_start = find_block(b, b3_start)
+            b5_start = find_block(b, b4_start)
 
-            # Blocks 2 and 3 should be the same size.
-            assert_equal(b3_start - b2_start, b4_start - b3_start)
+            # Blocks 3 and 4 should be the same size.
+            assert_equal(b4_start - b3_start, b5_start - b4_start)
 
-            # Swap the second and third blocks (don't disturb the genesis block).
-            bf.seek(b2_start)
-            bf.write(util_xor(b[b3_start:b4_start], xor_dat, offset=b2_start))
-            bf.write(util_xor(b[b2_start:b3_start], xor_dat, offset=b3_start))
+            # Swap the third and forth blocks (don't disturb the genesis block).
+            bf.seek(b3_start)
+            bf.write(util_xor(b[b4_start:b5_start], xor_dat, offset=b3_start))
+            bf.write(util_xor(b[b3_start:b4_start], xor_dat, offset=b4_start))
 
         # The reindexing code should detect and accommodate out of order blocks.
         with self.nodes[0].assert_debug_log([
