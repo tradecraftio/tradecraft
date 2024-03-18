@@ -53,7 +53,7 @@ Node1 is unused in tests 3-7:
 
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
+from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script, add_final_tx
 from test_framework.messages import CBlockHeader, CInv, MSG_BLOCK, msg_block, msg_headers, msg_inv
 from test_framework.p2p import p2p_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -162,9 +162,17 @@ class AcceptBlockTest(BitcoinTestFramework):
         # 4c. Now mine 288 more blocks and deliver; all should be processed but
         # the last (height-too-high) on node (as long as it is not missing any headers)
         tip = block_h3
+        final_tx = [{
+            'txid': block_h1f.vtx[0].hash,
+            'vout': 0,
+            'amount': 0,
+        }]
         all_blocks = []
         for i in range(288):
-            next_block = create_block(tip.sha256, create_coinbase(i + 4), tip.nTime+1)
+            height = i + 4
+            next_block = create_block(tip.sha256, create_coinbase(height), tip.nTime+1)
+            if height > 100:
+                final_tx = add_final_tx(final_tx, next_block)
             next_block.solve()
             all_blocks.append(next_block)
             tip = next_block
@@ -233,15 +241,24 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # 8. Create a chain which is invalid at a height longer than the
         # current chain, but which has more blocks on top of that
+        final_tx = [{
+            'txid': all_blocks[284].vtx[-1].hash,
+            'vout': n,
+            'amount': all_blocks[284].vtx[-1].vout[n].nValue,
+        } for n in range(len(all_blocks[284].vtx[-1].vout))]
         block_289f = create_block(all_blocks[284].sha256, create_coinbase(289), all_blocks[284].nTime+1)
+        final_tx = add_final_tx(final_tx, block_289f)
         block_289f.solve()
         block_290f = create_block(block_289f.sha256, create_coinbase(290), block_289f.nTime+1)
+        final_tx = add_final_tx(final_tx, block_290f)
         block_290f.solve()
         # block_291 spends a coinbase below maturity!
         tx_to_add = create_tx_with_script(block_290f.vtx[0], 0, script_sig=b"42", amount=1)
         block_291 = create_block(block_290f.sha256, create_coinbase(291), block_290f.nTime+1, txlist=[tx_to_add])
+        final_tx = add_final_tx(final_tx, block_291)
         block_291.solve()
         block_292 = create_block(block_291.sha256, create_coinbase(292), block_291.nTime+1)
+        final_tx = add_final_tx(final_tx, block_292)
         block_292.solve()
 
         # Now send all the headers on the chain and enough blocks to trigger reorg
@@ -282,6 +299,7 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # Now send a new header on the invalid chain, indicating we're forked off, and expect to get disconnected
         block_293 = create_block(block_292.sha256, create_coinbase(293), block_292.nTime+1)
+        final_tx = add_final_tx(final_tx, block_293)
         block_293.solve()
         headers_message = msg_headers()
         headers_message.headers.append(CBlockHeader(block_293))

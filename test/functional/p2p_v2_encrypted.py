@@ -6,8 +6,10 @@
 Test encrypted v2 p2p proposed in BIP 324
 """
 from test_framework.blocktools import (
+    add_final_tx,
     create_block,
     create_coinbase,
+    get_final_tx_info,
 )
 from test_framework.p2p import (
     P2PDataStore,
@@ -36,9 +38,11 @@ class P2PEncrypted(BitcoinTestFramework):
         tip = int(last_block, 16)
         tipheight = node.getblockcount()
         last_block_time = node.getblock(last_block)['time']
+        final_tx = get_final_tx_info(node)
         for _ in range(number):
             # Create some blocks
             block = create_block(tip, create_coinbase(tipheight + 1), last_block_time + 1)
+            final_tx = add_final_tx(final_tx, block)
             block.solve()
             test_blocks.append(block)
             tip = block.sha256
