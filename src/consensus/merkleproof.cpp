@@ -257,7 +257,7 @@ MerkleTree::MerkleTree(const MerkleTree& left, const MerkleTree& right) {
     m_verify.insert(m_verify.end(), right.m_verify.begin(), right.m_verify.end());
 }
 
-uint256 MerkleTree::GetHash(bool* invalid) const {
+uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) const {
     /* As a special case, an empty proof with no verify hashes results in the
      * unsalted hash of empty string.  Although this requires extra work in
      * this implementation to support, it provides continuous semantics to the
@@ -266,6 +266,9 @@ uint256 MerkleTree::GetHash(bool* invalid) const {
     if (m_proof.m_path.empty() && m_verify.empty() && m_proof.m_skip.empty()) {
         if (invalid) {
             *invalid = false;
+        }
+        if (branches) {
+            branches->clear();
         }
         return HashWriter().GetHash();
     }
@@ -287,6 +290,13 @@ uint256 MerkleTree::GetHash(bool* invalid) const {
         if (invalid) {
             *invalid = false;
         }
+        if (branches) {
+            branches->clear();
+            // If it is a verify hash, then the caller expects a proof.
+            if (!m_verify.empty()) {
+                branches->emplace_back();
+            }
+        }
         return m_verify.empty() ? m_proof.m_skip[0]
                                 : m_verify[0];
     }
@@ -298,16 +308,29 @@ uint256 MerkleTree::GetHash(bool* invalid) const {
     std::size_t verify_pos = 0;
     std::size_t skip_pos = 0;
 
-    auto visitor = [this, &stack, &verify_pos, &skip_pos](std::size_t depth, MerkleLink value, bool side) -> bool {
+    std::vector<MerkleBranch> proofs(m_verify.size());
+    std::vector<std::size_t> extra_depths(m_verify.size(), 0);
+    std::vector<bool> vpath;
+
+    auto visitor = [this, &stack, &verify_pos, &skip_pos, &proofs, &extra_depths, &vpath](std::size_t depth, MerkleLink value, bool side) -> bool {
         const uint256* new_hash = nullptr;
         switch (value) {
             case MerkleLink::DESCEND:
+                for (size_t pos = 0; pos < verify_pos; ++pos) {
+                    ++extra_depths[pos];
+                }
+                vpath.push_back(side);
                 stack.emplace_back(false, uint256());
                 return false;
 
             case MerkleLink::VERIFY:
                 if (verify_pos == m_verify.size()) // detect read past end of verify hashes list
                     return true;
+                // Include the last branch in the path for this hash:
+                proofs[verify_pos].m_vpath.push_back(side);
+                proofs[verify_pos].m_vpath.insert(
+                    proofs[verify_pos].m_vpath.end(),
+                    vpath.rbegin(), vpath.rend());
                 new_hash = &m_verify[verify_pos++];
                 break;
 
@@ -320,9 +343,31 @@ uint256 MerkleTree::GetHash(bool* invalid) const {
 
         uint256 tmp;
         while (stack.back().first) {
+            for (size_t pos = 0; pos < verify_pos; ++pos) {
+                if (extra_depths[pos]) {
+                    --extra_depths[pos];
+                } else {
+                    // Note the off-by-1 "error" in the expression below.  The
+                    // root of the tree is at depth 0, so the first links are
+                    // at depth 1.  Our stack is zero based, of course, so
+                    // `depth` needs to be offset by 1, which it implicitly is
+                    // in the subtraction.
+                    if (proofs[pos].m_vpath[proofs[pos].m_vpath.size()-depth]) {
+                        proofs[pos].m_branch.push_back(stack.back().second);
+                    } else {
+                        proofs[pos].m_branch.push_back(*new_hash);
+                    }
+                }
+            }
+            // Move one level up the tree.  At the root node the path is empth
+            // though, so avoid popping an empty path.
+            if (!vpath.empty()) {
+                vpath.pop_back();
+            }
             tmp = MerkleHash_Sha256Midstate(stack.back().second, *new_hash);
             new_hash = &tmp;
             stack.pop_back();
+            --depth;
         }
 
         stack.back().first = true;
@@ -343,11 +388,18 @@ uint256 MerkleTree::GetHash(bool* invalid) const {
         return uint256();
     }
 
+    bool failed = (verify_pos != m_verify.size() // did not use all verify hashes
+                  || skip_pos != m_proof.m_skip.size()); // did not use all skip hashes
     if (invalid) {
-        *invalid = (verify_pos != m_verify.size() // did not use all verify hashes
-                   || skip_pos != m_proof.m_skip.size()); // did not use all skip hashes
+        *invalid = failed;
+    }
+    if (failed) {
+        return uint256();
     }
 
+    if (branches) {
+        *branches = std::move(proofs);
+    }
     return stack.back().second;
 }
 
