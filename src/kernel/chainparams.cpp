@@ -128,7 +128,7 @@ public:
 
         /**
          * The size expansion rule change is scheduled for activation on 16 Apr
-         * 2025 at midnight UTC.  This is 4PM PDT, 7PM EDT, and 9AM JST.  Since
+         * 2026 at midnight UTC.  This is 4PM PDT, 7PM EDT, and 9AM JST.  Since
          * the activation time is median-time-past, it'll actually trigger about
          * 90 minutes after this wall-clock time.
          *
@@ -143,7 +143,7 @@ public:
          * be set to the highest value used in prior releases, and becomes the
          * earliest time at which the hard-fork rules can activate.
          */
-        consensus.size_expansion_activation_time = 1744786800;
+        consensus.size_expansion_activation_time = 1776297600;
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
@@ -317,8 +317,8 @@ public:
         consensus.protocol_cleanup_activation_time = 1726470000;
 
         // Two months prior to main net
-        // 16 February 2025 00:00:00 UTC
-        consensus.size_expansion_activation_time = 1739692800;
+        // 16 February 2026 00:00:00 UTC
+        consensus.size_expansion_activation_time = 1771200000;
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
@@ -464,8 +464,8 @@ public:
         consensus.protocol_cleanup_activation_time = 1726470000;
 
         // Two months prior to main net
-        // 16 February 2025 00:00:00 UTC
-        consensus.size_expansion_activation_time = 1739692800;
+        // 16 February 2026 00:00:00 UTC
+        consensus.size_expansion_activation_time = 1771200000;
 
         consensus.original_adjust_interval = 2016; // two weeks
         consensus.filtered_adjust_interval = 9; // 1.5 hrs
