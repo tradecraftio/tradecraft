@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_WALLETMODELTRANSACTION_H
-#define BITCOIN_QT_WALLETMODELTRANSACTION_H
+#ifndef FREICOIN_QT_WALLETMODELTRANSACTION_H
+#define FREICOIN_QT_WALLETMODELTRANSACTION_H
 
 #include <primitives/transaction.h>
 #include <qt/sendcoinsrecipient.h>
@@ -55,4 +55,4 @@ private:
     CAmount fee{0};
 };
 
-#endif // BITCOIN_QT_WALLETMODELTRANSACTION_H
+#endif // FREICOIN_QT_WALLETMODELTRANSACTION_H

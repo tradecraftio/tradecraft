@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ZMQ_ZMQRPC_H
-#define BITCOIN_ZMQ_ZMQRPC_H
+#ifndef FREICOIN_ZMQ_ZMQRPC_H
+#define FREICOIN_ZMQ_ZMQRPC_H
 
 class CRPCTable;
 
 void RegisterZMQRPCCommands(CRPCTable& t);
 
-#endif // BITCOIN_ZMQ_ZMQRPC_H
+#endif // FREICOIN_ZMQ_ZMQRPC_H

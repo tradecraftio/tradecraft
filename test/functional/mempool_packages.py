@@ -23,7 +23,7 @@ from test_framework.messages import (
     DEFAULT_DESCENDANT_LIMIT,
 )
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -36,7 +36,7 @@ CUSTOM_DESCENDANT_LIMIT = 10
 assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
 
 
-class MempoolPackagesTest(BitcoinTestFramework):
+class MempoolPackagesTest(FreicoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

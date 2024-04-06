@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_UTXO_SNAPSHOT_H
-#define BITCOIN_NODE_UTXO_SNAPSHOT_H
+#ifndef FREICOIN_NODE_UTXO_SNAPSHOT_H
+#define FREICOIN_NODE_UTXO_SNAPSHOT_H
 
 #include <coins.h>
 #include <kernel/cs_main.h>
@@ -147,4 +147,4 @@ std::optional<fs::path> FindSnapshotChainstateDir();
 
 } // namespace node
 
-#endif // BITCOIN_NODE_UTXO_SNAPSHOT_H
+#endif // FREICOIN_NODE_UTXO_SNAPSHOT_H

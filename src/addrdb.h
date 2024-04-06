@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ADDRDB_H
-#define BITCOIN_ADDRDB_H
+#ifndef FREICOIN_ADDRDB_H
+#define FREICOIN_ADDRDB_H
 
 #include <net_types.h> // For banmap_t
 #include <univalue.h>
@@ -78,4 +78,4 @@ void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& a
  */
 std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path);
 
-#endif // BITCOIN_ADDRDB_H
+#endif // FREICOIN_ADDRDB_H

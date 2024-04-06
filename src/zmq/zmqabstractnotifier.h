@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
-#define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#ifndef FREICOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#define FREICOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
 #include <cstdint>
 #include <memory>
@@ -74,4 +74,4 @@ protected:
     int outbound_message_high_water_mark; // aka SNDHWM
 };
 
-#endif // BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#endif // FREICOIN_ZMQ_ZMQABSTRACTNOTIFIER_H

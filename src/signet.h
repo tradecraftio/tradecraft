@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SIGNET_H
-#define BITCOIN_SIGNET_H
+#ifndef FREICOIN_SIGNET_H
+#define FREICOIN_SIGNET_H
 
 #include <consensus/params.h>
 #include <primitives/block.h>
@@ -45,4 +45,4 @@ public:
     const CTransaction m_to_sign;
 };
 
-#endif // BITCOIN_SIGNET_H
+#endif // FREICOIN_SIGNET_H

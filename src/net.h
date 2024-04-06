@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NET_H
-#define BITCOIN_NET_H
+#ifndef FREICOIN_NET_H
+#define FREICOIN_NET_H
 
 #include <chainparams.h>
 #include <common/bloom.h>
@@ -1246,4 +1246,4 @@ extern std::function<void(const CAddress& addr,
                           bool is_incoming)>
     CaptureMessage;
 
-#endif // BITCOIN_NET_H
+#endif // FREICOIN_NET_H

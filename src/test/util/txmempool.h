@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_TXMEMPOOL_H
-#define BITCOIN_TEST_UTIL_TXMEMPOOL_H
+#ifndef FREICOIN_TEST_UTIL_TXMEMPOOL_H
+#define FREICOIN_TEST_UTIL_TXMEMPOOL_H
 
 #include <txmempool.h>
 #include <util/time.h>
@@ -45,4 +45,4 @@ struct TestMemPoolEntryHelper {
     TestMemPoolEntryHelper& SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
 };
 
-#endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H
+#endif // FREICOIN_TEST_UTIL_TXMEMPOOL_H

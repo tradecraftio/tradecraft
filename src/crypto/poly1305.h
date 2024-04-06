@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_POLY1305_H
-#define BITCOIN_CRYPTO_POLY1305_H
+#ifndef FREICOIN_CRYPTO_POLY1305_H
+#define FREICOIN_CRYPTO_POLY1305_H
 
 #include <cstdlib>
 #include <stdint.h>
@@ -25,4 +25,4 @@
 void poly1305_auth(unsigned char out[POLY1305_TAGLEN], const unsigned char *m, size_t inlen,
     const unsigned char key[POLY1305_KEYLEN]);
 
-#endif // BITCOIN_CRYPTO_POLY1305_H
+#endif // FREICOIN_CRYPTO_POLY1305_H

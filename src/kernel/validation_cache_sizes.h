@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_VALIDATION_CACHE_SIZES_H
-#define BITCOIN_KERNEL_VALIDATION_CACHE_SIZES_H
+#ifndef FREICOIN_KERNEL_VALIDATION_CACHE_SIZES_H
+#define FREICOIN_KERNEL_VALIDATION_CACHE_SIZES_H
 
 #include <script/sigcache.h>
 
@@ -28,4 +28,4 @@ struct ValidationCacheSizes {
 };
 }
 
-#endif // BITCOIN_KERNEL_VALIDATION_CACHE_SIZES_H
+#endif // FREICOIN_KERNEL_VALIDATION_CACHE_SIZES_H

@@ -65,7 +65,7 @@ from decimal import Decimal
 import itertools
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.descriptors import (
     descsum_create,
     descsum_check,
@@ -76,7 +76,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-class AddressTypeTest(BitcoinTestFramework):
+class AddressTypeTest(FreicoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -178,11 +178,11 @@ class AddressTypeTest(BitcoinTestFramework):
         assert self.nodes[node].validateaddress(address)['isvalid']
 
         # Use a ridiculously roundabout way to find the key origin info through
-        # the PSBT logic. However, this does test consistency between the PSBT reported
+        # the PST logic. However, this does test consistency between the PST reported
         # fingerprints/paths and the descriptor logic.
-        psbt = self.nodes[node].createpsbt([{'txid':utxo['txid'], 'vout':utxo['vout']}],[{address:0.00010000}])
-        psbt = self.nodes[node].walletprocesspsbt(psbt, False, "ALL", True)
-        decode = self.nodes[node].decodepsbt(psbt['psbt'])
+        pst = self.nodes[node].createpst([{'txid':utxo['txid'], 'vout':utxo['vout']}],[{address:0.00010000}])
+        pst = self.nodes[node].walletprocesspst(pst, False, "ALL", True)
+        decode = self.nodes[node].decodepst(pst['pst'])
         key_descs = {}
         for deriv in decode['inputs'][0]['bip32_derivs']:
             assert_equal(len(deriv['master_fingerprint']), 8)

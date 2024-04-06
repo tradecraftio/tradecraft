@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_TRANSLATION_H
-#define BITCOIN_UTIL_TRANSLATION_H
+#ifndef FREICOIN_UTIL_TRANSLATION_H
+#define FREICOIN_UTIL_TRANSLATION_H
 
 #include <tinyformat.h>
 
@@ -91,4 +91,4 @@ inline bilingual_str _(const char* psz)
     return bilingual_str{psz, G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz};
 }
 
-#endif // BITCOIN_UTIL_TRANSLATION_H
+#endif // FREICOIN_UTIL_TRANSLATION_H

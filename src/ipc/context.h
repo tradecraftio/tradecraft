@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_IPC_CONTEXT_H
-#define BITCOIN_IPC_CONTEXT_H
+#ifndef FREICOIN_IPC_CONTEXT_H
+#define FREICOIN_IPC_CONTEXT_H
 
 namespace ipc {
 //! Context struct used to give IPC protocol implementations or implementation
@@ -27,4 +27,4 @@ struct Context
 };
 } // namespace ipc
 
-#endif // BITCOIN_IPC_CONTEXT_H
+#endif // FREICOIN_IPC_CONTEXT_H

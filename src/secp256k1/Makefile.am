@@ -249,14 +249,14 @@ include src/modules/schnorrsig/Makefile.am.include
 endif
 
 EXTRA_DIST += src/wycheproof/WYCHEPROOF_COPYING
-EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
-EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json
+EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_freicoin_test.h
+EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_freicoin_test.json
 EXTRA_DIST += tools/tests_wycheproof_generate.py
 
-TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
+TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_freicoin_test.h
 
-src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h:
-	python3 tools/tests_wycheproof_generate.py src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+src/wycheproof/ecdsa_secp256k1_sha256_freicoin_test.h:
+	python3 tools/tests_wycheproof_generate.py src/wycheproof/ecdsa_secp256k1_sha256_freicoin_test.json > $@
 
 testvectors: $(TESTVECTORS)
 

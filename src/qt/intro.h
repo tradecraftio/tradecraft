@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_INTRO_H
-#define BITCOIN_QT_INTRO_H
+#ifndef FREICOIN_QT_INTRO_H
+#define FREICOIN_QT_INTRO_H
 
 #include <QDialog>
 #include <QMutex>
@@ -95,4 +95,4 @@ private:
     friend class FreespaceChecker;
 };
 
-#endif // BITCOIN_QT_INTRO_H
+#endif // FREICOIN_QT_INTRO_H

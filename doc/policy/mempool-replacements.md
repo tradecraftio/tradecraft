@@ -38,11 +38,11 @@ other consensus and policy rules, each of the following conditions are met:
 4. The additional fees (difference between absolute fee paid by the replacement transaction and the
    sum paid by the original transactions) pays for the replacement transaction's bandwidth at or
    above the rate set by the node's incremental relay feerate. For example, if the incremental relay
-   feerate is 1 satoshi/vB and the replacement transaction is 500 virtual bytes total, then the
-   replacement pays a fee at least 500 satoshis higher than the sum of the original transactions.
+   feerate is 1 kria/vB and the replacement transaction is 500 virtual bytes total, then the
+   replacement pays a fee at least 500 kria higher than the sum of the original transactions.
 
    *Rationale*: Try to prevent DoS attacks where an attacker causes the network to repeatedly relay
-   transactions each paying a tiny additional amount in fees, e.g. just 1 satoshi.
+   transactions each paying a tiny additional amount in fees, e.g. just 1 kria.
 
 5. The number of original transactions does not exceed 100. More precisely, the sum of all
    directly conflicting transactions' descendant counts (number of transactions inclusive of itself
@@ -68,7 +68,7 @@ This set of rules is similar but distinct from BIP125.
   **v0.12.0** ([PR 6871](https://github.com/bitcoin/bitcoin/pull/6871)).
 
 * [BIP125](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki) defined based on
-  Bitcoin Core implementation.
+  Freicoin implementation.
 
 * The incremental relay feerate used to calculate the required additional fees is distinct from
   `-minrelaytxfee` and configurable using `-incrementalrelayfee`

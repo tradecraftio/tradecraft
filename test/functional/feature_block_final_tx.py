@@ -22,7 +22,7 @@ Activation after a further 144 blocks.
 from codecs import encode
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     JSONRPCException,
     assert_equal,
@@ -50,7 +50,7 @@ from test_framework.wallet import (
     MiniWalletMode,
 )
 
-class BlockFinalTxTest(BitcoinTestFramework):
+class BlockFinalTxTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-vbparams=finaltx:0:999999999999','-whitelist=127.0.0.1', '-acceptnonstdtxn']]

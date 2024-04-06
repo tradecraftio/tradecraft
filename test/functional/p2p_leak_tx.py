@@ -17,7 +17,7 @@
 
 from test_framework.messages import msg_getdata, CInv, MSG_TX
 from test_framework.p2p import p2p_lock, P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -29,7 +29,7 @@ class P2PNode(P2PDataStore):
         pass
 
 
-class P2PLeakTxTest(BitcoinTestFramework):
+class P2PLeakTxTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

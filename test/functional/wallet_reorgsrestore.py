@@ -28,12 +28,12 @@ from decimal import Decimal
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
         assert_equal,
 )
 
-class ReorgsRestoreTest(BitcoinTestFramework):
+class ReorgsRestoreTest(FreicoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

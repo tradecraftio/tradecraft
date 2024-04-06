@@ -146,14 +146,14 @@ chain for " target " development."))
       "--enable-default-ssp" "yes")
       "--enable-default-pie" "yes"))
 
-(define* (make-bitcoin-cross-toolchain target
+(define* (make-freicoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc (hardened-glibc glibc-2.27))
                                        (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
-desirable for building Bitcoin Core release binaries."
+desirable for building Freicoin release binaries."
   (make-cross-toolchain target
                         base-gcc-for-libc
                         base-kernel-headers
@@ -612,7 +612,7 @@ inspecting signatures in Mach-O binaries.")
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list (make-bitcoin-cross-toolchain target)))
+           (list (make-freicoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-10 binutils cmake-minimal xorriso python-signapple))
           (else '())))))
