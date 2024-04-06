@@ -1,6 +1,6 @@
-// Copyright (c) 2020-2023 The Freicoin Developers
+// Copyright (c) 2020-2024 The Freicoin Developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or <https://www.opensource.org/licenses/mit-license.php>.
 
 #ifndef BITCOIN_STRATUM_H
 #define BITCOIN_STRATUM_H
