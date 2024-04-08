@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/util/setup_common.h>
+
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <test/util/txmempool.h>
@@ -20,8 +22,6 @@
 #include <uint256.h>
 #include <util/time.h>
 #include <validationinterface.h>
-
-#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 

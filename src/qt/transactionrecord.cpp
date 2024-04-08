@@ -105,7 +105,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     sub.address = mapValue["to"];
                 }
 
-                CAmount nValue = txout.nValue;
+                CAmount nValue = txout.GetReferenceValue();
                 /* Add fee to first output */
                 if (nTxFee > 0)
                 {
@@ -126,7 +126,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
 
                 TransactionRecord sub(hash, nTime);
                 sub.idx = i; // vout index
-                sub.credit = txout.nValue;
+                sub.credit = txout.GetReferenceValue();
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (wtx.txout_address_is_mine[i])
                 {

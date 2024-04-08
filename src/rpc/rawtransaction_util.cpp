@@ -295,9 +295,9 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 }
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out.SetReferenceValue(MAX_MONEY);
                 if (prevOut.exists("value")) {
-                    newcoin.out.nValue = AmountFromValue(prevOut.find_value("value"));
+                    newcoin.out.SetReferenceValue(AmountFromValue(prevOut.find_value("value")));
                 }
                 newcoin.nHeight = 1;
                 newcoin.refheight = refheight;
