@@ -669,7 +669,7 @@ static RPCHelpMan getblocktemplate()
                         {RPCResult::Type::OBJ, "", "", {
                             {RPCResult::Type::STR_HEX, "txid", "input txid encoded in little-endian hexadecimal"},
                             {RPCResult::Type::NUM, "vout", "index to the output vector of the previous transaction"},
-                            {RPCResult::Type::NUM, "amount", "value of input"},
+                            {RPCResult::Type::NUM, "amount", "value of input at current refheight"},
                         }},
                     }},
                 }},
@@ -998,7 +998,7 @@ static RPCHelpMan getblocktemplate()
                 // This should never happen
                 in.pushKV("amount", strprintf("Error: UTXO record for block-final input '%s:%d' not found", txin.prevout.hash.GetHex(), txin.prevout.n));
             } else {
-                in.pushKV("amount", (int64_t)pcoin->second.out.nValue);
+                in.pushKV("amount", (int64_t)pcoin->second.GetPresentValue(pindexPrev->nHeight + 1));
             }
             finaltx_prevout.push_back(in);
         }
