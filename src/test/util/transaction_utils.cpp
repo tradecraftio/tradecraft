@@ -29,7 +29,7 @@ CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, int n
     txCredit.vin[0].scriptSig = CScript() << CScriptNum(0) << CScriptNum(0);
     txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txCredit.vout[0].scriptPubKey = scriptPubKey;
-    txCredit.vout[0].nValue = nValue;
+    txCredit.vout[0].SetReferenceValue(nValue);
 
     return txCredit;
 }
@@ -48,7 +48,7 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CSc
     txSpend.vin[0].scriptSig = scriptSig;
     txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txSpend.vout[0].scriptPubKey = CScript();
-    txSpend.vout[0].nValue = txCredit.vout[0].nValue;
+    txSpend.vout[0].SetReferenceValue(txCredit.vout[0].GetReferenceValue());
 
     return txSpend;
 }
@@ -67,16 +67,16 @@ std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keyst
 
     // Create some dummy input transactions
     dummyTransactions[0].vout.resize(2);
-    dummyTransactions[0].vout[0].nValue = nValues[0];
+    dummyTransactions[0].vout[0].SetReferenceValue(nValues[0]);
     dummyTransactions[0].vout[0].scriptPubKey << ToByteVector(key[0].GetPubKey()) << OP_CHECKSIG;
-    dummyTransactions[0].vout[1].nValue = nValues[1];
+    dummyTransactions[0].vout[1].SetReferenceValue(nValues[1]);
     dummyTransactions[0].vout[1].scriptPubKey << ToByteVector(key[1].GetPubKey()) << OP_CHECKSIG;
     AddCoins(coinsRet, CTransaction(dummyTransactions[0]), 0);
 
     dummyTransactions[1].vout.resize(2);
-    dummyTransactions[1].vout[0].nValue = nValues[2];
+    dummyTransactions[1].vout[0].SetReferenceValue(nValues[2]);
     dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[2].GetPubKey()));
-    dummyTransactions[1].vout[1].nValue = nValues[3];
+    dummyTransactions[1].vout[1].SetReferenceValue(nValues[3]);
     dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(PKHash(key[3].GetPubKey()));
     AddCoins(coinsRet, CTransaction(dummyTransactions[1]), 0);
 

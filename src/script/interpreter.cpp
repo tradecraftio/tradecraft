@@ -1399,7 +1399,7 @@ uint256 GetSpentAmountsSHA256(const std::vector<SpentOutput>& outputs_spent)
 {
     HashWriter ss{};
     for (const auto& txout : outputs_spent) {
-        ss << txout.out.nValue;
+        ss << txout.out.GetReferenceValue();
         ss << txout.refheight;
     }
     return ss.GetSHA256();
