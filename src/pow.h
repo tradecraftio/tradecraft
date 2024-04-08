@@ -20,6 +20,8 @@
 #include <consensus/consensus.h>
 #include <consensus/params.h>
 
+#include "primitives/block.h"
+
 #include <stdint.h>
 
 class CBlockHeader;
@@ -28,15 +30,19 @@ class uint256;
 
 int64_t GetFilteredTime(const CBlockIndex* pindexLast, const Consensus::Params&);
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&, Consensus::RuleSet rules);
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params&, Consensus::RuleSet rules);
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params&);
+
+uint32_t GetNextWorkRequiredAux(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params&);
+uint32_t CalculateNextWorkRequiredAux(const CBlockIndex* pindexLast, const Consensus::Params&);
 
 /** Verify that a block's work target is within the range of half to
  ** twice the targets of the past 12 blocks. */
-bool CheckNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params&, Consensus::RuleSet rules);
+bool CheckNextWorkRequiredAux(const CBlockIndex* pindexLast, const CBlockHeader& block, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned char bias, const Consensus::Params&);
+bool CheckAuxiliaryProofOfWork(const CBlockHeader& block, const Consensus::Params&);
+bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params&);
 
 /**
  * Return false if the proof-of-work requirement specified by new_nbits at a
