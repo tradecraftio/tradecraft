@@ -15,6 +15,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <test/util/setup_common.h>
+
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>

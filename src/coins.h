@@ -100,6 +100,12 @@ public:
         return out.IsNull();
     }
 
+    // calculate value of an output at the specified block height
+    CAmount GetPresentValue(uint32_t height) const
+    {
+        return out.GetTimeAdjustedValue((int)height - refheight);
+    }
+
     size_t DynamicMemoryUsage() const {
         return memusage::DynamicUsage(out.scriptPubKey);
     }
