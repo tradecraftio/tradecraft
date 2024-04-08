@@ -130,7 +130,7 @@ struct FuzzedWallet {
     {
         // The fee of "tx" is 0, so this is the total input and output amount
         const CAmount total_amt{
-            std::accumulate(tx.vout.begin(), tx.vout.end(), CAmount{}, [](CAmount t, const CTxOut& out) { return t + out.nValue; })};
+            std::accumulate(tx.vout.begin(), tx.vout.end(), CAmount{}, [](CAmount t, const CTxOut& out) { return t + out.GetReferenceValue(); })};
         const uint32_t tx_size(GetVirtualTransactionSize(CTransaction{tx}));
         std::set<int> subtract_fee_from_outputs;
         if (fuzzed_data_provider.ConsumeBool()) {
@@ -145,7 +145,7 @@ struct FuzzedWallet {
             const CTxOut& tx_out = tx.vout[idx];
             CTxDestination dest;
             ExtractDestination(tx_out.scriptPubKey, dest);
-            CRecipient recipient = {dest, tx_out.nValue, subtract_fee_from_outputs.count(idx) == 1};
+            CRecipient recipient = {dest, tx_out.GetReferenceValue(), subtract_fee_from_outputs.count(idx) == 1};
             recipients.push_back(recipient);
         }
         CCoinControl coin_control;
@@ -263,7 +263,7 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
                 for (const auto& tx : block.vtx) {
                     uint32_t i{0};
                     for (const auto& out : tx->vout) {
-                        coins_new.emplace(out.nValue, COutPoint{tx->GetHash(), i++});
+                        coins_new.emplace(out.GetReferenceValue(), COutPoint{tx->GetHash(), i++});
                     }
                 }
                 chain.emplace_back(coins_new, CBlock{});

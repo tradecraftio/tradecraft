@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <test/util/setup_common.h>
+
 #include <addresstype.h>
 #include <coins.h>
 #include <consensus/consensus.h>
@@ -22,7 +24,6 @@
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <script/solver.h>
-#include <test/util/setup_common.h>
 #include <uint256.h>
 
 #include <vector>
