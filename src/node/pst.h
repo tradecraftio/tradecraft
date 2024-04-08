@@ -41,6 +41,7 @@ struct PSTInputAnalysis {
 struct PSTAnalysis {
     std::optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
     std::optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
+    std::optional<CAmount> demurrage;           //!< Amount of inputs lost to demurrage
     std::optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
     std::vector<PSTInputAnalysis> inputs;      //!< More information about the individual inputs of the transaction
     PSTRole next;                              //!< Which of the BIP 174 roles needs to handle the transaction next

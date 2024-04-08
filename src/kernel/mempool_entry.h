@@ -135,6 +135,7 @@ public:
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
+    int32_t GetReferenceHeight() const { return GetTx().lock_height; }
     const CAmount& GetFee() const { return nFee; }
     int32_t GetTxSize() const
     {

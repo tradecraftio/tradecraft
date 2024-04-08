@@ -170,6 +170,8 @@ void VerifyUseAvailableBalance(SendCoinsDialog& sendCoinsDialog, const WalletMod
     Q_EMIT send_entry->useAvailableBalance(send_entry);
     QVERIFY(send_entry->getValue().amount == walletModel.getCachedBalance().balance);
 
+    const int next_height = walletModel.node().getNumBlocks() + 1;
+
     // Now manually select two coins and click on "useAvailableBalance". Then check updated balance
     // (only the sum of the selected coins should be set).
     int COINS_TO_SELECT = 2;
@@ -179,7 +181,7 @@ void VerifyUseAvailableBalance(SendCoinsDialog& sendCoinsDialog, const WalletMod
     QVERIFY(coins.size() == 1); // context check, coins received only on one destination
     for (const auto& [outpoint, tx_out] : coins.begin()->second) {
         sendCoinsDialog.getCoinControl()->Select(outpoint);
-        sum_selected_coins += tx_out.txout.nValue;
+        sum_selected_coins += tx_out.GetPresentValue(next_height);
         if (++selected == COINS_TO_SELECT) break;
     }
     QVERIFY(selected == COINS_TO_SELECT);
