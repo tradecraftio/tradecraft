@@ -123,7 +123,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         entry.size = 1;
     }
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, 0, m_node.chainman->GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block, m_node.chainman->GetConsensus())) ++block.nNonce;
 
     return block;
 }

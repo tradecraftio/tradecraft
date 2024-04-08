@@ -24,6 +24,7 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <util/vector.h>
+#include <validation.h>
 
 #include <cassert>
 #include <cstdlib>
