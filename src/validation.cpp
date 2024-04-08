@@ -2112,7 +2112,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, refheight, cacheStore, *m_signature_cache, *txdata), &error);
+    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.GetReferenceValue(), refheight, cacheStore, *m_signature_cache, *txdata), &error);
 }
 
 ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, const size_t signature_cache_bytes)
@@ -2291,7 +2291,7 @@ bool IsTriviallySpendable(const Coin& from, const COutPoint& prevout, unsigned i
     txTo.vin[0].scriptSig = CScript();
     txTo.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txTo.vout.resize(1);
-    txTo.vout[0].nValue = 0;
+    txTo.vout[0].SetReferenceValue(0);
     txTo.vout[0].scriptPubKey = (CScript() << OP_TRUE);
     txTo.nLockTime = 0;
     txTo.lock_height = from.refheight;
@@ -2820,7 +2820,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                 LogError("%s: Consensus::CheckTxInputs: %s, %s\n", __func__, tx.GetHash().ToString(), state.ToString());
                 return false;
             }
-            nFees += txfee;
+            nFees += GetTimeAdjustedValue(txfee, pindex->nHeight - (int)tx.lock_height);
+
             if (!MoneyRange(nFees)) {
                 LogPrintf("ERROR: %s: accumulated fee in the block out of range.\n", __func__);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-accumulated-fee-outofrange");
@@ -4292,7 +4293,7 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
         uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
         CHash256().Write(witnessroot).Write(ret).Finalize(witnessroot);
         CTxOut out;
-        out.nValue = 0;
+        out.SetReferenceValue(0);
         out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
         out.scriptPubKey[0] = OP_RETURN;
         out.scriptPubKey[1] = 0x24;
@@ -6122,7 +6123,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
                     return util::Error{strprintf(Untranslated("Bad snapshot data after deserializing %d coins"),
                               coins_count - coins_left)};
                 }
-                if (!MoneyRange(coin.out.nValue)) {
+                if (!MoneyRange(coin.out.GetReferenceValue())) {
                     return util::Error{strprintf(Untranslated("Bad snapshot data after deserializing %d coins - bad tx out value"),
                               coins_count - coins_left)};
                 }

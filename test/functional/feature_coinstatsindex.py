@@ -131,6 +131,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
             res4 = index_node.gettxoutsetinfo(hash_option, 0)
             assert_equal(res4['total_unspendable_value'], 50)
             assert_equal(res4['block_info'], {
+                'demurrage': 0,
                 'unspendable': 50,
                 'prevout_spent': 0,
                 'new_outputs_ex_coinbase': 0,
@@ -148,6 +149,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
             res5 = index_node.gettxoutsetinfo(hash_option, 102)
             assert_equal(res5['total_unspendable_value'], 50)
             assert_equal(res5['block_info'], {
+                'demurrage': 0,
                 'unspendable': 0,
                 'prevout_spent': 50,
                 'new_outputs_ex_coinbase': Decimal('49.99967600'),
@@ -187,6 +189,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
             res6 = index_node.gettxoutsetinfo(hash_option, 108)
             assert_equal(res6['total_unspendable_value'], Decimal('70.99000000'))
             assert_equal(res6['block_info'], {
+                'demurrage': 0,
                 'unspendable': Decimal('20.99000000'),
                 'prevout_spent': Decimal('71.00000000'),
                 'new_outputs_ex_coinbase': Decimal('49.99999000'),
@@ -219,6 +222,7 @@ class CoinStatsIndexTest(FreicoinTestFramework):
             res7 = index_node.gettxoutsetinfo(hash_option, 109)
             assert_equal(res7['total_unspendable_value'], Decimal('80.99000000'))
             assert_equal(res7['block_info'], {
+                'demurrage': 0,
                 'unspendable': 10,
                 'prevout_spent': 0,
                 'new_outputs_ex_coinbase': 0,

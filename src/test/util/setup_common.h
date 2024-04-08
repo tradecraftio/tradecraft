@@ -16,6 +16,8 @@
 #ifndef FREICOIN_TEST_UTIL_SETUP_COMMON_H
 #define FREICOIN_TEST_UTIL_SETUP_COMMON_H
 
+#define FREICOIN_TEST 1
+
 #include <common/args.h> // IWYU pragma: export
 #include <kernel/context.h>
 #include <key.h>

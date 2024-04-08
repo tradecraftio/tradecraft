@@ -182,7 +182,7 @@ struct PreSelectedInputs
             assert(atheight == output.atheight);
         }
         if (subtract_fee_outputs) {
-            total_amount += output.txout.nValue;
+            total_amount += output.adjusted;
         } else {
             total_amount += output.GetEffectiveValue();
         }
