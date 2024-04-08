@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TIMEDATA_H
-#define BITCOIN_TIMEDATA_H
+#ifndef FREICOIN_TIMEDATA_H
+#define FREICOIN_TIMEDATA_H
 
 #include <util/time.h>
 
@@ -94,4 +94,4 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime);
  */
 void TestOnlyResetTimeData();
 
-#endif // BITCOIN_TIMEDATA_H
+#endif // FREICOIN_TIMEDATA_H

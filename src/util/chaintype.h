@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_CHAINTYPE_H
-#define BITCOIN_UTIL_CHAINTYPE_H
+#ifndef FREICOIN_UTIL_CHAINTYPE_H
+#define FREICOIN_UTIL_CHAINTYPE_H
 
 #include <optional>
 #include <string>
@@ -30,4 +30,4 @@ std::string ChainTypeToString(ChainType chain);
 
 std::optional<ChainType> ChainTypeFromString(std::string_view chain);
 
-#endif // BITCOIN_UTIL_CHAINTYPE_H
+#endif // FREICOIN_UTIL_CHAINTYPE_H

@@ -19,7 +19,7 @@ from decimal import Decimal
 
 from test_framework.messages import MSG_TX, MSG_WTX, msg_feefilter
 from test_framework.p2p import P2PInterface, p2p_lock
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
@@ -54,7 +54,7 @@ class TestP2PConn(P2PInterface):
             self.txinvs = []
 
 
-class FeeFilterTest(BitcoinTestFramework):
+class FeeFilterTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         # We lower the various required feerates for this test

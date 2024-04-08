@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_CHECK_H
-#define BITCOIN_UTIL_CHECK_H
+#ifndef FREICOIN_UTIL_CHECK_H
+#define FREICOIN_UTIL_CHECK_H
 
 #include <attributes.h>
 
@@ -102,4 +102,4 @@ T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* f
     throw NonFatalCheckError(                                         \
         "Unreachable code reached (non-fatal)", __FILE__, __LINE__, __func__)
 
-#endif // BITCOIN_UTIL_CHECK_H
+#endif // FREICOIN_UTIL_CHECK_H

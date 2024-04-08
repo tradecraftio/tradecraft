@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CRYPTO_CHACHA20POLY1305_H
-#define BITCOIN_CRYPTO_CHACHA20POLY1305_H
+#ifndef FREICOIN_CRYPTO_CHACHA20POLY1305_H
+#define FREICOIN_CRYPTO_CHACHA20POLY1305_H
 
 #include <cstddef>
 #include <stdint.h>
@@ -156,4 +156,4 @@ public:
     bool Decrypt(Span<const std::byte> cipher, Span<const std::byte> aad, Span<std::byte> plain1, Span<std::byte> plain2) noexcept;
 };
 
-#endif // BITCOIN_CRYPTO_CHACHA20POLY1305_H
+#endif // FREICOIN_CRYPTO_CHACHA20POLY1305_H

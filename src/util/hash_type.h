@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_HASH_TYPE_H
-#define BITCOIN_UTIL_HASH_TYPE_H
+#ifndef FREICOIN_UTIL_HASH_TYPE_H
+#define FREICOIN_UTIL_HASH_TYPE_H
 
 template <typename HashType>
 class BaseHash
@@ -80,4 +80,4 @@ public:
     const unsigned char* data() const { return m_hash.data(); }
 };
 
-#endif // BITCOIN_UTIL_HASH_TYPE_H
+#endif // FREICOIN_UTIL_HASH_TYPE_H

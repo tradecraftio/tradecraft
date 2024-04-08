@@ -13,21 +13,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_PSBT_H
-#define BITCOIN_NODE_PSBT_H
+#ifndef FREICOIN_NODE_PST_H
+#define FREICOIN_NODE_PST_H
 
-#include <psbt.h>
+#include <pst.h>
 
 #include <optional>
 
 namespace node {
 /**
- * Holds an analysis of one input from a PSBT
+ * Holds an analysis of one input from a PST
  */
-struct PSBTInputAnalysis {
+struct PSTInputAnalysis {
     bool has_utxo; //!< Whether we have UTXO information for this input
     bool is_final; //!< Whether the input has all required information including signatures
-    PSBTRole next; //!< Which of the BIP 174 roles needs to handle this input next
+    PSTRole next; //!< Which of the BIP 174 roles needs to handle this input next
 
     std::vector<CKeyID> missing_pubkeys; //!< Pubkeys whose BIP32 derivation path is missing
     std::vector<CKeyID> missing_sigs;    //!< Pubkeys whose signatures are missing
@@ -36,14 +36,14 @@ struct PSBTInputAnalysis {
 };
 
 /**
- * Holds the results of AnalyzePSBT (miscellaneous information about a PSBT)
+ * Holds the results of AnalyzePST (miscellaneous information about a PST)
  */
-struct PSBTAnalysis {
+struct PSTAnalysis {
     std::optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
     std::optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
     std::optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
-    std::vector<PSBTInputAnalysis> inputs;      //!< More information about the individual inputs of the transaction
-    PSBTRole next;                              //!< Which of the BIP 174 roles needs to handle the transaction next
+    std::vector<PSTInputAnalysis> inputs;      //!< More information about the individual inputs of the transaction
+    PSTRole next;                              //!< Which of the BIP 174 roles needs to handle the transaction next
     std::string error;                          //!< Error message
 
     void SetInvalid(std::string err_msg)
@@ -52,18 +52,18 @@ struct PSBTAnalysis {
         estimated_feerate = std::nullopt;
         fee = std::nullopt;
         inputs.clear();
-        next = PSBTRole::CREATOR;
+        next = PSTRole::CREATOR;
         error = err_msg;
     }
 };
 
 /**
- * Provides helpful miscellaneous information about where a PSBT is in the signing workflow.
+ * Provides helpful miscellaneous information about where a PST is in the signing workflow.
  *
- * @param[in] psbtx the PSBT to analyze
- * @return A PSBTAnalysis with information about the provided PSBT.
+ * @param[in] pstx the PST to analyze
+ * @return A PSTAnalysis with information about the provided PST.
  */
-PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx);
+PSTAnalysis AnalyzePST(PartiallySignedTransaction pstx);
 } // namespace node
 
-#endif // BITCOIN_NODE_PSBT_H
+#endif // FREICOIN_NODE_PST_H

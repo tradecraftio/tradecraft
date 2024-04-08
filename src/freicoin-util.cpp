@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <arith_uint256.h>
@@ -42,7 +42,7 @@ static const int CONTINUE_EXECUTION=-1;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
-static void SetupBitcoinUtilArgs(ArgsManager &argsman)
+static void SetupFreicoinUtilArgs(ArgsManager &argsman)
 {
     SetupHelpOptions(argsman);
 
@@ -57,7 +57,7 @@ static void SetupBitcoinUtilArgs(ArgsManager &argsman)
 // CONTINUE_EXECUTION when it's expected to continue further.
 static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
 {
-    SetupBitcoinUtilArgs(args);
+    SetupFreicoinUtilArgs(args);
     std::string error;
     if (!args.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
@@ -66,13 +66,13 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
 
     if (HelpRequested(args) || args.IsArgSet("-version")) {
         // First part of help message is specific to this utility
-        std::string strUsage = PACKAGE_NAME " bitcoin-util utility version " + FormatFullVersion() + "\n";
+        std::string strUsage = PACKAGE_NAME " freicoin-util utility version " + FormatFullVersion() + "\n";
 
         if (args.IsArgSet("-version")) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                "Usage:  bitcoin-util [options] [commands]  Do stuff\n";
+                "Usage:  freicoin-util [options] [commands]  Do stuff\n";
             strUsage += "\n" + args.GetHelpMessage();
         }
 

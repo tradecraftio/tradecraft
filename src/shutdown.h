@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SHUTDOWN_H
-#define BITCOIN_SHUTDOWN_H
+#ifndef FREICOIN_SHUTDOWN_H
+#define FREICOIN_SHUTDOWN_H
 
 /** Request shutdown of the application. */
 void StartShutdown();
@@ -33,4 +33,4 @@ bool ShutdownRequested();
  */
 void WaitForShutdown();
 
-#endif // BITCOIN_SHUTDOWN_H
+#endif // FREICOIN_SHUTDOWN_H

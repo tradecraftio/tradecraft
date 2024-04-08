@@ -14,14 +14,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoin-wallet (CLI tool for " PACKAGE_NAME " wallets)"
+            VALUE "CompanyName",        "Freicoin"
+            VALUE "FileDescription",    "freicoin-wallet (CLI tool for " PACKAGE_NAME " wallets)"
             VALUE "FileVersion",        PACKAGE_VERSION
-            VALUE "InternalName",       "bitcoin-wallet"
+            VALUE "InternalName",       "freicoin-wallet"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the terms of the GNU Affero General Public License v3.0, see the accompanying file COPYING for details."
-            VALUE "OriginalFilename",   "bitcoin-wallet.exe"
-            VALUE "ProductName",        "bitcoin-wallet"
+            VALUE "OriginalFilename",   "freicoin-wallet.exe"
+            VALUE "ProductName",        "freicoin-wallet"
             VALUE "ProductVersion",     PACKAGE_VERSION
         END
     END

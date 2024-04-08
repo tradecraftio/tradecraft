@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NETADDRESS_H
-#define BITCOIN_NETADDRESS_H
+#ifndef FREICOIN_NETADDRESS_H
+#define FREICOIN_NETADDRESS_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <compat/compat.h>
@@ -85,11 +85,11 @@ static const std::array<uint8_t, 6> TORV2_IN_IPV6_PREFIX{
 
 /// Prefix of an IPv6 address when it contains an embedded "internal" address.
 /// Used when (un)serializing addresses in ADDRv1 format (pre-BIP155).
-/// The prefix comes from 0xFD + SHA256("bitcoin")[0:5].
+/// The prefix comes from 0xFD + SHA256("freicoin")[0:5].
 /// Such dummy IPv6 addresses are guaranteed to not be publicly routable as they
 /// fall under RFC4193's fc00::/7 subnet allocated to unique-local addresses.
 static const std::array<uint8_t, 6> INTERNAL_IN_IPV6_PREFIX{
-    0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 // 0xFD + sha256("bitcoin")[0:5].
+    0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 // 0xFD + sha256("freicoin")[0:5].
 };
 
 /// All CJDNS addresses start with 0xFC. See
@@ -598,4 +598,4 @@ private:
     const uint64_t m_salt_k1;
 };
 
-#endif // BITCOIN_NETADDRESS_H
+#endif // FREICOIN_NETADDRESS_H
