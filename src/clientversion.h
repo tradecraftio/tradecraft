@@ -10,7 +10,7 @@
 #include <config/bitcoin-config.h> // IWYU pragma: keep
 
 // Check that required client information is defined
-#if !defined(CLIENT_VERSION_MAJOR) || !defined(CLIENT_VERSION_MINOR) || !defined(CLIENT_VERSION_BUILD) || !defined(CLIENT_VERSION_IS_RELEASE) || !defined(COPYRIGHT_YEAR)
+#if !defined(CLIENT_VERSION_MAJOR) || !defined(CLIENT_VERSION_MINOR) || !defined(CLIENT_VERSION_REVISION) || !defined(CLIENT_VERSION_PATCH) || !defined(CLIENT_VERSION_BUILD) || !defined(CLIENT_VERSION_IS_RELEASE) || !defined(COPYRIGHT_YEAR)
 #error Client version information missing: version is not defined by bitcoin-config.h or in any other way
 #endif
 
@@ -31,7 +31,7 @@
 static const int CLIENT_VERSION =
                              10000 * CLIENT_VERSION_MAJOR
                          +     100 * CLIENT_VERSION_MINOR
-                         +       1 * CLIENT_VERSION_BUILD;
+                         +       1 * CLIENT_VERSION_REVISION;
 
 extern const std::string CLIENT_NAME;
 
