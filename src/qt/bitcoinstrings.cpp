@@ -45,8 +45,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Disk space for %s may not accommodate the block files. Approximately %u GB "
 "of data will be stored in this directory."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Distributed under the MIT software license, see the accompanying file %s or "
-"%s"),
+"Distributed under the GNU Affero General Purpose License v3.0, see the "
+"accompanying file %s or %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error loading %s: External signer wallet being loaded without external "
 "signer support compiled"),
