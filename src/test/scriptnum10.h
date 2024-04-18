@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_SCRIPTNUM10_H
-#define BITCOIN_TEST_SCRIPTNUM10_H
+#ifndef FREICOIN_TEST_SCRIPTNUM10_H
+#define FREICOIN_TEST_SCRIPTNUM10_H
 
 #include <assert.h>
 #include <limits>
@@ -33,7 +33,7 @@ public:
 class CScriptNum10
 {
 /**
- * The ScriptNum implementation from Bitcoin Core 10.4, for cross-comparison.
+ * The ScriptNum implementation from Freicoin 10.4, for cross-comparison.
  */
 public:
 
@@ -190,4 +190,4 @@ private:
 };
 
 
-#endif // BITCOIN_TEST_SCRIPTNUM10_H
+#endif // FREICOIN_TEST_SCRIPTNUM10_H

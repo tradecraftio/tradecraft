@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_INTERFACE_UI_H
-#define BITCOIN_NODE_INTERFACE_UI_H
+#ifndef FREICOIN_NODE_INTERFACE_UI_H
+#define FREICOIN_NODE_INTERFACE_UI_H
 
 #include <functional>
 #include <memory>
@@ -131,4 +131,4 @@ bool InitError(const bilingual_str& str, const std::vector<std::string>& details
 
 extern CClientUIInterface uiInterface;
 
-#endif // BITCOIN_NODE_INTERFACE_UI_H
+#endif // FREICOIN_NODE_INTERFACE_UI_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_WALLETTOOL_H
-#define BITCOIN_WALLET_WALLETTOOL_H
+#ifndef FREICOIN_WALLET_WALLETTOOL_H
+#define FREICOIN_WALLET_WALLETTOOL_H
 
 #include <string>
 
@@ -28,4 +28,4 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command);
 } // namespace WalletTool
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_WALLETTOOL_H
+#endif // FREICOIN_WALLET_WALLETTOOL_H

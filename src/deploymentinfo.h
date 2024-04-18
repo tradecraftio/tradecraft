@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_DEPLOYMENTINFO_H
-#define BITCOIN_DEPLOYMENTINFO_H
+#ifndef FREICOIN_DEPLOYMENTINFO_H
+#define FREICOIN_DEPLOYMENTINFO_H
 
 #include <consensus/params.h>
 
@@ -40,4 +40,4 @@ inline std::string DeploymentName(Consensus::DeploymentPos pos)
 
 std::optional<Consensus::BuriedDeployment> GetBuriedDeployment(const std::string_view deployment_name);
 
-#endif // BITCOIN_DEPLOYMENTINFO_H
+#endif // FREICOIN_DEPLOYMENTINFO_H

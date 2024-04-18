@@ -15,7 +15,7 @@
 //
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 #include <test/util/setup_common.h>
 #include <common/run_command.h>

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COMPAT_ENDIAN_H
-#define BITCOIN_COMPAT_ENDIAN_H
+#ifndef FREICOIN_COMPAT_ENDIAN_H
+#define FREICOIN_COMPAT_ENDIAN_H
 
 #include <compat/byteswap.h>
 
@@ -82,4 +82,4 @@ inline BSWAP_CONSTEXPR uint64_t le64toh_internal(uint64_t little_endian_64bits)
         else return little_endian_64bits;
 }
 
-#endif // BITCOIN_COMPAT_ENDIAN_H
+#endif // FREICOIN_COMPAT_ENDIAN_H

@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <qt/bitcoin.h>
+#include <qt/freicoin.h>
 
 #include <common/url.h>
 #include <compat/compat.h>
@@ -26,7 +26,7 @@
 
 /** Translate string to current locale using Qt. */
 extern const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](const char* psz) {
-    return QCoreApplication::translate("bitcoin-core", psz).toStdString();
+    return QCoreApplication::translate("freicoin", psz).toStdString();
 };
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
