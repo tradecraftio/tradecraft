@@ -52,7 +52,7 @@ class ReindexTest(FreicoinTestFramework):
         blk0 = self.nodes[0].blocks_path / "blk00000.dat"
         with open(blk0, 'r+b') as bf:
             # Read at least the first few blocks (including genesis)
-            b = bf.read(2000)
+            b = bf.read(4000)
 
             # Find the offsets of blocks 2, 3, 4, and 5 (the first 4 blocks beyond genesis)
             # by searching for the regtest marker bytes (see pchMessageStart).

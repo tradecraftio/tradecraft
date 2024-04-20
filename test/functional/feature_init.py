@@ -148,7 +148,7 @@ class InitStressTest(FreicoinTestFramework):
                     # Since the genesis block is not checked by -checkblocks, the
                     # perturbation window must be chosen such that a higher block
                     # in blk*.dat is affected.
-                    tf.seek(150)
+                    tf.seek(1350)
                     tf.write(b"1" * 200)
 
             start_expecting_error(err_fragment)
