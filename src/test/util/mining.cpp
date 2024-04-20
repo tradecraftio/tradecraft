@@ -31,7 +31,7 @@
 using node::BlockAssembler;
 using node::NodeContext;
 
-COutPoint generatetoaddress(const NodeContext& node, const std::string& address)
+std::pair<COutPoint, uint32_t> generatetoaddress(const NodeContext& node, const std::string& address)
 {
     const auto dest = DecodeDestination(address);
     assert(IsValidDestination(dest));
@@ -71,11 +71,11 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
     return ret;
 }
 
-COutPoint MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
+std::pair<COutPoint, uint32_t> MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(node, coinbase_scriptPubKey);
     auto valid = MineBlock(node, block);
-    assert(!valid.IsNull());
+    assert(!valid.first.IsNull());
     return valid;
 }
 
@@ -95,7 +95,7 @@ protected:
     }
 };
 
-COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
+std::pair<COutPoint, uint32_t> MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
 {
     while (!CheckProofOfWork(block->GetHash(), block->nBits, 0, Params().GetConsensus())) {
         ++block->nNonce;
@@ -115,7 +115,7 @@ COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
     const bool was_valid{bvsc.m_state && bvsc.m_state->IsValid()};
     assert(old_height + was_valid == WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight()));
 
-    if (was_valid) return {block->vtx[0]->GetHash(), static_cast<uint32_t>(block->vtx[0]->vout.size()-2)};
+    if (was_valid) return {{block->vtx[0]->GetHash(), static_cast<uint32_t>(block->vtx[0]->vout.size()-2)}, block->vtx[0]->lock_height};
     return {};
 }
 

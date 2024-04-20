@@ -105,6 +105,7 @@ class OutputMissing(BadTxTemplate):
     def get_tx(self):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
+        tx.lock_height = self.spend_tx.lock_height
         tx.calc_sha256()
         return tx
 
@@ -135,6 +136,7 @@ class SizeTooSmall(BadTxTemplate):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
         tx.vout.append(CTxOut(0, b""))
+        tx.lock_height = self.spend_tx.lock_height
         assert len(tx.serialize_without_witness()) == 64
         assert MIN_STANDARD_TX_NONWITNESS_SIZE - 1 == 64
         tx.calc_sha256()
@@ -154,6 +156,7 @@ class BadInputOutpointIndex(BadTxTemplate):
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.spend_tx.sha256, bad_idx), b"", SEQUENCE_FINAL))
         tx.vout.append(CTxOut(0, basic_p2sh))
+        tx.lock_height = self.spend_tx.lock_height
         tx.calc_sha256()
         return tx
 
@@ -167,6 +170,7 @@ class DuplicateInput(BadTxTemplate):
         tx.vin.append(self.valid_txin)
         tx.vin.append(self.valid_txin)
         tx.vout.append(CTxOut(1, basic_p2sh))
+        tx.lock_height = self.spend_tx.lock_height
         tx.calc_sha256()
         return tx
 
@@ -180,6 +184,7 @@ class PrevoutNullInput(BadTxTemplate):
         tx.vin.append(self.valid_txin)
         tx.vin.append(CTxIn(COutPoint(hash=0, n=0xffffffff)))
         tx.vout.append(CTxOut(1, basic_p2sh))
+        tx.lock_height = self.spend_tx.lock_height
         tx.calc_sha256()
         return tx
 
@@ -193,6 +198,7 @@ class NonexistentInput(BadTxTemplate):
         tx.vin.append(CTxIn(COutPoint(self.spend_tx.sha256 + 1, 0), b"", SEQUENCE_FINAL))
         tx.vin.append(self.valid_txin)
         tx.vout.append(CTxOut(1, basic_p2sh))
+        tx.lock_height = self.spend_tx.lock_height
         tx.calc_sha256()
         return tx
 
@@ -264,6 +270,7 @@ def getDisabledOpcodeTemplate(opcode):
         vin.scriptSig = CScript([opcode])
         tx.vin.append(vin)
         tx.vout.append(CTxOut(1, basic_p2sh))
+        tx.lock_height = self.spend_tx.lock_height
         tx.calc_sha256()
         return tx
 
