@@ -131,7 +131,7 @@ class RPCInterfaceTest(FreicoinTestFramework):
         results = [
             {"result": 0},
             {"error": {"code": RPC_METHOD_NOT_FOUND, "message": "Method not found"}},
-            {"result": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"},
+            {"result": "67756db06265141574ff8e7c3f97ebd57c443791e0ca27ee8b03758d6056edb8"},
             {"error": {"code": RPC_INVALID_REQUEST, "message": "Missing method"}},
         ]
 
