@@ -110,7 +110,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         assert_equal(
             dump_output['txoutset_hash'],
-            "46deef19d1576b48db60de2d1c80c977623742c8fc65c5ee748c2df94c56f1e6")
+            "7d417a8013ac7fd67ecddeadedcb23cd9a2d3329eecaf9e0f07e61e259f6dcb1")
         assert_equal(dump_output["nchaintx"], 533)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
