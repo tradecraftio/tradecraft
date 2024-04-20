@@ -312,7 +312,7 @@ TestChain100Setup::TestChain100Setup(
         LOCK(::cs_main);
         assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "2577316511514db1e7f50c414eea6e9ccd929035be271a4a7add6d1059516b3e");
+            "0f4772504297a042fb3c7bf7795bb2c0b4ed5caf51cdf8a6547cbffb73e77fd1");
     }
 }
 
@@ -394,8 +394,10 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
     // - Populate a CoinsViewCache with the unspent output
     CCoinsView coins_view;
     CCoinsViewCache coins_cache(&coins_view);
+    mempool_txn.lock_height = std::numeric_limits<uint32_t>::min();
     for (const auto& input_transaction : input_transactions) {
         AddCoins(coins_cache, *input_transaction.get(), input_height);
+        mempool_txn.lock_height = std::max(mempool_txn.lock_height, input_transaction->lock_height);
     }
     // Build Outpoint to Coin map for SignTransaction
     std::map<COutPoint, Coin> input_coins;
