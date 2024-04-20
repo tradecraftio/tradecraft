@@ -857,6 +857,16 @@ class FullBlockTest(FreicoinTestFramework):
         b61.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
         b61.vtx[0].vout.insert(0, CTxOut(0, CScript([OP_TRUE]))) # initial block-final output
         b61.vtx[0].vout[1].scriptPubKey = CScript([OP_TRUE])
+        b61.vtx[0].lock_height = b60.vtx[0].lock_height
+        b61.vtx[0].rehash()
+        b61 = self.update_block(61, [])
+        # This test is supposed to have a duplicate coinbase transaction in
+        # block b61, which would overwrite/shadow the coinbase of b_dup_cb.
+        # However this is impossible to setup now that coinbases are required to
+        # commit to their block height in the lock_height field, so this test is
+        # neutered.
+        assert duplicate_tx.serialize() != b61.vtx[0].serialize()
+        b61.vtx[0].lock_height = duplicate_tx.lock_height
         b61.vtx[0].rehash()
         b61 = self.update_block(61, [])
         assert_equal(duplicate_tx.serialize(), b61.vtx[0].serialize())
@@ -883,11 +893,13 @@ class FullBlockTest(FreicoinTestFramework):
         b_dup_2.vtx[0].vout[1].scriptPubKey = CScript([OP_TRUE])
         b_dup_2.vtx[0].rehash()
         b_dup_2 = self.update_block('dup_2', [])
-        assert_equal(duplicate_tx.serialize(), b_dup_2.vtx[0].serialize())
+        # See note above about coinbase lock_height commitments nullifying the
+        # duplicate coinbase transaction tests.
+        assert duplicate_tx.serialize() != b_dup_2.vtx[0].serialize()
         assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=1)['confirmations'], 119)
         self.send_blocks([b_spend_dup_cb, b_dup_2], success=True)
         # The duplicate has less confirmations
-        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=1)['confirmations'], 1)
+        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=1), None)
 
         # Test tx.isFinal is properly rejected (not an exhaustive tx.isFinal test, that should be in data-driven transaction tests)
         #
