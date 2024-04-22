@@ -149,16 +149,23 @@ def add_witness_commitment(block, nonce=0):
     witness_branch = b''
     if nonce:
         witness_branch = ser_uint256(nonce)
+    output_data = bytes((0,)) + ser_uint256(0) + WITNESS_COMMITMENT_HEADER
+    block.vtx[-1].vout[-1].scriptPubKey = CScript([output_data])
+    block.vtx[-1].rehash()
     witness_root = block.calc_witness_merkle_root()
     # witness_branch should go to coinbase witness.
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [witness_branch]
 
-    # witness commitment is the last output in coinbase
-    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, nonce)))
-    block.vtx[0].rehash()
+    # witness commitment is the last output in block-final tx
+    block.vtx[-1].vout[-1].scriptPubKey = get_witness_script(witness_root, nonce)
+    block.vtx[-1].rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()
+
+    return [
+        dict(txid=block.vtx[-1].hash, vout=n, amount=int(vout.nValue))
+        for n,vout in enumerate(block.vtx[-1].vout)]
 
 
 def script_BIP34_coinbase_height(height):

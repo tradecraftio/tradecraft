@@ -41,7 +41,7 @@ class SegwitUpgradeTest(FreicoinTestFramework):
         assert not softfork_active(node, "segwit")
 
         # Generate 8 blocks without witness data
-        self.generate(node, 8)
+        self.generatetoaddress(node, 8, "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj62f9yqsfn3zp") # <-- looks like a witness commitment
         assert_equal(node.getblockcount(), 8)
 
         self.stop_node(0)

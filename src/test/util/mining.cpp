@@ -116,7 +116,7 @@ std::pair<COutPoint, uint32_t> MineBlock(const NodeContext& node, std::shared_pt
     const bool was_valid{bvsc.m_state && bvsc.m_state->IsValid()};
     assert(old_height + was_valid == WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight()));
 
-    if (was_valid) return {{block->vtx[0]->GetHash(), static_cast<uint32_t>(block->vtx[0]->vout.size()-2)}, block->vtx[0]->lock_height};
+    if (was_valid) return {{block->vtx[0]->GetHash(), static_cast<uint32_t>(block->vtx[0]->vout.size()-1)}, block->vtx[0]->lock_height};
     return {};
 }
 
