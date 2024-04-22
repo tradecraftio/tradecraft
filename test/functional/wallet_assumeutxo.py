@@ -110,7 +110,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         assert_equal(
             dump_output['txoutset_hash'],
-            "18db5f54f66887f80e9787a4db59af95b17130cf6aa550af8864f990b1320e9a")
+            "98bce15dcc095d9b91abe6f4a6bed7ac858af030f0bb4acb0325a729141125ca")
         assert_equal(dump_output["nchaintx"], 533)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
@@ -126,7 +126,7 @@ class AssumeutxoTest(FreicoinTestFramework):
         self.log.info(
             f"Loading snapshot into second node from {dump_output['path']}")
         loaded = n1.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], 2 * SNAPSHOT_BASE_HEIGHT + 1)
+        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT + 1)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         normal, snapshot = n1.getchainstates()["chainstates"]

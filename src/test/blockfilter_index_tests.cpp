@@ -101,23 +101,26 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         for (uint32_t n = 0; n < entry.size; ++n) {
             final_tx.vin.emplace_back(COutPoint(entry.hash, n));
         }
-        final_tx.vout.emplace_back(0, CScript() << OP_TRUE);
+        final_tx.vout.emplace_back(0, EMPTY_SEGWIT_COMMITMENT);
         final_tx.nLockTime = prev->GetMedianTimePast();
         final_tx.lock_height = (uint32_t)prev->nHeight + 1;
-        // Store block-final info for next block
-        entry.hash = final_tx.GetHash();
-        entry.size = 1;
         // Add it to the block
         block.vtx.push_back(MakeTransactionRef(std::move(final_tx)));
     }
     {
         CMutableTransaction tx_coinbase{*block.vtx.at(0)};
-        tx_coinbase.vin.at(0).scriptSig = CScript{} << prev->nHeight + 1;
+        tx_coinbase.vin.at(0).scriptSig = CScript{} << prev->nHeight + 1 << CScriptNum(0);
         block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
         block.hashMerkleRoot = BlockMerkleRoot(block);
     }
     // Regenerate the segwit commitment
     node::RegenerateCommitments(block, *m_node.chainman);
+
+    if (!entry.IsNull()) {
+        // Store block-final info for next block
+        entry.hash = block.vtx.back()->GetHash();
+        entry.size = 1;
+    }
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, 0, m_node.chainman->GetConsensus())) ++block.nNonce;
 
