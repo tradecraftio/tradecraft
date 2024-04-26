@@ -75,8 +75,7 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "Error: Duplicate descriptors created during migration. Your wallet may be "
 "corrupted."),
 QT_TRANSLATE_NOOP("freicoin", ""
-"Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and "
-"\"bech32\" address types"),
+"Error: Legacy wallets only support the \"legacy\" or \"bech32\" address types"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Error: Transaction %s in wallet cannot be identified to belong to migrated "
 "wallets"),
@@ -129,15 +128,15 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "No wallet file format provided. To use createfromdump, -format=<format> must "
 "be provided."),
 QT_TRANSLATE_NOOP("freicoin", ""
-"Outbound connections restricted to CJDNS (-onlynet=cjdns) but -"
-"cjdnsreachable is not provided"),
+"Outbound connections restricted to CJDNS (-onlynet=cjdns) but "
+"-cjdnsreachable is not provided"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
 "reaching the Tor network is explicitly forbidden: -onion=0"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
-"reaching the Tor network is not provided: none of -proxy, -onion or -"
-"listenonion is given"),
+"reaching the Tor network is not provided: none of -proxy, -onion or "
+"-listenonion is given"),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not "
 "provided"),
@@ -150,8 +149,10 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "Prune mode is incompatible with -reindex-chainstate. Use full -reindex "
 "instead."),
 QT_TRANSLATE_NOOP("freicoin", ""
-"Prune: last wallet synchronisation goes beyond pruned data. You need to -"
-"reindex (download the whole blockchain again in case of pruned node)"),
+"Prune: last wallet synchronisation goes beyond pruned data. You need to "
+"-reindex (download the whole blockchain again in case of pruned node)"),
+QT_TRANSLATE_NOOP("freicoin", ""
+"Reference height not specified and couldn't determine current chain height."),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Rename of '%s' -> '%s' failed. Cannot clean up the background chainstate "
 "leveldb directory."),
@@ -205,8 +206,8 @@ QT_TRANSLATE_NOOP("freicoin", ""
 "UTXO snapshot failed to validate. Restart to resume normal initial block "
 "download, or try loading a different snapshot."),
 QT_TRANSLATE_NOOP("freicoin", ""
-"Unable to replay blocks. You will need to rebuild the database using -"
-"reindex-chainstate."),
+"Unable to replay blocks. You will need to rebuild the database using "
+"-reindex-chainstate."),
 QT_TRANSLATE_NOOP("freicoin", ""
 "Unconfirmed UTXOs are available, but spending them creates a chain of "
 "transactions that will be rejected by the mempool"),
@@ -271,6 +272,7 @@ QT_TRANSLATE_NOOP("freicoin", "%s is set very high!"),
 QT_TRANSLATE_NOOP("freicoin", "-maxmempool must be at least %d MB"),
 QT_TRANSLATE_NOOP("freicoin", "A fatal internal error occurred, see debug.log for details: "),
 QT_TRANSLATE_NOOP("freicoin", "Assumeutxo data not found for the given blockhash '%s'."),
+QT_TRANSLATE_NOOP("freicoin", "Bitcoin unit test compatibility mode only allowed on regtest."),
 QT_TRANSLATE_NOOP("freicoin", "Block verification was interrupted"),
 QT_TRANSLATE_NOOP("freicoin", "Cannot resolve -%s address: '%s'"),
 QT_TRANSLATE_NOOP("freicoin", "Cannot set -forcednsseed to true when setting -dnsseed to false."),
@@ -364,8 +366,8 @@ QT_TRANSLATE_NOOP("freicoin", "Loading banlist…"),
 QT_TRANSLATE_NOOP("freicoin", "Loading block index…"),
 QT_TRANSLATE_NOOP("freicoin", "Loading wallet…"),
 QT_TRANSLATE_NOOP("freicoin", "Maximum transaction weight must be between %d and %d"),
-QT_TRANSLATE_NOOP("freicoin", "Missing amount"),
 QT_TRANSLATE_NOOP("freicoin", "Missing solving data for estimating transaction size"),
+QT_TRANSLATE_NOOP("freicoin", "Missing value"),
 QT_TRANSLATE_NOOP("freicoin", "Need to specify a port with -whitebind: '%s'"),
 QT_TRANSLATE_NOOP("freicoin", "No addresses available"),
 QT_TRANSLATE_NOOP("freicoin", "No wallets available for mining."),
