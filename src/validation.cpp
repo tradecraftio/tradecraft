@@ -3899,13 +3899,13 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
                     witnessdepth = pos;
                 }
             }
-            if (witness_stack.size() != 1 || witness_stack[0].size() != 32*witnessdepth) {
+            DataStream ds(witness_stack[0]);
+            if (ds.size() != 32*witnessdepth) {
                 return state.Invalid(
                     /*result=*/BlockValidationResult::BLOCK_MUTATED,
                     /*reject_reason=*/"bad-witness-branch-size",
                     /*debug_message=*/strprintf("%s : invalid witness branch size", __func__));
             }
-            DataStream ds(witness_stack[0]);
             std::vector<uint256> branch;
             branch.resize(witnessdepth);
             for (size_t pos = 0; pos < witnessdepth; ++pos) {
