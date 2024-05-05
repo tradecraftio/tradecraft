@@ -68,7 +68,7 @@ protected:
 
 void MerkleElem::Rehash()
 {
-    assert(m_data != std::nullopt);
+    Assert(m_data != std::nullopt);
     const std::vector<unsigned char>& data = m_data.value();
     CHash256().Write(data).Finalize(m_hash);
 }
@@ -193,7 +193,7 @@ static RPCHelpMan createmerkleproof()
         swap(tree, next);
     }
 
-    assert(tree.size() == 1);
+    Assert(tree.size() == 1);
     DataStream ssProof;
     ssProof << tree[0].m_proof;
 
