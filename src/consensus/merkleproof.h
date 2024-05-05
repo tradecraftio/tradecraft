@@ -1355,15 +1355,15 @@ struct MerkleTree
       { return m_proof == other.m_proof
             && m_verify == other.m_verify; }
 
-    /* Calculates the root hash of the MerkleTree, a process that
-     * requires a depth first traverse of the full tree using linear
-     * time and logarithmic (depth) space, and maybe extracts the
-     * verification proofs for each element of that tree, which
-     * requires n log n (depth * size) space to store.
+    /* Calculates the root hash of the MerkleTree, a process that requires a
+     * depth first traverse of the full tree using linear time and logarithmic
+     * (depth) space, and maybe extracts the verification proofs for each
+     * element of that tree, which requires n log n (depth * size) space to
+     * store.
      *
-     * The algorithm for extracting the branch hashes of a proof is
-     * nearly identical to the algorithm for calculating the root
-     * hash, so it makes sense to combine these two together. */
+     * The algorithm for extracting the branch hashes of a proof is nearly
+     * identical to the algorithm for calculating the root hash, so it makes
+     * sense to combine these two together. */
     uint256 GetHash(bool* invalid = nullptr, std::vector<MerkleBranch>* proofs = nullptr) const;
 
     template<typename Stream>

@@ -362,8 +362,7 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
         }
         if (branches) {
             branches->clear();
-            // If it is a verify hash, then the caller expects a
-            // proof.
+            // If it is a verify hash, then the caller expects a proof.
             if (!m_verify.empty()) {
                 branches->emplace_back();
             }
@@ -418,12 +417,11 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
                 if (extra_depths[pos]) {
                     --extra_depths[pos];
                 } else {
-                    // Note the off-by-1 "error" in the expression
-                    // below.  The root of the tree is at depth 0, so
-                    // the first links are at depth 1. Our stack is
-                    // zero based, of course, so `depth` needs to be
-                    // offset by 1, which it implicitly is in the
-                    // subtraction.
+                    // Note the off-by-1 "error" in the expression below.  The
+                    // root of the tree is at depth 0, so the first links are
+                    // at depth 1.  Our stack is zero based, of course, so
+                    // `depth` needs to be offset by 1, which it implicitly is
+                    // in the subtraction.
                     if (proofs[pos].m_vpath[proofs[pos].m_vpath.size()-depth]) {
                         proofs[pos].m_branch.push_back(stack.back().second);
                     } else {
