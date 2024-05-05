@@ -10,6 +10,7 @@
 #include <uint256.h>
 
 #include <array>
+#include <iterator> // for std::random_access_iterator_tag
 
 /*
  * Each link of a Merkle tree can have one of three values in a proof object:
