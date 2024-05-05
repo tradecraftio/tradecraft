@@ -12,34 +12,31 @@
 #include <array>
 
 /*
- * Each link of a Merkle tree can have one of three values in a proof
- * object:
+ * Each link of a Merkle tree can have one of three values in a proof object:
  *
- *   DESCEND: This link connects to another sub-tree, which must be
- *     processed.  The root of this sub-tree is the hash value of the
- *     link.
+ *   DESCEND: This link connects to another sub-tree, which must be processed.
+ *     The root of this sub-tree is the hash value of the link.
  *
- *   VERIFY: This hash value of this link must be provided at
- *     validation time.  Computation of the Merkle root and comparison
- *     with a reference value provides a batch confirmation as to
- *     whether ALL the provided VERIFY hashes are correct.
+ *   VERIFY: This hash value of this link must be provided at validation time.
+ *     Computation of the Merkle root and comparison with a reference value
+ *     provides a batch confirmation as to whether ALL the provided VERIFY
+ *     hashes are correct.
  *
- *   SKIP: The hash value of this link is provided as part of the
- *     proof.
+ *   SKIP: The hash value of this link is provided as part of the proof.
  */
 enum class MerkleLink : unsigned char { DESCEND, VERIFY, SKIP };
 
 /*
- * An internal node of a proof can take on up to eight different
- * forms, the product of the 3 possible MerkleLink states the left and
- * right branches can each take, when the impossible {SKIP, SKIP}
- * state is excluded (this hypothetical state would be pruned as a
- * SKIP hash in the parent's node).  This means nodes can be encoded
- * as a 3-bit integer, and packed 8 nodes to each 3 byte sequence.
+ * An internal node of a proof can take on up to eight different forms, the
+ * product of the 3 possible MerkleLink states the left and right branches can
+ * each take, when the impossible {SKIP, SKIP} state is excluded (this
+ * hypothetical state would be pruned as a SKIP hash in the parent's node).
+ * This means nodes can be encoded as a 3-bit integer, and packed 8 nodes to
+ * each 3 byte sequence.
  *
- * The MerkleNode class uses an unsigned char to represent the
- * unpacked code, whereas the MerkleNodeReference class is used to
- * access a 3-bit code value within this packed representation.
+ * The MerkleNode class uses an unsigned char to represent the unpacked code,
+ * whereas the MerkleNodeReference class is used to access a 3-bit code value
+ * within this packed representation.
  */
 struct MerkleNode
 {
@@ -48,8 +45,8 @@ struct MerkleNode
 protected:
     code_type m_code;
 
-    /* Look-up tables to infer the value (DESCEND, VERIFY, or SKIP) of
-     * the left- and right-links. */
+    /* Look-up tables to infer the value (DESCEND, VERIFY, or SKIP) of the
+     * left- and right-links. */
     static const std::array<MerkleLink, 8> m_left_from_code;
     static const std::array<MerkleLink, 8> m_right_from_code;
 
@@ -59,9 +56,9 @@ protected:
 public:
     MerkleNode(MerkleLink left, MerkleLink right) : m_code(_encode(left, right)) { }
 
-    /* Must be explicit to avoid unintentional integer or boolean
-     * promotion assignments.  See also the related note about
-     * GetCode() and SetCode() below. */
+    /* Must be explicit to avoid unintentional integer or boolean promotion
+     * assignments.  See also the related note about GetCode() and SetCode()
+     * below. */
     explicit MerkleNode(code_type code) : m_code(code) { }
 
     /* Note that a code value of 0 is a {VERIFY, SKIP} node. */
@@ -73,14 +70,13 @@ public:
     MerkleNode& operator=(const MerkleNode&) = default;
     MerkleNode& operator=(MerkleNode&&) = default;
 
-    /* Ideally this would perhaps be operator int() and operator=(),
-     * however C++ does not let us mark an assingment operator as
-     * explicit.  This unfortunately defeats many of the protections
-     * against bugs that strong typing would give us as any integer or
-     * Boolean value could be mistakenly assigned and interpreted as a
-     * code, therefore assignable to a MerkleNode, and probably
-     * generating a memory access exception if the value is not
-     * between 0 and 7. */
+    /* Ideally this would perhaps be operator int() and operator=(), however
+     * C++ does not let us mark an assingment operator as explicit.  This
+     * unfortunately defeats many of the protections against bugs that strong
+     * typing would give us as any integer or Boolean value could be
+     * mistakenly assigned and interpreted as a code, therefore assignable to
+     * a MerkleNode, and probably generating a memory access exception if the
+     * value is not between 0 and 7. */
     inline code_type GetCode() const
       { return m_code; }
 
@@ -89,11 +85,10 @@ public:
         return *this;
     }
 
-    /* The getters and setters for the left and right MerkleLinks
-     * simply recalculate the code value using tables.  The code
-     * values line up such that this could be done with arithmetic and
-     * shifts, but that would probably be one optimization too far in
-     * terms of clarity. */
+    /* The getters and setters for the left and right MerkleLinks simply
+     * recalculate the code value using tables.  The code values line up such
+     * that this could be done with arithmetic and shifts, but that would
+     * probably be one optimization too far in terms of clarity. */
     inline MerkleLink GetLeft() const
       { return m_left_from_code[m_code]; }
 
@@ -118,11 +113,10 @@ public:
 
     /* Relational operators.
      *
-     * At first glance this doesn't make sense to include except for
-     * obscure reasons such as STL container compatibility, however
-     * the encoding scheme was chosen to preserve list ordering
-     * relationships when differing proofs of the same underlying tree
-     * structure are compared. */
+     * At first glance this doesn't make sense to include except for obscure
+     * reasons such as STL container compatibility, however the encoding
+     * scheme was chosen to preserve list ordering relationships when
+     * differing proofs of the same underlying tree structure are compared. */
     inline bool operator<(MerkleNode other) const
       { return (m_code < other.m_code); }
     inline bool operator<=(MerkleNode other) const
@@ -132,35 +126,33 @@ public:
     inline bool operator>(MerkleNode other) const
       { return (other < *this); }
 
-    /* Needs access to m_{left,right}_from_code and _encode() */
+    /* Needs access to m_{left,right}_from_code and _encode(). */
     friend struct MerkleNodeReference;
 };
 
 /*
- * Now we begin constructing the necessary infrastructure for
- * supporting an STL-like container for packed 3-bit code
- * representations of MerkleNode values.
+ * Now we begin constructing the necessary infrastructure for supporting an
+ * STL-like container for packed 3-bit code representations of MerkleNode
+ * values.
  *
- * This is parallels the way that std::vector<bool> is specialized,
- * but with the added complication of a non-power-of-2 packed size.
+ * This is parallel to the way that std::vector<bool> is specialized, but with
+ * the added complication of a non-power-of-2 packed size.
  */
 
 /*
- * First we build a "reference" class which is able to address the
- * location of a packed 3-bit value, and to read and write that value
- * without affecting its neighbors.
+ * First we build a "reference" class which is able to address the location of
+ * a packed 3-bit value, and to read and write that value without affecting
+ * its neighbors.
  *
- * Then we will make use of this MerkleNode reference type to
- * construct an STL-compatible iterator class (technically two, since
- * the container's const_iterator is not a const instance of the
- * iterator, because "const" in this case refers to the underlying
- * reference not the iterator itself).
+ * Then we will make use of this MerkleNode reference type to construct an
+ * STL-compatible iterator class (technically two, since the container's
+ * const_iterator is not a const instance of the iterator, because "const" in
+ * this case refers to the underlying reference not the iterator itself).
  */
 struct MerkleNodeReference
 {
-    /* Nodes are stored with a tightly packed 3-bit encoding, the
-     * code.  This allows up to 8 node specifications to fit within 3
-     * bytes:
+    /* Nodes are stored with a tightly packed 3-bit encoding, the code.  This
+     * allows up to 8 node specifications to fit within 3 bytes:
      *
      *    -- Node index
      *   /
@@ -170,9 +162,9 @@ struct MerkleNodeReference
      *                            /
      *                Bit Index --
      *
-     * A reference to a particular node consists of a pointer to the
-     * beginning of this 3 byte sequence, and the index (between 0 and
-     * 7) of the node referenced. */
+     * A reference to a particular node consists of a pointer to the beginning
+     * of this 3 byte sequence, and the index (between 0 and 7) of the node
+     * referenced. */
     typedef unsigned char base_type;
     /* Alas, C++ does not offer a 3-bit integer type: */
     typedef unsigned char offset_type;
@@ -182,36 +174,34 @@ protected:
     offset_type m_offset;
 
     /* The parameterized constructor is protected because MerkleNode
-     * references should only ever be created by the friended iterator
-     * and container code. */
+     * references should only ever be created by the friended iterator and
+     * container code. */
     MerkleNodeReference(base_type* base, offset_type offset) : m_base(base), m_offset(offset) { }
 
-    /* We're emulating a reference, not a pointer, and it doesn't make
-     * sense to have default-constructable references. */
+    /* We're emulating a reference, not a pointer, and it doesn't make sense
+     * to have default-constructable references. */
     MerkleNodeReference() = delete;
 
 public:
-    /* The default copy constructors are sufficient. Note that these
-     * create a new reference object that points to the same packed
-     * MerkleNode value. */
+    /* The default copy constructors are sufficient. Note that these create a
+     * new reference object that points to the same packed MerkleNode value. */
     MerkleNodeReference(const MerkleNodeReference& other) = default;
     MerkleNodeReference(MerkleNodeReference&& other) = default;
 
-    /* Copy assignment operators are NOT the default behavior:
-     * assigning one reference to another copies the underlying
-     * values, to make the MerkleNodeReference objects behave like
-     * references. It is NOT the same as the copy constructor, which
-     * copies the reference itself. */
+    /* Copy assignment operators are NOT the default behavior: assigning one
+     * reference to another copies the underlying values, to make the
+     * MerkleNodeReference objects behave like references.  It is NOT the same
+     * as the copy constructor, which copies the reference itself. */
     inline MerkleNodeReference& operator=(const MerkleNodeReference& other)
       { return SetCode(other.GetCode()); }
     inline MerkleNodeReference& operator=(MerkleNodeReference&& other)
       { return SetCode(other.GetCode()); }
 
 public:
-    /* Read a 3-bit code value */
+    /* Read a 3-bit code value. */
     MerkleNode::code_type GetCode() const;
 
-    /* Write a 3-bit code value */
+    /* Write a 3-bit code value. */
     MerkleNodeReference& SetCode(MerkleNode::code_type code);
 
     /* Read and write the MerkleLink values individually. */
@@ -253,23 +243,23 @@ public:
     inline bool operator>(MerkleNode other) const
       { return (GetCode() > other.GetCode()); }
 
-    /* Conversion to/from class MerkleNode */
+    /* Conversion to/from class MerkleNode. */
     inline MerkleNodeReference& operator=(const MerkleNode& other)
       { return SetCode(other.GetCode()); }
     inline operator MerkleNode() const
       { return MerkleNode(GetCode()); }
 
 protected:
-    /* Needs C(base,offset) and access to m_base and m_offset */
+    /* Needs C(base,offset) and access to m_base and m_offset. */
     friend struct MerkleNodeIteratorBase;
 
-    /* Needs C(base,offset) */
+    /* Needs C(base,offset). */
     template<class T, class Alloc> friend class std::vector;
 };
 
 /*
- * Equality and relational operators that couldn't have been defined
- * inside MerkleNode because MerkleNodeReference was not defined.
+ * Equality and relational operators that couldn't have been defined inside
+ * MerkleNode because MerkleNodeReference was not defined.
  */
 inline bool operator==(MerkleNode lhs, const MerkleNodeReference& rhs)
   { return (lhs.GetCode() == rhs.GetCode()); }
@@ -285,33 +275,31 @@ inline bool operator>(MerkleNode lhs, const MerkleNodeReference& rhs)
   { return (lhs.GetCode() > rhs.GetCode()); }
 
 /*
- * Now we construct an STL-compatible iterator object. If you are not
- * familiar with writing STL iterators, this might be difficult to
- * review.  In-line commentary explaining general facets of iterator
- * implementation would be too verbose, so I encourage reviewers to
- * compare this with their own standard library's implementation of
- * std::vector<bool>'s iterators as well as available documentation
- * for std::iterator, as necessary.
+ * Now we construct an STL-compatible iterator object.  If you are not
+ * familiar with writing STL iterators, this might be difficult to review.
+ * In-line commentary explaining general facets of iterator implementation
+ * would be too verbose, so I encourage reviewers to compare this with their
+ * own standard library's implementation of std::vector<bool>'s iterators as
+ * well as available documentation for std::iterator, as necessary.
  *
  * We derive from std::iterator basically just to provide the ability
  * specialize algorithms based on iterator category tags.  All iterator
- * functionality must be re-implemented by this class due to the
- * peculiarities of iterating over packed representations.
+ * functionality must be re-implemented by this class due to the peculiarities
+ * of iterating over packed representations.
  *
- * Note, if you're not aware, that for STL containers const_iterator
- * is not the iterator class with a const qualifier applied.  The
- * const in the typename refers the references it generates; a
- * const_iterator itself is mutable, otherwise you wouldn't be able to
- * advance it.  The class MerkleNodeIteratorBase implements the common
- * functionality and the two iterator classes derive from it.
+ * Note, if you're not aware, that for STL containers const_iterator is not
+ * the iterator class with a const qualifier applied.  The const in the
+ * typename refers the references it generates; a const_iterator itself is
+ * mutable, otherwise you wouldn't be able to advance it.  The class
+ * MerkleNodeIteratorBase implements the common functionality and the two
+ * iterator classes derive from it.
  */
 struct MerkleNodeIteratorBase
 {
-    /* The value extracted from an iterator is a MerkleNode, or more
-     * properly a MerkleNodeReference (iterator) or const MerkleNode
-     * (const_iterator). The packed array of 3-bit code values only
-     * has its values extracted and then converted to MerkleNode as
-     * necessary on the fly. */
+    /* The value extracted from an iterator is a MerkleNode, or more properly
+     * a MerkleNodeReference (iterator) or const MerkleNode (const_iterator).
+     * The packed array of 3-bit code values only has its values extracted and
+     * then converted to MerkleNode as necessary on the fly. */
     typedef std::random_access_iterator_tag iterator_category;
     typedef MerkleNode value_type;
     typedef std::ptrdiff_t difference_type;
@@ -319,23 +307,22 @@ struct MerkleNodeIteratorBase
 protected:
     MerkleNodeReference m_ref;
 
-    /* A pass through initializer used by the derived iterator types,
-     * since otherwise m_ref would not be accessible to their
-     * constructor member initialization lists. */
+    /* A pass through initializer used by the derived iterator types, since
+     * otherwise m_ref would not be accessible to their constructor member
+     * initialization lists. */
     MerkleNodeIteratorBase(MerkleNodeReference::base_type* base, MerkleNodeReference::offset_type offset) : m_ref(base, offset) { }
 
-    /* Constructing an iterator from another iterator clones the
-     * underlying reference. */
+    /* Constructing an iterator from another iterator clones the underlying
+     * reference. */
     MerkleNodeIteratorBase(const MerkleNodeIteratorBase&) = default;
     MerkleNodeIteratorBase(MerkleNodeIteratorBase&&) = default;
 
-    /* Copy assignment clones the underlying reference, but using the
-     * default copy assignment operator would not work since it calls
-     * the underlying MerkleNodeReference structure's custom copy
-     * assignment operator, which emulates reference assignment
-     * (destructive) instead of cloning the reference itself.  In this
-     * context we want is what would otherwise be the default
-     * behavior--cloning the reference--which we must implement
+    /* Copy assignment clones the underlying reference, but using the default
+     * copy assignment operator would not work since it calls the underlying
+     * MerkleNodeReference structure's custom copy assignment operator, which
+     * emulates reference assignment (destructive) instead of cloning the
+     * reference itself.  In this context we want is what would otherwise be
+     * the default behavior--cloning the reference--which we must implement
      * ourselves. */
     inline MerkleNodeIteratorBase& operator=(const MerkleNodeIteratorBase& other) {
         m_ref.m_base = other.m_ref.m_base;
@@ -350,24 +337,22 @@ protected:
     }
 
 public:
-    /* Distance: the number of increments required to get from *this
-     * to other. */
+    /* Distance: the number of increments required to get from *this to other. */
     difference_type operator-(const MerkleNodeIteratorBase& other) const;
 
     /*
-     * The standard increment, decrement, advancement, etc. operators
-     * for both iterator and const_iterator have the same internal
-     * implementation and could be defined here, but then they would
-     * be returning instances of the base class not the iterator. So
-     * look to those definitions in the derived classes below.
+     * The standard increment, decrement, advancement, etc. operators for both
+     * iterator and const_iterator have the same internal implementation and
+     * could be defined here, but then they would be returning instances of
+     * the base class not the iterator. So look to those definitions in the
+     * derived classes below.
      */
 
     /* Equality operators.
      *
      * Note: Comparing the underlying reference directly with
-     *       MerkleNodeReference::operator== and friends would result
-     *       in the underlying values being compared, not the memory
-     *       addresses. */
+     *       MerkleNodeReference::operator== and friends would result in the
+     *       underlying values being compared, not the memory addresses. */
     inline bool operator==(const MerkleNodeIteratorBase& other) const {
         return m_ref.m_base == other.m_ref.m_base
             && m_ref.m_offset == other.m_ref.m_offset;
@@ -390,28 +375,27 @@ public:
       { return other < *this; }
 
 protected:
-    /* Move to the next 3-bit code value, incrementing m_base (by 3)
-     * if we've gone past the end of a 3-byte block of 8 code values
-     * it points to. */
+    /* Move to the next 3-bit code value, incrementing m_base (by 3) if we've
+     * gone past the end of a 3-byte block of 8 code values it points to. */
     void _incr();
 
-    /* Move to the prior 3-bit code value, moving m_back back (by 3)
-     * if we've gone past the beginning of the 3-byte block of 8 code
-     * values it points to. */
+    /* Move to the prior 3-bit code value, moving m_back back (by 3) if we've
+     * gone past the beginning of the 3-byte block of 8 code values it points
+     * to. */
     void _decr();
 
-    /* Move an arbitrary number of elements forward or backwards.
-     * Used to implement random access interface with constant time
-     * properties (see related operator-() definition below). */
+    /* Move an arbitrary number of elements forward or backwards.  Used to
+     * implement random access interface with constant time properties (see
+     * related operator-() definition below). */
     void _seek(difference_type distance);
 };
 
 /*
- * Forward random access iterator, using the _incr(), _decr(), _seek()
- * and operator-() methods of MerkleNodeIteratorBase, which is the
- * important business logic. This class is mostly just API wrappers to
- * provide an API interface close enough to API compatible with STL
- * iterators to be usable with other standard library generics.
+ * Forward random access iterator, using the _incr(), _decr(), _seek() and
+ * operator-() methods of MerkleNodeIteratorBase, which is the important
+ * business logic.  This class is mostly just API wrappers to provide an API
+ * interface close enough to API compatible with STL iterators to be usable
+ * with other standard library generics.
  */
 struct MerkleNodeIterator : public MerkleNodeIteratorBase
 {
@@ -420,8 +404,8 @@ struct MerkleNodeIterator : public MerkleNodeIteratorBase
     typedef MerkleNodeReference* pointer;
 
     /* Default constructor makes an unsafe iterator that will crash if
-     * dereferenced, but is required so that an iterator variable can
-     * declared and initialized separately--a common usage pattern. */
+     * dereferenced, but is required so that an iterator variable can declared
+     * and initialized separately--a common usage pattern. */
     MerkleNodeIterator() : MerkleNodeIteratorBase(nullptr, 0) { }
 
     /* Default copy/move constructors and assignment operators are fine. */
@@ -467,9 +451,9 @@ public:
 
     /* Random access interface. */
     inline difference_type operator-(const MerkleNodeIterator& other) const {
-        /* The base class implements this correctly, but since we
-         * define another overload of operator-() below, we need to
-         * explicitly implement this variant too. */
+        /* The base class implements this correctly, but since we define
+         * another overload of operator-() below, we need to explicitly
+         * implement this variant too. */
         return MerkleNodeIteratorBase::operator-(other);
     }
 
@@ -507,8 +491,8 @@ inline MerkleNodeIterator operator+(MerkleNodeIterator::difference_type n, const
   { return x + n; }
 
 /*
- * An iterator that returns const references.  Not that this is
- * semantically different from a `const MerkleNodeIterator`.
+ * An iterator that returns const references.  Not that this is semantically
+ * different from a `const MerkleNodeIterator`.
  */
 struct MerkleNodeConstIterator : public MerkleNodeIteratorBase
 {
@@ -516,10 +500,9 @@ struct MerkleNodeConstIterator : public MerkleNodeIteratorBase
     typedef const MerkleNodeReference reference;
     typedef const MerkleNodeReference* pointer;
 
-    /* Creates an unsafe iterator with a sentinal value, which will
-     * crash if dereferenced.  Required to support the common code
-     * pattern of separating variable definitions from
-     * initialization. */
+    /* Creates an unsafe iterator with a sentinal value, which will crash if
+     * dereferenced.  Required to support the common code pattern of
+     * separating variable definitions from initialization. */
     MerkleNodeConstIterator() : MerkleNodeIteratorBase(nullptr, 0) { }
 
     /* Pass-through constructor of the m_ref field. */
@@ -533,10 +516,10 @@ struct MerkleNodeConstIterator : public MerkleNodeIteratorBase
     MerkleNodeConstIterator& operator=(MerkleNodeConstIterator&& other) = default;
 
 protected:
-    /* const_cast is required (and allowed) because the const
-     * qualifier is only dropped to copy its value into m_ref.  No API
-     * is provided to actually manipulate the underlying value of the
-     * reference by this class. */
+    /* const_cast is required (and allowed) because the const qualifier is
+     * only dropped to copy its value into m_ref.  No API is provided to
+     * actually manipulate the underlying value of the reference by this
+     * class. */
     MerkleNodeConstIterator(const MerkleNodeReference::base_type* base,
                             MerkleNodeReference::offset_type offset)
         : MerkleNodeIteratorBase(const_cast<MerkleNodeReference::base_type*>(base), offset) { }
@@ -603,7 +586,7 @@ public:
       { return *(*this + n); }
 
 protected:
-    /* std::vector<MerkleNode> uses C(base,offset) */
+    /* std::vector<MerkleNode> uses C(base,offset). */
     template<class T, class Alloc> friend class std::vector;
 };
 
@@ -611,12 +594,11 @@ inline MerkleNodeConstIterator operator+(MerkleNodeConstIterator::difference_typ
   { return x + n; }
 
 /*
- * Now we are ready to define the specialization of std::vector for
- * packed 3-bit MerkleNode values.  We use a std::vector<unsigned char>
- * as the underlying container to hold the encoded bytes, with 3
- * packed MerkleNodes per byte.  We then provide a std::vector
- * compatible API to return iterators over MerkleNodeReference objects
- * inside this packed array.
+ * Now we are ready to define the specialization of std::vector for packed
+ * 3-bit MerkleNode values.  We use a std::vector<unsigned char> as the
+ * underlying container to hold the encoded bytes, with 3 packed MerkleNodes
+ * per byte.  We then provide a std::vector compatible API to return iterators
+ * over MerkleNodeReference objects inside this packed array.
  */
 namespace std {
 template<class Allocator>
@@ -643,14 +625,14 @@ public:
     typedef const_iterator::pointer const_pointer;
 
 protected:
-    /* A std::vector<unsignd char> is what is actually used to store
-     * the packed Node representation. */
+    /* A std::vector<unsignd char> is what is actually used to store the
+     * packed Node representation. */
     typedef typename std::allocator_traits<Allocator>::template rebind_alloc<base_type> base_allocator_type;
     typedef std::vector<base_type, base_allocator_type> data_type;
 
-    /* m_data.size() is (3 * m_count) / 8, but because of the truncation
-     * we can't know from m_data.size() alone how many nodes are in the
-     * tree structure, so the count needs to be stored explicitly. */
+    /* m_data.size() is (3 * m_count) / 8, but because of the truncation we
+     * can't know from m_data.size() alone how many nodes are in the tree
+     * structure, so the count needs to be stored explicitly. */
     data_type m_data;
     size_type m_count;
 
@@ -662,17 +644,15 @@ public:
     explicit vector(const Allocator& alloc = Allocator())
         : m_data(static_cast<base_allocator_type>(alloc)), m_count(0) { }
 
-    /* Yes, this doesn't allow specifying the allocator.  That is a
-     * bug in C++11, fixed in C++14.  However we aim for exact
-     * compatibility with the version of C++ used by Bitcoin Core,
-     * which is still pegged to C++11.
+    /* Yes, this doesn't allow specifying the allocator.  That is a bug in
+     * C++11, fixed in C++14.  However we aim for exact compatibility with the
+     * version of C++ used by Bitcoin Core, which is still pegged to C++11.
      *
-     * Note: Because m_data is a vector of a primitive type, its values
-     *       are value initialized to zero according to the C++11
-     *       standard.  We don't need to do anything.  Note, however,
-     *       that in prior versions of the standard the behavior was
-     *       different and this implementation will not work with
-     *       pre-C++11 compilers. */
+     * Note: Because m_data is a vector of a primitive type, its values are
+     *       value initialized to zero according to the C++11 standard.  We
+     *       don't need to do anything.  Note, however, that in prior versions
+     *       of the standard the behavior was different and this
+     *       implementation will not work with pre-C++11 compilers. */
     explicit vector(size_type count)
         : m_data(_data_size(count)), m_count(count) { }
 
@@ -836,10 +816,10 @@ public:
       { m_data.reserve(_data_size(new_cap)); }
 
     inline size_type capacity() const noexcept {
-        /* Again, careful of overflow, although it is more of a
-         * theoretical concern here since such limitations would only
-         * be encountered if the vector consumed more than 1/8th of
-         * the addressable memory range. */
+        /* Again, careful of overflow, although it is more of a theoretical
+         * concern here since such limitations would only be encountered if
+         * the vector consumed more than 1/8th of the addressable memory
+         * range. */
         return std::max(m_count, 8 * m_data.capacity() / 3);
     }
 
@@ -857,24 +837,22 @@ public:
       { m_data.shrink_to_fit(); }
 
 protected:
-    /* Resizes the underlying vector to support the number of packed
-     * Nodes specified.  Does NOT initialize any newly allocated
-     * bytes, except for the unused bits in the last byte when
-     * shrinking or the last new byte added, to prevent acquisition of
-     * dirty status.  It is the responsibility of the caller to
-     * initialize any added new MerkleNodes. */
+    /* Resizes the underlying vector to support the number of packed Nodes
+     * specified.  Does NOT initialize any newly allocated bytes, except for
+     * the unused bits in the last byte when shrinking or the last new byte
+     * added, to prevent acquisition of dirty status.  It is the responsibility
+     * of the caller to initialize any added new MerkleNodes. */
     void _resize(size_type count) {
         if (count < m_count) {
-            /* Clear bits of elements being removed in the new last
-             * byte, for the purpose of not introducing dirty
-             * status. */
+            /* Clear bits of elements being removed in the new last byte, for
+             * the purpose of not introducing dirty status. */
             _fill(count, std::min((count + 7) & ~7, m_count), 0);
         }
         size_type new_data_size = _data_size(count);
         m_data.resize(new_data_size);
         if (m_count < count) {
-            /* Clear the last byte, if a byte is being added, so that
-             * none of the extra bits introduce dirty status. */
+            /* Clear the last byte, if a byte is being added, so that none of
+             * the extra bits introduce dirty status. */
             if (new_data_size > _data_size(m_count)) {
                 m_data.back() = 0;
             }
@@ -887,10 +865,10 @@ protected:
      * overlap.  Any non-overlap in the source is left with its prior
      * value intact. */
     void _move(size_type first, size_type last, size_type dest) {
-        /* TODO: This could be made much faster by copying chunks at a
-         *       time.  This far less efficient approach is taken
-         *       because it is more obviously correct and _move is not
-         *       in the pipeline critical to validation performance. */
+        /* TODO: This could be made much faster by copying chunks at a time.
+         *       This far less efficient approach is taken because it is more
+         *       obviously correct and _move is not in the pipeline critical
+         *       to validation performance. */
         if (dest < first) {
             std::copy(begin()+first, begin()+last, begin()+dest);
         }
@@ -900,16 +878,15 @@ protected:
         }
     }
 
-    /* A std::fill()-like behavior over a range of the packed elements
-     * of this container. */
+    /* A std::fill()-like behavior over a range of the packed elements of this
+     * container. */
     void _fill(size_type first, size_type last, MerkleNode::code_type value) {
         /* TODO: This could be made much faster for long ranges by
-         *       precomputing the 3-byte repeating sequence and using
-         *       that for long runs.  However this method mostly
-         *       exists for API compatability with std::vector, and is
-         *       not used by Merkle tree manipulation code, which at
-         *       best very infrequently needs to fill a range of
-         *       serialized MerkleNode code values. */
+         *       precomputing the 3-byte repeating sequence and using that for
+         *       long runs.  However this method mostly exists for API
+         *       compatability with std::vector, and is not used by Merkle
+         *       tree manipulation code, which at best very infrequently needs
+         *       to fill a range of serialized MerkleNode code values. */
         std::fill(begin()+first, begin()+last, MerkleNode(value));
     }
 
@@ -930,13 +907,12 @@ public:
         return (begin() + n);
     }
 
-    /* TODO: This implementation should be correct.  It's a rather
-     *       trivial method to implement.  However (1) the lack of
-     *       easy non-interactive input iterators in the standard
-     *       library makes this difficult to write tests for; and (2)
-     *       it's not currently used anyway.  Still, for exact
-     *       compatibility with the standard container interface this
-     *       should get tested and implemented. */
+    /* TODO: This implementation should be correct.  It's a rather trivial
+     *       method to implement.  However (1) the lack of easy non-
+     *       interactive input iterators in the standard library makes this
+     *       difficult to write tests for; and (2) it's not currently used
+     *       anyway.  Still, for exact compatibility with the standard
+     *       container interface this should get tested and implemented. */
     template<class InputIt>
     iterator insert(const_iterator pos, InputIt first, InputIt last, std::input_iterator_tag) {
         difference_type n = pos - cbegin();
@@ -959,9 +935,9 @@ public:
 
     template<class InputIt>
     inline iterator insert(const_iterator pos, InputIt first, InputIt last) {
-        /* Use iterator tag dispatching to be able to pre-allocate the
-         * space when InputIt is a random access iterator, to prevent
-         * multiple resizings on a large insert. */
+        /* Use iterator tag dispatching to be able to pre-allocate the space
+         * when InputIt is a random access iterator, to prevent multiple
+         * resizings on a large insert. */
         return insert(pos, first, last, typename iterator_traits<InputIt>::iterator_category());
     }
 
@@ -1034,15 +1010,14 @@ public:
 
     template<typename Stream>
     void Serialize(Stream &s) const {
-        /* The size of the node array is prefixed by the number of
-         * nodes, not the number of bytes which much then be
-         * read. _resize() in Unserialize() below handles conversion
-         * between the two. */
+        /* The size of the node array is prefixed by the number of nodes, not
+         * the number of bytes which much then be read. _resize() in
+         * Unserialize() below handles conversion between the two. */
         ::Serialize(s, VARINT(m_count));
-        /* The size of the underlying storage vector is always kept
-         * exactly equal to the minimum number of bytes necessary to
-         * store the number 3-bit packed code values, so we can just
-         * read and write it as a plain old data. */
+        /* The size of the underlying storage vector is always kept exactly
+         * equal to the minimum number of bytes necessary to store the number
+         * 3-bit packed code values, so we can just read and write it as a
+         * plain old data. */
         if (!m_data.empty()) {
             s.write(MakeByteSpan(m_data));
         }
@@ -1088,34 +1063,32 @@ template<class A> inline bool operator>(const vector<MerkleNode, A> &lhs, const 
 /*
  * Tree traversal helper routines.
  *
- * Havig defined the std::vector<MerkleNode> representation of the
- * structure of a Merkle tree, we define a helper routine to apply the
- * visitor idiom in a depth-first traversal of a Merkle tree, which is
- * the general strategy we will take towards working with Merkle
- * trees.
+ * Havig defined the std::vector<MerkleNode> representation of the structure
+ * of a Merkle tree, we define a helper routine to apply the visitor idiom in
+ * a depth-first traversal of a Merkle tree, which is the general strategy we
+ * will take towards working with Merkle trees.
  */
 
 /*
- * TraversalPredicate (used below) is a template parameter for a
- * callable object or function pointer which supports the following
- * API:
+ * TraversalPredicate (used below) is a template parameter for a callable
+ * object or function pointer which supports the following API:
  *
  *   bool operator()(std::vector<Node>::size_t depth, MerkleLink value, bool is_right)
  *
- * It is called by the traversal routines both to process the contents
- * of the tree (for example, calculate the Merkle root), or report
- * reaching the end of traversal.
+ * It is called by the traversal routines both to process the contents of the
+ * tree (for example, calculate the Merkle root), or report reaching the end
+ * of traversal.
  *
  * size_t depth
  *
- *   The depth of the MerkleLink being processed. MerkleLinks of the
- *   root node have a depth of 1.  Depth 0 would be the depth of a
- *   single-hash tree, which has no internal nodes.
+ *   The depth of the MerkleLink being processed. MerkleLinks of the root node
+ *   have a depth of 1.  Depth 0 would be the depth of a single-hash tree,
+ *   which has no internal nodes.
  *
  * MerkleLink value
  *
- *   The value of the link, one of MerkleLink::DESCEND,
- *   MerkleLink::VERIFY, or MerkleLink::SKIP.
+ *   The value of the link, one of MerkleLink::DESCEND, MerkleLink::VERIFY, or
+ *   MerkleLink::SKIP.
  *
  * bool is_right
  *
@@ -1123,23 +1096,21 @@ template<class A> inline bool operator>(const vector<MerkleNode, A> &lhs, const 
  *
  * returns bool
  *
- *   false if traversal should continue.  true causes traversal to
- *   terminate and an iterator to the node containing the link in
- *   question to be returned to the caller.
+ *   false if traversal should continue.  true causes traversal to terminate
+ *   and an iterator to the node containing the link in question to be
+ *   returned to the caller.
  */
 
 /*
  * Does a depth-first traversal of a tree.
  *
- * Starting with the root node first, the left link is passed to pred
- * then advanced, and if it is MerkleLink::DESCEND then its sub-tree
- * is recursively processed, then the right link followed by its
- * sub-tree.  Traversal ends the first time any of following
- * conditions hold true:
+ * Starting with the root node first, the left link is passed to pred then
+ * advanced, and if it is MerkleLink::DESCEND then its sub-tree is recursively
+ * processed, then the right link followed by its sub-tree.  Traversal ends
+ * the first time any of following conditions hold true:
  *
  *   1. first == last;
- *   2. the entire sub-tree with first as the root node has been
- *      processed; or
+ *   2. the entire sub-tree with first as the root node has been processed; or
  *   3. pred() returns true.
  *
  * Iter first
@@ -1148,42 +1119,40 @@ template<class A> inline bool operator>(const vector<MerkleNode, A> &lhs, const 
  *
  * Iter last
  *
- *   One past the last node to possibly be processed.  Traversal will
- *   end earlier if it reaches the end of the subtree rooted in the
- *   first node, or if TraversalPredicate returns true.
+ *   One past the last node to possibly be processed.  Traversal will end
+ *   earlier if it reaches the end of the subtree rooted in the first node, or
+ *   if TraversalPredicate returns true.
  *
  * TraversalPredicate pred
  *
- *   A callable object or function pointer that executed for each link
- *   in the tree.  It is passed the current depth, the MerkleLink
- *   value, and a Boolean value indicating whether it is the left or
- *   the right link.
+ *   A callable object or function pointer that executed for each link in the
+ *   tree.  It is passed the current depth, the MerkleLink value, and a
+ *   Boolean value indicating whether it is the left or the right link.
  *
  * returns std::pair<Iter, bool>
  *
- *   Returns the iterator pointing to the node where traversal
- *   terminated, and a Boolean value indicating whether it was the
- *   left (false) or right (true) branch that triggered termination,
- *   or {last, incomplete} if termination is due to hitting the end of
- *   the range, where incomplete is a Boolean value indicating whether
- *   termination was due to finishing the subtree (false) or merely
- *   hitting the end of the range (true).
+ *   Returns the iterator pointing to the node where traversal terminated, and
+ *   a Boolean value indicating whether it was the left (false) or right
+ *   (true) branch that triggered termination, or {last, incomplete} if
+ *   termination is due to hitting the end of the range, where incomplete is a
+ *   Boolean value indicating whether termination was due to finishing the
+ *   subtree (false) or merely hitting the end of the range (true).
  */
 template<class Iter, class TraversalPredicate>
 std::pair<Iter, bool> depth_first_traverse(Iter first, Iter last, TraversalPredicate pred)
 {
-    /* Depth-first traversal uses space linear with respect to the
-     * depth of the tree, which is logarithmetic in the case of a
-     * balanced tree.  What is stored is a path from the root to the
-     * node under consideration, and a record of whether it was the
-     * left (false) or right (true) branch that was taken. */
+    /* Depth-first traversal uses space linear with respect to the depth of
+     * the tree, which is logarithmetic in the case of a balanced tree.  What
+     * is stored is a path from the root to the node under consideration, and
+     * a record of whether it was the left (false) or right (true) branch that
+     * was taken. */
     std::vector<std::pair<Iter, bool> > stack;
 
     for (auto pos = first; pos != last; ++pos) {
-        /* Each branch is processed the same.  First we check if the
-         * branch meets the user-provided termination criteria.  Then
-         * if it is a MerkleLink::DESCEND we save our position on the
-         * stack and "recurse" down the link into the next layer. */
+        /* Each branch is processed the same.  First we check if the branch
+         * meets the user-provided termination criteria.  Then if it is a
+         * MerkleLink::DESCEND we save our position on the stack and "recurse"
+         * down the link into the next layer. */
         if (pred(stack.size()+1, pos->GetLeft(), false)) {
             return {pos, false};
         }
@@ -1192,9 +1161,8 @@ std::pair<Iter, bool> depth_first_traverse(Iter first, Iter last, TraversalPredi
             continue;
         }
 
-        /* If the left link was MerkleLink::VERIFY or
-         * MerkleLink::SKIP, we continue on to the right branch in the
-         * same way. */
+        /* If the left link was MerkleLink::VERIFY or MerkleLink::SKIP, we
+         * continue on to the right branch in the same way. */
         if (pred(stack.size()+1, pos->GetRight(), true)) {
             return {pos, true};
         }
@@ -1203,10 +1171,9 @@ std::pair<Iter, bool> depth_first_traverse(Iter first, Iter last, TraversalPredi
             continue;
         }
 
-        /* After processing a leaf node (neither left nor right
-         * branches are MerkleLink:DESCEND) we move up the path,
-         * processing the right branches of nodes for which we had
-         * descended the left-branch. */
+        /* After processing a leaf node (neither left nor right branches are
+         * MerkleLink:DESCEND) we move up the path, processing the right
+         * branches of nodes for which we had descended the left-branch. */
         bool done = false;
         while (!stack.empty() && !done) {
             if (stack.back().second) {
@@ -1222,19 +1189,18 @@ std::pair<Iter, bool> depth_first_traverse(Iter first, Iter last, TraversalPredi
             }
         }
 
-        /* We get to this point only after retreating up the path and
-         * hitting an inner node for which the right branch has not
-         * been explored (in which case the stack is not empty and we
-         * continue), or if we have completed processing the entire
-         * subtree, in which case traversal terminates. */
+        /* We get to this point only after retreating up the path and hitting
+         * an inner node for which the right branch has not been explored (in
+         * which case the stack is not empty and we continue), or if we have
+         * completed processing the entire subtree, in which case traversal
+         * terminates. */
         if (stack.empty())
             return {++pos, false};
     }
 
-    /* The user-provided traversal predicate did not at any point
-     * terminate traversal, but we nevertheless hit the end of the
-     * traversal range with portions of the subtree still left
-     * unexplored. */
+    /* The user-provided traversal predicate did not at any point terminate
+     * traversal, but we nevertheless hit the end of the traversal range with
+     * portions of the subtree still left unexplored. */
     return {last, true};
 }
 
@@ -1286,12 +1252,12 @@ struct MerkleBranch
 void swap(MerkleBranch& lhs, MerkleBranch& rhs);
 
 /*
- * A MerkleProof is a transportable structure that contains the
- * information necessary to verify the root of a Merkle tree given N
- * accompanying "verify" hashes.  The proof consists of those portions
- * of the tree which can't be pruned, and M "skip" hashes, each of
- * which is either the root hash of a fully pruned subtree, or a leaf
- * value not included in the set of "verify" hashes.
+ * A MerkleProof is a transportable structure that contains the information
+ * necessary to verify the root of a Merkle tree given N accompanying "verify"
+ * hashes.  The proof consists of those portions of the tree which can't be
+ * pruned, and M "skip" hashes, each of which is either the root hash of a
+ * fully pruned subtree, or a leaf value not included in the set of "verify"
+ * hashes.
  */
 struct MerkleProof
 {
@@ -1303,7 +1269,7 @@ struct MerkleProof
 
     MerkleProof(path_type&& path, skip_type&& skip) : m_path(path), m_skip(skip) { }
 
-    /* Default constructors and assignment operators are fine */
+    /* Default constructors and assignment operators are fine. */
     MerkleProof() = default;
     MerkleProof(const MerkleProof&) = default;
     MerkleProof(MerkleProof&&) = default;
@@ -1319,12 +1285,11 @@ struct MerkleProof
     template<typename Stream>
     void Serialize(Stream &s) const {
         m_path.Serialize(s);
-        /* The standard serialization primitives for a vector involves
-         * using the Satoshi-defined CompactSize format, which isn't
-         * actually a very nice format to for most purposes when
-         * compared with the VarInt encoding developed by Pieter
-         * Wuille.  Since we have the freedom of defining a new
-         * serialization format for MerkleProofs, we choose to
+        /* The standard serialization primitives for a vector involves using
+         * the Satoshi-defined CompactSize format, which isn't actually a very
+         * nice format to for most purposes when compared with the VarInt
+         * encoding developed by Pieter Wuille.  Since we have the freedom of
+         * defining a new serialization format for MerkleProofs, we choose to
          * explicitly use the latter here. */
         uint64_t skip_size = m_skip.size();
         ::Serialize(s, VARINT(skip_size));
@@ -1349,8 +1314,8 @@ struct MerkleProof
 void swap(MerkleProof& lhs, MerkleProof& rhs);
 
 /*
- * A MerkleTree combines a MerkleProof with a vector of "verify" hash
- * values.  It also contains methods for re-computing the root hash.
+ * A MerkleTree combines a MerkleProof with a vector of "verify" hash values.
+ * It also contains methods for re-computing the root hash.
  */
 struct MerkleTree
 {
@@ -1360,8 +1325,8 @@ struct MerkleTree
     typedef proof_type::skip_type verify_type;
     verify_type m_verify;
 
-    /* Builds a single-element MerkleTree with the specified hash
-     * value, as either a VERIFY or SKIP hash. */
+    /* Builds a single-element MerkleTree with the specified hash value, as
+     * either a VERIFY or SKIP hash. */
     explicit MerkleTree(const uint256& hash, bool verify = true);
 
     /* Builds a single-element MerkleTree from a leaf hash and proof
@@ -1369,11 +1334,11 @@ struct MerkleTree
     MerkleTree(const uint256& leaf, const MerkleBranch &branch);
 
     /* Builds a new Merkle tree with the specified left-branch and
-     * right-branch, including properly handling the case of left or
-     * right being a single hash. */
+     * right-branch, including properly handling the case of left or right
+     * being a single hash. */
     MerkleTree(const MerkleTree& left, const MerkleTree& right);
 
-    /* Default constructors and assignment operators are fine */
+    /* Default constructors and assignment operators are fine. */
     MerkleTree() = default;
     MerkleTree(const MerkleTree&) = default;
     MerkleTree(MerkleTree&&) = default;

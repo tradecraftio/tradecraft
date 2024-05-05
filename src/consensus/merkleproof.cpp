@@ -8,17 +8,16 @@
 extern uint256 MerkleHash_Sha256Midstate(const uint256& left, const uint256& right);
 
 /*
- * The {SKIP, SKIP} entry is missing on purpose. Not only does this
- * make the number of possible states a nicely packable power of 2,
- * but excluding that fully prunable state means that any given fully
- * expanded tree and set of verify hashes has one and only one proof
- * encoding -- the serialized tree with all {SKIP, SKIP} nodes
- * recursively pruned.
+ * The {SKIP, SKIP} entry is missing on purpose.  Not only does this make the
+ * number of possible states a nicely packable power of 2, but excluding that
+ * fully prunable state means that any given fully expanded tree and set of
+ * verify hashes has one and only one proof encoding -- the serialized tree
+ * with all {SKIP, SKIP} nodes recursively pruned.
  *
- * The ordering of these entries is also specially chosen: it allows
- * for lexigraphical ordering of proofs extracted from the same tree
- * to stand-in for lexigraphical ordering of the underlying elements
- * if interpreted as an ordered list.
+ * The ordering of these entries is also specially chosen: it allows for
+ * lexigraphical ordering of proofs extracted from the same tree to stand-in
+ * for lexigraphical ordering of the underlying elements if interpreted as an
+ * ordered list.
  */
 const std::array<MerkleLink, 8> MerkleNode::m_left_from_code {{
     MerkleLink::VERIFY,  MerkleLink::VERIFY,  MerkleLink::VERIFY,
@@ -31,8 +30,8 @@ const std::array<MerkleLink, 8> MerkleNode::m_right_from_code {{
       /* No SKIP */   MerkleLink::VERIFY, MerkleLink::DESCEND }};
 
 MerkleNode::code_type MerkleNode::_encode(MerkleLink left, MerkleLink right) {
-    /* Returns the 3-bit code for a given combination of left and
-     * right link values in an internal node. */
+    /* Returns the 3-bit code for a given combination of left and right link
+     * values in an internal node. */
     code_type code = std::numeric_limits<code_type>::max();
     /* Write out a table of Code values to see why this works :) */
     switch (left) {
@@ -49,16 +48,13 @@ MerkleNode::code_type MerkleNode::_encode(MerkleLink left, MerkleLink right) {
 }
 
 MerkleNode::code_type MerkleNodeReference::GetCode() const {
-    /* Belts and suspenders: m_offset should never be anything outside
-     * the range [0, 7], so the assignment to max, which is necessary
-     * to avoid compiler whining, should be undone by the switch that
-     * follows.  But just in case we'll favor failing in a way that is
-     * maximally likely to be cause trouble when the code value is
-     * later used. */
+    /* m_offset should never be anything outside the range [0, 7], so the
+     * assignment to max, which is necessary to avoid compiler whining, should
+     * be undone by the switch that follows. */
     MerkleNode::code_type code = std::numeric_limits<MerkleNode::code_type>::max();
     switch (m_offset) {
-        /* Use the diagram in the class definition to work out that
-         * these magic constant values are correct. */
+        /* Use the diagram in the class definition to work out that these
+         * magic constant values are correct. */
         case 0: code =   m_base[0] >> 5;       break;
         case 1: code =   m_base[0] >> 2;       break;
         case 2: code =  (m_base[0] << 1)
@@ -69,11 +65,11 @@ MerkleNode::code_type MerkleNodeReference::GetCode() const {
                      | ((m_base[2] >> 6) & 3); break;
         case 6: code =   m_base[2] >> 3;       break;
         case 7: code =   m_base[2];            break;
-        /* offset should never be outside the range of [0, 7], so we
-         * should have been handled by one of the prior conditions and
-         * this code is unreachable.  But as a matter of defensive
-         * coding we throw a runtime error rather than return a
-         * nonsense value. */
+        /* m_offset should never be outside the range of [0, 7], so we should
+         * have been handled by one of the prior conditions and this code is
+         * unreachable.  But as a matter of defensive coding and to satisfy
+         * type-based exhaustive checks by the compiler we throw a runtime
+         * error rather than return a nonsense value. */
         default:
             throw std::runtime_error("MerkleNode::m_offset out of bounds");
     }
@@ -82,9 +78,8 @@ MerkleNode::code_type MerkleNodeReference::GetCode() const {
 
 MerkleNodeReference& MerkleNodeReference::SetCode(MerkleNode::code_type code) {
     switch (m_offset) {
-        /* Again, check the diagram in the class definition to see
-         * where these magic constant shift and mask values arise
-         * from. */
+        /* Again, check the diagram in the class definition to see where these
+         * magic constant shift and mask values arise from. */
         case 0: m_base[0] = (m_base[0] & 0x1f) |  (code      << 5); break;
         case 1: m_base[0] = (m_base[0] & 0xe3) |  (code      << 2); break;
         case 2: m_base[0] = (m_base[0] & 0xfc) |  (code      >> 1);
@@ -95,11 +90,11 @@ MerkleNodeReference& MerkleNodeReference::SetCode(MerkleNode::code_type code) {
                 m_base[2] = (m_base[2] & 0x3f) | ((code & 3) << 6); break;
         case 6: m_base[2] = (m_base[2] & 0xc7) |  (code      << 3); break;
         case 7: m_base[2] = (m_base[2] & 0xf8) |   code;            break;
-        /* offset should never be outside the range of [0, 7], so we
-         * should have been handled by one of the prior conditions and
-         * this code is unreachable.  But as a matter of defensive
-         * coding we throw a runtime error rather than try to guess
-         * why we got here. */
+        /* offset should never be outside the range of [0, 7], so we should
+         * have been handled by one of the prior conditions and this code is
+         * unreachable.  But as a matter of defensive coding and to satisfy
+         * type-based exhaustive checks by the compiler we throw a runtime
+         * error rather than try to guess why we got here. */
         default:
             throw std::runtime_error("MerkleNode::m_offset out of bounds");
     }
@@ -132,14 +127,13 @@ void MerkleNodeIteratorBase::_seek(MerkleNodeIteratorBase::difference_type dista
 }
 
 MerkleNodeIteratorBase::difference_type MerkleNodeIteratorBase::operator-(const MerkleNodeIteratorBase& other) const {
-    /* Compare with the version of _seek implemented above. The
-     * following property should hold true:
+    /* Compare with the version of _seek implemented above. The following
+     * property should hold true:
      *
      *   A._seek(B-A) == B
      *
-     * That is to say, the difference between two iterators is the
-     * value which needs to be passed to _seek() to move from one to
-     * the other. */
+     * That is to say, the difference between two iterators is the value which
+     * needs to be passed to _seek() to move from one to the other. */
     return 8 * (m_ref.m_base - other.m_ref.m_base) / 3 + m_ref.m_offset - other.m_ref.m_offset;
 }
 
@@ -310,8 +304,8 @@ MerkleTree::MerkleTree(const uint256& leaf, const MerkleBranch& branch)
 }
 
 MerkleTree::MerkleTree(const MerkleTree& left, const MerkleTree& right) {
-    /* Handle the special case of either the left or right being
-     * empty, which is idempotent. */
+    /* Handle the special case of either the left or right being empty, which
+     * is idempotent. */
     if (left == MerkleTree()) {
         m_proof = right.m_proof;
         m_verify = right.m_verify;
@@ -324,8 +318,8 @@ MerkleTree::MerkleTree(const MerkleTree& left, const MerkleTree& right) {
         return;
     }
 
-    /* Handle the special case of both left and right being fully
-     * pruned, which also results in a fully pruned super-tree. */
+    /* Handle the special case of both left and right being fully pruned,
+     * which also results in a fully pruned super-tree. */
     if (left.m_proof.m_path.empty() && left.m_proof.m_skip.size()==1 && left.m_verify.empty() &&
         right.m_proof.m_path.empty() && right.m_proof.m_skip.size()==1 && right.m_verify.empty())
     {
@@ -334,20 +328,22 @@ MerkleTree::MerkleTree(const MerkleTree& left, const MerkleTree& right) {
         return;
     }
 
-    /* We assume a well-formed, non-empty MerkleTree for both passed
-     * in subtrees, in which if there are no internal nodes than
-     * either m_skip XOR m_verify must have a single hash.  Otherwise
-     * the result of what follows will be an invalid MerkleTree. */
+    /* We assume a well-formed, non-empty MerkleTree for both passed in
+     * subtrees, in which if there are no internal nodes than either m_skip
+     * XOR m_verify must have a single hash.  Otherwise the result of what
+     * follows will be an invalid MerkleTree. */
     m_proof.m_path.emplace_back(MerkleLink::DESCEND, MerkleLink::DESCEND);
 
-    if (left.m_proof.m_path.empty())
+    if (left.m_proof.m_path.empty()) {
         m_proof.m_path.front().SetLeft(left.m_proof.m_skip.empty()? MerkleLink::VERIFY: MerkleLink::SKIP);
+    }
     m_proof.m_path.insert(m_proof.m_path.end(), left.m_proof.m_path.begin(), left.m_proof.m_path.end());
     m_proof.m_skip.insert(m_proof.m_skip.end(), left.m_proof.m_skip.begin(), left.m_proof.m_skip.end());
     m_verify.insert(m_verify.end(), left.m_verify.begin(), left.m_verify.end());
 
-    if (right.m_proof.m_path.empty())
+    if (right.m_proof.m_path.empty()) {
         m_proof.m_path.front().SetRight(right.m_proof.m_skip.empty()? MerkleLink::VERIFY: MerkleLink::SKIP);
+    }
     m_proof.m_path.insert(m_proof.m_path.end(), right.m_proof.m_path.begin(), right.m_proof.m_path.end());
     m_proof.m_skip.insert(m_proof.m_skip.end(), right.m_proof.m_skip.begin(), right.m_proof.m_skip.end());
     m_verify.insert(m_verify.end(), right.m_verify.begin(), right.m_verify.end());
@@ -365,12 +361,11 @@ void swap(MerkleTree& lhs, MerkleTree& rhs) {
 }
 
 uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) const {
-    /* As a special case, an empty proof with no verify hashes results
-     * in the unsalted hash of empty string.  Although this requires
-     * extra work in this implementation to support, it provides
-     * continuous semantics to the meaning of the MERKLEBLOCKVERIFY
-     * opcode, which might potentially reduce the number of code paths
-     * in some scripts. */
+    /* As a special case, an empty proof with no verify hashes results in the
+     * unsalted hash of empty string.  Although this requires extra work in
+     * this implementation to support, it provides continuous semantics to the
+     * meaning of the MERKLEBLOCKVERIFY opcode, which might potentially reduce
+     * the number of code paths in some scripts. */
     if (m_proof.m_path.empty() && m_verify.empty() && m_proof.m_skip.empty()) {
         if (invalid) {
             *invalid = false;
@@ -381,10 +376,10 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
         return HashWriter().GetHash();
     }
 
-    /* Except for the special case of a 0-node, 0-verify, 0-skip tree,
-     * it is always the case (for any binary tree), that the number of
-     * leaf nodes (verify + skip) is one more than the number of
-     * internal nodes in the tree. */
+    /* Except for the special case of a 0-node, 0-verify, 0-skip tree, it is
+     * always the case (for any binary tree), that the number of leaf nodes
+     * (verify + skip) is one more than the number of internal nodes in the
+     * tree. */
     if ((m_verify.size() + m_proof.m_skip.size()) != (m_proof.m_path.size() + 1)) {
         if (invalid) {
             *invalid = true;
@@ -392,8 +387,8 @@ uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) 
         return uint256();
     }
 
-    /* If there are NO nodes in the tree, then this is the degenerate
-     * case of a single hash, in either the verify or skip set. */
+    /* If there are NO nodes in the tree, then this is the degenerate case of
+     * a single hash, in either the verify or skip set. */
     if (m_proof.m_path.empty()) {
         if (invalid) {
             *invalid = false;
