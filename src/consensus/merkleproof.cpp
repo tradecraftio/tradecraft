@@ -154,10 +154,10 @@ uint32_t MerkleBranch::GetPath() const {
     for (; pos < m_vpath.size() && pos < 32; ++pos) {
         ret |= static_cast<uint32_t>(m_vpath[pos]) << pos;
     }
-    // We only throw an error if we are required to set a bit
-    // which is too high to be contained in type uint32_t.  Note
-    // that this means a path which is more than 32 bits in length
-    // could be accepted, so long as the high-order bits are zero.
+    /* We only throw an error if we are required to set a bit which is too
+     * high to be contained in type uint32_t.  Note that this means a path
+     * which is more than 32 bits in length could be accepted, so long as the
+     * high-order bits are zero. */
     for (; pos < m_vpath.size(); ++pos) {
         if (m_vpath[pos]) {
             throw std::runtime_error("MerkleBranch::GetPath : vpath does not fit within standard integer");

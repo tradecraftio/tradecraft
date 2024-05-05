@@ -1192,9 +1192,9 @@ std::pair<Iter, bool> depth_first_traverse(Iter first, Iter last, TraversalPredi
 }
 
 /*
- * A MerkleBranch contains the verification proof for a single hash
- * contained within a MerkleTree structure, in a format that can be
- * verified by ComputeFastMerkleRootFromBranch.
+ * A MerkleBranch contains the verification proof for a single hash contained
+ * within a MerkleTree structure, in a format that can be verified by
+ * ComputeFastMerkleRootFromBranch.
  */
 struct MerkleBranch
 {
@@ -1225,12 +1225,12 @@ struct MerkleBranch
     typedef uint32_t path_type;
     path_type GetPath() const;
 
-    /* Serialize / deserialize the branch as a compactly serialized
-     * byte vector, suitable for use as a segwit script locator or in
-     * the various RPC's.  We expose a custom API instead of the
-     * standard serialization interface because the resulting data
-     * format is NOT self-synchronizing.  The length of the byte
-     * vector is a critical part of its deserialization. */
+    /* Serialize / deserialize the branch as a compactly serialized byte
+     * vector, suitable for use as a segwit script locator or in the various
+     * RPC's.  We expose a custom API instead of the standard serialization
+     * interface because the resulting data format is NOT self-synchronizing.
+     * The length of the byte vector is a critical part of its
+     * deserialization. */
     std::vector<unsigned char> getvch() const;
     MerkleBranch& setvch(const std::vector<unsigned char>& data);
 };
@@ -1323,8 +1323,8 @@ struct MerkleTree
      * either a VERIFY or SKIP hash. */
     explicit MerkleTree(const uint256& hash, bool verify = true);
 
-    /* Builds a single-element MerkleTree from a leaf hash and proof
-     * structure verifying its position in the tree. */
+    /* Builds a single-element MerkleTree from a leaf hash and proof structure
+     * verifying its position in the tree. */
     MerkleTree(const uint256& leaf, const MerkleBranch &branch);
 
     /* Builds a new Merkle tree with the specified left-branch and
