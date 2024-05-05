@@ -212,17 +212,6 @@ MerkleBranch& MerkleBranch::setvch(const std::vector<unsigned char>& data) {
     return *this;
 }
 
-void MerkleProof::clear() noexcept {
-    m_path.clear();
-    m_skip.clear();
-}
-
-void swap(MerkleProof& lhs, MerkleProof& rhs) {
-    using std::swap; // enable ADL
-    swap(lhs.m_path, rhs.m_path);
-    swap(lhs.m_skip, rhs.m_skip);
-}
-
 MerkleTree::MerkleTree(const uint256& hash, bool verify) {
     /* A tree consisting of a single hash, whether VERIFY or SKIP, is
      * represented with no nodes. */
@@ -347,17 +336,6 @@ MerkleTree::MerkleTree(const MerkleTree& left, const MerkleTree& right) {
     m_proof.m_path.insert(m_proof.m_path.end(), right.m_proof.m_path.begin(), right.m_proof.m_path.end());
     m_proof.m_skip.insert(m_proof.m_skip.end(), right.m_proof.m_skip.begin(), right.m_proof.m_skip.end());
     m_verify.insert(m_verify.end(), right.m_verify.begin(), right.m_verify.end());
-}
-
-void MerkleTree::clear() noexcept {
-    m_proof.clear();
-    m_verify.clear();
-}
-
-void swap(MerkleTree& lhs, MerkleTree& rhs) {
-    using std::swap; // enable ADL
-    swap(lhs.m_proof, rhs.m_proof);
-    swap(lhs.m_verify, rhs.m_verify);
 }
 
 uint256 MerkleTree::GetHash(bool* invalid, std::vector<MerkleBranch>* branches) const {

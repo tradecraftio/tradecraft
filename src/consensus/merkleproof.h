@@ -55,21 +55,21 @@ protected:
     static code_type _encode(MerkleLink left, MerkleLink right);
 
 public:
-    MerkleNode(MerkleLink left, MerkleLink right) : m_code(_encode(left, right)) { }
+    constexpr MerkleNode(MerkleLink left, MerkleLink right) noexcept : m_code(_encode(left, right)) { }
 
     /* Must be explicit to avoid unintentional integer or boolean promotion
      * assignments.  See also the related note about GetCode() and SetCode()
      * below. */
-    explicit MerkleNode(code_type code) : m_code(code) { }
+    constexpr explicit MerkleNode(code_type code) noexcept : m_code(code) { }
 
     /* Note that a code value of 0 is a {VERIFY, SKIP} node. */
-    MerkleNode() : m_code(0) { }
+    constexpr MerkleNode() noexcept : m_code(0) { }
 
     /* The default behavior is adequate. */
-    MerkleNode(const MerkleNode&) = default;
-    MerkleNode(MerkleNode&&) = default;
-    MerkleNode& operator=(const MerkleNode&) = default;
-    MerkleNode& operator=(MerkleNode&&) = default;
+    constexpr MerkleNode(const MerkleNode&) noexcept = default;
+    constexpr MerkleNode(MerkleNode&&) noexcept = default;
+    constexpr MerkleNode& operator=(const MerkleNode&) noexcept = default;
+    constexpr MerkleNode& operator=(MerkleNode&&) noexcept = default;
 
     /* Ideally this would perhaps be operator int() and operator=(), however
      * C++ does not let us mark an assingment operator as explicit.  This
@@ -78,10 +78,10 @@ public:
      * mistakenly assigned and interpreted as a code, therefore assignable to
      * a MerkleNode, and probably generating a memory access exception if the
      * value is not between 0 and 7. */
-    inline code_type GetCode() const
+    constexpr code_type GetCode() const
       { return m_code; }
 
-    inline MerkleNode& SetCode(code_type code) {
+    constexpr MerkleNode& SetCode(code_type code) {
         m_code = code;
         return *this;
     }
@@ -90,42 +90,31 @@ public:
      * recalculate the code value using tables.  The code values line up such
      * that this could be done with arithmetic and shifts, but that would
      * probably be one optimization too far in terms of clarity. */
-    inline MerkleLink GetLeft() const
+    constexpr MerkleLink GetLeft() const
       { return m_left_from_code[m_code]; }
 
-    inline MerkleNode& SetLeft(MerkleLink left) {
+    constexpr MerkleNode& SetLeft(MerkleLink left) {
         m_code = _encode(left, m_right_from_code[m_code]);
         return *this;
     }
 
-    inline MerkleLink GetRight() const
+    constexpr MerkleLink GetRight() const
       { return m_right_from_code[m_code]; }
 
-    inline MerkleNode& SetRight(MerkleLink right) {
+    constexpr MerkleNode& SetRight(MerkleLink right) {
         m_code = _encode(m_left_from_code[m_code], right);
         return *this;
     }
 
-    /* Equality operators. */
-    inline bool operator==(MerkleNode other) const
-      { return (m_code == other.m_code); }
-    inline bool operator!=(MerkleNode other) const
-      { return !(*this == other); }
-
-    /* Relational operators.
+    /* Equality & relational operators.
      *
-     * At first glance this doesn't make sense to include except for obscure
-     * reasons such as STL container compatibility, however the encoding
-     * scheme was chosen to preserve list ordering relationships when
-     * differing proofs of the same underlying tree structure are compared. */
-    inline bool operator<(MerkleNode other) const
-      { return (m_code < other.m_code); }
-    inline bool operator<=(MerkleNode other) const
-      { return !(other < *this); }
-    inline bool operator>=(MerkleNode other) const
-      { return !(*this < other); }
-    inline bool operator>(MerkleNode other) const
-      { return (other < *this); }
+     * At first glance it might not make sense to include relational operators
+     * except for obscure reasons such as STL container compatibility, however
+     * the encoding scheme was chosen to preserve list ordering relationships
+     * when differing proofs of the same underlying tree structure are
+     * compared. */
+    constexpr bool operator==(const MerkleNode& other) const = default;
+    constexpr auto operator<=>(const MerkleNode& other) const = default;
 
     /* Needs access to m_{left,right}_from_code and _encode(). */
     friend struct MerkleNodeReference;
@@ -177,7 +166,7 @@ protected:
     /* The parameterized constructor is protected because MerkleNode
      * references should only ever be created by the friended iterator and
      * container code. */
-    MerkleNodeReference(base_type* base, offset_type offset) : m_base(base), m_offset(offset) { }
+    constexpr MerkleNodeReference(base_type* base, offset_type offset) noexcept : m_base(base), m_offset(offset) { }
 
     /* We're emulating a reference, not a pointer, and it doesn't make sense
      * to have default-constructable references. */
@@ -186,16 +175,16 @@ protected:
 public:
     /* The default copy constructors are sufficient. Note that these create a
      * new reference object that points to the same packed MerkleNode value. */
-    MerkleNodeReference(const MerkleNodeReference& other) = default;
-    MerkleNodeReference(MerkleNodeReference&& other) = default;
+    constexpr MerkleNodeReference(const MerkleNodeReference& other) noexcept = default;
+    constexpr MerkleNodeReference(MerkleNodeReference&& other) noexcept = default;
 
     /* Copy assignment operators are NOT the default behavior: assigning one
      * reference to another copies the underlying values, to make the
      * MerkleNodeReference objects behave like references.  It is NOT the same
      * as the copy constructor, which copies the reference itself. */
-    inline MerkleNodeReference& operator=(const MerkleNodeReference& other)
+    constexpr MerkleNodeReference& operator=(const MerkleNodeReference& other) noexcept
       { return SetCode(other.GetCode()); }
-    inline MerkleNodeReference& operator=(MerkleNodeReference&& other)
+    constexpr MerkleNodeReference& operator=(MerkleNodeReference&& other) noexcept
       { return SetCode(other.GetCode()); }
 
 public:
@@ -206,48 +195,48 @@ public:
     MerkleNodeReference& SetCode(MerkleNode::code_type code);
 
     /* Read and write the MerkleLink values individually. */
-    inline MerkleLink GetLeft() const
+    constexpr MerkleLink GetLeft() const
       { return MerkleNode::m_left_from_code[GetCode()]; }
-    inline MerkleNodeReference& SetLeft(MerkleLink left)
+    constexpr MerkleNodeReference& SetLeft(MerkleLink left)
       { return SetCode(MerkleNode::_encode(left, GetRight())); }
 
-    inline MerkleLink GetRight() const
+    constexpr MerkleLink GetRight() const
       { return MerkleNode::m_right_from_code[GetCode()]; }
-    inline MerkleNodeReference& SetRight(MerkleLink right)
+    constexpr MerkleNodeReference& SetRight(MerkleLink right)
       { return SetCode(MerkleNode::_encode(GetLeft(), right)); }
 
     /* Equality operators. */
-    inline bool operator==(const MerkleNodeReference& other) const
+    constexpr bool operator==(const MerkleNodeReference& other) const
       { return (GetCode() == other.GetCode()); }
-    inline bool operator==(MerkleNode other) const
+    constexpr bool operator==(MerkleNode other) const
       { return (GetCode() == other.GetCode()); }
-    inline bool operator!=(const MerkleNodeReference& other) const
+    constexpr bool operator!=(const MerkleNodeReference& other) const
       { return (GetCode() != other.GetCode()); }
-    inline bool operator!=(MerkleNode other) const
+    constexpr bool operator!=(MerkleNode other) const
       { return (GetCode() != other.GetCode()); }
 
     /* Relational operators. */
-    inline bool operator<(const MerkleNodeReference& other) const
+    constexpr bool operator<(const MerkleNodeReference& other) const
       { return (GetCode() < other.GetCode()); }
-    inline bool operator<(MerkleNode other) const
+    constexpr bool operator<(MerkleNode other) const
       { return (GetCode() < other.GetCode()); }
-    inline bool operator<=(const MerkleNodeReference& other) const
+    constexpr bool operator<=(const MerkleNodeReference& other) const
       { return (GetCode() <= other.GetCode()); }
-    inline bool operator<=(MerkleNode other) const
+    constexpr bool operator<=(MerkleNode other) const
       { return (GetCode() <= other.GetCode()); }
-    inline bool operator>=(const MerkleNodeReference& other) const
+    constexpr bool operator>=(const MerkleNodeReference& other) const
       { return (GetCode() >= other.GetCode()); }
-    inline bool operator>=(MerkleNode other) const
+    constexpr bool operator>=(MerkleNode other) const
       { return (GetCode() >= other.GetCode()); }
-    inline bool operator>(const MerkleNodeReference& other) const
+    constexpr bool operator>(const MerkleNodeReference& other) const
       { return (GetCode() > other.GetCode()); }
-    inline bool operator>(MerkleNode other) const
+    constexpr bool operator>(MerkleNode other) const
       { return (GetCode() > other.GetCode()); }
 
     /* Conversion to/from class MerkleNode. */
-    inline MerkleNodeReference& operator=(const MerkleNode& other)
+    constexpr MerkleNodeReference& operator=(const MerkleNode& other) noexcept
       { return SetCode(other.GetCode()); }
-    inline operator MerkleNode() const
+    constexpr operator MerkleNode() const noexcept
       { return MerkleNode(GetCode()); }
 
 protected:
@@ -262,17 +251,17 @@ protected:
  * Equality and relational operators that couldn't have been defined inside
  * MerkleNode because MerkleNodeReference was not defined.
  */
-inline bool operator==(MerkleNode lhs, const MerkleNodeReference& rhs)
+constexpr bool operator==(MerkleNode lhs, const MerkleNodeReference& rhs)
   { return (lhs.GetCode() == rhs.GetCode()); }
-inline bool operator!=(MerkleNode lhs, const MerkleNodeReference& rhs)
+constexpr bool operator!=(MerkleNode lhs, const MerkleNodeReference& rhs)
   { return (lhs.GetCode() != rhs.GetCode()); }
-inline bool operator<(MerkleNode lhs, const MerkleNodeReference& rhs)
+constexpr bool operator<(MerkleNode lhs, const MerkleNodeReference& rhs)
   { return (lhs.GetCode() < rhs.GetCode()); }
-inline bool operator<=(MerkleNode lhs, const MerkleNodeReference& rhs)
+constexpr bool operator<=(MerkleNode lhs, const MerkleNodeReference& rhs)
   { return (lhs.GetCode() <= rhs.GetCode()); }
-inline bool operator>=(MerkleNode lhs, const MerkleNodeReference& rhs)
+constexpr bool operator>=(MerkleNode lhs, const MerkleNodeReference& rhs)
   { return (lhs.GetCode() >= rhs.GetCode()); }
-inline bool operator>(MerkleNode lhs, const MerkleNodeReference& rhs)
+constexpr bool operator>(MerkleNode lhs, const MerkleNodeReference& rhs)
   { return (lhs.GetCode() > rhs.GetCode()); }
 
 /*
@@ -311,12 +300,12 @@ protected:
     /* A pass through initializer used by the derived iterator types, since
      * otherwise m_ref would not be accessible to their constructor member
      * initialization lists. */
-    MerkleNodeIteratorBase(MerkleNodeReference::base_type* base, MerkleNodeReference::offset_type offset) : m_ref(base, offset) { }
+    constexpr MerkleNodeIteratorBase(MerkleNodeReference::base_type* base, MerkleNodeReference::offset_type offset) noexcept : m_ref(base, offset) { }
 
     /* Constructing an iterator from another iterator clones the underlying
      * reference. */
-    MerkleNodeIteratorBase(const MerkleNodeIteratorBase&) = default;
-    MerkleNodeIteratorBase(MerkleNodeIteratorBase&&) = default;
+    constexpr MerkleNodeIteratorBase(const MerkleNodeIteratorBase&) noexcept = default;
+    constexpr MerkleNodeIteratorBase(MerkleNodeIteratorBase&&) noexcept = default;
 
     /* Copy assignment clones the underlying reference, but using the default
      * copy assignment operator would not work since it calls the underlying
@@ -325,13 +314,13 @@ protected:
      * reference itself.  In this context we want is what would otherwise be
      * the default behavior--cloning the reference--which we must implement
      * ourselves. */
-    inline MerkleNodeIteratorBase& operator=(const MerkleNodeIteratorBase& other) {
+    constexpr MerkleNodeIteratorBase& operator=(const MerkleNodeIteratorBase& other) noexcept {
         m_ref.m_base = other.m_ref.m_base;
         m_ref.m_offset = other.m_ref.m_offset;
         return *this;
     }
 
-    inline MerkleNodeIteratorBase& operator=(MerkleNodeIteratorBase&& other) {
+    constexpr MerkleNodeIteratorBase& operator=(MerkleNodeIteratorBase&& other) noexcept {
         m_ref.m_base = other.m_ref.m_base;
         m_ref.m_offset = other.m_ref.m_offset;
         return *this;
@@ -354,25 +343,25 @@ public:
      * Note: Comparing the underlying reference directly with
      *       MerkleNodeReference::operator== and friends would result in the
      *       underlying values being compared, not the memory addresses. */
-    inline bool operator==(const MerkleNodeIteratorBase& other) const {
+    constexpr bool operator==(const MerkleNodeIteratorBase& other) const {
         return m_ref.m_base == other.m_ref.m_base
             && m_ref.m_offset == other.m_ref.m_offset;
     }
 
-    inline bool operator!=(const MerkleNodeIteratorBase& other) const
+    constexpr bool operator!=(const MerkleNodeIteratorBase& other) const
       { return !(*this == other); }
 
     /* Relational operators. */
-    inline bool operator<(const MerkleNodeIteratorBase& other) const {
+    constexpr bool operator<(const MerkleNodeIteratorBase& other) const {
         return m_ref.m_base < other.m_ref.m_base
            || (m_ref.m_base == other.m_ref.m_base && m_ref.m_offset < other.m_ref.m_offset);
     }
 
-    inline bool operator<=(const MerkleNodeIteratorBase& other) const
+    constexpr bool operator<=(const MerkleNodeIteratorBase& other) const
       { return !(other < *this); }
-    inline bool operator>=(const MerkleNodeIteratorBase& other) const
+    constexpr bool operator>=(const MerkleNodeIteratorBase& other) const
       { return !(*this < other); }
-    inline bool operator>(const MerkleNodeIteratorBase& other) const
+    constexpr bool operator>(const MerkleNodeIteratorBase& other) const
       { return other < *this; }
 
 protected:
@@ -407,80 +396,80 @@ struct MerkleNodeIterator : public MerkleNodeIteratorBase
     /* Default constructor makes an unsafe iterator that will crash if
      * dereferenced, but is required so that an iterator variable can declared
      * and initialized separately--a common usage pattern. */
-    MerkleNodeIterator() : MerkleNodeIteratorBase(nullptr, 0) { }
+    constexpr MerkleNodeIterator() noexcept : MerkleNodeIteratorBase(nullptr, 0) { }
 
     /* Default copy/move constructors and assignment operators are fine. */
-    MerkleNodeIterator(const MerkleNodeIterator& other) = default;
-    MerkleNodeIterator(MerkleNodeIterator&& other) = default;
-    MerkleNodeIterator& operator=(const MerkleNodeIterator& other) = default;
-    MerkleNodeIterator& operator=(MerkleNodeIterator&& other) = default;
+    constexpr MerkleNodeIterator(const MerkleNodeIterator& other) noexcept = default;
+    constexpr MerkleNodeIterator(MerkleNodeIterator&& other) noexcept = default;
+    constexpr MerkleNodeIterator& operator=(const MerkleNodeIterator& other) noexcept = default;
+    constexpr MerkleNodeIterator& operator=(MerkleNodeIterator&& other) noexcept = default;
 
 protected:
-    MerkleNodeIterator(MerkleNodeReference::base_type* base,
-                       MerkleNodeReference::offset_type offset)
+    constexpr MerkleNodeIterator(MerkleNodeReference::base_type* base,
+                                 MerkleNodeReference::offset_type offset) noexcept
         : MerkleNodeIteratorBase(base, offset) { }
 
 public:
     /* Dereference interface. */
-    inline reference operator*() const
+    constexpr reference operator*() const
       { return m_ref; }
-    inline pointer operator->() const
+    constexpr pointer operator->() const
       { return const_cast<pointer>(&m_ref); }
 
     /* Bidirectional interface. */
-    inline iterator& operator++() {
+    constexpr iterator& operator++() {
         _incr();
         return *this;
     }
 
-    inline iterator operator++(int) {
+    constexpr iterator operator++(int) {
         iterator ret(*this);
         _incr();
         return ret;
     }
 
-    inline iterator& operator--() {
+    constexpr iterator& operator--() {
         _decr();
         return *this;
     }
 
-    inline iterator operator--(int) {
+    constexpr iterator operator--(int) {
         iterator ret(*this);
         _decr();
         return ret;
     }
 
     /* Random access interface. */
-    inline difference_type operator-(const MerkleNodeIterator& other) const {
+    constexpr difference_type operator-(const MerkleNodeIterator& other) const {
         /* The base class implements this correctly, but since we define
          * another overload of operator-() below, we need to explicitly
          * implement this variant too. */
         return MerkleNodeIteratorBase::operator-(other);
     }
 
-    inline iterator& operator+=(difference_type n) {
+    constexpr iterator& operator+=(difference_type n) {
         _seek(n);
         return *this;
     }
 
-    inline iterator& operator-=(difference_type n) {
+    constexpr iterator& operator-=(difference_type n) {
         _seek(-n);
         return *this;
     }
 
-    inline iterator operator+(difference_type n) const {
+    constexpr iterator operator+(difference_type n) const {
         iterator ret(*this);
         ret._seek(n);
         return ret;
     }
 
-    inline iterator operator-(difference_type n) const {
+    constexpr iterator operator-(difference_type n) const {
         iterator ret(*this);
         ret._seek(-n);
         return ret;
     }
 
-    inline reference operator[](difference_type n) const
+    constexpr reference operator[](difference_type n) const
       { return *(*this + n); }
 
 protected:
@@ -488,8 +477,12 @@ protected:
     template<class T, class Alloc> friend class std::vector;
 };
 
-inline MerkleNodeIterator operator+(MerkleNodeIterator::difference_type n, const MerkleNodeIterator& x)
+constexpr MerkleNodeIterator operator+(MerkleNodeIterator::difference_type n, const MerkleNodeIterator& x)
   { return x + n; }
+
+/* Have the compiler ensure that MerkleNodeIterator meets all the requirements
+ * of a random-access iterator. */
+static_assert(std::random_access_iterator<MerkleNodeIterator>);
 
 /*
  * An iterator that returns const references.  Not that this is semantically
@@ -504,86 +497,86 @@ struct MerkleNodeConstIterator : public MerkleNodeIteratorBase
     /* Creates an unsafe iterator with a sentinal value, which will crash if
      * dereferenced.  Required to support the common code pattern of
      * separating variable definitions from initialization. */
-    MerkleNodeConstIterator() : MerkleNodeIteratorBase(nullptr, 0) { }
+    constexpr MerkleNodeConstIterator() noexcept : MerkleNodeIteratorBase(nullptr, 0) { }
 
     /* Pass-through constructor of the m_ref field. */
-    MerkleNodeConstIterator(const MerkleNodeIterator& other)
+    constexpr MerkleNodeConstIterator(const MerkleNodeIterator& other) noexcept
         : MerkleNodeIteratorBase(static_cast<const MerkleNodeIteratorBase&>(other)) { }
 
     /* Default copy/move constructors and assignment operators are fine. */
-    MerkleNodeConstIterator(const MerkleNodeConstIterator& other) = default;
-    MerkleNodeConstIterator(MerkleNodeConstIterator&& other) = default;
-    MerkleNodeConstIterator& operator=(const MerkleNodeConstIterator& other) = default;
-    MerkleNodeConstIterator& operator=(MerkleNodeConstIterator&& other) = default;
+    constexpr MerkleNodeConstIterator(const MerkleNodeConstIterator& other) noexcept = default;
+    constexpr MerkleNodeConstIterator(MerkleNodeConstIterator&& other) noexcept = default;
+    constexpr MerkleNodeConstIterator& operator=(const MerkleNodeConstIterator& other) noexcept = default;
+    constexpr MerkleNodeConstIterator& operator=(MerkleNodeConstIterator&& other) noexcept = default;
 
 protected:
     /* const_cast is required (and allowed) because the const qualifier is
      * only dropped to copy its value into m_ref.  No API is provided to
      * actually manipulate the underlying value of the reference by this
      * class. */
-    MerkleNodeConstIterator(const MerkleNodeReference::base_type* base,
-                            MerkleNodeReference::offset_type offset)
+    constexpr MerkleNodeConstIterator(const MerkleNodeReference::base_type* base,
+                                      MerkleNodeReference::offset_type offset) noexcept
         : MerkleNodeIteratorBase(const_cast<MerkleNodeReference::base_type*>(base), offset) { }
 
 public:
     /* Dereference interface. */
-    inline reference operator*() const
+    constexpr reference operator*() const
       { return m_ref; }
-    inline pointer operator->() const
+    constexpr pointer operator->() const
       { return &m_ref; }
 
     /* Bidirectional interface. */
-    inline iterator& operator++() {
+    constexpr iterator& operator++() {
         _incr();
         return *this;
     }
 
-    inline iterator operator++(int) {
+    constexpr iterator operator++(int) {
         iterator tmp = *this;
         _incr();
         return tmp;
     }
 
-    inline iterator& operator--() {
+    constexpr iterator& operator--() {
         _decr();
         return *this;
     }
 
-    inline iterator operator--(int) {
+    constexpr iterator operator--(int) {
         iterator tmp = *this;
         _decr();
         return tmp;
     }
 
     /* Random access interface. */
-    inline difference_type operator-(const MerkleNodeConstIterator& other) const {
+    constexpr difference_type operator-(const MerkleNodeConstIterator& other) const {
         /* The base class implements this correctly, but since we define
          * another version of operator-() below, we need to explicitly
          * implement this variant too. */
         return MerkleNodeIteratorBase::operator-(other);
     }
 
-    inline iterator& operator+=(difference_type n) {
+    constexpr iterator& operator+=(difference_type n) {
         _seek(n);
         return *this;
     }
 
-    inline iterator& operator-=(difference_type n) {
+    constexpr iterator& operator-=(difference_type n) {
         *this += -n;
         return *this;
     }
 
-    inline iterator operator+(difference_type n) const {
+    constexpr iterator operator+(difference_type n) const {
         iterator tmp = *this;
         return tmp += n;
     }
 
-    inline iterator operator-(difference_type n) const {
+    constexpr iterator operator-(difference_type n) const {
         iterator tmp = *this;
         return tmp -= n;
     }
 
-    inline reference operator[](difference_type n) const
+    constexpr reference operator[](difference_type n) const
       { return *(*this + n); }
 
 protected:
@@ -591,8 +584,12 @@ protected:
     template<class T, class Alloc> friend class std::vector;
 };
 
-inline MerkleNodeConstIterator operator+(MerkleNodeConstIterator::difference_type n, const MerkleNodeConstIterator& x)
+constexpr MerkleNodeConstIterator operator+(MerkleNodeConstIterator::difference_type n, const MerkleNodeConstIterator& x)
   { return x + n; }
+
+/* Have the compiler ensure that MerkleNodeConstIterator meets all the
+ * requirements of a random-access iterator. */
+static_assert(std::random_access_iterator<MerkleNodeConstIterator>);
 
 /*
  * Now we are ready to define the specialization of std::vector for packed
@@ -634,189 +631,177 @@ protected:
     /* m_data.size() is (3 * m_count) / 8, but because of the truncation we
      * can't know from m_data.size() alone how many nodes are in the tree
      * structure, so the count needs to be stored explicitly. */
-    data_type m_data;
     size_type m_count;
+    data_type m_data;
 
     /* Returns the required size of m_data to contain count packed Nodes. */
-    static inline const typename data_type::size_type _data_size(size_type count)
+    static constexpr const typename data_type::size_type _data_size(size_type count)
       { return (3 * count + 7) / 8; }
 
 public:
-    explicit vector(const Allocator& alloc = Allocator())
-        : m_data(static_cast<base_allocator_type>(alloc)), m_count(0) { }
+    /* Default constructor. */
+    constexpr vector() noexcept(is_nothrow_copy_constructible<allocator_type>::value)
+        : m_count(0), m_data() { }
 
-    /* Yes, this doesn't allow specifying the allocator.  That is a bug in
-     * C++11, fixed in C++14.  However we aim for exact compatibility with the
-     * version of C++ used by Bitcoin Core, which is still pegged to C++11.
-     *
-     * Note: Because m_data is a vector of a primitive type, its values are
-     *       value initialized to zero according to the C++11 standard.  We
-     *       don't need to do anything.  Note, however, that in prior versions
-     *       of the standard the behavior was different and this
-     *       implementation will not work with pre-C++11 compilers. */
-    explicit vector(size_type count)
-        : m_data(_data_size(count)), m_count(count) { }
+    constexpr explicit vector(const Allocator& alloc) noexcept
+        : m_count(0), m_data(static_cast<base_allocator_type>(alloc)) { }
 
-    vector(size_type count, value_type value, const Allocator& alloc = Allocator())
-        : m_data(_data_size(count), 0, static_cast<base_allocator_type>(alloc)), m_count(count)
+    /* Note: Because m_data is a vector of a primitive type, its values are
+     *       value initialized to zero according to the C++20 standard.  We
+     *       don't need to do anything. */
+    constexpr explicit vector(size_type count, const Allocator& alloc = Allocator())
+        : m_count(count), m_data(_data_size(count), static_cast<base_allocator_type>(alloc)) { }
+
+    constexpr vector(size_type count, const value_type value, const Allocator& alloc = Allocator())
+        : m_count(count), m_data(_data_size(count), 0, static_cast<base_allocator_type>(alloc))
     {
         MerkleNode::code_type code = value.GetCode();
-        if (code) // Already filled with zeros
+        if (code) { // Already filled with zeros
             _fill(0, count, code);
+        }
     }
 
     /* Assign constructors. */
     template<class InputIt>
-    vector(InputIt first, InputIt last, const Allocator& alloc = Allocator())
-        : m_data(static_cast<base_allocator_type>(alloc)), m_count(0)
+    constexpr vector(InputIt first, InputIt last, const Allocator& alloc = Allocator())
+        : m_count(0), m_data(static_cast<base_allocator_type>(alloc))
     {
         insert(begin(), first, last);
     }
 
-    vector(std::initializer_list<value_type> ilist, const Allocator& alloc = Allocator())
-        : m_data(static_cast<base_allocator_type>(alloc)), m_count(0)
+    constexpr vector(std::initializer_list<value_type> ilist, const Allocator& alloc = Allocator())
+        : m_count(0), m_data(static_cast<base_allocator_type>(alloc))
     {
         assign(ilist);
     }
 
     /* Copy constructors. */
-    vector(const vector& other) = default;
-    vector(const vector& other, const Allocator& alloc)
-        : m_data(other.m_data, static_cast<base_allocator_type>(alloc)), m_count(other.m_count) { }
-    vector(vector&& other) = default;
-    vector(vector&& other, const Allocator& alloc)
-        : m_data(other.m_data, static_cast<base_allocator_type>(alloc)), m_count(other.m_count) { }
+    constexpr vector(const vector& other) = default;
+    constexpr vector(const vector& other, const Allocator& alloc)
+        : m_count(other.m_count), m_data(other.m_data, static_cast<base_allocator_type>(alloc)) { }
+    constexpr vector(vector&& other) noexcept = default;
+    constexpr vector(vector&& other, const Allocator& alloc) noexcept
+        : m_count(other.m_count), m_data(other.m_data, static_cast<base_allocator_type>(alloc)) { }
 
     /* Assignment operators. */
-    vector& operator=(const vector& other) = default;
-    vector& operator=(vector&& other) = default;
+    constexpr vector& operator=(const vector& other) = default;
+    constexpr vector& operator=(vector&& other) noexcept(std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value
+|| std::allocator_traits<Allocator>::is_always_equal::value) = default;
 
-    inline vector& operator=(std::initializer_list<value_type> ilist) {
+    constexpr vector& operator=(std::initializer_list<value_type> ilist) {
         assign(ilist);
         return *this;
     }
 
-    /* Equality operators. */
-    inline bool operator==(const vector &other) const
-      { return ((m_count == other.m_count) && (m_data == other.m_data)); }
-    inline bool operator!=(const vector &other) const
-      { return !(*this == other); }
-
-    /* Relational operators. */
-    inline bool operator<(const vector &other) const
-      { return ((m_data < other.m_data) || ((m_data == other.m_data) && (m_count < other.m_count))); }
-    inline bool operator<=(const vector &other) const
-      { return !(other < *this); }
-    inline bool operator>=(const vector &other) const
-      { return !(*this < other); }
-    inline bool operator>(const vector &other) const
-      { return (other < *this); }
+    /* Equality & relational operators. */
+    constexpr bool operator==(const vector &other) const = default;
+    constexpr auto operator<=>(const vector &other) const = default;
 
     /* Clear & assign methods. */
-    void clear() noexcept {
+    constexpr void clear() noexcept {
         m_data.clear();
         m_count = 0;
     }
 
-    void assign(size_type count, value_type value) {
+    constexpr void assign(size_type count, value_type value) {
         clear();
         insert(begin(), count, value);
     }
 
     template<class InputIt>
-    void assign(InputIt first, InputIt last) {
+    constexpr void assign(InputIt first, InputIt last) {
         clear();
         insert(begin(), first, last);
     }
 
-    void assign(std::initializer_list<value_type> ilist) {
+    constexpr void assign(std::initializer_list<value_type> ilist) {
         clear();
         reserve(ilist.size());
         for (auto node : ilist)
             push_back(node);
     }
 
-    allocator_type get_allocator() const
+    constexpr allocator_type get_allocator() const noexcept
       { return allocator_type(m_data.get_allocator()); }
 
     /* Item access: */
-    reference at(size_type pos) {
+    constexpr reference at(size_type pos) {
         if (!(pos < size()))
             throw std::out_of_range("vector<Node>::at out of range");
         return (*this)[pos];
     }
 
-    const_reference at(size_type pos) const {
+    constexpr const_reference at(size_type pos) const {
         if (!(pos < size()))
             throw std::out_of_range("vector<Node>::at out of range");
         return (*this)[pos];
     }
 
-    inline reference operator[](size_type pos)
+    constexpr reference operator[](size_type pos)
       { return reference(data() + (3 * (pos / 8)), pos % 8); }
-    inline const_reference operator[](size_type pos) const
+    constexpr const_reference operator[](size_type pos) const
       { return const_reference(const_cast<const_reference::base_type*>(data() + (3 * (pos / 8))), pos % 8); }
 
-    inline reference front()
+    constexpr reference front()
       { return (*this)[0]; }
-    inline const_reference front() const
+    constexpr const_reference front() const
       { return (*this)[0]; }
 
-    inline reference back()
+    constexpr reference back()
       { return (*this)[m_count-1]; }
-    inline const_reference back() const
+    constexpr const_reference back() const
       { return (*this)[m_count-1]; }
 
-    inline base_type* data()
+    constexpr base_type* data()
       { return m_data.data(); }
-    inline const base_type* data() const
+    constexpr const base_type* data() const
       { return m_data.data(); }
 
     /* Iterators: */
-    inline iterator begin() noexcept
+    constexpr iterator begin() noexcept
       { return iterator(data(), 0); }
-    inline const_iterator begin() const noexcept
+    constexpr const_iterator begin() const noexcept
       { return const_iterator(data(), 0); }
-    inline const_iterator cbegin() const noexcept
+    constexpr const_iterator cbegin() const noexcept
       { return begin(); }
 
-    inline iterator end() noexcept
+    constexpr iterator end() noexcept
       { return iterator(data() + (3 * (m_count / 8)), m_count % 8); }
-    inline const_iterator end() const noexcept
+    constexpr const_iterator end() const noexcept
       { return const_iterator(data() + (3 * (m_count / 8)), m_count % 8); }
-    inline const_iterator cend() const noexcept
+    constexpr const_iterator cend() const noexcept
       { return end(); }
 
-    inline reverse_iterator rbegin() noexcept
+    constexpr reverse_iterator rbegin() noexcept
       { return reverse_iterator(end()); }
-    inline const_reverse_iterator rbegin() const noexcept
+    constexpr const_reverse_iterator rbegin() const noexcept
       { return const_reverse_iterator(end()); }
-    inline const_reverse_iterator crbegin() const noexcept
+    constexpr const_reverse_iterator crbegin() const noexcept
       { return rbegin(); }
 
-    inline reverse_iterator rend() noexcept
+    constexpr reverse_iterator rend() noexcept
       { return reverse_iterator(begin()); }
-    inline const_reverse_iterator rend() const noexcept
+    constexpr const_reverse_iterator rend() const noexcept
       { return const_reverse_iterator(begin()); }
-    inline const_reverse_iterator crend() const noexcept
+    constexpr const_reverse_iterator crend() const noexcept
       { return rend(); }
 
     /* Size and capacity: */
-    inline bool empty() const noexcept
+    [[nodiscard]] constexpr bool empty() const noexcept
       { return !m_count; }
 
-    inline size_type size() const noexcept
+    constexpr size_type size() const noexcept
       { return m_count; }
 
-    inline size_type max_size() const noexcept {
+    constexpr size_type max_size() const noexcept {
         /* We must be careful in what we return due to overflow. */
         return std::max(m_data.max_size(), 8 * m_data.max_size() / 3);
     }
 
-    inline void reserve(size_type new_cap)
+    constexpr void reserve(size_type new_cap)
       { m_data.reserve(_data_size(new_cap)); }
 
-    inline size_type capacity() const noexcept {
+    constexpr size_type capacity() const noexcept {
         /* Again, careful of overflow, although it is more of a theoretical
          * concern here since such limitations would only be encountered if
          * the vector consumed more than 1/8th of the addressable memory
@@ -824,17 +809,17 @@ public:
         return std::max(m_count, 8 * m_data.capacity() / 3);
     }
 
-    inline void resize(size_type count)
+    constexpr void resize(size_type count)
       { resize(count, value_type()); }
 
-    void resize(size_type count, value_type value) {
+    constexpr void resize(size_type count, value_type value) {
         auto old_count = m_count;
         _resize(count);
         if (old_count < count)
             _fill(old_count, count, value.GetCode());
     }
 
-    inline void shrink_to_fit()
+    constexpr void shrink_to_fit() noexcept
       { m_data.shrink_to_fit(); }
 
 protected:
@@ -892,7 +877,7 @@ protected:
     }
 
 public:
-    iterator insert(const_iterator pos, value_type value) {
+    constexpr iterator insert(const_iterator pos, value_type value) {
         difference_type n = pos - cbegin();
         _resize(m_count + 1);
         _move(n, m_count-1, n+1);
@@ -900,7 +885,7 @@ public:
         return (begin() + n);
     }
 
-    iterator insert(const_iterator pos, size_type count, value_type value) {
+    constexpr iterator insert(const_iterator pos, size_type count, value_type value) {
         difference_type n = pos - cbegin();
         _resize(m_count + count);
         _move(n, m_count-count, n+count);
@@ -915,7 +900,7 @@ public:
      *       anyway.  Still, for exact compatibility with the standard
      *       container interface this should get tested and implemented. */
     template<class InputIt>
-    iterator insert(const_iterator pos, InputIt first, InputIt last, std::input_iterator_tag) {
+    constexpr iterator insert(const_iterator pos, InputIt first, InputIt last, std::input_iterator_tag) {
         difference_type n = pos - cbegin();
         for (; first != last; ++first, ++pos)
             pos = insert(pos, *first);
@@ -923,7 +908,7 @@ public:
     }
 
     template<class InputIt>
-    iterator insert(const_iterator pos, InputIt first, InputIt last, std::forward_iterator_tag) {
+    constexpr iterator insert(const_iterator pos, InputIt first, InputIt last, std::forward_iterator_tag) {
         auto n = std::distance(cbegin(), pos);
         auto len = std::distance(first, last);
         _resize(m_count + len);
@@ -935,18 +920,18 @@ public:
     }
 
     template<class InputIt>
-    inline iterator insert(const_iterator pos, InputIt first, InputIt last) {
+    constexpr iterator insert(const_iterator pos, InputIt first, InputIt last) {
         /* Use iterator tag dispatching to be able to pre-allocate the space
          * when InputIt is a random access iterator, to prevent multiple
          * resizings on a large insert. */
         return insert(pos, first, last, typename iterator_traits<InputIt>::iterator_category());
     }
 
-    inline iterator insert(const_iterator pos, std::initializer_list<value_type> ilist)
+    constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist)
       { return insert(pos, ilist.begin(), ilist.end()); }
 
     template<class... Args>
-    iterator emplace(const_iterator pos, Args&&... args) {
+    constexpr iterator emplace(const_iterator pos, Args&&... args) {
         difference_type n = pos - cbegin();
         _resize(m_count + 1);
         _move(n, m_count-1, n+1);
@@ -955,14 +940,14 @@ public:
         return ret;
     }
 
-    iterator erase(const_iterator pos) {
+    constexpr iterator erase(const_iterator pos) {
         difference_type n = pos - cbegin();
         _move(n+1, m_count, n);
         _resize(m_count - 1);
         return (begin() + n);
     }
 
-    iterator erase(const_iterator first, const_iterator last) {
+    constexpr iterator erase(const_iterator first, const_iterator last) {
         auto n = std::distance(cbegin(), first);
         auto len = std::distance(first, last);
         _move(n+len, m_count, n);
@@ -970,33 +955,34 @@ public:
         return (begin() + n);
     }
 
-    void push_back(value_type value) {
+    constexpr void push_back(value_type value) {
         if (m_data.size() < _data_size(m_count+1))
             m_data.push_back(0);
         (*this)[m_count++] = value;
     }
 
     template<class... Args>
-    void emplace_back(Args&&... args) {
+    constexpr void emplace_back(Args&&... args) {
         if (m_data.size() < _data_size(m_count+1))
             m_data.push_back(0);
         (*this)[m_count++] = MerkleNode(args...);
     }
 
-    void pop_back() {
+    constexpr void pop_back() {
         (*this)[m_count-1].SetCode(0);
         if (_data_size(m_count-1) < m_data.size())
             m_data.pop_back();
         --m_count;
     }
 
-    void swap(vector& other) {
+    constexpr void swap(vector& other) noexcept(std::allocator_traits<Allocator>::propagate_on_container_swap::value
+|| std::allocator_traits<Allocator>::is_always_equal::value) {
         m_data.swap(other.m_data);
         std::swap(m_count, other.m_count);
     }
 
 public:
-    base_type dirty() const {
+    constexpr base_type dirty() const {
         switch (m_count%8) {
             case 0:  return 0;
             case 1:  return m_data.back() & 0x1f;
@@ -1036,19 +1022,19 @@ public:
 };
 
 /* Equality operators: */
-template<class A> inline bool operator==(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
+template<class A> constexpr bool operator==(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
   { return lhs.operator==(rhs); }
-template<class A> inline bool operator!=(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
+template<class A> constexpr bool operator!=(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
   { return lhs.operator!=(rhs); }
 
 /* Relational operators: */
-template<class A> inline bool operator<(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
+template<class A> constexpr bool operator<(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
   { return lhs.operator<(rhs); }
-template<class A> inline bool operator<=(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
+template<class A> constexpr bool operator<=(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
   { return lhs.operator<=(rhs); }
-template<class A> inline bool operator>=(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
+template<class A> constexpr bool operator>=(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
   { return lhs.operator>=(rhs); }
-template<class A> inline bool operator>(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
+template<class A> constexpr bool operator>(const vector<MerkleNode, A> &lhs, const vector<MerkleNode, A> &rhs)
   { return lhs.operator>(rhs); }
 } // namespace std
 
@@ -1268,18 +1254,21 @@ struct MerkleProof
     typedef std::vector<uint256> skip_type;
     skip_type m_skip;
 
-    MerkleProof(path_type&& path, skip_type&& skip) : m_path(path), m_skip(skip) { }
+    constexpr MerkleProof(path_type&& path, skip_type&& skip) noexcept : m_path(path), m_skip(skip) { }
 
     /* Default constructors and assignment operators are fine. */
-    MerkleProof() = default;
-    MerkleProof(const MerkleProof&) = default;
-    MerkleProof(MerkleProof&&) = default;
-    MerkleProof& operator=(const MerkleProof&) = default;
-    MerkleProof& operator=(MerkleProof&&) = default;
+    constexpr MerkleProof() noexcept = default;
+    constexpr MerkleProof(const MerkleProof&) = default;
+    constexpr MerkleProof(MerkleProof&&) noexcept = default;
+    constexpr MerkleProof& operator=(const MerkleProof&) = default;
+    constexpr MerkleProof& operator=(MerkleProof&&) noexcept = default;
 
-    void clear() noexcept;
+    constexpr void clear() noexcept {
+        m_path.clear();
+        m_skip.clear();
+    }
 
-    inline bool operator==(const MerkleProof& other) const
+    constexpr bool operator==(const MerkleProof& other) const
       { return m_path == other.m_path
             && m_skip == other.m_skip; }
 
@@ -1312,7 +1301,11 @@ struct MerkleProof
 };
 
 /* Defined outside the class for argument-dpendent lookup. */
-void swap(MerkleProof& lhs, MerkleProof& rhs);
+constexpr void swap(MerkleProof& lhs, MerkleProof& rhs) noexcept {
+    using std::swap; // enable ADL
+    swap(lhs.m_path, rhs.m_path);
+    swap(lhs.m_skip, rhs.m_skip);
+}
 
 /*
  * A MerkleTree combines a MerkleProof with a vector of "verify" hash values.
@@ -1340,15 +1333,18 @@ struct MerkleTree
     MerkleTree(const MerkleTree& left, const MerkleTree& right);
 
     /* Default constructors and assignment operators are fine. */
-    MerkleTree() = default;
-    MerkleTree(const MerkleTree&) = default;
-    MerkleTree(MerkleTree&&) = default;
-    MerkleTree& operator=(const MerkleTree&) = default;
-    MerkleTree& operator=(MerkleTree&&) = default;
+    constexpr MerkleTree() noexcept = default;
+    constexpr MerkleTree(const MerkleTree&) = default;
+    constexpr MerkleTree(MerkleTree&&) noexcept = default;
+    constexpr MerkleTree& operator=(const MerkleTree&) = default;
+    constexpr MerkleTree& operator=(MerkleTree&&) noexcept = default;
 
-    void clear() noexcept;
+    constexpr void clear() noexcept {
+        m_proof.clear();
+        m_verify.clear();
+    }
 
-    inline bool operator==(const MerkleTree& other) const
+    constexpr bool operator==(const MerkleTree& other) const
       { return m_proof == other.m_proof
             && m_verify == other.m_verify; }
 
@@ -1387,7 +1383,11 @@ struct MerkleTree
 };
 
 /* Defined outside the class for argument-dpendent lookup. */
-void swap(MerkleTree& lhs, MerkleTree& rhs);
+constexpr void swap(MerkleTree& lhs, MerkleTree& rhs) noexcept {
+    using std::swap; // enable ADL
+    swap(lhs.m_proof, rhs.m_proof);
+    swap(lhs.m_verify, rhs.m_verify);
+}
 
 #endif // BITCOIN_CONSENSUS_MERKLE_PROOF
 
