@@ -137,17 +137,6 @@ MerkleNodeIteratorBase::difference_type MerkleNodeIteratorBase::operator-(const 
     return 8 * (m_ref.m_base - other.m_ref.m_base) / 3 + m_ref.m_offset - other.m_ref.m_offset;
 }
 
-void MerkleBranch::clear() noexcept {
-    m_branch.clear();
-    m_vpath.clear();
-}
-
-void swap(MerkleBranch& lhs, MerkleBranch& rhs) {
-    using std::swap; // enable ADL
-    swap(lhs.m_branch, rhs.m_branch);
-    swap(lhs.m_vpath, rhs.m_vpath);
-}
-
 uint32_t MerkleBranch::GetPath() const {
     uint32_t ret = 0;
     size_t pos = 0;
