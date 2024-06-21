@@ -26,7 +26,7 @@ from test_framework.p2p import (
     P2PDataStore,
     P2PInterface,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -35,7 +35,7 @@ from test_framework.util import (
 from test_framework.crypto.chacha20 import REKEY_INTERVAL
 
 
-class P2PEncrypted(BitcoinTestFramework):
+class P2PEncrypted(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-v2transport=1"], ["-v2transport=1"]]

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_PROTOCOL_VERSION_H
-#define BITCOIN_NODE_PROTOCOL_VERSION_H
+#ifndef FREICOIN_NODE_PROTOCOL_VERSION_H
+#define FREICOIN_NODE_PROTOCOL_VERSION_H
 
 /**
  * network protocol versioning
@@ -46,4 +46,4 @@ static const int INVALID_CB_NO_BAN_VERSION = 70015;
 //! "wtxidrelay" command for wtxid-based relay starts with this version
 static const int WTXID_RELAY_VERSION = 70016;
 
-#endif // BITCOIN_NODE_PROTOCOL_VERSION_H
+#endif // FREICOIN_NODE_PROTOCOL_VERSION_H

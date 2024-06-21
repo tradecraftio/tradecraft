@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_TXMEMPOOL_H
-#define BITCOIN_TEST_UTIL_TXMEMPOOL_H
+#ifndef FREICOIN_TEST_UTIL_TXMEMPOOL_H
+#define FREICOIN_TEST_UTIL_TXMEMPOOL_H
 
 #include <policy/packages.h>
 #include <txmempool.h>
@@ -67,4 +67,4 @@ std::optional<std::string>  CheckPackageMempoolAcceptResult(const Package& txns,
  *   */
 void CheckMempoolV3Invariants(const CTxMemPool& tx_pool);
 
-#endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H
+#endif // FREICOIN_TEST_UTIL_TXMEMPOOL_H

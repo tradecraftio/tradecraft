@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_UTIL_H
-#define BITCOIN_RPC_UTIL_H
+#ifndef FREICOIN_RPC_UTIL_H
+#define FREICOIN_RPC_UTIL_H
 
 #include <addresstype.h>
 #include <consensus/amount.h>
@@ -115,8 +115,8 @@ std::vector<unsigned char> ParseHexO(const UniValue& o, std::string_view strKey)
  */
 CAmount AmountFromValue(const UniValue& value, int decimals = 8);
 /**
- * Parse a json number or string, denoting BTC/kvB, into a CFeeRate (sat/kvB).
- * Reject negative values or rates larger than 1BTC/kvB.
+ * Parse a json number or string, denoting FRC/kvB, into a CFeeRate (sat/kvB).
+ * Reject negative values or rates larger than 1FRC/kvB.
  */
 CFeeRate ParseFeeRate(const UniValue& json);
 
@@ -480,4 +480,4 @@ private:
 void PushWarnings(const UniValue& warnings, UniValue& obj);
 void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj);
 
-#endif // BITCOIN_RPC_UTIL_H
+#endif // FREICOIN_RPC_UTIL_H

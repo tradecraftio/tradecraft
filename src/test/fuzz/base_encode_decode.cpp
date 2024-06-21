@@ -16,7 +16,7 @@
 #include <test/fuzz/fuzz.h>
 
 #include <base58.h>
-#include <psbt.h>
+#include <pst.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -56,7 +56,7 @@ FUZZ_TARGET(base_encode_decode)
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }
 
-    PartiallySignedTransaction psbt;
+    PartiallySignedTransaction pst;
     std::string error;
-    (void)DecodeBase64PSBT(psbt, random_encoded_string, error);
+    (void)DecodeBase64PST(pst, random_encoded_string, error);
 }
