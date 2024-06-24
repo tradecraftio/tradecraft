@@ -717,12 +717,20 @@ public:
         auto lhs = m_data.begin();
         auto rhs = other.m_data.begin();
         while (lhs != m_data.end() && rhs != other.m_data.end()) {
-            if (*lhs < *rhs)
-                return true;
-            if (*rhs < *lhs)
-                return false;
+            base_type l = *lhs;
             ++lhs;
+            if (m_data.end() == lhs) {
+                l ^= dirty();
+            }
+            base_type r = *rhs;
             ++rhs;
+            if (other.m_data.end() == rhs) {
+                r ^= other.dirty();
+            }
+            if (l < r)
+                return true;
+            if (r < l)
+                return false;
         }
         if (lhs == m_data.end() && rhs != other.m_data.end())
             return true;
