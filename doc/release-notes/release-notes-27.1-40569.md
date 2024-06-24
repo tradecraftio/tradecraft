@@ -71,11 +71,6 @@ Notable changes
 
 - #29856 ci: Bump s390x to ubuntu:24.04
 
-### Misc
-
-- #29691 Change Luke Dashjr seed to dashjr-list-of-p2p-nodes.us
-- #30149 contrib: Renew Windows code signing certificate
-
 Credits
 =======
 
