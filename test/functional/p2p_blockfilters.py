@@ -30,7 +30,7 @@ from test_framework.messages import (
     uint256_from_str,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -51,7 +51,7 @@ class FiltersClient(P2PInterface):
         self.cfilters.append(message)
 
 
-class CompactFiltersTest(BitcoinTestFramework):
+class CompactFiltersTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.rpc_timeout = 480

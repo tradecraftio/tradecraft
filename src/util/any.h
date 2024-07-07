@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_ANY_H
-#define BITCOIN_UTIL_ANY_H
+#ifndef FREICOIN_UTIL_ANY_H
+#define FREICOIN_UTIL_ANY_H
 
 #include <any>
 
@@ -34,4 +34,4 @@ T* AnyPtr(const std::any& any) noexcept
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_ANY_H
+#endif // FREICOIN_UTIL_ANY_H

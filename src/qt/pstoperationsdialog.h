@@ -13,29 +13,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_PSBTOPERATIONSDIALOG_H
-#define BITCOIN_QT_PSBTOPERATIONSDIALOG_H
+#ifndef FREICOIN_QT_PSTOPERATIONSDIALOG_H
+#define FREICOIN_QT_PSTOPERATIONSDIALOG_H
 
 #include <QDialog>
 
-#include <psbt.h>
+#include <pst.h>
 #include <qt/clientmodel.h>
 #include <qt/walletmodel.h>
 
 namespace Ui {
-class PSBTOperationsDialog;
+class PSTOperationsDialog;
 }
 
 /** Dialog showing transaction details. */
-class PSBTOperationsDialog : public QDialog
+class PSTOperationsDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit PSBTOperationsDialog(QWidget* parent, WalletModel* walletModel, ClientModel* clientModel);
-    ~PSBTOperationsDialog();
+    explicit PSTOperationsDialog(QWidget* parent, WalletModel* walletModel, ClientModel* clientModel);
+    ~PSTOperationsDialog();
 
-    void openWithPSBT(PartiallySignedTransaction psbtx);
+    void openWithPST(PartiallySignedTransaction pstx);
 
 public Q_SLOTS:
     void signTransaction();
@@ -44,7 +44,7 @@ public Q_SLOTS:
     void saveTransaction();
 
 private:
-    Ui::PSBTOperationsDialog* m_ui;
+    Ui::PSTOperationsDialog* m_ui;
     PartiallySignedTransaction m_transaction_data;
     WalletModel* m_wallet_model;
     ClientModel* m_client_model;
@@ -55,11 +55,11 @@ private:
         ERR
     };
 
-    size_t couldSignInputs(const PartiallySignedTransaction &psbtx);
+    size_t couldSignInputs(const PartiallySignedTransaction &pstx);
     void updateTransactionDisplay();
-    std::string renderTransaction(const PartiallySignedTransaction &psbtx);
+    std::string renderTransaction(const PartiallySignedTransaction &pstx);
     void showStatus(const QString &msg, StatusLevel level);
-    void showTransactionStatus(const PartiallySignedTransaction &psbtx);
+    void showTransactionStatus(const PartiallySignedTransaction &pstx);
 };
 
-#endif // BITCOIN_QT_PSBTOPERATIONSDIALOG_H
+#endif // FREICOIN_QT_PSTOPERATIONSDIALOG_H

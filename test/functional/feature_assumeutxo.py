@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test for assumeutxo, a means of quickly bootstrapping a node using
 a serialized version of the UTXO set at a certain height, which corresponds
-to a hash that has been compiled into bitcoind.
+to a hash that has been compiled into freicoind.
 
 The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/chainparams.cpp`.
@@ -46,7 +46,7 @@ Interesting starting states could be loading a snapshot when the current chain t
 """
 from shutil import rmtree
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -58,7 +58,7 @@ FINAL_HEIGHT = 399
 COMPLETE_IDX = {'synced': True, 'best_block_height': FINAL_HEIGHT}
 
 
-class AssumeutxoTest(BitcoinTestFramework):
+class AssumeutxoTest(FreicoinTestFramework):
 
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COMMON_URL_H
-#define BITCOIN_COMMON_URL_H
+#ifndef FREICOIN_COMMON_URL_H
+#define FREICOIN_COMMON_URL_H
 
 #include <string>
 
@@ -22,4 +22,4 @@ using UrlDecodeFn = std::string(const std::string& url_encoded);
 UrlDecodeFn urlDecode;
 extern UrlDecodeFn* const URL_DECODE;
 
-#endif // BITCOIN_COMMON_URL_H
+#endif // FREICOIN_COMMON_URL_H

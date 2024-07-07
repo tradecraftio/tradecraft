@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <qt/walletmodel.h>
@@ -34,7 +34,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
-#include <psbt.h>
+#include <pst.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient
@@ -186,7 +186,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
-        {   // User-entered bitcoin address / amount:
+        {   // User-entered freicoin address / amount:
             if(!validateAddress(rcp.address))
             {
                 return InvalidAddress;
@@ -264,7 +264,7 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
         std::vector<std::pair<std::string, std::string>> vOrderForm;
         for (const SendCoinsRecipient &rcp : transaction.getRecipients())
         {
-            if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+            if (!rcp.message.isEmpty()) // Message from normal freicoin:URI (freicoin:123...?message=example)
                 vOrderForm.emplace_back("Message", rcp.message.toStdString());
         }
 
@@ -508,15 +508,15 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     questionString.append("<tr><td>");
     questionString.append(tr("Current fee:"));
     questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), old_fee));
+    questionString.append(FreicoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), old_fee));
     questionString.append("</td></tr><tr><td>");
     questionString.append(tr("Increase:"));
     questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee - old_fee));
+    questionString.append(FreicoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee - old_fee));
     questionString.append("</td></tr><tr><td>");
     questionString.append(tr("New fee:"));
     questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee));
+    questionString.append(FreicoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee));
     questionString.append("</td></tr></table>");
 
     // Display warning in the "Confirm fee bump" window if the "Coin Control Features" option is enabled
@@ -526,7 +526,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     }
 
     const bool enable_send{!wallet().privateKeysDisabled() || wallet().hasExternalSigner()};
-    const bool always_show_unsigned{getOptionsModel()->getEnablePSBTControls()};
+    const bool always_show_unsigned{getOptionsModel()->getEnablePSFRControls()};
     auto confirmationDialog = new SendConfirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, enable_send, always_show_unsigned, nullptr);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
     // TODO: Replace QDialog::exec() with safer QDialog::show().
@@ -543,21 +543,21 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         return false;
     }
 
-    // Short-circuit if we are returning a bumped transaction PSBT to clipboard
+    // Short-circuit if we are returning a bumped transaction PST to clipboard
     if (retval == QMessageBox::Save) {
         // "Create Unsigned" clicked
-        PartiallySignedTransaction psbtx(mtx);
+        PartiallySignedTransaction pstx(mtx);
         bool complete = false;
-        const TransactionError err = wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, nullptr, psbtx, complete);
+        const TransactionError err = wallet().fillPST(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, nullptr, pstx, complete);
         if (err != TransactionError::OK || complete) {
             QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't draft transaction."));
             return false;
         }
-        // Serialize the PSBT
+        // Serialize the PST
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << psbtx;
+        ssTx << pstx;
         GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
-        Q_EMIT message(tr("PSBT copied"), tr("Copied to clipboard", "Fee-bump PSBT saved"), CClientUIInterface::MSG_INFORMATION);
+        Q_EMIT message(tr("PST copied"), tr("Copied to clipboard", "Fee-bump PST saved"), CClientUIInterface::MSG_INFORMATION);
         return true;
     }
 

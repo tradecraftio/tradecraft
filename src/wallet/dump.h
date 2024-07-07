@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_DUMP_H
-#define BITCOIN_WALLET_DUMP_H
+#ifndef FREICOIN_WALLET_DUMP_H
+#define FREICOIN_WALLET_DUMP_H
 
 #include <util/fs.h>
 
@@ -30,4 +30,4 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error);
 bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::path& wallet_path, bilingual_str& error, std::vector<bilingual_str>& warnings);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_DUMP_H
+#endif // FREICOIN_WALLET_DUMP_H

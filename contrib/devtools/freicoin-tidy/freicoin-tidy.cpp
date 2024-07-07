@@ -18,16 +18,16 @@
 #include <clang-tidy/ClangTidyModule.h>
 #include <clang-tidy/ClangTidyModuleRegistry.h>
 
-class BitcoinModule final : public clang::tidy::ClangTidyModule
+class FreicoinModule final : public clang::tidy::ClangTidyModule
 {
 public:
     void addCheckFactories(clang::tidy::ClangTidyCheckFactories& CheckFactories) override
     {
-        CheckFactories.registerCheck<bitcoin::LogPrintfCheck>("bitcoin-unterminated-logprintf");
+        CheckFactories.registerCheck<freicoin::LogPrintfCheck>("freicoin-unterminated-logprintf");
     }
 };
 
-static clang::tidy::ClangTidyModuleRegistry::Add<BitcoinModule>
-    X("bitcoin-module", "Adds bitcoin checks.");
+static clang::tidy::ClangTidyModuleRegistry::Add<FreicoinModule>
+    X("freicoin-module", "Adds freicoin checks.");
 
-volatile int BitcoinModuleAnchorSource = 0;
+volatile int FreicoinModuleAnchorSource = 0;

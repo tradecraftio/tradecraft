@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_BIP324_H
-#define BITCOIN_BIP324_H
+#ifndef FREICOIN_BIP324_H
+#define FREICOIN_BIP324_H
 
 #include <array>
 #include <cstddef>
@@ -104,4 +104,4 @@ public:
     Span<const std::byte> GetReceiveGarbageTerminator() const noexcept { return m_recv_garbage_terminator; }
 };
 
-#endif // BITCOIN_BIP324_H
+#endif // FREICOIN_BIP324_H

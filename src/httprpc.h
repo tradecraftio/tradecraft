@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_HTTPRPC_H
-#define BITCOIN_HTTPRPC_H
+#ifndef FREICOIN_HTTPRPC_H
+#define FREICOIN_HTTPRPC_H
 
 #include <any>
 
@@ -42,4 +42,4 @@ void InterruptREST();
  */
 void StopREST();
 
-#endif // BITCOIN_HTTPRPC_H
+#endif // FREICOIN_HTTPRPC_H

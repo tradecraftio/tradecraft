@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_CONTEXT_H
-#define BITCOIN_KERNEL_CONTEXT_H
+#ifndef FREICOIN_KERNEL_CONTEXT_H
+#define FREICOIN_KERNEL_CONTEXT_H
 
 #include <util/signalinterrupt.h>
 
@@ -22,7 +22,7 @@
 
 namespace kernel {
 //! Context struct holding the kernel library's logically global state, and
-//! passed to external libbitcoin_kernel functions which need access to this
+//! passed to external libfreicoin_kernel functions which need access to this
 //! state. The kernel library API is a work in progress, so state organization
 //! and member list will evolve over time.
 //!
@@ -49,4 +49,4 @@ struct Context {
 extern Context* g_context;
 } // namespace kernel
 
-#endif // BITCOIN_KERNEL_CONTEXT_H
+#endif // FREICOIN_KERNEL_CONTEXT_H

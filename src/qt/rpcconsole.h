@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_RPCCONSOLE_H
-#define BITCOIN_QT_RPCCONSOLE_H
+#ifndef FREICOIN_QT_RPCCONSOLE_H
+#define FREICOIN_QT_RPCCONSOLE_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <qt/clientmodel.h>
@@ -50,7 +50,7 @@ class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
 
-/** Local Bitcoin RPC console. */
+/** Local Freicoin RPC console. */
 class RPCConsole: public QWidget
 {
     Q_OBJECT
@@ -204,4 +204,4 @@ private Q_SLOTS:
     void updateAlerts(const QString& warnings);
 };
 
-#endif // BITCOIN_QT_RPCCONSOLE_H
+#endif // FREICOIN_QT_RPCCONSOLE_H

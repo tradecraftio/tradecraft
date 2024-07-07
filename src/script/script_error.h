@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCRIPT_SCRIPT_ERROR_H
-#define BITCOIN_SCRIPT_SCRIPT_ERROR_H
+#ifndef FREICOIN_SCRIPT_SCRIPT_ERROR_H
+#define FREICOIN_SCRIPT_SCRIPT_ERROR_H
 
 #include <string>
 
@@ -100,4 +100,4 @@ typedef enum ScriptError_t
 
 std::string ScriptErrorString(const ScriptError error);
 
-#endif // BITCOIN_SCRIPT_SCRIPT_ERROR_H
+#endif // FREICOIN_SCRIPT_SCRIPT_ERROR_H

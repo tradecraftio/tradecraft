@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NETMESSAGEMAKER_H
-#define BITCOIN_NETMESSAGEMAKER_H
+#ifndef FREICOIN_NETMESSAGEMAKER_H
+#define FREICOIN_NETMESSAGEMAKER_H
 
 #include <net.h>
 #include <serialize.h>
@@ -44,4 +44,4 @@ private:
     const int nVersion;
 };
 
-#endif // BITCOIN_NETMESSAGEMAKER_H
+#endif // FREICOIN_NETMESSAGEMAKER_H

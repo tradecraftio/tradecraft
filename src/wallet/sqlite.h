@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_SQLITE_H
-#define BITCOIN_WALLET_SQLITE_H
+#ifndef FREICOIN_WALLET_SQLITE_H
+#define FREICOIN_WALLET_SQLITE_H
 
 #include <sync.h>
 #include <wallet/db.h>
@@ -162,4 +162,4 @@ std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const D
 std::string SQLiteDatabaseVersion();
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_SQLITE_H
+#endif // FREICOIN_WALLET_SQLITE_H

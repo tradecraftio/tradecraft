@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COMPAT_ENDIAN_H
-#define BITCOIN_COMPAT_ENDIAN_H
+#ifndef FREICOIN_COMPAT_ENDIAN_H
+#define FREICOIN_COMPAT_ENDIAN_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <compat/byteswap.h>
@@ -33,7 +33,7 @@
 #ifndef HAVE_CONFIG_H
 // While not technically a supported configuration, defaulting to defining these
 // DECLs when we were compiled without autotools makes it easier for other build
-// systems to build things like libbitcoinconsensus for strange targets.
+// systems to build things like libfreicoinconsensus for strange targets.
 #ifdef htobe16
 #define HAVE_DECL_HTOBE16 1
 #endif
@@ -249,4 +249,4 @@ inline uint64_t le64toh(uint64_t little_endian_64bits)
 
 #endif // WORDS_BIGENDIAN
 
-#endif // BITCOIN_COMPAT_ENDIAN_H
+#endif // FREICOIN_COMPAT_ENDIAN_H

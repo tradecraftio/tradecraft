@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_COINSTATS_H
-#define BITCOIN_KERNEL_COINSTATS_H
+#ifndef FREICOIN_KERNEL_COINSTATS_H
+#define FREICOIN_KERNEL_COINSTATS_H
 
 #include <consensus/amount.h>
 #include <crypto/muhash.h>
@@ -90,4 +90,4 @@ void RemoveCoinHash(MuHash3072& muhash, const COutPoint& outpoint, const Coin& c
 std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point = {});
 } // namespace kernel
 
-#endif // BITCOIN_KERNEL_COINSTATS_H
+#endif // FREICOIN_KERNEL_COINSTATS_H

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_WALLETDB_H
-#define BITCOIN_WALLET_WALLETDB_H
+#ifndef FREICOIN_WALLET_WALLETDB_H
+#define FREICOIN_WALLET_WALLETDB_H
 
 #include <script/sign.h>
 #include <wallet/db.h>
@@ -316,4 +316,4 @@ bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue,
 bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_WALLETDB_H
+#endif // FREICOIN_WALLET_WALLETDB_H

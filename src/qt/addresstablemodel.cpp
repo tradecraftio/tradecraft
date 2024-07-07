@@ -346,7 +346,7 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
 void AddressTableModel::updateEntry(const QString &address,
         const QString &label, bool isMine, wallet::AddressPurpose purpose, int status)
 {
-    // Update address book model from Bitcoin core
+    // Update address book model from Freicoin
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 

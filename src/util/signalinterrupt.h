@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_SIGNALINTERRUPT_H
-#define BITCOIN_UTIL_SIGNALINTERRUPT_H
+#ifndef FREICOIN_UTIL_SIGNALINTERRUPT_H
+#define FREICOIN_UTIL_SIGNALINTERRUPT_H
 
 #ifdef WIN32
 #include <condition_variable>
@@ -60,4 +60,4 @@ private:
 };
 } // namespace util
 
-#endif // BITCOIN_UTIL_SIGNALINTERRUPT_H
+#endif // FREICOIN_UTIL_SIGNALINTERRUPT_H

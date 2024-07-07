@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_MEMPOOL_ENTRY_H
-#define BITCOIN_KERNEL_MEMPOOL_ENTRY_H
+#ifndef FREICOIN_KERNEL_MEMPOOL_ENTRY_H
+#define FREICOIN_KERNEL_MEMPOOL_ENTRY_H
 
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -189,4 +189,4 @@ public:
 
 using CTxMemPoolEntryRef = CTxMemPoolEntry::CTxMemPoolEntryRef;
 
-#endif // BITCOIN_KERNEL_MEMPOOL_ENTRY_H
+#endif // FREICOIN_KERNEL_MEMPOOL_ENTRY_H

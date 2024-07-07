@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_HASHER_H
-#define BITCOIN_UTIL_HASHER_H
+#ifndef FREICOIN_UTIL_HASHER_H
+#define FREICOIN_UTIL_HASHER_H
 
 #include <crypto/common.h>
 #include <crypto/siphash.h>
@@ -109,4 +109,4 @@ public:
     size_t operator()(const Span<const unsigned char>& script) const;
 };
 
-#endif // BITCOIN_UTIL_HASHER_H
+#endif // FREICOIN_UTIL_HASHER_H
