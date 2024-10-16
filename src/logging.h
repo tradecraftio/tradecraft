@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_LOGGING_H
-#define BITCOIN_LOGGING_H
+#ifndef FREICOIN_LOGGING_H
+#define FREICOIN_LOGGING_H
 
 #include <threadsafety.h>
 #include <tinyformat.h>
@@ -193,7 +193,7 @@ namespace BCLog {
         /** Disable logging
          * This offers a slight speedup and slightly smaller memory usage
          * compared to leaving the logging system in its default state.
-         * Mostly intended for libbitcoin-kernel apps that don't want any logging.
+         * Mostly intended for libfreicoin-kernel apps that don't want any logging.
          * Should be used instead of StartLogging().
          */
         void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
@@ -304,4 +304,4 @@ static inline void LogPrintf_(std::string_view logging_function, std::string_vie
 // Deprecated conditional logging
 #define LogPrint(category, ...)  LogDebug(category, __VA_ARGS__)
 
-#endif // BITCOIN_LOGGING_H
+#endif // FREICOIN_LOGGING_H

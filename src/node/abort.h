@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_ABORT_H
-#define BITCOIN_NODE_ABORT_H
+#ifndef FREICOIN_NODE_ABORT_H
+#define FREICOIN_NODE_ABORT_H
 
 #include <atomic>
 
@@ -29,4 +29,4 @@ class Warnings;
 void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, const bilingual_str& message, node::Warnings* warnings);
 } // namespace node
 
-#endif // BITCOIN_NODE_ABORT_H
+#endif // FREICOIN_NODE_ABORT_H

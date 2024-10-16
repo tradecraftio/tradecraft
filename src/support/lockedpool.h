@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SUPPORT_LOCKEDPOOL_H
-#define BITCOIN_SUPPORT_LOCKEDPOOL_H
+#ifndef FREICOIN_SUPPORT_LOCKEDPOOL_H
+#define FREICOIN_SUPPORT_LOCKEDPOOL_H
 
 #include <cstddef>
 #include <list>
@@ -248,4 +248,4 @@ private:
     static LockedPoolManager* _instance;
 };
 
-#endif // BITCOIN_SUPPORT_LOCKEDPOOL_H
+#endif // FREICOIN_SUPPORT_LOCKEDPOOL_H

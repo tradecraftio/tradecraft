@@ -21,8 +21,8 @@
 //! dependencies. More complicated types should be defined in dedicated header
 //! files.
 
-#ifndef BITCOIN_NODE_TYPES_H
-#define BITCOIN_NODE_TYPES_H
+#ifndef FREICOIN_NODE_TYPES_H
+#define FREICOIN_NODE_TYPES_H
 
 #include <cstddef>
 
@@ -57,4 +57,4 @@ struct BlockCreateOptions {
 };
 } // namespace node
 
-#endif // BITCOIN_NODE_TYPES_H
+#endif // FREICOIN_NODE_TYPES_H

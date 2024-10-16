@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
     add_coin(available_coins, *wallet, COIN + params.m_cost_of_change, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
     add_coin(available_coins, *wallet, 0.5 * COIN + params.m_cost_of_change, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
     add_coin(available_coins, *wallet, 0.5 * COIN, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
-    // Knapsack will only find a changeless solution on an exact match to the satoshi, SRD doesn’t look for changeless
+    // Knapsack will only find a changeless solution on an exact match to the kria, SRD doesn’t look for changeless
     // If BnB were run, it would produce a single input solution with the best waste score
     auto result = WITH_LOCK(wallet->cs_wallet, return SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, COIN, /*coin_control=*/{}, params));
     BOOST_CHECK(result.has_value());
@@ -633,12 +633,12 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         add_coin(available_coins, *wallet,  4*COIN); // now we have 5+6+7+8+18+20+30+100+200+300+400 = 1094 cents
         const auto result14 = KnapsackSolver(KnapsackGroupOutputs(available_coins, *wallet, filter_confirmed), 95 * CENT, CENT);
         BOOST_CHECK(result14);
-        BOOST_CHECK_EQUAL(result14->GetSelectedValue(), 1 * COIN);  // we should get 1 BTC in 1 coin
+        BOOST_CHECK_EQUAL(result14->GetSelectedValue(), 1 * COIN);  // we should get 1 FRC in 1 coin
         BOOST_CHECK_EQUAL(result14->GetInputSet().size(), 1U);
 
         const auto result15 = KnapsackSolver(KnapsackGroupOutputs(available_coins, *wallet, filter_confirmed), 195 * CENT, CENT);
         BOOST_CHECK(result15);
-        BOOST_CHECK_EQUAL(result15->GetSelectedValue(), 2 * COIN);  // we should get 2 BTC in 1 coin
+        BOOST_CHECK_EQUAL(result15->GetSelectedValue(), 2 * COIN);  // we should get 2 FRC in 1 coin
         BOOST_CHECK_EQUAL(result15->GetInputSet().size(), 1U);
 
         // empty the wallet and start again, now with fractions of a cent, to test small change avoidance
@@ -1185,10 +1185,10 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         int max_selection_weight = 10'000; // WU
         const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
-            for (int j = 0; j < 60; ++j) { // 60 UTXO --> 19,8 BTC total --> 60 × 272 WU = 16320 WU
+            for (int j = 0; j < 60; ++j) { // 60 UTXO --> 19,8 FRC total --> 60 × 272 WU = 16320 WU
                 add_coin(available_coins, wallet, CAmount(0.33 * COIN), CFeeRate(5000), 144, false, 0, true);
             }
-            for (int i = 0; i < 10; i++) { // 10 UTXO --> 20 BTC total --> 10 × 272 WU = 2720 WU
+            for (int i = 0; i < 10; i++) { // 10 UTXO --> 20 FRC total --> 10 × 272 WU = 2720 WU
                 add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true);
             }
             return available_coins;
@@ -1258,7 +1258,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         int max_selection_weight = 400'000; // WU
         const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
-            // Expected Result: 4 + 3 + 2 + 1 = 10 BTC at 400 vB
+            // Expected Result: 4 + 3 + 2 + 1 = 10 FRC at 400 vB
             add_coin(available_coins, wallet, CAmount(4 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
             add_coin(available_coins, wallet, CAmount(3 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
             add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
@@ -1375,7 +1375,7 @@ BOOST_AUTO_TEST_CASE(srd_tests)
         const auto& res = SelectCoinsSRD(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
             for (int j = 0; j < 10; ++j) {
-                /* 10 × 1 BTC + 10 × 2 BTC = 30 BTC. 20 × 272 WU = 5440 WU */
+                /* 10 × 1 FRC + 10 × 2 FRC = 30 FRC. 20 × 272 WU = 5440 WU */
                 add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(0), 144, false, 0, true);
                 add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(0), 144, false, 0, true);
             }
@@ -1393,10 +1393,10 @@ BOOST_AUTO_TEST_CASE(srd_tests)
         int max_selection_weight = 10000; // WU
         const auto& res = SelectCoinsSRD(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
-            for (int j = 0; j < 60; ++j) { // 60 UTXO --> 19,8 BTC total --> 60 × 272 WU = 16320 WU
+            for (int j = 0; j < 60; ++j) { // 60 UTXO --> 19,8 FRC total --> 60 × 272 WU = 16320 WU
                 add_coin(available_coins, wallet, CAmount(0.33 * COIN), CFeeRate(0), 144, false, 0, true);
             }
-            for (int i = 0; i < 10; i++) { // 10 UTXO --> 20 BTC total --> 10 × 272 WU = 2720 WU
+            for (int i = 0; i < 10; i++) { // 10 UTXO --> 20 FRC total --> 10 × 272 WU = 2720 WU
                 add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(0), 144, false, 0, true);
             }
             return available_coins;
@@ -1447,9 +1447,9 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
     int max_weight = MAX_STANDARD_TX_WEIGHT - WITNESS_SCALE_FACTOR * (cs_params.tx_noinputs_size + cs_params.change_output_size);
     {
         // Scenario 1:
-        // The actor starts with 1x 50.0 BTC and 1515x 0.033 BTC (~100.0 BTC total) unspent outputs
-        // Then tries to spend 49.5 BTC
-        // The 50.0 BTC output should be selected, because the transaction would otherwise be too large
+        // The actor starts with 1x 50.0 FRC and 1515x 0.033 FRC (~100.0 FRC total) unspent outputs
+        // Then tries to spend 49.5 FRC
+        // The 50.0 FRC output should be selected, because the transaction would otherwise be too large
 
         // Perform selection
 
@@ -1466,7 +1466,7 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
             m_node);
 
         BOOST_CHECK(result);
-        // Verify that the 50 BTC UTXO was selected, and result is below max_weight
+        // Verify that the 50 FRC UTXO was selected, and result is below max_weight
         BOOST_CHECK(has_coin(result->GetInputSet(), CAmount(50 * COIN)));
         BOOST_CHECK_LE(result->GetWeight(), max_weight);
     }
@@ -1474,8 +1474,8 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
     {
         // Scenario 2:
 
-        // The actor starts with 400x 0.0625 BTC and 2000x 0.025 BTC (75.0 BTC total) unspent outputs
-        // Then tries to spend 49.5 BTC
+        // The actor starts with 400x 0.0625 FRC and 2000x 0.025 FRC (75.0 FRC total) unspent outputs
+        // Then tries to spend 49.5 FRC
         // A combination of coins should be selected, such that the created transaction is not too large
 
         // Perform selection
@@ -1500,7 +1500,7 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
     {
         // Scenario 3:
 
-        // The actor starts with 1515x 0.033 BTC (49.995 BTC total) unspent outputs
+        // The actor starts with 1515x 0.033 FRC (49.995 FRC total) unspent outputs
         // No results should be returned, because the transaction would be too large
 
         // Perform selection
@@ -1532,10 +1532,10 @@ BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
     CoinsResult available_coins;
     {
         std::unique_ptr<CWallet> dummyWallet = NewWallet(m_node, /*wallet_name=*/"dummy");
-        add_coin(available_coins, *dummyWallet, 100000); // 0.001 BTC
+        add_coin(available_coins, *dummyWallet, 100000); // 0.001 FRC
     }
 
-    CAmount target{99900}; // 0.000999 BTC
+    CAmount target{99900}; // 0.000999 FRC
 
     FastRandomContext rand;
     CoinSelectionParams cs_params{

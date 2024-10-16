@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_MINER_H
-#define BITCOIN_NODE_MINER_H
+#ifndef FREICOIN_NODE_MINER_H
+#define FREICOIN_NODE_MINER_H
 
 #include <node/types.h>
 #include <policy/policy.h>
@@ -240,4 +240,4 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& options);
 } // namespace node
 
-#endif // BITCOIN_NODE_MINER_H
+#endif // FREICOIN_NODE_MINER_H

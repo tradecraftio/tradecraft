@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SUPPORT_ALLOCATORS_POOL_H
-#define BITCOIN_SUPPORT_ALLOCATORS_POOL_H
+#ifndef FREICOIN_SUPPORT_ALLOCATORS_POOL_H
+#define FREICOIN_SUPPORT_ALLOCATORS_POOL_H
 
 #include <array>
 #include <cassert>
@@ -357,4 +357,4 @@ bool operator!=(const PoolAllocator<T1, MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>& a,
     return !(a == b);
 }
 
-#endif // BITCOIN_SUPPORT_ALLOCATORS_POOL_H
+#endif // FREICOIN_SUPPORT_ALLOCATORS_POOL_H

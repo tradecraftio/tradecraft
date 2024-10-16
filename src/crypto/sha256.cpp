@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/freicoin-config.h> // IWYU pragma: keep
 
 #include <crypto/sha256.h>
 #include <crypto/common.h>

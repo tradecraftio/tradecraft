@@ -46,7 +46,7 @@
 #include <utility>
 #include <vector>
 
-using common::PSBTError;
+using common::PSTError;
 using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
@@ -402,14 +402,14 @@ public:
         }
         return {};
     }
-    std::optional<PSBTError> fillPSBT(int sighash_type,
+    std::optional<PSTError> fillPST(int sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,
-        PartiallySignedTransaction& psbtx,
+        PartiallySignedTransaction& pstx,
         bool& complete) override
     {
-        return m_wallet->FillPSBT(psbtx, complete, sighash_type, sign, bip32derivs, n_signed);
+        return m_wallet->FillPST(pstx, complete, sighash_type, sign, bip32derivs, n_signed);
     }
     WalletBalances getBalances() override
     {

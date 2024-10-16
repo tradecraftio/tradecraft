@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/freicoin-config.h> // IWYU pragma: keep
 
 #include <clientversion.h>
 #include <common/args.h>
@@ -43,8 +43,8 @@
 #include <tuple>
 #include <utility>
 
-using common::PSBTError;
-using common::PSBTErrorString;
+using common::PSTError;
+using common::PSTErrorString;
 using common::TransactionErrorString;
 using node::TransactionError;
 using util::Join;
@@ -106,7 +106,7 @@ CAmount AmountFromValue(const UniValue& value, int decimals)
 CFeeRate ParseFeeRate(const UniValue& json)
 {
     CAmount val{AmountFromValue(json)};
-    if (val >= COIN) throw JSONRPCError(RPC_INVALID_PARAMETER, "Fee rates larger than or equal to 1BTC/kvB are not accepted");
+    if (val >= COIN) throw JSONRPCError(RPC_INVALID_PARAMETER, "Fee rates larger than or equal to 1FRC/kvB are not accepted");
     return CFeeRate{val};
 }
 
@@ -178,12 +178,12 @@ std::string ShellQuoteIfNeeded(const std::string& s)
 
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
-    return "> bitcoin-cli " + methodname + " " + args + "\n";
+    return "> freicoin-cli " + methodname + " " + args + "\n";
 }
 
 std::string HelpExampleCliNamed(const std::string& methodname, const RPCArgList& args)
 {
-    std::string result = "> bitcoin-cli -named " + methodname;
+    std::string result = "> freicoin-cli -named " + methodname;
     for (const auto& argpair: args) {
         const auto& value = argpair.second.isStr()
                 ? argpair.second.get_str()
@@ -393,12 +393,12 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
     return unsigned_target;
 }
 
-RPCErrorCode RPCErrorFromPSBTError(PSBTError err)
+RPCErrorCode RPCErrorFromPSTError(PSTError err)
 {
     switch (err) {
-        case PSBTError::UNSUPPORTED:
+        case PSTError::UNSUPPORTED:
             return RPC_INVALID_PARAMETER;
-        case PSBTError::SIGHASH_MISMATCH:
+        case PSTError::SIGHASH_MISMATCH:
             return RPC_DESERIALIZATION_ERROR;
         default: break;
     }
@@ -417,9 +417,9 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
     return RPC_TRANSACTION_ERROR;
 }
 
-UniValue JSONRPCPSBTError(PSBTError err)
+UniValue JSONRPCPSTError(PSTError err)
 {
-    return JSONRPCError(RPCErrorFromPSBTError(err), PSBTErrorString(err).original);
+    return JSONRPCError(RPCErrorFromPSTError(err), PSTErrorString(err).original);
 }
 
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)

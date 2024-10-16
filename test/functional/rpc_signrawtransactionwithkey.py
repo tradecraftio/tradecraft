@@ -23,7 +23,7 @@ from test_framework.address import (
     p2a,
     script_to_p2sh,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -55,7 +55,7 @@ INPUTS = [
 ]
 OUTPUTS = {'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB': 0.1}
 
-class SignRawTransactionWithKeyTest(BitcoinTestFramework):
+class SignRawTransactionWithKeyTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

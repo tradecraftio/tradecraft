@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ZMQ_ZMQUTIL_H
-#define BITCOIN_ZMQ_ZMQUTIL_H
+#ifndef FREICOIN_ZMQ_ZMQUTIL_H
+#define FREICOIN_ZMQ_ZMQUTIL_H
 
 #include <string>
 
@@ -23,4 +23,4 @@ void zmqError(const std::string& str);
 /** Prefix for unix domain socket addresses (which are local filesystem paths) */
 const std::string ADDR_PREFIX_IPC = "ipc://"; // used by libzmq, example "ipc:///root/path/to/file"
 
-#endif // BITCOIN_ZMQ_ZMQUTIL_H
+#endif // FREICOIN_ZMQ_ZMQUTIL_H

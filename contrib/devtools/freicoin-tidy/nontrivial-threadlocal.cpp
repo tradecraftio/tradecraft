@@ -27,7 +27,7 @@ AST_MATCHER(clang::CXXRecordDecl, hasNonTrivialDestructor) {
 }
 } // namespace
 
-namespace bitcoin {
+namespace freicoin {
 
 void NonTrivialThreadLocal::registerMatchers(clang::ast_matchers::MatchFinder* finder)
 {
@@ -52,4 +52,4 @@ void NonTrivialThreadLocal::check(const clang::ast_matchers::MatchFinder::MatchR
     }
 }
 
-} // namespace bitcoin
+} // namespace freicoin

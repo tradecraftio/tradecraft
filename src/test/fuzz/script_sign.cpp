@@ -15,7 +15,7 @@
 
 #include <chainparams.h>
 #include <key.h>
-#include <psbt.h>
+#include <pst.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <script/sign.h>

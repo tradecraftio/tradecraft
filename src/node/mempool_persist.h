@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_MEMPOOL_PERSIST_H
-#define BITCOIN_NODE_MEMPOOL_PERSIST_H
+#ifndef FREICOIN_NODE_MEMPOOL_PERSIST_H
+#define FREICOIN_NODE_MEMPOOL_PERSIST_H
 
 #include <util/fs.h>
 
@@ -42,4 +42,4 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path,
 } // namespace node
 
 
-#endif // BITCOIN_NODE_MEMPOOL_PERSIST_H
+#endif // FREICOIN_NODE_MEMPOOL_PERSIST_H

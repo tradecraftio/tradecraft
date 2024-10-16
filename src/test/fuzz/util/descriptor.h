@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
-#define BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
+#ifndef FREICOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
+#define FREICOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
 
 #include <key_io.h>
 #include <util/strencodings.h>
@@ -87,4 +87,4 @@ constexpr int MAX_WRAPPERS{100};
  */
 bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers = MAX_WRAPPERS);
 
-#endif // BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
+#endif // FREICOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H

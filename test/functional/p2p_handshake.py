@@ -19,7 +19,7 @@ Test P2P behaviour during the handshake phase (VERSION, VERACK messages).
 import itertools
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.messages import (
     NODE_NETWORK,
     NODE_NETWORK_LIMITED,
@@ -39,7 +39,7 @@ DESIRABLE_SERVICE_FLAGS_FULL = NODE_NETWORK | NODE_WITNESS
 DESIRABLE_SERVICE_FLAGS_PRUNED = NODE_NETWORK_LIMITED | NODE_WITNESS
 
 
-class P2PHandshakeTest(BitcoinTestFramework):
+class P2PHandshakeTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

@@ -7,7 +7,7 @@ To run linters locally with the same versions as the CI environment, use the inc
 Dockerfile:
 
 ```sh
-DOCKER_BUILDKIT=1 docker build -t bitcoin-linter --file "./ci/lint_imagefile" ./ && docker run --rm -v $(pwd):/bitcoin -it bitcoin-linter
+DOCKER_BUILDKIT=1 docker build -t freicoin-linter --file "./ci/lint_imagefile" ./ && docker run --rm -v $(pwd):/freicoin -it freicoin-linter
 ```
 
 Building the container can be done every time, because it is fast when the
@@ -95,7 +95,7 @@ maintained:
 * for `src/secp256k1`: https://github.com/bitcoin-core/secp256k1.git (branch master)
 * for `src/leveldb`: https://github.com/bitcoin-core/leveldb-subtree.git (branch bitcoin-fork)
 * for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
-* for `src/crc32c`: https://github.com/bitcoin-core/crc32c-subtree.git (branch bitcoin-fork)
+* for `src/crc32c`: https://github.com/freicoin/crc32c-subtree.git (branch bitcoin-fork)
 * for `src/minisketch`: https://github.com/sipa/minisketch.git (branch master)
 
 To do so, add the upstream repository as remote:

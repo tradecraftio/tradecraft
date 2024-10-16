@@ -33,8 +33,8 @@ Documentation for C++ subprocessing library.
 @version 1.0.0
 */
 
-#ifndef BITCOIN_UTIL_SUBPROCESS_H
-#define BITCOIN_UTIL_SUBPROCESS_H
+#ifndef FREICOIN_UTIL_SUBPROCESS_H
+#define FREICOIN_UTIL_SUBPROCESS_H
 
 #include <util/syserror.h>
 
@@ -1459,4 +1459,4 @@ namespace detail {
 
 }
 
-#endif // BITCOIN_UTIL_SUBPROCESS_H
+#endif // FREICOIN_UTIL_SUBPROCESS_H

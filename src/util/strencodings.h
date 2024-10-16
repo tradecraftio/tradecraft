@@ -17,8 +17,8 @@
 /**
  * Utilities for converting data from/to strings.
  */
-#ifndef BITCOIN_UTIL_STRENCODINGS_H
-#define BITCOIN_UTIL_STRENCODINGS_H
+#ifndef FREICOIN_UTIL_STRENCODINGS_H
+#define FREICOIN_UTIL_STRENCODINGS_H
 
 #include <crypto/hex_base.h> // IWYU pragma: export
 #include <span.h>
@@ -380,4 +380,4 @@ std::string Capitalize(std::string str);
  */
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier);
 
-#endif // BITCOIN_UTIL_STRENCODINGS_H
+#endif // FREICOIN_UTIL_STRENCODINGS_H

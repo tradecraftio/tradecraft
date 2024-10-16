@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_RESULT_H
-#define BITCOIN_UTIL_RESULT_H
+#ifndef FREICOIN_UTIL_RESULT_H
+#define FREICOIN_UTIL_RESULT_H
 
 #include <attributes.h>
 #include <util/translation.h>
@@ -107,4 +107,4 @@ bilingual_str ErrorString(const Result<T>& result)
 }
 } // namespace util
 
-#endif // BITCOIN_UTIL_RESULT_H
+#endif // FREICOIN_UTIL_RESULT_H

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_WARNINGS_H
-#define BITCOIN_NODE_WARNINGS_H
+#ifndef FREICOIN_NODE_WARNINGS_H
+#define FREICOIN_NODE_WARNINGS_H
 
 #include <sync.h>
 #include <util/translation.h>
@@ -98,4 +98,4 @@ public:
 UniValue GetWarningsForRpc(const Warnings& warnings, bool use_deprecated);
 } // namespace node
 
-#endif // BITCOIN_NODE_WARNINGS_H
+#endif // FREICOIN_NODE_WARNINGS_H

@@ -13,10 +13,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_TEST_UTIL_H
-#define BITCOIN_WALLET_TEST_UTIL_H
+#ifndef FREICOIN_WALLET_TEST_UTIL_H
+#define FREICOIN_WALLET_TEST_UTIL_H
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/freicoin-config.h> // IWYU pragma: keep
 
 #include <addresstype.h>
 #include <wallet/db.h>
@@ -141,4 +141,4 @@ std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData record
 MockableDatabase& GetMockableDatabase(CWallet& wallet);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_TEST_UTIL_H
+#endif // FREICOIN_WALLET_TEST_UTIL_H

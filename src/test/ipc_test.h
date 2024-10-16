@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_IPC_TEST_H
-#define BITCOIN_TEST_IPC_TEST_H
+#ifndef FREICOIN_TEST_IPC_TEST_H
+#define FREICOIN_TEST_IPC_TEST_H
 
 #include <primitives/transaction.h>
 #include <univalue.h>
@@ -29,4 +29,4 @@ public:
 
 void IpcTest();
 
-#endif // BITCOIN_TEST_IPC_TEST_H
+#endif // FREICOIN_TEST_IPC_TEST_H

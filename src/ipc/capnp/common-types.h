@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_IPC_CAPNP_COMMON_TYPES_H
-#define BITCOIN_IPC_CAPNP_COMMON_TYPES_H
+#ifndef FREICOIN_IPC_CAPNP_COMMON_TYPES_H
+#define FREICOIN_IPC_CAPNP_COMMON_TYPES_H
 
 #include <clientversion.h>
 #include <streams.h>
@@ -57,7 +57,7 @@ public:
 } // namespace capnp
 } // namespace ipc
 
-//! Functions to serialize / deserialize common bitcoin types.
+//! Functions to serialize / deserialize common freicoin types.
 namespace mp {
 //! Overload multiprocess library's CustomBuildField hook to allow any
 //! serializable object to be stored in a capnproto Data field or passed to a
@@ -116,4 +116,4 @@ decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext& i
 }
 } // namespace mp
 
-#endif // BITCOIN_IPC_CAPNP_COMMON_TYPES_H
+#endif // FREICOIN_IPC_CAPNP_COMMON_TYPES_H

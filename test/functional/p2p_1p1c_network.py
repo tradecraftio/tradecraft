@@ -32,7 +32,7 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -42,10 +42,10 @@ from test_framework.wallet import (
     MiniWalletMode,
 )
 
-# 1sat/vB feerate denominated in BTC/KvB
+# 1sat/vB feerate denominated in FRC/KvB
 FEERATE_1SAT_VB = Decimal("0.00001000")
 
-class PackageRelayTest(BitcoinTestFramework):
+class PackageRelayTest(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
@@ -83,7 +83,7 @@ class PackageRelayTest(BitcoinTestFramework):
             num_outputs=2,
         )
 
-        # Target 1sat/vB so the number of satoshis is equal to the vsize.
+        # Target 1sat/vB so the number of kria is equal to the vsize.
         # Round up. The goal is to be between min relay feerate and mempool min feerate.
         fee_2outs = ceil(low_fee_parent_2outs_tester["tx"].get_vsize() / 2)
 

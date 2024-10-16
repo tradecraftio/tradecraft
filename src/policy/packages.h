@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POLICY_PACKAGES_H
-#define BITCOIN_POLICY_PACKAGES_H
+#ifndef FREICOIN_POLICY_PACKAGES_H
+#define FREICOIN_POLICY_PACKAGES_H
 
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
@@ -104,4 +104,4 @@ bool IsChildWithParentsTree(const Package& package);
  * wtxids as little endian encoded uint256, smallest to largest). */
 uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions);
 
-#endif // BITCOIN_POLICY_PACKAGES_H
+#endif // FREICOIN_POLICY_PACKAGES_H

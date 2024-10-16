@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCRIPT_SIGCACHE_H
-#define BITCOIN_SCRIPT_SIGCACHE_H
+#ifndef FREICOIN_SCRIPT_SIGCACHE_H
+#define FREICOIN_SCRIPT_SIGCACHE_H
 
 #include <consensus/amount.h>
 #include <crypto/sha256.h>
@@ -84,4 +84,4 @@ public:
     bool VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;
 };
 
-#endif // BITCOIN_SCRIPT_SIGCACHE_H
+#endif // FREICOIN_SCRIPT_SIGCACHE_H

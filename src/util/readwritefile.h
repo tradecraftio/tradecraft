@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_READWRITEFILE_H
-#define BITCOIN_UTIL_READWRITEFILE_H
+#ifndef FREICOIN_UTIL_READWRITEFILE_H
+#define FREICOIN_UTIL_READWRITEFILE_H
 
 #include <util/fs.h>
 
@@ -36,4 +36,4 @@ std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxs
  */
 bool WriteBinaryFile(const fs::path &filename, const std::string &data);
 
-#endif // BITCOIN_UTIL_READWRITEFILE_H
+#endif // FREICOIN_UTIL_READWRITEFILE_H

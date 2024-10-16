@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INTERFACES_MINING_H
-#define BITCOIN_INTERFACES_MINING_H
+#ifndef FREICOIN_INTERFACES_MINING_H
+#define FREICOIN_INTERFACES_MINING_H
 
 #include <node/types.h>
 #include <uint256.h>
@@ -94,4 +94,4 @@ std::unique_ptr<Mining> MakeMining(node::NodeContext& node);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_MINING_H
+#endif // FREICOIN_INTERFACES_MINING_H

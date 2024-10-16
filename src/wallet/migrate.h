@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_MIGRATE_H
-#define BITCOIN_WALLET_MIGRATE_H
+#ifndef FREICOIN_WALLET_MIGRATE_H
+#define FREICOIN_WALLET_MIGRATE_H
 
 #include <wallet/db.h>
 
@@ -132,4 +132,4 @@ public:
 std::unique_ptr<BerkeleyRODatabase> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_MIGRATE_H
+#endif // FREICOIN_WALLET_MIGRATE_H

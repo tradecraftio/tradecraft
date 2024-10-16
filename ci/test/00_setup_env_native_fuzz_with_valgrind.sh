@@ -26,5 +26,5 @@ export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export FUZZ_TESTS_CONFIG="--valgrind"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer CC=clang-16 CXX=clang++-16"
+export FREICOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer CC=clang-16 CXX=clang++-16"
 export CCACHE_MAXSIZE=200M

@@ -18,11 +18,11 @@ Test ports handling for I2P hosts
 """
 
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 
 PROXY = "127.0.0.1:60000"
 
-class I2PPorts(BitcoinTestFramework):
+class I2PPorts(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # The test assumes that an I2P SAM proxy is not listening here.

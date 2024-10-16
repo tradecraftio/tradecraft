@@ -69,7 +69,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/freicoin-config.h> // IWYU pragma: keep
 
 #include <any>
 #include <memory>

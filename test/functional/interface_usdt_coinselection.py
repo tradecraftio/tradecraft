@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """  Tests the coin_selection:* tracepoint API interface.
-     See https://github.com/bitcoin/bitcoin/blob/master/doc/tracing.md#context-coin_selection
+     See https://github.com/tradecraftio/tradecraft/blob/master/doc/tracing.md#context-coin_selection
 """
 
 # Test will be skipped if we don't have bcc installed
@@ -23,7 +23,7 @@ try:
     from bcc import BPF, USDT # type: ignore[import]
 except ImportError:
     pass
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -107,7 +107,7 @@ int trace_aps_create_tx(struct pt_regs *ctx) {
 """
 
 
-class CoinSelectionTracepointTest(BitcoinTestFramework):
+class CoinSelectionTracepointTest(FreicoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -117,7 +117,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_freicoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
         self.skip_if_no_wallet()

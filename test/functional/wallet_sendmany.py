@@ -15,9 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test the sendmany RPC command."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 
-class SendmanyTest(BitcoinTestFramework):
+class SendmanyTest(FreicoinTestFramework):
     # Setup and helpers
     def add_options(self, parser):
         self.add_wallet_options(parser)
