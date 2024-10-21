@@ -1842,7 +1842,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     // Check for activation of rule changes
-    if (pindex->pprev && IsProtocolCleanupActive(consensusparams, *pindex->pprev)) {
+    if (IsProtocolCleanupActive(consensusparams, *pindex)) {
         flags |= SCRIPT_VERIFY_PROTOCOL_CLEANUP;
     }
 
