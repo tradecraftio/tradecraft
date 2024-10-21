@@ -67,6 +67,7 @@ class LoadblockTest(FreicoinTestFramework):
             cfg.write(f"input={blocks_dir}\n")
             cfg.write(f"genesis={genesis_block}\n")
             cfg.write(f"hashlist={hash_list.name}\n")
+            cfg.write(f"auxpow=999999\n")
 
         base_dir = self.config["environment"]["SRCDIR"]
         linearize_dir = os.path.join(base_dir, "contrib", "linearize")

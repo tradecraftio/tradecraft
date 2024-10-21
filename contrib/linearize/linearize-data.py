@@ -222,6 +222,7 @@ class BlockDataCopier:
             su = struct.unpack("<I", inLenLE)
             inLen = su[0] - 80 # length without header
             blk_hdr = self.inF.read(80)
+            has_aux_pow = (blk_hdr[74] & 0x80) != 0
             inExtent = BlockExtent(self.inFn, self.inF.tell(), inhdr, blk_hdr, inLen)
 
             self.hash_str = calc_hash_str(blk_hdr)
@@ -234,6 +235,11 @@ class BlockDataCopier:
                 continue
 
             blkHeight = self.blkmap[self.hash_str]
+            if blkHeight >= self.settings['auxpow'] and not has_aux_pow:
+                print("Skipping block %s at height %d due to missing auxpow" % (self.hash_str, blkHeight))
+                self.inF.seek(inLen, os.SEEK_CUR)
+                continue
+
             self.blkCountIn += 1
 
             if self.blkCountOut == blkHeight:
@@ -301,6 +307,11 @@ if __name__ == '__main__':
     if 'debug_output' not in settings:
         settings['debug_output'] = 'false'
 
+    if 'auxpow' not in settings:
+        print("Missing auxpow height")
+        sys.exit(1)
+
+    settings['auxpow'] = int(settings['auxpow'])
     settings['max_out_sz'] = int(settings['max_out_sz'])
     settings['split_timestamp'] = int(settings['split_timestamp'])
     settings['file_timestamp'] = int(settings['file_timestamp'])
