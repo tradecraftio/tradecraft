@@ -2391,6 +2391,23 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         const uint256 hash(pblock->GetHash());
         {
             LOCK(cs_main);
+            const CBlockIndex *prev_block = m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock);
+            const CBlockIndex *pindex = m_chainman.m_blockman.LookupBlockIndex(pblock->GetHash());
+            if (pindex) {
+                // If the block has no auxpow, but the index does, copy it over
+                if (pblock->m_aux_pow.IsNull() && !pindex->m_aux_pow.IsNull()) {
+                    // Some older clients saved blocks without auxpow.  This doesn't affect them so long
+                    // as their database is not corrupted, as upon reading the auxpow is fetched from
+                    // the block index.  But when they serve peers, they read straight from the disk.
+                    // When reindexing, the blocks are seen as invalid and the node has to redownload
+                    // from a peer.
+                    //
+                    // To fix this issue, we check our block index to see if we already have an
+                    // auxiliary proof of work for this block.  We should, if one exists, as it would
+                    // have been checked when the block header was validated.
+                    pblock->m_aux_pow = pindex->m_aux_pow;
+                }
+            }
             // Also always process if we requested the block explicitly, as we may
             // need it even though it is not a candidate for a new best tip.
             forceProcessing |= MarkBlockAsReceived(hash);
