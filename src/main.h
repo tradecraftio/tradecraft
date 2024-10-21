@@ -266,11 +266,11 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
  **/
 inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBlock& block)
 {
-    return ((!block.vtx.empty() ? block.vtx[0].nLockTime : 0) >= params.protocol_cleanup_activation_time);
+    return ((!block.vtx.empty() ? block.vtx[0].lock_height : 0) >= params.CleanupHeight);
 }
 inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBlockIndex* pindex)
 {
-    return ((pindex ? pindex->GetMedianTimePast() : 0) >= params.protocol_cleanup_activation_time);
+    return (pindex->nHeight >= params.CleanupHeight);
 }
 /** Finally, a version based on network time, for places in
  ** non-consensus code where it would be inappropriate to examine the
