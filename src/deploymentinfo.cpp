@@ -48,6 +48,8 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
         return "segwit";
     case Consensus::DEPLOYMENT_FINALTX:
         return "finaltx";
+    case Consensus::DEPLOYMENT_AUXPOW:
+        return "auxpow";
     case Consensus::DEPLOYMENT_CLEANUP:
         return "cleanup";
     } // no default case, so the compiler can warn about missing cases
