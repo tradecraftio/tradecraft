@@ -1403,6 +1403,7 @@ RPCHelpMan getblockchaininfo()
     BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
     BIP9SoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
     BIP9SoftForkDescPushBack(softforks, "finaltx", consensusParams, Consensus::DEPLOYMENT_FINALTX);
+    BIP9SoftForkDescPushBack(softforks, "auxpow", consensusParams, Consensus::DEPLOYMENT_AUXPOW);
     obj.pushKV("softforks",             softforks);
 
     obj.pushKV("warnings", GetWarnings(false).original);
