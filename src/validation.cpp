@@ -1689,7 +1689,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Check for activation of rule changes
-    if (IsProtocolCleanupActive(consensusparams, pindex->pprev)) {
+    if (IsProtocolCleanupActive(consensusparams, pindex)) {
         flags |= SCRIPT_VERIFY_PROTOCOL_CLEANUP;
     }
     if (IsSizeExpansionActive(consensusparams, pindex->pprev)) {
