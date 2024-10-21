@@ -46,13 +46,17 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
         return "locktime";
     case Consensus::DEPLOYMENT_SEGWIT:
         return "segwit";
+    case Consensus::DEPLOYMENT_CLEANUP:
+        return "cleanup";
     } // no default case, so the compiler can warn about missing cases
     return "";
 }
 
 std::optional<Consensus::BuriedDeployment> GetBuriedDeployment(const std::string_view name)
 {
-    if (name == "segwit") {
+    if (name == "cleanup") {
+        return Consensus::BuriedDeployment::DEPLOYMENT_CLEANUP;
+    } else if (name == "segwit") {
         return Consensus::BuriedDeployment::DEPLOYMENT_SEGWIT;
     } else if (name == "bip34") {
         return Consensus::BuriedDeployment::DEPLOYMENT_HEIGHTINCB;

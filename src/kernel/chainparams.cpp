@@ -86,6 +86,7 @@ public:
         consensus.BIP66Height = 158425; // 0000000000000799b28bbc61b9a93770af898ffc621174e70480656f0382a020
         consensus.LockTimeHeight = 258048; // 000000000000002b7c1e4b345d09ed56475bd7e9d84f1bb43ea13195aa7719b6
         consensus.SegwitHeight = 278208; // 0000000000000050599fa4cae6de65d71a1d7d0d7dc2e9b19531b794c30458c0
+        consensus.CleanupHeight = 424780; // ea767ef6150a2fe2c1d3be59464db199adb14e9197e8277acf2db68fe9896eec
         consensus.MinBIP9WarningHeight = 280224; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -285,6 +286,7 @@ public:
         consensus.BIP66Height = 1; // 0000000000002076358270b88c18cce6a0886c870e6167776e40d167bd01b49f
         consensus.LockTimeHeight = 1512; // 00000000000019f427d3b84e5d97485fa957deb7c5d7df6ca7a60f5739b91d3a
         consensus.SegwitHeight = 2016; // 00000000000017c5d079dfbe901cb7d0fae2a8eafd91be4e98f23481c73921d5
+        consensus.CleanupHeight = 25259; // unknown
         consensus.MinBIP9WarningHeight = 4032; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -481,6 +483,7 @@ public:
         consensus.BIP66Height = 1;
         consensus.LockTimeHeight = 1;
         consensus.SegwitHeight = 1;
+        consensus.CleanupHeight = 1;
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -574,6 +577,7 @@ public:
         consensus.BIP66Height = 1;  // Always active unless overridden
         consensus.LockTimeHeight = 1;    // Always active unless overridden
         consensus.SegwitHeight = 0; // Always active unless overridden
+        consensus.CleanupHeight = std::numeric_limits<int>::max(); // Never
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -630,6 +634,9 @@ public:
 
         for (const auto& [dep, height] : opts.activation_heights) {
             switch (dep) {
+            case Consensus::BuriedDeployment::DEPLOYMENT_CLEANUP:
+                consensus.CleanupHeight = int{height};
+                break;
             case Consensus::BuriedDeployment::DEPLOYMENT_SEGWIT:
                 consensus.SegwitHeight = int{height};
                 break;

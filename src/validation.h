@@ -170,11 +170,11 @@ inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBloc
     if (block.m_aux_pow.IsNull()) {
         return false;
     }
-    return ((!block.vtx.empty() ? block.vtx[0]->nLockTime : 0) >= params.protocol_cleanup_activation_time);
+    return ((!block.vtx.empty() ? block.vtx[0]->lock_height : 0) >= params.CleanupHeight);
 }
 inline bool IsProtocolCleanupActive(const Consensus::Params& params, const CBlockIndex& index)
 {
-    return (index.GetMedianTimePast() >= params.protocol_cleanup_activation_time);
+    return (index.nHeight >= params.CleanupHeight);
 }
 
 /** Scheduled size expansion rule change
