@@ -1323,6 +1323,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     BuriedForkDescPushBack(softforks, "cleanup", consensusParams.CleanupHeight);
     BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
     BIP9SoftForkDescPushBack(softforks, "finaltx", consensusParams, Consensus::DEPLOYMENT_FINALTX);
+    BIP9SoftForkDescPushBack(softforks, "auxpow", consensusParams, Consensus::DEPLOYMENT_AUXPOW);
     obj.pushKV("softforks",             softforks);
 
     obj.pushKV("warnings", GetWarnings("statusbar"));
