@@ -46,8 +46,6 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
         return "locktime";
     case Consensus::DEPLOYMENT_SEGWIT:
         return "segwit";
-    case Consensus::DEPLOYMENT_AUXPOW:
-        return "auxpow";
     case Consensus::DEPLOYMENT_CLEANUP:
         return "cleanup";
     } // no default case, so the compiler can warn about missing cases
