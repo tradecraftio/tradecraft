@@ -4082,7 +4082,7 @@ void ChainstateManager::GenerateCoinbaseCommitment(CBlock& block, const CBlockIn
 bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams)
 {
     return std::all_of(headers.cbegin(), headers.cend(),
-            [&](const auto& header) { return CheckProofOfWork(header, consensusParams);});
+            [&](const auto& header) { return CheckAuxiliaryProofOfWork(header, consensusParams) && (IsProtocolCleanupActive(consensusParams, std::chrono::seconds(header.nTime)) || CheckProofOfWork(header, consensusParams));});
 }
 
 bool IsBlockMutated(const CBlock& block, const Consensus::Params& consensusParams, bool check_witness_root)
