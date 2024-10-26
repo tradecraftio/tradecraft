@@ -138,9 +138,11 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
         block.hashMerkleRoot = BlockMerkleRoot(block);
     }
 
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block, chainman.GetConsensus()) && !chainman.m_interrupt) {
-        ++block.nNonce;
-        --max_tries;
+    if (!IsProtocolCleanupActive(chainman.GetConsensus(), block)) {
+        while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block, chainman.GetConsensus()) && !chainman.m_interrupt) {
+            ++block.nNonce;
+            --max_tries;
+        }
     }
     if (max_tries == 0 || chainman.m_interrupt) {
         return false;
