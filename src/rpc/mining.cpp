@@ -141,9 +141,11 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
         IncrementExtraNonce(&block, chainparams.GetConsensus(), chainman.ActiveChain().Tip(), extra_nonce, aux_hash2);
     }
 
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block, chainparams.GetConsensus()) && !ShutdownRequested()) {
-        ++block.nNonce;
-        --max_tries;
+    if (!IsProtocolCleanupActive(chainparams.GetConsensus(), block)) {
+        while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block, chainparams.GetConsensus()) && !ShutdownRequested()) {
+            ++block.nNonce;
+            --max_tries;
+        }
     }
     if (max_tries == 0 || ShutdownRequested()) {
         return false;
