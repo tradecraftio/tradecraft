@@ -137,9 +137,11 @@ static UniValue generateBlocks(const CTxMemPool& mempool, const CScript& coinbas
             }
             IncrementExtraNonce(pblock, Params().GetConsensus(), ::ChainActive().Tip(), nExtraNonce, aux_hash2);
         }
-        while (nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(*pblock, Params().GetConsensus()) && !ShutdownRequested()) {
-            ++pblock->nNonce;
-            --nMaxTries;
+        if (!IsProtocolCleanupActive(chainparams.GetConsensus(), block)) {
+            while (nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(*pblock, Params().GetConsensus()) && !ShutdownRequested()) {
+                ++pblock->nNonce;
+                --nMaxTries;
+            }
         }
         if (nMaxTries == 0 || ShutdownRequested()) {
             break;
