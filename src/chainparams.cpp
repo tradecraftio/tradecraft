@@ -102,8 +102,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 1622592000; // June 2nd, 2021.
         consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000003cda5268b682c9ebd2b");
-        consensus.defaultAssumeValid = uint256S("0x000000000092ed109a133fc773421f83796aff1f6a5521256c425f39c660b60e"); // 383040
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000003e328537a467ba2c7de");
+        consensus.defaultAssumeValid = uint256S("0xea767ef6150a2fe2c1d3be59464db199adb14e9197e8277acf2db68fe9896eec"); // 424780
 
         // Locked-in via checkpoint:
         consensus.verify_coinbase_lock_time_activation_height = 247554;
@@ -241,6 +241,11 @@ public:
                 {362880, uint256S("0x000000000008e9c63ddbaa03f32a6961a6837362be121b220b45410d59095f9a")},
                 {372960, uint256S("0x0000000002af94c90e368a6dfd5d1f35857d3deb5a0402144866dfbab0688d09")},
                 {383040, uint256S("0x000000000092ed109a133fc773421f83796aff1f6a5521256c425f39c660b60e")},
+                {393120, uint256S("0x000000000194cdd5bb0083bc859c57cc4dcadeae117ea26b7343d1a7228a114d")},
+                {403200, uint256S("0x0000000003785caa54529380bbf22211bd32b6539485896c61c69d23668f5c1b")},
+                {413280, uint256S("0x00000000035baef17c52f0b021cf13dfbfe045df56d036780ea16e8faf62dd16")},
+                {423360, uint256S("0x000000000235f7fa5091a0c115527cae13fba1d1d654129cd96a411a15d51202")},
+                {424780, uint256S("0xea767ef6150a2fe2c1d3be59464db199adb14e9197e8277acf2db68fe9896eec")}, // CleanupHeight
             }
         };
 
@@ -249,10 +254,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 2688 000000000092ed109a133fc773421f83796aff1f6a5521256c425f39c660b60e
-            .nTime    = 1689773678,
-            .nTxCount = 1165936,
-            .dTxRate  = 0.001581603879825156,
+            // Data from RPC: getchaintxstats 2688 ea767ef6150a2fe2c1d3be59464db199adb14e9197e8277acf2db68fe9896eec
+            .nTime    = 1729071811,
+            .nTxCount = 1249564,
+            .dTxRate  = 0.001680734703331907,
         };
     }
 };
@@ -304,8 +309,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].nTimeout = 1622592000; // June 2nd, 2021.
         consensus.vDeployments[Consensus::DEPLOYMENT_AUXPOW].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000117428a7cfdf3d5299");
-        consensus.defaultAssumeValid = uint256S("0x00000000000015207580bae63ac8ae344f6fdee79dbc06af9fdd88d9fe28a3e4");
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000001d134f91d559fc28fb");
+        consensus.defaultAssumeValid = uint256S("0x58c121907bf5f005acdddf38da413fcd2c9f7048163bcfa0310fa7bd067b7e44"); // 25259
 
         consensus.verify_coinbase_lock_time_activation_height = 2016;
         // Tuesday, April 2, 2019 00:00:00 UTC
@@ -391,6 +396,8 @@ public:
             {
                 { 2016, uint256S("0x00000000000017c5d079dfbe901cb7d0fae2a8eafd91be4e98f23481c73921d5")},
                 {10080, uint256S("0x00000000000015207580bae63ac8ae344f6fdee79dbc06af9fdd88d9fe28a3e4")},
+                {20160, uint256S("0x0000000083e9fa7a66f24b5eb781caedd67a5bd80069b361710b827c66f9ff40")},
+                {25259, uint256S("0x58c121907bf5f005acdddf38da413fcd2c9f7048163bcfa0310fa7bd067b7e44")}, // CleanupHeight
             }
         };
 
@@ -399,10 +406,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 2688 00000000000015207580bae63ac8ae344f6fdee79dbc06af9fdd88d9fe28a3e4
-            .nTime    = 1679650087,
-            .nTxCount = 18550,
-            .dTxRate  = 6.876553860058087e-05,
+            // Data from RPC: getchaintxstats 2688 58c121907bf5f005acdddf38da413fcd2c9f7048163bcfa0310fa7bd067b7e44
+            .nTime    = 1729644118,
+            .nTxCount = 48908,
+            .dTxRate  = 0.002227688309277393,
         };
     }
 };
