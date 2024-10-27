@@ -1,11 +1,18 @@
 # List of fixed seed nodes for testnet
+127.0.0.1:18639
+5.78.110.217:18639
+51.81.166.153:18639
+51.81.32.218:18639
+54.38.193.222:18639
+54.39.129.45:18639
+65.21.3.81:18639
+85.15.179.171:18639
+91.206.16.214:18639
+[2001:41d0:602:18de::]:18639
+[2604:2dc0:101:200::32f6]:18639
+[2604:2dc0:200:1799::]:18639
+[2607:5300:203:402d::]:18639
+[2a01:4f9:c012:597b::1]:18639
+[2a01:4ff:1f0:c7d5::1]:18639
 
 # Onion nodes
-thfsmmn2jfreicoin.onion
-it2pj4f7657g3rhi.onion
-nkf5e6b7pl4jfd4a.onion
-4zhkir2ofl7orfom.onion
-t6xj6wilh4ytvcs7.onion
-i6y6ivorwakd7nw3.onion
-ubqj4rsu3nqtxmtp.onion
-
