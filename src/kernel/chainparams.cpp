@@ -286,7 +286,7 @@ public:
         consensus.BIP66Height = 1; // 0000000000002076358270b88c18cce6a0886c870e6167776e40d167bd01b49f
         consensus.LockTimeHeight = 1512; // 00000000000019f427d3b84e5d97485fa957deb7c5d7df6ca7a60f5739b91d3a
         consensus.SegwitHeight = 2016; // 00000000000017c5d079dfbe901cb7d0fae2a8eafd91be4e98f23481c73921d5
-        consensus.CleanupHeight = 25259; // unknown
+        consensus.CleanupHeight = 25259; // 58c121907bf5f005acdddf38da413fcd2c9f7048163bcfa0310fa7bd067b7e44
         consensus.MinBIP9WarningHeight = 4032; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.aux_pow_limit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
