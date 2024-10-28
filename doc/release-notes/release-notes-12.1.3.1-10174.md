@@ -1,98 +1,56 @@
-Freicoin version 12.1.3.1-10174 is now available from:
+v12.1.3.1-10174 Release Notes
+=============================
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3.1-10174-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3.1-10174-linux64.zip)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3.1-10174-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3.1-10174-osx64.tar.gz)
-  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3.1-10174-win32-setup.exe)
-  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3.1-10174-win32.zip)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3.1-10174-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v12.1.3.1-10174-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v12.1.3.1-10174.zip)
+Freicoin version v12.1.3.1-10174 is now available from:
 
-This is a new patch release, fixing an important bug in the
-`getblocktemplate` RPC code that prevented miners from using
-v12.1.3-10161 to generate work units.
+  https://github.com/tradecraftio/tradecraft/releases/tag/v12.1.3.1-10174
 
-Please report bugs using the issue tracker at github:
+This is a new patch release, fixing an important bug in the `getblocktemplate` RPC code that prevented miners from using v12.1.3-10161 to generate work units.
+
+Please report bugs using the issue tracker at GitHub:
 
   https://github.com/tradecraftio/tradecraft/issues
 
 How to Upgrade
-==============
+--------------
 
-If you are running an older version, shut it down. Wait until it has
-completely shut down (which might take a few minutes for older
-versions), then run the installer (on Windows) or just copy over
-/Applications/Freicoin-Qt (on Mac) or freicoind/freicoin-qt (on
-Linux).
+If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes for older versions), then run the installer (on Windows) or just copy over /Applications/Freicoin-Qt (on Mac) or freicoind/freicoin-qt (on Linux).
 
 Downgrade warning
 -----------------
 
 ### Downgrade to a version < v12
 
-Because release v12 and later will obfuscate the chainstate on every
-fresh sync or reindex, the chainstate is not backwards-compatible with
-pre-v12 versions of Freicoin or other software.
+Because release v12 and later will obfuscate the chainstate on every fresh sync or reindex, the chainstate is not backwards-compatible with pre-v12 versions of Freicoin or other software.
 
-If you want to downgrade after you have done a reindex with v12 or
-later, you will need to reindex when you first start Freicoin version
-v11 or earlier.
+If you want to downgrade after you have done a reindex with v12 or later, you will need to reindex when you first start Freicoin version v11 or earlier.
 
 This does not affect wallet forward or backward compatibility.
 
 Notable changes
-===============
+---------------
 
-Critical bug fix in `getblocktemplate`
---------------------------------------
+### Critical bug fix in `getblocktemplate`
 
-There was a bug introduced in v12.1.3-10161 which corrupted the output
-of `getblocktemplate`, causing work units representing invalid blocks
-to be generated when the mempool was non-empty.  This release contains
-a patch to fix the identified error, and has been tested to generate
-valid blocks in production.
+There was a bug introduced in v12.1.3-10161 which corrupted the output of `getblocktemplate`, causing work units representing invalid blocks to be generated when the mempool was non-empty.  This release contains a patch to fix the identified error, and has been tested to generate valid blocks in production.
 
-Miners who have upgraded to v12.1.3-10161 should either upgrade to
-this patch release, or downgrade to v12.1.2-10135 immediately.  Using
-a version prior to v12.1.2-10135 is not safe to do since the locktime
-soft-fork achieved "locked-in" status on block #256032.
+Miners who have upgraded to v12.1.3-10161 should either upgrade to this patch release, or downgrade to v12.1.2-10135 immediately.  Using a version prior to v12.1.2-10135 is not safe to do since the locktime soft-fork achieved "locked-in" status on block #256032.
 
-Delay time-based IBD detection threshold from 24h to 14d
---------------------------------------------------------
+### Delay time-based IBD detection threshold from 24h to 14d
 
-A property inherited from bitcoin is that a node previously would
-consider itself in initial block download or "IBD" state if the most
-recent block it has seen is more than 24 hours old.  While this has
-worked for the bitcoin network, on Tradecraft there have been at least
-two recent instances where software bugs or a sudden drop of hash
-power has caused a tip extension delay of that magnitude.  If the node
-providing work for a miner is then restarted, work will no longer be
-generated by the `getblocktemplate` RPC, causing that miner to go
-offline and further aggravating the issue.
+A property inherited from bitcoin is that a node previously would consider itself in initial block download or "IBD" state if the most recent block it has seen is more than 24 hours old.  While this has worked for the bitcoin network, on Tradecraft there have been at least two recent instances where software bugs or a sudden drop of hash power has caused a tip extension delay of that magnitude.  If the node providing work for a miner is then restarted, work will no longer be generated by the `getblocktemplate` RPC, causing that miner to go offline and further aggravating the issue.
 
-Until a better fix can be engineered, this release changes the "IBD"
-detection threshold from its prior value of 24 hours to 14 days--only
-if the network goes without blocks for a full 2 weeks will a reset
-node start up in "IBD" state.
+Until a better fix can be engineered, this release changes the "IBD" detection threshold from its prior value of 24 hours to 14 days--only if the network goes without blocks for a full 2 weeks will a reset node start up in "IBD" state.
 
-New port numbers for "regtest" network
---------------------------------------
+### New port numbers for "regtest" network
 
-While testing the mining RPCs with production mining pool code, it was
-observed that the default port settings for regtest mode conflict with
-testnet, a problem that was inherited from bitcoin.  This release
-assigns new default port numbers for regtest from the 2xxxx block,
-much like testnet inhabits the 1xxxx block.
+While testing the mining RPCs with production mining pool code, it was observed that the default port settings for regtest mode conflict with testnet, a problem that was inherited from bitcoin.  This release assigns new default port numbers for regtest from the 2xxxx block, much like testnet inhabits the 1xxxx block.
 
-12.1.3.1-10174 Change log
-=========================
+v12.1.3.1-10174 Change log
+--------------------------
 
   * `40d8ab2c` [FinalTx]
-    Fix bug corrupting the output of `getblocktemplate` RPC, causing
-    it to generate invalid work with high probability when the mempool
-    is not empty.
+    Fix bug corrupting the output of `getblocktemplate` RPC, causing it to generate invalid work with high probability when the mempool is not empty.
 
   * `4cf7ba38` [Chainparams]
     Delay IBD threshold to be 14 days instead of 24 hours.
@@ -100,8 +58,7 @@ much like testnet inhabits the 1xxxx block.
   * `467661aa` [Net]
     `b013e689` [Net]
     `b75b1154` [Net]
-    Change the network ports used by regtest to not conflict with the
-    default testnet ports.
+    Change the network ports used by regtest to not conflict with the default testnet ports.
 
 Credits
 --------

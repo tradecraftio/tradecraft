@@ -1,228 +1,114 @@
-Freicoin version 10.4 is now available from:
+v10.4-7842 Release Notes
+========================
 
-  * [Linux 32-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4-7842-linux32.zip)
-  * [Linux 64-bit](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4-7842-linux64.zip)
-  * [macOS (app)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4-7842-osx.dmg)
-  * [macOS (server)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4-7842-osx64.tar.gz)
-  * [Windows 32-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4-7842-win32-setup.exe)
-  * [Windows 32-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4-7842-win32.zip)
-  * [Windows 64-bit (installer)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4-7842-win64-setup.exe)
-  * [Windows 64-bit (zip)](https://s3.amazonaws.com/in.freico.stable/freicoin-v10.4-7842-win64.zip)
-  * [Source](https://github.com/tradecraftio/tradecraft/archive/v10.4-7842.zip)
+Freicoin version v10.4-7842 is now available from:
 
-This is a new major version release, bringing both new features and
-bug fixes.
+  https://github.com/tradecraftio/tradecraft/releases/tag/v10.4-7842
+
+This is a new major version release, bringing both new features and bug fixes.
 
 Please report bugs using the issue tracker at github:
 
   https://github.com/tradecraftio/tradecraft/issues
 
-Upgrading and downgrading
-=========================
-
 How to Upgrade
 --------------
 
-If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Freicoin-Qt (on Mac) or
-freicoind/freicoin-qt (on Linux).
+If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes for older versions), then run the installer (on Windows) or just copy over /Applications/Freicoin-Qt (on Mac) or freicoind/freicoin-qt (on Linux).
 
 Downgrading warning
 ---------------------
 
-Because release 10.4 makes use of headers-first synchronization and parallel
-block download (see further), the block files and databases are not
-backwards-compatible with older versions of Freicoin or other software:
+Because release 10.4 makes use of headers-first synchronization and parallel block download (see further), the block files and databases are not backwards-compatible with older versions of Freicoin or other software:
 
-* Blocks will be stored on disk out of order (in the order they are
-received, really), which makes it incompatible with some tools or
-other programs. Reindexing using earlier versions will also not work
-anymore as a result of this.
+- Blocks will be stored on disk out of order (in the order they are received, really), which makes it incompatible with some tools or other programs. Reindexing using earlier versions will also not work anymore as a result of this.
 
-* The block index database will now hold headers for which no block is
-stored on disk, which earlier versions won't support.
+- The block index database will now hold headers for which no block is stored on disk, which earlier versions won't support.
 
-If you want to be able to downgrade smoothly, make a backup of your entire data
-directory. Without this your node will need start syncing (or importing from
-bootstrap.dat) anew afterwards. It is possible that the data from a completely
-synchronized 0.10 node may be usable in older versions as-is, but this is not
-supported and may break as soon as the older version attempts to reindex.
+If you want to be able to downgrade smoothly, make a backup of your entire data directory. Without this your node will need start syncing (or importing from bootstrap.dat) anew afterwards. It is possible that the data from a completely synchronized v10 node may be usable in older versions as-is, but this is not supported and may break as soon as the older version attempts to reindex.
 
 This does not affect wallet forward or backward compatibility.
 
-
 Notable changes
-===============
+---------------
 
-This fixes a serious problem on Windows with data directories that have non-ASCII
-characters (https://github.com/bitcoin/bitcoin/issues/6078).
+This fixes a serious problem on Windows with data directories that have non-ASCII characters (https://github.com/bitcoin/bitcoin/issues/6078).
 
-Protocol-cleanup flag day fork
-------------------------------
+### Protocol-cleanup flag day fork
 
-To achieve desired scaling limits, the forward blocks protocol upgrade
-will eventually trigger a hard-fork modification of the consensus
-rules, for the primary purposes of dropping enforcement of many
-aggregate block limits and altering the difficulty adjustment
-algorithm.
+To achieve desired scaling limits, the forward blocks protocol upgrade will eventually trigger a hard-fork modification of the consensus rules, for the primary purposes of dropping enforcement of many aggregate block limits and altering the difficulty adjustment algorithm.
 
-This hard-fork will not activate until it is absolutely necessary for
-it to do so, at the point when measurements of real demand for
-additional shard space in aggregate across all forward block
-shard-chains exceeds the available space in the compatibility
-chain. It is anticipated that this will not occur until many, many
-years into the future, when Freicoin/Tradecraft's usage exceeds even
-the levels of bitcoin usage ca. 2018. However when it does eventually
-trigger, any node enforcing the old rules will be left behind.
+This hard-fork will not activate until it is absolutely necessary for it to do so, at the point when measurements of real demand for additional shard space in aggregate across all forward block shard-chains exceeds the available space in the compatibility chain. It is anticipated that this will not occur until many, many years into the future, when Freicoin/Tradecraft's usage exceeds even the levels of bitcoin usage ca. 2018. However when it does eventually trigger, any node enforcing the old rules will be left behind.
 
-Beginning in 10.4, we introduce a flag-day relaxation of the consensus
-rules in preparation for this eventual fork. Since the rule changes
-for forward blocks have not been written yet, any code written now
-wouldn't be able to detect actual activation or enforce the new
-aggregate limits. Instead we schedule a relaxation of the consensus
-rules at the EOL support date for the current release, after which
-rules which we anticipate being changed are simply unenforced, and
-aggregate limits are set to the maximum values the software is able to
-support. After the flag-day, older clients of at least version 10.4
-will continue to receive blocks, but with only SPV security ("trust
-the most work") for the new protocol rules. So activation of forward
-blocks' new scaling limits becomes a soft-fork starting with the
-release of 10.4, with the only concern being the forking off of
-pre-10.4 nodes upon activation.
+Beginning in 10.4, we introduce a flag-day relaxation of the consensus rules in preparation for this eventual fork. Since the rule changes for forward blocks have not been written yet, any code written now wouldn't be able to detect actual activation or enforce the new aggregate limits. Instead we schedule a relaxation of the consensus rules at the EOL support date for the current release, after which rules which we anticipate being changed are simply unenforced, and aggregate limits are set to the maximum values the software is able to support. After the flag-day, older clients of at least version 10.4 will continue to receive blocks, but with only SPV security ("trust the most work") for the new protocol rules. So activation of forward blocks' new scaling limits becomes a soft-fork starting with the release of 10.4, with the only concern being the forking off of pre-10.4 nodes upon activation.
 
-The protocol cleanup rule change is scheduled for activation on 2
-April 2021 at midnight UTC. This is 4PM PDT, 7PM EDT, and 9AM
-JST. Since the activation time is median-time-past, it'll actually
-trigger about an hour after this wall-clock time.
+The protocol cleanup rule change is scheduled for activation on 2 April 2021 at midnight UTC. This is 4PM PDT, 7PM EDT, and 9AM JST. Since the activation time is median-time-past, it'll actually trigger about an hour after this wall-clock time.
 
-This date is chosen to be roughly 2 years after the expected release
-date of official binaries for 10.4. While the Freicoin developer team
-doesn't have the resources to provide strong ongoing support beyond
-emergency fixes, we nevertheless have an ideal goal of supporting
-release binaries for up to 2 years following the first release from
-that series. Any release of a new series prior to the deployment of
-forward blocks will reset this to be at least two years from the time
-of release. When forward blocks is deployed, this parameter will be
-set to the highest value used in any prior release, and becomes the
-earliest time at which the hard-fork rules can activate.
+This date is chosen to be roughly 2 years after the expected release date of official binaries for 10.4. While the Freicoin developer team doesn't have the resources to provide strong ongoing support beyond emergency fixes, we nevertheless have an ideal goal of supporting release binaries for up to 2 years following the first release from that series. Any release of a new series prior to the deployment of forward blocks will reset this to be at least two years from the time of release. When forward blocks is deployed, this parameter will be set to the highest value used in any prior release, and becomes the earliest time at which the hard-fork rules can activate.
 
-All users should be aware that timely updates or modification of their
-own nodes are required within this time window in order to maintain
-full-node security, until such time as a version supporting forward
-blocks is released and adopted. Miners especially *must* upgrade or
-modify their block-generating nodes before this date, or else they
-place the consensus of the network at risk.
+All users should be aware that timely updates or modification of their own nodes are required within this time window in order to maintain full-node security, until such time as a version supporting forward blocks is released and adopted. Miners especially *must* upgrade or modify their block-generating nodes before this date, or else they place the consensus of the network at risk.
 
-Depreciation of 32-bit clients
-------------------------------
+### Depreciation of 32-bit clients
 
-The lifting of aggregate limits in preparation of the new scaling
-limits enabled by forward blocks unfortunately opens a memory
-exhaustion denial of service attack vector after the above-mentioned
-flag-day activation of new rules, even if the actual activation date
-has been pushed back in later releases. To protect against this,
-32-bit clients have smaller network buffers (about 16 MiB under
-default settings), too small to contain the largest block-relay
-message allowed under the new rules (2 GiB).
+The lifting of aggregate limits in preparation of the new scaling limits enabled by forward blocks unfortunately opens a memory exhaustion denial of service attack vector after the above-mentioned flag-day activation of new rules, even if the actual activation date has been pushed back in later releases. To protect against this, 32-bit clients have smaller network buffers (about 16 MiB under default settings), too small to contain the largest block-relay message allowed under the new rules (2 GiB).
 
-This unfortunately means that if/when forward blocks is deployed and
-the flexible cap used to grow aggregate block size limits, then 32-bit
-nodes will no longer be able to perform network synchronization once a
-block larger than 17,179,845 bytes is included into the main chain.
+This unfortunately means that if/when forward blocks is deployed and the flexible cap used to grow aggregate block size limits, then 32-bit nodes will no longer be able to perform network synchronization once a block larger than 17,179,845 bytes is included into the main chain.
 
-For this reason, support for 32-bit clients is officially depreciated
-as of the 10.4 release. Starting with 10.4, 32-bit clients will at
-some point in the future be unable to sync the main chain. Users on
-32-bit hosts should strongly consider upgrading before activation of
-the new rules.
+For this reason, support for 32-bit clients is officially depreciated as of the 10.4 release. Starting with 10.4, 32-bit clients will at some point in the future be unable to sync the main chain. Users on 32-bit hosts should strongly consider upgrading before activation of the new rules.
 
-However should you need to continue running 32-bit nodes, be advised
-that the network message limits are informed by the -maxconnections
-option. Specifically the maximum network packet size allowed is
+However should you need to continue running 32-bit nodes, be advised that the network message limits are informed by the -maxconnections option. Specifically the maximum network packet size allowed is
 
     2^32 / max(125, -maxconnections) / 2,
 
-which for the default of 125 connection slots is 17,179,869 bytes (not
-including the 24-byte header). By providing a lower value for
--maxconnections this value is increased.  With -maxconnections=1, the
-calculated value is clamped to MAX_BLOCKFILE_SIZE. So a 32-bit node
-with -maxconnections=1 will be able to network synchronize even the
-largest blocks from its (only) peer.
+which for the default of 125 connection slots is 17,179,869 bytes (not including the 24-byte header). By providing a lower value for -maxconnections this value is increased.  With -maxconnections=1, the calculated value is clamped to MAX_BLOCKFILE_SIZE. So a 32-bit node with -maxconnections=1 will be able to network synchronize even the largest blocks from its (only) peer.
 
-Although depreciated, 32-bit official binaries will continue to be
-provided for releases so long as it remains a reasonable amount of
-work to do so.
+Although depreciated, 32-bit official binaries will continue to be provided for releases so long as it remains a reasonable amount of work to do so.
 
-Faster synchronization
-----------------------
+### Faster synchronization
 
-Freicoin now uses 'headers-first synchronization'. This means that we first
-ask peers for block headers (a total of 19 megabytes, as of February 2019) and
-validate those. In a second stage, when the headers have been discovered, we
-download the blocks. However, as we already know about the whole chain in
-advance, the blocks can be downloaded in parallel from all available peers.
+Freicoin now uses 'headers-first synchronization'. This means that we first ask peers for block headers (a total of 19 megabytes, as of February 2019) and validate those. In a second stage, when the headers have been discovered, we download the blocks. However, as we already know about the whole chain in advance, the blocks can be downloaded in parallel from all available peers.
 
-In practice, this means a much faster and more robust synchronization. You may
-notice a slower progress in the very first few minutes, when headers are still
-being fetched and verified, but it should gain speed afterwards.
+In practice, this means a much faster and more robust synchronization. You may notice a slower progress in the very first few minutes, when headers are still being fetched and verified, but it should gain speed afterwards.
 
 A few RPCs were added/updated as a result of this:
-- `getblockchaininfo` now returns the number of validated headers in addition to
-the number of validated blocks.
-- `getpeerinfo` lists both the number of blocks and headers we know we have in
-common with each peer. While synchronizing, the heights of the blocks that we
-have requested from peers (but haven't received yet) are also listed as
-'inflight'.
-- A new RPC `getchaintips` lists all known branches of the block chain,
-including those we only have headers for.
 
-Transaction fee changes
------------------------
+- `getblockchaininfo` now returns the number of validated headers in addition to the number of validated blocks.
 
-This release automatically estimates how high a transaction fee (or how
-high a priority) transactions require to be confirmed quickly. The default
-settings will create transactions that confirm quickly; see the new
-'txconfirmtarget' setting to control the tradeoff between fees and
-confirmation times. Fees are added by default unless the 'sendfreetransactions'
-setting is enabled.
+- `getpeerinfo` lists both the number of blocks and headers we know we have in common with each peer. While synchronizing, the heights of the blocks that we have requested from peers (but haven't received yet) are also listed as 'inflight'.
 
-Prior releases used hard-coded fees (and priorities), and would
-sometimes create transactions that took a very long time to confirm.
+- A new RPC `getchaintips` lists all known branches of the block chain, including those we only have headers for.
 
-Statistics used to estimate fees and priorities are saved in the
-data directory in the `fee_estimates.dat` file just before
-program shutdown, and are read in at startup.
+### Transaction fee changes
+
+This release automatically estimates how high a transaction fee (or how high a priority) transactions require to be confirmed quickly. The default settings will create transactions that confirm quickly; see the new 'txconfirmtarget' setting to control the tradeoff between fees and confirmation times. Fees are added by default unless the 'sendfreetransactions' setting is enabled.
+
+Prior releases used hard-coded fees (and priorities), and would sometimes create transactions that took a very long time to confirm.
+
+Statistics used to estimate fees and priorities are saved in the data directory in the `fee_estimates.dat` file just before program shutdown, and are read in at startup.
 
 New command line options for transaction fee changes:
-- `-txconfirmtarget=n` : create transactions that have enough fees (or priority)
-so they are likely to begin confirmation within n blocks (default: 1). This setting
-is over-ridden by the -paytxfee option.
-- `-sendfreetransactions` : Send transactions as zero-fee transactions if possible
-(default: 0)
+
+- `-txconfirmtarget=n` : create transactions that have enough fees (or priority) so they are likely to begin confirmation within n blocks (default: 1). This setting is over-ridden by the -paytxfee option.
+
+- `-sendfreetransactions` : Send transactions as zero-fee transactions if possible (default: 0)
 
 New RPC commands for fee estimation:
-- `estimatefee nblocks` : Returns approximate fee-per-1,000-bytes needed for
-a transaction to begin confirmation within nblocks. Returns -1 if not enough
-transactions have been observed to compute a good estimate.
-- `estimatepriority nblocks` : Returns approximate priority needed for
-a zero-fee transaction to begin confirmation within nblocks. Returns -1 if not
-enough free transactions have been observed to compute a good
-estimate.
 
-RPC access control changes
---------------------------
+- `estimatefee nblocks` : Returns approximate fee-per-1,000-bytes needed for a transaction to begin confirmation within nblocks. Returns -1 if not enough transactions have been observed to compute a good estimate.
 
-Subnet matching for the purpose of access control is now done
-by matching the binary network address, instead of with string wildcard matching.
-For the user this means that `-rpcallowip` takes a subnet specification, which can be
+- `estimatepriority nblocks` : Returns approximate priority needed for a zero-fee transaction to begin confirmation within nblocks. Returns -1 if not enough free transactions have been observed to compute a good estimate.
+
+### RPC access control changes
+
+Subnet matching for the purpose of access control is now done by matching the binary network address, instead of with string wildcard matching.  For the user this means that `-rpcallowip` takes a subnet specification, which can be
 
 - a single IP address (e.g. `1.2.3.4` or `fe80::0012:3456:789a:bcde`)
+
 - a network/CIDR (e.g. `1.2.3.0/24` or `fe80::0000/64`)
+
 - a network/netmask (e.g. `1.2.3.4/255.255.255.0` or `fe80::0012:3456:789a:bcde/ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`)
 
-An arbitrary number of `-rpcallow` arguments can be given. An incoming connection will be accepted if its origin address
-matches one of them.
+An arbitrary number of `-rpcallow` arguments can be given. An incoming connection will be accepted if its origin address matches one of them.
 
 For example:
 
@@ -238,224 +124,132 @@ Using wildcards will result in the rule being rejected with the following error 
     Error: Invalid -rpcallowip subnet specification: *. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).
 
 
-REST interface
---------------
+### REST interface
 
-A new HTTP API is exposed when running with the `-rest` flag, which allows
-unauthenticated access to public node data.
+A new HTTP API is exposed when running with the `-rest` flag, which allows unauthenticated access to public node data.
 
-It is served on the same port as RPC, but does not need a password, and uses
-plain HTTP instead of JSON-RPC.
+It is served on the same port as RPC, but does not need a password, and uses plain HTTP instead of JSON-RPC.
 
 Assuming a local RPC server running on port 8332, it is possible to request:
+
 - Blocks: http://localhost:8332/rest/block/*HASH*.*EXT*
+
 - Blocks without transactions: http://localhost:8332/rest/block/notxdetails/*HASH*.*EXT*
+
 - Transactions (requires `-txindex`): http://localhost:8332/rest/tx/*HASH*.*EXT*
 
-In every case, *EXT* can be `bin` (for raw binary data), `hex` (for hex-encoded
-binary) or `json`.
+In every case, *EXT* can be `bin` (for raw binary data), `hex` (for hex-encoded binary) or `json`.
 
 For more details, see the `doc/REST-interface.md` document in the repository.
 
-RPC Server "Warm-Up" Mode
--------------------------
+### RPC Server "Warm-Up" Mode
 
-The RPC server is started earlier now, before most of the expensive
-initializations like loading the block index.  It is available now almost
-immediately after starting the process.  However, until all initializations
-are done, it always returns an immediate error with code -28 to all calls.
+The RPC server is started earlier now, before most of the expensive initializations like loading the block index.  It is available now almost immediately after starting the process.  However, until all initializations are done, it always returns an immediate error with code -28 to all calls.
 
-This new behavior can be useful for clients to know that a server is already
-started and will be available soon (for instance, so that they do not
-have to start it themselves).
+This new behavior can be useful for clients to know that a server is already started and will be available soon (for instance, so that they do not have to start it themselves).
 
-Improved signing security
--------------------------
+### Improved signing security
 
-For 0.10 the security of signing against unusual attacks has been
-improved by making the signatures constant time and deterministic.
+For v10 the security of signing against unusual attacks has been improved by making the signatures constant time and deterministic.
 
-This change is a result of switching signing to use libsecp256k1
-instead of OpenSSL. Libsecp256k1 is a cryptographic library
-optimized for the curve Freicoin uses which was created by Bitcoin
-Core developer Pieter Wuille.
+This change is a result of switching signing to use libsecp256k1 instead of OpenSSL. Libsecp256k1 is a cryptographic library optimized for the curve Freicoin uses which was created by Bitcoin Core developer Pieter Wuille.
 
-There exist attacks[1] against most ECC implementations where an
-attacker on shared virtual machine hardware could extract a private
-key if they could cause a target to sign using the same key hundreds
-of times. While using shared hosts and reusing keys are inadvisable
-for other reasons, it's a better practice to avoid the exposure.
+There exist attacks[1] against most ECC implementations where an attacker on shared virtual machine hardware could extract a private key if they could cause a target to sign using the same key hundreds of times. While using shared hosts and reusing keys are inadvisable for other reasons, it's a better practice to avoid the exposure.
 
-OpenSSL has code in their source repository for derandomization
-and reduction in timing leaks that we've eagerly wanted to use for a
-long time, but this functionality has still not made its
-way into a released version of OpenSSL. Libsecp256k1 achieves
-significantly stronger protection: As far as we're aware this is
-the only deployed implementation of constant time signing for
-the curve Freicoin uses and we have reason to believe that
-libsecp256k1 is better tested and more thoroughly reviewed
-than the implementation in OpenSSL.
+OpenSSL has code in their source repository for derandomization and reduction in timing leaks that we've eagerly wanted to use for a long time, but this functionality has still not made its way into a released version of OpenSSL. Libsecp256k1 achieves significantly stronger protection: As far as we're aware this is the only deployed implementation of constant time signing for the curve Freicoin uses and we have reason to believe that libsecp256k1 is better tested and more thoroughly reviewed than the implementation in OpenSSL.
 
 [1] https://eprint.iacr.org/2014/161.pdf
 
-Watch-only wallet support
--------------------------
+### Watch-only wallet support
 
-The wallet can now track transactions to and from wallets for which you know
-all addresses (or scripts), even without the private keys.
+The wallet can now track transactions to and from wallets for which you know all addresses (or scripts), even without the private keys.
 
-This can be used to track payments without needing the private keys online on a
-possibly vulnerable system. In addition, it can help for (manual) construction
-of multisig transactions where you are only one of the signers.
+This can be used to track payments without needing the private keys online on a possibly vulnerable system. In addition, it can help for (manual) construction of multisig transactions where you are only one of the signers.
 
-One new RPC, `importaddress`, is added which functions similarly to
-`importprivkey`, but instead takes an address or script (in hexadecimal) as
-argument.  After using it, outputs credited to this address or script are
-considered to be received, and transactions consuming these outputs will be
-considered to be sent.
+One new RPC, `importaddress`, is added which functions similarly to `importprivkey`, but instead takes an address or script (in hexadecimal) as argument.  After using it, outputs credited to this address or script are considered to be received, and transactions consuming these outputs will be considered to be sent.
 
-The following RPCs have optional support for watch-only:
-`getbalance`, `listreceivedbyaddress`, `listreceivedbyaccount`,
-`listtransactions`, `listaccounts`, `listsinceblock`, `gettransaction`. See the
-RPC documentation for those methods for more information.
+The following RPCs have optional support for watch-only: `getbalance`, `listreceivedbyaddress`, `listreceivedbyaccount`, `listtransactions`, `listaccounts`, `listsinceblock`, `gettransaction`. See the RPC documentation for those methods for more information.
 
-Compared to using `getrawtransaction`, this mechanism does not require
-`-txindex`, scales better, integrates better with the wallet, and is compatible
-with future block chain pruning functionality. It does mean that all relevant
-addresses need to added to the wallet before the payment, though.
+Compared to using `getrawtransaction`, this mechanism does not require `-txindex`, scales better, integrates better with the wallet, and is compatible with future block chain pruning functionality. It does mean that all relevant addresses need to added to the wallet before the payment, though.
 
-Consensus library
------------------
+### Consensus library
 
 Starting from 10.4, the Freicoin distribution includes a consensus library.
 
-The purpose of this library is to make the verification functionality that is
-critical to Freicoin's consensus available to other applications, e.g. to language
-bindings such as [python-bitcoinlib](https://pypi.python.org/pypi/python-bitcoinlib) or
-alternative node implementations.
+The purpose of this library is to make the verification functionality that is critical to Freicoin's consensus available to other applications, e.g. to language bindings such as [python-bitcoinlib](https://pypi.python.org/pypi/python-bitcoinlib) or alternative node implementations.
 
-This library is called `libfreicoinconsensus.so` (or, `.dll` for Windows).
-Its interface is defined in the C header [freicoinconsensus.h](https://github.com/tradecraftio/tradecraft/blob/v10.4/src/script/freicoinconsensus.h).
+This library is called `libfreicoinconsensus.so` (or, `.dll` for Windows).  Its interface is defined in the C header [freicoinconsensus.h](https://github.com/tradecraftio/tradecraft/blob/v10.4/src/script/freicoinconsensus.h).
 
 In its initial version the API includes two functions:
 
-- `freicoinconsensus_verify_script` verifies a script. It returns whether the indicated input of the provided serialized transaction
-correctly spends the passed scriptPubKey under additional constraints indicated by flags
+- `freicoinconsensus_verify_script` verifies a script. It returns whether the indicated input of the provided serialized transaction correctly spends the passed scriptPubKey under additional constraints indicated by flags
+
 - `freicoinconsensus_version` returns the API version, currently at an experimental `0`
 
-The functionality is planned to be extended to e.g. UTXO management in upcoming releases, but the interface
-for existing methods should remain stable.
+The functionality is planned to be extended to e.g. UTXO management in upcoming releases, but the interface for existing methods should remain stable.
 
-Standard script rules relaxed for P2SH addresses
-------------------------------------------------
+### Standard script rules relaxed for P2SH addresses
 
-The IsStandard() rules have been almost completely removed for P2SH
-redemption scripts, allowing applications to make use of any valid
-script type, such as "n-of-m OR y", hash-locked oracle addresses, etc.
-While the Freicoin protocol has always supported these types of script,
-actually using them on mainnet has been previously inconvenient as
-standard Freicoin nodes wouldn't relay them to miners, nor would
-most miners include them in blocks they mined.
+The IsStandard() rules have been almost completely removed for P2SH redemption scripts, allowing applications to make use of any valid script type, such as "n-of-m OR y", hash-locked oracle addresses, etc.  While the Freicoin protocol has always supported these types of script, actually using them on mainnet has been previously inconvenient as standard Freicoin nodes wouldn't relay them to miners, nor would most miners include them in blocks they mined.
 
-freicoin-tx
------------
+### freicoin-tx
 
-It has been observed that many of the RPC functions offered by freicoind are
-"pure functions", and operate independently of the freicoind wallet. This
-included many of the RPC "raw transaction" API functions, such as
-createrawtransaction.
+It has been observed that many of the RPC functions offered by freicoind are "pure functions", and operate independently of the freicoind wallet. This included many of the RPC "raw transaction" API functions, such as createrawtransaction.
 
-freicoin-tx is a newly introduced command line utility designed to enable easy
-manipulation of freicoin transactions. A summary of its operation may be
-obtained via "freicoin-tx --help" Transactions may be created or signed in a
-manner similar to the RPC raw tx API. Transactions may be updated, deleting
-inputs or outputs, or appending new inputs and outputs. Custom scripts may be
-easily composed using a simple text notation, borrowed from the freicoin test
-suite.
+freicoin-tx is a newly introduced command line utility designed to enable easy manipulation of freicoin transactions. A summary of its operation may be obtained via "freicoin-tx --help" Transactions may be created or signed in a manner similar to the RPC raw tx API. Transactions may be updated, deleting inputs or outputs, or appending new inputs and outputs. Custom scripts may be easily composed using a simple text notation, borrowed from the freicoin test suite.
 
-This tool may be used for experimenting with new transaction types, signing
-multi-party transactions, and many other uses. Long term, the goal is to
-deprecate and remove "pure function" RPC API calls, as those do not require a
-server round-trip to execute.
+This tool may be used for experimenting with new transaction types, signing multi-party transactions, and many other uses. Long term, the goal is to deprecate and remove "pure function" RPC API calls, as those do not require a server round-trip to execute.
 
-Other utilities "freicoin-key" and "freicoin-script" have been proposed, making
-key and script operations easily accessible via command line.
+Other utilities "freicoin-key" and "freicoin-script" have been proposed, making key and script operations easily accessible via command line.
 
-Mining and relay policy enhancements
-------------------------------------
+### Mining and relay policy enhancements
 
-Freicoin's block templates are now for version 3 blocks only, and any mining
-software relying on its `getblocktemplate` must be updated in parallel to use
-libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
-If you are solo mining, this will affect you the moment you upgrade Freicoin.
-If you are mining with the stratum mining protocol: this does not affect you.
-If you are mining with the getblocktemplate protocol to a pool: this will affect
-you at the pool operator's discretion.
+Freicoin's block templates are now for version 3 blocks only, and any mining software relying on its `getblocktemplate` must be updated in parallel to use libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
 
-The `prioritisetransaction` RPC method has been added to enable miners to
-manipulate the priority of transactions on an individual basis.
+- If you are solo mining, this will affect you the moment you upgrade Freicoin.
 
-Freicoin now supports BIP 22 long polling, so mining software can be
-notified immediately of new templates rather than having to poll periodically.
+- If you are mining with the stratum mining protocol: this does not affect you.
 
-Support for BIP 23 block proposals is now available in Freicoin's
-`getblocktemplate` method. This enables miners to check the basic validity of
-their next block before expending work on it, reducing risks of accidental
-hardforks or mining invalid blocks.
+- If you are mining with the getblocktemplate protocol to a pool: this will affect you at the pool operator's discretion.
 
-The relay policy has changed to more properly implement the desired behavior of not
-relaying free (or very low fee) transactions unless they have a priority above the
-AllowFreeThreshold(), in which case they are relayed subject to the rate limiter.
+The `prioritisetransaction` RPC method has been added to enable miners to manipulate the priority of transactions on an individual basis.
 
-Fix buffer overflow in bundled upnp
-------------------------------------
+Freicoin now supports BIP 22 long polling, so mining software can be notified immediately of new templates rather than having to poll periodically.
 
-Bundled miniupnpc was updated to 1.9.20151008. This fixes a buffer overflow in
-the XML parser during initial network discovery.
+Support for BIP 23 block proposals is now available in Freicoin's `getblocktemplate` method. This enables miners to check the basic validity of their next block before expending work on it, reducing risks of accidental hardforks or mining invalid blocks.
+
+The relay policy has changed to more properly implement the desired behavior of not relaying free (or very low fee) transactions unless they have a priority above the AllowFreeThreshold(), in which case they are relayed subject to the rate limiter.
+
+### Fix buffer overflow in bundled upnp
+
+Bundled miniupnpc was updated to 1.9.20151008. This fixes a buffer overflow in the XML parser during initial network discovery.
 
 Details can be found here: http://talosintel.com/reports/TALOS-2015-0035/
 
-This applies to the distributed executables only, not when building from source or
-using distribution provided packages.
+This applies to the distributed executables only, not when building from source or using distribution provided packages.
 
-Additionally, upnp has been disabled by default. This may result in a lower
-number of reachable nodes on IPv4, however this prevents future libupnpc
-vulnerabilities from being a structural risk to the network
-(see https://github.com/bitcoin/bitcoin/pull/6795).
+Additionally, upnp has been disabled by default. This may result in a lower number of reachable nodes on IPv4, however this prevents future libupnpc vulnerabilities from being a structural risk to the network (see https://github.com/bitcoin/bitcoin/pull/6795).
 
-Minimum relay fee default increase
------------------------------------
+### Minimum relay fee default increase
 
-The default for the `-minrelaytxfee` setting has been increased from `0.00001`
-to `0.00005`.
+The default for the `-minrelaytxfee` setting has been increased from `0.00001` to `0.00005`.
 
-This is antemporary measure, bridging the time until a dynamic method for
-determining this fee is merged (which will be in 0.12).
+This is a temporary measure, bridging the time until a dynamic method for determining this fee is merged (which will be in 0.12).
 
-(see https://github.com/bitcoin/bitcoin/pull/6793, as well as the 11.3
-release notes, in which this value was suggested)
+(see https://github.com/bitcoin/bitcoin/pull/6793, as well as the 11.3 release notes, in which this value was suggested)
 
-Windows bug fix for corrupted UTXO database on unclean shutdowns
-----------------------------------------------------------------
+### Windows bug fix for corrupted UTXO database on unclean shutdowns
 
-Several Windows users of the upstream Bitcoin Core software reported
-that they often need to reindex the entire blockchain after an unclean
-shutdown of Bitcoin on Windows (or an unclean shutdown of Windows
-itself). Although unclean shutdowns remain unsafe, this release no
-longer relies on memory-mapped files for the UTXO database, which
-significantly reduced the frequency of unclean shutdowns leading to
-required reindexes during testing.
+Several Windows users of the upstream Bitcoin Core software reported that they often need to reindex the entire blockchain after an unclean shutdown of Bitcoin on Windows (or an unclean shutdown of Windows itself). Although unclean shutdowns remain unsafe, this release no longer relies on memory-mapped files for the UTXO database, which significantly reduced the frequency of unclean shutdowns leading to required reindexes during testing.
 
-For more information, see: <https://github.com/bitcoin/bitcoin/pull/6917>
+For more information, see: https://github.com/bitcoin/bitcoin/pull/6917
 
-Other fixes for database corruption on Windows are expected in the
-next major release.
+Other fixes for database corruption on Windows are expected in the next major release.
 
-10.4 Change log
-===============
+v10.4-7842 Change log
+---------------------
 
-Detailed release notes follow. This overview includes changes that affect external
-behavior, not code moves, refactors or string updates.
+Detailed release notes follow. This overview includes changes that affect external behavior, not code moves, refactors or string updates.
 
 RPC:
 - `f923c07` Support IPv6 lookup in bitcoin-cli even when IPv6 only bound on localhost
@@ -804,78 +598,64 @@ Miscellaneous:
 - `da65606` Avoid crash on start in TestBlockValidity with gen=1.
 - `424ae66` don't imbue boost::filesystem::path with locale "C" on windows (fixes #6078)
 
-For convenience in locating the code changes and accompanying
-discussion, the following changes reference both the pull request and
-git merge commit.
+For convenience in locating the code changes and accompanying discussion, the following changes reference both the pull request and git merge commit.
 
 Bitcoin Core pull requests
-- #6186 `e4a7d51` Fix two problems in CSubnet parsing
-- #6153 `ebd7d8d` Parameter interaction: disable upnp if -proxy set
-- #6203 `ecc96f5` Remove P2SH coinbase flag, no longer interesting
-- #6226 `181771b` json: fail read_string if string contains trailing garbage
-- #6244 `09334e0` configure: Detect (and reject) LibreSSL
-- #6276 `0fd8464` Fix getbalance * 0
-- #6274 `be64204` Add option `-alerts` to opt out of alert system
-- #6319 `3f55638` doc: update mailing list address
-- #6438 `7e66e9c` openssl: avoid config file load/race
-- #6439 `255eced` Updated URL location of netinstall for Debian
-- #6412 `0739e6e` Test whether created sockets are select()able
-- #6694 `f696ea1` [QT] fix thin space word wrap line brake issue
-- #6704 `743cc9e` Backport bugfixes to 0.10
-- #6769 `1cea6b0` Test LowS in standardness, removes nuisance malleability vector.
-- #6789 `093d7b5` Update miniupnpc to 1.9.20151008
-- #6795 `f2778e0` net: Disable upnp by default
-- #6797 `91ef4d9` Do not store more than 200 timedata samples
-- #6793 `842c48d` Bump minrelaytxfee default
-- #6953 `8b3311f` alias -h for --help
-- #6953 `97546fc` Change URLs to https in debian/control
-- #6953 `38671bf` Update debian/changelog and slight tweak to debian/control
-- #6953 `256321e` Correct spelling mistakes in doc folder
-- #6953 `eae0350` Clarification of unit test build instructions
-- #6953 `90897ab` Update bluematt-key, the old one is long-since revoked
-- #6953 `a2f2fb6` build: disable -Wself-assign
-- #6953 `cf67d8b` Bugfix: Allow mining on top of old tip blocks for testnet (fixes testnet-in-a-box use case)
-- #6953 `b3964e3` Drop "with minimal dependencies" from description
-- #6953 `43c2789` Split freicoin-tx into its own package
-- #6953 `dfe0d4d` Include freicoin-tx binary on Debian/Ubuntu
-- #6953 `612efe8` [Qt] Raise debug window when requested
-- #6953 `3ad96bd` Fix locking in GetTransaction
-- #6953 `9c81005` Fix spelling of Qt
-- #6946 `94b67e5` Update LevelDB
-- #6706 `5dc72f8` CLTV: Add more tests to improve coverage
-- #6706 `6a1343b` Add RPC tests for the CHECKLOCKTIMEVERIFY (BIP65) soft-fork
-- #6706 `4137248` Add CHECKLOCKTIMEVERIFY (BIP65) soft-fork logic
-- #6706 `0e01d0f` Enable CHECKLOCKTIMEVERIFY as a standard script verify flag
-- #6706 `6d01325` Replace NOP2 with CHECKLOCKTIMEVERIFY (BIP65)
-- #6706 `750d54f` Move LOCKTIME_THRESHOLD to src/script/script.h
-- #6706 `6897468` Make CScriptNum() take nMaxNumSize as an argument
-- #6867 `5297194` Set TCP_NODELAY on P2P sockets
-- #6836 `fb818b6` Bring historical release notes up to date
-- #6852 `0b3fd07` build: make sure OpenSSL heeds noexecstack
+- bitcoin/bitcoin#6186 `e4a7d51` Fix two problems in CSubnet parsing
+- bitcoin/bitcoin#6153 `ebd7d8d` Parameter interaction: disable upnp if -proxy set
+- bitcoin/bitcoin#6203 `ecc96f5` Remove P2SH coinbase flag, no longer interesting
+- bitcoin/bitcoin#6226 `181771b` json: fail read_string if string contains trailing garbage
+- bitcoin/bitcoin#6244 `09334e0` configure: Detect (and reject) LibreSSL
+- bitcoin/bitcoin#6276 `0fd8464` Fix getbalance * 0
+- bitcoin/bitcoin#6274 `be64204` Add option `-alerts` to opt out of alert system
+- bitcoin/bitcoin#6319 `3f55638` doc: update mailing list address
+- bitcoin/bitcoin#6438 `7e66e9c` openssl: avoid config file load/race
+- bitcoin/bitcoin#6439 `255eced` Updated URL location of netinstall for Debian
+- bitcoin/bitcoin#6412 `0739e6e` Test whether created sockets are select()able
+- bitcoin/bitcoin#6694 `f696ea1` [QT] fix thin space word wrap line brake issue
+- bitcoin/bitcoin#6704 `743cc9e` Backport bugfixes to 0.10
+- bitcoin/bitcoin#6769 `1cea6b0` Test LowS in standardness, removes nuisance malleability vector.
+- bitcoin/bitcoin#6789 `093d7b5` Update miniupnpc to 1.9.20151008
+- bitcoin/bitcoin#6795 `f2778e0` net: Disable upnp by default
+- bitcoin/bitcoin#6797 `91ef4d9` Do not store more than 200 timedata samples
+- bitcoin/bitcoin#6793 `842c48d` Bump minrelaytxfee default
+- bitcoin/bitcoin#6953 `8b3311f` alias -h for --help
+- bitcoin/bitcoin#6953 `97546fc` Change URLs to https in debian/control
+- bitcoin/bitcoin#6953 `38671bf` Update debian/changelog and slight tweak to debian/control
+- bitcoin/bitcoin#6953 `256321e` Correct spelling mistakes in doc folder
+- bitcoin/bitcoin#6953 `eae0350` Clarification of unit test build instructions
+- bitcoin/bitcoin#6953 `90897ab` Update bluematt-key, the old one is long-since revoked
+- bitcoin/bitcoin#6953 `a2f2fb6` build: disable -Wself-assign
+- bitcoin/bitcoin#6953 `cf67d8b` Bugfix: Allow mining on top of old tip blocks for testnet (fixes testnet-in-a-box use case)
+- bitcoin/bitcoin#6953 `b3964e3` Drop "with minimal dependencies" from description
+- bitcoin/bitcoin#6953 `43c2789` Split freicoin-tx into its own package
+- bitcoin/bitcoin#6953 `dfe0d4d` Include freicoin-tx binary on Debian/Ubuntu
+- bitcoin/bitcoin#6953 `612efe8` [Qt] Raise debug window when requested
+- bitcoin/bitcoin#6953 `3ad96bd` Fix locking in GetTransaction
+- bitcoin/bitcoin#6953 `9c81005` Fix spelling of Qt
+- bitcoin/bitcoin#6946 `94b67e5` Update LevelDB
+- bitcoin/bitcoin#6706 `5dc72f8` CLTV: Add more tests to improve coverage
+- bitcoin/bitcoin#6706 `6a1343b` Add RPC tests for the CHECKLOCKTIMEVERIFY (BIP65) soft-fork
+- bitcoin/bitcoin#6706 `4137248` Add CHECKLOCKTIMEVERIFY (BIP65) soft-fork logic
+- bitcoin/bitcoin#6706 `0e01d0f` Enable CHECKLOCKTIMEVERIFY as a standard script verify flag
+- bitcoin/bitcoin#6706 `6d01325` Replace NOP2 with CHECKLOCKTIMEVERIFY (BIP65)
+- bitcoin/bitcoin#6706 `750d54f` Move LOCKTIME_THRESHOLD to src/script/script.h
+- bitcoin/bitcoin#6706 `6897468` Make CScriptNum() take nMaxNumSize as an argument
+- bitcoin/bitcoin#6867 `5297194` Set TCP_NODELAY on P2P sockets
+- bitcoin/bitcoin#6836 `fb818b6` Bring historical release notes up to date
+- bitcoin/bitcoin#6852 `0b3fd07` build: make sure OpenSSL heeds noexecstack
 
 Tradecraft pull requests:
 
-- #23 `9f12779` [Demurrage] Add inverse-demurrage calculations,
-   permitting GetTimeAdjustedValue to be called with negative
-   relative_depth values and yield reasonable results.
-
-- #23 `6ca19e0` [Alert] Do not warn that an upgrade is required when
-   unrecognized block versions have been observed.
-
-- #24 `2289825` [Branding] Update macOS icon file to use new Freicoin
-   kria logo.
-
-- #26 `8333769` [Hard-Fork] Implement time-activated "protocol
-   cleanup" flag-day hard-fork, set to activate in April 2021.
-
-- #28 `d9b93a4` [Standard] Remove SCRIPT_VERIFY_NULLDUMMY from the
-   standard verification flags.
-
-- #29 `62ce0e7` [Soft-fork] Require the nTimeLock value of a coinbase
-   transaction to be equal to the median of the past 11 block times.
+- tradecraftio/tradecraft#23 `9f12779` [Demurrage] Add inverse-demurrage calculations, permitting GetTimeAdjustedValue to be called with negative relative_depth values and yield reasonable results.
+- tradecraftio/tradecraft#23 `6ca19e0` [Alert] Do not warn that an upgrade is required when unrecognized block versions have been observed.
+- tradecraftio/tradecraft#24 `2289825` [Branding] Update macOS icon file to use new Freicoin kria logo.
+- tradecraftio/tradecraft#26 `8333769` [Hard-Fork] Implement time-activated "protocol cleanup" flag-day hard-fork, set to activate in April 2021.
+- tradecraftio/tradecraft#28 `d9b93a4` [Standard] Remove SCRIPT_VERIFY_NULLDUMMY from the standard verification flags.
+- tradecraftio/tradecraft#29 `62ce0e7` [Soft-fork] Require the nTimeLock value of a coinbase transaction to be equal to the median of the past 11 block times.
 
 Credits
-=======
+-------
 
 Thanks to everyone who contributed to this release:
 
@@ -1019,4 +799,3 @@ And all those who contributed additional code review and/or security research:
 - Vulnerability in miniupnp discovered by Aleksandar Nikolic of Cisco Talos
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/tradecraft/freicoin-1/).
-
