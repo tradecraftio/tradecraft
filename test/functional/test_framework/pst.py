@@ -112,7 +112,7 @@ class PST:
         self.tx = None
 
     def deserialize(self, f):
-        assert f.read(5) == b"psbt\xff"
+        assert f.read(4) == b"pst\xff"
         self.g = from_binary(PSTMap, f)
         assert PST_GLOBAL_UNSIGNED_TX in self.g.map
         self.tx = from_binary(CTransaction, self.g.map[PST_GLOBAL_UNSIGNED_TX])
@@ -130,7 +130,7 @@ class PST:
         assert len(tx.vout) == len(self.o)
 
         pst = [x.serialize() for x in [self.g] + self.i + self.o]
-        return b"psbt\xff" + b"".join(pst)
+        return b"pst\xff" + b"".join(pst)
 
     def make_blank(self):
         """
