@@ -40,7 +40,6 @@ from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than_or_equal,
     assert_raises_rpc_error,
     get_fee,
 )
@@ -131,57 +130,6 @@ class MiningTest(FreicoinTestFramework):
             assert tx_with_min_feerate['txid'] in block_txids
             assert tx_below_min_feerate['txid'] not in block_template_txids
             assert tx_below_min_feerate['txid'] not in block_txids
-
-    def test_timewarp(self):
-        self.log.info("Test timewarp attack mitigation (BIP94)")
-        node = self.nodes[0]
-
-        self.log.info("Mine until the last block of the retarget period")
-        blockchain_info = self.nodes[0].getblockchaininfo()
-        n = DIFFICULTY_ADJUSTMENT_INTERVAL - blockchain_info['blocks'] % DIFFICULTY_ADJUSTMENT_INTERVAL - 2
-        t = blockchain_info['time']
-
-        for _ in range(n):
-            t += 600
-            self.nodes[0].setmocktime(t)
-            self.generate(self.wallet, 1, sync_fun=self.no_op)
-
-        self.log.info("Create block two hours in the future")
-        self.nodes[0].setmocktime(t + MAX_FUTURE_BLOCK_TIME)
-        self.generate(self.wallet, 1, sync_fun=self.no_op)
-        assert_equal(node.getblock(node.getbestblockhash())['time'], t + MAX_FUTURE_BLOCK_TIME)
-
-        self.log.info("First block template of retarget period can't use wall clock time")
-        self.nodes[0].setmocktime(t)
-        # The template will have an adjusted timestamp, which we then modify
-        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
-        assert_greater_than_or_equal(tmpl['curtime'], t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP)
-
-        block = CBlock()
-        block.nVersion = tmpl["version"]
-        block.hashPrevBlock = int(tmpl["previousblockhash"], 16)
-        block.nTime = tmpl["curtime"]
-        block.nBits = int(tmpl["bits"], 16)
-        block.nNonce = 0
-        block.vtx = [create_coinbase(height=int(tmpl["height"]))]
-        if 'finaltx' in tmpl and 'prevout' in tmpl['finaltx']:
-            add_final_tx(tmpl['finaltx']['prevout'], block)
-        block.solve()
-        assert_template(node, block, None)
-
-        bad_block = copy.deepcopy(block)
-        bad_block.nTime = t
-        bad_block.solve()
-        assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
-
-        self.log.info("Test timewarp protection boundary")
-        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP - 1
-        bad_block.solve()
-        assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
-
-        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
-        bad_block.solve()
-        node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex())
 
     def run_test(self):
         node = self.nodes[0]
@@ -394,7 +342,6 @@ class MiningTest(FreicoinTestFramework):
         assert_equal(node.submitblock(hexdata=block.serialize().hex()), 'duplicate')  # valid
 
         self.test_blockmintxfee_parameter()
-        self.test_timewarp()
 
 
 if __name__ == '__main__':
