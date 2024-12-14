@@ -20,7 +20,7 @@ _freicoin_rpc() {
     local rpcargs=()
     for i in ${COMP_LINE}; do
         case "$i" in
-            -conf=*|-datadir=*|-regtest|-rpc*|-testnet|-testnet4)
+            -conf=*|-datadir=*|-regtest|-rpc*|-testnet)
                 rpcargs=( "${rpcargs[@]}" "$i" )
                 ;;
         esac
