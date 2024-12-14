@@ -114,11 +114,15 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
         generateFakeBlock(params, test_setup->m_node, wallet, coinbase_out);
     }
 
-    const int next_height = test_setup->m_node.chain->getHeight().value() + 1;
-
     // Check available balance
+    int next_height = test_setup->m_node.chain->getHeight().value() + 1;
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet, next_height).GetTotalAmount()); // Cache
-    assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
+    CAmount total{0};
+    for (unsigned int height = 0; height < chain_size - COINBASE_MATURITY; ++height) {
+        total += GetTimeAdjustedValue(49 * COIN, next_height - height);
+        total += GetTimeAdjustedValue( 1 * COIN, next_height - height);
+    }
+    assert(bal == total);
 
     wallet::CCoinControl coin_control;
     coin_control.m_allow_other_inputs = allow_other_inputs;
@@ -143,7 +147,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 
     bench.epochIterations(5).run([&] {
         LOCK(wallet.cs_wallet);
-        const auto& tx_res = CreateTransaction(wallet, recipients, next_height, /*change_pos=*/std::nullopt, coin_control);
+        const auto& tx_res = CreateTransaction(wallet, recipients, /*refheight=*/chain_size, /*change_pos=*/std::nullopt, coin_control);
         assert(tx_res);
     });
 }
@@ -176,11 +180,15 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
         }
     }
 
-    const int next_height = test_setup->m_node.chain->getHeight().value() + 1;
-
     // Check available balance
+    int next_height = test_setup->m_node.chain->getHeight().value() + 1;
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet, next_height).GetTotalAmount()); // Cache
-    assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
+    CAmount total{0};
+    for (unsigned int height = 0; height < chain_size - COINBASE_MATURITY; ++height) {
+        total += GetTimeAdjustedValue(49 * COIN, next_height - height);
+        total += GetTimeAdjustedValue( 1 * COIN, next_height - height);
+    }
+    assert(bal == total);
 
     bench.epochIterations(2).run([&] {
         LOCK(wallet.cs_wallet);
