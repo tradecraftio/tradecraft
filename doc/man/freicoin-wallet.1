@@ -7,7 +7,7 @@ Freicoin freicoin\-wallet version v28.1
 .PP
 freicoin\-wallet is an offline tool for creating and interacting with Freicoin wallet files.
 By default freicoin\-wallet will act on wallets in the default mainnet wallet directory in the datadir.
-To change the target wallet, use the \fB\-datadir\fR, \fB\-wallet\fR and \fB\-regtest\fR/\-signet/\-testnet/\-testnet4 arguments.
+To change the target wallet, use the \fB\-datadir\fR, \fB\-wallet\fR and \fB\-regtest\fR/\-signet/\-testnet arguments.
 .SS "Usage:"
 .IP
 freicoin\-wallet [options] <command>
@@ -68,7 +68,7 @@ Chain selection options:
 \fB\-chain=\fR<chain>
 .IP
 Use the chain <chain> (default: main). Allowed values: main, test,
-testnet4, signet, regtest
+signet, regtest
 .HP
 \fB\-signet\fR
 .IP
@@ -90,13 +90,7 @@ network seed node(s))
 .HP
 \fB\-testnet\fR
 .IP
-Use the testnet3 chain. Equivalent to \fB\-chain\fR=\fI\,test\/\fR. Support for testnet3
-is deprecated and will be removed in an upcoming release.
-Consider moving to testnet4 now by using \fB\-testnet4\fR.
-.HP
-\fB\-testnet4\fR
-.IP
-Use the testnet4 chain. Equivalent to \fB\-chain\fR=\fI\,testnet4\/\fR.
+Use the testnet3 chain. Equivalent to \fB\-chain\fR=\fI\,test\/\fR.
 .PP
 Commands:
 .IP
