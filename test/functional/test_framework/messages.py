@@ -605,17 +605,24 @@ class CTransaction:
 
     def deserialize(self, f):
         self.version = int.from_bytes(f.read(4), "little")
-        self.vin = deser_vector(f, CTxIn)
         flags = 0
-        if len(self.vin) == 0:
+        dummy = int.from_bytes(f.read(1), "little")
+        if dummy == 255:
             flags = int.from_bytes(f.read(1), "little")
-            # Not sure why flags can't be zero, but this
-            # matches the implementation in freicoind
-            if (flags != 0):
-                self.vin = deser_vector(f, CTxIn)
-                self.vout = deser_vector(f, CTxOut)
+            self.vin = deser_vector(f, CTxIn)
         else:
-            self.vout = deser_vector(f, CTxOut)
+            if dummy <= 252:
+                size = dummy
+            if dummy == 253:
+                size = int.from_bytes(f.read(2), "little")
+            if dummy == 254:
+                size = int.from_bytes(f.read(4), "little")
+            self.vin = []
+            for _ in range(size):
+                txin = CTxIn()
+                txin.deserialize(f)
+                self.vin.append(txin)
+        self.vout = deser_vector(f, CTxOut)
         if flags != 0:
             self.wit.vtxinwit = [CTxInWitness() for _ in range(len(self.vin))]
             self.wit.deserialize(f)
@@ -645,8 +652,8 @@ class CTransaction:
         r = b""
         r += self.version.to_bytes(4, "little")
         if flags:
-            dummy = []
-            r += ser_vector(dummy)
+            dummy = 255
+            r += dummy.to_bytes(1, "little")
             r += flags.to_bytes(1, "little")
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
