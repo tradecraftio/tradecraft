@@ -144,12 +144,12 @@ class AssumeutxoTest(FreicoinTestFramework):
         self.log.info("  - snapshot file with alternated but parsable UTXO data results in different hash")
         cases = [
             # (content, offset, wrong_hash, custom_message)
-            [b"\xff" * 32, 0, "1afd449e5ad65074e4f4575654bf3a4c479683b9e7f17c0c2fd25f90d285c172", None],  # wrong outpoint hash
+            [b"\xff" * 32, 0, "da09c99c6234f7dee1beb56b3b2014bffea7390d5ab24f50f6e4d1e71df1a316", None],  # wrong outpoint hash
             [(2).to_bytes(1, "little"), 32, None, "Bad snapshot data after deserializing 1 coins."],  # wrong txid coins count
             [b"\xfd\xff\xff", 32, None, "Mismatch in coins count in snapshot metadata and actual snapshot data"],  # txid coins count exceeds coins left
-            [b"\x01", 33, "427978983d98631fa79b49bfd33c5c5263e46a67b8ff103af63a72fc2c9eff97", None],  # wrong outpoint index
-            [b"\x7f", 34, "8f28cd39a8a2fc405b2ba1781c8b7152bf4621cf469031549d408adfba2657fb", None],  # wrong coin code VARINT
-            [b"\x7e", 34, "74af36a6adbbab559c994b6f8bcf9ae0a699660eb04415d2b50f8976f06c9d88", None],  # another wrong coin code
+            [b"\x01", 33, "275b125cea6e2cfa32aed572411cb9b6669e147e0b37c60db94d51d6e524fc80", None],  # wrong outpoint index
+            [b"\x7f", 34, "35209d65a10117a8918614c82cec08f1be7aff015717e3b29f3690a556046959", None],  # wrong coin code VARINT
+            [b"\x7e", 34, "dbf360ca5131bcb4d018805d5c1b70dc8f352d7c6189db3abd893d6ca54eb52a", None],  # another wrong coin code
             [b"\x84\x58\x32\x23", 34, None, "Bad snapshot data after deserializing 0 coins"],  # wrong coin case with height 364 and coinbase 0
             [b"\xCA\xD2\x8F\x5A\x22", 35, None, "Bad snapshot data after deserializing 0 coins - bad tx out value"],  # Amount exceeds MAX_MONEY
         ]
@@ -161,12 +161,12 @@ class AssumeutxoTest(FreicoinTestFramework):
                 f.write(content)
                 f.write(valid_snapshot_contents[(idx + 8 + offset + len(content)):])
 
-            msg = custom_message if custom_message is not None else f"Bad snapshot content hash: expected 98bce15dcc095d9b91abe6f4a6bed7ac858af030f0bb4acb0325a729141125ca, got {wrong_hash}."
+            msg = custom_message if custom_message is not None else f"Bad snapshot content hash: expected 1b5d185f10ce4d31b1942b95908562f280fa57263cab402ab5419e11d0c1461c, got {wrong_hash}."
             expected_error(msg)
 
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
-            msg = "Unable to load UTXO snapshot: The base block header (3d1a3dca397470249479591cd71664f453a8ffcd90d84b730e1284f4bd6614ab) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
+            msg = "Unable to load UTXO snapshot: The base block header (156bf490964b4d394724acd5575de0f3b3fa73c9bd67843f4ac2ead90dbf19ef) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, valid_snapshot_path)
 
     def test_invalid_chainstate_scenarios(self):
@@ -225,7 +225,7 @@ class AssumeutxoTest(FreicoinTestFramework):
             block_hash = node.getblockhash(height)
             node.invalidateblock(block_hash)
             assert_equal(node.getblockcount(), height - 1)
-            msg = "Unable to load UTXO snapshot: The base block header (3d1a3dca397470249479591cd71664f453a8ffcd90d84b730e1284f4bd6614ab) is part of an invalid chain."
+            msg = "Unable to load UTXO snapshot: The base block header (156bf490964b4d394724acd5575de0f3b3fa73c9bd67843f4ac2ead90dbf19ef) is part of an invalid chain."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
             node.reconsiderblock(block_hash)
 
@@ -419,7 +419,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         assert_equal(
             dump_output['txoutset_hash'],
-            "98bce15dcc095d9b91abe6f4a6bed7ac858af030f0bb4acb0325a729141125ca")
+            "1b5d185f10ce4d31b1942b95908562f280fa57263cab402ab5419e11d0c1461c")
         assert_equal(dump_output["nchaintx"], blocks[SNAPSHOT_BASE_HEIGHT].chain_tx)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 

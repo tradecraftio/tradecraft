@@ -1191,8 +1191,7 @@ class SegWitTest(FreicoinTestFramework):
                 r = b""
                 r += self.version.to_bytes(4, "little")
                 if flags:
-                    dummy = []
-                    r += ser_vector(dummy)
+                    r += (255).to_bytes(1, "little")
                     r += flags.to_bytes(1, "little")
                 r += ser_vector(self.vin)
                 r += ser_vector(self.vout)
@@ -2014,8 +2013,7 @@ class SegWitTest(FreicoinTestFramework):
             r = b""
             r += tx.version.to_bytes(4, "little")
             if flags:
-                dummy = []
-                r += ser_vector(dummy)
+                r += (255).to_bytes(1, "little")
                 r += flags.to_bytes(1, "little")
             r += ser_vector(tx.vin)
             r += ser_vector(tx.vout)
