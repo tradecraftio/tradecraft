@@ -42,6 +42,7 @@ from test_framework.messages import (
     ser_uint256,
     ser_vector,
     sha256,
+    uint256_from_str,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -94,6 +95,7 @@ from test_framework.wallet_util import generate_keypair
 MAX_SIGOP_COST = 80000
 
 SEGWIT_HEIGHT = 120
+FINALTX_HEIGHT = 432
 
 class UTXO():
     """Used to keep track of anyone-can-spend outputs that we can use in the tests."""
@@ -106,14 +108,16 @@ class UTXO():
 def subtest(func):
     """Wraps the subtests for logging and state assertions."""
     def func_wrapper(self, *args, **kwargs):
-        self.log.info("Subtest: {} (Segwit active = {})".format(func.__name__, self.segwit_active))
+        self.log.info("Subtest: {} (BlockFinalTx active = {}, Segwit active = {})".format(func.__name__, self.finaltx_active, self.segwit_active))
         # Assert segwit status is as expected
+        assert_equal(softfork_active(self.nodes[0], 'finaltx'), self.finaltx_active)
         assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
         func(self, *args, **kwargs)
         # Each subtest should leave some utxos for the next subtest
         assert self.utxo
         self.sync_blocks()
         # Assert segwit status is as expected at end of subtest
+        assert_equal(softfork_active(self.nodes[0], 'finaltx'), self.finaltx_active)
         assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
 
     return func_wrapper
@@ -228,12 +232,32 @@ class SegWitTest(BitcoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
+        try:
+            finaltx_prevout = self.nodes[0].getblocktemplate({'rules':['segwit','finaltx']})['finaltx']['prevout']
+        except:
+            finaltx_prevout = []
+        if finaltx_prevout:
+            finaltx = CTransaction()
+            finaltx.nLockTime = block.vtx[0].nLockTime
+            finaltx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+            for prevout in finaltx_prevout:
+                finaltx.vin.append(CTxIn(COutPoint(uint256_from_str(bytes.fromhex(prevout['txid'])[::-1]), prevout['vout']), CScript([]), 0xffffffff))
+                finaltx.vout[-1].nValue += prevout['amount']
+            finaltx.rehash()
+            block.vtx.append(finaltx)
+            block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         return block
 
     def update_witness_block_with_transactions(self, block, tx_list, nonce=0):
         """Add list of transactions to block, adds witness commitment, then solves."""
+        if all(txin.scriptSig == CScript([]) for txin in block.vtx[-1].vin) and all(txout.scriptPubKey == CScript([OP_TRUE]) or txout.scriptPubKey[0] == len(txout.scriptPubKey)-1 for txout in block.vtx[-1].vout):
+            finaltx = block.vtx.pop()
+        else:
+            finaltx = None
         block.vtx.extend(tx_list)
+        if finaltx is not None:
+            block.vtx.append(finaltx)
         add_witness_commitment(block, nonce)
         block.solve()
 
@@ -254,6 +278,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo = []
 
         self.log.info("Starting tests before segwit activation")
+        self.finaltx_active = False
         self.segwit_active = False
         self.wallet = MiniWallet(self.nodes[0])
 
@@ -663,13 +688,32 @@ class SegWitTest(BitcoinTestFramework):
     @subtest
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
+        assert not softfork_active(self.nodes[0], 'finaltx')
         assert not softfork_active(self.nodes[0], 'segwit')
         height = self.nodes[0].getblockcount()
         self.generate(self.nodes[0], SEGWIT_HEIGHT - height - 2)
+        assert not softfork_active(self.nodes[0], 'finaltx')
         assert not softfork_active(self.nodes[0], 'segwit')
         self.generate(self.nodes[0], 1)
+        assert not softfork_active(self.nodes[0], 'finaltx')
         assert softfork_active(self.nodes[0], 'segwit')
         self.segwit_active = True
+        height = self.nodes[0].getblockcount()
+        self.generate(self.nodes[0], FINALTX_HEIGHT - height - 2)
+        assert not softfork_active(self.nodes[0], 'finaltx')
+        self.generate(self.nodes[0], 1)
+        assert softfork_active(self.nodes[0], 'finaltx')
+        self.finaltx_active = True
+        # Advance a further 100 blocks to finish activation of block-final rules
+        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
+        assert('finaltx' not in gbt)
+        self.generate(self.nodes[0], 99)
+        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
+        assert('finaltx' not in gbt)
+        self.generate(self.nodes[0], 1)
+        gbt = self.nodes[0].getblocktemplate({"rules":["segwit","finaltx"]})
+        assert('finaltx' in gbt)
+        assert('prevout' in gbt['finaltx'])
 
     @subtest
     def test_p2sh_witness(self):
@@ -816,7 +860,7 @@ class SegWitTest(BitcoinTestFramework):
         tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), b""))
         tx3.vout.append(CTxOut(tx.vout[0].nValue - 1000, witness_script))
         tx3.rehash()
-        block_4.vtx.append(tx3)
+        block_4.vtx.insert(-1, tx3)
         block_4.hashMerkleRoot = block_4.calc_merkle_root()
         block_4.solve()
         test_witness_block(self.nodes[0], self.test_node, block_4, with_witness=False, accepted=True)
@@ -912,7 +956,7 @@ class SegWitTest(BitcoinTestFramework):
         while additional_bytes > 0:
             # Add some more bytes to each input until we hit MAX_BLOCK_WEIGHT+1
             extra_bytes = min(additional_bytes + 1, 55)
-            block.vtx[-1].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)] = b'a' * (195 + extra_bytes)
+            block.vtx[-2].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)] = b'a' * (195 + extra_bytes)
             additional_bytes -= extra_bytes
             i += 1
 
@@ -927,8 +971,8 @@ class SegWitTest(BitcoinTestFramework):
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='bad-blk-weight')
 
         # Now resize the second transaction to make the block fit.
-        cur_length = len(block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0])
-        block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0] = b'a' * (cur_length - 1)
+        cur_length = len(block.vtx[-2].wit.vtxinwit[0].scriptWitness.stack[0])
+        block.vtx[-2].wit.vtxinwit[0].scriptWitness.stack[0] = b'a' * (cur_length - 1)
         block.vtx[0].vout.pop()
         add_witness_commitment(block)
         block.solve()
@@ -938,7 +982,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Update available utxo's
         self.utxo.pop(0)
-        self.utxo.append(UTXO(block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue))
+        self.utxo.append(UTXO(block.vtx[-2].sha256, 0, block.vtx[-2].vout[0].nValue))
 
     @subtest
     def test_submit_block(self):
@@ -1128,7 +1172,7 @@ class SegWitTest(BitcoinTestFramework):
         tx2.vin[0].prevout.hash = tx.sha256
         tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 43 + [witness_script]
         tx2.rehash()
-        block.vtx = [block.vtx[0]]
+        block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx, tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
@@ -1194,7 +1238,7 @@ class SegWitTest(BitcoinTestFramework):
         tx2.wit.vtxinwit.pop()
         tx2.wit.vtxinwit.pop()
 
-        block.vtx = [block.vtx[0]]
+        block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx2])
         # This block doesn't result in a specific reject reason, but an iostream exception:
         # "Exception 'CDataStream::read(): end of data: unspecified iostream_category error' (...) caught"
@@ -1205,14 +1249,14 @@ class SegWitTest(BitcoinTestFramework):
         tx2.wit.vtxinwit[-1].scriptWitness.stack = [b'a', witness_script]
         tx2.wit.vtxinwit[5].scriptWitness.stack = [witness_script]
 
-        block.vtx = [block.vtx[0]]
+        block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
                            reason='mandatory-script-verify-flag-failed (Operation not valid with the current stack size)')
 
         # Fix the broken witness and the block should be accepted.
         tx2.wit.vtxinwit[5].scriptWitness.stack = [b'a', witness_script]
-        block.vtx = [block.vtx[0]]
+        block.vtx = [block.vtx[0], block.vtx[-1]]
         self.update_witness_block_with_transactions(block, [tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
@@ -1573,7 +1617,7 @@ class SegWitTest(BitcoinTestFramework):
 
                 # Too-small input value
                 sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue - 1, key)
-                block.vtx.pop()  # remove last tx
+                block.vtx.pop(-2)  # remove last tx
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
                                    reason='mandatory-script-verify-flag-failed (Script evaluated without error '
@@ -1581,7 +1625,7 @@ class SegWitTest(BitcoinTestFramework):
 
                 # Now try correct value
                 sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue, key)
-                block.vtx.pop()
+                block.vtx.pop(-2)
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
@@ -1644,7 +1688,7 @@ class SegWitTest(BitcoinTestFramework):
                 temp_utxos.append(UTXO(tx.sha256, i, split_value))
             temp_utxos = temp_utxos[num_inputs:]
 
-            block.vtx.append(tx)
+            block.vtx.insert(-1, tx)
 
             # Test the block periodically, if we're close to maxblocksize
             if block.get_weight() > MAX_BLOCK_WEIGHT - 4000:
@@ -1655,7 +1699,7 @@ class SegWitTest(BitcoinTestFramework):
         if (not used_sighash_single_out_of_bounds):
             self.log.info("WARNING: this test run didn't attempt SIGHASH_SINGLE with out-of-bounds index value")
         # Test the transactions we've added to the block
-        if (len(block.vtx) > 1):
+        if (len(block.vtx) > 2):
             self.update_witness_block_with_transactions(block, [])
             test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
@@ -1685,7 +1729,7 @@ class SegWitTest(BitcoinTestFramework):
                            reason='mandatory-script-verify-flag-failed (Witness requires empty scriptSig)')
 
         # Move the signature to the witness.
-        block.vtx.pop()
+        block.vtx.pop(-2)
         tx2.wit.vtxinwit.append(CTxInWitness())
         tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, pubkey]
         tx2.vin[0].scriptSig = b""
