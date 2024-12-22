@@ -139,19 +139,19 @@ class AssumeutxoTest(FreicoinTestFramework):
                 f.write(valid_snapshot_contents[:idx])
                 f.write((valid_num_coins + off).to_bytes(8, "little"))
                 f.write(valid_snapshot_contents[idx + 8:])
-            expected_error(msg="Bad snapshot - coins left over after deserializing 299 coins." if off == -1 else "Bad snapshot format or truncated snapshot after deserializing 300 coins.")
+            expected_error(msg="Mismatch in coins count in snapshot metadata and actual snapshot data." if off == -1 else "Bad snapshot format or truncated snapshot after deserializing 599 coins.")
 
         self.log.info("  - snapshot file with alternated but parsable UTXO data results in different hash")
         cases = [
             # (content, offset, wrong_hash, custom_message)
-            [b"\xff" * 32, 0, "8190244da8a55ed2db550b640244830fdfbcb7fdff7091ac1a26038566fadbea", None],  # wrong outpoint hash
-            [(2).to_bytes(1, "little"), 32, None, "Bad snapshot format or truncated snapshot after deserializing 2 coins."],  # wrong txid coins count
+            [b"\xff" * 32, 0, "255db9970637c3e3b2287fe0fb8c4ce045874f9fa6655f9bd0f168b7d57c0606", None],  # wrong outpoint hash
+            [(3).to_bytes(1, "little"), 32, None, "Bad snapshot format or truncated snapshot after deserializing 2 coins."],  # wrong txid coins count
             [b"\xfd\xff\xff", 32, None, "Mismatch in coins count in snapshot metadata and actual snapshot data"],  # txid coins count exceeds coins left
-            [b"\x01", 33, "6cbe6693628fa933e87e39e109328bea85b9d5fdae575f1695389d73f0408d05", None],  # wrong outpoint index
-            [b"\x80", 34, "9c0cd8b6a8bf10e85b6f2e79de555b7751df98a41cbdc11745e6d3aaacd0e5d7", None],  # wrong coin code VARINT
-            [b"\x81", 34, "c8f8a4f106cc8edd1e07bbb535f9686a85ebed01786ed469ab80ead363ec5c3c", None],  # another wrong coin code
+            [b"\x01", 33, "5d99c3c3a86729bf09749454b293846bf60eef022690725d8c9bec94640276ea", None],  # wrong outpoint index
+            [b"\x2a", 34, "dce5ab78f687889cda98c13f8c10c8e727a48c1740f43528a3be3c406cc6a3c9", None],  # wrong coin code VARINT
+            [b"\x2b", 34, "d9734e661ba6f24bbd19269f64ecb2bfa89ca87e9f140d754b0de63a09ca810b", None],  # another wrong coin code
             [b"\x84\x58", 34, None, "Bad snapshot data after deserializing 0 coins"],  # wrong coin case with height 364 and coinbase 0
-            [b"\xCA\xD2\x8F\x5A\x21", 36, None, "Bad snapshot data after deserializing 0 coins - bad tx out value"],  # Amount exceeds MAX_MONEY
+            [b"\xCA\xD2\x8F\x5A\x22", 35, None, "Bad snapshot data after deserializing 0 coins - bad tx out value"],  # Amount exceeds MAX_MONEY
         ]
 
         for content, offset, wrong_hash, custom_message in cases:
@@ -161,12 +161,12 @@ class AssumeutxoTest(FreicoinTestFramework):
                 f.write(content)
                 f.write(valid_snapshot_contents[(idx + 8 + offset + len(content)):])
 
-            msg = custom_message if custom_message is not None else f"Bad snapshot content hash: expected 2ccb4b15d51be9ff215ffb2696b2edf69cdd7a857059dfce5bd8115d187eefa6, got {wrong_hash}."
+            msg = custom_message if custom_message is not None else f"Bad snapshot content hash: expected 7f427fd760cb9ee390b0f7a3d863b0f5357ceae44999e510f1fbe288b9a41527, got {wrong_hash}."
             expected_error(msg)
 
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
-            msg = "Unable to load UTXO snapshot: The base block header (5bb87581319dc1656013d5faa334a0d9da8fbcbc63415a853a886447d1479b73) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
+            msg = "Unable to load UTXO snapshot: The base block header (5c00ab05c7841bef0af0c05a9b37b6d774f6591729678df9f8eb5bda324cda47) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, valid_snapshot_path)
 
     def test_invalid_chainstate_scenarios(self):
@@ -225,7 +225,7 @@ class AssumeutxoTest(FreicoinTestFramework):
             block_hash = node.getblockhash(height)
             node.invalidateblock(block_hash)
             assert_equal(node.getblockcount(), height - 1)
-            msg = "Unable to load UTXO snapshot: The base block header (5bb87581319dc1656013d5faa334a0d9da8fbcbc63415a853a886447d1479b73) is part of an invalid chain."
+            msg = "Unable to load UTXO snapshot: The base block header (5c00ab05c7841bef0af0c05a9b37b6d774f6591729678df9f8eb5bda324cda47) is part of an invalid chain."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
             node.reconsiderblock(block_hash)
 
@@ -263,7 +263,7 @@ class AssumeutxoTest(FreicoinTestFramework):
         block_time = node0.getblock(node0.getbestblockhash())['time'] + 1
         fork_block1 = create_block(int(parent_block_hash, 16), create_coinbase(SNAPSHOT_BASE_HEIGHT), block_time)
         fork_block1.solve()
-        fork_block2 = create_block(fork_block1.sha256, create_coinbase(SNAPSHOT_BASE_HEIGHT + 1), block_time + 1)
+        fork_block2 = create_block(fork_block1.sha256, create_coinbase(SNAPSHOT_BASE_HEIGHT * 2 + 1), block_time + 1)
         fork_block2.solve()
         node1.submitheader(fork_block1.serialize().hex())
         node1.submitheader(fork_block2.serialize().hex())
@@ -271,7 +271,7 @@ class AssumeutxoTest(FreicoinTestFramework):
         assert_raises_rpc_error(-32603, msg, node1.loadtxoutset, dump_output_path)
         # Cleanup: submit two more headers of the snapshot chain to node 1, so that it is the most-work chain again and loading
         # the snapshot in future subtests succeeds
-        main_block1 = node0.getblock(node0.getblockhash(SNAPSHOT_BASE_HEIGHT + 1), 0)
+        main_block1 = node0.getblock(node0.getblockhash(SNAPSHOT_BASE_HEIGHT  + 1), 0)
         main_block2 = node0.getblock(node0.getblockhash(SNAPSHOT_BASE_HEIGHT + 2), 0)
         node1.submitheader(main_block1)
         node1.submitheader(main_block2)
@@ -419,7 +419,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         assert_equal(
             dump_output['txoutset_hash'],
-            "2ccb4b15d51be9ff215ffb2696b2edf69cdd7a857059dfce5bd8115d187eefa6")
+            "7f427fd760cb9ee390b0f7a3d863b0f5357ceae44999e510f1fbe288b9a41527")
         assert_equal(dump_output["nchaintx"], blocks[SNAPSHOT_BASE_HEIGHT].chain_tx)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
@@ -447,7 +447,7 @@ class AssumeutxoTest(FreicoinTestFramework):
         # This node's tip is on an ancestor block of the snapshot, which should
         # be the normal case
         loaded = n1.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT + 1)
+        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT * 2 + 1)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         self.log.info("Confirm that local services remain unchanged")
@@ -635,7 +635,7 @@ class AssumeutxoTest(FreicoinTestFramework):
 
         self.log.info(f"Loading snapshot into third node from {dump_output['path']}")
         loaded = n2.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT + 1)
+        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT * 2 + 1)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         # Even though n2 is a full node, it will unset the 'NETWORK' service flag during snapshot loading.
@@ -651,7 +651,7 @@ class AssumeutxoTest(FreicoinTestFramework):
                 block = n0.getblock(n0.getblockhash(i), 0)
                 n2.submitheader(block)
             loaded = n2.loadtxoutset(dump_output['path'])
-            assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT + 1)
+            assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT * 2 + 1)
             assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         normal, snapshot = n2.getchainstates()['chainstates']
