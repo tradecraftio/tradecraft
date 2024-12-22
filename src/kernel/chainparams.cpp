@@ -655,9 +655,9 @@ public:
         m_assumeutxo_data = {
             {   // For use by unit tests
                 .height = 110,
-                .hash_serialized = AssumeutxoHash{uint256{"67088cccadbb1a8e34fd8b03e65c247df1e38260b3bac6d9fdba096affdae1ea"}},
+                .hash_serialized = AssumeutxoHash{uint256{"d9de564d8b460e26dbf7dca0c5716bc7029ee966658a5a5936c870514c2d1d79"}},
                 .m_chain_tx_count = 121,
-                .blockhash = consteval_ctor(uint256{"0ba0bd14a3fdcd7b9a5c37dc949210331fc377c7c38797d534160a70583129d9"}),
+                .blockhash = consteval_ctor(uint256{"4b1160d0b1ec03eeb876024ef6d96db8f3696118e1409c44166f4f532640b496"}),
             },
             {
                 // For use by fuzz target src/test/fuzz/utxo_snapshot.cpp
@@ -669,9 +669,9 @@ public:
             {
                 // For use by test/functional/feature_assumeutxo.py
                 .height = 299,
-                .hash_serialized = AssumeutxoHash{uint256{"18db5f54f66887f80e9787a4db59af95b17130cf6aa550af8864f990b1320e9a"}},
+                .hash_serialized = AssumeutxoHash{uint256{"98bce15dcc095d9b91abe6f4a6bed7ac858af030f0bb4acb0325a729141125ca"}},
                 .m_chain_tx_count = 533,
-                .blockhash = consteval_ctor(uint256{"3057a077932a97ffd7af5e530f455e20423094bc57229f581120dc68f8244e2e"}),
+                .blockhash = consteval_ctor(uint256{"3d1a3dca397470249479591cd71664f453a8ffcd90d84b730e1284f4bd6614ab"}),
             },
         };
 
