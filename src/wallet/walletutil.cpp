@@ -71,11 +71,6 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
         desc_prefix = "pkh(" + xpub + "/44h";
         break;
     }
-    case OutputType::P2SH_SEGWIT: {
-        desc_prefix = "sh(wpk(" + xpub + "/49h";
-        desc_suffix += ")";
-        break;
-    }
     case OutputType::BECH32: {
         desc_prefix = "wpk(" + xpub + "/84h";
         break;

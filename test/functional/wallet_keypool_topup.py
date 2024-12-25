@@ -53,10 +53,10 @@ class KeypoolRestoreTest(FreicoinTestFramework):
         self.stop_node(1)
         shutil.copyfile(wallet_path, wallet_backup_path)
         self.start_node(1, self.extra_args[1])
-        for i in [1, 2, 3, 4]:
+        for i in [1, 2, 3]:
             self.connect_nodes(0, i)
 
-        output_types = ["legacy", "p2sh-segwit", "bech32"]
+        output_types = ["legacy", "bech32"]
         if self.options.descriptors:
             output_types.append("bech32m")
         for i, output_type in enumerate(output_types):
@@ -71,11 +71,7 @@ class KeypoolRestoreTest(FreicoinTestFramework):
             address_details = self.nodes[idx].validateaddress(addr_extpool)
             if i == 0:
                 assert not address_details["isscript"] and not address_details["iswitness"]
-            elif i == 1:
-                assert address_details["isscript"] and not address_details["iswitness"]
-            elif i == 2:
-                assert address_details["isscript"] and address_details["iswitness"]
-            elif i == 3:
+            else:
                 assert address_details["isscript"] and address_details["iswitness"]
 
             self.log.info("Send funds to wallet")
@@ -98,8 +94,6 @@ class KeypoolRestoreTest(FreicoinTestFramework):
             if self.options.descriptors:
                 if output_type == 'legacy':
                     assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress(address_type=output_type))['hdkeypath'], "m/44h/1h/0h/0/110")
-                elif output_type == 'p2sh-segwit':
-                    assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress(address_type=output_type))['hdkeypath'], "m/49h/1h/0h/0/110")
                 elif output_type == 'bech32':
                     assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress(address_type=output_type))['hdkeypath'], "m/84h/1h/0h/0/110")
                 elif output_type == 'bech32m':
