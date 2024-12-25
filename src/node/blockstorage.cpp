@@ -143,7 +143,7 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckAuxiliaryProofOfWork(pindexNew->GetBlockHeader(), consensusParams) || (pindexNew->pprev && !IsProtocolCleanupActive(consensusParams, *pindexNew->pprev) && !CheckProofOfWork(pindexNew->GetBlockHeader(), consensusParams))) {
+                if (!CheckAuxiliaryProofOfWork(pindexNew->GetBlockHeader(), consensusParams) || (!IsProtocolCleanupActive(consensusParams, *pindexNew) && !CheckProofOfWork(pindexNew->GetBlockHeader(), consensusParams))) {
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
                 }
 

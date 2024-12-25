@@ -2231,7 +2231,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     }
 
     // Check for activation of rule changes
-    if (block_index.pprev && IsProtocolCleanupActive(consensusparams, *block_index.pprev)) {
+    if (IsProtocolCleanupActive(consensusparams, block_index)) {
         flags |= SCRIPT_VERIFY_PROTOCOL_CLEANUP;
     }
     if (block_index.pprev && IsSizeExpansionActive(consensusparams, *block_index.pprev)) {
