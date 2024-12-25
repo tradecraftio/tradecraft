@@ -77,7 +77,7 @@ class RawTransactionsTest(FreicoinTestFramework):
         """
         if outputtype in ["legacy", "p2pkh", "pkh"]:
             prefixes = ["pkh(", "sh(multi("]
-        elif outputtype in ["p2sh-segwit", "sh_wpk"]:
+        elif outputtype in ["sh_wpk"]:
             prefixes = ["sh(wpk(", "sh(wsh("]
         elif outputtype in ["bech32", "wpk"]:
             prefixes = ["wpk(", "wsh("]

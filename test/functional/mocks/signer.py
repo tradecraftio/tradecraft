@@ -37,13 +37,11 @@ def getdescriptors(args):
     sys.stdout.write(json.dumps({
         "receive": [
             "pkh([00000001/44h/1h/" + args.account + "']" + xpub + "/0/*)#aqllu46s",
-            "sh(wpk([00000001/49h/1h/" + args.account + "']" + xpub + "/0/*))#plzj5ts8",
             "wpk([00000001/84h/1h/" + args.account + "']" + xpub + "/0/*)#9ft9w5dj",
             "tr([00000001/86h/1h/" + args.account + "']" + xpub + "/0/*)#pcd5w87f"
         ],
         "internal": [
             "pkh([00000001/44h/1h/" + args.account + "']" + xpub + "/1/*)#v567pq2g",
-            "sh(wpk([00000001/49h/1h/" + args.account + "']" + xpub + "/1/*))#8u2h0xmn",
             "wpk([00000001/84h/1h/" + args.account + "']" + xpub + "/1/*)#5awynpa2",
             "tr([00000001/86h/1h/" + args.account + "']" + xpub + "/1/*)#svg4njw3"
 
@@ -57,7 +55,6 @@ def displayaddress(args):
 
     expected_desc = {
         "wpk([00000001/84h/1h/0h/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#50z3vw49": "bcrt1q55f34cyg0hy9w4ka6pnlf6h5za68jccjex27gc",
-        "sh(wpk([00000001/49h/1h/0h/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7))#p06ymzfm": "2NCWdX9n9Vz7dng75KNNSziiRiRaH5mzeon",
         "pkh([00000001/44h/1h/0h/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#q3pqd8wh": "n1LKejAadN6hg2FrBXoU1KrwX4uK16mco9",
         "tr([00000001/86h/1h/0h/0/0]c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#puqqa90m": "tb1phw4cgpt6cd30kz9k4wkpwm872cdvhss29jga2xpmftelhqll62mscq0k4g",
         "wpk([00000001/84h/1h/0h/0/1]03a20a46308be0b8ded6dff0a22b10b4245c587ccf23f3b4a303885be3a524f172)#jth7cp4k": "wrong_address",

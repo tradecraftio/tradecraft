@@ -71,7 +71,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         self.create_keys(21)  # max number of allowed keys + 1
         m_of_n = [(2, 3), (3, 3), (2, 5), (3, 5), (10, 15), (15, 15)]
         for (sigs, keys) in m_of_n:
-            for output_type in ["bech32", "p2sh-segwit", "legacy"]:
+            for output_type in ["bech32", "legacy"]:
                 self.do_multisig(keys, sigs, output_type, wallet_multi)
 
         self.test_multisig_script_limit(wallet_multi)
@@ -113,12 +113,10 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         self.log.info('Test legacy redeem script max size limit')
         assert_raises_rpc_error(-8, "redeemScript exceeds size limit: 684 > 520", node1.createmultisig, 16, pubkeys, 'legacy')
 
-        self.log.info('Test valid 16-20 multisig p2sh-legacy and bech32 (no wallet)')
-        self.do_multisig(nkeys=20, nsigs=16, output_type="p2sh-segwit", wallet_multi=None)
+        self.log.info('Test valid 16-20 multisig bech32 (no wallet)')
         self.do_multisig(nkeys=20, nsigs=16, output_type="bech32", wallet_multi=None)
 
-        self.log.info('Test invalid 16-21 multisig p2sh-legacy and bech32 (no wallet)')
-        assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'p2sh-segwit')
+        self.log.info('Test invalid 16-21 multisig bech32 (no wallet)')
         assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'bech32')
 
         # Check legacy wallet related command
@@ -126,11 +124,10 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         if wallet_multi is not None and not self.options.descriptors:
             assert_raises_rpc_error(-8, "redeemScript exceeds size limit: 684 > 520", wallet_multi.addmultisigaddress, 16, pubkeys, '', 'legacy')
 
-            self.log.info('Test legacy wallet unsupported operation. 16-20 multisig p2sh-legacy and bech32 generation')
-            # Due an internal limitation on legacy wallets, the redeem script limit also applies to p2sh-segwit and bech32 (even when the scripts are valid)
+            self.log.info('Test legacy wallet unsupported operation. 16-20 multisig bech32 generation')
+            # Due an internal limitation on legacy wallets, the redeem script limit also applies to bech32 (even when the scripts are valid)
             # We take this as a "good thing" to tell users to upgrade to descriptors.
-            assert_raises_rpc_error(-4, "Unsupported multisig script size for legacy wallet. Upgrade to descriptors to overcome this limitation for p2sh-segwit or bech32 scripts", wallet_multi.addmultisigaddress, 16, pubkeys, '', 'p2sh-segwit')
-            assert_raises_rpc_error(-4, "Unsupported multisig script size for legacy wallet. Upgrade to descriptors to overcome this limitation for p2sh-segwit or bech32 scripts", wallet_multi.addmultisigaddress, 16, pubkeys, '', 'bech32')
+            assert_raises_rpc_error(-4, "Unsupported multisig script size for legacy wallet. Upgrade to descriptors to overcome this limitation for bech32 scripts", wallet_multi.addmultisigaddress, 16, pubkeys, '', 'bech32')
 
     def do_multisig(self, nkeys, nsigs, output_type, wallet_multi):
         node0, node1, node2 = self.nodes
@@ -141,8 +138,6 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
         desc = 'multi({},{})'.format(nsigs, ','.join(pub_keys))
         if output_type == 'legacy':
             desc = 'sh({})'.format(desc)
-        elif output_type == 'p2sh-segwit':
-            desc = 'sh(wsh({}))'.format(desc)
         elif output_type == 'bech32':
             desc = 'wsh({})'.format(desc)
         desc = descsum_create(desc)
@@ -243,7 +238,7 @@ class RpcCreateMultiSigTest(FreicoinTestFramework):
             # Generate addresses with the segwit types. These should all make legacy addresses
             err_msg = ["Unable to make chosen address type, please ensure no uncompressed public keys are present."]
 
-            for addr_type in ['bech32', 'p2sh-segwit']:
+            for addr_type in ['bech32']:
                 result = self.nodes[0].createmultisig(nrequired=2, keys=keys, address_type=addr_type)
                 assert_equal(legacy_addr, result['address'])
                 assert_equal(result['warnings'], err_msg)

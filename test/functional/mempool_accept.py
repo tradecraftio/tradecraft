@@ -457,7 +457,7 @@ class MempoolAcceptanceTest(FreicoinTestFramework):
         nested_anchor_spend.rehash()
 
         self.check_mempool_result(
-            result_expected=[{'txid': nested_anchor_spend.rehash(), 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Witness version reserved for soft-fork upgrades)'}],
+            result_expected=[{'txid': nested_anchor_spend.rehash(), 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Stack size must be exactly one after execution)'}],
             rawtxs=[nested_anchor_spend.serialize().hex()],
             maxfeerate=0,
         )
