@@ -4,8 +4,8 @@
         {
             "asm": "-1 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
             "address": "fcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqfnuueq",
-            "desc": "rawtr(eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee)#jk7c6kys",
-            "type": "witness_v1_taproot"
+            "desc": "addr(fcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqfnuueq)#hzlst3vw",
+            "type": "witness_unknown"
         }
     ],
     [

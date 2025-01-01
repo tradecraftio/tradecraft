@@ -68,14 +68,6 @@ public:
         return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
-    std::string operator()(const WitnessV1Taproot& tap) const
-    {
-        std::vector<unsigned char> data = {1};
-        data.reserve(53);
-        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, tap.begin(), tap.end());
-        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
-    }
-
     std::string operator()(const WitnessUnknown& id) const
     {
         const std::vector<unsigned char>& program = id.GetWitnessProgram();
@@ -176,13 +168,6 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                         return longid;
                     }
                 }
-            }
-
-            if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
-                static_assert(WITNESS_V1_TAPROOT_SIZE == WitnessV1Taproot::size());
-                WitnessV1Taproot tap;
-                std::copy(data.begin(), data.end(), tap.begin());
-                return tap;
             }
 
             if (version > 30) {

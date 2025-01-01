@@ -57,7 +57,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
     // Sanity check on k
     if (fragment == Fragment::OLDER || fragment == Fragment::AFTER) {
         assert(k >= 1 && k < 0x80000000UL);
-    } else if (fragment == Fragment::MULTI || fragment == Fragment::MULTI_A) {
+    } else if (fragment == Fragment::MULTI) {
         assert(k >= 1 && k <= n_keys);
     } else if (fragment == Fragment::THRESH) {
         assert(k >= 1 && k <= n_subs);
@@ -82,10 +82,6 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
         assert(n_keys == 1);
     } else if (fragment == Fragment::MULTI) {
         assert(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTISIG);
-        assert(!IsTapscript(ms_ctx));
-    } else if (fragment == Fragment::MULTI_A) {
-        assert(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTI_A);
-        assert(IsTapscript(ms_ctx));
     } else {
         assert(n_keys == 0);
     }
@@ -130,8 +126,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             "e"_mst.If(x << "f"_mst) | // e=f_x
             (x & "ghijk"_mst) | // g=g_x, h=h_x, i=i_x, j=j_x, k=k_x
             (x & "ms"_mst) | // m=m_x, s=s_x
-            // NOTE: 'd:' is 'u' under Tapscript but not P2WSH as MINIMALIF is only a policy rule there.
-            "u"_mst.If(IsTapscript(ms_ctx)) |
+            // NOTE: 'd:' is not 'u' under P2WSH as MINIMALIF is only a policy rule there.
             "ndx"_mst; // n, d, x
         case Fragment::WRAP_V: return
             "V"_mst.If(x << "B"_mst) | // V=B_x
@@ -231,9 +226,6 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
         case Fragment::MULTI: {
             return "Bnudemsk"_mst;
         }
-        case Fragment::MULTI_A: {
-            return "Budemsk"_mst;
-        }
         case Fragment::THRESH: {
             bool all_e = true;
             bool all_m = true;
@@ -274,7 +266,7 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
     switch (fragment) {
         case Fragment::JUST_1:
         case Fragment::JUST_0: return 1;
-        case Fragment::PK_K: return IsTapscript(ms_ctx) ? 33 : 34;
+        case Fragment::PK_K: return 34;
         case Fragment::PK_H: return 3 + 21;
         case Fragment::OLDER:
         case Fragment::AFTER: return 1 + BuildScript(k).size();
@@ -283,7 +275,6 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
         case Fragment::HASH160:
         case Fragment::RIPEMD160: return 4 + 2 + 21;
         case Fragment::MULTI: return 1 + BuildScript(n_keys).size() + BuildScript(k).size() + 34 * n_keys;
-        case Fragment::MULTI_A: return (1 + 32 + 1) * n_keys + BuildScript(k).size() + 1;
         case Fragment::AND_V: return subsize;
         case Fragment::WRAP_V: return subsize + (sub0typ << "x"_mst);
         case Fragment::WRAP_S:
