@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_OVERLOADED_H
-#define BITCOIN_UTIL_OVERLOADED_H
+#ifndef FREICOIN_UTIL_OVERLOADED_H
+#define FREICOIN_UTIL_OVERLOADED_H
 
 namespace util {
 //! Overloaded helper for std::visit. This helper and std::visit in general are
@@ -30,4 +30,4 @@ template<class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 } // namespace util
 
-#endif // BITCOIN_UTIL_OVERLOADED_H
+#endif // FREICOIN_UTIL_OVERLOADED_H

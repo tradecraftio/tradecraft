@@ -15,13 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test external signer.
 
-Verify that a bitcoind node can use an external signer command
+Verify that a freicoind node can use an external signer command
 See also rpc_signer.py for tests without wallet context.
 """
 import os
 import platform
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -29,7 +29,7 @@ from test_framework.util import (
 )
 
 
-class WalletSignerTest(BitcoinTestFramework):
+class WalletSignerTest(FreicoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
 
@@ -151,11 +151,11 @@ class WalletSignerTest(BitcoinTestFramework):
         )
         self.clear_mock_result(self.nodes[1])
 
-        self.log.info('Prepare mock PSBT')
+        self.log.info('Prepare mock PST')
         self.nodes[0].sendtoaddress(address4, 1)
         self.generate(self.nodes[0], 1)
 
-        # Load private key into wallet to generate a signed PSBT for the mock
+        # Load private key into wallet to generate a signed PST for the mock
         self.nodes[1].createwallet(wallet_name="mock", disable_private_keys=False, blank=True, descriptors=True)
         mock_wallet = self.nodes[1].get_wallet_rpc("mock")
         assert mock_wallet.getwalletinfo()['private_keys_enabled']
@@ -178,13 +178,13 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(result[1], {'success': True})
         assert_equal(mock_wallet.getwalletinfo()["txcount"], 1)
         dest = self.nodes[0].getnewaddress(address_type='bech32')
-        mock_psbt = mock_wallet.walletcreatefundedpsbt([], {dest:0.5}, 0, {'replaceable': True}, True)['psbt']
-        mock_psbt_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt, sign=True, sighashtype="ALL", bip32derivs=True)
-        mock_tx = mock_psbt_signed["hex"]
+        mock_pst = mock_wallet.walletcreatefundedpst([], {dest:0.5}, 0, {'replaceable': True}, True)['pst']
+        mock_pst_signed = mock_wallet.walletprocesspst(pst=mock_pst, sign=True, sighashtype="ALL", bip32derivs=True)
+        mock_tx = mock_pst_signed["hex"]
         assert mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"]
 
         # # Create a new wallet and populate with specific public keys, in order
-        # # to work with the mock signed PSBT.
+        # # to work with the mock signed PST.
         # self.nodes[1].createwallet(wallet_name="hww4", disable_private_keys=True, descriptors=True, external_signer=True)
         # hww4 = self.nodes[1].get_wallet_rpc("hww4")
         #
@@ -212,8 +212,8 @@ class WalletSignerTest(BitcoinTestFramework):
 
         assert hww.testmempoolaccept([mock_tx])[0]["allowed"]
 
-        with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w", encoding="utf8") as f:
-            f.write(mock_psbt_signed["psbt"])
+        with open(os.path.join(self.nodes[1].cwd, "mock_pst"), "w", encoding="utf8") as f:
+            f.write(mock_pst_signed["pst"])
 
         self.log.info('Test send using hww1')
 
@@ -230,15 +230,15 @@ class WalletSignerTest(BitcoinTestFramework):
         # Broadcast transaction so we can bump the fee
         hww.sendrawtransaction(res["hex"])
 
-        self.log.info('Prepare fee bumped mock PSBT')
+        self.log.info('Prepare fee bumped mock PST')
 
         # Now that the transaction is broadcast, bump fee in mock wallet:
         orig_tx_id = res["txid"]
-        mock_psbt_bumped = mock_wallet.psbtbumpfee(orig_tx_id)["psbt"]
-        mock_psbt_bumped_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt_bumped, sign=True, sighashtype="ALL", bip32derivs=True)
+        mock_pst_bumped = mock_wallet.pstbumpfee(orig_tx_id)["pst"]
+        mock_pst_bumped_signed = mock_wallet.walletprocesspst(pst=mock_pst_bumped, sign=True, sighashtype="ALL", bip32derivs=True)
 
-        with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w", encoding="utf8") as f:
-            f.write(mock_psbt_bumped_signed["psbt"])
+        with open(os.path.join(self.nodes[1].cwd, "mock_pst"), "w", encoding="utf8") as f:
+            f.write(mock_pst_bumped_signed["pst"])
 
         self.log.info('Test bumpfee using hww1')
 
@@ -250,7 +250,7 @@ class WalletSignerTest(BitcoinTestFramework):
         # # Handle error thrown by script
         # self.set_mock_result(self.nodes[4], "2")
         # assert_raises_rpc_error(-1, 'Unable to parse JSON',
-        #     hww4.signerprocesspsbt, psbt_orig, "00000001"
+        #     hww4.signerprocesspst, pst_orig, "00000001"
         # )
         # self.clear_mock_result(self.nodes[4])
 

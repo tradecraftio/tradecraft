@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_UI_CHANGE_TYPE_H
-#define BITCOIN_UTIL_UI_CHANGE_TYPE_H
+#ifndef FREICOIN_UTIL_UI_CHANGE_TYPE_H
+#define FREICOIN_UTIL_UI_CHANGE_TYPE_H
 
 /** General change type (added, updated, removed). */
 enum ChangeType {
@@ -23,4 +23,4 @@ enum ChangeType {
     CT_DELETED
 };
 
-#endif // BITCOIN_UTIL_UI_CHANGE_TYPE_H
+#endif // FREICOIN_UTIL_UI_CHANGE_TYPE_H

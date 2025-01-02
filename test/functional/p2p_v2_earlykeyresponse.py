@@ -16,7 +16,7 @@
 
 import random
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.crypto.ellswift import ellswift_create
 from test_framework.p2p import P2PInterface
 from test_framework.v2_p2p import EncryptedP2PState
@@ -74,7 +74,7 @@ class PeerEarlyKey(P2PInterface):
     def on_open(self):
         self.connection_opened = True
 
-class P2PEarlyKey(BitcoinTestFramework):
+class P2PEarlyKey(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-v2transport=1", "-peertimeout=3"]]

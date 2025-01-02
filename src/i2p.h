@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_I2P_H
-#define BITCOIN_I2P_H
+#ifndef FREICOIN_I2P_H
+#define FREICOIN_I2P_H
 
 #include <compat/compat.h>
 #include <netaddress.h>
@@ -298,4 +298,4 @@ private:
 } // namespace sam
 } // namespace i2p
 
-#endif // BITCOIN_I2P_H
+#endif // FREICOIN_I2P_H

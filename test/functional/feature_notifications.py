@@ -19,7 +19,7 @@ import platform
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.descriptors import descsum_create
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -35,7 +35,7 @@ def notify_outputname(walletname, txid):
     return txid if platform.system() == 'Windows' else f'{walletname}_{txid}'
 
 
-class NotificationsTest(BitcoinTestFramework):
+class NotificationsTest(FreicoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

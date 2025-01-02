@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_EDITADDRESSDIALOG_H
-#define BITCOIN_QT_EDITADDRESSDIALOG_H
+#ifndef FREICOIN_QT_EDITADDRESSDIALOG_H
+#define FREICOIN_QT_EDITADDRESSDIALOG_H
 
 #include <QDialog>
 
@@ -67,4 +67,4 @@ private:
     QString address;
 };
 
-#endif // BITCOIN_QT_EDITADDRESSDIALOG_H
+#endif // FREICOIN_QT_EDITADDRESSDIALOG_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_MEMPOOL_REMOVAL_REASON_H
-#define BITCOIN_KERNEL_MEMPOOL_REMOVAL_REASON_H
+#ifndef FREICOIN_KERNEL_MEMPOOL_REMOVAL_REASON_H
+#define FREICOIN_KERNEL_MEMPOOL_REMOVAL_REASON_H
 
 #include <string>
 
@@ -32,4 +32,4 @@ enum class MemPoolRemovalReason {
 
 std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
 
-#endif // BITCOIN_KERNEL_MEMPOOL_REMOVAL_REASON_H
+#endif // FREICOIN_KERNEL_MEMPOOL_REMOVAL_REASON_H

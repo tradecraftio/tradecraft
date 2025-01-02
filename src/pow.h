@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POW_H
-#define BITCOIN_POW_H
+#ifndef FREICOIN_POW_H
+#define FREICOIN_POW_H
 
 #include <consensus/params.h>
 
@@ -45,4 +45,4 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, unsigned char bias, cons
  */
 bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits);
 
-#endif // BITCOIN_POW_H
+#endif // FREICOIN_POW_H

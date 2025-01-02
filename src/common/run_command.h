@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COMMON_RUN_COMMAND_H
-#define BITCOIN_COMMON_RUN_COMMAND_H
+#ifndef FREICOIN_COMMON_RUN_COMMAND_H
+#define FREICOIN_COMMON_RUN_COMMAND_H
 
 #include <string>
 
@@ -29,4 +29,4 @@ class UniValue;
  */
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
 
-#endif // BITCOIN_COMMON_RUN_COMMAND_H
+#endif // FREICOIN_COMMON_RUN_COMMAND_H

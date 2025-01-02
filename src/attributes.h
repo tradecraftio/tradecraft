@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ATTRIBUTES_H
-#define BITCOIN_ATTRIBUTES_H
+#ifndef FREICOIN_ATTRIBUTES_H
+#define FREICOIN_ATTRIBUTES_H
 
 #if defined(__clang__)
 #  if __has_attribute(lifetimebound)
@@ -35,4 +35,4 @@
 #  error No known always_inline attribute for this platform.
 #endif
 
-#endif // BITCOIN_ATTRIBUTES_H
+#endif // FREICOIN_ATTRIBUTES_H

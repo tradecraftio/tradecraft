@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_H
-#define BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_H
+#ifndef FREICOIN_UNIVALUE_INCLUDE_UNIVALUE_H
+#define FREICOIN_UNIVALUE_INCLUDE_UNIVALUE_H
 
 #include <charconv>
 #include <cstddef>
@@ -212,4 +212,4 @@ static inline bool json_isspace(int ch)
 
 extern const UniValue NullUniValue;
 
-#endif // BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_H
+#endif // FREICOIN_UNIVALUE_INCLUDE_UNIVALUE_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_SCRIPT_H
-#define BITCOIN_TEST_UTIL_SCRIPT_H
+#ifndef FREICOIN_TEST_UTIL_SCRIPT_H
+#define FREICOIN_TEST_UTIL_SCRIPT_H
 
 #include <crypto/sha256.h>
 #include <script/script.h>
@@ -44,4 +44,4 @@ static const std::vector<std::vector<uint8_t>> P2WSH_EMPTY_TWO_STACK{{static_cas
 /** Flags that are not forbidden by an assert in script validation */
 bool IsValidFlagCombination(unsigned flags);
 
-#endif // BITCOIN_TEST_UTIL_SCRIPT_H
+#endif // FREICOIN_TEST_UTIL_SCRIPT_H

@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_EXTERNAL_SIGNER_H
-#define BITCOIN_EXTERNAL_SIGNER_H
+#ifndef FREICOIN_EXTERNAL_SIGNER_H
+#define FREICOIN_EXTERNAL_SIGNER_H
 
 #include <common/system.h>
 #include <univalue.h>
@@ -32,7 +32,7 @@ private:
     //! The command which handles interaction with the external signer.
     std::string m_command;
 
-    //! Bitcoin mainnet, testnet, etc
+    //! Freicoin mainnet, testnet, etc
     std::string m_chain;
 
     std::string NetworkArg() const;
@@ -69,9 +69,9 @@ public:
     UniValue GetDescriptors(const int account);
 
     //! Sign PartiallySignedTransaction on the device.
-    //! Calls `<command> signtransaction` and passes the PSBT via stdin.
-    //! @param[in,out] psbt  PartiallySignedTransaction to be signed
-    bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
+    //! Calls `<command> signtransaction` and passes the PST via stdin.
+    //! @param[in,out] pst  PartiallySignedTransaction to be signed
+    bool SignTransaction(PartiallySignedTransaction& pst, std::string& error);
 };
 
-#endif // BITCOIN_EXTERNAL_SIGNER_H
+#endif // FREICOIN_EXTERNAL_SIGNER_H

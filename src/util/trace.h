@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_TRACE_H
-#define BITCOIN_UTIL_TRACE_H
+#ifndef FREICOIN_UTIL_TRACE_H
+#define FREICOIN_UTIL_TRACE_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #ifdef ENABLE_TRACING
@@ -57,4 +57,4 @@
 #endif
 
 
-#endif // BITCOIN_UTIL_TRACE_H
+#endif // FREICOIN_UTIL_TRACE_H

@@ -28,7 +28,7 @@
 
 # eBPF Limitations:
 #
-# Bitcoin P2P messages can be larger than 32kb (e.g. tx, block, ...). The eBPF
+# Freicoin P2P messages can be larger than 32kb (e.g. tx, block, ...). The eBPF
 # VM's stack is limited to 512 bytes, and we can't allocate more than about 32kb
 # for a P2P message in the eBPF VM. The message data is cut off when the message
 # is larger than MAX_MSG_DATA_LENGTH (see definition below). This can be detected
@@ -143,15 +143,15 @@ def print_message(event, inbound):
           )
 
 
-def main(bitcoind_path):
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+def main(freicoind_path):
+    freicoind_with_usdts = USDT(path=str(freicoind_path))
 
     # attaching the trace functions defined in the BPF program to the tracepoints
-    bitcoind_with_usdts.enable_probe(
+    freicoind_with_usdts.enable_probe(
         probe="inbound_message", fn_name="trace_inbound_message")
-    bitcoind_with_usdts.enable_probe(
+    freicoind_with_usdts.enable_probe(
         probe="outbound_message", fn_name="trace_outbound_message")
-    bpf = BPF(text=program, usdt_contexts=[bitcoind_with_usdts])
+    bpf = BPF(text=program, usdt_contexts=[freicoind_with_usdts])
 
     # BCC: perf buffer handle function for inbound_messages
     def handle_inbound(_, data, size):
@@ -188,7 +188,7 @@ def main(bitcoind_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("USAGE:", sys.argv[0], "path/to/bitcoind")
+        print("USAGE:", sys.argv[0], "path/to/freicoind")
         exit()
     path = sys.argv[1]
     main(path)

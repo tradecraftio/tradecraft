@@ -14,14 +14,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoin-cli (JSON-RPC client for " PACKAGE_NAME ")"
+            VALUE "CompanyName",        "Freicoin"
+            VALUE "FileDescription",    "freicoin-cli (JSON-RPC client for " PACKAGE_NAME ")"
             VALUE "FileVersion",        PACKAGE_VERSION
-            VALUE "InternalName",       "bitcoin-cli"
+            VALUE "InternalName",       "freicoin-cli"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the terms of the GNU Affero General Public License v3.0, see the accompanying file COPYING for details."
-            VALUE "OriginalFilename",   "bitcoin-cli.exe"
-            VALUE "ProductName",        "bitcoin-cli"
+            VALUE "OriginalFilename",   "freicoin-cli.exe"
+            VALUE "ProductName",        "freicoin-cli"
             VALUE "ProductVersion",     PACKAGE_VERSION
         END
     END

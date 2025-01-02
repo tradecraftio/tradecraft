@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SCRIPT_SIGCACHE_H
-#define BITCOIN_SCRIPT_SIGCACHE_H
+#ifndef FREICOIN_SCRIPT_SIGCACHE_H
+#define FREICOIN_SCRIPT_SIGCACHE_H
 
 #include <script/interpreter.h>
 #include <span.h>
@@ -45,4 +45,4 @@ public:
 
 [[nodiscard]] bool InitSignatureCache(size_t max_size_bytes);
 
-#endif // BITCOIN_SCRIPT_SIGCACHE_H
+#endif // FREICOIN_SCRIPT_SIGCACHE_H

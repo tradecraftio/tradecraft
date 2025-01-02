@@ -16,7 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 export LC_ALL=C.UTF-8
-export CI_IMAGE_LABEL="bitcoin-ci-test"
+export CI_IMAGE_LABEL="freicoin-ci-test"
 
 set -ex
 

@@ -8,7 +8,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <common/args.h>
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
@@ -289,7 +289,7 @@ uint32_t ParseHexInt4(const UniValue& hex, const std::string& name)
             throw JSONRPCError(RPC_INVALID_PARAMETER, name+" must be a hexidecimal string");
         }
     }
-    // Some bitcoin miners incorrectly report version strings using "%x"
+    // Some freicoin miners incorrectly report version strings using "%x"
     // instead of "%08x", so we need to handle that case by inserting leading
     // zeros.  Still the standard is "%08x", so that's what our error message
     // will say.
@@ -428,7 +428,7 @@ std::string GetWorkUnit(StratumClient& client) EXCLUSIVE_LOCKS_REQUIRED(cs_strat
     }
 
     if (!client.m_authorized) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Stratum client not authorized.  Use mining.authorize first, with a Bitcoin address as the username.");
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Stratum client not authorized.  Use mining.authorize first, with a Freicoin address as the username.");
     }
 
     static CBlockIndex* tip = NULL;
@@ -703,7 +703,7 @@ UniValue stratum_mining_subscribe(StratumClient& client, const UniValue& params)
 
     // Send the client a `mining.set_difficulty` message with the current
     // difficulty.  This is required by some mining hardware (e.g. the Apollo
-    // BTC miner).
+    // FRC miner).
     //
     // Note: The client is not authorized, and therefore the no work will be
     //       generated for them.  The send_work handler will merely generate
@@ -745,14 +745,14 @@ UniValue stratum_mining_authorize(StratumClient& client, const UniValue& params)
         boost::trim_right(username);
     }
 
-    // If the username is a valid Bitcoin address, use it as the destination
+    // If the username is a valid Freicoin address, use it as the destination
     // for block rewards.  Otherwise setup the miner to use fresh keys from the
     // wallet.
     CTxDestination addr;
     if (!username.empty()) {
         addr = DecodeDestination(username);
         if (!IsValidDestination(addr)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Bitcoin address: %s", username));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid Freicoin address: %s", username));
         }
     }
 

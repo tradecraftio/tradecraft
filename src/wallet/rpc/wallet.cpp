@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/freicoin-config.h>
 #endif
 
 #include <core_io.h>
@@ -230,7 +230,7 @@ static RPCHelpMan loadwallet()
 {
     return RPCHelpMan{"loadwallet",
                 "\nLoads a wallet from a wallet file or directory."
-                "\nNote that all wallet command-line options used when starting bitcoind will be"
+                "\nNote that all wallet command-line options used when starting freicoind will be"
                 "\napplied to the new wallet.\n",
                 {
                     {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
@@ -881,11 +881,11 @@ RPCHelpMan sendmany();
 RPCHelpMan settxfee();
 RPCHelpMan fundrawtransaction();
 RPCHelpMan bumpfee();
-RPCHelpMan psbtbumpfee();
+RPCHelpMan pstbumpfee();
 RPCHelpMan send();
 RPCHelpMan sendall();
-RPCHelpMan walletprocesspsbt();
-RPCHelpMan walletcreatefundedpsbt();
+RPCHelpMan walletprocesspst();
+RPCHelpMan walletcreatefundedpst();
 RPCHelpMan signrawtransactionwithwallet();
 
 // signmessage
@@ -911,7 +911,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &addwitnessaddress},
         {"wallet", &backupwallet},
         {"wallet", &bumpfee},
-        {"wallet", &psbtbumpfee},
+        {"wallet", &pstbumpfee},
         {"wallet", &createwallet},
         {"wallet", &restorewallet},
         {"wallet", &dumpprivkey},
@@ -966,14 +966,14 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &sendall},
         {"wallet", &unloadwallet},
         {"wallet", &upgradewallet},
-        {"wallet", &walletcreatefundedpsbt},
+        {"wallet", &walletcreatefundedpst},
 #ifdef ENABLE_EXTERNAL_SIGNER
         {"wallet", &walletdisplayaddress},
 #endif // ENABLE_EXTERNAL_SIGNER
         {"wallet", &walletlock},
         {"wallet", &walletpassphrase},
         {"wallet", &walletpassphrasechange},
-        {"wallet", &walletprocesspsbt},
+        {"wallet", &walletprocesspst},
     };
     return commands;
 }

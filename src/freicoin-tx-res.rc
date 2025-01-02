@@ -14,14 +14,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoin-tx (CLI Bitcoin transaction editor utility)"
+            VALUE "CompanyName",        "Freicoin"
+            VALUE "FileDescription",    "freicoin-tx (CLI Freicoin transaction editor utility)"
             VALUE "FileVersion",        PACKAGE_VERSION
-            VALUE "InternalName",       "bitcoin-tx"
+            VALUE "InternalName",       "freicoin-tx"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the terms of the GNU Affero General Public License v3.0, see the accompanying file COPYING for details."
-            VALUE "OriginalFilename",   "bitcoin-tx.exe"
-            VALUE "ProductName",        "bitcoin-tx"
+            VALUE "OriginalFilename",   "freicoin-tx.exe"
+            VALUE "ProductName",        "freicoin-tx"
             VALUE "ProductVersion",     PACKAGE_VERSION
         END
     END

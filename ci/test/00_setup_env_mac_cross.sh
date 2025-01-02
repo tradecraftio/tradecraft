@@ -17,7 +17,7 @@
 
 export LC_ALL=C.UTF-8
 
-export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
+export SDK_URL=${SDK_URL:-https://raw.githubusercontent.com/maaku/dependencies/master}
 
 export CONTAINER_NAME=ci_macos_cross
 export CI_IMAGE_NAME_TAG="docker.io/ubuntu:22.04"
@@ -28,4 +28,4 @@ export XCODE_BUILD_ID=15A240d
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="deploy"
-export BITCOIN_CONFIG="--with-gui --enable-reduce-exports"
+export FREICOIN_CONFIG="--with-gui --enable-reduce-exports"

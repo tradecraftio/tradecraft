@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_IPC_CAPNP_INIT_TYPES_H
-#define BITCOIN_IPC_CAPNP_INIT_TYPES_H
+#ifndef FREICOIN_IPC_CAPNP_INIT_TYPES_H
+#define FREICOIN_IPC_CAPNP_INIT_TYPES_H
 
 #include <ipc/capnp/echo.capnp.proxy-types.h>
 
-#endif // BITCOIN_IPC_CAPNP_INIT_TYPES_H
+#endif // FREICOIN_IPC_CAPNP_INIT_TYPES_H

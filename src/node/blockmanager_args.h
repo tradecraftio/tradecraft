@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_BLOCKMANAGER_ARGS_H
-#define BITCOIN_NODE_BLOCKMANAGER_ARGS_H
+#ifndef FREICOIN_NODE_BLOCKMANAGER_ARGS_H
+#define FREICOIN_NODE_BLOCKMANAGER_ARGS_H
 
 #include <node/blockstorage.h>
 #include <util/result.h>
@@ -26,4 +26,4 @@ namespace node {
 [[nodiscard]] util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts);
 } // namespace node
 
-#endif // BITCOIN_NODE_BLOCKMANAGER_ARGS_H
+#endif // FREICOIN_NODE_BLOCKMANAGER_ARGS_H

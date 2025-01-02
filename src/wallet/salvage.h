@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_WALLET_SALVAGE_H
-#define BITCOIN_WALLET_SALVAGE_H
+#ifndef FREICOIN_WALLET_SALVAGE_H
+#define FREICOIN_WALLET_SALVAGE_H
 
 #include <streams.h>
 #include <util/fs.h>
@@ -27,4 +27,4 @@ namespace wallet {
 bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bilingual_str& error, std::vector<bilingual_str>& warnings);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_SALVAGE_H
+#endif // FREICOIN_WALLET_SALVAGE_H
