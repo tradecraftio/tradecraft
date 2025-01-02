@@ -32,37 +32,37 @@ Notable changes
 
 ### P2P
 
-- #bitcoin/bitcoin30394 net: fix race condition in self-connect detection
+- bitcoin/bitcoin#30394 net: fix race condition in self-connect detection
 
 ### Init
 
-- #bitcoin/bitcoin30435 init: change shutdown order of load block thread and scheduler
+- bitcoin/bitcoin#30435 init: change shutdown order of load block thread and scheduler
 
 ### RPC
 
-- #bitcoin/bitcoin30357 Fix cases of calls to FillPST errantly returning complete=true
+- bitcoin/bitcoin#30357 Fix cases of calls to FillPST errantly returning complete=true
 
 ### PSBT
 
-- #bitcoin/bitcoin29855 pst: Check non witness utxo outpoint early
+- bitcoin/bitcoin#29855 pst: Check non witness utxo outpoint early
 
 ### Test
 
-- #bitcoin/bitcoin30552 test: fix constructor of msg_tx
+- bitcoin/bitcoin#30552 test: fix constructor of msg_tx
 
 ### Doc
 
-- #bitcoin/bitcoin30504 doc: use proper doxygen formatting for CTxMemPool::cs
+- bitcoin/bitcoin#30504 doc: use proper doxygen formatting for CTxMemPool::cs
 
 ### Build
 
-- #bitcoin/bitcoin30283 upnp: fix build with miniupnpc 2.2.8
-- #bitcoin/bitcoin30633 Fixes for GCC 15 compatibility
+- bitcoin/bitcoin#30283 upnp: fix build with miniupnpc 2.2.8
+- bitcoin/bitcoin#30633 Fixes for GCC 15 compatibility
 
 ### CI
 
-- #bitcoin/bitcoin30193 ci: move ASan job to GitHub Actions from Cirrus CI
-- #bitcoin/bitcoin30299 ci: remove unused bcc variable from workflow
+- bitcoin/bitcoin#30193 ci: move ASan job to GitHub Actions from Cirrus CI
+- bitcoin/bitcoin#30299 ci: remove unused bcc variable from workflow
 
 Credits
 -------
