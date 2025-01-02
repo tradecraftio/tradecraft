@@ -42,7 +42,7 @@ Notable changes
 
 - bitcoin/bitcoin#30357 Fix cases of calls to FillPST errantly returning complete=true
 
-### PSBT
+### PST
 
 - bitcoin/bitcoin#29855 pst: Check non witness utxo outpoint early
 
