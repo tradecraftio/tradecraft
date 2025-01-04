@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/freicoin-config.h> // IWYU pragma: keep
 
 #include <common/args.h>
 #include <init.h>
-#include <qt/bitcoin.h>
+#include <qt/freicoin.h>
 #include <qt/guiutil.h>
 #include <qt/test/optiontests.h>
 #include <test/util/setup_common.h>
@@ -119,10 +119,10 @@ void OptionTests::integerGetArgBug()
 
 void OptionTests::parametersInteraction()
 {
-    // Test that the bug https://github.com/bitcoin-core/gui/issues/567 does not resurface.
-    // It was fixed via https://github.com/bitcoin-core/gui/pull/568.
-    // With fListen=false in ~/.config/Bitcoin/Bitcoin-Qt.conf and all else left as default,
-    // bitcoin-qt should set both -listen and -listenonion to false and start successfully.
+    // Test that the bug https://github.com/freicoin/gui/issues/567 does not resurface.
+    // It was fixed via https://github.com/freicoin/gui/pull/568.
+    // With fListen=false in ~/.config/Freicoin/Freicoin-Qt.conf and all else left as default,
+    // freicoin-qt should set both -listen and -listenonion to false and start successfully.
     gArgs.LockSettings([&](common::Settings& s) {
         s.forced_settings.erase("listen");
         s.forced_settings.erase("listenonion");
@@ -154,8 +154,8 @@ void OptionTests::parametersInteraction()
 
 void OptionTests::extractFilter()
 {
-    QString filter = QString("Partially Signed Transaction (Binary) (*.psbt)");
-    QCOMPARE(GUIUtil::ExtractFirstSuffixFromFilter(filter), "psbt");
+    QString filter = QString("Partially Signed Transaction (Binary) (*.pst)");
+    QCOMPARE(GUIUtil::ExtractFirstSuffixFromFilter(filter), "pst");
 
     filter = QString("Image (*.png *.jpg)");
     QCOMPARE(GUIUtil::ExtractFirstSuffixFromFilter(filter), "png");

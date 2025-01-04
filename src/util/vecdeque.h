@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_VECDEQUE_H
-#define BITCOIN_UTIL_VECDEQUE_H
+#ifndef FREICOIN_UTIL_VECDEQUE_H
+#define FREICOIN_UTIL_VECDEQUE_H
 
 #include <util/check.h>
 
@@ -325,4 +325,4 @@ public:
     size_t capacity() const noexcept { return m_capacity; }
 };
 
-#endif // BITCOIN_UTIL_VECDEQUE_H
+#endif // FREICOIN_UTIL_VECDEQUE_H

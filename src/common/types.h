@@ -14,18 +14,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! @file common/types.h is a home for simple enum and struct type definitions
-//! that can be used internally by functions in the libbitcoin_common library,
+//! that can be used internally by functions in the libfreicoin_common library,
 //! but also used externally by node, wallet, and GUI code.
 //!
 //! This file is intended to define only simple types that do not have external
 //! dependencies. More complicated types should be defined in dedicated header
 //! files.
 
-#ifndef BITCOIN_COMMON_TYPES_H
-#define BITCOIN_COMMON_TYPES_H
+#ifndef FREICOIN_COMMON_TYPES_H
+#define FREICOIN_COMMON_TYPES_H
 
 namespace common {
-enum class PSBTError {
+enum class PSTError {
     MISSING_INPUTS,
     SIGHASH_MISMATCH,
     EXTERNAL_SIGNER_NOT_FOUND,
@@ -34,4 +34,4 @@ enum class PSBTError {
 };
 } // namespace common
 
-#endif // BITCOIN_COMMON_TYPES_H
+#endif // FREICOIN_COMMON_TYPES_H

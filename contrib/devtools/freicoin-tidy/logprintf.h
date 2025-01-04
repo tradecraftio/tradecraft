@@ -18,7 +18,7 @@
 
 #include <clang-tidy/ClangTidyCheck.h>
 
-namespace bitcoin {
+namespace freicoin {
 
 // Warn about any use of LogPrintf that does not end with a newline.
 class LogPrintfCheck final : public clang::tidy::ClangTidyCheck
@@ -35,6 +35,6 @@ public:
     void check(const clang::ast_matchers::MatchFinder::MatchResult& Result) override;
 };
 
-} // namespace bitcoin
+} // namespace freicoin
 
 #endif // LOGPRINTF_CHECK_H

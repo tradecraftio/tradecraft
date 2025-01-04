@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_BITSET_H
-#define BITCOIN_UTIL_BITSET_H
+#ifndef FREICOIN_UTIL_BITSET_H
+#define FREICOIN_UTIL_BITSET_H
 
 #include <util/check.h>
 
@@ -535,4 +535,4 @@ using BitSet = std::conditional_t<(BITS <= 32), bitset_detail::IntBitSet<uint32_
                std::conditional_t<(BITS <= std::numeric_limits<size_t>::digits), bitset_detail::IntBitSet<size_t>,
                bitset_detail::MultiIntBitSet<size_t, (BITS + std::numeric_limits<size_t>::digits - 1) / std::numeric_limits<size_t>::digits>>>;
 
-#endif // BITCOIN_UTIL_BITSET_H
+#endif // FREICOIN_UTIL_BITSET_H

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_SERVER_H
-#define BITCOIN_RPC_SERVER_H
+#ifndef FREICOIN_RPC_SERVER_H
+#define FREICOIN_RPC_SERVER_H
 
 #include <rpc/request.h>
 #include <rpc/util.h>
@@ -192,4 +192,4 @@ void InterruptRPC();
 void StopRPC();
 UniValue JSONRPCExec(const JSONRPCRequest& jreq, bool catch_errors);
 
-#endif // BITCOIN_RPC_SERVER_H
+#endif // FREICOIN_RPC_SERVER_H

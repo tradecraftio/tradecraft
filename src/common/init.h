@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_COMMON_INIT_H
-#define BITCOIN_COMMON_INIT_H
+#ifndef FREICOIN_COMMON_INIT_H
+#define FREICOIN_COMMON_INIT_H
 
 #include <util/translation.h>
 
@@ -47,4 +47,4 @@ using SettingsAbortFn = std::function<bool(const bilingual_str& message, const s
 std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn settings_abort_fn = nullptr);
 } // namespace common
 
-#endif // BITCOIN_COMMON_INIT_H
+#endif // FREICOIN_COMMON_INIT_H

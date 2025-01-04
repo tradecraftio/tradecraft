@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_KERNEL_CHAIN_H
-#define BITCOIN_KERNEL_CHAIN_H
+#ifndef FREICOIN_KERNEL_CHAIN_H
+#define FREICOIN_KERNEL_CHAIN_H
 
 #include<iostream>
 
@@ -47,4 +47,4 @@ enum class ChainstateRole {
 
 std::ostream& operator<<(std::ostream& os, const ChainstateRole& role);
 
-#endif // BITCOIN_KERNEL_CHAIN_H
+#endif // FREICOIN_KERNEL_CHAIN_H

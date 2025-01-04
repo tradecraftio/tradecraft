@@ -13,10 +13,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_BITCOIN_H
-#define BITCOIN_QT_BITCOIN_H
+#ifndef FREICOIN_QT_FREICOIN_H
+#define FREICOIN_QT_FREICOIN_H
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/freicoin-config.h> // IWYU pragma: keep
 
 #include <interfaces/node.h>
 #include <qt/initexecutor.h>
@@ -27,7 +27,7 @@
 
 #include <QApplication>
 
-class BitcoinGUI;
+class FreicoinGUI;
 class ClientModel;
 class NetworkStyle;
 class OptionsModel;
@@ -41,13 +41,13 @@ class Init;
 } // namespace interfaces
 
 
-/** Main Bitcoin application object */
-class BitcoinApplication: public QApplication
+/** Main Freicoin application object */
+class FreicoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication();
-    ~BitcoinApplication();
+    explicit FreicoinApplication();
+    ~FreicoinApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
@@ -71,7 +71,7 @@ public:
     /// Request core initialization
     void requestInitialize();
 
-    /// Get window identifier of QMainWindow (BitcoinGUI)
+    /// Get window identifier of QMainWindow (FreicoinGUI)
     WId getMainWinId() const;
 
     /// Setup platform style
@@ -95,7 +95,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void requestedInitialize();
     void requestedShutdown();
-    void windowShown(BitcoinGUI* window);
+    void windowShown(FreicoinGUI* window);
 
 protected:
     bool event(QEvent* e) override;
@@ -104,7 +104,7 @@ private:
     std::optional<InitExecutor> m_executor;
     OptionsModel* optionsModel{nullptr};
     ClientModel* clientModel{nullptr};
-    BitcoinGUI* window{nullptr};
+    FreicoinGUI* window{nullptr};
     QTimer* pollShutdownTimer{nullptr};
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};
@@ -120,4 +120,4 @@ private:
 
 int GuiMain(int argc, char* argv[]);
 
-#endif // BITCOIN_QT_BITCOIN_H
+#endif // FREICOIN_QT_FREICOIN_H

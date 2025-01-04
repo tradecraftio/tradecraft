@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_BENCH_BENCH_H
-#define BITCOIN_BENCH_BENCH_H
+#ifndef FREICOIN_BENCH_BENCH_H
+#define FREICOIN_BENCH_BENCH_H
 
 #include <util/fs.h>
 #include <util/macros.h>
@@ -90,4 +90,4 @@ public:
 #define BENCHMARK(n, priority_level) \
     benchmark::BenchRunner PASTE2(bench_, PASTE2(__LINE__, n))(STRINGIZE(n), n, priority_level);
 
-#endif // BITCOIN_BENCH_BENCH_H
+#endif // FREICOIN_BENCH_BENCH_H

@@ -1,33 +1,33 @@
-# /etc/conf.d/bitcoind: config file for /etc/init.d/bitcoind
+# /etc/conf.d/freicoind: config file for /etc/init.d/freicoind
 
 # Config file location
-#BITCOIND_CONFIGFILE="/etc/bitcoin/bitcoin.conf"
+#FREICOIND_CONFIGFILE="/etc/freicoin/freicoin.conf"
 
-# What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
-#BITCOIND_PIDDIR="/var/run/bitcoind"
+# What directory to write pidfile to?  (created and owned by $FREICOIND_USER)
+#FREICOIND_PIDDIR="/var/run/freicoind"
 
 # What filename to give the pidfile
-#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/bitcoind.pid"
+#FREICOIND_PIDFILE="${FREICOIND_PIDDIR}/freicoind.pid"
 
-# Where to write bitcoind data (be mindful that the blockchain is large)
-#BITCOIND_DATADIR="/var/lib/bitcoind"
+# Where to write freicoind data (be mindful that the blockchain is large)
+#FREICOIND_DATADIR="/var/lib/freicoind"
 
-# User and group to own bitcoind process
-#BITCOIND_USER="bitcoin"
-#BITCOIND_GROUP="bitcoin"
+# User and group to own freicoind process
+#FREICOIND_USER="freicoin"
+#FREICOIND_GROUP="freicoin"
 
-# Path to bitcoind executable
-#BITCOIND_BIN="/usr/bin/bitcoind"
+# Path to freicoind executable
+#FREICOIND_BIN="/usr/bin/freicoind"
 
-# Nice value to run bitcoind under
-#BITCOIND_NICE=0
+# Nice value to run freicoind under
+#FREICOIND_NICE=0
 
 # Additional options (avoid -conf and -datadir, use flags above)
-#BITCOIND_OPTS=""
+#FREICOIND_OPTS=""
 
-# The timeout in seconds OpenRC will wait for bitcoind to terminate
+# The timeout in seconds OpenRC will wait for freicoind to terminate
 # after a SIGTERM has been raised.
 # Note that this will be mapped as argument to start-stop-daemon's
 # '--retry' option, which means you can specify a retry schedule
 # here. For more information see man 8 start-stop-daemon.
-BITCOIND_SIGTERM_TIMEOUT=600
+FREICOIND_SIGTERM_TIMEOUT=600

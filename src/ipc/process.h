@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_IPC_PROCESS_H
-#define BITCOIN_IPC_PROCESS_H
+#ifndef FREICOIN_IPC_PROCESS_H
+#define FREICOIN_IPC_PROCESS_H
 
 #include <util/fs.h>
 
@@ -24,7 +24,7 @@
 namespace ipc {
 class Protocol;
 
-//! IPC process interface for spawning bitcoin processes and serving requests
+//! IPC process interface for spawning freicoin processes and serving requests
 //! in processes that have been spawned.
 //!
 //! There will be different implementations of this interface depending on the
@@ -52,4 +52,4 @@ public:
 std::unique_ptr<Process> MakeProcess();
 } // namespace ipc
 
-#endif // BITCOIN_IPC_PROCESS_H
+#endif // FREICOIN_IPC_PROCESS_H

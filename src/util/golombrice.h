@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_GOLOMBRICE_H
-#define BITCOIN_UTIL_GOLOMBRICE_H
+#ifndef FREICOIN_UTIL_GOLOMBRICE_H
+#define FREICOIN_UTIL_GOLOMBRICE_H
 
 #include <util/fastrange.h>
 
@@ -53,4 +53,4 @@ uint64_t GolombRiceDecode(BitStreamReader<IStream>& bitreader, uint8_t P)
     return (q << P) + r;
 }
 
-#endif // BITCOIN_UTIL_GOLOMBRICE_H
+#endif // FREICOIN_UTIL_GOLOMBRICE_H

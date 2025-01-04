@@ -18,7 +18,7 @@
 #include <key_io.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <psbt.h>
+#include <pst.h>
 #include <rpc/client.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
@@ -103,25 +103,25 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
 
 // RPC commands which are safe for fuzzing.
 const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
-    "analyzepsbt",
+    "analyzepst",
     "clearbanned",
-    "combinepsbt",
+    "combinepst",
     "combinerawtransaction",
-    "converttopsbt",
+    "converttopst",
     "createmultisig",
-    "createpsbt",
+    "createpst",
     "createrawtransaction",
-    "decodepsbt",
+    "decodepst",
     "decoderawtransaction",
     "decodescript",
     "deriveaddresses",
-    "descriptorprocesspsbt",
+    "descriptorprocesspst",
     "disconnectnode",
     "echo",
     "echojson",
     "estimaterawfee",
     "estimatesmartfee",
-    "finalizepsbt",
+    "finalizepst",
     "generate",
     "generateblock",
     "getaddednodeinfo",
@@ -166,7 +166,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "gettxspendingprevout",
     "help",
     "invalidateblock",
-    "joinpsbts",
+    "joinpsts",
     "listbanned",
     "logging",
     "mockscheduler",
@@ -189,7 +189,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "syncwithvalidationinterfacequeue",
     "testmempoolaccept",
     "uptime",
-    "utxoupdatepsbt",
+    "utxoupdatepst",
     "validateaddress",
     "verifychain",
     "verifymessage",
@@ -297,14 +297,14 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
             r = HexStr(data_stream);
         },
         [&] {
-            // base64 encoded psbt
-            std::optional<PartiallySignedTransaction> opt_psbt = ConsumeDeserializable<PartiallySignedTransaction>(fuzzed_data_provider);
-            if (!opt_psbt) {
+            // base64 encoded pst
+            std::optional<PartiallySignedTransaction> opt_pst = ConsumeDeserializable<PartiallySignedTransaction>(fuzzed_data_provider);
+            if (!opt_pst) {
                 good_data = false;
                 return;
             }
             DataStream data_stream{};
-            data_stream << *opt_psbt;
+            data_stream << *opt_pst;
             r = EncodeBase64(data_stream);
         },
         [&] {

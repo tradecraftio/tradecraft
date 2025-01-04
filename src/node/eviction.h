@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_EVICTION_H
-#define BITCOIN_NODE_EVICTION_H
+#ifndef FREICOIN_NODE_EVICTION_H
+#define FREICOIN_NODE_EVICTION_H
 
 #include <node/connection_types.h>
 #include <net_permissions.h>
@@ -77,4 +77,4 @@ struct NodeEvictionCandidate {
  */
 void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates);
 
-#endif // BITCOIN_NODE_EVICTION_H
+#endif // FREICOIN_NODE_EVICTION_H

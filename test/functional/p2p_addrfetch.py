@@ -28,7 +28,7 @@ from test_framework.p2p import (
     p2p_lock,
     P2P_SERVICES,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import assert_equal
 
 ADDR = CAddress()
@@ -38,7 +38,7 @@ ADDR.ip = "192.0.0.8"
 ADDR.port = 18444
 
 
-class P2PAddrFetch(BitcoinTestFramework):
+class P2PAddrFetch(FreicoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

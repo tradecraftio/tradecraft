@@ -15,15 +15,15 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Test wallet load on startup.
 
-Verify that a bitcoind node can maintain list of wallets loading on startup
+Verify that a freicoind node can maintain list of wallets loading on startup
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
 
 
-class WalletStartupTest(BitcoinTestFramework):
+class WalletStartupTest(FreicoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

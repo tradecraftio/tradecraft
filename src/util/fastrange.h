@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_FASTRANGE_H
-#define BITCOIN_UTIL_FASTRANGE_H
+#ifndef FREICOIN_UTIL_FASTRANGE_H
+#define FREICOIN_UTIL_FASTRANGE_H
 
 #include <cstdint>
 
@@ -59,4 +59,4 @@ static inline uint64_t FastRange64(uint64_t x, uint64_t n)
 #endif
 }
 
-#endif // BITCOIN_UTIL_FASTRANGE_H
+#endif // FREICOIN_UTIL_FASTRANGE_H

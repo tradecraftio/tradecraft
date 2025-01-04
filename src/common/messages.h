@@ -19,8 +19,8 @@
 //! messages, and are called in different parts of the codebase across
 //! node/wallet/gui boundaries.
 
-#ifndef BITCOIN_COMMON_MESSAGES_H
-#define BITCOIN_COMMON_MESSAGES_H
+#ifndef FREICOIN_COMMON_MESSAGES_H
+#define FREICOIN_COMMON_MESSAGES_H
 
 #include <string>
 
@@ -33,14 +33,14 @@ enum class TransactionError;
 } // namespace node
 
 namespace common {
-enum class PSBTError;
+enum class PSTError;
 bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
 std::string StringForFeeReason(FeeReason reason);
 std::string FeeModes(const std::string& delimiter);
 std::string FeeModeInfo(std::pair<std::string, FeeEstimateMode>& mode);
 std::string FeeModesDetail(std::string default_info);
 std::string InvalidEstimateModeErrorMessage();
-bilingual_str PSBTErrorString(PSBTError error);
+bilingual_str PSTErrorString(PSTError error);
 bilingual_str TransactionErrorString(const node::TransactionError error);
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind);
 bilingual_str InvalidPortErrMsg(const std::string& optname, const std::string& strPort);
@@ -48,4 +48,4 @@ bilingual_str AmountHighWarn(const std::string& optname);
 bilingual_str AmountErrMsg(const std::string& optname, const std::string& strValue);
 } // namespace common
 
-#endif // BITCOIN_COMMON_MESSAGES_H
+#endif // FREICOIN_COMMON_MESSAGES_H
