@@ -51,7 +51,6 @@ if [ -e share/examples/bitcoin.conf ]; then
       fi
     done
   done
-  git commit -m '[Branding] Rename files "bitcoin" -> "freicoin".'
 fi
 
 git grep -z -l bitcoin | xargs -0 sed -i 's:bitcoin:freicoin:g'
@@ -166,6 +165,6 @@ git checkout -- doc/release-notes
 git checkout -- src/test/crypto_tests.cpp
 git checkout -- src/bench/data/block413567.raw
 sed -i 's:test/test_bitcoin:test/test_freicoin:g' src/test/crypto_tests.cpp
-git commit -a -m '[Branding] Re-brand "bitcoin" -> "freicoin".'
+git commit -a -m '[Branding] Rebrand "bitcoin" -> "freicoin".'
 
 # End of File
