@@ -16,8 +16,8 @@
 
 // Compile-time verification of assumptions we make.
 
-#ifndef BITCOIN_COMPAT_ASSUMPTIONS_H
-#define BITCOIN_COMPAT_ASSUMPTIONS_H
+#ifndef FREICOIN_COMPAT_ASSUMPTIONS_H
+#define FREICOIN_COMPAT_ASSUMPTIONS_H
 
 #include <cstddef>
 #include <limits>
@@ -52,4 +52,4 @@ static_assert(sizeof(size_t) == sizeof(void*), "Sizes of size_t and void* assume
 // * We are NOT assuming a specific value for std::locale("").name().
 // * We are NOT assuming a specific value for std::numeric_limits<char>::is_signed.
 
-#endif // BITCOIN_COMPAT_ASSUMPTIONS_H
+#endif // FREICOIN_COMPAT_ASSUMPTIONS_H

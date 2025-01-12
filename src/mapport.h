@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_MAPPORT_H
-#define BITCOIN_MAPPORT_H
+#ifndef FREICOIN_MAPPORT_H
+#define FREICOIN_MAPPORT_H
 
 static constexpr bool DEFAULT_UPNP = false;
 
@@ -30,4 +30,4 @@ void StartMapPort(bool use_upnp, bool use_natpmp);
 void InterruptMapPort();
 void StopMapPort();
 
-#endif // BITCOIN_MAPPORT_H
+#endif // FREICOIN_MAPPORT_H

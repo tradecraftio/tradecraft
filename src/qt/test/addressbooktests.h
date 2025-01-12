@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_TEST_ADDRESSBOOKTESTS_H
-#define BITCOIN_QT_TEST_ADDRESSBOOKTESTS_H
+#ifndef FREICOIN_QT_TEST_ADDRESSBOOKTESTS_H
+#define FREICOIN_QT_TEST_ADDRESSBOOKTESTS_H
 
 #include <QObject>
 #include <QTest>
@@ -35,4 +35,4 @@ private Q_SLOTS:
     void addressBookTests();
 };
 
-#endif // BITCOIN_QT_TEST_ADDRESSBOOKTESTS_H
+#endif // FREICOIN_QT_TEST_ADDRESSBOOKTESTS_H

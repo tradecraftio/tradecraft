@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_BLOCKCHAIN_H
-#define BITCOIN_RPC_BLOCKCHAIN_H
+#ifndef FREICOIN_RPC_BLOCKCHAIN_H
+#define FREICOIN_RPC_BLOCKCHAIN_H
 
 #include <consensus/amount.h>
 #include <core_io.h>
@@ -72,4 +72,4 @@ UniValue CreateUTXOSnapshot(
 //! Return height of highest block that has been pruned, or std::nullopt if no blocks have been pruned
 std::optional<int> GetPruneHeight(const node::BlockManager& blockman, const CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-#endif // BITCOIN_RPC_BLOCKCHAIN_H
+#endif // FREICOIN_RPC_BLOCKCHAIN_H

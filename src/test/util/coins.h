@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_COINS_H
-#define BITCOIN_TEST_UTIL_COINS_H
+#ifndef FREICOIN_TEST_UTIL_COINS_H
+#define FREICOIN_TEST_UTIL_COINS_H
 
 #include <primitives/transaction.h>
 
@@ -27,4 +27,4 @@ class CCoinsViewCache;
  */
 COutPoint AddTestCoin(CCoinsViewCache& coins_view);
 
-#endif // BITCOIN_TEST_UTIL_COINS_H
+#endif // FREICOIN_TEST_UTIL_COINS_H

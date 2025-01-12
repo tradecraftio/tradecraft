@@ -15,20 +15,20 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pathlib
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 
 
 class TestShell:
-    """Wrapper Class for BitcoinTestFramework.
+    """Wrapper Class for FreicoinTestFramework.
 
-    The TestShell class extends the BitcoinTestFramework
+    The TestShell class extends the FreicoinTestFramework
     rpc & daemon process management functionality to external
     python environments.
 
     It is a singleton class, which ensures that users only
     start a single TestShell at a time."""
 
-    class __TestShell(BitcoinTestFramework):
+    class __TestShell(FreicoinTestFramework):
         def add_options(self, parser):
             self.add_wallet_options(parser)
 
@@ -44,7 +44,7 @@ class TestShell:
                 return
 
             # Num_nodes parameter must be set
-            # by BitcoinTestFramework child class.
+            # by FreicoinTestFramework child class.
             self.num_nodes = 1
 
             # User parameters override default values.
@@ -80,7 +80,7 @@ class TestShell:
         # This implementation enforces singleton pattern, and will return the
         # previously initialized instance if available
         if not TestShell.instance:
-            # BitcoinTestFramework instances are supposed to be constructed with the path
+            # FreicoinTestFramework instances are supposed to be constructed with the path
             # of the calling test in order to find shared data like configuration and the
             # cache. Since TestShell is meant for interactive use, there is no concrete
             # test; passing a dummy name is fine though, as only the containing directory

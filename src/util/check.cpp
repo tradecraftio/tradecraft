@@ -15,7 +15,7 @@
 
 #include <util/check.h>
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/freicoin-config.h> // IWYU pragma: keep
 
 #include <clientversion.h>
 #include <tinyformat.h>

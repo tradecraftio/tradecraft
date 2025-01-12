@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_FEEFRAC_H
-#define BITCOIN_UTIL_FEEFRAC_H
+#ifndef FREICOIN_UTIL_FEEFRAC_H
+#define FREICOIN_UTIL_FEEFRAC_H
 
 #include <stdint.h>
 #include <compare>
@@ -167,4 +167,4 @@ struct FeeFrac
  */
 std::partial_ordering CompareChunks(Span<const FeeFrac> chunks0, Span<const FeeFrac> chunks1);
 
-#endif // BITCOIN_UTIL_FEEFRAC_H
+#endif // FREICOIN_UTIL_FEEFRAC_H

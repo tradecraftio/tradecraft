@@ -92,7 +92,7 @@ jobs:
     runs-on: macos-13
 
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: github.repository != 'freicoin/gui' || github.event_name == 'pull_request'
 
     timeout-minutes: 120
 
@@ -147,7 +147,7 @@ jobs:
     runs-on: windows-2022
 
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: github.repository != 'freicoin/gui' || github.event_name == 'pull_request'
 
     env:
       CCACHE_MAXSIZE: '200M'
@@ -278,7 +278,7 @@ jobs:
         shell: cmd
         run: |
           ccache --zero-stats
-          msbuild build_msvc\bitcoin.sln -property:CLToolPath=C:\ccache;CLToolExe=cl.exe;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+          msbuild build_msvc\freicoin.sln -property:CLToolPath=C:\ccache;CLToolExe=cl.exe;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
 
       - name: Ccache stats
         run: ccache --show-stats
@@ -292,10 +292,10 @@ jobs:
           key: ${{ github.job }}-ccache-${{ github.run_id }}
 
       - name: Run unit tests
-        run: src\test_bitcoin.exe -l test_suite
+        run: src\test_freicoin.exe -l test_suite
 
       - name: Run benchmarks
-        run: src\bench_bitcoin.exe -sanity-check
+        run: src\bench_freicoin.exe -sanity-check
 
       - name: Run util tests
         run: py -3 test\util\test_runner.py
@@ -318,7 +318,7 @@ jobs:
 
       - name: Run fuzz binaries
         env:
-          BITCOINFUZZ: "${{ github.workspace}}\\src\\fuzz.exe"
+          FREICOINFUZZ: "${{ github.workspace}}\\src\\fuzz.exe"
         shell: cmd
         run: py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_seed_corpus
 
@@ -326,7 +326,7 @@ jobs:
     name: 'ASan + LSan + UBSan + integer, no depends, USDT'
     runs-on: ubuntu-24.04 # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: github.repository != 'freicoin/gui' || github.event_name == 'pull_request'
     timeout-minutes: 120
     env:
       FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"

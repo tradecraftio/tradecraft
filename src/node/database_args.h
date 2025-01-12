@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_NODE_DATABASE_ARGS_H
-#define BITCOIN_NODE_DATABASE_ARGS_H
+#ifndef FREICOIN_NODE_DATABASE_ARGS_H
+#define FREICOIN_NODE_DATABASE_ARGS_H
 
 class ArgsManager;
 struct DBOptions;
@@ -23,4 +23,4 @@ namespace node {
 void ReadDatabaseArgs(const ArgsManager& args, DBOptions& options);
 } // namespace node
 
-#endif // BITCOIN_NODE_DATABASE_ARGS_H
+#endif // FREICOIN_NODE_DATABASE_ARGS_H

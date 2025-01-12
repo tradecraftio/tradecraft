@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_SUPPORT_ALLOCATORS_SECURE_H
-#define BITCOIN_SUPPORT_ALLOCATORS_SECURE_H
+#ifndef FREICOIN_SUPPORT_ALLOCATORS_SECURE_H
+#define FREICOIN_SUPPORT_ALLOCATORS_SECURE_H
 
 #include <support/lockedpool.h>
 #include <support/cleanse.h>
@@ -92,4 +92,4 @@ secure_unique_ptr<T> make_secure_unique(Args&&... as)
     }
 }
 
-#endif // BITCOIN_SUPPORT_ALLOCATORS_SECURE_H
+#endif // FREICOIN_SUPPORT_ALLOCATORS_SECURE_H

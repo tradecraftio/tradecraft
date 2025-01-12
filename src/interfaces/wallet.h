@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_INTERFACES_WALLET_H
-#define BITCOIN_INTERFACES_WALLET_H
+#ifndef FREICOIN_INTERFACES_WALLET_H
+#define FREICOIN_INTERFACES_WALLET_H
 
 #include <addresstype.h>
 #include <common/signmessage.h>
@@ -44,7 +44,7 @@ enum class OutputType;
 struct PartiallySignedTransaction;
 struct bilingual_str;
 namespace common {
-enum class PSBTError;
+enum class PSTError;
 } // namespace common
 namespace node {
 enum class TransactionError;
@@ -217,12 +217,12 @@ public:
         bool& in_mempool,
         int& num_blocks) = 0;
 
-    //! Fill PSBT.
-    virtual std::optional<common::PSBTError> fillPSBT(int sighash_type,
+    //! Fill PST.
+    virtual std::optional<common::PSTError> fillPST(int sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,
-        PartiallySignedTransaction& psbtx,
+        PartiallySignedTransaction& pstx,
         bool& complete) = 0;
 
     //! Get balances.
@@ -467,4 +467,4 @@ std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_WALLET_H
+#endif // FREICOIN_INTERFACES_WALLET_H

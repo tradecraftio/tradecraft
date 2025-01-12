@@ -13,10 +13,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RPC_MINING_H
-#define BITCOIN_RPC_MINING_H
+#ifndef FREICOIN_RPC_MINING_H
+#define FREICOIN_RPC_MINING_H
 
 /** Default max iterations to try in RPC generatetodescriptor, generatetoaddress, and generateblock. */
 static const uint64_t DEFAULT_MAX_TRIES{1000000};
 
-#endif // BITCOIN_RPC_MINING_H
+#endif // FREICOIN_RPC_MINING_H

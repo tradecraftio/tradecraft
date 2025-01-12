@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_VALIDATIONINTERFACE_H
-#define BITCOIN_VALIDATIONINTERFACE_H
+#ifndef FREICOIN_VALIDATIONINTERFACE_H
+#define FREICOIN_VALIDATIONINTERFACE_H
 
 #include <kernel/chain.h>
 #include <kernel/cs_main.h>
@@ -240,4 +240,4 @@ public:
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
 };
 
-#endif // BITCOIN_VALIDATIONINTERFACE_H
+#endif // FREICOIN_VALIDATIONINTERFACE_H

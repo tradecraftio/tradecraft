@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_ADDRMAN_IMPL_H
-#define BITCOIN_ADDRMAN_IMPL_H
+#ifndef FREICOIN_ADDRMAN_IMPL_H
+#define FREICOIN_ADDRMAN_IMPL_H
 
 #include <logging.h>
 #include <logging/timer.h>
@@ -46,7 +46,7 @@ static constexpr int ADDRMAN_BUCKET_SIZE{1 << ADDRMAN_BUCKET_SIZE_LOG2};
 /**
  * User-defined type for the internally used nIds
  * This used to be int, making it feasible for attackers to cause an overflow,
- * see https://bitcoincore.org/en/2024/07/31/disclose-addrman-int-overflow/
+ * see http://freico.in/en/2024/07/31/disclose-addrman-int-overflow/
  */
 using nid_type = int64_t;
 
@@ -303,4 +303,4 @@ private:
     int CheckAddrman() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
-#endif // BITCOIN_ADDRMAN_IMPL_H
+#endif // FREICOIN_ADDRMAN_IMPL_H

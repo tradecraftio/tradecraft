@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_QT_COINCONTROLTREEWIDGET_H
-#define BITCOIN_QT_COINCONTROLTREEWIDGET_H
+#ifndef FREICOIN_QT_COINCONTROLTREEWIDGET_H
+#define FREICOIN_QT_COINCONTROLTREEWIDGET_H
 
 #include <QKeyEvent>
 #include <QTreeWidget>
@@ -30,4 +30,4 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event) override;
 };
 
-#endif // BITCOIN_QT_COINCONTROLTREEWIDGET_H
+#endif // FREICOIN_QT_COINCONTROLTREEWIDGET_H

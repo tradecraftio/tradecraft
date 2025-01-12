@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_TEST_UTIL_POOLRESOURCETESTER_H
-#define BITCOIN_TEST_UTIL_POOLRESOURCETESTER_H
+#ifndef FREICOIN_TEST_UTIL_POOLRESOURCETESTER_H
+#define FREICOIN_TEST_UTIL_POOLRESOURCETESTER_H
 
 #include <support/allocators/pool.h>
 
@@ -137,4 +137,4 @@ public:
     }
 };
 
-#endif // BITCOIN_TEST_UTIL_POOLRESOURCETESTER_H
+#endif // FREICOIN_TEST_UTIL_POOLRESOURCETESTER_H

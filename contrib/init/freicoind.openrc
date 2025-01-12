@@ -1,0 +1,93 @@
+#!/sbin/openrc-run
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/freicoin/.freicoin" ]; then
+	FREICOIND_DEFAULT_DATADIR="/var/lib/freicoin/.freicoin"
+else
+	FREICOIND_DEFAULT_DATADIR="/var/lib/freicoind"
+fi
+
+FREICOIND_CONFIGFILE=${FREICOIND_CONFIGFILE:-/etc/freicoin/freicoin.conf}
+FREICOIND_PIDDIR=${FREICOIND_PIDDIR:-/var/run/freicoind}
+FREICOIND_PIDFILE=${FREICOIND_PIDFILE:-${FREICOIND_PIDDIR}/freicoind.pid}
+FREICOIND_DATADIR=${FREICOIND_DATADIR:-${FREICOIND_DEFAULT_DATADIR}}
+FREICOIND_USER=${FREICOIND_USER:-${FREICOIN_USER:-freicoin}}
+FREICOIND_GROUP=${FREICOIND_GROUP:-freicoin}
+FREICOIND_BIN=${FREICOIND_BIN:-/usr/bin/freicoind}
+FREICOIND_NICE=${FREICOIND_NICE:-${NICELEVEL:-0}}
+FREICOIND_OPTS="${FREICOIND_OPTS:-${FREICOIN_OPTS}}"
+
+name="Freicoin Daemon"
+description="Freicoin cryptocurrency P2P network daemon"
+
+command="/usr/bin/freicoind"
+command_args="-pid=\"${FREICOIND_PIDFILE}\" \
+		-conf=\"${FREICOIND_CONFIGFILE}\" \
+		-datadir=\"${FREICOIND_DATADIR}\" \
+		-daemon \
+		${FREICOIND_OPTS}"
+
+required_files="${FREICOIND_CONFIGFILE}"
+start_stop_daemon_args="-u ${FREICOIND_USER} \
+			-N ${FREICOIND_NICE} -w 2000"
+pidfile="${FREICOIND_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${FREICOIND_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${FREICOIND_USER}:${FREICOIND_GROUP}" \
+	"${FREICOIND_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${FREICOIND_USER}:${FREICOIND_GROUP}" \
+	"${FREICOIND_PIDDIR}"
+
+	checkpath -f \
+	-o "${FREICOIND_USER}:${FREICOIND_GROUP}" \
+	-m 0660 \
+	"${FREICOIND_CONFIGFILE}"
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if grep -qs '^rpcuser=' "${FREICOIND_CONFIGFILE}" && \
+		! grep -qs '^rpcpassword=' "${FREICOIND_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run freicoind."
+		eerror "The setting must appear in ${FREICOIND_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following "
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"Freicoin Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}

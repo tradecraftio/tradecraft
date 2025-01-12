@@ -1,0 +1,100 @@
+// Copyright (c) 2018-2020 The Freicoin developers
+// Copyright (c) 2011-2024 The Freicoin Developers
+//
+// This program is free software: you can redistribute it and/or modify it under
+// the terms of version 3 of the GNU Affero General Public License as published
+// by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#ifndef FREICOIN_FREICOIN_CONFIG_H
+#define FREICOIN_FREICOIN_CONFIG_H
+
+/* Version Build */
+#define CLIENT_VERSION_BUILD $
+
+/* Version is release */
+#define CLIENT_VERSION_IS_RELEASE $
+
+/* Major version */
+#define CLIENT_VERSION_MAJOR $
+
+/* Minor version */
+#define CLIENT_VERSION_MINOR $
+
+/* Patch version */
+#define CLIENT_VERSION_PATCH $
+
+/* Build revision */
+#define CLIENT_VERSION_REVISION $
+
+/* Copyright holder(s) before %s replacement */
+#define COPYRIGHT_HOLDERS "The %s developers"
+
+/* Copyright holder(s) */
+#define COPYRIGHT_HOLDERS_FINAL "The Freicoin developers"
+
+/* Replacement for %s in copyright holders string */
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
+
+/* Copyright year */
+#define COPYRIGHT_YEAR $
+
+/* Define to 1 to enable wallet functions */
+#define ENABLE_WALLET 1
+
+/* Define to 1 to enable BDB wallet */
+#define USE_BDB 1
+
+/* Define to 1 to enable SQLite wallet */
+#define USE_SQLITE 1
+
+/* Define this symbol to enable ZMQ functions */
+#define ENABLE_ZMQ 1
+
+/* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
+   */
+#define HAVE_DECL_FORK 0
+
+/* Define to 1 if you have the declaration of `setsid', and to 0 if you don't.
+   */
+#define HAVE_DECL_SETSID 0
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "https://github.com/tradecraftio/tradecraft/issues"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "Freicoin"
+
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING $
+
+/* Define to the home page for this package. */
+#define PACKAGE_URL "http://freico.in/"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION $
+
+/* Define this symbol if the minimal qt platform exists */
+#define QT_QPA_PLATFORM_MINIMAL 1
+
+/* Define this symbol if the qt platform is windows */
+#define QT_QPA_PLATFORM_WINDOWS 1
+
+/* Windows Universal Platform constraints */
+#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+/* Either a desktop application without API restrictions, or and older system
+   before these macros were defined. */
+
+/* ::wsystem is available */
+#define HAVE_SYSTEM 1
+
+#endif // !WINAPI_FAMILY || WINAPI_FAMILY_DESKTOP_APP
+
+#endif //FREICOIN_FREICOIN_CONFIG_H

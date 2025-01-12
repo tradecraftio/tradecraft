@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_UTIL_EXCEPTION_H
-#define BITCOIN_UTIL_EXCEPTION_H
+#ifndef FREICOIN_UTIL_EXCEPTION_H
+#define FREICOIN_UTIL_EXCEPTION_H
 
 #include <exception>
 #include <string_view>
 
 void PrintExceptionContinue(const std::exception* pex, std::string_view thread_name);
 
-#endif // BITCOIN_UTIL_EXCEPTION_H
+#endif // FREICOIN_UTIL_EXCEPTION_H

@@ -28,7 +28,7 @@ from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import FreicoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
@@ -70,7 +70,7 @@ def seed_addrman(node):
     assert_equal(node.addpeeraddress(address="c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p", port=8333), success)
 
 
-class NetTest(BitcoinTestFramework):
+class NetTest(FreicoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-minrelaytxfee=0.00001000"], ["-minrelaytxfee=0.00000500"]]

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_RANDOMENV_H
-#define BITCOIN_RANDOMENV_H
+#ifndef FREICOIN_RANDOMENV_H
+#define FREICOIN_RANDOMENV_H
 
 #include <crypto/sha512.h>
 
@@ -25,4 +25,4 @@ void RandAddDynamicEnv(CSHA512& hasher);
 /** Gather non-cryptographic environment data that does not change over time. */
 void RandAddStaticEnv(CSHA512& hasher);
 
-#endif // BITCOIN_RANDOMENV_H
+#endif // FREICOIN_RANDOMENV_H

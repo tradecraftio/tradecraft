@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_POLICY_RBF_H
-#define BITCOIN_POLICY_RBF_H
+#ifndef FREICOIN_POLICY_RBF_H
+#define FREICOIN_POLICY_RBF_H
 
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
@@ -143,4 +143,4 @@ std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(
                                                 int64_t replacement_vsize)
                                                 EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
-#endif // BITCOIN_POLICY_RBF_H
+#endif // FREICOIN_POLICY_RBF_H

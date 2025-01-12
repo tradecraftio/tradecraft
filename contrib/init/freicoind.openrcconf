@@ -1,0 +1,33 @@
+# /etc/conf.d/freicoind: config file for /etc/init.d/freicoind
+
+# Config file location
+#FREICOIND_CONFIGFILE="/etc/freicoin/freicoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $FREICOIND_USER)
+#FREICOIND_PIDDIR="/var/run/freicoind"
+
+# What filename to give the pidfile
+#FREICOIND_PIDFILE="${FREICOIND_PIDDIR}/freicoind.pid"
+
+# Where to write freicoind data (be mindful that the blockchain is large)
+#FREICOIND_DATADIR="/var/lib/freicoind"
+
+# User and group to own freicoind process
+#FREICOIND_USER="freicoin"
+#FREICOIND_GROUP="freicoin"
+
+# Path to freicoind executable
+#FREICOIND_BIN="/usr/bin/freicoind"
+
+# Nice value to run freicoind under
+#FREICOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#FREICOIND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for freicoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+FREICOIND_SIGTERM_TIMEOUT=600

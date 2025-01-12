@@ -1,5 +1,5 @@
-#ifndef BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
-#define BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
+#ifndef FREICOIN_UTIL_TRANSACTION_IDENTIFIER_H
+#define FREICOIN_UTIL_TRANSACTION_IDENTIFIER_H
 
 #include <attributes.h>
 #include <uint256.h>
@@ -72,4 +72,4 @@ using Txid = transaction_identifier<false>;
 /** Wtxid commits to all transaction fields including the witness. */
 using Wtxid = transaction_identifier<true>;
 
-#endif // BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
+#endif // FREICOIN_UTIL_TRANSACTION_IDENTIFIER_H

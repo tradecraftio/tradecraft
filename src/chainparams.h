@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BITCOIN_CHAINPARAMS_H
-#define BITCOIN_CHAINPARAMS_H
+#ifndef FREICOIN_CHAINPARAMS_H
+#define FREICOIN_CHAINPARAMS_H
 
 #include <kernel/chainparams.h> // IWYU pragma: export
 
@@ -39,4 +39,4 @@ const CChainParams &Params();
  */
 void SelectParams(const ChainType chain);
 
-#endif // BITCOIN_CHAINPARAMS_H
+#endif // FREICOIN_CHAINPARAMS_H

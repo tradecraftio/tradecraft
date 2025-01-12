@@ -15,7 +15,7 @@
 
 #include <node/kernel_notifications.h>
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/freicoin-config.h> // IWYU pragma: keep
 
 #include <chain.h>
 #include <common/args.h>
