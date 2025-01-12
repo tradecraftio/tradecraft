@@ -194,14 +194,7 @@ static int SendAuxSubmitRequest(AuxWorkServer& server, const std::string& addres
     UniValue params(UniValue::VARR);
     params.push_back(address);
     params.push_back(work.job_id);
-    UniValue path(UniValue::VARR);
-    for (const auto& item : work.path) {
-        UniValue tuple(UniValue::VARR);
-        tuple.push_back((int)item.first);
-        tuple.push_back(HexStr(item.second));
-        path.push_back(tuple);
-    }
-    params.push_back(path);
+    params.push_back(UniValue(UniValue::VARR)); // FIXME: no commit branch
     params.push_back(HexStr(proof.midstate_hash));
     params.push_back(HexStr(proof.midstate_buffer));
     params.push_back(UniValue(static_cast<uint64_t>(proof.midstate_length)));
