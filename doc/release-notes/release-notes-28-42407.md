@@ -18,14 +18,14 @@ To receive security and update notifications, please subscribe to:
 How to Upgrade
 --------------
 
-If you are running an older version, shut it down.  Wait until it has completely shut down (which might take a few minutes in some cases), then run the installer (on Windows) or just copy over `/Applications/Freicoin-Qt` (on macOS) or `freicoind`/`Freicoin-Qt` (on Linux).
+If you are running an older version, shut it down.  Wait until it has completely shut down (which might take a few minutes in some cases), then run the installer (on Windows) or just copy over `/Applications/Freicoin-Qt` (on macOS) or `freicoind`/`Freicoin-qt` (on Linux).
 
 Upgrading directly from a version of Freicoin that has reached its EOL is possible, but it might take some time if the data directory needs to be migrated.  Old wallet versions of Freicoin are generally supported.
 
 Compatibility
 -------------
 
-Freicoin is supported and extensively tested on operating systems using the Linux Kernel 3.17+, macOS 11.0+, and Windows 7 and newer.  Freicoin should also work on most other UNIX-like systems but is not as frequently tested on them. It is not recommended to use Freicoin on unsupported systems.
+Freicoin is supported and extensively tested on operating systems using the Linux Kernel 3.17+, macOS 11.0+, and Windows 7 and newer.  Freicoin should also work on most other UNIX-like systems but is not as frequently tested on them.  It is not recommended to use Freicoin on unsupported systems.
 
 Notable changes
 ---------------
