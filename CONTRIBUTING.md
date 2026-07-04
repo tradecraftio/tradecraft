@@ -36,9 +36,6 @@ list or changes that are
 Some of them might no longer be applicable. So if you are interested, but
 unsure, you might want to leave a comment on the issue first.
 
-You may also participate in the weekly
-[Freicoin PR Review Club](https://freicoincore.reviews/) meeting.
-
 ### Good First Issue Label
 
 The purpose of the `good first issue` label is to highlight which issues are
