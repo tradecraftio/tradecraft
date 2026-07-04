@@ -295,11 +295,9 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 
 - Announce the release:
 
-  - freicoin-dev and freicoin-dev mailing list
+  - freicoin-dev mailing list
 
   - Freicoin announcements list http://freico.in/en/list/announcements/join/
-
-  - Freicoin Twitter https://twitter.com/freicoincoreorg
 
   - Celebrate
 

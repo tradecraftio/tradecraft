@@ -13,6 +13,15 @@ Freicoin connects to the Freicoin peer-to-peer network to download and fully
 validate blocks and transactions. It also includes a wallet and graphical user
 interface, which can be optionally built.
 
+Freicoin is a fork of bitcoin implementing the *freigeld* ("free money")
+monetary policy proposed by the economist Silvio Gesell: all balances are
+subject to demurrage, decaying by approximately 5% per year, and in place of
+a halving schedule an offsetting amount is issued to miners as a perpetual
+block subsidy. Demurrage rewards circulation over hoarding, and the perpetual
+subsidy permanently funds network security. An introduction can be found on
+the [Freicoin website](https://freico.in/) and in this dated but accessible
+[CoinDesk article](https://www.coindesk.com/freicoins-attempt-to-free-the-economy).
+
 Further information about Freicoin is available in the [doc folder](/doc).
 
 License
