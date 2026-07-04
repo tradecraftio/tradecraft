@@ -21,7 +21,7 @@
 
 /** Only set to true when running the regtest chain with the
  ** '-notimeadjust' option set, making TimeAdjustValueForward() and
- ** TimeAdjustValueBackward() return their inputs unmodified. This
+ ** TimeAdjustValueReverse() return their inputs unmodified. This
  ** enables running bitcoin regression tests unmodified. */
 bool disable_time_adjust = DEFAULT_DISABLE_TIME_ADJUST;
 
