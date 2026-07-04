@@ -196,8 +196,6 @@ public:
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
         vSeeds.emplace_back("seed.freico.in"); // Mark Friedenbach
-        vSeeds.emplace_back("fledge.freico.in"); // @galambo
-        vSeeds.emplace_back("dnsseed.sicanet.net"); // Fredrik Bodin
         vSeeds.emplace_back("ap-northeast-1.aws.seed.tradecraft.io");
         vSeeds.emplace_back("eu-west-1.aws.seed.tradecraft.io");
         vSeeds.emplace_back("us-west-2.aws.seed.tradecraft.io");
