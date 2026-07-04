@@ -856,7 +856,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
             }
             half_solved_work = new_job_id;
         } else {
-            LogPrintf("NEW AUXILIARY SHARE!!! by %s: %s, %s\n", EncodeDestination(client.m_addr), aux_hash.first.ToString(), aux_hash.second.ToString());
+            LogPrint(BCLog::STRATUM, "NEW AUXILIARY SHARE!!! by %s: %s, %s\n", EncodeDestination(client.m_addr), aux_hash.first.ToString(), aux_hash.second.ToString());
         }
     }
 
@@ -920,7 +920,7 @@ bool SubmitBlock(StratumClient& client, const JobId& job_id, const StratumWork& 
                 }
             }
         } else {
-            LogPrintf("NEW SHARE!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
+            LogPrint(BCLog::STRATUM, "NEW SHARE!!! by %s: %s\n", EncodeDestination(client.m_addr), hash.ToString());
         }
     }
 
@@ -966,7 +966,7 @@ bool SubmitAuxiliaryBlock(StratumClient& client, const CTxDestination& addr, con
     const Consensus::Params& params = Params().GetConsensus();
     auto aux_hash = blkhdr.GetAuxiliaryHash(params);
     if (!CheckAuxiliaryProofOfWork(blkhdr, params)) {
-        LogPrintf("NEW AUXILIARY SHARE!!! by %s: %s, %s\n", EncodeDestination(addr), aux_hash.first.ToString(), aux_hash.second.ToString());
+        LogPrint(BCLog::STRATUM, "NEW AUXILIARY SHARE!!! by %s: %s, %s\n", EncodeDestination(addr), aux_hash.first.ToString(), aux_hash.second.ToString());
         return false;
     }
 
