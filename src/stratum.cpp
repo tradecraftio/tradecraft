@@ -1627,14 +1627,20 @@ void BlockWatcher()
     std::chrono::steady_clock::time_point checktxtime = std::chrono::steady_clock::now();
     unsigned int txns_updated_last = 0;
     while (true) {
+        // Set when the timer expired without any block or mempool activity.
+        // In that case the only clients which could need an update are those
+        // that have never been sent work for the current tip, e.g. because
+        // the node had no peer connections when they subscribed.
+        bool only_notify_stalled = false;
         {
             WAIT_LOCK(g_best_block_mutex, lock);
             checktxtime += std::chrono::seconds(15);
             if (g_best_block_cv.wait_until(lock, checktxtime) == std::cv_status::timeout) {
                 // Timeout: Check to see if mempool was updated.
                 unsigned int txns_updated_next = g_context->mempool ? g_context->mempool->GetTransactionsUpdated() : txns_updated_last;
-                if (txns_updated_last == txns_updated_next)
-                    continue;
+                if (txns_updated_last == txns_updated_next) {
+                    only_notify_stalled = true;
+                }
                 txns_updated_last = txns_updated_next;
             }
         }
@@ -1649,6 +1655,39 @@ void BlockWatcher()
         if (g_context && g_context->chainman) {
             LOCK(g_context->chainman->GetMutex());
             tip = g_context->chainman->ActiveChain().Tip();
+        }
+
+        // Regardless of why we woke up, if the node is in no state to serve
+        // work then there is no point in disturbing the clients: every work
+        // request below would just produce an error reply, repeatedly
+        // spamming clients which already received one when they first asked.
+        // They will be serviced by a later pass, once the node is ready.
+        if (!Params().MineBlocksOnDemand() && (!g_context->connman || g_context->connman->GetNodeCount(ConnectionDirection::Both) == 0)) {
+            continue;
+        }
+        if (g_context->chainman && g_context->chainman->IsInitialBlockDownload()) {
+            continue;
+        }
+
+        if (only_notify_stalled) {
+            // Work requests received while the node had no peers (or was
+            // still in initial block download) were answered with an error,
+            // and no work would be pushed to those clients until the tip or
+            // the mempool changed -- which on a quiet network can take a
+            // very long time.  The checks above established that the node
+            // can serve work now, so proceed if any client is still waiting
+            // for its first work unit on the current tip.
+            bool any_stalled = false;
+            for (const auto& subscription : subscriptions) {
+                const StratumClient& client = subscription.second;
+                if ((client.m_authorized || !client.m_aux_addr.empty()) && client.m_last_tip != tip) {
+                    any_stalled = true;
+                    break;
+                }
+            }
+            if (!any_stalled) {
+                continue;
+            }
         }
 
         // Either new block, or updated transactions.  Either way,
