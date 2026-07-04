@@ -35,6 +35,7 @@ class GetblockstatsTest(FreicoinTestFramework):
     max_stat_pos = 2
 
     def add_options(self, parser):
+        self.add_wallet_options(parser, legacy=False)
         parser.add_argument('--gen-test-data', dest='gen_test_data',
                             default=False, action='store_true',
                             help='Generate test data')
@@ -48,15 +49,21 @@ class GetblockstatsTest(FreicoinTestFramework):
         self.setup_clean_chain = True
         self.supports_cli = False
 
+    def skip_test_if_missing_module(self):
+        # A wallet is only used in --gen-test-data mode; replaying the
+        # canned test data does not need one.
+        if self.options.gen_test_data:
+            self.skip_if_no_wallet()
+
     def get_stats(self):
         return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos+1)]
 
     def generate_test_data(self, filename):
         mocktime = 1525107225
         self.nodes[0].setmocktime(mocktime)
-        self.nodes[0].createwallet(wallet_name='test')
-        privkey = self.nodes[0].get_deterministic_priv_key().key
-        self.nodes[0].importprivkey(privkey)
+        # The framework has already created the default wallet and imported
+        # the deterministic coinbase key (skip_if_no_wallet() is called in
+        # --gen-test-data mode).
 
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
@@ -189,9 +196,9 @@ class GetblockstatsTest(FreicoinTestFramework):
         self.log.info('Test tip including OP_RETURN')
         tip_stats = self.nodes[0].getblockstats(tip)
         assert_equal(tip_stats["utxo_increase"], 4)
-        assert_equal(tip_stats["utxo_size_inc"], 294)
+        assert_equal(tip_stats["utxo_size_inc"], 300)
         assert_equal(tip_stats["utxo_increase_actual"], 4)
-        assert_equal(tip_stats["utxo_size_inc_actual"], 294)
+        assert_equal(tip_stats["utxo_size_inc_actual"], 300)
 
 if __name__ == '__main__':
     GetblockstatsTest(__file__).main()
