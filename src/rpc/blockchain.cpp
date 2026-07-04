@@ -1873,7 +1873,9 @@ static RPCHelpMan getblockstats()
 {
     return RPCHelpMan{"getblockstats",
                 "\nCompute per block statistics for a given window. All amounts are in kria.\n"
-                "It won't work for some heights with pruning.\n",
+                "It won't work for some heights with pruning.\n"
+                "Fee, feerate, size, and weight statistics cover fee-market transactions only,\n"
+                "i.e. they exclude both the coinbase and the block-final transaction.\n",
                 {
                     {"hash_or_height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block hash or height of the target block",
                      RPCArgOptions{
@@ -1919,9 +1921,9 @@ static RPCHelpMan getblockstats()
                 {RPCResult::Type::NUM, "swtotal_weight", /*optional=*/true, "Total weight of all segwit transactions"},
                 {RPCResult::Type::NUM, "swtxs", /*optional=*/true, "The number of segwit transactions"},
                 {RPCResult::Type::NUM, "time", /*optional=*/true, "The block time"},
-                {RPCResult::Type::NUM, "total_out", /*optional=*/true, "Total amount in all outputs (excluding coinbase and thus reward [ie subsidy + totalfee])"},
-                {RPCResult::Type::NUM, "total_size", /*optional=*/true, "Total size of all non-coinbase transactions"},
-                {RPCResult::Type::NUM, "total_weight", /*optional=*/true, "Total weight of all non-coinbase transactions"},
+                {RPCResult::Type::NUM, "total_out", /*optional=*/true, "Total amount in all outputs (excluding coinbase and block-final, and thus reward [ie subsidy + totalfee])"},
+                {RPCResult::Type::NUM, "total_size", /*optional=*/true, "Total size of all fee-market (non-coinbase, non-block-final) transactions"},
+                {RPCResult::Type::NUM, "total_weight", /*optional=*/true, "Total weight of all fee-market (non-coinbase, non-block-final) transactions"},
                 {RPCResult::Type::NUM, "totalfee", /*optional=*/true, "The fee total"},
                 {RPCResult::Type::NUM, "txs", /*optional=*/true, "The number of transactions (including coinbase)"},
                 {RPCResult::Type::NUM, "utxo_increase", /*optional=*/true, "The increase/decrease in the number of unspent outputs (not discounting op_return and similar)"},
@@ -1986,8 +1988,20 @@ static RPCHelpMan getblockstats()
     std::vector<std::pair<CAmount, int64_t>> feerate_array;
     std::vector<int64_t> txsize_array;
 
+    // The block-final transaction, where present, is a protocol construct
+    // rather than a fee-market transaction, so it is excluded from the fee,
+    // feerate, size, and weight statistics. Its inputs and outputs are still
+    // reflected in the UTXO accounting, which tracks actual changes to the
+    // UTXO set. Note that the first block after activation bootstraps the
+    // block-final chain from an output of its coinbase and does not carry a
+    // separate block-final transaction.
+    const bool enforce_block_final{pindex.pprev && DeploymentActiveAfter(pindex.pprev, chainman, Consensus::DEPLOYMENT_FINALTX)};
+    const bool initial_block_final{enforce_block_final && (!pindex.pprev->pprev || !DeploymentActiveAfter(pindex.pprev->pprev, chainman, Consensus::DEPLOYMENT_FINALTX))};
+    const bool has_block_final_tx{enforce_block_final && !initial_block_final};
+
     for (size_t i = 0; i < block.vtx.size(); ++i) {
         const auto& tx = block.vtx.at(i);
+        const bool is_block_final_tx{has_block_final_tx && i + 1 == block.vtx.size()};
         outputs += tx->vout.size();
 
         CAmount tx_total_out = 0;
@@ -2014,6 +2028,21 @@ static RPCHelpMan getblockstats()
         }
 
         inputs += tx->vin.size(); // Don't count coinbase's fake input
+
+        if (is_block_final_tx) {
+            // Keep the UTXO accounting for the block-final transaction's
+            // spent prevouts, but skip all fee-market statistics.
+            if (loop_inputs) {
+                const auto& txundo = blockUndo.vtxundo.at(i - 1);
+                for (const Coin& coin: txundo.vprevout) {
+                    size_t prevout_size = GetSerializeSize(coin.out) + PER_UTXO_OVERHEAD;
+                    utxo_size_inc -= prevout_size;
+                    utxo_size_inc_actual -= prevout_size;
+                }
+            }
+            continue;
+        }
+
         total_out += GetTimeAdjustedValue(tx_total_out, pindex.nHeight - tx->lock_height); // Don't count coinbase reward
 
         int64_t tx_size = 0;
@@ -2079,10 +2108,14 @@ static RPCHelpMan getblockstats()
         feerates_res.push_back(feerate_percentiles[i]);
     }
 
+    // Number of fee-market transactions: everything except the coinbase and
+    // the block-final transaction (where present).
+    const int64_t market_txs{static_cast<int64_t>(block.vtx.size()) - 1 - (has_block_final_tx ? 1 : 0)};
+
     UniValue ret_all(UniValue::VOBJ);
-    ret_all.pushKV("avgfee", (block.vtx.size() > 1) ? totalfee / (block.vtx.size() - 1) : 0);
+    ret_all.pushKV("avgfee", (market_txs > 0) ? totalfee / market_txs : 0);
     ret_all.pushKV("avgfeerate", total_weight ? (totalfee * WITNESS_SCALE_FACTOR) / total_weight : 0); // Unit: sat/vbyte
-    ret_all.pushKV("avgtxsize", (block.vtx.size() > 1) ? total_size / (block.vtx.size() - 1) : 0);
+    ret_all.pushKV("avgtxsize", (market_txs > 0) ? total_size / market_txs : 0);
     ret_all.pushKV("blockhash", pindex.GetBlockHash().GetHex());
     ret_all.pushKV("feerate_percentiles", std::move(feerates_res));
     ret_all.pushKV("height", (int64_t)pindex.nHeight);
