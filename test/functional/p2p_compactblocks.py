@@ -421,17 +421,7 @@ class CompactBlocksTest(FreicoinTestFramework):
             else:
                 test_node.send_header_for_blocks([block])
             test_node.wait_for_getdata([block.sha256], timeout=30)
-            #FIXME: For some reason freicoind is returning a non-compact block
-            #       request here when block-final transactions are enabled.  I
-            #       admit I don't exactly know why, or even whether this is a
-            #       problem.  It shouldn't be, because whether a full or a
-            #       compact block is requested doesn't affect network consensus.
-            #       But errors like this can be indicative of deeper issues that
-            #       could be a problem.  This merits further investigation, but
-            #       not at this time.
-            #assert_equal(test_node.last_message["getdata"].inv[0].type, 4)
-            assert(test_node.last_message["getdata"].inv[0].type in (2,4,0x40000002))
-            #END
+            assert_equal(test_node.last_message["getdata"].inv[0].type, 4)
 
             # Send back a compactblock message that omits the coinbase
             comp_block = HeaderAndShortIDs()
