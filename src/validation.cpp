@@ -3165,6 +3165,11 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
     if (!m_chainman.IsInitialBlockDownload()) {
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
+            // Bits reserved by BIP320 for miner version-rolling carry no
+            // soft-fork signalling meaning: the stratum server itself hands
+            // them out to miners performing overt AsicBoost, so seeing them
+            // set in block headers is expected and no cause for alarm.
+            if ((VERSIONBITS_BIP320_MASK >> bit) & 1) continue;
             WarningBitsConditionChecker checker(m_chainman, bit);
             ThresholdState state = checker.GetStateFor(pindex, params.GetConsensus(), m_chainman.m_warningcache.at(bit));
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {

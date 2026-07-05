@@ -29,6 +29,10 @@ static const int32_t VERSIONBITS_TOP_BITS = 0x20000000UL;
 static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
 static const int32_t VERSIONBITS_NUM_BITS = 29;
+/** Bits reserved by BIP320 for miner version-rolling (overt AsicBoost).
+ *  These are handed out to miners by the stratum server's version-rolling
+ *  extension and carry no soft-fork signalling meaning. */
+static const int32_t VERSIONBITS_BIP320_MASK = 0x1fffe000UL;
 
 /** BIP 9 defines a finite-state-machine to deploy a softfork in multiple stages.
  *  State transitions happen during retarget period if conditions are met

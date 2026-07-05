@@ -34,6 +34,7 @@
 #include <util/hash_type.h> // for BaseHash
 #include <util/strencodings.h>
 #include <validation.h>
+#include <versionbits.h>
 #include <wallet/miner.h>
 
 #include <univalue.h>
@@ -1198,7 +1199,7 @@ UniValue stratum_mining_configure(StratumClient& client, const UniValue& params)
         if ("version-rolling" == name) {
             uint32_t mask = ParseHexInt4(config.find_value("version-rolling.mask"), "version-rolling.mask");
             size_t min_bit_count = config.find_value("version-rolling.min-bit-count").getInt<size_t>();
-            client.m_version_rolling_mask = mask & 0x1fffe000;
+            client.m_version_rolling_mask = mask & VERSIONBITS_BIP320_MASK;
             size_t bit_count = std::bitset<32>(client.m_version_rolling_mask).count();
             if (bit_count < min_bit_count) {
                 LogPrint(BCLog::STRATUM, "WARNING: version-rolling.min-bit-count (%d) sent by %s is greater than the number of bits availble to the miner (%d), after combining version-rolling masks (%08x); performance will be degraded\n", min_bit_count, client.GetPeer().ToStringAddrPort(), bit_count, client.m_version_rolling_mask);
