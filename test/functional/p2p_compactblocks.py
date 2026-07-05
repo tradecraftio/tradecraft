@@ -185,6 +185,13 @@ class CompactBlocksTest(FreicoinTestFramework):
         total_value = block.vtx[0].vout[0].nValue
         out_value = total_value // 10
         tx = CTransaction()
+        # Work in the epoch of the coinbase being spent: with
+        # lock_height equal to the input's reference height no demurrage
+        # adjustment applies, so nominal values can be used as-is.
+        # (lock_height = 0 would violate the consensus rule that a
+        # transaction's lock_height be >= each input's reference height.)
+        self.utxo_refheight = block.vtx[0].lock_height
+        tx.lock_height = self.utxo_refheight
         tx.vin.append(CTxIn(COutPoint(block.vtx[0].sha256, 0), b''))
         for _ in range(10):
             tx.vout.append(CTxOut(out_value, CScript([OP_TRUE])))
@@ -414,17 +421,7 @@ class CompactBlocksTest(FreicoinTestFramework):
             else:
                 test_node.send_header_for_blocks([block])
             test_node.wait_for_getdata([block.sha256], timeout=30)
-            #FIXME: For some reason freicoind is returning a non-compact block
-            #       request here when block-final transactions are enabled.  I
-            #       admit I don't exactly know why, or even whether this is a
-            #       problem.  It shouldn't be, because whether a full or a
-            #       compact block is requested doesn't affect network consensus.
-            #       But errors like this can be indicative of deeper issues that
-            #       could be a problem.  This merits further investigation, but
-            #       not at this time.
-            #assert_equal(test_node.last_message["getdata"].inv[0].type, 4)
-            assert(test_node.last_message["getdata"].inv[0].type in (2,4,0x40000002))
-            #END
+            assert_equal(test_node.last_message["getdata"].inv[0].type, 4)
 
             # Send back a compactblock message that omits the coinbase
             comp_block = HeaderAndShortIDs()
@@ -459,6 +456,9 @@ class CompactBlocksTest(FreicoinTestFramework):
 
         for _ in range(num_transactions):
             tx = CTransaction()
+            # Stay in the epoch of the original utxos (see make_utxos), so
+            # that no demurrage adjustment of the values is necessary.
+            tx.lock_height = self.utxo_refheight
             tx.vin.append(CTxIn(COutPoint(utxo[0], utxo[1]), b''))
             tx.vout.append(CTxOut(utxo[2] - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
             tx.rehash()
