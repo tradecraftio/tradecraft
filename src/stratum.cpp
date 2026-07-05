@@ -1630,12 +1630,25 @@ void BlockWatcher()
         {
             WAIT_LOCK(g_best_block_mutex, lock);
             checktxtime += std::chrono::seconds(15);
+            if (g_shutdown) {
+                // Shutdown was requested while we were doing other work;
+                // don't go back to sleep.
+                break;
+            }
             if (g_best_block_cv.wait_until(lock, checktxtime) == std::cv_status::timeout) {
+                if (g_shutdown) {
+                    break;
+                }
                 // Timeout: Check to see if mempool was updated.
                 unsigned int txns_updated_next = g_context->mempool ? g_context->mempool->GetTransactionsUpdated() : txns_updated_last;
                 if (txns_updated_last == txns_updated_next)
                     continue;
                 txns_updated_last = txns_updated_next;
+            }
+            if (g_shutdown) {
+                // Woken up by StopStratumServer(); exit without touching
+                // the clients.
+                break;
             }
         }
 
@@ -1771,21 +1784,32 @@ bool InitStratumServer(node::NodeContext& node)
 /** Interrupt the stratum server connections */
 void InterruptStratumServer()
 {
-    LOCK(cs_stratum);
-    // Stop listening for connections on stratum sockets
-    for (const auto& binding : bound_listeners) {
-        LogPrint(BCLog::STRATUM, "Interrupting stratum service on %s\n", binding.second.ToStringAddrPort());
-        evconnlistener_disable(binding.first);
+    {
+        LOCK(cs_stratum);
+        // Stop listening for connections on stratum sockets
+        for (const auto& binding : bound_listeners) {
+            LogPrint(BCLog::STRATUM, "Interrupting stratum service on %s\n", binding.second.ToStringAddrPort());
+            evconnlistener_disable(binding.first);
+        }
     }
-    // Tell the block watching thread to stop
-    g_shutdown = true;
+    // Tell the block watching thread to stop, and wake it up so that it
+    // notices promptly. The flag is set while holding the mutex the thread
+    // sleeps on, so the notification cannot fall into the gap between its
+    // check of g_shutdown and its entry into the wait.
+    WITH_LOCK(g_best_block_mutex, g_shutdown = true);
+    g_best_block_cv.notify_all();
 }
 
 /** Cleanup stratum server network connections and free resources. */
 void StopStratumServer()
 {
-    g_shutdown = true;
-    /* Wake up the block watcher thread. */
+    /* Wake up the block watcher thread so it exits promptly. Setting the
+     * flag under the mutex ensures the notification cannot be lost if the
+     * thread is currently processing a pass: without it, a notify sent
+     * while the thread is not waiting would be dropped, and on a quiet
+     * network the thread would then sleep until the next block or mempool
+     * change -- which is what made shutdown take minutes (issue #99). */
+    WITH_LOCK(g_best_block_mutex, g_shutdown = true);
     g_best_block_cv.notify_all();
     if (block_watcher_thread.joinable()) {
         block_watcher_thread.join();
