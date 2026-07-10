@@ -201,6 +201,7 @@ public:
         vSeeds.emplace_back("ap-northeast-1.aws.seed.tradecraft.io");
         vSeeds.emplace_back("eu-west-1.aws.seed.tradecraft.io");
         vSeeds.emplace_back("us-west-2.aws.seed.tradecraft.io");
+        vSeeds.emplace_back("seed.testtty.ru."); // Kirill Denisov
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
